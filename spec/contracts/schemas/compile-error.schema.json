@@ -1,0 +1,108 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://semantic-compiler.invalid/spec/contracts/compile-error/1.0.0",
+  "title": "Compile error document",
+  "type": "object",
+  "required": [
+    "contract",
+    "contract_version",
+    "errors",
+    "warnings"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "contract": {
+      "enum": [
+        "semantic_compiler.compile_error",
+        "semantic_compiler.validation_report"
+      ]
+    },
+    "contract_version": {
+      "type": "string",
+      "pattern": "^(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)$"
+    },
+    "errors": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/diagnostic"
+      }
+    },
+    "warnings": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/diagnostic"
+      }
+    }
+  },
+  "$defs": {
+    "diagnostic": {
+      "type": "object",
+      "required": [
+        "code",
+        "message",
+        "location"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "code": {
+          "type": "string",
+          "pattern": "^(E|W)[A-Z0-9_-]+$"
+        },
+        "message": {
+          "type": "string"
+        },
+        "location": {
+          "type": [
+            "object",
+            "null"
+          ],
+          "required": [
+            "document",
+            "pointer"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "document": {
+              "enum": [
+                "model",
+                "catalog_schema",
+                "catalog_state",
+                "query",
+                "security_context"
+              ]
+            },
+            "pointer": {
+              "type": "string"
+            },
+            "line": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "column": {
+              "type": "integer",
+              "minimum": 1
+            }
+          }
+        }
+      }
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "contract": {
+            "const": "semantic_compiler.compile_error"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "errors": {
+            "minItems": 1
+          }
+        }
+      }
+    }
+  ]
+}

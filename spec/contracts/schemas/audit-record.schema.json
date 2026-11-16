@@ -1,0 +1,233 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://semantic-compiler.invalid/spec/contracts/audit-record/1.0.0",
+  "title": "Audit record",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "contract",
+    "contract_version",
+    "subject",
+    "inputs",
+    "producer",
+    "outcome",
+    "authorization",
+    "row_policies",
+    "decisions",
+    "load_options",
+    "contract_versions"
+  ],
+  "properties": {
+    "contract": {
+      "const": "semantic_compiler.audit_record"
+    },
+    "contract_version": {
+      "type": "string",
+      "pattern": "^(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)$"
+    },
+    "subject": {
+      "type": "string",
+      "minLength": 1
+    },
+    "inputs": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "model",
+        "catalog_schema",
+        "catalog_state",
+        "query",
+        "security_fingerprint"
+      ],
+      "properties": {
+        "model": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "catalog_schema": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "catalog_state": {
+          "oneOf": [
+            {
+              "type": "string",
+              "pattern": "^[0-9a-f]{64}$"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "query": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "security_fingerprint": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        }
+      }
+    },
+    "producer": {
+      "type": "object",
+      "required": [
+        "compiler_version",
+        "ossie_normative",
+        "ossie_tracked_commit",
+        "tzdata_version"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "compiler_version": {
+          "$ref": "#/$defs/semver"
+        },
+        "ossie_normative": {
+          "type": "string",
+          "minLength": 1
+        },
+        "ossie_tracked_commit": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{7,40}$"
+        },
+        "tzdata_version": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "outcome": {
+      "oneOf": [
+        {
+          "type": "object",
+          "required": [
+            "plan_hash"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "plan_hash": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{64}$"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "error_codes"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "error_codes": {
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "authorization": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "object",
+          "decision",
+          "rule"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "object": {
+            "type": "string"
+          },
+          "decision": {
+            "enum": [
+              "granted",
+              "denied"
+            ]
+          },
+          "rule": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "row_policies": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "decisions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "step",
+          "decision",
+          "reason"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "step": {
+            "enum": [
+              "E1",
+              "E2",
+              "E3",
+              "E4",
+              "E5",
+              "E6"
+            ]
+          },
+          "decision": {
+            "type": "string"
+          },
+          "reason": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "load_options": {
+      "type": "object",
+      "required": [
+        "grant_authenticated_to_all",
+        "ossie_format",
+        "namespace"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "grant_authenticated_to_all": {
+          "type": "boolean"
+        },
+        "ossie_format": {
+          "enum": [
+            "release",
+            "development"
+          ]
+        },
+        "namespace": {
+          "type": "string"
+        },
+        "model_name": {
+          "type": "string"
+        }
+      }
+    },
+    "contract_versions": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "string"
+      }
+    }
+  },
+  "$defs": {
+    "semver": {
+      "type": "string",
+      "pattern": "^(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)$"
+    }
+  }
+}

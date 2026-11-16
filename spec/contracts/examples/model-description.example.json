@@ -1,0 +1,170 @@
+{
+  "contract": "semantic_compiler.model_description",
+  "contract_version": "1.0.0",
+  "model_hash": "1111111111111111111111111111111111111111111111111111111111111111",
+  "security_fingerprint": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+  "datasets": [
+    {
+      "name": "customers",
+      "fields": [
+        {
+          "reference": "customers.customer_id",
+          "logical_type": {
+            "kind": "integer",
+            "bits": 32,
+            "signed": true
+          },
+          "is_time": false,
+          "time_grains": []
+        },
+        {
+          "reference": "customers.region",
+          "logical_type": {
+            "kind": "text"
+          },
+          "is_time": false,
+          "time_grains": []
+        },
+        {
+          "reference": "customers.segment",
+          "logical_type": {
+            "kind": "text"
+          },
+          "is_time": false,
+          "time_grains": []
+        }
+      ]
+    },
+    {
+      "name": "invoices",
+      "fields": [
+        {
+          "reference": "invoices.amount",
+          "logical_type": {
+            "kind": "decimal",
+            "precision": 18,
+            "scale": 2
+          },
+          "is_time": false,
+          "time_grains": []
+        },
+        {
+          "reference": "invoices.area_id",
+          "logical_type": {
+            "kind": "integer",
+            "bits": 32,
+            "signed": true
+          },
+          "is_time": false,
+          "time_grains": []
+        },
+        {
+          "reference": "invoices.category_id",
+          "logical_type": {
+            "kind": "integer",
+            "bits": 32,
+            "signed": true
+          },
+          "is_time": false,
+          "time_grains": []
+        },
+        {
+          "reference": "invoices.customer_id",
+          "logical_type": {
+            "kind": "integer",
+            "bits": 32,
+            "signed": true
+          },
+          "is_time": false,
+          "time_grains": []
+        },
+        {
+          "reference": "invoices.invoice_date",
+          "logical_type": {
+            "kind": "date"
+          },
+          "is_time": true,
+          "time_grains": [
+            "day",
+            "week",
+            "month",
+            "quarter",
+            "year"
+          ]
+        },
+        {
+          "reference": "invoices.invoice_id",
+          "logical_type": {
+            "kind": "integer",
+            "bits": 64,
+            "signed": true
+          },
+          "is_time": false,
+          "time_grains": []
+        },
+        {
+          "reference": "invoices.status",
+          "logical_type": {
+            "kind": "text"
+          },
+          "is_time": false,
+          "time_grains": []
+        }
+      ]
+    }
+  ],
+  "metrics": [
+    {
+      "reference": "average_invoice",
+      "logical_type": {
+        "kind": "float",
+        "bits": 64
+      },
+      "kind": "derived",
+      "reachable_datasets": [
+        "customers",
+        "invoices"
+      ]
+    },
+    {
+      "reference": "billed",
+      "logical_type": {
+        "kind": "decimal",
+        "precision": 38,
+        "scale": 2
+      },
+      "kind": "base",
+      "reachable_datasets": [
+        "customers",
+        "invoices"
+      ]
+    },
+    {
+      "reference": "billed_ytd",
+      "logical_type": {
+        "kind": "decimal",
+        "precision": 38,
+        "scale": 2
+      },
+      "kind": "context",
+      "reachable_datasets": [
+        "customers",
+        "invoices"
+      ]
+    },
+    {
+      "reference": "invoice_count",
+      "logical_type": {
+        "kind": "integer",
+        "bits": 64,
+        "signed": true
+      },
+      "kind": "base",
+      "reachable_datasets": [
+        "customers",
+        "invoices"
+      ]
+    }
+  ],
+  "ambiguous_paths": []
+}

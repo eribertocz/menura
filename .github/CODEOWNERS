@@ -7,4 +7,4 @@
 /rustfmt.toml    @eribertocz
 /AGENTS.md       @eribertocz
 /CLAUDE.md       @eribertocz
-/.github/identities.json @eribertocz
+/.claude/        @eribertocz

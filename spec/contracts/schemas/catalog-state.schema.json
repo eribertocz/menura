@@ -1,0 +1,339 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://semantic-compiler.invalid/spec/contracts/catalog-state/1.0.0",
+  "title": "Catalog state document",
+  "type": "object",
+  "required": [
+    "contract",
+    "contract_version",
+    "document_id",
+    "schema_document_id",
+    "relations"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "contract": {
+      "const": "semantic_compiler.catalog_state"
+    },
+    "contract_version": {
+      "$ref": "#/$defs/semver"
+    },
+    "document_id": {
+      "$ref": "#/$defs/token"
+    },
+    "schema_document_id": {
+      "$ref": "#/$defs/token"
+    },
+    "relations": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/relation_state"
+      }
+    },
+    "checks": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "target",
+          "check",
+          "definition_hash",
+          "status",
+          "verified"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "check": {
+            "enum": [
+              "key_uniqueness",
+              "orphan_keys",
+              "population",
+              "semi_additive"
+            ]
+          },
+          "definition_hash": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$"
+          },
+          "status": {
+            "enum": [
+              "passed",
+              "failed"
+            ]
+          },
+          "verified": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "object",
+              "required": [
+                "source",
+                "version"
+              ],
+              "additionalProperties": false,
+              "properties": {
+                "source": {
+                  "type": "string"
+                },
+                "version": {
+                  "type": "object",
+                  "required": [
+                    "origin",
+                    "snapshot"
+                  ],
+                  "additionalProperties": false,
+                  "properties": {
+                    "origin": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "snapshot": {
+                      "type": "string",
+                      "minLength": 1
+                    }
+                  }
+                },
+                "period": {
+                  "$ref": "#/$defs/period"
+                }
+              }
+            }
+          },
+          "target": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "semver": {
+      "type": "string",
+      "pattern": "^(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)$"
+    },
+    "token": {
+      "type": "object",
+      "required": [
+        "origin",
+        "snapshot"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "origin": {
+          "type": "string",
+          "minLength": 1
+        },
+        "snapshot": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "grain": {
+      "enum": [
+        "day",
+        "week",
+        "month",
+        "quarter",
+        "year"
+      ]
+    },
+    "period": {
+      "type": "string",
+      "pattern": "^([0-9]{4}|[0-9]{4}-Q[1-4]|[0-9]{4}-(0[1-9]|1[0-2])|[0-9]{4}-W(0[1-9]|[1-4][0-9]|5[0-3])|[0-9]{4}-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01]))$"
+    },
+    "period_version": {
+      "type": "object",
+      "required": [
+        "period",
+        "version"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "period": {
+          "$ref": "#/$defs/period"
+        },
+        "version": {
+          "$ref": "#/$defs/token"
+        }
+      }
+    },
+    "relation_state": {
+      "type": "object",
+      "required": [
+        "source",
+        "row_count_estimate"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "source": {
+          "type": "string",
+          "minLength": 1
+        },
+        "row_count_estimate": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "partitions": {
+          "type": "object",
+          "required": [
+            "column",
+            "grain",
+            "versions"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "column": {
+              "type": "string",
+              "minLength": 1
+            },
+            "grain": {
+              "$ref": "#/$defs/grain"
+            },
+            "versions": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/period_version"
+              }
+            }
+          }
+        },
+        "aggregate_build": {
+          "type": "object",
+          "required": [
+            "definition_hash",
+            "coverage",
+            "built_from",
+            "integrity_check",
+            "time_zone"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "definition_hash": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{64}$"
+            },
+            "coverage": {
+              "type": "object",
+              "required": [
+                "from",
+                "to"
+              ],
+              "additionalProperties": false,
+              "properties": {
+                "from": {
+                  "$ref": "#/$defs/period"
+                },
+                "to": {
+                  "$ref": "#/$defs/period"
+                }
+              }
+            },
+            "built_from": {
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "$ref": "#/$defs/period_version"
+              }
+            },
+            "integrity_check": {
+              "type": "object",
+              "required": [
+                "status",
+                "definition_hash",
+                "verified"
+              ],
+              "additionalProperties": false,
+              "properties": {
+                "status": {
+                  "enum": [
+                    "passed",
+                    "failed"
+                  ]
+                },
+                "definition_hash": {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]{64}$"
+                },
+                "verified": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/$defs/period_version"
+                  }
+                }
+              }
+            },
+            "time_zone": {
+              "type": "string",
+              "minLength": 1,
+              "description": "IANA time zone used to truncate periods"
+            }
+          }
+        },
+        "version": {
+          "$ref": "#/$defs/token"
+        }
+      },
+      "oneOf": [
+        {
+          "required": [
+            "version"
+          ],
+          "not": {
+            "anyOf": [
+              {
+                "required": [
+                  "partitions"
+                ]
+              },
+              {
+                "required": [
+                  "aggregate_build"
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "required": [
+            "partitions"
+          ],
+          "not": {
+            "anyOf": [
+              {
+                "required": [
+                  "version"
+                ]
+              },
+              {
+                "required": [
+                  "aggregate_build"
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "required": [
+            "aggregate_build"
+          ],
+          "not": {
+            "anyOf": [
+              {
+                "required": [
+                  "version"
+                ]
+              },
+              {
+                "required": [
+                  "partitions"
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    }
+  }
+}
