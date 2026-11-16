@@ -12,6 +12,12 @@ use serde::Deserialize;
 pub struct RuleId(String);
 
 impl RuleId {
+    /// A rule ID from its text, for cases the runner builds itself (the Apache Ossie suites).
+    #[must_use]
+    pub fn new(rule: &str) -> Self {
+        Self(rule.to_owned())
+    }
+
     /// The rule ID as written in the specification.
     #[must_use]
     pub fn as_str(&self) -> &str {
@@ -31,6 +37,13 @@ impl fmt::Display for RuleId {
 pub struct CaseId(String);
 
 impl CaseId {
+    /// A case identifier from its text, for cases the runner builds itself (the Apache Ossie
+    /// suites).
+    #[must_use]
+    pub fn new(id: String) -> Self {
+        Self(id)
+    }
+
     /// The case identifier as written in the case file.
     #[must_use]
     pub fn as_str(&self) -> &str {

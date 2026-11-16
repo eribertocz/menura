@@ -33,6 +33,10 @@ pub enum RunnerErrorKind {
     MissingSecurityContext,
     /// The `DuckDB` database cannot be prepared (CS-4.2).
     Database(duckdb::Error),
+    /// An entry of `ossie/expected-failures.yaml` names no vendored case (OSS-2.4).
+    UnknownExpectedFailure(String),
+    /// `ossie/runner-context.json` is not the security context of CS-4.5.
+    InvalidRunnerContext(String),
 }
 
 impl RunnerErrorKind {
@@ -46,6 +50,8 @@ impl RunnerErrorKind {
             Self::PlanWithoutRows => "CS-2.2",
             Self::MissingSecurityContext => "CS-2",
             Self::Database(_) => "CS-4.2",
+            Self::UnknownExpectedFailure(_) => "OSS-2.4",
+            Self::InvalidRunnerContext(_) => "CS-4.5",
         }
     }
 }
@@ -74,6 +80,12 @@ impl fmt::Display for RunnerErrorKind {
                 formatter.write_str("this outcome requires `security_context`")
             }
             Self::Database(error) => write!(formatter, "database preparation failed: {error}"),
+            Self::UnknownExpectedFailure(case) => {
+                write!(formatter, "entry `{case}` names no vendored case")
+            }
+            Self::InvalidRunnerContext(message) => {
+                write!(formatter, "invalid runner security context: {message}")
+            }
         }
     }
 }
