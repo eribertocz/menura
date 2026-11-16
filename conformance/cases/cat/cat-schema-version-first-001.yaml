@@ -1,0 +1,6 @@
+id: cat-schema-version-first-001
+rules: [CAT-9.1]
+model: cat-schema-version-first-001
+expect:
+  outcome: load_error
+  error: ECAT-02

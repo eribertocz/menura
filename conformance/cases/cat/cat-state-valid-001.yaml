@@ -1,0 +1,16 @@
+id: cat-state-valid-001
+rules: [CAT-2.1, CAT-4.2, CAT-8.9]
+model: cat-state-valid-001
+security_context: analyst.json
+query:
+  contract: semantic_compiler.query
+  contract_version: "1.0.0"
+  reference_time: "2026-11-15T12:00:00-04:00"
+  time_zone: UTC
+  query:
+    metrics:
+      - {metric: total_amount, alias: total_amount}
+expect:
+  outcome: plan
+  rows: cat-state-valid-001.csv
+  row_order: any

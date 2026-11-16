@@ -1,0 +1,6 @@
+id: cat-schema-unsupported-version-001
+rules: [CAT-3.2, CAT-9]
+model: cat-schema-unsupported-version-001
+expect:
+  outcome: load_error
+  error: ECAT-02

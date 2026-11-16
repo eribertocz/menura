@@ -1,0 +1,6 @@
+id: cat-schema-duplicate-column-001
+rules: [CAT-8.2, CAT-9]
+model: cat-schema-duplicate-column-001
+expect:
+  outcome: load_error
+  error: ECAT-03

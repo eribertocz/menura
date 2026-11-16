@@ -1,0 +1,46 @@
+{
+  "contract": "semantic_compiler.catalog_state",
+  "contract_version": "1.0.0",
+  "document_id": {
+    "origin": "conformance:catalog",
+    "snapshot": "state-1"
+  },
+  "schema_document_id": {
+    "origin": "conformance:catalog",
+    "snapshot": "1"
+  },
+  "relations": [
+    {
+      "source": "shop.main.orders",
+      "row_count_estimate": 3,
+      "partitions": {
+        "column": "order_date",
+        "grain": "month",
+        "versions": [
+          {
+            "period": "2026-09",
+            "version": {
+              "origin": "conformance:catalog",
+              "snapshot": "orders-9"
+            }
+          },
+          {
+            "period": "2026-11",
+            "version": {
+              "origin": "conformance:catalog",
+              "snapshot": "orders-11"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "source": "shop.main.orders",
+      "row_count_estimate": 1,
+      "version": {
+        "origin": "conformance:catalog",
+        "snapshot": "customers-1"
+      }
+    }
+  ]
+}
