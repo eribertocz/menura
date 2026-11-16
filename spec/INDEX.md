@@ -199,6 +199,7 @@ Find a rule ID or a section here, then open only that file at that line.
 | [contracts/catalog.md](contracts/catalog.md#L124) | 124 | section | CAT-7.4 Never |
 | [contracts/catalog.md](contracts/catalog.md#L130) | 130 | section | CAT-8 Semantic rules |
 | [contracts/catalog.md](contracts/catalog.md#L142) | 142 | section | CAT-9 Errors |
+| [contracts/catalog.md](contracts/catalog.md#L154) | 154 | rule | CAT-9.1 |
 | [contracts/compiled-plan.md](contracts/compiled-plan.md#L1) | 1 | section | Contract: compiled plan and compile error |
 | [contracts/compiled-plan.md](contracts/compiled-plan.md#L7) | 7 | section | PLN-1 Compiled plan |
 | [contracts/compiled-plan.md](contracts/compiled-plan.md#L25) | 25 | section | PLN-2 SQL rules |

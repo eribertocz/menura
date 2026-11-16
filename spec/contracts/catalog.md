@@ -151,5 +151,7 @@ difference. Only then may E5 use it: skip deduplication (`key_uniqueness`) or us
 | `WCAT-03` | State document violates a CAT-8 rule | State ignored |
 | `WCAT-04` | `schema_document_id` does not match the schema in use | State ignored |
 
+- **CAT-9.1** Order of checks for each document: the document is JSON, then `contract` and `contract_version` (`ECAT-02` / `WCAT-02`), then the JSON Schema (`ECAT-01` / `WCAT-01`), then the CAT-8 rules (`ECAT-03` / `WCAT-03`), then, for the state document, `schema_document_id` (`WCAT-04`). The first failure is reported, as in E1-2.1.
+
 A rejected state document never prevents compilation: without evidence, E5 always uses base
 relations, and the explanation says so.
