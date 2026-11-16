@@ -95,5 +95,26 @@ pub fn validate_structure(kind: ContractKind, document: &Value) -> Result<(), Sc
                 kind.contract_name()
             ),
         })?;
-    Evaluator::new(&schema).validate(&schema, document, "")
+    validate_against_schema(&schema, document)
+}
+
+/// Validates `instance` against a JSON Schema 2020-12 `schema` that only uses the keywords the
+/// contract schemas use, with `format` asserted. Any other assertion keyword, and any `$ref`
+/// outside `#/$defs/`, fails closed.
+///
+/// # Errors
+///
+/// Returns the first [`SchemaViolation`], with the same order as [`validate_structure`].
+///
+/// # Example
+///
+/// ```
+/// use semantic_compiler_contracts::validate_against_schema;
+///
+/// let schema = serde_json::json!({"type": "object", "required": ["name"]});
+/// let violation = validate_against_schema(&schema, &serde_json::json!({})).unwrap_err();
+/// assert_eq!(violation.pointer, "");
+/// ```
+pub fn validate_against_schema(schema: &Value, instance: &Value) -> Result<(), SchemaViolation> {
+    Evaluator::new(schema).validate(schema, instance, "")
 }
