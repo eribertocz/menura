@@ -1,0 +1,19 @@
+id: e0-functions-and-cast-001
+rules: [E0F-10, E0F-11]
+model: expressions
+security_context: analyst.json
+query:
+  contract: semantic_compiler.query
+  contract_version: "1.0.0"
+  reference_time: "2026-11-15T12:00:00-04:00"
+  time_zone: UTC
+  query:
+    dimensions: [orders.status]
+    metrics:
+      - {metric: rounded_halves, alias: rounded_halves}
+      - {metric: late_orders, alias: late_orders}
+      - {metric: open_prefix_orders, alias: open_prefix_orders}
+expect:
+  outcome: plan
+  rows: e0-functions-and-cast-001.csv
+  row_order: any

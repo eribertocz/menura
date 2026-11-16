@@ -1,4 +1,4 @@
-id: e0-engine-specific-operator-001
+id: e0-engine-specific-function-001
 rules: [E0F-02, E0F-2.3]
 model: expressions
 security_context: analyst.json
