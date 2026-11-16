@@ -97,19 +97,21 @@ Find a rule ID or a section here, then open only that file at that line.
 | [06-development-workflow.md](06-development-workflow.md#L64) | 64 | rule | WF-6.4 |
 | [06-development-workflow.md](06-development-workflow.md#L65) | 65 | rule | WF-6.5 |
 | [06-development-workflow.md](06-development-workflow.md#L70) | 70 | rule | WF-6.6 |
-| [06-development-workflow.md](06-development-workflow.md#L71) | 71 | rule | WF-6.7 |
-| [06-development-workflow.md](06-development-workflow.md#L73) | 73 | section | 6.7 Pull request review |
-| [06-development-workflow.md](06-development-workflow.md#L82) | 82 | section | 6.8 Who owns the CI rules |
-| [06-development-workflow.md](06-development-workflow.md#L84) | 84 | rule | WF-8.0 |
-| [06-development-workflow.md](06-development-workflow.md#L96) | 96 | section | 6.9 Language |
-| [06-development-workflow.md](06-development-workflow.md#L98) | 98 | rule | WF-9.1 |
-| [06-development-workflow.md](06-development-workflow.md#L99) | 99 | rule | WF-9.2 |
-| [06-development-workflow.md](06-development-workflow.md#L100) | 100 | rule | WF-9.3 |
+| [06-development-workflow.md](06-development-workflow.md#L72) | 72 | rule | WF-6.7 |
+| [06-development-workflow.md](06-development-workflow.md#L74) | 74 | section | 6.7 Pull request review |
+| [06-development-workflow.md](06-development-workflow.md#L83) | 83 | section | 6.8 Who owns the CI rules |
+| [06-development-workflow.md](06-development-workflow.md#L85) | 85 | rule | WF-8.0 |
+| [06-development-workflow.md](06-development-workflow.md#L97) | 97 | section | 6.9 Language |
+| [06-development-workflow.md](06-development-workflow.md#L99) | 99 | rule | WF-9.1 |
+| [06-development-workflow.md](06-development-workflow.md#L100) | 100 | rule | WF-9.2 |
+| [06-development-workflow.md](06-development-workflow.md#L101) | 101 | rule | WF-9.3 |
 | [07-roadmap.md](07-roadmap.md#L1) | 1 | section | 7. Roadmap |
 | [07-roadmap.md](07-roadmap.md#L8) | 8 | section | 7.1 Path to the MVP |
-| [07-roadmap.md](07-roadmap.md#L23) | 23 | section | 7.2 After the MVP |
-| [07-roadmap.md](07-roadmap.md#L36) | 36 | section | 7.3 Capability scope |
-| [07-roadmap.md](07-roadmap.md#L58) | 58 | section | 7.4 Backlog after the MVP |
+| [07-roadmap.md](07-roadmap.md#L27) | 27 | section | 7.1a Gates |
+| [07-roadmap.md](07-roadmap.md#L40) | 40 | section | 7.1b What 1.0.0 guarantees |
+| [07-roadmap.md](07-roadmap.md#L52) | 52 | section | 7.2 After the MVP |
+| [07-roadmap.md](07-roadmap.md#L66) | 66 | section | 7.3 Capability scope |
+| [07-roadmap.md](07-roadmap.md#L88) | 88 | section | 7.4 Backlog after the MVP |
 | [08-conformance-suite.md](08-conformance-suite.md#L1) | 1 | section | 8. Conformance suite |
 | [08-conformance-suite.md](08-conformance-suite.md#L5) | 5 | section | CS-1 Layout |
 | [08-conformance-suite.md](08-conformance-suite.md#L21) | 21 | section | CS-2 Case format |

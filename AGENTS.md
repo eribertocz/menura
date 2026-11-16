@@ -18,11 +18,14 @@ This holds even when the person you are talking to writes in another language.
 
 1. Read the issue.
 2. Open `spec/INDEX.md` only to locate a rule ID or section you were not given.
-3. Read **only** the files and sections the issue lists under "Read", plus `spec/08-conformance-suite.md` CS-1 and CS-2 when writing cases.
-4. Do not read other specification files, `spec/decisions/`, or other modules' code.
+3. From the specification, read **only** the sections the issue lists under "Read", plus `spec/08-conformance-suite.md` CS-1 and CS-2 when writing cases. Do not read `spec/decisions/`.
+4. You may read any code, test and contract in this repository, and the public contracts and APIs of other modules. You may never **depend** on another module's private implementation: only on its public contracts.
 
-If the listed sections are not enough to implement the issue without guessing, that is a
-specification defect: open an issue labeled `spec-defect` and stop.
+**Doubts.** Decide yourself, and explain the choice in the pull request, anything that is
+invisible from outside the crate: private names, internal data structures, private helper
+functions, test organization. Stop and open a `spec-defect` issue only when the doubt affects
+observable behavior: a result, an error code or its order, a contract field, SQL semantics,
+security, or determinism.
 
 ## 3. Never
 
@@ -58,7 +61,7 @@ specification defect: open an issue labeled `spec-defect` and stop.
 
 **Maintainability and scalability**
 - Change one thing per pull request. Refactor and behavior change never share a commit.
-- No premature abstraction: add an interface when the second real implementation exists.
+- No premature abstraction: add an interface when a second real implementation exists, **or** when the specification defines the boundary (contracts, the input and output of each stage, the dialect generator of E6). Those boundaries get their interface from the start, even with one implementation.
 - Avoid quadratic algorithms over model size; respect the performance targets in `spec/05-engineering-standards.md` §5.6.
 - Prefer immutable data and pure transformations; share by reference, not by copy.
 - Dependencies: add a crate only if it is maintained, widely used, license-compatible, and approved in `deny.toml` by the maintainer.
@@ -79,4 +82,4 @@ specification defect: open an issue labeled `spec-defect` and stop.
 
 ## 6. When in doubt
 
-Stop and open an issue. A question costs minutes; a wrong guess costs a rewrite.
+Apply section 2 "Doubts": decide what is internal, ask about what is observable. A question costs minutes; a wrong guess about behavior costs a rewrite.
