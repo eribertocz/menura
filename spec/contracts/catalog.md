@@ -134,7 +134,7 @@ difference. Only then may E5 use it: skip deduplication (`key_uniqueness`) or us
 3. For `decimal`, `scale` ≤ `precision`.
 4. Every `source` in the state exists in the referenced schema document.
 5. `partitions.column` exists in the relation and is of kind `date` or `timestamp`.
-6. Every period is in the canonical form of its grain and is not repeated in its list.
+6. Every period is in the canonical form of its grain and is not repeated in its list. Where the document declares no grain (`aggregate_build`, `checks[].verified`), a period has the grain its shape denotes: `YYYY` year, `YYYY-Qn` quarter, `YYYY-MM` month, `YYYY-Www` ISO week, `YYYY-MM-DD` day; it must name a real calendar date or ISO week. All periods of one `aggregate_build` have the same grain, which CAT-8.8 compares with the summary's grain. In `checks[].verified` the pair of `source` and period is not repeated.
 7. `coverage.from` ≤ `coverage.to`.
 8. `aggregate_build` appears only on relations the model declares as summaries; otherwise the state is ignored (`WCAT-03`), checked by `load` and `with_state`.
 9. For a partitioned relation, `partitions.versions` lists every period that contains data; a period not listed has no rows (producer guarantee CAT-7.1.5).
@@ -151,7 +151,7 @@ difference. Only then may E5 use it: skip deduplication (`key_uniqueness`) or us
 | `WCAT-03` | State document violates a CAT-8 rule | State ignored |
 | `WCAT-04` | `schema_document_id` does not match the schema in use | State ignored |
 
-- **CAT-9.1** Order of checks for each document: the document is JSON, then `contract` and `contract_version` (`ECAT-02` / `WCAT-02`), then the JSON Schema (`ECAT-01` / `WCAT-01`), then the CAT-8 rules (`ECAT-03` / `WCAT-03`), then, for the state document, `schema_document_id` (`WCAT-04`). The first failure is reported, as in E1-2.1.
+- **CAT-9.1** Order of checks for each document: the document is JSON, then `contract` and `contract_version` (`ECAT-02` / `WCAT-02`), then the JSON Schema (`ECAT-01` / `WCAT-01`), then, for the state document, `schema_document_id` (`WCAT-04`), then the CAT-8 rules (`ECAT-03` / `WCAT-03`). The CAT-8 rules of a state document are therefore always checked against the schema it refers to. The first failure is reported, as in E1-2.1.
 
 A rejected state document never prevents compilation: without evidence, E5 always uses base
 relations, and the explanation says so.
