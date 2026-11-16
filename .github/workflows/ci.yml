@@ -1,0 +1,146 @@
+# Checks of spec/09-continuous-integration.md CI-1 that run on every pull request and every
+# push to main (WF-8.0): format, lint, unsafe, test, dependencies, dependency-graph, index and
+# examples. Every job is named exactly as its check in CI-1.
+#
+# Tool versions are pinned so that the same commit always gets the same verdict.
+name: ci
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.event.pull_request.number || github.sha }}
+  cancel-in-progress: true
+
+env:
+  RUST_TOOLCHAIN: "1.97.0"
+  CARGO_DENY_VERSION: "0.20.2"
+  CARGO_TERM_COLOR: always
+
+jobs:
+  format:
+    name: format
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the commit
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+      - name: Install the Rust toolchain
+        run: |
+          rustup toolchain install "$RUST_TOOLCHAIN" --profile minimal --component rustfmt
+          rustup default "$RUST_TOOLCHAIN"
+      - name: Check formatting (Q3)
+        run: cargo fmt --check
+
+  lint:
+    name: lint
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the commit
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+      - name: Install the Rust toolchain
+        run: |
+          rustup toolchain install "$RUST_TOOLCHAIN" --profile minimal --component clippy
+          rustup default "$RUST_TOOLCHAIN"
+      - name: Run clippy with every warning denied (Q2, Q3, Q4, Q7)
+        run: cargo clippy --locked --all-targets -- -D warnings
+
+  unsafe:
+    name: unsafe
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the commit
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+      - name: Install the Rust toolchain
+        run: |
+          rustup toolchain install "$RUST_TOOLCHAIN" --profile minimal
+          rustup default "$RUST_TOOLCHAIN"
+      - name: Test the check
+        run: python3 -m unittest discover -s scripts/ci -p 'test_unsafe.py' -v
+      - name: Check every crate root forbids unsafe code (Q1)
+        run: python3 -I scripts/ci/check_unsafe.py
+
+  test:
+    name: test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the commit
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+      - name: Install the Rust toolchain
+        run: |
+          rustup toolchain install "$RUST_TOOLCHAIN" --profile minimal
+          rustup default "$RUST_TOOLCHAIN"
+      - name: Run every test (T2, T5)
+        run: cargo test --locked --all-targets
+
+  dependencies:
+    name: dependencies
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the commit
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+      - name: Install the Rust toolchain
+        run: |
+          rustup toolchain install "$RUST_TOOLCHAIN" --profile minimal
+          rustup default "$RUST_TOOLCHAIN"
+      - name: Install cargo-deny
+        run: cargo install cargo-deny --locked --version "$CARGO_DENY_VERSION"
+      - name: Check the allowlist, banned I/O crates, licenses, sources and advisories (A1, A2)
+        run: cargo deny --locked check
+
+  dependency-graph:
+    name: dependency-graph
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the commit
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+      - name: Install the Rust toolchain
+        run: |
+          rustup toolchain install "$RUST_TOOLCHAIN" --profile minimal
+          rustup default "$RUST_TOOLCHAIN"
+      - name: Test the check
+        run: python3 -m unittest discover -s scripts/ci -p 'test_dependency_graph.py' -v
+      - name: Check dependency direction, cycles and wrappers (S6, S7, S8)
+        run: python3 -I scripts/ci/check_dependency_graph.py
+
+  index:
+    name: index
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the commit
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+      - name: Check spec/INDEX.md is up to date
+        run: python3 -I scripts/build_index.py --check
+
+  examples:
+    name: examples
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the commit
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+      - name: Install the example checker's dependencies
+        run: |
+          python3 -m venv "$RUNNER_TEMP/venv"
+          "$RUNNER_TEMP/venv/bin/pip" install --disable-pip-version-check jsonschema==4.26.0 pyyaml==6.0.3
+      - name: Validate the contract examples against their schemas
+        run: '"$RUNNER_TEMP/venv/bin/python" -I scripts/check_examples.py'
