@@ -80,7 +80,12 @@ fn database_of(source: &str) -> Option<&str> {
     }
 }
 
-fn read_text(path: &Path) -> Result<String, RunnerError> {
+/// Reads a UTF-8 file of the conformance directory.
+///
+/// # Errors
+///
+/// Returns [`RunnerErrorKind::Unreadable`] when the file cannot be read.
+pub(crate) fn read_text(path: &Path) -> Result<String, RunnerError> {
     fs::read_to_string(path)
         .map_err(|error| RunnerError::new(RunnerErrorKind::Unreadable(error), path))
 }

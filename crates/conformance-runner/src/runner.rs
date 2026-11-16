@@ -9,34 +9,63 @@ use crate::case_file::read_case;
 use crate::database::prepare_database;
 use crate::error::{RunnerError, RunnerErrorKind};
 use crate::fixture::{ModelFixture, security_context_path};
+use crate::ossie::{OSSIE_AREA, check_layout, run_suites};
 use crate::report::{CaseResult, CaseStatus, Report};
 
 /// Why every case is pending in this version: no compilation stage exists yet.
 pub const PENDING_REASON: &str = "the compiler stages are not implemented yet";
 
-/// Runs every case of `conformance_directory`, or only those of `area` (CS-4.1).
+/// Runs every case of `conformance_directory/cases/`, or only those of `area` (CS-4.1).
+///
+/// Without an area, the layout of `ossie/` is also checked (the stale-list rule of OSS-2.4), but
+/// its suite cases are not run: their outcomes are judged only by the area `ossie`, which runs
+/// the Apache Ossie suites alone (OSS-2.3).
 ///
 /// A case whose fixtures cannot be read or whose database cannot be prepared is reported as
 /// failed; otherwise it is reported as pending, because no compilation stage exists yet.
 ///
 /// # Errors
 ///
-/// Returns a [`RunnerError`] when the layout cannot be read, the area does not exist, or a case
-/// file breaks CS-1 or CS-2.
+/// Returns a [`RunnerError`] when the layout cannot be read, the area does not exist, a case
+/// file breaks CS-1 or CS-2, or the layout of `ossie/` breaks OSS-2.4 or CS-4.5.
 pub fn run(conformance_directory: &Path, area: Option<&str>) -> Result<Report, RunnerError> {
+    let ossie_directory = conformance_directory.join(OSSIE_AREA);
     let mut report = Report::default();
+    match area {
+        Some(OSSIE_AREA) if !ossie_directory.is_dir() => {
+            return Err(RunnerError::new(
+                RunnerErrorKind::UnknownArea(OSSIE_AREA.to_owned()),
+                conformance_directory,
+            ));
+        }
+        Some(OSSIE_AREA) => report.cases = run_suites(&ossie_directory)?,
+        None if ossie_directory.is_dir() => {
+            check_layout(&ossie_directory)?;
+            report.cases = run_cases(conformance_directory, area)?;
+        }
+        _ => report.cases = run_cases(conformance_directory, area)?,
+    }
+    Ok(report)
+}
+
+/// Runs the cases of `cases/`, or only those of `area`.
+fn run_cases(
+    conformance_directory: &Path,
+    area: Option<&str>,
+) -> Result<Vec<CaseResult>, RunnerError> {
+    let mut results = Vec::new();
     for area_folder in area_folders(&conformance_directory.join("cases"), area)? {
         for case_path in case_files(&area_folder)? {
             let case = read_case(&case_path)?;
             let status = run_case(conformance_directory, &case);
-            report.cases.push(CaseResult {
+            results.push(CaseResult {
                 id: case.id,
                 rules: case.rules,
                 status,
             });
         }
     }
-    Ok(report)
+    Ok(results)
 }
 
 fn run_case(conformance_directory: &Path, case: &Case) -> CaseStatus {
@@ -84,7 +113,7 @@ fn case_files(area_folder: &Path) -> Result<Vec<PathBuf>, RunnerError> {
 }
 
 /// The entries of a directory, sorted by path so that runs are deterministic.
-fn list_directory(directory: &Path) -> Result<Vec<PathBuf>, RunnerError> {
+pub(crate) fn list_directory(directory: &Path) -> Result<Vec<PathBuf>, RunnerError> {
     let unreadable = |error| RunnerError::new(RunnerErrorKind::Unreadable(error), directory);
     let mut paths = Vec::new();
     for entry in fs::read_dir(directory).map_err(unreadable)? {

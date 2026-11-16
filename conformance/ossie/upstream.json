@@ -1,0 +1,9 @@
+{
+  "repository": "https://github.com/apache/ossie",
+  "tracked_commit": "aa500d37894c3d62c96cdce4192cbecea4d7f06a",
+  "recorded_release": "osi-0.1.1-rc1",
+  "suites": {
+    "wide_table": "compliance/wide_table",
+    "query": "compliance/query"
+  }
+}
