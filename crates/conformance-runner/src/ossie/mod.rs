@@ -18,14 +18,36 @@ use crate::case::CaseId;
 use crate::error::{RunnerError, RunnerErrorKind};
 use crate::fixture::read_text;
 use crate::report::{CaseResult, CaseStatus};
-use expected_failures::{ExpectedFailure, check_entries, parse_expected_failures};
+use expected_failures::{
+    ExpectedFailure, ExpectedFailures, check_entries, parse_expected_failures,
+};
 use prepare::prepare_case;
-use suite::discover_cases;
+use suite::{OssieCase, discover_cases};
 
 /// The area name that selects the Apache Ossie suites (`just conformance ossie`).
 pub const OSSIE_AREA: &str = "ossie";
 
-/// Runs every case of the suites vendored in `ossie_directory`.
+/// What the layout of `conformance/ossie/` holds once it is checked.
+struct Suites {
+    failures: ExpectedFailures,
+    security_context: Value,
+    cases: Vec<OssieCase>,
+}
+
+/// Checks the layout of `ossie_directory` without running any suite case (CS-4.1): the
+/// expected-failure list is well formed and every entry names a vendored case (OSS-2.4), and the
+/// runner security context is valid (CS-4.5).
+///
+/// # Errors
+///
+/// Returns a [`RunnerError`] when the suites cannot be read, `expected-failures.yaml` is malformed
+/// or names a case that is not vendored, or `runner-context.json` is not a valid security context.
+pub fn check_layout(ossie_directory: &Path) -> Result<(), RunnerError> {
+    read_suites(ossie_directory).map(|_| ())
+}
+
+/// Runs every case of the suites vendored in `ossie_directory` (`just conformance ossie`,
+/// OSS-2.3), after checking their layout as [`check_layout`] does.
 ///
 /// While no compilation stage exists, a case is pending when its fixtures can be prepared and it
 /// is listed in `expected-failures.yaml`; it fails when its fixtures cannot be prepared or it is
@@ -33,27 +55,37 @@ pub const OSSIE_AREA: &str = "ossie";
 ///
 /// # Errors
 ///
-/// Returns a [`RunnerError`] when the suites cannot be read, `expected-failures.yaml` is malformed
-/// or names a case that is not vendored, or `runner-context.json` is not a valid security context.
+/// Returns the errors of [`check_layout`].
 pub fn run_suites(ossie_directory: &Path) -> Result<Vec<CaseResult>, RunnerError> {
+    let suites = read_suites(ossie_directory)?;
+    Ok(suites
+        .cases
+        .iter()
+        .map(|case| {
+            let prepared = prepare_case(case, &suites.security_context).map(|_| ());
+            CaseResult {
+                id: CaseId::new(case.key()),
+                rules: case.suite.rules(),
+                status: case_status(prepared, suites.failures.get(&case.key())),
+            }
+        })
+        .collect())
+}
+
+/// Reads and checks the layout of `ossie_directory`.
+fn read_suites(ossie_directory: &Path) -> Result<Suites, RunnerError> {
     let failures_path = ossie_directory.join("expected-failures.yaml");
     let failures = parse_expected_failures(&read_text(&failures_path)?)
         .map_err(|kind| RunnerError::new(kind, &failures_path))?;
     let security_context = read_runner_context(&ossie_directory.join("runner-context.json"))?;
     let cases = discover_cases(ossie_directory)?;
-    let keys: BTreeSet<String> = cases.iter().map(suite::OssieCase::key).collect();
+    let keys: BTreeSet<String> = cases.iter().map(OssieCase::key).collect();
     check_entries(&failures, &keys).map_err(|kind| RunnerError::new(kind, &failures_path))?;
-    Ok(cases
-        .iter()
-        .map(|case| {
-            let prepared = prepare_case(case, &security_context).map(|_| ());
-            CaseResult {
-                id: CaseId::new(case.key()),
-                rules: case.suite.rules(),
-                status: case_status(prepared, failures.get(&case.key())),
-            }
-        })
-        .collect())
+    Ok(Suites {
+        failures,
+        security_context,
+        cases,
+    })
 }
 
 /// The status of a case whose preparation gave `prepared`, listed with `entry`.
@@ -93,6 +125,7 @@ mod tests {
         ExpectedFailure {
             reason: "not implemented".to_owned(),
             fixed_in: "0.7.0".to_owned(),
+            issue: None,
         }
     }
 

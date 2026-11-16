@@ -12,8 +12,11 @@ use crate::error::RunnerErrorKind;
 pub struct ExpectedFailure {
     /// Why the case does not pass, such as `not implemented`.
     pub reason: String,
-    /// The version expected to make the case pass.
+    /// The roadmap version expected to make the case pass.
     pub fixed_in: String,
+    /// The issue that will make the case pass, such as `#35`, once one exists.
+    #[serde(default)]
+    pub issue: Option<String>,
 }
 
 /// The expected-failure list, keyed by case (`<suite folder>/<case folder>`).
@@ -24,7 +27,7 @@ pub type ExpectedFailures = BTreeMap<String, ExpectedFailure>;
 /// # Errors
 ///
 /// Returns [`RunnerErrorKind::Malformed`] when the text is not a mapping from case keys to
-/// entries with exactly `reason` and `fixed_in`.
+/// entries with `reason`, `fixed_in` and an optional `issue`, and nothing else.
 pub fn parse_expected_failures(text: &str) -> Result<ExpectedFailures, RunnerErrorKind> {
     serde_saphyr::from_str(text).map_err(|error| RunnerErrorKind::Malformed(error.to_string()))
 }
@@ -59,6 +62,17 @@ mod tests {
         let entry = &failures["wide_table/a01_shared_dimension"];
         assert_eq!(entry.reason, "not implemented");
         assert_eq!(entry.fixed_in, "0.7.0");
+        assert_eq!(entry.issue, None);
+    }
+
+    #[test]
+    fn oss_2_4_reads_the_issue_of_an_entry_once_it_exists() {
+        let text = format!("{LIST}  issue: \"#35\"\n");
+        let failures = parse_expected_failures(&text).unwrap();
+        assert_eq!(
+            failures["wide_table/a01_shared_dimension"].issue.as_deref(),
+            Some("#35")
+        );
     }
 
     #[test]

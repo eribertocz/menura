@@ -10,6 +10,7 @@ use std::path::{Path, PathBuf};
 use std::sync::OnceLock;
 
 use semantic_compiler_conformance_runner::case::RuleId;
+use semantic_compiler_conformance_runner::ossie::check_layout;
 use semantic_compiler_conformance_runner::{CaseStatus, Report, run};
 
 fn conformance_directory() -> PathBuf {
@@ -77,14 +78,20 @@ fn cs_4_6_query_cases_are_reported_under_their_rules() {
 }
 
 #[test]
-fn cs_4_1_a_full_run_includes_the_ossie_suites() {
+fn cs_4_1_a_run_without_area_does_not_judge_the_ossie_suites() {
     let report = run(&conformance_directory(), None).unwrap();
+    assert!(!report.cases.is_empty());
     assert!(
         report
             .cases
             .iter()
-            .any(|case| case.id.as_str() == "query/b20_having_on_one_side_measure")
+            .all(|case| !case.rules.iter().any(|rule| rule.as_str() == "OSS-2.3"))
     );
+}
+
+#[test]
+fn cs_4_1_the_layout_of_the_ossie_folder_is_valid() {
+    check_layout(&conformance_directory().join("ossie")).unwrap();
 }
 
 #[test]

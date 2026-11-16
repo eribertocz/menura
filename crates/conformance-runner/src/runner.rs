@@ -9,29 +9,28 @@ use crate::case_file::read_case;
 use crate::database::prepare_database;
 use crate::error::{RunnerError, RunnerErrorKind};
 use crate::fixture::{ModelFixture, security_context_path};
-use crate::ossie::{OSSIE_AREA, run_suites};
+use crate::ossie::{OSSIE_AREA, check_layout, run_suites};
 use crate::report::{CaseResult, CaseStatus, Report};
 
 /// Why every case is pending in this version: no compilation stage exists yet.
 pub const PENDING_REASON: &str = "the compiler stages are not implemented yet";
 
-/// Runs every case of `conformance_directory`, or only those of `area` (CS-4.1). Every case
-/// includes the Apache Ossie suites of `ossie/` (CS-3.1), which the area `ossie` selects alone.
+/// Runs every case of `conformance_directory/cases/`, or only those of `area` (CS-4.1).
+///
+/// Without an area, the layout of `ossie/` is also checked (the stale-list rule of OSS-2.4), but
+/// its suite cases are not run: their outcomes are judged only by the area `ossie`, which runs
+/// the Apache Ossie suites alone (OSS-2.3).
 ///
 /// A case whose fixtures cannot be read or whose database cannot be prepared is reported as
-/// failed; otherwise it is reported as pending, because no compilation stage exists yet. The
-/// Apache Ossie cases are also checked against `ossie/expected-failures.yaml` (OSS-2.4).
+/// failed; otherwise it is reported as pending, because no compilation stage exists yet.
 ///
 /// # Errors
 ///
-/// Returns a [`RunnerError`] when the layout cannot be read, the area does not exist, or a case
-/// file breaks CS-1 or CS-2.
+/// Returns a [`RunnerError`] when the layout cannot be read, the area does not exist, a case
+/// file breaks CS-1 or CS-2, or the layout of `ossie/` breaks OSS-2.4 or CS-4.5.
 pub fn run(conformance_directory: &Path, area: Option<&str>) -> Result<Report, RunnerError> {
-    let mut report = Report::default();
-    if area != Some(OSSIE_AREA) {
-        report.cases = run_cases(conformance_directory, area)?;
-    }
     let ossie_directory = conformance_directory.join(OSSIE_AREA);
+    let mut report = Report::default();
     match area {
         Some(OSSIE_AREA) if !ossie_directory.is_dir() => {
             return Err(RunnerError::new(
@@ -39,10 +38,12 @@ pub fn run(conformance_directory: &Path, area: Option<&str>) -> Result<Report, R
                 conformance_directory,
             ));
         }
-        Some(OSSIE_AREA) | None if ossie_directory.is_dir() => {
-            report.cases.extend(run_suites(&ossie_directory)?);
+        Some(OSSIE_AREA) => report.cases = run_suites(&ossie_directory)?,
+        None if ossie_directory.is_dir() => {
+            check_layout(&ossie_directory)?;
+            report.cases = run_cases(conformance_directory, area)?;
         }
-        _ => {}
+        _ => report.cases = run_cases(conformance_directory, area)?,
     }
     Ok(report)
 }
