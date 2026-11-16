@@ -1,0 +1,10 @@
+# Owners of every path. Changes to these paths require the maintainer's approval.
+*                @eribertocz
+/spec/           @eribertocz
+/.github/        @eribertocz
+/deny.toml       @eribertocz
+/clippy.toml     @eribertocz
+/rustfmt.toml    @eribertocz
+/AGENTS.md       @eribertocz
+/CLAUDE.md       @eribertocz
+/.github/identities.json @eribertocz
