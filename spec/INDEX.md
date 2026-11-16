@@ -122,16 +122,17 @@ Find a rule ID or a section here, then open only that file at that line.
 | [08-conformance-suite.md](08-conformance-suite.md#L43) | 43 | rule | CS-2.3 |
 | [08-conformance-suite.md](08-conformance-suite.md#L44) | 44 | rule | CS-2.4 |
 | [08-conformance-suite.md](08-conformance-suite.md#L45) | 45 | rule | CS-2.5 |
-| [08-conformance-suite.md](08-conformance-suite.md#L47) | 47 | section | CS-3 Apache Ossie suites |
-| [08-conformance-suite.md](08-conformance-suite.md#L49) | 49 | rule | CS-3.1 |
-| [08-conformance-suite.md](08-conformance-suite.md#L50) | 50 | rule | CS-3.2 |
-| [08-conformance-suite.md](08-conformance-suite.md#L52) | 52 | section | CS-4 Running |
-| [08-conformance-suite.md](08-conformance-suite.md#L54) | 54 | rule | CS-4.1 |
-| [08-conformance-suite.md](08-conformance-suite.md#L55) | 55 | rule | CS-4.2 |
-| [08-conformance-suite.md](08-conformance-suite.md#L56) | 56 | rule | CS-4.3 |
-| [08-conformance-suite.md](08-conformance-suite.md#L57) | 57 | rule | CS-4.4 |
-| [08-conformance-suite.md](08-conformance-suite.md#L58) | 58 | rule | CS-4.5 |
-| [08-conformance-suite.md](08-conformance-suite.md#L59) | 59 | rule | CS-4.6 |
+| [08-conformance-suite.md](08-conformance-suite.md#L46) | 46 | rule | CS-2.6 |
+| [08-conformance-suite.md](08-conformance-suite.md#L48) | 48 | section | CS-3 Apache Ossie suites |
+| [08-conformance-suite.md](08-conformance-suite.md#L50) | 50 | rule | CS-3.1 |
+| [08-conformance-suite.md](08-conformance-suite.md#L51) | 51 | rule | CS-3.2 |
+| [08-conformance-suite.md](08-conformance-suite.md#L53) | 53 | section | CS-4 Running |
+| [08-conformance-suite.md](08-conformance-suite.md#L55) | 55 | rule | CS-4.1 |
+| [08-conformance-suite.md](08-conformance-suite.md#L56) | 56 | rule | CS-4.2 |
+| [08-conformance-suite.md](08-conformance-suite.md#L57) | 57 | rule | CS-4.3 |
+| [08-conformance-suite.md](08-conformance-suite.md#L58) | 58 | rule | CS-4.4 |
+| [08-conformance-suite.md](08-conformance-suite.md#L59) | 59 | rule | CS-4.5 |
+| [08-conformance-suite.md](08-conformance-suite.md#L60) | 60 | rule | CS-4.6 |
 | [09-continuous-integration.md](09-continuous-integration.md#L1) | 1 | section | 9. Continuous integration |
 | [09-continuous-integration.md](09-continuous-integration.md#L6) | 6 | section | CI-1 On every pull request and every push to `main` |
 | [09-continuous-integration.md](09-continuous-integration.md#L30) | 30 | section | CI-2 Scheduled |
