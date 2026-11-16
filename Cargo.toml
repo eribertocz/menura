@@ -15,6 +15,7 @@ members = [
     "crates/generator-duckdb",
     "crates/core",
     "crates/cli",
+    "crates/conformance-runner",
 ]
 
 [workspace.package]

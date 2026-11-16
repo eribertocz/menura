@@ -16,5 +16,8 @@ GitHub GraphQL is not available in cloud sessions: use the REST API through `gh 
 7. Run every check: `cargo fmt --check`, `cargo clippy --all-targets -- -D warnings`, `cargo test`, `cargo deny check`, `just conformance`, `python3 scripts/build_index.py --check`, `python3 scripts/check_examples.py`.
 8. Review your own diff: only files in scope, no commented-out code, no `unwrap`, every public item documented.
 9. Commit with Conventional Commits and the issue number. Push the branch.
+   - Every commit, merge commits included, carries the `Co-Authored-By` trailer (WF-6.4); the `co-author` check fails otherwise.
+   - To bring `main` into your branch, merge it with the trailer in the message: `git merge origin/main -m "chore: merge origin/main (#<number>)" -m "Co-Authored-By: <AI name> <noreply@anthropic.com>"`.
+   - Never rebase, amend or force-push a pushed branch.
 10. Open the pull request with `gh api repos/{owner}/{repo}/pulls -X POST -f title=... -f head=<branch> -f base=main -F body=@<file>`, filling every section of the template, including the rule IDs and the conformance cases that cover each. Then add the `impl` label with `gh api repos/{owner}/{repo}/issues/<pr>/labels -X POST -f "labels[]=impl"`.
 11. Stop. Do not merge.

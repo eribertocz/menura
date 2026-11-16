@@ -1,0 +1,6 @@
+id: sample-load-error-001
+rules: [CS-2]
+model: sample-missing-source
+expect:
+  outcome: load_error
+  error: E0D-02
