@@ -1,0 +1,17 @@
+id: e0-call-form-outside-the-subset-001
+rules: [E0F-02, E0F-9.4]
+model: expressions
+security_context: analyst.json
+query:
+  contract: semantic_compiler.query
+  contract_version: "1.0.0"
+  reference_time: "2026-11-15T12:00:00-04:00"
+  time_zone: UTC
+  query:
+    dimensions: [orders.status]
+    metrics:
+      - {metric: star_sum, alias: star_sum}
+expect:
+  outcome: error
+  error: E0F-02
+  warnings: [W0F-01]

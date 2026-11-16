@@ -1,0 +1,15 @@
+id: e0-current-date-without-reference-time-001
+rules: [E0F-2.3]
+model: expressions
+security_context: analyst.json
+query:
+  contract: semantic_compiler.query
+  contract_version: "1.0.0"
+  time_zone: UTC
+  query:
+    dimensions: [orders.status]
+    metrics:
+      - {metric: amount_to_date, alias: amount_to_date}
+expect:
+  outcome: error
+  error: EQRY-03
