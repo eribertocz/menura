@@ -2,6 +2,7 @@
 *                @eribertocz
 /spec/           @eribertocz
 /.github/        @eribertocz
+/scripts/ci/     @eribertocz
 /deny.toml       @eribertocz
 /clippy.toml     @eribertocz
 /rustfmt.toml    @eribertocz
