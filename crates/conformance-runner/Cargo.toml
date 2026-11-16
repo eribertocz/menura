@@ -1,0 +1,18 @@
+[package]
+name = "semantic-compiler-conformance-runner"
+description = "Test tooling (ARC-5.3): runs the conformance suite of spec/08-conformance-suite.md and reports results per rule ID."
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[dependencies]
+semantic-compiler-contracts.workspace = true
+semantic-compiler-core.workspace = true
+duckdb = { version = "=1.20000.2", default-features = false, features = ["bundled"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+serde-saphyr = "2.1.1"
+
+[lints]
+workspace = true
