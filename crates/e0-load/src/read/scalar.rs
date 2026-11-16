@@ -2,8 +2,8 @@
 //!
 //! Only the standard tags `!!str`, `!!null`, `!!bool`, `!!int`, `!!float` and `!!timestamp`
 //! construct a scalar; every other tag is an error, so no arbitrary object is ever built.
-//! Rejecting `!!binary`, `!!set`, `!!omap` and `!!pairs`, whose values are not JSON values, is
-//! provisional until the specification decides (#61).
+//! `!!binary`, `!!set`, `!!omap` and `!!pairs`, whose values have no JSON form, are errors too
+//! (E0A-2.5).
 
 use super::compose::RawTag;
 use super::numbers::{construct_boolean, construct_float, construct_integer};

@@ -5,7 +5,7 @@
 //! microseconds are not zero (digits beyond the sixth are dropped) and `+HH:MM` or `-HH:MM` when
 //! the timestamp has a time zone (`Z` is `+00:00`).
 //!
-//! The specification does not fix the timestamp form yet (#61); this one is provisional.
+//! This is the form E0A-2.8 fixes.
 
 /// The parts of a date or timestamp, as written.
 struct Parts {

@@ -365,6 +365,22 @@ fn e0a_2_5_tag_value_that_cannot_be_constructed_is_e0a_05() {
 }
 
 #[test]
+fn e0a_2_5_standard_tags_without_a_json_form_are_e0a_05() {
+    for document in [
+        "a: !!binary aGVsbG8=\n",
+        "a: !!set {x: ~}\n",
+        "a: !!omap [{x: 1}]\n",
+        "a: !!pairs [{x: 1}]\n",
+    ] {
+        assert_eq!(
+            failure(document.as_bytes()),
+            (ReadErrorCode::Unconstructible, at(1, 4)),
+            "{document}"
+        );
+    }
+}
+
+#[test]
 fn e0a_2_5_invalid_date_is_e0a_05() {
     let model = include_bytes!("../../../conformance/models/e0-read-invalid-date-001/model.yaml");
     assert_eq!(failure(model), (ReadErrorCode::Unconstructible, at(4, 18)));
