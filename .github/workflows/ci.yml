@@ -145,6 +145,7 @@ jobs:
           python3 -m venv "$RUNNER_TEMP/venv"
           "$RUNNER_TEMP/venv/bin/pip" install --disable-pip-version-check jsonschema==4.26.0 pyyaml==6.0.3
       - name: Throwaway - break an example in the runner only
-        run: sed -i 's/"snapshot": "schema-0042"/"snapshot": "throwaway"/' spec/contracts/examples/catalog-state.example.json
+        run: |
+          sed -i 's/"snapshot": "schema-0042"/"snapshot": "throwaway"/' spec/contracts/examples/catalog-state.example.json
       - name: Validate the contract examples against their schemas
         run: '"$RUNNER_TEMP/venv/bin/python" -I scripts/check_examples.py'
