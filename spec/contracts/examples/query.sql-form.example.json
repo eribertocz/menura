@@ -1,0 +1,6 @@
+{
+  "contract": "semantic_compiler.query",
+  "contract_version": "1.0.0",
+  "time_zone": "UTC",
+  "sql": "SELECT DATE_TRUNC('month', i.invoice_date) AS invoice_month, AGG(i.billed) AS billed FROM sales.invoices AS i WHERE i.status = 'ISSUED' GROUP BY 1 ORDER BY billed DESC NULLS LAST, invoice_month ASC NULLS LAST"
+}

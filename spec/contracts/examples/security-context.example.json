@@ -1,0 +1,14 @@
+{
+  "contract": "semantic_compiler.security_context",
+  "contract_version": "1.0.0",
+  "subject": "user-7f3a",
+  "roles": [
+    "analyst"
+  ],
+  "attributes": {
+    "regions": [
+      "NORTH",
+      "SOUTH"
+    ]
+  }
+}

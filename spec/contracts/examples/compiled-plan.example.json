@@ -1,0 +1,193 @@
+{
+  "contract": "semantic_compiler.compiled_plan",
+  "contract_version": "1.0.0",
+  "producer": {
+    "compiler_version": "1.0.0",
+    "ossie_normative": "0.1.1",
+    "ossie_tracked_commit": "aa500d3",
+    "tzdata_version": "2026a"
+  },
+  "dialect": "duckdb",
+  "data_source": "warehouse:gold",
+  "sql": "WITH\n  \"home_invoices\" AS (\n    SELECT\n      ROW_NUMBER() OVER () AS \"__row_identity\",\n      \"i\".\"invoice_date\" AS \"invoice_date\",\n      \"i\".\"customer_id\" AS \"customer_id\",\n      \"i\".\"amount\" AS \"amount\"\n    FROM \"sales\".\"public\".\"fact_invoice\" AS \"i\"\n    WHERE \"i\".\"invoice_date\" >= $1\n      AND \"i\".\"invoice_date\" <= $2\n      AND EXISTS (\n        SELECT 1\n        FROM \"sales\".\"public\".\"dim_customer\" AS \"p\"\n        WHERE \"p\".\"customer_id\" = \"i\".\"customer_id\"\n          AND list_contains($3, \"p\".\"region\")\n      )\n  ),\n  \"scan_customers\" AS (\n    SELECT \"c\".\"customer_id\", \"c\".\"region\", \"c\".\"segment\"\n    FROM \"sales\".\"public\".\"dim_customer\" AS \"c\"\n    WHERE list_contains($3, \"c\".\"region\")\n  ),\n  \"joined\" AS (\n    SELECT\n      \"h\".\"__row_identity\",\n      \"c\".\"region\" AS \"region\",\n      CAST(date_trunc('month', \"h\".\"invoice_date\") AS DATE) AS \"invoice_date\",\n      \"h\".\"amount\"\n    FROM \"home_invoices\" AS \"h\"\n    LEFT JOIN \"scan_customers\" AS \"c\"\n      ON \"c\".\"customer_id\" = \"h\".\"customer_id\"\n    WHERE \"c\".\"segment\" = $4\n  ),\n  \"deduplicated\" AS (\n    SELECT DISTINCT ON (\"region\", \"invoice_date\", \"__row_identity\")\n      \"region\", \"invoice_date\", \"amount\"\n    FROM \"joined\"\n  ),\n  \"aggregated\" AS (\n    SELECT\n      \"region\",\n      \"invoice_date\",\n      CAST(SUM(\"amount\") AS DECIMAL(38, 2)) AS \"billed\"\n    FROM \"deduplicated\"\n    GROUP BY \"region\", \"invoice_date\"\n  )\nSELECT \"region\", \"invoice_date\", \"billed\"\nFROM \"aggregated\"\nORDER BY \"billed\" DESC NULLS LAST, \"region\" ASC NULLS LAST, \"invoice_date\" ASC NULLS LAST\nLIMIT 100\n",
+  "parameters": [
+    {
+      "position": 1,
+      "logical_type": {
+        "kind": "date"
+      },
+      "value": "2025-12-01"
+    },
+    {
+      "position": 2,
+      "logical_type": {
+        "kind": "date"
+      },
+      "value": "2026-11-30"
+    },
+    {
+      "position": 3,
+      "logical_type": {
+        "kind": "list",
+        "element": {
+          "kind": "text"
+        }
+      },
+      "value": [
+        "NORTH",
+        "SOUTH"
+      ]
+    },
+    {
+      "position": 4,
+      "logical_type": {
+        "kind": "text"
+      },
+      "value": "RESIDENTIAL"
+    }
+  ],
+  "result_schema": [
+    {
+      "name": "region",
+      "role": "dimension",
+      "logical_type": {
+        "kind": "text"
+      },
+      "physical_type": "VARCHAR",
+      "nullable": true
+    },
+    {
+      "name": "invoice_date",
+      "role": "dimension",
+      "logical_type": {
+        "kind": "date"
+      },
+      "physical_type": "DATE",
+      "nullable": false
+    },
+    {
+      "name": "billed",
+      "role": "metric",
+      "logical_type": {
+        "kind": "decimal",
+        "precision": 38,
+        "scale": 2
+      },
+      "physical_type": "DECIMAL(38,2)",
+      "nullable": true
+    }
+  ],
+  "cache_key": {
+    "key": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "plan_hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+    "security_fingerprint": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+    "data_versions": [
+      {
+        "source": "sales.public.dim_customer",
+        "period": "*",
+        "version": {
+          "origin": "warehouse:gold",
+          "snapshot": "c-0099"
+        }
+      },
+      {
+        "source": "sales.public.fact_invoice",
+        "period": "2026-09",
+        "version": {
+          "origin": "warehouse:gold",
+          "snapshot": "8801"
+        }
+      },
+      {
+        "source": "sales.public.fact_invoice",
+        "period": "2026-10",
+        "version": {
+          "origin": "warehouse:gold",
+          "snapshot": "8812"
+        }
+      }
+    ]
+  },
+  "limits": {
+    "timeout_ms": 30000,
+    "max_rows": null
+  },
+  "lineage": [
+    {
+      "output": "region",
+      "model_inputs": [
+        "customers.region"
+      ],
+      "physical_inputs": [
+        {
+          "source": "sales.public.dim_customer",
+          "column": "region"
+        }
+      ],
+      "summary": null,
+      "security_policies": [
+        "region_scope"
+      ]
+    },
+    {
+      "output": "invoice_date",
+      "model_inputs": [
+        "invoices.invoice_date"
+      ],
+      "physical_inputs": [
+        {
+          "source": "sales.public.fact_invoice",
+          "column": "invoice_date"
+        }
+      ],
+      "summary": null,
+      "security_policies": [
+        "region_scope"
+      ]
+    },
+    {
+      "output": "billed",
+      "model_inputs": [
+        "billed"
+      ],
+      "physical_inputs": [
+        {
+          "source": "sales.public.fact_invoice",
+          "column": "amount"
+        }
+      ],
+      "summary": null,
+      "security_policies": [
+        "region_scope"
+      ]
+    }
+  ],
+  "explanation": [
+    {
+      "step": "E1",
+      "decision": "relative range: last 12 months including the current one",
+      "reason": "reference_time 2026-11-15 in America/La_Paz gives 2025-12-01 to 2026-11-30"
+    },
+    {
+      "step": "E3",
+      "decision": "invoices -> customers via invoices_customer",
+      "reason": "only path"
+    },
+    {
+      "step": "E4",
+      "decision": "row policy region_scope applied to customers and propagated to invoices",
+      "reason": "user role analyst"
+    },
+    {
+      "step": "E4",
+      "decision": "deduplication by (group, row identity)",
+      "reason": "no key_uniqueness evidence for invoices_customer"
+    },
+    {
+      "step": "E5",
+      "decision": "summary invoices_by_month not used",
+      "reason": "the range 2025-12 to 2026-11 is outside its coverage 2026-09 to 2026-10"
+    }
+  ],
+  "warnings": []
+}

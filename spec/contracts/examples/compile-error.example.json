@@ -1,0 +1,15 @@
+{
+  "contract": "semantic_compiler.compile_error",
+  "contract_version": "1.0.0",
+  "errors": [
+    {
+      "code": "E_NAME_NOT_FOUND",
+      "message": "'revenue' does not name a metric you can query. Use 'describe' to list the available metrics.",
+      "location": {
+        "document": "query",
+        "pointer": "/query/metrics/0"
+      }
+    }
+  ],
+  "warnings": []
+}

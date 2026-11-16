@@ -1,0 +1,241 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://semantic-compiler.invalid/spec/contracts/integrity-checks/1.0.0",
+  "title": "Integrity checks document",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "contract",
+    "contract_version",
+    "model_hash",
+    "dialect",
+    "checks"
+  ],
+  "properties": {
+    "contract": {
+      "const": "semantic_compiler.integrity_checks"
+    },
+    "contract_version": {
+      "type": "string",
+      "pattern": "^(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)$"
+    },
+    "model_hash": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "dialect": {
+      "enum": [
+        "duckdb"
+      ]
+    },
+    "checks": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "check_id",
+          "kind",
+          "target",
+          "definition_hash",
+          "sql",
+          "parameters",
+          "sources"
+        ],
+        "properties": {
+          "check_id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "kind": {
+            "enum": [
+              "key_uniqueness",
+              "orphan_keys",
+              "summary",
+              "population",
+              "semi_additive"
+            ]
+          },
+          "target": {
+            "type": "string",
+            "minLength": 1
+          },
+          "definition_hash": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$"
+          },
+          "sql": {
+            "type": "string",
+            "minLength": 1
+          },
+          "parameters": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "position",
+                "logical_type",
+                "value"
+              ],
+              "additionalProperties": false,
+              "properties": {
+                "position": {
+                  "type": "integer",
+                  "minimum": 1
+                },
+                "logical_type": {
+                  "$ref": "#/$defs/logical_type"
+                },
+                "value": {}
+              }
+            }
+          },
+          "sources": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "logical_type": {
+      "oneOf": [
+        {
+          "type": "object",
+          "required": [
+            "kind"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "enum": [
+                "boolean",
+                "text",
+                "date",
+                "time",
+                "interval",
+                "binary",
+                "uuid",
+                "unsupported"
+              ]
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "kind",
+            "bits",
+            "signed"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "const": "integer"
+            },
+            "bits": {
+              "enum": [
+                8,
+                16,
+                32,
+                64,
+                128
+              ]
+            },
+            "signed": {
+              "type": "boolean"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "kind",
+            "precision",
+            "scale"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "const": "decimal"
+            },
+            "precision": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 38
+            },
+            "scale": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 38
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "kind",
+            "bits"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "const": "float"
+            },
+            "bits": {
+              "enum": [
+                32,
+                64
+              ]
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "kind",
+            "precision",
+            "with_time_zone"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "const": "timestamp"
+            },
+            "precision": {
+              "enum": [
+                "s",
+                "ms",
+                "us",
+                "ns"
+              ]
+            },
+            "with_time_zone": {
+              "type": "boolean"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "kind",
+            "element"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "const": "list"
+            },
+            "element": {
+              "$ref": "#/$defs/logical_type"
+            }
+          }
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,155 @@
+# 3. Architecture
+
+## 3.1 Independent modules
+
+`semantic_compiler` is one module of a larger system. Each module has its own repository and
+specification, and communicates with the others **only through public contracts**.
+
+| Module | Responsibility | Talks to the compiler through |
+|---|---|---|
+| Host (e.g. a BI application) | Orchestrates; authenticates users; presents results | Query, security context, compiled plan |
+| Executor | Runs a compiled plan against a database; returns Apache Arrow | Compiled plan (read only) |
+| Data pipelines | Load data; build summaries | Catalog state (write) |
+| Modeling | Authors the semantic model | Apache Ossie document |
+| Natural-language translator (after the MVP) | Turns a question into a query document | Model description in, query document out |
+| Gateway (optional) | Exposes the SQL form over a standard network protocol for third-party tools | Query document in, compiled plan out, then the executor |
+
+```
+Pipelines ──► Catalog ─────┐
+Modeling  ──► Model ───────┤
+Host      ──► Query ───────┼──► semantic_compiler ──► Compiled plan ──► Host ──► Executor ──► Database
+Host      ──► Security ────┘
+```
+
+The compiler MUST NOT import code from any other module, open connections, or call other modules.
+
+## 3.2 Contract ownership
+
+Every contract has exactly one owner, which is the only party allowed to change it.
+
+| Contract | Owner |
+|---|---|
+| Semantic model | Apache Ossie (extensions: `semantic_compiler`) |
+| Catalog schema and state | `semantic_compiler` |
+| Query | `semantic_compiler` |
+| Security context | `semantic_compiler` |
+| Compiled plan, explanation, errors | `semantic_compiler` |
+
+## 3.3 Contract evolution
+
+1. Each contract is a JSON Schema (2020-12) with its own semantic version, independent of the compiler version.
+2. A minor version only adds optional fields. A major version may break compatibility.
+3. The compiler MUST accept the current and the previous major version during a declared transition period.
+4. Every document MUST declare its contract version. An unknown version MUST produce an early error.
+5. The owner publishes valid and invalid examples and a conformance suite that other modules run in their CI.
+6. Nothing is removed without first being deprecated with a warning and a removal date.
+
+## 3.4 Compiled plan
+
+The compiled plan carries everything the executor needs without knowing any semantics:
+
+- SQL with bound parameters (values are never concatenated into the text),
+- dialect and logical data source,
+- result schema (names, logical and physical types),
+- cache key (plan hash, data versions used, security context fingerprint),
+- suggested timeout and row limit,
+- explanation.
+
+The executor MUST NOT modify the SQL.
+
+## 3.5 Public functions
+
+All functions are pure. Inputs and outputs are the contract documents of `spec/contracts/`.
+
+| Function | Inputs | Output |
+|---|---|---|
+| `validate` | model, catalog schema, load options | Validation report: the same document as a compile error, with `errors` possibly empty (`semantic_compiler.validation_report`) |
+| `load` | model, catalog schema, optional catalog state, load options | Handle, with warnings; or compile error |
+| `with_state` | handle, catalog state | New handle with the new state; the model is not reloaded |
+| `integrity_checks` | handle, dialect | Integrity-check document ([contract](../contracts/integrity-checks.md)) |
+| `compile` | handle, query, security context, compile options | Compiled plan, or compile error; with `audit: true`, also an audit record in both cases |
+| `migrate` | model document | Model document with deprecated extensions rewritten to their native form, and a report |
+| `run_conformance` | conformance directory | Conformance report per rule ID (CS-4.3) |
+| `explain` | handle, query, security context, compile options | The compiled plan with `sql` and `parameters` replaced by empty values (same schema, `contract` `semantic_compiler.explanation`) |
+| `describe` | handle, security context | Model description |
+
+| Load option | Meaning | Default |
+|---|---|---|
+| `model_name` | Which semantic model to load when the document has several (DEV-7) | — |
+| `ossie_format` | `release` or `development` (section 4.5) | `release` |
+| `grant_authenticated_to_all` | Treat datasets without `access` as `authenticated` (DEV-4); recorded in every plan | `false` |
+| `namespace` | Extension namespace (MDL-2.3) | `semantic_compiler` |
+| `data_source` | Logical source name written in every plan | Catalog schema `document_id.origin` |
+
+| Compile option | Meaning | Default |
+|---|---|---|
+| `dialect` | Target dialect | `duckdb` |
+| `timeout_ms` | Written to `limits.timeout_ms` | 30000 |
+| `max_rows` | Written to `limits.max_rows` | `null` |
+| `audit` | Also return the audit record | `false` |
+
+- **ARC-5.1** A handle is immutable. A new model means `load`; a new catalog state means `with_state`.
+- **ARC-5.2** The catalog state is validated by `load` and `with_state`. An invalid state produces a warning (`WCAT-01`–`WCAT-04`) and is ignored: the handle has no state, and E5 applies only rewrites that need no evidence.
+
+## 3.6 Delivery forms
+
+One core, written in Rust (reference implementation). Every other form is a thin wrapper without logic of its own:
+
+| Form | Use |
+|---|---|
+| Rust crate | Native embedding |
+| Python package | Embedding in Python hosts |
+| CLI | `validate`, `compile`, `explain`, `describe`, `integrity-checks`, `migrate`, `conformance` |
+| HTTP service (optional, after the MVP) | Same JSON contracts, for remote hosts. A Rust wrapper built on `axum` |
+
+The public functions are those of section 3.5.
+
+## 3.7 Integration
+
+- **In-process:** the host imports the modules as libraries. This is the recommended mode.
+- **Distributed:** the same modules run as services, with the same contracts.
+
+A separate distribution repository assembles the modules. It holds a compatibility manifest (which
+module and contract versions work together) and end-to-end tests that verify it.
+
+## 3.8 Boundary enforcement (from the first commit)
+
+Module boundaries are checked by the build, not left to discipline. Every rule below runs in CI
+from the first commit, and a violation fails the build.
+
+| ID | Rule | Check |
+|---|---|---|
+| A1 | The core MUST NOT depend on any crate or package of another module. | Dependency allowlist (`cargo deny`) |
+| A2 | The core MUST NOT depend on network, filesystem, clock or database libraries. | Banned dependency list |
+| A3 | Cross-module data MUST be a contract document validated against its JSON Schema. | Contract tests at every boundary |
+| A4 | Wrappers (Python, CLI, HTTP) MUST contain no compilation logic. | Wrappers may depend only on `core` (allowlist), and the conformance suite runs through each wrapper with identical results |
+| A5 | Every contract change MUST bump its version and update its examples. | Schema diff check in CI |
+| A6 | Any other module MUST be replaceable by a stub that only speaks the contract. | End-to-end tests run with stubs |
+
+A module is considered independent only if it can be built, tested and released with every
+other module absent.
+
+## 3.9 Lineage and audit
+
+Lineage and audit are compiler outputs, because only the compiler knows how each result was built.
+
+**Lineage** is part of every compiled plan. It is column-level and reports, for each result column:
+
+- the model fields, metrics and relationships it derives from,
+- the physical tables and columns read,
+- the summary used, if any, and why it was valid,
+- the security filters applied.
+
+The lineage format maps to the OpenLineage column-lineage facet, so external lineage tools can
+consume it without translation.
+
+**Audit record.** Every compilation can emit an audit record that contains no data values:
+
+- input hashes (model, catalog state, query, security context fingerprint),
+- versions (compiler, contracts, Apache Ossie),
+- every decision with its reason (path, summary, rewrite),
+- every security rule applied or denied,
+- the plan hash and the outcome (plan or error code).
+
+Because compilation is deterministic (P3), an audit record can be replayed to reproduce the exact
+plan.

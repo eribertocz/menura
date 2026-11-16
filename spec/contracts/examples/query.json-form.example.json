@@ -1,0 +1,60 @@
+{
+  "contract": "semantic_compiler.query",
+  "contract_version": "1.0.0",
+  "reference_time": "2026-11-15T12:00:00-04:00",
+  "time_zone": "America/La_Paz",
+  "query": {
+    "dimensions": [
+      "customers.region",
+      "invoices.invoice_date"
+    ],
+    "metrics": [
+      {
+        "metric": "billed",
+        "alias": "billed"
+      }
+    ],
+    "filter": "customers.segment = 'RESIDENTIAL'",
+    "nonportable_extensions": [
+      {
+        "vendor_name": "COMMON",
+        "data": {
+          "namespace": "semantic_compiler",
+          "version": 1,
+          "time_grains": [
+            {
+              "dimension": "invoices.invoice_date",
+              "grain": "month"
+            }
+          ],
+          "date_range": {
+            "dimension": "invoices.invoice_date",
+            "relative": {
+              "unit": "month",
+              "count": 12,
+              "include_current": true
+            }
+          },
+          "order_by": [
+            {
+              "output": "billed",
+              "direction": "desc",
+              "nulls": "last"
+            },
+            {
+              "output": "region",
+              "direction": "asc",
+              "nulls": "last"
+            },
+            {
+              "output": "invoice_date",
+              "direction": "asc",
+              "nulls": "last"
+            }
+          ],
+          "limit": 100
+        }
+      }
+    ]
+  }
+}

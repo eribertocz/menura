@@ -1,0 +1,79 @@
+version: "0.1.1"
+semantic_model:
+  - name: sales
+    description: Invoices by customer, with a monthly summary
+    custom_extensions:
+      - vendor_name: COMMON
+        data: '{"namespace": "semantic_compiler", "version": 1, "security_context": {"roles": ["admin", "analyst"], "attributes": [{"name": "regions", "type": "list<text>"}]}}'
+    datasets:
+      - name: invoices
+        source: sales.public.fact_invoice
+        primary_key: [invoice_id]
+        fields:
+          - name: invoice_id
+            expression: {dialects: [{dialect: ANSI_SQL, expression: invoice_id}]}
+          - name: invoice_date
+            expression: {dialects: [{dialect: ANSI_SQL, expression: invoice_date}]}
+            dimension: {is_time: true}
+          - name: customer_id
+            expression: {dialects: [{dialect: ANSI_SQL, expression: customer_id}]}
+          - name: category_id
+            expression: {dialects: [{dialect: ANSI_SQL, expression: category_id}]}
+          - name: area_id
+            expression: {dialects: [{dialect: ANSI_SQL, expression: area_id}]}
+          - name: amount
+            expression: {dialects: [{dialect: ANSI_SQL, expression: amount}]}
+          - name: status
+            expression: {dialects: [{dialect: ANSI_SQL, expression: status}]}
+        custom_extensions:
+          - vendor_name: COMMON
+            data: '{"namespace": "semantic_compiler", "version": 1, "access": {"mode": "roles", "roles": ["admin", "analyst"]}}'
+      - name: customers
+        source: sales.public.dim_customer
+        primary_key: [customer_id]
+        fields:
+          - name: customer_id
+            expression: {dialects: [{dialect: ANSI_SQL, expression: customer_id}]}
+          - name: region
+            expression: {dialects: [{dialect: ANSI_SQL, expression: region}]}
+          - name: segment
+            expression: {dialects: [{dialect: ANSI_SQL, expression: segment}]}
+        custom_extensions:
+          - vendor_name: COMMON
+            data: '{"namespace": "semantic_compiler", "version": 1, "access": {"mode": "roles", "roles": ["admin", "analyst"]}, "row_access": [{"name": "region_scope", "condition": "region IN USER_ATTRIBUTE(''regions'')", "roles": ["analyst"]}, {"name": "all_regions", "condition": "TRUE", "roles": ["admin"]}]}'
+      - name: invoices_by_month
+        source: sales.public.agg_invoice_month
+        fields:
+          - name: month
+            expression: {dialects: [{dialect: ANSI_SQL, expression: month}]}
+            dimension: {is_time: true}
+          - name: customer_id
+            expression: {dialects: [{dialect: ANSI_SQL, expression: customer_id}]}
+          - name: amount_sum
+            expression: {dialects: [{dialect: ANSI_SQL, expression: amount_sum}]}
+          - name: amount_count
+            expression: {dialects: [{dialect: ANSI_SQL, expression: amount_count}]}
+        custom_extensions:
+          - vendor_name: COMMON
+            data: '{"namespace": "semantic_compiler", "version": 1, "access": {"mode": "internal"}, "aggregate": {"of": "invoices", "dimensions": [{"field": "month", "base": "invoices.invoice_date", "grain": "month"}, {"field": "customer_id", "base": "invoices.customer_id"}], "measures": [{"field": "amount_sum", "base_aggregate": "SUM(invoices.amount)"}, {"field": "amount_count", "base_aggregate": "COUNT(invoices.amount)"}], "coverage_field": "month"}}'
+    relationships:
+      - name: invoices_customer
+        from: invoices
+        to: customers
+        from_columns: [customer_id]
+        to_columns: [customer_id]
+    metrics:
+      - name: billed
+        expression: {dialects: [{dialect: ANSI_SQL, expression: SUM(invoices.amount)}]}
+      - name: invoice_count
+        expression: {dialects: [{dialect: ANSI_SQL, expression: COUNT(invoices.invoice_id)}]}
+      - name: billed_ytd
+        expression: {dialects: [{dialect: ANSI_SQL, expression: AGG(billed)}]}
+        custom_extensions:
+          - vendor_name: COMMON
+            data: '{"namespace": "semantic_compiler", "version": 1, "context": {"base": "billed", "modifier": {"type": "period_to_date", "time_dimension": "invoices.invoice_date", "grain": "year"}}}'
+      - name: average_invoice
+        expression: {dialects: [{dialect: ANSI_SQL, expression: AGG(billed) / AGG(invoice_count)}]}
+        custom_extensions:
+          - vendor_name: COMMON
+            data: '{"namespace": "semantic_compiler", "version": 1, "derived": {"on_division_by_zero": "null"}}'

@@ -1,0 +1,338 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://semantic-compiler.invalid/spec/contracts/query/1.0.0",
+  "title": "Query document",
+  "type": "object",
+  "required": [
+    "contract",
+    "contract_version",
+    "time_zone"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "contract": {
+      "const": "semantic_compiler.query"
+    },
+    "contract_version": {
+      "$ref": "#/$defs/semver"
+    },
+    "reference_time": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "time_zone": {
+      "type": "string",
+      "minLength": 1
+    },
+    "query": {
+      "$ref": "#/$defs/wide_table_query"
+    },
+    "sql": {
+      "type": "string",
+      "minLength": 1
+    }
+  },
+  "oneOf": [
+    {
+      "required": [
+        "query"
+      ],
+      "not": {
+        "required": [
+          "sql"
+        ]
+      }
+    },
+    {
+      "required": [
+        "sql"
+      ],
+      "not": {
+        "required": [
+          "query"
+        ]
+      }
+    }
+  ],
+  "$defs": {
+    "semver": {
+      "type": "string",
+      "pattern": "^(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)$"
+    },
+    "reference": {
+      "type": "string",
+      "minLength": 1
+    },
+    "wide_table_query": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "dimensions": {
+          "type": "array",
+          "items": {
+            "oneOf": [
+              {
+                "$ref": "#/$defs/reference"
+              },
+              {
+                "type": "object",
+                "required": [
+                  "field"
+                ],
+                "additionalProperties": false,
+                "properties": {
+                  "field": {
+                    "$ref": "#/$defs/reference"
+                  },
+                  "alias": {
+                    "$ref": "#/$defs/reference"
+                  }
+                }
+              }
+            ]
+          }
+        },
+        "metrics": {
+          "type": "array",
+          "items": {
+            "oneOf": [
+              {
+                "$ref": "#/$defs/reference"
+              },
+              {
+                "type": "object",
+                "required": [
+                  "metric"
+                ],
+                "additionalProperties": false,
+                "properties": {
+                  "metric": {
+                    "$ref": "#/$defs/reference"
+                  },
+                  "alias": {
+                    "$ref": "#/$defs/reference"
+                  }
+                }
+              }
+            ]
+          }
+        },
+        "filter": {
+          "type": "string",
+          "minLength": 1
+        },
+        "nonportable_extensions": {
+          "type": "array",
+          "maxItems": 1,
+          "items": {
+            "$ref": "#/$defs/extension"
+          }
+        }
+      }
+    },
+    "extension": {
+      "type": "object",
+      "required": [
+        "vendor_name",
+        "data"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "vendor_name": {
+          "const": "COMMON"
+        },
+        "data": {
+          "$ref": "#/$defs/compiler_extension"
+        }
+      }
+    },
+    "compiler_extension": {
+      "type": "object",
+      "required": [
+        "namespace",
+        "version"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "version": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "time_grains": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "dimension",
+              "grain"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "dimension": {
+                "$ref": "#/$defs/reference"
+              },
+              "grain": {
+                "enum": [
+                  "day",
+                  "week",
+                  "month",
+                  "quarter",
+                  "year"
+                ]
+              }
+            }
+          }
+        },
+        "date_range": {
+          "type": "object",
+          "required": [
+            "dimension"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "dimension": {
+              "$ref": "#/$defs/reference"
+            },
+            "from": {
+              "type": "string",
+              "format": "date"
+            },
+            "to": {
+              "type": "string",
+              "format": "date"
+            },
+            "relative": {
+              "type": "object",
+              "required": [
+                "unit",
+                "count"
+              ],
+              "additionalProperties": false,
+              "properties": {
+                "unit": {
+                  "enum": [
+                    "day",
+                    "week",
+                    "month",
+                    "quarter",
+                    "year"
+                  ]
+                },
+                "count": {
+                  "type": "integer",
+                  "minimum": 1
+                },
+                "include_current": {
+                  "type": "boolean",
+                  "default": true
+                }
+              }
+            }
+          },
+          "oneOf": [
+            {
+              "required": [
+                "from",
+                "to"
+              ],
+              "not": {
+                "required": [
+                  "relative"
+                ]
+              }
+            },
+            {
+              "required": [
+                "relative"
+              ],
+              "not": {
+                "anyOf": [
+                  {
+                    "required": [
+                      "from"
+                    ]
+                  },
+                  {
+                    "required": [
+                      "to"
+                    ]
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        "paths": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "from",
+              "to",
+              "relationships"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "from": {
+                "$ref": "#/$defs/reference"
+              },
+              "to": {
+                "$ref": "#/$defs/reference"
+              },
+              "relationships": {
+                "type": "array",
+                "minItems": 1,
+                "items": {
+                  "$ref": "#/$defs/reference"
+                }
+              }
+            }
+          }
+        },
+        "filters": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "order_by": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "output",
+              "direction",
+              "nulls"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "output": {
+                "$ref": "#/$defs/reference"
+              },
+              "direction": {
+                "enum": [
+                  "asc",
+                  "desc"
+                ]
+              },
+              "nulls": {
+                "enum": [
+                  "first",
+                  "last"
+                ]
+              }
+            }
+          }
+        },
+        "limit": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "namespace": {
+          "const": "semantic_compiler"
+        }
+      }
+    }
+  }
+}

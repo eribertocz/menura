@@ -1,0 +1,75 @@
+{
+  "contract": "semantic_compiler.audit_record",
+  "contract_version": "1.0.0",
+  "subject": "user-7f3a",
+  "inputs": {
+    "model": "1111111111111111111111111111111111111111111111111111111111111111",
+    "catalog_schema": "2222222222222222222222222222222222222222222222222222222222222222",
+    "catalog_state": "2222222222222222222222222222222222222222222222222222222222222223",
+    "query": "3333333333333333333333333333333333333333333333333333333333333333",
+    "security_fingerprint": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+  },
+  "producer": {
+    "compiler_version": "1.0.0",
+    "ossie_normative": "0.1.1",
+    "ossie_tracked_commit": "aa500d3",
+    "tzdata_version": "2026a"
+  },
+  "outcome": {
+    "plan_hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+  },
+  "authorization": [
+    {
+      "object": "dataset:invoices",
+      "decision": "granted",
+      "rule": "access.roles: analyst"
+    },
+    {
+      "object": "dataset:customers",
+      "decision": "granted",
+      "rule": "access.roles: analyst"
+    }
+  ],
+  "row_policies": [
+    "region_scope"
+  ],
+  "decisions": [
+    {
+      "step": "E1",
+      "decision": "relative range: last 12 months including the current one",
+      "reason": "reference_time 2026-11-15 in America/La_Paz gives 2025-12-01 to 2026-11-30"
+    },
+    {
+      "step": "E3",
+      "decision": "invoices -> customers via invoices_customer",
+      "reason": "only path"
+    },
+    {
+      "step": "E4",
+      "decision": "row policy region_scope applied to customers and propagated to invoices",
+      "reason": "user role analyst"
+    },
+    {
+      "step": "E4",
+      "decision": "deduplication by (group, row identity)",
+      "reason": "no key_uniqueness evidence for invoices_customer"
+    },
+    {
+      "step": "E5",
+      "decision": "summary invoices_by_month not used",
+      "reason": "the range 2025-12 to 2026-11 is outside its coverage 2026-09 to 2026-10"
+    }
+  ],
+  "load_options": {
+    "grant_authenticated_to_all": false,
+    "ossie_format": "release",
+    "namespace": "semantic_compiler"
+  },
+  "contract_versions": {
+    "model": "0.1.1",
+    "catalog_schema": "1.0.0",
+    "catalog_state": "1.0.0",
+    "query": "1.0.0",
+    "security_context": "1.0.0"
+  }
+}
