@@ -18,6 +18,8 @@ const PACKAGE_PREFIX: &str = "semantic-compiler-";
 const LAYERS: &[&[&str]] = &[
     &["contracts"],
     &["model"],
+    &["expressions"],
+    &["representations"],
     &["security"],
     &[
         "e0-load",
@@ -38,7 +40,10 @@ const TOOLS: &[&str] = &["conformance-runner"];
 /// The exact set of dependency edges between workspace crates, as `(dependent, dependency)`.
 const EXPECTED_EDGES: &[(&str, &str)] = &[
     ("model", "contracts"),
+    ("expressions", "model"),
+    ("representations", "model"),
     ("security", "model"),
+    ("security", "representations"),
     ("e0-load", "security"),
     ("e1-parse", "security"),
     ("e2-bind", "security"),
@@ -71,6 +76,15 @@ fn crate_names() -> Vec<&'static str> {
 
 fn layer_of(crate_name: &str) -> Option<usize> {
     LAYERS.iter().position(|layer| layer.contains(&crate_name))
+}
+
+/// Returns whether `dependent` may depend on `dependency`: both are in a layer and the
+/// dependency's layer is strictly lower.
+fn is_allowed_edge(dependent: &str, dependency: &str) -> bool {
+    match (layer_of(dependent), layer_of(dependency)) {
+        (Some(dependent_layer), Some(dependency_layer)) => dependency_layer < dependent_layer,
+        _ => false,
+    }
 }
 
 /// Returns the workspace crates named as dependencies (of any kind) in a manifest.
@@ -137,10 +151,8 @@ fn s6_dependencies_point_to_lower_layers_only() {
         if TOOLS.contains(&dependent.as_str()) {
             continue;
         }
-        let dependent_layer = layer_of(&dependent).expect("dependent is in a layer");
-        let dependency_layer = layer_of(&dependency).expect("dependency is in a layer");
         assert!(
-            dependency_layer < dependent_layer,
+            is_allowed_edge(&dependent, &dependency),
             "`{dependent}` depends on `{dependency}`, which is not in a lower layer"
         );
     }
@@ -153,4 +165,38 @@ fn s6_dependency_edges_match_the_specification() {
         .map(|(dependent, dependency)| ((*dependent).to_owned(), (*dependency).to_owned()))
         .collect();
     assert_eq!(actual_edges().unwrap(), expected);
+}
+
+/// The shared crates of §5.2, in their required order from the bottom up.
+const SHARED_CRATES: &[&str] = &["model", "expressions", "representations", "security"];
+
+#[test]
+fn s6_shared_crates_are_layered_in_order() {
+    let order: Vec<&str> = crate_names()
+        .into_iter()
+        .filter(|name| SHARED_CRATES.contains(name))
+        .collect();
+    assert_eq!(order, SHARED_CRATES);
+}
+
+#[test]
+fn s10_expressions_may_not_depend_on_a_stage() {
+    assert!(!is_allowed_edge("expressions", "e0-load"));
+}
+
+#[test]
+fn s9_representations_may_not_depend_on_security() {
+    assert!(!is_allowed_edge("representations", "security"));
+}
+
+#[test]
+fn s9_representations_may_not_depend_on_a_stage() {
+    assert!(!is_allowed_edge("representations", "e0-load"));
+}
+
+#[test]
+fn s9_s10_specified_shared_crate_edges_are_allowed() {
+    assert!(is_allowed_edge("expressions", "model"));
+    assert!(is_allowed_edge("representations", "model"));
+    assert!(is_allowed_edge("security", "representations"));
 }

@@ -1074,6 +1074,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "semantic-compiler-expressions"
+version = "0.1.0"
+dependencies = [
+ "semantic-compiler-model",
+]
+
+[[package]]
 name = "semantic-compiler-generator-duckdb"
 version = "0.1.0"
 dependencies = [
@@ -1088,10 +1095,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "semantic-compiler-representations"
+version = "0.1.0"
+dependencies = [
+ "semantic-compiler-model",
+]
+
+[[package]]
 name = "semantic-compiler-security"
 version = "0.1.0"
 dependencies = [
  "semantic-compiler-model",
+ "semantic-compiler-representations",
 ]
 
 [[package]]

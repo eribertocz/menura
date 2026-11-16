@@ -3,6 +3,8 @@ resolver = "3"
 members = [
     "crates/contracts",
     "crates/model",
+    "crates/expressions",
+    "crates/representations",
     "crates/security",
     "crates/e0-load",
     "crates/e1-parse",
@@ -25,6 +27,8 @@ publish = false
 [workspace.dependencies]
 semantic-compiler-contracts = { path = "crates/contracts" }
 semantic-compiler-model = { path = "crates/model" }
+semantic-compiler-expressions = { path = "crates/expressions" }
+semantic-compiler-representations = { path = "crates/representations" }
 semantic-compiler-security = { path = "crates/security" }
 semantic-compiler-e0-load = { path = "crates/e0-load" }
 semantic-compiler-e1-parse = { path = "crates/e1-parse" }

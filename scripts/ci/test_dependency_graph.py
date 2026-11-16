@@ -12,7 +12,10 @@ PREFIX = check_dependency_graph.PACKAGE_PREFIX
 # The edges of the workspace as specified by spec/05-engineering-standards.md section 5.2.
 VALID_EDGES = [
     ("model", "contracts"),
+    ("expressions", "model"),
+    ("representations", "model"),
     ("security", "model"),
+    ("security", "representations"),
     ("e0-load", "security"),
     ("e1-parse", "security"),
     ("e2-bind", "security"),
@@ -98,6 +101,23 @@ class DependencyGraphTest(unittest.TestCase):
     def test_s7_stage_depending_on_another_stage_fails(self):
         found = violations(metadata(VALID_EDGES + [("e1-parse", "e0-load")]))
         self.assertTrue(any("`e1-parse` depends on `e0-load`" in line for line in found), found)
+
+    def test_s6_layers_order_the_shared_crates(self):
+        order = check_dependency_graph.crate_names()
+        shared = ["model", "expressions", "representations", "security"]
+        self.assertEqual([name for name in order if name in shared], shared)
+
+    def test_s10_expressions_depending_on_a_stage_fails(self):
+        found = violations(metadata(VALID_EDGES + [("expressions", "e0-load")]))
+        self.assertTrue(any("`expressions` depends on `e0-load`" in line for line in found), found)
+
+    def test_s9_representations_depending_on_security_fails(self):
+        found = violations(metadata(VALID_EDGES + [("representations", "security")]))
+        self.assertTrue(any("`representations` depends on `security`" in line for line in found), found)
+
+    def test_s9_representations_depending_on_a_stage_fails(self):
+        found = violations(metadata(VALID_EDGES + [("representations", "e0-load")]))
+        self.assertTrue(any("`representations` depends on `e0-load`" in line for line in found), found)
 
     def test_s6_tool_outside_the_layers_passes(self):
         members = check_dependency_graph.crate_names() + list(check_dependency_graph.TOOLS)
