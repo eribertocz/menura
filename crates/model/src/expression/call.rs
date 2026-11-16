@@ -1,19 +1,157 @@
-//! Function and aggregate calls of the accepted subset (E0F-2.2).
+//! Function and aggregate calls of the accepted subset (E0F-2.2, E0F-10).
 
 use super::tree::Expression;
 
-/// A scalar function of the accepted subset.
+/// A scalar function of E0F-10 called with a plain argument list.
 ///
-/// The list is provisional until issue #51 settles the `OSSIE_SQL_2026` REQUIRED functions: it
-/// holds only the functions the specification names.
+/// Name synonyms share one variant (`CEIL` and `CEILING`, `TRUNC` and `TRUNCATE`, `IF` and
+/// `IFF`, `IFNULL` and `NVL`), and `CHARINDEX(a, s)` is stored as `POSITION(a IN s)`. The
+/// functions with a date part (`EXTRACT`, `DATE_PART`, `DATE_TRUNC`, `DATEADD`, `DATEDIFF`) have
+/// their own nodes, and `CURRENT_*` are nodes without arguments.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum ScalarFunction {
-    /// `COALESCE(a, b, …)`, two or more arguments.
-    Coalesce,
+    /// `YEAR(x)`.
+    Year,
+    /// `QUARTER(x)`.
+    Quarter,
+    /// `MONTH(x)`.
+    Month,
+    /// `DAY(x)`.
+    Day,
+    /// `DAYOFYEAR(x)`.
+    DayOfYear,
+    /// `HOUR(x)`.
+    Hour,
+    /// `MINUTE(x)`.
+    Minute,
+    /// `SECOND(x)`.
+    Second,
+    /// `TO_DATE(s)`.
+    ToDate,
+    /// `TO_TIMESTAMP(s)`.
+    ToTimestamp,
+    /// `CONCAT(a, …)`.
+    Concat,
+    /// `LENGTH(s)`.
+    Length,
+    /// `LOWER(s)`.
+    Lower,
+    /// `UPPER(s)`.
+    Upper,
+    /// `TRIM(s)`.
+    Trim,
+    /// `LTRIM(s)`.
+    LeftTrim,
+    /// `RTRIM(s)`.
+    RightTrim,
+    /// `LEFT(s, n)`.
+    Left,
+    /// `RIGHT(s, n)`.
+    Right,
+    /// `SUBSTRING(s, start[, length])`.
+    Substring,
+    /// `REPLACE(s, from, to)`.
+    Replace,
+    /// `SPLIT_PART(s, delimiter, n)`.
+    SplitPart,
+    /// `POSITION(a IN s)` or `CHARINDEX(a, s)`; the arguments are `[a, s]`.
+    Position,
+    /// `CONTAINS(s, a)`.
+    Contains,
+    /// `STARTSWITH(s, a)`.
+    StartsWith,
+    /// `ENDSWITH(s, a)`.
+    EndsWith,
+    /// `ABS(x)`.
+    Absolute,
+    /// `SIGN(x)`.
+    Sign,
+    /// `FLOOR(x)`.
+    Floor,
+    /// `CEIL(x)` or `CEILING(x)`.
+    Ceiling,
+    /// `ROUND(x[, n])`, rounding half away from zero (E0F-2.5).
+    Round,
+    /// `TRUNC(x[, n])` or `TRUNCATE(x[, n])`.
+    Truncate,
+    /// `MOD(x, y)`.
+    Modulo,
+    /// `POWER(x, y)`.
+    Power,
+    /// `SQRT(x)`.
+    SquareRoot,
+    /// `EXP(x)`.
+    Exponential,
+    /// `LN(x)`.
+    NaturalLogarithm,
+    /// `LOG(base, x)`.
+    Logarithm,
+    /// `LOG10(x)`.
+    DecimalLogarithm,
+    /// `GREATEST(a, b, …)`.
+    Greatest,
+    /// `LEAST(a, b, …)`.
+    Least,
+    /// `IF(c, a, b)` or `IFF(c, a, b)`.
+    If,
     /// `NULLIF(a, b)`.
     Nullif,
-    /// `ROUND(x, n)`, rounding half away from zero (E0F-2.5).
-    Round,
+    /// `COALESCE(a, b, …)`.
+    Coalesce,
+    /// `IFNULL(a, b)` or `NVL(a, b)`.
+    IfNull,
+    /// `NVL2(a, b, c)`.
+    Nvl2,
+    /// `ZEROIFNULL(x)`.
+    ZeroIfNull,
+    /// `NULLIFZERO(x)`.
+    NullIfZero,
+}
+
+/// The part of `EXTRACT(part FROM x)` and `DATE_PART('part', x)` (E0F-10.1).
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum ExtractPart {
+    /// `YEAR`.
+    Year,
+    /// `QUARTER`.
+    Quarter,
+    /// `MONTH`.
+    Month,
+    /// `WEEK`: the ISO 8601 week, 1 to 53.
+    Week,
+    /// `DAY`.
+    Day,
+    /// `DAYOFWEEK`: ISO, Monday 1 to Sunday 7.
+    DayOfWeek,
+    /// `DAYOFYEAR`.
+    DayOfYear,
+    /// `HOUR`.
+    Hour,
+    /// `MINUTE`.
+    Minute,
+    /// `SECOND`, without fraction.
+    Second,
+}
+
+/// The unit of `DATE_TRUNC`, `DATEADD` and `DATEDIFF` (E0F-10.1).
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum DateUnit {
+    /// `year`.
+    Year,
+    /// `quarter`.
+    Quarter,
+    /// `month`.
+    Month,
+    /// `week`, starting on Monday.
+    Week,
+    /// `day`.
+    Day,
+    /// `hour`.
+    Hour,
+    /// `minute`.
+    Minute,
+    /// `second`.
+    Second,
 }
 
 /// An aggregate call.
@@ -44,7 +182,8 @@ pub enum AggregateCall {
         fraction: Box<Expression>,
         /// The ordered value.
         ordering: Box<Expression>,
-        /// The order; no direction means ascending.
+        /// The order; no direction means ascending. `NULLS FIRST` and `NULLS LAST` have no
+        /// effect (E0F-10.5) and are not kept.
         direction: SortDirection,
     },
 }

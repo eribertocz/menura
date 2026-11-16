@@ -1,4 +1,4 @@
-//! Operators of the accepted subset (E0F-2.2).
+//! Operators of the accepted subset (E0F-2.2, E0F-9.2).
 
 /// A prefix operator.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -28,7 +28,7 @@ pub enum BinaryOperator {
     Concatenate,
     /// `=`.
     Equal,
-    /// `<>`.
+    /// `<>`, also written `!=`.
     NotEqual,
     /// `<`.
     Less,

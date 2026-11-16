@@ -1,6 +1,6 @@
-//! Literal values of the accepted subset (E0F-2.2).
+//! Literal values of the accepted subset (E0F-2.2, E0F-9.3).
 
-/// A constant written in an expression.
+/// A constant written in an expression, of one of the literal kinds of E0F-9.3.
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum Literal {
     /// `NULL`.
@@ -9,74 +9,160 @@ pub enum Literal {
     Boolean(bool),
     /// A text literal, with `''` already undoubled.
     Text(String),
-    /// An exact number such as `12` or `0.50`.
-    Exact(ExactNumber),
-    /// An approximate number such as `1.5E3`.
-    Approximate(ApproximateNumber),
+    /// A number with digits only, such as `12`.
+    Integer(IntegerLiteral),
+    /// A number with `.` and no exponent, such as `0.50`.
+    Decimal(DecimalLiteral),
+    /// A number with an exponent, such as `1.5E3`: a 64-bit float.
+    Float(FloatLiteral),
     /// `DATE 'YYYY-MM-DD'`.
     Date(DateValue),
-    /// `TIMESTAMP 'YYYY-MM-DD HH:MM:SS[.fraction]'`.
+    /// `TIME 'HH:MM:SS[.fraction]'`.
+    Time(TimeOfDay),
+    /// `TIMESTAMP '…'` or `TIMESTAMP_NTZ '…'`: both are a timestamp without time zone.
     Timestamp(TimestampValue),
 }
 
-/// An unsigned exact number: integer digits and fraction digits.
+/// The most digits an exact literal may have (E0F-9.3).
+pub const MAXIMUM_EXACT_DIGITS: usize = 38;
+
+fn all_digits(text: &str) -> bool {
+    text.bytes().all(|byte| byte.is_ascii_digit())
+}
+
+/// An integer literal: its digits exactly as written, at most 38 (E0F-9.3).
 ///
-/// Leading zeros of the integer part are not kept (`007` equals `7`, `.5` equals `0.5`), but
-/// every fraction digit is, because the number of fraction digits is the literal's scale
-/// (`0.50` differs from `0.5`).
+/// The digits are kept as written, leading zeros included, because the literal's type depends
+/// on how many there are: up to 18 a 64-bit integer, 19 to 38 `decimal(n,0)`.
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-pub struct ExactNumber {
+pub struct IntegerLiteral {
+    digits: String,
+}
+
+impl IntegerLiteral {
+    /// The most digits of a literal typed as a 64-bit integer (E0F-9.3).
+    pub const MAXIMUM_BIG_INTEGER_DIGITS: usize = 18;
+
+    /// Builds an integer literal. Returns `None` when `digits` is empty, holds anything but
+    /// ASCII digits, or has more than 38 digits.
+    ///
+    /// ```
+    /// use semantic_compiler_model::expression::IntegerLiteral;
+    /// assert!(IntegerLiteral::new("007").is_some());
+    /// assert!(IntegerLiteral::new(&"9".repeat(39)).is_none());
+    /// ```
+    #[must_use]
+    pub fn new(digits: &str) -> Option<Self> {
+        let valid =
+            !digits.is_empty() && digits.len() <= MAXIMUM_EXACT_DIGITS && all_digits(digits);
+        valid.then(|| Self {
+            digits: digits.to_owned(),
+        })
+    }
+
+    /// The digits as written.
+    #[must_use]
+    pub fn digits(&self) -> &str {
+        &self.digits
+    }
+}
+
+/// A decimal literal: the digits before and after the point exactly as written, at most 38
+/// in all (E0F-9.3). Its type is `decimal(p,s)` with `p` all the digits and `s` the fraction
+/// digits: `.5` is `decimal(1,1)`, `10.` is `decimal(2,0)`.
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub struct DecimalLiteral {
     integer_digits: String,
     fraction_digits: String,
 }
 
-impl ExactNumber {
-    /// Builds a number from its digits before and after the decimal point.
-    ///
-    /// Returns `None` when a part holds anything but ASCII digits or when both are empty.
+impl DecimalLiteral {
+    /// Builds a decimal literal. Returns `None` when a part holds anything but ASCII digits,
+    /// when both parts are empty, or when they have more than 38 digits together.
     ///
     /// ```
-    /// use semantic_compiler_model::expression::ExactNumber;
-    /// let number = ExactNumber::new("007", "50").unwrap();
-    /// assert_eq!((number.integer_digits(), number.fraction_digits()), ("7", "50"));
+    /// use semantic_compiler_model::expression::DecimalLiteral;
+    /// let number = DecimalLiteral::new("", "5").unwrap();
+    /// assert_eq!((number.precision(), number.scale()), (1, 1));
     /// ```
     #[must_use]
     pub fn new(integer_digits: &str, fraction_digits: &str) -> Option<Self> {
-        let all_digits = |part: &str| part.bytes().all(|byte| byte.is_ascii_digit());
-        if !all_digits(integer_digits)
-            || !all_digits(fraction_digits)
-            || (integer_digits.is_empty() && fraction_digits.is_empty())
-        {
-            return None;
-        }
-        let trimmed = integer_digits.trim_start_matches('0');
-        let integer_digits = if trimmed.is_empty() { "0" } else { trimmed };
-        Some(Self {
+        let length = integer_digits.len() + fraction_digits.len();
+        let valid = length > 0
+            && length <= MAXIMUM_EXACT_DIGITS
+            && all_digits(integer_digits)
+            && all_digits(fraction_digits);
+        valid.then(|| Self {
             integer_digits: integer_digits.to_owned(),
             fraction_digits: fraction_digits.to_owned(),
         })
     }
 
-    /// The integer digits, without leading zeros; `"0"` when the integer part is zero.
+    /// The digits before the point, as written; may be empty (`.5`).
     #[must_use]
     pub fn integer_digits(&self) -> &str {
         &self.integer_digits
     }
 
-    /// The fraction digits as written; empty for an integer.
+    /// The digits after the point, as written; may be empty (`10.`).
     #[must_use]
     pub fn fraction_digits(&self) -> &str {
         &self.fraction_digits
     }
+
+    /// Every digit written, 1 to 38.
+    #[must_use]
+    pub fn precision(&self) -> usize {
+        self.integer_digits.len() + self.fraction_digits.len()
+    }
+
+    /// The digits after the point.
+    #[must_use]
+    pub fn scale(&self) -> usize {
+        self.fraction_digits.len()
+    }
 }
 
-/// An approximate number: `mantissa × 10^exponent`.
+/// A float literal: `mantissa × 10^exponent`, with the mantissa digits as written.
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-pub struct ApproximateNumber {
-    /// The digits before the exponent.
-    pub mantissa: ExactNumber,
+pub struct FloatLiteral {
+    integer_digits: String,
+    fraction_digits: String,
+    exponent: i32,
+}
+
+impl FloatLiteral {
+    /// Builds a float literal. Returns `None` when a mantissa part holds anything but ASCII
+    /// digits or when both are empty.
+    #[must_use]
+    pub fn new(integer_digits: &str, fraction_digits: &str, exponent: i32) -> Option<Self> {
+        let valid = !(integer_digits.is_empty() && fraction_digits.is_empty())
+            && all_digits(integer_digits)
+            && all_digits(fraction_digits);
+        valid.then(|| Self {
+            integer_digits: integer_digits.to_owned(),
+            fraction_digits: fraction_digits.to_owned(),
+            exponent,
+        })
+    }
+
+    /// The mantissa digits before the point, as written.
+    #[must_use]
+    pub fn integer_digits(&self) -> &str {
+        &self.integer_digits
+    }
+
+    /// The mantissa digits after the point, as written; empty when there is no point.
+    #[must_use]
+    pub fn fraction_digits(&self) -> &str {
+        &self.fraction_digits
+    }
+
     /// The power of ten.
-    pub exponent: i32,
+    #[must_use]
+    pub fn exponent(&self) -> i32 {
+        self.exponent
+    }
 }
 
 /// A calendar date of the proleptic Gregorian calendar, years 1 to 9999.
@@ -134,7 +220,7 @@ fn days_in_month(year: u16, month: u8) -> u8 {
     }
 }
 
-/// A time of day with up to nine fraction digits of a second.
+/// A time of day with up to six fraction digits of a second (E0F-9.3).
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct TimeOfDay {
     hour: u8,
@@ -144,14 +230,17 @@ pub struct TimeOfDay {
 }
 
 impl TimeOfDay {
+    /// The most fraction digits of a second (E0F-9.3).
+    pub const MAXIMUM_FRACTION_DIGITS: usize = 6;
+
     /// Builds a time of day. Returns `None` when a field is out of range, or when the fraction
-    /// has more than nine digits or anything but ASCII digits.
+    /// has more than six digits or anything but ASCII digits.
     #[must_use]
     pub fn new(hour: u8, minute: u8, second: u8, fraction_digits: &str) -> Option<Self> {
         let valid = hour < 24
             && minute < 60
             && second < 60
-            && fraction_digits.len() <= 9
+            && fraction_digits.len() <= Self::MAXIMUM_FRACTION_DIGITS
             && fraction_digits.bytes().all(|byte| byte.is_ascii_digit());
         valid.then(|| Self {
             hour,
@@ -179,7 +268,7 @@ impl TimeOfDay {
         self.second
     }
 
-    /// The fraction digits of the second as written, at most nine; empty when none.
+    /// The fraction digits of the second as written, at most six; empty when none.
     #[must_use]
     pub fn fraction_digits(&self) -> &str {
         &self.fraction_digits

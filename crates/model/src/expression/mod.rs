@@ -15,11 +15,14 @@ mod operator;
 mod tree;
 
 pub use call::{
-    AggregateCall, DistinctAggregate, PercentileFunction, ScalarFunction, SimpleAggregate,
-    SortDirection,
+    AggregateCall, DateUnit, DistinctAggregate, ExtractPart, PercentileFunction, ScalarFunction,
+    SimpleAggregate, SortDirection,
 };
 pub use cast::{CastTarget, DecimalTarget};
-pub use literal::{ApproximateNumber, DateValue, ExactNumber, Literal, TimeOfDay, TimestampValue};
+pub use literal::{
+    DateValue, DecimalLiteral, FloatLiteral, IntegerLiteral, Literal, MAXIMUM_EXACT_DIGITS,
+    TimeOfDay, TimestampValue,
+};
 pub use name::{Identifier, Reference};
 pub use operator::{BinaryOperator, LikeCase, UnaryOperator};
 pub use tree::{CaseBranch, Expression};

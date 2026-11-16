@@ -1,6 +1,6 @@
 //! The expression tree itself.
 
-use super::call::{AggregateCall, ScalarFunction};
+use super::call::{AggregateCall, DateUnit, ExtractPart, ScalarFunction};
 use super::cast::CastTarget;
 use super::literal::Literal;
 use super::name::Reference;
@@ -21,8 +21,10 @@ pub enum Expression {
     MetricAggregate(Reference),
     /// `USER_ATTRIBUTE('name')`: an attribute of the security context.
     UserAttribute(String),
-    /// `CURRENT_DATE`, resolved at compilation from the query's reference time (E0F-2.3).
+    /// `CURRENT_DATE` or `CURRENT_DATE()`, resolved at compilation from the query's reference time (E0F-2.3).
     CurrentDate,
+    /// `CURRENT_TIME`, resolved at compilation from the query's reference time (E0F-2.3).
+    CurrentTime,
     /// `CURRENT_TIMESTAMP`, resolved at compilation from the query's reference time (E0F-2.3).
     CurrentTimestamp,
     /// A prefix operator.
@@ -104,7 +106,39 @@ pub enum Expression {
         /// The target type.
         target: CastTarget,
     },
-    /// A scalar function call of the accepted subset.
+    /// `EXTRACT(part FROM operand)`, also written `DATE_PART('part', operand)`.
+    Extract {
+        /// The extracted part.
+        part: ExtractPart,
+        /// The date, time or timestamp.
+        operand: Box<Expression>,
+    },
+    /// `DATE_TRUNC('unit', operand)`.
+    DateTrunc {
+        /// The unit truncated to.
+        unit: DateUnit,
+        /// The date or timestamp.
+        operand: Box<Expression>,
+    },
+    /// `DATEADD(unit, amount, operand)`, with the unit as a bare word or a text literal.
+    DateAdd {
+        /// The unit added.
+        unit: DateUnit,
+        /// The number of units.
+        amount: Box<Expression>,
+        /// The date or timestamp.
+        operand: Box<Expression>,
+    },
+    /// `DATEDIFF(unit, start, end)`, with the unit as a bare word or a text literal.
+    DateDiff {
+        /// The unit counted.
+        unit: DateUnit,
+        /// The start.
+        start: Box<Expression>,
+        /// The end.
+        end: Box<Expression>,
+    },
+    /// A scalar function call of E0F-10 with a plain argument list.
     Function {
         /// The function.
         function: ScalarFunction,

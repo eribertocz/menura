@@ -1,31 +1,26 @@
-//! Target types of `CAST` (E0F-2.2).
-//!
-//! The list is provisional until issue #51 settles the `OSSIE_SQL_2026` target types.
+//! Target types of `CAST` (E0F-11).
 
-/// The target type of a `CAST`.
+/// The target type of a `CAST`. Synonyms share one variant: `VARCHAR` and `STRING`, `INTEGER`
+/// and `INT`, `DECIMAL` and `NUMERIC`, `FLOAT` and `DOUBLE`, `TIMESTAMP` and `TIMESTAMP_NTZ`.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum CastTarget {
+    /// `VARCHAR` or `STRING`: text.
+    Text,
+    /// `INTEGER` or `INT`: 32-bit signed integer.
+    Integer,
+    /// `BIGINT`: 64-bit signed integer.
+    BigInteger,
+    /// `DECIMAL(p, s)` or `NUMERIC(p, s)`.
+    Decimal(DecimalTarget),
+    /// `FLOAT` or `DOUBLE`: 64-bit float.
+    Double,
     /// `BOOLEAN`.
     Boolean,
-    /// `SMALLINT`.
-    SmallInteger,
-    /// `INTEGER`.
-    Integer,
-    /// `BIGINT`.
-    BigInteger,
-    /// `DECIMAL(p, s)`, also written `NUMERIC(p, s)`.
-    Decimal(DecimalTarget),
-    /// `REAL`.
-    Real,
-    /// `DOUBLE PRECISION`.
-    DoublePrecision,
-    /// `VARCHAR`.
-    Varchar,
     /// `DATE`.
     Date,
     /// `TIME`.
     Time,
-    /// `TIMESTAMP`.
+    /// `TIMESTAMP` or `TIMESTAMP_NTZ`: timestamp without time zone, precision `us`.
     Timestamp,
 }
 
