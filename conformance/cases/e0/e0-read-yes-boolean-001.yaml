@@ -1,0 +1,6 @@
+id: e0-read-yes-boolean-001
+rules: [E0A-2.2]
+model: e0-read-yes-boolean-001
+expect:
+  outcome: load_error
+  error: E0B-03

@@ -1,0 +1,6 @@
+id: e0-read-unconstructible-value-001
+rules: [E0A-2.5]
+model: e0-read-unconstructible-value-001
+expect:
+  outcome: load_error
+  error: E0A-05

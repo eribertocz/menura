@@ -1,0 +1,6 @@
+id: e0-read-duplicate-key-001
+rules: [E0A-2.3, DEV-1]
+model: e0-read-duplicate-key-001
+expect:
+  outcome: load_error
+  error: E0A-04
