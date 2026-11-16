@@ -52,7 +52,7 @@ expect:
 
 ## CS-4 Running
 
-- **CS-4.1** `just conformance` runs every case. `just conformance <area>` runs one area.
+- **CS-4.1** `just conformance` runs every case of `conformance/cases/` and checks the layout of `conformance/ossie/` (the stale-list rule of OSS-2.4). `just conformance <area>` runs one area. The outcomes of the Apache Ossie suites are judged only by `just conformance ossie`, the `ossie-suites` check (OSS-2.3).
 - **CS-4.2** Each case runs in a fresh in-memory DuckDB database. For each source with three parts (`catalog.schema.table`), the runner attaches an in-memory database named after the first part before running `data.sql`; two-part sources (`schema.table`) live in the default database, and `data.sql` creates their schema. This applies to the compiler's own cases and to the Apache Ossie suites (CS-4.4). The session uses non-default settings (`TimeZone` not UTC, `integer_division = true`) to prove E6-4.10. The runner's DuckDB build includes the `icu` extension, which provides time zones, so no setting or query ever downloads an extension at run time.
 - **CS-4.3** The runner reports, per rule ID, the cases that cover it and their result.
 - **CS-4.4** For Apache Ossie suites, the runner loads the fixture with `ossie_format: development` and `grant_authenticated_to_all: true`, builds the catalog schema by reading the created tables, wraps each `query.json` in a query envelope with `time_zone: UTC`, and compares the first error code or the rows. SQL-form cases refer to relations as `<model name>.<dataset name>` (QRY-5.1).
