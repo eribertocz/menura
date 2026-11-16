@@ -25,10 +25,11 @@ fn e0h_1_3_format_never_changes_the_tree() {
         &["CAST(a AS NUMERIC(10,2))", "cast(a as decimal ( 10 , 2 ))"],
         &[
             "PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY a)",
-            "percentile_cont(.5) within group (order by a asc)",
+            "percentile_cont(0.5) within group (order by a asc nulls last)",
         ],
         &["DATE '2026-01-05'", "date '2026-01-05'"],
-        &["007", "7"],
+        &["a <> b", "a != b"],
+        &["CURRENT_DATE", "current_date ( )"],
     ];
     for group in groups {
         let first = tree(group[0]);
@@ -44,6 +45,9 @@ fn e0h_1_3_meaningful_differences_change_the_tree() {
         ("a - b - c", "a - (b - c)"),
         ("(a + b) * c", "a + b * c"),
         ("0.5", "0.50"),
+        (".5", "0.5"),
+        ("7", "007"),
+        ("10", "10."),
         ("'Open'", "'OPEN'"),
         ("amount", "\"amount\""),
         ("SUM(a)", "SUM(DISTINCT a)"),

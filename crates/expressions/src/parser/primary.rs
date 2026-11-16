@@ -1,9 +1,9 @@
-//! Primary expressions: literals, parenthesized expressions, references, `CASE`, `CAST`,
-//! `CURRENT_DATE` and `CURRENT_TIMESTAMP`.
+//! Primary expressions: literals, parenthesized expressions, references, `CASE`, `CAST`
+//! and `CURRENT_*`.
 
 use semantic_compiler_model::expression::{CaseBranch, Expression, Literal, Reference};
 
-use super::literals::{date_value, timestamp_value};
+use super::literals::{date_value, time_value, timestamp_value};
 use super::{Parsed, Parser};
 use crate::error::{ExpressionError, ExpressionErrorKind};
 use crate::lexer::{Symbol, TokenKind};
@@ -35,7 +35,9 @@ impl Parser<'_> {
 
     /// A primary expression that starts with a word.
     fn word(&mut self, word: &str) -> Parsed<Expression> {
-        if is_keyword(word, "SELECT") || is_keyword(word, "EXISTS") {
+        let subquery = is_keyword(word, "SELECT")
+            || (is_keyword(word, "EXISTS") && self.symbol_at(1, Symbol::LeftParenthesis));
+        if subquery {
             return Err(self.error_here(ExpressionErrorKind::Subquery));
         }
         if is_keyword(word, "CAST") {
@@ -44,26 +46,21 @@ impl Parser<'_> {
         if is_keyword(word, "CASE") {
             return self.case();
         }
-        let current = is_keyword(word, "CURRENT_DATE") || is_keyword(word, "CURRENT_TIMESTAMP");
-        if self.symbol_at(1, Symbol::LeftParenthesis) && (current || !is_reserved(word)) {
+        if let Some(current) = current_moment(word) {
+            self.position += 1;
+            if self.symbol_at(0, Symbol::LeftParenthesis)
+                && self.symbol_at(1, Symbol::RightParenthesis)
+            {
+                self.position += 2;
+            }
+            return Ok(current);
+        }
+        if self.symbol_at(1, Symbol::LeftParenthesis) && !is_reserved(word) {
             return self.call(word);
         }
         if let Some(literal) = keyword_literal(word) {
             self.position += 1;
             return Ok(Expression::Literal(literal));
-        }
-        if current {
-            self.position += 1;
-            return Ok(if is_keyword(word, "CURRENT_DATE") {
-                Expression::CurrentDate
-            } else {
-                Expression::CurrentTimestamp
-            });
-        }
-        if is_keyword(word, "INTERVAL") {
-            return Err(self.error_here(ExpressionErrorKind::UnsupportedConstruct(
-                "INTERVAL literals",
-            )));
         }
         if let Some(TokenKind::Text(text)) = self.peek_kind_at(1).cloned()
             && let Some(literal) = self.typed_literal(word, &text)?
@@ -76,13 +73,18 @@ impl Parser<'_> {
         self.reference().map(Expression::Reference)
     }
 
-    /// `DATE 'text'` or `TIMESTAMP 'text'`; `None` when `word` is neither.
+    /// `DATE 'text'`, `TIME 'text'`, `TIMESTAMP 'text'` or `TIMESTAMP_NTZ 'text'`; `None` when
+    /// `word` is none of these.
     fn typed_literal(&mut self, word: &str, text: &str) -> Parsed<Option<Literal>> {
         let literal = if is_keyword(word, "DATE") {
             date_value(text)
                 .map(Literal::Date)
                 .ok_or_else(|| ExpressionErrorKind::InvalidDate(text.to_owned()))
-        } else if is_keyword(word, "TIMESTAMP") {
+        } else if is_keyword(word, "TIME") {
+            time_value(text)
+                .map(Literal::Time)
+                .ok_or_else(|| ExpressionErrorKind::InvalidTime(text.to_owned()))
+        } else if is_keyword(word, "TIMESTAMP") || is_keyword(word, "TIMESTAMP_NTZ") {
             timestamp_value(text)
                 .map(Literal::Timestamp)
                 .ok_or_else(|| ExpressionErrorKind::InvalidTimestamp(text.to_owned()))
@@ -171,6 +173,19 @@ impl Parser<'_> {
             operand: Box::new(operand),
             target,
         })
+    }
+}
+
+/// `CURRENT_DATE`, `CURRENT_TIME` or `CURRENT_TIMESTAMP` (E0F-10.1), if `word` is one.
+fn current_moment(word: &str) -> Option<Expression> {
+    if is_keyword(word, "CURRENT_DATE") {
+        Some(Expression::CurrentDate)
+    } else if is_keyword(word, "CURRENT_TIME") {
+        Some(Expression::CurrentTime)
+    } else if is_keyword(word, "CURRENT_TIMESTAMP") {
+        Some(Expression::CurrentTimestamp)
+    } else {
+        None
     }
 }
 

@@ -1,13 +1,14 @@
-//! Operators by precedence, loosest first: `OR`, `AND`, `NOT`, predicates (comparisons, `IS`,
-//! `IN`, `BETWEEN`, `LIKE`), `||`, `+ -`, `* / %`, prefix `+ -`.
+//! Operators by precedence (E0F-9.2), loosest first: `OR`, `AND`, `NOT`, predicates
+//! (comparisons, `IS`, `IN`, `BETWEEN`, `LIKE`, `ILIKE`), `+ - ||` (one level), `* / %`,
+//! prefix `+ -`.
 //!
-//! Comparisons and other predicates do not chain: `a = b = c` cannot be parsed. Binary
-//! operators of one level associate to the left.
+//! Predicates do not chain: `a = b = c` cannot be parsed. Binary operators of one level
+//! associate to the left. Forms the grammar lacks (`LIKE … ESCAPE`, `BETWEEN SYMMETRIC`,
+//! `IS TRUE`, quantified comparisons) cannot be parsed either (`E0F-01`, E0F-9.1).
 
 use semantic_compiler_model::expression::{BinaryOperator, Expression, LikeCase, UnaryOperator};
 
 use super::{Parsed, Parser};
-use crate::error::ExpressionErrorKind;
 use crate::lexer::{Symbol, TokenKind};
 
 fn binary(operator: BinaryOperator, left: Expression, right: Expression) -> Expression {
@@ -47,11 +48,11 @@ impl Parser<'_> {
     }
 
     fn predicate(&mut self) -> Parsed<Expression> {
-        let left = self.concatenation()?;
+        let left = self.additive()?;
         if let Some(operator) = self.comparison_operator() {
             self.position += 1;
             self.reject_quantifier()?;
-            return Ok(binary(operator, left, self.concatenation()?));
+            return Ok(binary(operator, left, self.additive()?));
         }
         if self.eat_keyword("IS") {
             return self.is_test(left);
@@ -94,15 +95,14 @@ impl Parser<'_> {
         })
     }
 
-    /// `= ANY (…)`, `= SOME (…)` and `= ALL (…)` are quantified comparisons over subqueries.
+    /// `= ANY (…)`, `= SOME (…)` and `= ALL (…)` are not in the grammar (E0F-9.1).
     fn reject_quantifier(&self) -> Parsed<()> {
-        if ["ANY", "SOME", "ALL"]
+        let quantified = ["ANY", "SOME", "ALL"]
             .iter()
             .any(|keyword| self.keyword_at(0, keyword))
-        {
-            return Err(self.error_here(ExpressionErrorKind::UnsupportedConstruct(
-                "a quantified comparison (ANY, SOME, ALL)",
-            )));
+            && self.symbol_at(1, Symbol::LeftParenthesis);
+        if quantified {
+            return Err(self.unexpected("an operand"));
         }
         Ok(())
     }
@@ -120,17 +120,9 @@ impl Parser<'_> {
             self.expect_keyword("FROM")?;
             return Ok(Expression::IsDistinctFrom {
                 left: Box::new(left),
-                right: Box::new(self.concatenation()?),
+                right: Box::new(self.additive()?),
                 negated,
             });
-        }
-        if ["TRUE", "FALSE", "UNKNOWN"]
-            .iter()
-            .any(|keyword| self.keyword_at(0, keyword))
-        {
-            return Err(self.error_here(ExpressionErrorKind::UnsupportedConstruct(
-                "IS TRUE, IS FALSE and IS UNKNOWN",
-            )));
         }
         Err(self.unexpected("NULL or DISTINCT FROM"))
     }
@@ -156,14 +148,9 @@ impl Parser<'_> {
     }
 
     fn between(&mut self, operand: Expression, negated: bool) -> Parsed<Expression> {
-        if self.keyword_at(0, "SYMMETRIC") || self.keyword_at(0, "ASYMMETRIC") {
-            return Err(self.error_here(ExpressionErrorKind::UnsupportedConstruct(
-                "BETWEEN SYMMETRIC and BETWEEN ASYMMETRIC",
-            )));
-        }
-        let low = self.concatenation()?;
+        let low = self.additive()?;
         self.expect_keyword("AND")?;
-        let high = self.concatenation()?;
+        let high = self.additive()?;
         Ok(Expression::Between {
             operand: Box::new(operand),
             low: Box::new(low),
@@ -173,10 +160,7 @@ impl Parser<'_> {
     }
 
     fn like(&mut self, operand: Expression, case: LikeCase, negated: bool) -> Parsed<Expression> {
-        let pattern = self.concatenation()?;
-        if self.keyword_at(0, "ESCAPE") {
-            return Err(self.error_here(ExpressionErrorKind::UnsupportedConstruct("LIKE … ESCAPE")));
-        }
+        let pattern = self.additive()?;
         Ok(Expression::Like {
             operand: Box::new(operand),
             pattern: Box::new(pattern),
@@ -185,21 +169,15 @@ impl Parser<'_> {
         })
     }
 
-    fn concatenation(&mut self) -> Parsed<Expression> {
-        let mut left = self.additive()?;
-        while self.eat_symbol(Symbol::Concatenate) {
-            left = binary(BinaryOperator::Concatenate, left, self.additive()?);
-        }
-        Ok(left)
-    }
-
-    fn additive(&mut self) -> Parsed<Expression> {
+    pub(super) fn additive(&mut self) -> Parsed<Expression> {
         let mut left = self.multiplicative()?;
         loop {
             let operator = if self.eat_symbol(Symbol::Plus) {
                 BinaryOperator::Add
             } else if self.eat_symbol(Symbol::Minus) {
                 BinaryOperator::Subtract
+            } else if self.eat_symbol(Symbol::Concatenate) {
+                BinaryOperator::Concatenate
             } else {
                 return Ok(left);
             };

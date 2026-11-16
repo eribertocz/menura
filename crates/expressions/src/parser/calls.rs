@@ -1,63 +1,116 @@
-//! Function calls: scalar functions, aggregates with `FILTER`, `AGG(metric)`,
+//! Function calls: dispatch by name, the plain scalar functions of E0F-10, `AGG(metric)`,
 //! `USER_ATTRIBUTE('name')`, and the detection of calls outside the subset and of window
-//! functions (E0F-2.3, E0F-2.4).
+//! functions (E0F-2.4, E0F-2.6, E0F-9.4).
 
-use semantic_compiler_model::expression::{
-    AggregateCall, DistinctAggregate, Expression, PercentileFunction, SimpleAggregate,
-    SortDirection,
-};
+use semantic_compiler_model::expression::Expression;
 
 use super::{Parsed, Parser};
 use crate::error::{ExpressionError, ExpressionErrorKind, Span};
 use crate::lexer::{Symbol, TokenKind};
-use crate::vocabulary::{
-    accepts_argument_count, is_keyword, scalar_function, scalar_function_name, simple_aggregate,
-    simple_aggregate_name,
-};
+use crate::vocabulary::{Arity, is_keyword, scalar_function, scalar_function_name};
+
+/// The arguments of a call as the grammar reads them, before E0F-9.4 checks the form.
+pub(super) struct CallArguments {
+    /// `(*)`.
+    pub(super) star: bool,
+    /// Where `DISTINCT` was written, if it was.
+    pub(super) distinct: Option<Span>,
+    /// The arguments, in order.
+    pub(super) arguments: Vec<Expression>,
+}
 
 impl Parser<'_> {
     /// A call `word(…)`; the next token is `word` and the one after it is `(`.
     pub(super) fn call(&mut self, word: &str) -> Parsed<Expression> {
         let start = self.next_span();
-        if is_keyword(word, "AGG") {
-            return self.metric_aggregate();
-        }
-        if is_keyword(word, "USER_ATTRIBUTE") {
-            return self.user_attribute();
-        }
-        if let Some(function) = scalar_function(word) {
+        let expression = if is_keyword(word, "AGG") {
+            self.metric_aggregate()?
+        } else if is_keyword(word, "USER_ATTRIBUTE") {
+            self.user_attribute()?
+        } else if let Some(expression) = self.date_call(word, start)? {
+            expression
+        } else if let Some((function, arity)) = scalar_function(word) {
             self.position += 2;
-            let arguments = self.expression_list()?;
-            self.expect_symbol(Symbol::RightParenthesis)?;
-            if !accepts_argument_count(function, arguments.len()) {
-                return Err(ExpressionError::new(
-                    ExpressionErrorKind::WrongArgumentCount {
-                        function: scalar_function_name(function),
-                        found: arguments.len(),
-                    },
-                    start.to(self.previous_span()),
-                ));
-            }
-            return Ok(Expression::Function {
+            let arguments = self.plain_arguments()?;
+            check_arity(
+                scalar_function_name(function),
+                arity,
+                arguments.len(),
+                start.to(self.previous_span()),
+            )?;
+            Expression::Function {
                 function,
                 arguments,
-            });
-        }
-        let call = if let Some(function) = percentile_function(word) {
-            self.percentile(function)?
-        } else if let Some(function) = simple_aggregate(word) {
-            self.aggregate(function, start)?
+            }
+        } else if let Some(aggregate) = self.aggregate_call(word, start)? {
+            return Ok(aggregate);
         } else {
             return Err(self.unsupported_call(start));
         };
-        let filter = self.filter()?;
+        self.reject_aggregate_clauses(start)?;
+        Ok(expression)
+    }
+
+    /// The arguments after `(`, through the closing `)`: `*`, or an optional `DISTINCT` and
+    /// zero or more expressions.
+    pub(super) fn call_arguments(&mut self) -> Parsed<CallArguments> {
+        let mut arguments = CallArguments {
+            star: false,
+            distinct: None,
+            arguments: Vec::new(),
+        };
+        if self.symbol_at(0, Symbol::Star) && self.symbol_at(1, Symbol::RightParenthesis) {
+            self.position += 2;
+            arguments.star = true;
+            return Ok(arguments);
+        }
+        if self.keyword_at(0, "DISTINCT") {
+            arguments.distinct = Some(self.next_span());
+            self.position += 1;
+        }
+        if !(arguments.distinct.is_none() && self.symbol_at(0, Symbol::RightParenthesis)) {
+            arguments.arguments = self.expression_list()?;
+        }
+        self.expect_symbol(Symbol::RightParenthesis)?;
+        Ok(arguments)
+    }
+
+    /// The arguments of a function that takes neither `*` nor `DISTINCT` (E0F-9.4).
+    pub(super) fn plain_arguments(&mut self) -> Parsed<Vec<Expression>> {
+        let start = self.next_span();
+        let arguments = self.call_arguments()?;
+        if arguments.star {
+            return Err(ExpressionError::new(
+                ExpressionErrorKind::UnsupportedConstruct("* outside COUNT(*)"),
+                start,
+            ));
+        }
+        if let Some(span) = arguments.distinct {
+            return Err(ExpressionError::new(
+                ExpressionErrorKind::UnsupportedConstruct("DISTINCT outside SUM and COUNT"),
+                span,
+            ));
+        }
+        Ok(arguments.arguments)
+    }
+
+    /// After a call that is not an aggregate: `OVER` makes it a window function (E0F-2.4), and
+    /// `FILTER` or `WITHIN GROUP` is outside the subset (E0F-9.4).
+    pub(super) fn reject_aggregate_clauses(&self, start: Span) -> Parsed<()> {
         if self.keyword_at(0, "OVER") {
             return Err(ExpressionError::new(
                 ExpressionErrorKind::WindowFunction,
                 start.to(self.next_span()),
             ));
         }
-        Ok(Expression::Aggregate { call, filter })
+        let clause = (self.keyword_at(0, "FILTER") && self.symbol_at(1, Symbol::LeftParenthesis))
+            || (self.keyword_at(0, "WITHIN") && self.keyword_at(1, "GROUP"));
+        if clause {
+            return Err(self.error_here(ExpressionErrorKind::UnsupportedConstruct(
+                "FILTER and WITHIN GROUP on a function that is not an aggregate of E0F-10.5",
+            )));
+        }
+        Ok(())
     }
 
     /// `AGG(metric)`.
@@ -81,113 +134,32 @@ impl Parser<'_> {
         Ok(Expression::UserAttribute(name))
     }
 
-    /// `FUNCTION(*)` (only `COUNT`), `FUNCTION(DISTINCT x)` (only `SUM` and `COUNT`) or
-    /// `FUNCTION(x)`.
-    fn aggregate(&mut self, function: SimpleAggregate, start: Span) -> Parsed<AggregateCall> {
-        self.position += 2;
-        if function == SimpleAggregate::Count && self.eat_symbol(Symbol::Star) {
-            self.expect_symbol(Symbol::RightParenthesis)?;
-            return Ok(AggregateCall::CountRows);
-        }
-        if self.keyword_at(0, "ALL") {
-            return Err(self.error_here(ExpressionErrorKind::UnsupportedConstruct(
-                "ALL in an aggregate",
-            )));
-        }
-        let distinct = if self.keyword_at(0, "DISTINCT") {
-            let Some(distinct) = distinct_aggregate(function) else {
-                return Err(self.error_here(ExpressionErrorKind::UnsupportedConstruct(
-                    "DISTINCT in an aggregate other than SUM and COUNT",
-                )));
-            };
-            self.position += 1;
-            Some(distinct)
-        } else {
-            None
-        };
-        let mut arguments = self.expression_list()?;
-        self.expect_symbol(Symbol::RightParenthesis)?;
-        let (Some(argument), true) = (arguments.pop(), arguments.is_empty()) else {
-            return Err(ExpressionError::new(
-                ExpressionErrorKind::WrongArgumentCount {
-                    function: simple_aggregate_name(function),
-                    found: arguments.len() + 1,
-                },
-                start.to(self.previous_span()),
-            ));
-        };
-        let argument = Box::new(argument);
-        Ok(match distinct {
-            Some(function) => AggregateCall::Distinct { function, argument },
-            None => AggregateCall::Simple { function, argument },
-        })
-    }
-
-    /// `PERCENTILE_…(fraction) WITHIN GROUP (ORDER BY ordering [ASC | DESC])`.
-    fn percentile(&mut self, function: PercentileFunction) -> Parsed<AggregateCall> {
-        self.position += 2;
-        let fraction = self.expression()?;
-        self.expect_symbol(Symbol::RightParenthesis)?;
-        self.expect_keyword("WITHIN")?;
-        self.expect_keyword("GROUP")?;
-        self.expect_symbol(Symbol::LeftParenthesis)?;
-        self.expect_keyword("ORDER")?;
-        self.expect_keyword("BY")?;
-        let ordering = self.expression()?;
-        let direction = if self.eat_keyword("DESC") {
-            SortDirection::Descending
-        } else {
-            self.eat_keyword("ASC");
-            SortDirection::Ascending
-        };
-        if self.keyword_at(0, "NULLS") {
-            return Err(self.error_here(ExpressionErrorKind::UnsupportedConstruct(
-                "NULLS FIRST and NULLS LAST",
-            )));
-        }
-        self.expect_symbol(Symbol::RightParenthesis)?;
-        Ok(AggregateCall::Percentile {
-            function,
-            fraction: Box::new(fraction),
-            ordering: Box::new(ordering),
-            direction,
-        })
-    }
-
-    /// An optional `FILTER (WHERE condition)`.
-    fn filter(&mut self) -> Parsed<Option<Box<Expression>>> {
-        if !(self.keyword_at(0, "FILTER") && self.symbol_at(1, Symbol::LeftParenthesis)) {
-            return Ok(None);
-        }
-        self.position += 2;
-        self.expect_keyword("WHERE")?;
-        let condition = self.expression()?;
-        self.expect_symbol(Symbol::RightParenthesis)?;
-        Ok(Some(Box::new(condition)))
-    }
-
     /// The error for a call of a function outside the subset, whose name is the next token.
     ///
     /// The arguments are skipped without being parsed, since such functions may have their own
-    /// syntax; a following `OVER` makes it a window function (E0F-2.4).
+    /// syntax; an `OVER` after them, or after their `WITHIN GROUP (…)` and `FILTER (…)`, makes
+    /// it a window function (E0F-2.4).
     fn unsupported_call(&mut self, start: Span) -> ExpressionError {
         let name = self.text[start.start..start.end].to_owned();
         let unsupported =
             ExpressionError::new(ExpressionErrorKind::UnsupportedFunction(name), start);
         self.position += 1;
-        let mut depth = 0_usize;
-        while let Some(token) = self.advance() {
-            match token.kind {
-                TokenKind::Symbol(Symbol::LeftParenthesis) => depth += 1,
-                TokenKind::Symbol(Symbol::RightParenthesis) => depth = depth.saturating_sub(1),
-                TokenKind::Invalid(_) => return unsupported,
-                _ => {}
-            }
-            if depth == 0 {
-                break;
+        if !self.skip_parenthesized() {
+            return unsupported;
+        }
+        if self.keyword_at(0, "WITHIN") && self.keyword_at(1, "GROUP") {
+            self.position += 2;
+            if !self.skip_parenthesized() {
+                return unsupported;
             }
         }
-        if depth == 0 && self.keyword_at(0, "OVER") {
+        if self.keyword_at(0, "FILTER") {
+            self.position += 1;
+            if !self.skip_parenthesized() {
+                return unsupported;
+            }
+        }
+        if self.keyword_at(0, "OVER") {
             return ExpressionError::new(
                 ExpressionErrorKind::WindowFunction,
                 start.to(self.next_span()),
@@ -195,22 +167,57 @@ impl Parser<'_> {
         }
         unsupported
     }
+
+    /// Skips a balanced `( … )` that starts at the next token. Returns `false` when there is
+    /// none, or when the text ends or a lexical error comes first.
+    fn skip_parenthesized(&mut self) -> bool {
+        if !self.symbol_at(0, Symbol::LeftParenthesis) {
+            return false;
+        }
+        let mut depth = 0_usize;
+        while let Some(token) = self.advance() {
+            match token.kind {
+                TokenKind::Symbol(Symbol::LeftParenthesis) => depth += 1,
+                TokenKind::Symbol(Symbol::RightParenthesis) => depth = depth.saturating_sub(1),
+                TokenKind::Invalid(_) => return false,
+                _ => {}
+            }
+            if depth == 0 {
+                return true;
+            }
+        }
+        false
+    }
 }
 
-fn percentile_function(word: &str) -> Option<PercentileFunction> {
-    if is_keyword(word, "PERCENTILE_CONT") {
-        Some(PercentileFunction::Continuous)
-    } else if is_keyword(word, "PERCENTILE_DISC") {
-        Some(PercentileFunction::Discrete)
+/// `E0F-02` when a function of E0F-10 gets a number of arguments it does not take.
+pub(super) fn check_arity(
+    function: &'static str,
+    arity: Arity,
+    found: usize,
+    span: Span,
+) -> Parsed<()> {
+    if arity.accepts(found) {
+        Ok(())
     } else {
-        None
+        Err(ExpressionError::new(
+            ExpressionErrorKind::WrongArgumentCount { function, found },
+            span,
+        ))
     }
 }
 
-fn distinct_aggregate(function: SimpleAggregate) -> Option<DistinctAggregate> {
-    match function {
-        SimpleAggregate::Sum => Some(DistinctAggregate::Sum),
-        SimpleAggregate::Count => Some(DistinctAggregate::Count),
-        _ => None,
-    }
+/// The arguments of a function that takes exactly `N` of them; `E0F-02` otherwise.
+pub(super) fn exactly<const N: usize>(
+    function: &'static str,
+    arguments: Vec<Expression>,
+    span: Span,
+) -> Parsed<[Expression; N]> {
+    let found = arguments.len();
+    <[Expression; N]>::try_from(arguments).map_err(|_| {
+        ExpressionError::new(
+            ExpressionErrorKind::WrongArgumentCount { function, found },
+            span,
+        )
+    })
 }

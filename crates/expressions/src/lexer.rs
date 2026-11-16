@@ -4,7 +4,9 @@
 //! no trace. A lexical error ends the token list with an [`TokenKind::Invalid`] token, so the
 //! parser reports errors strictly from left to right.
 
-use semantic_compiler_model::expression::{ApproximateNumber, ExactNumber, Literal};
+use semantic_compiler_model::expression::{
+    DecimalLiteral, FloatLiteral, IntegerLiteral, Literal, MAXIMUM_EXACT_DIGITS,
+};
 
 use crate::error::{ExpressionErrorKind, Span};
 
@@ -27,8 +29,6 @@ pub(crate) enum Symbol {
     LessOrEqual,
     Greater,
     GreaterOrEqual,
-    /// `!=`: recognized only to report it as outside the subset.
-    BangEqual,
     /// `::`: recognized only to report it as outside the subset.
     DoubleColon,
 }
@@ -53,7 +53,6 @@ impl Symbol {
             Self::LessOrEqual => "<=",
             Self::Greater => ">",
             Self::GreaterOrEqual => ">=",
-            Self::BangEqual => "!=",
             Self::DoubleColon => "::",
         }
     }
@@ -197,17 +196,15 @@ impl Lexer<'_> {
         &self.text[start..self.position]
     }
 
-    /// `digits [. digits] [E [+|-] digits]`, or `. digits [E …]`.
+    /// `digits [. digits] [E [+|-] digits]`, or `. digits [E …]` (E0F-9.3).
     fn number(&mut self) -> TokenKind {
         let start = self.position;
         let integer_digits = self.take_digits().to_owned();
-        let fraction_digits = if self.rest().starts_with('.') {
+        let point = self.rest().starts_with('.');
+        if point {
             self.position += 1;
-            self.take_digits().to_owned()
-        } else {
-            String::new()
-        };
-        let mantissa = ExactNumber::new(&integer_digits, &fraction_digits);
+        }
+        let fraction_digits = self.take_digits().to_owned();
         let exponent = if self.rest().starts_with(['e', 'E']) {
             self.position += 1;
             Some(self.exponent())
@@ -220,24 +217,31 @@ impl Lexer<'_> {
         if glued {
             self.take_word();
         }
-        let literal = match (mantissa, exponent) {
-            (Some(mantissa), None) if !glued => Some(Literal::Exact(mantissa)),
-            (Some(mantissa), Some(Some(exponent))) if !glued => {
-                Some(Literal::Approximate(ApproximateNumber {
-                    mantissa,
-                    exponent,
-                }))
+        let text = &self.text[start..self.position];
+        let invalid =
+            |kind: fn(String) -> ExpressionErrorKind| TokenKind::Invalid(kind(text.to_owned()));
+        if glued {
+            return invalid(ExpressionErrorKind::InvalidNumber);
+        }
+        match exponent {
+            Some(Some(exponent)) => FloatLiteral::new(&integer_digits, &fraction_digits, exponent)
+                .map_or_else(
+                    || invalid(ExpressionErrorKind::InvalidNumber),
+                    |number| TokenKind::Number(Literal::Float(number)),
+                ),
+            Some(None) => invalid(ExpressionErrorKind::InvalidNumber),
+            None if integer_digits.len() + fraction_digits.len() > MAXIMUM_EXACT_DIGITS => {
+                invalid(ExpressionErrorKind::NumberOutOfRange)
             }
-            _ => None,
-        };
-        literal.map_or_else(
-            || {
-                TokenKind::Invalid(ExpressionErrorKind::InvalidNumber(
-                    self.text[start..self.position].to_owned(),
-                ))
-            },
-            TokenKind::Number,
-        )
+            None if point => DecimalLiteral::new(&integer_digits, &fraction_digits).map_or_else(
+                || invalid(ExpressionErrorKind::InvalidNumber),
+                |number| TokenKind::Number(Literal::Decimal(number)),
+            ),
+            None => IntegerLiteral::new(&integer_digits).map_or_else(
+                || invalid(ExpressionErrorKind::InvalidNumber),
+                |number| TokenKind::Number(Literal::Integer(number)),
+            ),
+        }
     }
 
     /// The exponent after `E`: an optional sign and digits that fit in an `i32`.
@@ -302,10 +306,9 @@ impl Lexer<'_> {
 fn two_character_symbol(text: &str) -> Option<Symbol> {
     Some(match text {
         "||" => Symbol::Concatenate,
-        "<>" => Symbol::NotEqual,
+        "<>" | "!=" => Symbol::NotEqual,
         "<=" => Symbol::LessOrEqual,
         ">=" => Symbol::GreaterOrEqual,
-        "!=" => Symbol::BangEqual,
         "::" => Symbol::DoubleColon,
         _ => return None,
     })

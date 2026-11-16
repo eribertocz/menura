@@ -63,9 +63,14 @@ pub enum ExpressionErrorKind {
     EmptyIdentifier,
     /// A malformed number, or an exponent that does not fit. `E0F-01`.
     InvalidNumber(String),
+    /// An exact number with more than 38 digits (E0F-9.3). `E0F-02`.
+    NumberOutOfRange(String),
     /// A `DATE` literal whose text is not a valid `YYYY-MM-DD` date. `E0F-01`.
     InvalidDate(String),
-    /// A `TIMESTAMP` literal whose text is not a valid `YYYY-MM-DD HH:MM:SS[.fraction]`. `E0F-01`.
+    /// A `TIME` literal whose text is not a valid `HH:MM:SS[.fraction]`. `E0F-01`.
+    InvalidTime(String),
+    /// A `TIMESTAMP` or `TIMESTAMP_NTZ` literal whose text is not a valid
+    /// `YYYY-MM-DD HH:MM:SS[.fraction]`. `E0F-01`.
     InvalidTimestamp(String),
     /// A token where the grammar expects something else. `E0F-01`.
     UnexpectedToken {
@@ -79,18 +84,23 @@ pub enum ExpressionErrorKind {
         /// What the grammar expects at that point.
         expected: &'static str,
     },
-    /// A subquery: `SELECT` or `EXISTS` (E0F-2.3). `E0F-02`.
+    /// A subquery: `SELECT` or `EXISTS (…)` (E0F-2.3). `E0F-02`.
     Subquery,
-    /// A call of a function outside the accepted subset: non-deterministic, engine-specific or
-    /// not listed (E0F-2.2, E0F-2.3). `E0F-02`.
+    /// A call of a function outside the accepted subset: any function E0F-10 does not list,
+    /// such as non-deterministic, engine-specific or dialect functions, `TRY_CAST` or the
+    /// left-out REQUIRED functions of DEV-10 (E0F-2.3, E0F-2.6). `E0F-02`.
     UnsupportedFunction(String),
-    /// An operator outside the accepted subset, such as `!=` or `::`. `E0F-02`.
+    /// An operator outside the accepted subset: `::`. `E0F-02`.
     UnsupportedOperator(String),
-    /// A clause or form outside the accepted subset, such as `LIKE … ESCAPE`. `E0F-02`.
+    /// A call form the grammar accepts but E0F-9.4 does not, such as `*` outside `COUNT(*)`,
+    /// `DISTINCT` outside `SUM` and `COUNT`, or `WITHIN GROUP` outside the percentiles. `E0F-02`.
     UnsupportedConstruct(&'static str),
-    /// A `CAST` target type outside the accepted subset. `E0F-02`.
+    /// A date part E0F-10.1 does not list for the function, such as `MILLISECOND` (DEV-10).
+    /// `E0F-02`.
+    UnsupportedDatePart(String),
+    /// A `CAST` target type outside E0F-11. `E0F-02`.
     UnsupportedType(String),
-    /// A function of the subset called with a number of arguments it does not take. `E0F-02`.
+    /// A function of E0F-10 called with a number of arguments it does not take. `E0F-02`.
     WrongArgumentCount {
         /// The function, as the specification writes it.
         function: &'static str,
@@ -114,10 +124,13 @@ impl ExpressionErrorKind {
             | Self::EmptyIdentifier
             | Self::InvalidNumber(_)
             | Self::InvalidDate(_)
+            | Self::InvalidTime(_)
             | Self::InvalidTimestamp(_)
             | Self::UnexpectedToken { .. }
             | Self::UnexpectedEnd { .. } => ExpressionCode::Unparsable,
-            Self::Subquery
+            Self::NumberOutOfRange(_)
+            | Self::Subquery
+            | Self::UnsupportedDatePart(_)
             | Self::UnsupportedFunction(_)
             | Self::UnsupportedOperator(_)
             | Self::UnsupportedConstruct(_)
@@ -142,6 +155,13 @@ impl fmt::Display for ExpressionErrorKind {
             Self::EmptyIdentifier => formatter.write_str("empty delimited identifier"),
             Self::InvalidNumber(text) => write!(formatter, "invalid number {text}"),
             Self::InvalidDate(text) => write!(formatter, "invalid DATE literal '{text}'"),
+            Self::NumberOutOfRange(text) => {
+                write!(formatter, "number {text} has more than 38 digits")
+            }
+            Self::InvalidTime(text) => write!(formatter, "invalid TIME literal '{text}'"),
+            Self::UnsupportedDatePart(part) => {
+                write!(formatter, "date part {part} is outside the accepted subset")
+            }
             Self::InvalidTimestamp(text) => write!(formatter, "invalid TIMESTAMP literal '{text}'"),
             Self::UnexpectedToken { found, expected } => {
                 write!(formatter, "expected {expected}, found {found}")

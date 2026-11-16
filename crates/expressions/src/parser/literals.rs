@@ -7,7 +7,7 @@ use semantic_compiler_model::expression::{
 use super::{Parsed, Parser};
 use crate::error::{ExpressionError, ExpressionErrorKind};
 use crate::lexer::{Symbol, TokenKind};
-use crate::vocabulary::{is_decimal_type, is_keyword, simple_cast_target};
+use crate::vocabulary::{is_decimal_type, simple_cast_target};
 
 /// The value of `DATE 'YYYY-MM-DD'`, or `None` when the text is not a valid date.
 pub(super) fn date_value(text: &str) -> Option<DateValue> {
@@ -22,27 +22,33 @@ pub(super) fn date_value(text: &str) -> Option<DateValue> {
     )
 }
 
-/// The value of `TIMESTAMP 'YYYY-MM-DD HH:MM:SS[.fraction]'`, or `None` when the text is not a
-/// valid timestamp without time zone.
-pub(super) fn timestamp_value(text: &str) -> Option<TimestampValue> {
-    let (date, time) = text.split_once(' ')?;
-    let (clock, fraction) = time.split_once('.').unwrap_or((time, ""));
+/// The value of `TIME 'HH:MM:SS[.fraction]'`, with 1 to 6 fraction digits, or `None` when the
+/// text is not a valid time.
+pub(super) fn time_value(text: &str) -> Option<TimeOfDay> {
+    let (clock, fraction) = text.split_once('.').unwrap_or((text, ""));
     let bytes = clock.as_bytes();
     if bytes.len() != 8
         || bytes[2] != b':'
         || bytes[5] != b':'
-        || (time.contains('.') && fraction.is_empty())
+        || (text.contains('.') && fraction.is_empty())
     {
         return None;
     }
+    TimeOfDay::new(
+        digits(&clock[0..2])?,
+        digits(&clock[3..5])?,
+        digits(&clock[6..8])?,
+        fraction,
+    )
+}
+
+/// The value of `TIMESTAMP 'YYYY-MM-DD HH:MM:SS[.fraction]'`, or `None` when the text is not a
+/// valid timestamp without time zone.
+pub(super) fn timestamp_value(text: &str) -> Option<TimestampValue> {
+    let (date, time) = text.split_once(' ')?;
     Some(TimestampValue {
         date: date_value(date)?,
-        time: TimeOfDay::new(
-            digits(&clock[0..2])?,
-            digits(&clock[3..5])?,
-            digits(&clock[6..8])?,
-            fraction,
-        )?,
+        time: time_value(time)?,
     })
 }
 
@@ -56,7 +62,7 @@ fn digits<T: std::str::FromStr>(text: &str) -> Option<T> {
 }
 
 impl Parser<'_> {
-    /// The type after `AS` in a `CAST`.
+    /// The type after `AS` in a `CAST` (E0F-11).
     pub(super) fn cast_target(&mut self) -> Parsed<CastTarget> {
         let Some(TokenKind::Word(word)) = self.peek_kind_at(0).cloned() else {
             return Err(self.unexpected("a type"));
@@ -65,8 +71,6 @@ impl Parser<'_> {
         self.position += 1;
         let target = if is_decimal_type(&word) {
             self.decimal_target()?
-        } else if is_keyword(&word, "DOUBLE") && self.eat_keyword("PRECISION") {
-            Some(CastTarget::DoublePrecision)
         } else {
             simple_cast_target(&word).filter(|_| !self.symbol_at(0, Symbol::LeftParenthesis))
         };
@@ -109,13 +113,11 @@ impl Parser<'_> {
 
     /// An unsigned integer literal; `None` when it does not fit in a byte.
     fn small_integer(&mut self) -> Parsed<Option<u8>> {
-        let Some(TokenKind::Number(Literal::Exact(number))) = self.peek_kind_at(0).cloned() else {
+        let Some(TokenKind::Number(Literal::Integer(number))) = self.peek_kind_at(0).cloned()
+        else {
             return Err(self.unexpected("an integer"));
         };
-        if !number.fraction_digits().is_empty() {
-            return Err(self.unexpected("an integer"));
-        }
         self.position += 1;
-        Ok(number.integer_digits().parse().ok())
+        Ok(number.digits().parse().ok())
     }
 }

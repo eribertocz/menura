@@ -3,10 +3,10 @@
 //! A failure always reproduces from its seed, and no property-testing dependency is needed.
 
 use semantic_compiler_model::expression::{
-    AggregateCall, ApproximateNumber, BinaryOperator, CaseBranch, CastTarget, DateValue,
-    DecimalTarget, DistinctAggregate, ExactNumber, Expression, Identifier, LikeCase, Literal,
-    PercentileFunction, Reference, ScalarFunction, SimpleAggregate, SortDirection, TimeOfDay,
-    TimestampValue, UnaryOperator,
+    AggregateCall, BinaryOperator, CaseBranch, CastTarget, DateUnit, DateValue, DecimalLiteral,
+    DecimalTarget, DistinctAggregate, Expression, ExtractPart, FloatLiteral, Identifier,
+    IntegerLiteral, LikeCase, Literal, PercentileFunction, Reference, ScalarFunction,
+    SimpleAggregate, SortDirection, TimeOfDay, TimestampValue, UnaryOperator,
 };
 
 /// A xorshift generator: deterministic and dependency free.
@@ -86,39 +86,46 @@ fn reference(generator: &mut Generator) -> Reference {
     }
 }
 
-fn exact(generator: &mut Generator) -> ExactNumber {
-    let (integer, fraction) = *generator.pick(&[("0", ""), ("12", ""), ("3", "50"), ("0", "001")]);
-    ExactNumber::new(integer, fraction).unwrap()
-}
-
 fn literal(generator: &mut Generator) -> Literal {
-    match generator.below(7) {
+    let (integer, fraction) =
+        *generator.pick(&[("0", ""), ("12", ""), ("", "5"), ("10", ""), ("3", "50")]);
+    match generator.below(9) {
         0 => Literal::Null,
         1 => Literal::Boolean(generator.flag()),
         2 => Literal::Text((*generator.pick(&["", "it's", "a\nb", "-- not a comment"])).to_owned()),
-        3 => Literal::Exact(exact(generator)),
-        4 => Literal::Approximate(ApproximateNumber {
-            mantissa: exact(generator),
-            exponent: *generator.pick(&[-12, 0, 7]),
-        }),
-        5 => Literal::Date(DateValue::new(2024, 2, 29).unwrap()),
+        3 => Literal::Integer(
+            IntegerLiteral::new(generator.pick(&["0", "007", "123456789012345678901"])).unwrap(),
+        ),
+        4 => Literal::Decimal(DecimalLiteral::new(integer, fraction).unwrap()),
+        5 => Literal::Float(
+            FloatLiteral::new(
+                if integer.is_empty() && fraction.is_empty() {
+                    "1"
+                } else {
+                    integer
+                },
+                fraction,
+                *generator.pick(&[-12, 0, 7]),
+            )
+            .unwrap(),
+        ),
+        6 => Literal::Date(DateValue::new(2024, 2, 29).unwrap()),
+        7 => Literal::Time(TimeOfDay::new(0, 0, 0, generator.pick(&["", "000001"])).unwrap()),
         _ => Literal::Timestamp(TimestampValue {
             date: DateValue::new(1, 1, 1).unwrap(),
-            time: TimeOfDay::new(23, 59, 59, generator.pick(&["", "5", "123456789"])).unwrap(),
+            time: TimeOfDay::new(23, 59, 59, generator.pick(&["", "5", "123456"])).unwrap(),
         }),
     }
 }
 
 fn cast_target(generator: &mut Generator) -> CastTarget {
     *generator.pick(&[
-        CastTarget::Boolean,
-        CastTarget::SmallInteger,
+        CastTarget::Text,
         CastTarget::Integer,
         CastTarget::BigInteger,
         CastTarget::Decimal(DecimalTarget::new(38, 4).unwrap()),
-        CastTarget::Real,
-        CastTarget::DoublePrecision,
-        CastTarget::Varchar,
+        CastTarget::Double,
+        CastTarget::Boolean,
         CastTarget::Date,
         CastTarget::Time,
         CastTarget::Timestamp,
@@ -130,7 +137,13 @@ fn leaf(generator: &mut Generator) -> Expression {
         0 => Expression::Reference(reference(generator)),
         1 => Expression::MetricAggregate(reference(generator)),
         2 => Expression::UserAttribute("it's".to_owned()),
-        3 => Expression::CurrentDate,
+        3 => {
+            if generator.flag() {
+                Expression::CurrentDate
+            } else {
+                Expression::CurrentTime
+            }
+        }
         4 => Expression::CurrentTimestamp,
         _ => Expression::Literal(literal(generator)),
     }
@@ -218,19 +231,73 @@ fn case_expression(generator: &mut Generator, depth: u32) -> Expression {
     }
 }
 
+/// A function of E0F-10 and an argument count it accepts.
+const FUNCTIONS: [(ScalarFunction, usize); 20] = [
+    (ScalarFunction::Year, 1),
+    (ScalarFunction::ToTimestamp, 1),
+    (ScalarFunction::Concat, 3),
+    (ScalarFunction::Substring, 3),
+    (ScalarFunction::SplitPart, 3),
+    (ScalarFunction::Position, 2),
+    (ScalarFunction::EndsWith, 2),
+    (ScalarFunction::Ceiling, 1),
+    (ScalarFunction::Round, 1),
+    (ScalarFunction::Round, 2),
+    (ScalarFunction::Truncate, 2),
+    (ScalarFunction::Modulo, 2),
+    (ScalarFunction::Logarithm, 2),
+    (ScalarFunction::Greatest, 3),
+    (ScalarFunction::If, 3),
+    (ScalarFunction::Nullif, 2),
+    (ScalarFunction::Coalesce, 2),
+    (ScalarFunction::IfNull, 2),
+    (ScalarFunction::Nvl2, 3),
+    (ScalarFunction::NullIfZero, 1),
+];
+
+const DATE_UNITS: [DateUnit; 8] = [
+    DateUnit::Year,
+    DateUnit::Quarter,
+    DateUnit::Month,
+    DateUnit::Week,
+    DateUnit::Day,
+    DateUnit::Hour,
+    DateUnit::Minute,
+    DateUnit::Second,
+];
+
 fn function(generator: &mut Generator, depth: u32) -> Expression {
-    let function = *generator.pick(&[
-        ScalarFunction::Coalesce,
-        ScalarFunction::Nullif,
-        ScalarFunction::Round,
-    ]);
-    let count = match function {
-        ScalarFunction::Coalesce => 2 + generator.below(2),
-        ScalarFunction::Nullif | ScalarFunction::Round => 2,
-    };
-    Expression::Function {
-        function,
-        arguments: (0..count).map(|_| expression(generator, depth)).collect(),
+    let unit = *generator.pick(&DATE_UNITS);
+    match generator.below(5) {
+        0 => Expression::Extract {
+            part: *generator.pick(&[
+                ExtractPart::Week,
+                ExtractPart::DayOfWeek,
+                ExtractPart::Second,
+            ]),
+            operand: boxed(generator, depth),
+        },
+        1 => Expression::DateTrunc {
+            unit,
+            operand: boxed(generator, depth),
+        },
+        2 => Expression::DateAdd {
+            unit,
+            amount: boxed(generator, depth),
+            operand: boxed(generator, depth),
+        },
+        3 => Expression::DateDiff {
+            unit,
+            start: boxed(generator, depth),
+            end: boxed(generator, depth),
+        },
+        _ => {
+            let (function, count) = *generator.pick(&FUNCTIONS);
+            Expression::Function {
+                function,
+                arguments: (0..count).map(|_| expression(generator, depth)).collect(),
+            }
+        }
     }
 }
 

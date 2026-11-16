@@ -3,7 +3,9 @@
 //! Normalization happens by construction: the lexer drops whitespace and comments, keywords are
 //! matched without regard to ASCII case, and parentheses produce no node.
 
+mod aggregates;
 mod calls;
+mod dates;
 mod literals;
 mod operators;
 mod primary;
@@ -21,10 +23,9 @@ type Parsed<T> = Result<T, ExpressionError>;
 ///
 /// # Errors
 ///
-/// Returns the first problem from left to right: `E0F-01` when the text cannot be parsed,
-/// `E0F-02` when it uses a construct, function or operator outside the accepted subset
-/// (E0F-2.2, E0F-2.3), including window functions (E0F-2.4,
-/// [`ExpressionErrorKind::WindowFunction`]).
+/// Returns the first problem from left to right (E0F-9.1): `E0F-01` when the grammar rejects
+/// the text, `E0F-02` when it accepts a construct outside the subset (E0F-2.2, E0F-2.6),
+/// including window functions (E0F-2.4, [`ExpressionErrorKind::WindowFunction`]).
 ///
 /// # Examples
 ///
@@ -134,14 +135,13 @@ impl Parser<'_> {
 
     /// The error for the next token when the grammar expects `expected` there.
     ///
-    /// A lexical error token reports itself; `!=` and `::` are outside the subset wherever
-    /// they appear.
+    /// A lexical error token reports itself; `::` is outside the subset wherever it appears.
     fn unexpected(&self, expected: &'static str) -> ExpressionError {
         let span = self.next_span();
         let kind = match self.peek().map(|token| &token.kind) {
             None => ExpressionErrorKind::UnexpectedEnd { expected },
             Some(TokenKind::Invalid(kind)) => kind.clone(),
-            Some(TokenKind::Symbol(symbol @ (Symbol::BangEqual | Symbol::DoubleColon))) => {
+            Some(TokenKind::Symbol(symbol @ Symbol::DoubleColon)) => {
                 ExpressionErrorKind::UnsupportedOperator(symbol.text().to_owned())
             }
             Some(_) => ExpressionErrorKind::UnexpectedToken {

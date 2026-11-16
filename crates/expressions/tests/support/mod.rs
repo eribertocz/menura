@@ -9,7 +9,8 @@ pub mod generator;
 
 use semantic_compiler_expressions::{ExpressionCode, parse};
 use semantic_compiler_model::expression::{
-    BinaryOperator, ExactNumber, Expression, Identifier, Literal, Reference,
+    BinaryOperator, DecimalLiteral, Expression, Identifier, IntegerLiteral, Literal, Reference,
+    ScalarFunction,
 };
 
 pub fn column(name: &str) -> Expression {
@@ -27,14 +28,14 @@ pub fn field(dataset: &str, name: &str) -> Expression {
 }
 
 pub fn integer(digits: &str) -> Expression {
-    Expression::Literal(Literal::Exact(
-        ExactNumber::new(digits, "").expect("digits"),
+    Expression::Literal(Literal::Integer(
+        IntegerLiteral::new(digits).expect("digits"),
     ))
 }
 
 pub fn decimal(integer_digits: &str, fraction_digits: &str) -> Expression {
-    Expression::Literal(Literal::Exact(
-        ExactNumber::new(integer_digits, fraction_digits).expect("digits"),
+    Expression::Literal(Literal::Decimal(
+        DecimalLiteral::new(integer_digits, fraction_digits).expect("digits"),
     ))
 }
 
@@ -47,6 +48,13 @@ pub fn binary(operator: BinaryOperator, left: Expression, right: Expression) -> 
         operator,
         left: Box::new(left),
         right: Box::new(right),
+    }
+}
+
+pub fn call(function: ScalarFunction, arguments: Vec<Expression>) -> Expression {
+    Expression::Function {
+        function,
+        arguments,
     }
 }
 
@@ -63,5 +71,19 @@ pub fn code_of(text: &str) -> ExpressionCode {
     match parse(text) {
         Ok(tree) => panic!("{text:?} should fail, parsed as {tree:?}"),
         Err(error) => error.code(),
+    }
+}
+
+/// Asserts that every text parses.
+pub fn assert_parses(texts: &[&str]) {
+    for text in texts {
+        tree(text);
+    }
+}
+
+/// Asserts that every text fails with `code`.
+pub fn assert_code(code: ExpressionCode, texts: &[&str]) {
+    for text in texts {
+        assert_eq!(code_of(text), code, "{text:?}");
     }
 }

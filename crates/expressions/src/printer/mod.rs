@@ -10,10 +10,12 @@ use std::fmt::{self, Display, Formatter};
 
 use semantic_compiler_model::expression::{
     AggregateCall, BinaryOperator, CaseBranch, DistinctAggregate, Expression, LikeCase,
-    PercentileFunction, SortDirection, UnaryOperator,
+    PercentileFunction, ScalarFunction, SortDirection, UnaryOperator,
 };
 
-use crate::vocabulary::{scalar_function_name, simple_aggregate_name};
+use crate::vocabulary::{
+    date_unit_name, extract_part_name, scalar_function_name, simple_aggregate_name,
+};
 use constants::{Quoted, write_cast_target, write_literal, write_reference};
 
 /// Writes `expression` as canonical text.
@@ -114,15 +116,12 @@ fn write_expression(output: &mut Formatter<'_>, expression: &Expression) -> fmt:
         Expression::Function {
             function,
             arguments,
-        } => {
-            write!(
-                output,
-                "{}{}",
-                scalar_function_name(*function),
-                Arguments(arguments)
-            )
-        }
+        } => write_function(output, *function, arguments),
         Expression::Aggregate { call, filter } => write_aggregate(output, call, filter.as_deref()),
+        Expression::Extract { .. }
+        | Expression::DateTrunc { .. }
+        | Expression::DateAdd { .. }
+        | Expression::DateDiff { .. } => write_date_function(output, expression),
         Expression::IsNull { .. } | Expression::IsDistinctFrom { .. } => {
             write_null_test(output, expression)
         }
@@ -145,6 +144,7 @@ fn write_atom(output: &mut Formatter<'_>, expression: &Expression) -> fmt::Resul
         }
         Expression::UserAttribute(name) => write!(output, "USER_ATTRIBUTE({})", Quoted(name, '\'')),
         Expression::CurrentDate => output.write_str("CURRENT_DATE"),
+        Expression::CurrentTime => output.write_str("CURRENT_TIME"),
         Expression::CurrentTimestamp => output.write_str("CURRENT_TIMESTAMP"),
         other => write_expression(output, other),
     }
@@ -218,6 +218,69 @@ fn write_match_test(output: &mut Formatter<'_>, expression: &Expression) -> fmt:
                 Operand(pattern)
             )
         }
+        other => write_expression(output, other),
+    }
+}
+
+/// A plain call; `POSITION` keeps its own form, `POSITION(a IN s)`.
+fn write_function(
+    output: &mut Formatter<'_>,
+    function: ScalarFunction,
+    arguments: &[Expression],
+) -> fmt::Result {
+    if let (ScalarFunction::Position, [needle, haystack]) = (function, arguments) {
+        return write!(
+            output,
+            "POSITION({} IN {})",
+            Operand(needle),
+            Canonical(haystack)
+        );
+    }
+    write!(
+        output,
+        "{}{}",
+        scalar_function_name(function),
+        Arguments(arguments)
+    )
+}
+
+/// `EXTRACT`, `DATE_TRUNC`, `DATEADD` and `DATEDIFF`, with the part as E0F-10.1 writes it.
+fn write_date_function(output: &mut Formatter<'_>, expression: &Expression) -> fmt::Result {
+    match expression {
+        Expression::Extract { part, operand } => {
+            write!(
+                output,
+                "EXTRACT({} FROM {})",
+                extract_part_name(*part),
+                Canonical(operand)
+            )
+        }
+        Expression::DateTrunc { unit, operand } => {
+            write!(
+                output,
+                "DATE_TRUNC('{}', {})",
+                date_unit_name(*unit),
+                Canonical(operand)
+            )
+        }
+        Expression::DateAdd {
+            unit,
+            amount,
+            operand,
+        } => write!(
+            output,
+            "DATEADD({}, {}, {})",
+            date_unit_name(*unit),
+            Canonical(amount),
+            Canonical(operand)
+        ),
+        Expression::DateDiff { unit, start, end } => write!(
+            output,
+            "DATEDIFF({}, {}, {})",
+            date_unit_name(*unit),
+            Canonical(start),
+            Canonical(end)
+        ),
         other => write_expression(output, other),
     }
 }
