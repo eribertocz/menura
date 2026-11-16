@@ -1,0 +1,6 @@
+id: e0-read-invalid-date-001
+rules: [E0A-2.5, E0A-2.8]
+model: e0-read-invalid-date-001
+expect:
+  outcome: load_error
+  error: E0A-05

@@ -164,6 +164,7 @@ allow = [
     "futures-task",
     "futures-util",
     "getrandom",
+    # YAML event parser, also approved by the maintainer for the model reader of e0-load (#28).
     "granit-parser",
     "half",
     "hashbrown",

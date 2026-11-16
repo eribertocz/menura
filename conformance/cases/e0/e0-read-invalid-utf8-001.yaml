@@ -1,0 +1,6 @@
+id: e0-read-invalid-utf8-001
+rules: [E0A-2.1, MDL-1.2]
+model: e0-read-invalid-utf8-001
+expect:
+  outcome: load_error
+  error: E0A-01

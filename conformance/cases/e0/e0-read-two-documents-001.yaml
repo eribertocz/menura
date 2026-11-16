@@ -1,0 +1,6 @@
+id: e0-read-two-documents-001
+rules: [E0A-2.6]
+model: e0-read-two-documents-001
+expect:
+  outcome: load_error
+  error: E0A-03

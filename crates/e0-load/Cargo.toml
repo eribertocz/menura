@@ -10,6 +10,7 @@ publish.workspace = true
 semantic-compiler-expressions.workspace = true
 semantic-compiler-model.workspace = true
 semantic-compiler-security.workspace = true
+granit-parser = "2.1.0"
 
 [lints]
 workspace = true
