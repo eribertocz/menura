@@ -54,6 +54,7 @@ Find a rule ID or a section here, then open only that file at that line.
 | [04-ossie-conformance.md](04-ossie-conformance.md#L79) | 79 | rule | DEV-7 |
 | [04-ossie-conformance.md](04-ossie-conformance.md#L80) | 80 | rule | DEV-8 |
 | [04-ossie-conformance.md](04-ossie-conformance.md#L81) | 81 | rule | DEV-9 |
+| [04-ossie-conformance.md](04-ossie-conformance.md#L82) | 82 | rule | DEV-10 |
 | [05-engineering-standards.md](05-engineering-standards.md#L1) | 1 | section | 5. Engineering standards |
 | [05-engineering-standards.md](05-engineering-standards.md#L6) | 6 | section | 5.1 Single responsibility |
 | [05-engineering-standards.md](05-engineering-standards.md#L10) | 10 | rule | S1 |
@@ -404,16 +405,31 @@ Find a rule ID or a section here, then open only that file at that line.
 | [stages/E0/expressions.md](stages/E0/expressions.md#L24) | 24 | rule | E0F-2.3 |
 | [stages/E0/expressions.md](stages/E0/expressions.md#L25) | 25 | rule | E0F-2.4 |
 | [stages/E0/expressions.md](stages/E0/expressions.md#L26) | 26 | rule | E0F-2.5 |
-| [stages/E0/expressions.md](stages/E0/expressions.md#L28) | 28 | section | E0F-3 Implicit conversions |
-| [stages/E0/expressions.md](stages/E0/expressions.md#L41) | 41 | section | E0F-4 Relationship keys |
-| [stages/E0/expressions.md](stages/E0/expressions.md#L43) | 43 | rule | E0F-4.1 |
-| [stages/E0/expressions.md](stages/E0/expressions.md#L45) | 45 | section | E0F-5 Result types of aggregates |
-| [stages/E0/expressions.md](stages/E0/expressions.md#L66) | 66 | section | E0F-5a Result types of scalar expressions |
-| [stages/E0/expressions.md](stages/E0/expressions.md#L85) | 85 | section | E0F-6 Division |
-| [stages/E0/expressions.md](stages/E0/expressions.md#L87) | 87 | rule | E0F-6.1 |
-| [stages/E0/expressions.md](stages/E0/expressions.md#L89) | 89 | section | E0F-7 Nullability |
-| [stages/E0/expressions.md](stages/E0/expressions.md#L91) | 91 | rule | E0F-7.1 |
-| [stages/E0/expressions.md](stages/E0/expressions.md#L93) | 93 | section | E0F-8 Diagnostics |
+| [stages/E0/expressions.md](stages/E0/expressions.md#L27) | 27 | rule | E0F-2.6 |
+| [stages/E0/expressions.md](stages/E0/expressions.md#L34) | 34 | section | E0F-9 Syntax |
+| [stages/E0/expressions.md](stages/E0/expressions.md#L36) | 36 | rule | E0F-9.1 |
+| [stages/E0/expressions.md](stages/E0/expressions.md#L37) | 37 | rule | E0F-9.2 |
+| [stages/E0/expressions.md](stages/E0/expressions.md#L38) | 38 | rule | E0F-9.3 |
+| [stages/E0/expressions.md](stages/E0/expressions.md#L57) | 57 | rule | E0F-9.4 |
+| [stages/E0/expressions.md](stages/E0/expressions.md#L59) | 59 | section | E0F-10 Functions |
+| [stages/E0/expressions.md](stages/E0/expressions.md#L65) | 65 | section | E0F-10.1 Date and time |
+| [stages/E0/expressions.md](stages/E0/expressions.md#L78) | 78 | section | E0F-10.2 Text |
+| [stages/E0/expressions.md](stages/E0/expressions.md#L94) | 94 | section | E0F-10.3 Numbers |
+| [stages/E0/expressions.md](stages/E0/expressions.md#L107) | 107 | section | E0F-10.4 Conditionals |
+| [stages/E0/expressions.md](stages/E0/expressions.md#L118) | 118 | section | E0F-10.5 Aggregates |
+| [stages/E0/expressions.md](stages/E0/expressions.md#L125) | 125 | section | E0F-11 `CAST` target types |
+| [stages/E0/expressions.md](stages/E0/expressions.md#L137) | 137 | rule | E0F-11.1 |
+| [stages/E0/expressions.md](stages/E0/expressions.md#L138) | 138 | rule | E0F-11.2 |
+| [stages/E0/expressions.md](stages/E0/expressions.md#L140) | 140 | section | E0F-3 Implicit conversions |
+| [stages/E0/expressions.md](stages/E0/expressions.md#L153) | 153 | section | E0F-4 Relationship keys |
+| [stages/E0/expressions.md](stages/E0/expressions.md#L155) | 155 | rule | E0F-4.1 |
+| [stages/E0/expressions.md](stages/E0/expressions.md#L157) | 157 | section | E0F-5 Result types of aggregates |
+| [stages/E0/expressions.md](stages/E0/expressions.md#L178) | 178 | section | E0F-5a Result types of scalar expressions |
+| [stages/E0/expressions.md](stages/E0/expressions.md#L197) | 197 | section | E0F-6 Division |
+| [stages/E0/expressions.md](stages/E0/expressions.md#L199) | 199 | rule | E0F-6.1 |
+| [stages/E0/expressions.md](stages/E0/expressions.md#L201) | 201 | section | E0F-7 Nullability |
+| [stages/E0/expressions.md](stages/E0/expressions.md#L203) | 203 | rule | E0F-7.1 |
+| [stages/E0/expressions.md](stages/E0/expressions.md#L205) | 205 | section | E0F-8 Diagnostics |
 | [stages/E0/extensions.md](stages/E0/extensions.md#L1) | 1 | section | E0.c Validate extensions |
 | [stages/E0/extensions.md](stages/E0/extensions.md#L3) | 3 | section | E0C-1 Which entries are ours |
 | [stages/E0/extensions.md](stages/E0/extensions.md#L11) | 11 | rule | E0C-1.1 |

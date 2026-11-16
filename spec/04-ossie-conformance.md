@@ -79,3 +79,4 @@ Each deviation is deliberate, justified, and reported with its own code.
 | DEV-7 | A model may contain several semantic models | `load` compiles one; with more than one, the load option `model_name` is required (`E0B-07`) | One handle, one model |
 | DEV-8 | Layer 2 exposes only dataset-scoped metrics as measures | A 0.1.1 model metric whose every component has home dataset `D` is exposed as a measure of relation `D` in the SQL form (QRY-5.2) | 0.1.1 has no dataset-scoped metrics |
 | DEV-9 | 0.1.1 sets no identifier length | Identifiers longer than 128 characters are rejected (`E0D-01`), as in the development line | Portability across engines |
+| DEV-10 | `REGEXP_LIKE` and the `MILLISECOND` part of `EXTRACT` and `DATE_PART` are REQUIRED in `OSSIE_SQL_2026` | Outside the accepted subset (`E0F-02`, E0F-2.6) | Apache Ossie fixes neither the regular expression syntax nor whether milliseconds include the seconds, so engines return different results (P1) |

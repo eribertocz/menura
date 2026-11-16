@@ -27,7 +27,7 @@ covered by the Layer 2 suite cases that test it.
 |---|---|
 | Statement | One `SELECT`. SQL comments are ignored and one trailing `;` is allowed. No `WITH`, set operators, subqueries, `DISTINCT` or window functions. |
 | `FROM` | Exactly one relation: `<model>.<dataset> [[AS] alias]`, where `<model>` is the model name. No `JOIN`. References to the relation's fields and metrics MAY be unqualified or qualified by the alias or the dataset name. |
-| `SELECT` items | A field of the relation; a scalar expression over fields of the relation (E0F-2 language, including `CAST`, `COALESCE`, `NULLIF`, `CASE`, `EXTRACT` and the REQUIRED scalar functions); `AGG(metric)` or `MEASURE(metric)` of a metric exposed on the relation (QRY-5.2); a scalar expression over `AGG(…)` terms, literals and the same functions. An item that is not a plain field reference MUST have `AS alias` (`EQRY-13`). |
+| `SELECT` items | A field of the relation; a scalar expression over fields of the relation (the E0F-2 language: operators, `CASE`, `CAST` (E0F-11) and the scalar functions of E0F-10); `AGG(metric)` or `MEASURE(metric)` of a metric exposed on the relation (QRY-5.2); a scalar expression over `AGG(…)` terms, literals and the same functions. An item that is not a plain field reference MUST have `AS alias` (`EQRY-13`). |
 | `WHERE` | A boolean expression over fields of the relation. |
 | `GROUP BY` | Exactly the non-aggregated `SELECT` items, by expression or position, or `GROUP BY ALL`. At least one `AGG(…)` item is required; without `GROUP BY`, every item MUST contain `AGG(…)` and the result is one row. |
 | `ORDER BY` | Output names or positions, each with `ASC`/`DESC` and `NULLS FIRST`/`NULLS LAST`. |
