@@ -1,0 +1,15 @@
+[package]
+name = "semantic-compiler-conformance-runner"
+description = "Runs the conformance suite of spec/08-conformance-suite.md and reports results per rule ID."
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[dependencies]
+duckdb = { version = "=1.20000.2", default-features = false, features = ["bundled"] }
+serde = { version = "1.0.229", features = ["derive"] }
+serde_yaml_ng = "0.10.0"
+
+[lints]
+workspace = true

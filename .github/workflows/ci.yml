@@ -1,6 +1,6 @@
 # Checks of spec/09-continuous-integration.md CI-1 that run on every pull request and every
-# push to main (WF-8.0): format, lint, unsafe, test, dependencies, dependency-graph, index and
-# examples. Every job is named exactly as its check in CI-1.
+# push to main (WF-8.0): format, lint, unsafe, test, dependencies, dependency-graph, conformance,
+# rule-coverage, index and examples. Every job is named exactly as its check in CI-1.
 #
 # Tool versions are pinned so that the same commit always gets the same verdict.
 name: ci
@@ -118,6 +118,40 @@ jobs:
         run: python3 -m unittest discover -s scripts/ci -p 'test_dependency_graph.py' -v
       - name: Check dependency direction, cycles and wrappers (S6, S7, S8)
         run: python3 -I scripts/ci/check_dependency_graph.py
+
+  conformance:
+    name: conformance
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the commit
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+      - name: Install the Rust toolchain
+        run: |
+          rustup toolchain install "$RUST_TOOLCHAIN" --profile minimal
+          rustup default "$RUST_TOOLCHAIN"
+      - name: Test the runner (CS-2.1, CS-2.2, CS-4.2, CS-4.3)
+        run: cargo test --locked -p semantic-compiler-conformance-runner
+      - name: Run every case with non-default DuckDB settings and report per rule ID (CS-4.1, CS-4.2, CS-4.3)
+        run: cargo run --locked --quiet -p semantic-compiler-conformance-runner -- conformance
+
+  rule-coverage:
+    name: rule-coverage
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the commit
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+      - name: Install the check's dependencies
+        run: |
+          python3 -m venv "$RUNNER_TEMP/venv"
+          "$RUNNER_TEMP/venv/bin/pip" install --disable-pip-version-check pyyaml==6.0.3
+      - name: Test the check
+        run: '"$RUNNER_TEMP/venv/bin/python" -m unittest discover -s scripts/ci -p "test_rule_coverage.py" -v'
+      - name: List rule IDs without a case, CI check or review item (T1; reports only before 0.2.0)
+        run: '"$RUNNER_TEMP/venv/bin/python" -I scripts/ci/check_rule_coverage.py'
 
   index:
     name: index

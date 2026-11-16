@@ -1,0 +1,15 @@
+id: sample-runtime-error-001
+rules: [CS-2.5]
+model: sample
+security_context: analyst.json
+query:
+  contract: semantic_compiler.query
+  contract_version: "1.0.0"
+  reference_time: "2026-11-15T12:00:00-04:00"
+  time_zone: UTC
+  query:
+    metrics:
+      - {metric: total_balance, alias: total_balance}
+expect:
+  outcome: runtime_error
+  error: RADD-03

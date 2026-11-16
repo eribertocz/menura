@@ -32,6 +32,9 @@ const LAYERS: &[&[&str]] = &[
     &["cli"],
 ];
 
+/// Tools outside the layers of §5.2. No crate may depend on a tool.
+const TOOLS: &[&str] = &["conformance-runner"];
+
 /// The exact set of dependency edges between workspace crates, as `(dependent, dependency)`.
 const EXPECTED_EDGES: &[(&str, &str)] = &[
     ("model", "contracts"),
@@ -91,7 +94,7 @@ fn workspace_dependencies(manifest: &str) -> BTreeSet<String> {
 fn actual_edges() -> io::Result<BTreeSet<(String, String)>> {
     let root = workspace_root();
     let mut edges = BTreeSet::new();
-    for name in crate_names() {
+    for name in crate_names().into_iter().chain(TOOLS.iter().copied()) {
         let path = root.join("crates").join(name).join("Cargo.toml");
         let manifest = fs::read_to_string(&path)?;
         for dependency in workspace_dependencies(&manifest) {
@@ -109,8 +112,21 @@ fn s6_every_workspace_member_is_in_a_layer() {
         .filter_map(|line| line.trim().strip_prefix("\"crates/"))
         .map(|rest| rest.trim_end_matches("\","))
         .collect();
-    let layered: BTreeSet<&str> = crate_names().into_iter().collect();
+    let layered: BTreeSet<&str> = crate_names()
+        .into_iter()
+        .chain(TOOLS.iter().copied())
+        .collect();
     assert_eq!(members, layered);
+}
+
+#[test]
+fn s6_no_crate_depends_on_a_tool() {
+    for (dependent, dependency) in actual_edges().unwrap() {
+        assert!(
+            !TOOLS.contains(&dependency.as_str()),
+            "`{dependent}` depends on the tool `{dependency}`"
+        );
+    }
 }
 
 #[test]
