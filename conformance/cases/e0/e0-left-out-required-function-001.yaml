@@ -1,0 +1,17 @@
+id: e0-left-out-required-function-001
+rules: [E0F-02, E0F-2.6, DEV-10]
+model: expressions
+security_context: analyst.json
+query:
+  contract: semantic_compiler.query
+  contract_version: "1.0.0"
+  reference_time: "2026-11-15T12:00:00-04:00"
+  time_zone: UTC
+  query:
+    dimensions: [orders.status]
+    metrics:
+      - {metric: regexp_open_count, alias: regexp_open_count}
+expect:
+  outcome: error
+  error: E0F-02
+  warnings: [W0F-01]

@@ -1,0 +1,64 @@
+version: "0.1.1"
+semantic_model:
+  - name: expressions
+    description: Expression parsing (E0F-2, E0F-9 to E0F-11, E0H-1.3) with one metric per accepted or rejected form
+    custom_extensions:
+      - vendor_name: COMMON
+        data: '{"namespace": "semantic_compiler", "version": 1, "security_context": {"roles": ["analyst"], "attributes": []}}'
+    datasets:
+      - name: orders
+        source: shop.main.orders
+        primary_key: [order_id]
+        fields:
+          - name: order_id
+            expression: {dialects: [{dialect: ANSI_SQL, expression: order_id}]}
+          - name: status
+            expression: {dialects: [{dialect: ANSI_SQL, expression: status}]}
+          - name: amount
+            expression: {dialects: [{dialect: ANSI_SQL, expression: amount}]}
+          - name: ordered_on
+            expression: {dialects: [{dialect: ANSI_SQL, expression: ordered_on}]}
+        custom_extensions:
+          - vendor_name: COMMON
+            data: '{"namespace": "semantic_compiler", "version": 1, "access": {"mode": "roles", "roles": ["analyst"]}}'
+    metrics:
+      - name: total_amount
+        expression: {dialects: [{dialect: ANSI_SQL, expression: SUM(orders.amount)}]}
+      - name: total_amount_reformatted
+        expression: {dialects: [{dialect: ANSI_SQL, expression: "sum ( ( orders.amount ) ) -- same tree as total_amount"}]}
+      - name: positive_amount
+        expression: {dialects: [{dialect: ANSI_SQL, expression: "SUM(CASE WHEN orders.amount BETWEEN 1 AND 100 THEN orders.amount ELSE 0 END) FILTER (WHERE orders.status IN ('OPEN', 'CLOSED') AND orders.status != 'PENDING')"}]}
+      - name: half_amount
+        expression: {dialects: [{dialect: ANSI_SQL, expression: SUM(orders.amount) / 2}]}
+      - name: rounded_half_amount
+        expression: {dialects: [{dialect: ANSI_SQL, expression: "ROUND(SUM(orders.amount) / 2, 0)"}]}
+      - name: unparsable_amount
+        expression: {dialects: [{dialect: ANSI_SQL, expression: "SUM(orders.amount"}]}
+      - name: random_amount
+        expression: {dialects: [{dialect: ANSI_SQL, expression: "SUM(orders.amount * RANDOM())"}]}
+      - name: subquery_amount
+        expression: {dialects: [{dialect: ANSI_SQL, expression: "SUM(orders.amount) + (SELECT 1)"}]}
+      - name: engine_specific_amount
+        expression: {dialects: [{dialect: ANSI_SQL, expression: "SUM(EPOCH(orders.ordered_on))"}]}
+      - name: try_cast_amount
+        expression: {dialects: [{dialect: ANSI_SQL, expression: "SUM(TRY_CAST(orders.status AS INTEGER))"}]}
+      - name: regexp_open_count
+        expression: {dialects: [{dialect: ANSI_SQL, expression: "COUNT(*) FILTER (WHERE REGEXP_LIKE(orders.status, '^O'))"}]}
+      - name: escaped_like_count
+        expression: {dialects: [{dialect: ANSI_SQL, expression: "COUNT(*) FILTER (WHERE orders.status LIKE 'O!%' ESCAPE '!')"}]}
+      - name: rounded_halves
+        expression: {dialects: [{dialect: ANSI_SQL, expression: "SUM(CAST(ROUND(orders.amount / 2) AS INT))"}]}
+      - name: late_orders
+        expression: {dialects: [{dialect: ANSI_SQL, expression: "COUNT(*) FILTER (WHERE EXTRACT(DAY FROM orders.ordered_on) >= 2 AND DATEADD(day, 1, orders.ordered_on) <= DATE '2026-11-04')"}]}
+      - name: open_prefix_orders
+        expression: {dialects: [{dialect: ANSI_SQL, expression: "COUNT(*) FILTER (WHERE STARTSWITH(LOWER(orders.status), 'op'))"}]}
+      - name: left_associative_amount
+        expression: {dialects: [{dialect: ANSI_SQL, expression: "SUM(orders.amount) - 2 - 1 * 3"}]}
+      - name: star_sum
+        expression: {dialects: [{dialect: ANSI_SQL, expression: "SUM(*)"}]}
+      - name: double_precision_amount
+        expression: {dialects: [{dialect: ANSI_SQL, expression: "SUM(CAST(orders.amount AS DOUBLE PRECISION))"}]}
+      - name: running_amount
+        expression: {dialects: [{dialect: ANSI_SQL, expression: "SUM(orders.amount) OVER (ORDER BY orders.order_id)"}]}
+      - name: amount_to_date
+        expression: {dialects: [{dialect: ANSI_SQL, expression: "SUM(orders.amount) FILTER (WHERE orders.ordered_on <= CURRENT_DATE)"}]}

@@ -1024,6 +1024,8 @@ name = "semantic-compiler-e0-load"
 version = "0.1.0"
 dependencies = [
  "granit-parser",
+ "semantic-compiler-expressions",
+ "semantic-compiler-model",
  "semantic-compiler-security",
 ]
 

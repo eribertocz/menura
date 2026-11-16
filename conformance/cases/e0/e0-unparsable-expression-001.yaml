@@ -1,0 +1,17 @@
+id: e0-unparsable-expression-001
+rules: [E0F-01, E0F-2.2, E0F-9.1]
+model: expressions
+security_context: analyst.json
+query:
+  contract: semantic_compiler.query
+  contract_version: "1.0.0"
+  reference_time: "2026-11-15T12:00:00-04:00"
+  time_zone: UTC
+  query:
+    dimensions: [orders.status]
+    metrics:
+      - {metric: unparsable_amount, alias: unparsable_amount}
+expect:
+  outcome: error
+  error: E0F-01
+  warnings: [W0F-01]

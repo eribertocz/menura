@@ -1,0 +1,4 @@
+Vendored from the Apache Ossie repository, https://github.com/apache/ossie
+Commit: aa500d37894c3d62c96cdce4192cbecea4d7f06a (aa500d3, the tracked commit of spec/04-ossie-conformance.md section 4.1)
+Files: compliance/expressions/valid.txt and compliance/expressions/invalid.txt, unchanged.
+License: Apache License, Version 2.0, as the header of each file states.

@@ -2,4 +2,5 @@
 
 #![forbid(unsafe_code)]
 
+mod expressions;
 pub mod read;
