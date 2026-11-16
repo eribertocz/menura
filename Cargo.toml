@@ -1,0 +1,45 @@
+[workspace]
+resolver = "3"
+members = [
+    "crates/contracts",
+    "crates/model",
+    "crates/security",
+    "crates/e0-load",
+    "crates/e1-parse",
+    "crates/e2-bind",
+    "crates/e3-paths",
+    "crates/e4-plan",
+    "crates/e5-optimize",
+    "crates/generator-duckdb",
+    "crates/core",
+    "crates/cli",
+]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2024"
+license = "Apache-2.0"
+publish = false
+
+[workspace.dependencies]
+semantic-compiler-contracts = { path = "crates/contracts" }
+semantic-compiler-model = { path = "crates/model" }
+semantic-compiler-security = { path = "crates/security" }
+semantic-compiler-e0-load = { path = "crates/e0-load" }
+semantic-compiler-e1-parse = { path = "crates/e1-parse" }
+semantic-compiler-e2-bind = { path = "crates/e2-bind" }
+semantic-compiler-e3-paths = { path = "crates/e3-paths" }
+semantic-compiler-e4-plan = { path = "crates/e4-plan" }
+semantic-compiler-e5-optimize = { path = "crates/e5-optimize" }
+semantic-compiler-generator-duckdb = { path = "crates/generator-duckdb" }
+semantic-compiler-core = { path = "crates/core" }
+
+[workspace.lints.rust]
+unsafe_code = "forbid"
+missing_docs = "deny"
+
+[workspace.lints.clippy]
+pedantic = { level = "deny", priority = -1 }
+unwrap_used = "deny"
+expect_used = "deny"
+panic = "deny"

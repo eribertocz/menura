@@ -1,0 +1,13 @@
+[package]
+name = "semantic-compiler-e5-optimize"
+description = "Stage E5: rewrites the logical plan into an optimized plan."
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[dependencies]
+semantic-compiler-security.workspace = true
+
+[lints]
+workspace = true

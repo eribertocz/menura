@@ -1,0 +1,13 @@
+[package]
+name = "semantic-compiler-e4-plan"
+description = "Stage E4: builds the logical plan."
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[dependencies]
+semantic-compiler-security.workspace = true
+
+[lints]
+workspace = true

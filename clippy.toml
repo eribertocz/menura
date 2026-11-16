@@ -1,0 +1,6 @@
+# Tests may use unwrap, expect and panic (AGENTS.md section 3); library code may not (Q2).
+allow-unwrap-in-tests = true
+allow-expect-in-tests = true
+allow-panic-in-tests = true
+# Function length target of Q5.
+too-many-lines-threshold = 50
