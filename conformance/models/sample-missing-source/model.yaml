@@ -1,0 +1,17 @@
+version: "0.1.1"
+semantic_model:
+  - name: sample_missing_source
+    description: Sample model whose dataset source is not in the catalog schema
+    custom_extensions:
+      - vendor_name: COMMON
+        data: '{"namespace": "semantic_compiler", "version": 1, "security_context": {"roles": ["analyst"], "attributes": []}}'
+    datasets:
+      - name: returns
+        source: shop.main.returns
+        primary_key: [return_id]
+        fields:
+          - name: return_id
+            expression: {dialects: [{dialect: ANSI_SQL, expression: return_id}]}
+        custom_extensions:
+          - vendor_name: COMMON
+            data: '{"namespace": "semantic_compiler", "version": 1, "access": {"mode": "roles", "roles": ["analyst"]}}'

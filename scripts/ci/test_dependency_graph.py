@@ -49,7 +49,7 @@ def violations(document):
 
 
 class DependencyGraphTest(unittest.TestCase):
-    """S6, S7, S8."""
+    """S6, S7, S8, ARC-5.3."""
 
     def test_s6_specified_graph_passes(self):
         self.assertEqual(violations(metadata(VALID_EDGES)), [])
@@ -98,6 +98,30 @@ class DependencyGraphTest(unittest.TestCase):
     def test_s7_stage_depending_on_another_stage_fails(self):
         found = violations(metadata(VALID_EDGES + [("e1-parse", "e0-load")]))
         self.assertTrue(any("`e1-parse` depends on `e0-load`" in line for line in found), found)
+
+    def test_s6_tool_outside_the_layers_passes(self):
+        members = check_dependency_graph.crate_names() + list(check_dependency_graph.TOOLS)
+        self.assertEqual(violations(metadata(VALID_EDGES, members=members)), [])
+
+    def test_arc_5_3_tool_depending_on_core_and_contracts_passes(self):
+        members = check_dependency_graph.crate_names() + list(check_dependency_graph.TOOLS)
+        edges = VALID_EDGES + [("conformance-runner", "core"), ("conformance-runner", "contracts")]
+        self.assertEqual(violations(metadata(edges, members=members)), [])
+
+    def test_arc_5_3_tool_depending_on_a_stage_fails(self):
+        members = check_dependency_graph.crate_names() + list(check_dependency_graph.TOOLS)
+        found = violations(metadata(VALID_EDGES + [("conformance-runner", "e0-load")], members=members))
+        self.assertTrue(any(line.startswith("ARC-5.3:") for line in found), found)
+
+    def test_s6_crate_depending_on_a_tool_fails(self):
+        members = check_dependency_graph.crate_names() + list(check_dependency_graph.TOOLS)
+        found = violations(metadata(VALID_EDGES + [("cli", "conformance-runner")], members=members))
+        self.assertTrue(any("depends on the tool `conformance-runner`" in line for line in found), found)
+
+    def test_s6_core_depending_on_a_tool_fails(self):
+        members = check_dependency_graph.crate_names() + list(check_dependency_graph.TOOLS)
+        found = violations(metadata(VALID_EDGES + [("core", "conformance-runner")], members=members))
+        self.assertTrue(any("`core` depends on the tool" in line for line in found), found)
 
     def test_s8_wrapper_depending_on_a_stage_fails(self):
         found = violations(metadata(VALID_EDGES + [("cli", "model")]))
