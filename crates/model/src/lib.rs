@@ -1,0 +1,3 @@
+//! Semantic model representation consumed by every compilation stage.
+
+#![forbid(unsafe_code)]
