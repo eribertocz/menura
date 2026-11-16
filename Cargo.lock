@@ -3,6 +3,12 @@
 version = 4
 
 [[package]]
+name = "itoa"
+version = "1.0.19"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "3bd1574e617a9a6c1f8f8181bd7e841e1f20e4277607ef28945765188d6284d4"
+
+[[package]]
 name = "semantic-compiler-cli"
 version = "0.1.0"
 dependencies = [
@@ -51,6 +57,7 @@ dependencies = [
 name = "semantic-compiler-e3-paths"
 version = "0.1.0"
 dependencies = [
+ "semantic-compiler-e4-plan",
  "semantic-compiler-security",
 ]
 
@@ -65,6 +72,7 @@ dependencies = [
 name = "semantic-compiler-e5-optimize"
 version = "0.1.0"
 dependencies = [
+ "itoa",
  "semantic-compiler-security",
 ]
 

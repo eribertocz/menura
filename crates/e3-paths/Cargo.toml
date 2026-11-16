@@ -8,6 +8,7 @@ publish.workspace = true
 
 [dependencies]
 semantic-compiler-security.workspace = true
+semantic-compiler-e4-plan.workspace = true
 
 [lints]
 workspace = true
