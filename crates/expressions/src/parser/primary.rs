@@ -35,11 +35,6 @@ impl Parser<'_> {
 
     /// A primary expression that starts with a word.
     fn word(&mut self, word: &str) -> Parsed<Expression> {
-        let subquery = is_keyword(word, "SELECT")
-            || (is_keyword(word, "EXISTS") && self.symbol_at(1, Symbol::LeftParenthesis));
-        if subquery {
-            return Err(self.error_here(ExpressionErrorKind::Subquery));
-        }
         if is_keyword(word, "CAST") {
             return self.cast();
         }

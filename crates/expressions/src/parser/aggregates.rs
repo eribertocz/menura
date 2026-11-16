@@ -87,22 +87,37 @@ impl Parser<'_> {
         }
         self.position += 2;
         self.expect_symbol(Symbol::LeftParenthesis)?;
-        self.expect_keyword("ORDER")?;
-        self.expect_keyword("BY")?;
-        let ordering = self.expression()?;
-        let direction = self.sort_direction();
-        if self.symbol_at(0, Symbol::Comma) {
-            return Err(self.error_here(ExpressionErrorKind::UnsupportedConstruct(
-                "WITHIN GROUP with more than one sort item",
-            )));
-        }
+        let sort_start = self.next_span();
+        let mut items = self.sort_items()?;
         self.expect_symbol(Symbol::RightParenthesis)?;
+        let (Some((ordering, direction)), true) = (items.pop(), items.is_empty()) else {
+            return Err(ExpressionError::new(
+                ExpressionErrorKind::UnsupportedConstruct(
+                    "WITHIN GROUP with more than one sort item",
+                ),
+                sort_start.to(self.previous_span()),
+            ));
+        };
         Ok(AggregateCall::Percentile {
             function,
             fraction: Box::new(fraction),
             ordering: Box::new(ordering),
             direction,
         })
+    }
+
+    /// `ORDER BY item [, item …]`, each `expression [ASC | DESC] [NULLS FIRST | NULLS LAST]`.
+    pub(super) fn sort_items(&mut self) -> Parsed<Vec<(Expression, SortDirection)>> {
+        self.expect_keyword("ORDER")?;
+        self.expect_keyword("BY")?;
+        let mut items = Vec::new();
+        loop {
+            let expression = self.expression()?;
+            items.push((expression, self.sort_direction()));
+            if !self.eat_symbol(Symbol::Comma) {
+                return Ok(items);
+            }
+        }
     }
 
     /// `[ASC | DESC] [NULLS FIRST | NULLS LAST]`; the `NULLS` clause is read and dropped.
@@ -122,7 +137,7 @@ impl Parser<'_> {
     }
 
     /// An optional `FILTER (WHERE condition)`.
-    fn filter(&mut self) -> Parsed<Option<Box<Expression>>> {
+    pub(super) fn filter(&mut self) -> Parsed<Option<Box<Expression>>> {
         if !(self.keyword_at(0, "FILTER") && self.symbol_at(1, Symbol::LeftParenthesis)) {
             return Ok(None);
         }

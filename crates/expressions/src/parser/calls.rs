@@ -136,57 +136,58 @@ impl Parser<'_> {
 
     /// The error for a call of a function outside the subset, whose name is the next token.
     ///
-    /// The arguments are skipped without being parsed, since such functions may have their own
-    /// syntax; an `OVER` after them, or after their `WITHIN GROUP (…)` and `FILTER (…)`, makes
-    /// it a window function (E0F-2.4).
+    /// The call is read with the grammar's generic call form first (E0F-9.1), so a text the
+    /// grammar rejects stays `E0F-01`: the arguments (with `*`, `DISTINCT`, or the `x AS type`
+    /// of `TRY_CAST`), then an optional `WITHIN GROUP (ORDER BY …)` and `FILTER (WHERE …)`. An
+    /// `OVER` after them makes it a window function (E0F-2.4); otherwise it is `E0F-02`.
     fn unsupported_call(&mut self, start: Span) -> ExpressionError {
-        let name = self.text[start.start..start.end].to_owned();
-        let unsupported =
-            ExpressionError::new(ExpressionErrorKind::UnsupportedFunction(name), start);
-        self.position += 1;
-        if !self.skip_parenthesized() {
-            return unsupported;
+        match self.generic_call(start) {
+            Ok(()) if self.keyword_at(0, "OVER") => ExpressionError::new(
+                ExpressionErrorKind::WindowFunction,
+                start.to(self.next_span()),
+            ),
+            Ok(()) => {
+                let name = self.text[start.start..start.end].to_owned();
+                ExpressionError::new(ExpressionErrorKind::UnsupportedFunction(name), start)
+            }
+            Err(error) => error,
+        }
+    }
+
+    /// Reads a call in the grammar's generic form, discarding it.
+    fn generic_call(&mut self, start: Span) -> Parsed<()> {
+        let is_try_cast = self.text[start.start..start.end].eq_ignore_ascii_case("TRY_CAST");
+        self.position += 2;
+        if is_try_cast {
+            self.expression()?;
+            self.expect_keyword("AS")?;
+            self.type_name()?;
+            self.expect_symbol(Symbol::RightParenthesis)?;
+        } else {
+            self.call_arguments()?;
         }
         if self.keyword_at(0, "WITHIN") && self.keyword_at(1, "GROUP") {
             self.position += 2;
-            if !self.skip_parenthesized() {
-                return unsupported;
-            }
+            self.expect_symbol(Symbol::LeftParenthesis)?;
+            self.sort_items()?;
+            self.expect_symbol(Symbol::RightParenthesis)?;
         }
-        if self.keyword_at(0, "FILTER") {
-            self.position += 1;
-            if !self.skip_parenthesized() {
-                return unsupported;
-            }
-        }
-        if self.keyword_at(0, "OVER") {
-            return ExpressionError::new(
-                ExpressionErrorKind::WindowFunction,
-                start.to(self.next_span()),
-            );
-        }
-        unsupported
+        self.filter()?;
+        Ok(())
     }
 
-    /// Skips a balanced `( … )` that starts at the next token. Returns `false` when there is
-    /// none, or when the text ends or a lexical error comes first.
-    fn skip_parenthesized(&mut self) -> bool {
-        if !self.symbol_at(0, Symbol::LeftParenthesis) {
-            return false;
+    /// A type name with optional parameters, as the grammar reads it: a word, then an optional
+    /// `(` list of integers `)`.
+    fn type_name(&mut self) -> Parsed<()> {
+        if !matches!(self.peek_kind_at(0), Some(TokenKind::Word(_))) {
+            return Err(self.unexpected("a type"));
         }
-        let mut depth = 0_usize;
-        while let Some(token) = self.advance() {
-            match token.kind {
-                TokenKind::Symbol(Symbol::LeftParenthesis) => depth += 1,
-                TokenKind::Symbol(Symbol::RightParenthesis) => depth = depth.saturating_sub(1),
-                TokenKind::Invalid(_) => return false,
-                _ => {}
-            }
-            if depth == 0 {
-                return true;
-            }
+        self.position += 1;
+        if self.eat_symbol(Symbol::LeftParenthesis) {
+            self.expression_list()?;
+            self.expect_symbol(Symbol::RightParenthesis)?;
         }
-        false
+        Ok(())
     }
 }
 

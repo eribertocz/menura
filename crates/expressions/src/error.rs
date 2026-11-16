@@ -84,14 +84,10 @@ pub enum ExpressionErrorKind {
         /// What the grammar expects at that point.
         expected: &'static str,
     },
-    /// A subquery: `SELECT` or `EXISTS (…)` (E0F-2.3). `E0F-02`.
-    Subquery,
     /// A call of a function outside the accepted subset: any function E0F-10 does not list,
     /// such as non-deterministic, engine-specific or dialect functions, `TRY_CAST` or the
     /// left-out REQUIRED functions of DEV-10 (E0F-2.3, E0F-2.6). `E0F-02`.
     UnsupportedFunction(String),
-    /// An operator outside the accepted subset: `::`. `E0F-02`.
-    UnsupportedOperator(String),
     /// A call form the grammar accepts but E0F-9.4 does not, such as `*` outside `COUNT(*)`,
     /// `DISTINCT` outside `SUM` and `COUNT`, or `WITHIN GROUP` outside the percentiles. `E0F-02`.
     UnsupportedConstruct(&'static str),
@@ -129,10 +125,8 @@ impl ExpressionErrorKind {
             | Self::UnexpectedToken { .. }
             | Self::UnexpectedEnd { .. } => ExpressionCode::Unparsable,
             Self::NumberOutOfRange(_)
-            | Self::Subquery
             | Self::UnsupportedDatePart(_)
             | Self::UnsupportedFunction(_)
-            | Self::UnsupportedOperator(_)
             | Self::UnsupportedConstruct(_)
             | Self::UnsupportedType(_)
             | Self::WrongArgumentCount { .. }
@@ -170,14 +164,9 @@ impl fmt::Display for ExpressionErrorKind {
                 formatter,
                 "expected {expected}, found the end of the expression"
             ),
-            Self::Subquery => formatter.write_str("subqueries are outside the accepted subset"),
             Self::UnsupportedFunction(name) => {
                 write!(formatter, "function {name} is outside the accepted subset")
             }
-            Self::UnsupportedOperator(operator) => write!(
-                formatter,
-                "operator {operator} is outside the accepted subset"
-            ),
             Self::UnsupportedConstruct(construct) => {
                 write!(formatter, "{construct} is outside the accepted subset")
             }

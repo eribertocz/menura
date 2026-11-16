@@ -23,6 +23,30 @@ fn e0f_9_1_texts_the_grammar_rejects_are_e0f_01() {
             "a = ANY (b)",
             "a > ALL (b)",
             "INTERVAL '1' DAY",
+            "SUM(ALL a)",
+            "a::INTEGER",
+        ],
+    );
+}
+
+#[test]
+fn e0f_9_1_calls_outside_the_subset_are_parsed_before_they_are_rejected() {
+    assert_code(
+        ExpressionCode::Unparsable,
+        &[
+            "DATE_ADD(d, INTERVAL 7 DAY)",
+            "FOO(a b)",
+            "TRY_CAST(x AS)",
+            "FOO(a) WITHIN GROUP (a)",
+            "FOO(a) FILTER (a)",
+        ],
+    );
+    assert_code(
+        ExpressionCode::OutsideSubset,
+        &[
+            "FOO(DISTINCT a) WITHIN GROUP (ORDER BY a, b DESC) FILTER (WHERE c)",
+            "TRY_CAST(x AS DECIMAL(10, 2))",
+            "FOO(*)",
         ],
     );
 }

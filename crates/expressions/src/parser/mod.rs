@@ -66,14 +66,6 @@ impl Parser<'_> {
             .map(|token| &token.kind)
     }
 
-    fn advance(&mut self) -> Option<Token> {
-        let token = self.tokens.get(self.position).cloned();
-        if token.is_some() {
-            self.position += 1;
-        }
-        token
-    }
-
     /// The span of the next token, or an empty span at the end of the text.
     fn next_span(&self) -> Span {
         self.peek().map_or(
@@ -135,15 +127,12 @@ impl Parser<'_> {
 
     /// The error for the next token when the grammar expects `expected` there.
     ///
-    /// A lexical error token reports itself; `::` is outside the subset wherever it appears.
+    /// A lexical error token reports itself.
     fn unexpected(&self, expected: &'static str) -> ExpressionError {
         let span = self.next_span();
         let kind = match self.peek().map(|token| &token.kind) {
             None => ExpressionErrorKind::UnexpectedEnd { expected },
             Some(TokenKind::Invalid(kind)) => kind.clone(),
-            Some(TokenKind::Symbol(symbol @ Symbol::DoubleColon)) => {
-                ExpressionErrorKind::UnsupportedOperator(symbol.text().to_owned())
-            }
             Some(_) => ExpressionErrorKind::UnexpectedToken {
                 found: self.text[span.start..span.end].to_owned(),
                 expected,

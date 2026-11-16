@@ -171,16 +171,18 @@ fn e0f_2_3_current_moments_are_accepted() {
 }
 
 #[test]
-fn e0f_2_3_subqueries_and_other_functions_are_outside_the_subset() {
+fn e0f_2_3_forbidden_constructs() {
     assert_code(
         ExpressionCode::OutsideSubset,
+        &["RANDOM()", "now()", "list_sum(a)", "EXISTS(a)"],
+    );
+    assert_code(
+        ExpressionCode::Unparsable,
         &[
+            "SELECT a FROM t",
             "(SELECT 1)",
             "a IN (SELECT b FROM t)",
             "EXISTS (SELECT 1)",
-            "RANDOM()",
-            "now()",
-            "list_sum(a)",
             "a::DOUBLE",
         ],
     );

@@ -29,8 +29,6 @@ pub(crate) enum Symbol {
     LessOrEqual,
     Greater,
     GreaterOrEqual,
-    /// `::`: recognized only to report it as outside the subset.
-    DoubleColon,
 }
 
 impl Symbol {
@@ -53,7 +51,6 @@ impl Symbol {
             Self::LessOrEqual => "<=",
             Self::Greater => ">",
             Self::GreaterOrEqual => ">=",
-            Self::DoubleColon => "::",
         }
     }
 }
@@ -309,7 +306,6 @@ fn two_character_symbol(text: &str) -> Option<Symbol> {
         "<>" | "!=" => Symbol::NotEqual,
         "<=" => Symbol::LessOrEqual,
         ">=" => Symbol::GreaterOrEqual,
-        "::" => Symbol::DoubleColon,
         _ => return None,
     })
 }
