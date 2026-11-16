@@ -1,0 +1,76 @@
+# Workflow guards of spec/09-continuous-integration.md CI-1:
+# scope (WF-6.3), co-author (WF-6.4), issue-label (WF-6.5) and language (WF-9.3).
+name: workflow-guards
+
+on:
+  pull_request:
+    types: [opened, edited, reopened, synchronize]
+
+permissions:
+  contents: read
+  issues: read
+  pull-requests: read
+
+concurrency:
+  group: workflow-guards-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  scope:
+    name: scope
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Check changed files against the branch prefix (WF-6.3)
+        env:
+          BRANCH: ${{ github.head_ref }}
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: python3 scripts/ci/check_scope.py "$BRANCH" "$BASE_SHA" "$HEAD_SHA"
+
+  co-author:
+    name: co-author
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Check every commit for a Co-Authored-By trailer (WF-6.4)
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: python3 scripts/ci/check_co_author.py "$BASE_SHA" "$HEAD_SHA"
+
+  issue-label:
+    name: issue-label
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          persist-credentials: false
+      - name: Check the closed issue carries exactly one of spec or impl (WF-6.5)
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: python3 scripts/ci/check_issue_label.py
+
+  language:
+    name: language
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Warn about non-English text (WF-9.3, never blocks)
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: python3 scripts/ci/check_language.py "$BASE_SHA" "$HEAD_SHA"

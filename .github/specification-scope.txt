@@ -1,0 +1,12 @@
+# Specification scope (spec/06-development-workflow.md section 6.6).
+# Read by the `scope` CI check (WF-6.3). One entry per line.
+# An entry ending with "/" covers a directory and everything below it;
+# any other entry covers exactly one file. Blank lines and lines starting with "#" are ignored.
+spec/
+AGENTS.md
+CLAUDE.md
+.claude/
+.github/ISSUE_TEMPLATE/
+.github/PULL_REQUEST_TEMPLATE.md
+scripts/build_index.py
+scripts/check_examples.py
