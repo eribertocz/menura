@@ -5,7 +5,9 @@ description: Review an implementation pull request against the specification and
 
 # Review a pull request
 
-1. Read the pull request and its issue: `gh pr view <number>`, `gh issue view <issue>`.
+GitHub GraphQL is not available in cloud sessions: use the REST API through `gh api` only.
+
+1. Read the pull request, its files and its issue: `gh api repos/{owner}/{repo}/pulls/<number>`, `gh api repos/{owner}/{repo}/pulls/<number>/files`, `gh api repos/{owner}/{repo}/issues/<issue>`.
 2. Read only the specification sections the issue lists, plus `AGENTS.md`.
 3. Check, and record each finding with file and line:
    - **Traceability:** every rule ID of the issue has at least one passing conformance case; no case claims a rule the code does not implement.
@@ -16,6 +18,6 @@ description: Review an implementation pull request against the specification and
    - **Security:** bound parameters only; row policies untouched by later stages.
    - **Determinism:** no iteration over unordered collections into output.
    - **Language:** everything in English.
-4. Verify CI is green.
-5. Post one review comment with `gh pr review <number> --comment`, listing findings by severity: blocking, should fix, note. If there are none, say so.
+4. Verify CI is green: `gh api repos/{owner}/{repo}/commits/<head-sha>/check-runs`.
+5. Post one comment with `gh api repos/{owner}/{repo}/issues/<number>/comments -X POST -F body=@<file>`, listing findings by severity: blocking, should fix, note. If there are none, say so.
 6. Never approve and never merge: approval belongs to the maintainer.
