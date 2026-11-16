@@ -66,25 +66,26 @@ Find a rule ID or a section here, then open only that file at that line.
 | [05-engineering-standards.md](05-engineering-standards.md#L27) | 27 | rule | S7 |
 | [05-engineering-standards.md](05-engineering-standards.md#L28) | 28 | rule | S8 |
 | [05-engineering-standards.md](05-engineering-standards.md#L29) | 29 | rule | S9 |
-| [05-engineering-standards.md](05-engineering-standards.md#L31) | 31 | section | 5.3 Code quality |
-| [05-engineering-standards.md](05-engineering-standards.md#L35) | 35 | rule | Q1 |
-| [05-engineering-standards.md](05-engineering-standards.md#L36) | 36 | rule | Q2 |
-| [05-engineering-standards.md](05-engineering-standards.md#L37) | 37 | rule | Q3 |
-| [05-engineering-standards.md](05-engineering-standards.md#L38) | 38 | rule | Q4 |
-| [05-engineering-standards.md](05-engineering-standards.md#L39) | 39 | rule | Q5 |
-| [05-engineering-standards.md](05-engineering-standards.md#L40) | 40 | rule | Q6 |
-| [05-engineering-standards.md](05-engineering-standards.md#L41) | 41 | rule | Q7 |
-| [05-engineering-standards.md](05-engineering-standards.md#L43) | 43 | section | 5.4 Testing |
-| [05-engineering-standards.md](05-engineering-standards.md#L47) | 47 | rule | T1 |
-| [05-engineering-standards.md](05-engineering-standards.md#L48) | 48 | rule | T2 |
-| [05-engineering-standards.md](05-engineering-standards.md#L49) | 49 | rule | T3 |
-| [05-engineering-standards.md](05-engineering-standards.md#L50) | 50 | rule | T4 |
-| [05-engineering-standards.md](05-engineering-standards.md#L51) | 51 | rule | T5 |
-| [05-engineering-standards.md](05-engineering-standards.md#L53) | 53 | section | 5.5 Decisions and changes |
-| [05-engineering-standards.md](05-engineering-standards.md#L59) | 59 | section | 5.6 Performance targets |
-| [05-engineering-standards.md](05-engineering-standards.md#L63) | 63 | rule | R1 |
-| [05-engineering-standards.md](05-engineering-standards.md#L64) | 64 | rule | R2 |
-| [05-engineering-standards.md](05-engineering-standards.md#L65) | 65 | rule | R3 |
+| [05-engineering-standards.md](05-engineering-standards.md#L30) | 30 | rule | S10 |
+| [05-engineering-standards.md](05-engineering-standards.md#L32) | 32 | section | 5.3 Code quality |
+| [05-engineering-standards.md](05-engineering-standards.md#L36) | 36 | rule | Q1 |
+| [05-engineering-standards.md](05-engineering-standards.md#L37) | 37 | rule | Q2 |
+| [05-engineering-standards.md](05-engineering-standards.md#L38) | 38 | rule | Q3 |
+| [05-engineering-standards.md](05-engineering-standards.md#L39) | 39 | rule | Q4 |
+| [05-engineering-standards.md](05-engineering-standards.md#L40) | 40 | rule | Q5 |
+| [05-engineering-standards.md](05-engineering-standards.md#L41) | 41 | rule | Q6 |
+| [05-engineering-standards.md](05-engineering-standards.md#L42) | 42 | rule | Q7 |
+| [05-engineering-standards.md](05-engineering-standards.md#L44) | 44 | section | 5.4 Testing |
+| [05-engineering-standards.md](05-engineering-standards.md#L48) | 48 | rule | T1 |
+| [05-engineering-standards.md](05-engineering-standards.md#L49) | 49 | rule | T2 |
+| [05-engineering-standards.md](05-engineering-standards.md#L50) | 50 | rule | T3 |
+| [05-engineering-standards.md](05-engineering-standards.md#L51) | 51 | rule | T4 |
+| [05-engineering-standards.md](05-engineering-standards.md#L52) | 52 | rule | T5 |
+| [05-engineering-standards.md](05-engineering-standards.md#L54) | 54 | section | 5.5 Decisions and changes |
+| [05-engineering-standards.md](05-engineering-standards.md#L60) | 60 | section | 5.6 Performance targets |
+| [05-engineering-standards.md](05-engineering-standards.md#L64) | 64 | rule | R1 |
+| [05-engineering-standards.md](05-engineering-standards.md#L65) | 65 | rule | R2 |
+| [05-engineering-standards.md](05-engineering-standards.md#L66) | 66 | rule | R3 |
 | [06-development-workflow.md](06-development-workflow.md#L1) | 1 | section | 6. Development workflow |
 | [06-development-workflow.md](06-development-workflow.md#L3) | 3 | section | 6.1 Roles |
 | [06-development-workflow.md](06-development-workflow.md#L12) | 12 | section | 6.2 Who does what |
