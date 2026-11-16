@@ -1,0 +1,370 @@
+{
+  "schema": "compiled-plan",
+  "example": "compiled-plan.example.json",
+  "cases": [
+    {
+      "name": "published example",
+      "valid": true,
+      "patch": []
+    },
+    {
+      "name": "unknown data versions",
+      "valid": true,
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/cache_key/data_versions",
+          "value": null
+        }
+      ]
+    },
+    {
+      "name": "row limit",
+      "valid": true,
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/limits/max_rows",
+          "value": 5
+        }
+      ]
+    },
+    {
+      "name": "explanation without SQL",
+      "valid": true,
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/contract",
+          "value": "semantic_compiler.explanation"
+        },
+        {
+          "op": "replace",
+          "path": "/sql",
+          "value": ""
+        },
+        {
+          "op": "replace",
+          "path": "/parameters",
+          "value": []
+        }
+      ]
+    },
+    {
+      "name": "any parameter value",
+      "valid": true,
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/parameters/0/value",
+          "value": {
+            "nested": [
+              1,
+              null
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "timeout is text",
+      "valid": false,
+      "keywords": [
+        "type",
+        "properties"
+      ],
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/limits/timeout_ms",
+          "value": "30000"
+        }
+      ]
+    },
+    {
+      "name": "data versions is text",
+      "valid": false,
+      "keywords": [
+        "type"
+      ],
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/cache_key/data_versions",
+          "value": "x"
+        }
+      ]
+    },
+    {
+      "name": "explanation with SQL",
+      "valid": false,
+      "keywords": [
+        "allOf",
+        "if",
+        "else",
+        "const"
+      ],
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/contract",
+          "value": "semantic_compiler.explanation"
+        },
+        {
+          "op": "replace",
+          "path": "/parameters",
+          "value": []
+        }
+      ]
+    },
+    {
+      "name": "explanation with parameters",
+      "valid": false,
+      "keywords": [
+        "allOf",
+        "if",
+        "else",
+        "maxItems"
+      ],
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/contract",
+          "value": "semantic_compiler.explanation"
+        },
+        {
+          "op": "replace",
+          "path": "/sql",
+          "value": ""
+        }
+      ]
+    },
+    {
+      "name": "plan without SQL",
+      "valid": false,
+      "keywords": [
+        "allOf",
+        "if",
+        "then",
+        "minLength"
+      ],
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/sql",
+          "value": ""
+        }
+      ]
+    },
+    {
+      "name": "another dialect",
+      "valid": false,
+      "keywords": [
+        "enum"
+      ],
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/dialect",
+          "value": "postgres"
+        }
+      ]
+    },
+    {
+      "name": "unknown role",
+      "valid": false,
+      "keywords": [
+        "enum",
+        "items"
+      ],
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/result_schema/0/role",
+          "value": "measure"
+        }
+      ]
+    },
+    {
+      "name": "lineage missing",
+      "valid": false,
+      "keywords": [
+        "required"
+      ],
+      "patch": [
+        {
+          "op": "remove",
+          "path": "/lineage"
+        }
+      ]
+    },
+    {
+      "name": "unknown limits member",
+      "valid": false,
+      "keywords": [
+        "additionalProperties"
+      ],
+      "patch": [
+        {
+          "op": "add",
+          "path": "/limits/extra",
+          "value": 1
+        }
+      ]
+    },
+    {
+      "name": "empty result schema",
+      "valid": false,
+      "keywords": [
+        "minItems"
+      ],
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/result_schema",
+          "value": []
+        }
+      ]
+    },
+    {
+      "name": "position 0",
+      "valid": false,
+      "keywords": [
+        "minimum",
+        "items"
+      ],
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/parameters/0/position",
+          "value": 0
+        }
+      ]
+    },
+    {
+      "name": "decimal precision 39",
+      "valid": false,
+      "keywords": [
+        "maximum",
+        "$ref",
+        "oneOf"
+      ],
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/parameters/0/logical_type",
+          "value": {
+            "kind": "decimal",
+            "precision": 39,
+            "scale": 2
+          }
+        }
+      ]
+    },
+    {
+      "name": "upper-case key",
+      "valid": false,
+      "keywords": [
+        "pattern",
+        "$ref"
+      ],
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/cache_key/key",
+          "value": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+        }
+      ]
+    },
+    {
+      "name": "short tracked commit",
+      "valid": false,
+      "keywords": [
+        "pattern"
+      ],
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/producer/ossie_tracked_commit",
+          "value": "abc"
+        }
+      ]
+    },
+    {
+      "name": "one-part compiler version",
+      "valid": false,
+      "keywords": [
+        "$ref",
+        "pattern"
+      ],
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/producer/compiler_version",
+          "value": "1"
+        }
+      ]
+    },
+    {
+      "name": "numeric model input",
+      "valid": false,
+      "keywords": [
+        "items",
+        "type"
+      ],
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/lineage/0/model_inputs",
+          "value": [
+            1
+          ]
+        }
+      ]
+    },
+    {
+      "name": "unknown logical kind",
+      "valid": false,
+      "keywords": [
+        "oneOf"
+      ],
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/result_schema/0/logical_type",
+          "value": {
+            "kind": "blob"
+          }
+        }
+      ]
+    },
+    {
+      "name": "empty data source",
+      "valid": false,
+      "keywords": [
+        "minLength"
+      ],
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/data_source",
+          "value": ""
+        }
+      ]
+    },
+    {
+      "name": "another contract",
+      "valid": false,
+      "keywords": [
+        "enum"
+      ],
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/contract",
+          "value": "semantic_compiler.plan"
+        }
+      ]
+    }
+  ]
+}

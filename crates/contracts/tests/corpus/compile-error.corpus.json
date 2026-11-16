@@ -1,0 +1,219 @@
+{
+  "schema": "compile-error",
+  "example": "compile-error.example.json",
+  "cases": [
+    {
+      "name": "published example",
+      "valid": true,
+      "patch": []
+    },
+    {
+      "name": "empty validation report",
+      "valid": true,
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/contract",
+          "value": "semantic_compiler.validation_report"
+        },
+        {
+          "op": "replace",
+          "path": "/errors",
+          "value": []
+        }
+      ]
+    },
+    {
+      "name": "no location",
+      "valid": true,
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/errors/0/location",
+          "value": null
+        }
+      ]
+    },
+    {
+      "name": "line and column",
+      "valid": true,
+      "patch": [
+        {
+          "op": "add",
+          "path": "/errors/0/location/line",
+          "value": 3
+        },
+        {
+          "op": "add",
+          "path": "/errors/0/location/column",
+          "value": 7
+        }
+      ]
+    },
+    {
+      "name": "compile error without errors",
+      "valid": false,
+      "keywords": [
+        "allOf",
+        "if",
+        "then",
+        "const",
+        "minItems"
+      ],
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/errors",
+          "value": []
+        }
+      ]
+    },
+    {
+      "name": "numeric message",
+      "valid": false,
+      "keywords": [
+        "type",
+        "items",
+        "$ref",
+        "properties"
+      ],
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/errors/0/message",
+          "value": 5
+        }
+      ]
+    },
+    {
+      "name": "location is text",
+      "valid": false,
+      "keywords": [
+        "type"
+      ],
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/errors/0/location",
+          "value": "x"
+        }
+      ]
+    },
+    {
+      "name": "another contract",
+      "valid": false,
+      "keywords": [
+        "enum"
+      ],
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/contract",
+          "value": "semantic_compiler.other"
+        }
+      ]
+    },
+    {
+      "name": "unknown document",
+      "valid": false,
+      "keywords": [
+        "enum"
+      ],
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/errors/0/location/document",
+          "value": "sql"
+        }
+      ]
+    },
+    {
+      "name": "warnings missing",
+      "valid": false,
+      "keywords": [
+        "required"
+      ],
+      "patch": [
+        {
+          "op": "remove",
+          "path": "/warnings"
+        }
+      ]
+    },
+    {
+      "name": "location without pointer",
+      "valid": false,
+      "keywords": [
+        "required"
+      ],
+      "patch": [
+        {
+          "op": "remove",
+          "path": "/errors/0/location/pointer"
+        }
+      ]
+    },
+    {
+      "name": "unknown diagnostic member",
+      "valid": false,
+      "keywords": [
+        "additionalProperties"
+      ],
+      "patch": [
+        {
+          "op": "add",
+          "path": "/errors/0/hint",
+          "value": "x"
+        }
+      ]
+    },
+    {
+      "name": "line 0",
+      "valid": false,
+      "keywords": [
+        "minimum"
+      ],
+      "patch": [
+        {
+          "op": "add",
+          "path": "/errors/0/location/line",
+          "value": 0
+        }
+      ]
+    },
+    {
+      "name": "lower-case code",
+      "valid": false,
+      "keywords": [
+        "pattern"
+      ],
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/errors/0/code",
+          "value": "e_x"
+        }
+      ]
+    },
+    {
+      "name": "incomplete warning",
+      "valid": false,
+      "keywords": [
+        "items",
+        "$ref",
+        "required"
+      ],
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/warnings",
+          "value": [
+            {
+              "code": "W1"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

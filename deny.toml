@@ -42,6 +42,28 @@ allow = [
     "semantic-compiler-generator-duckdb",
     "semantic-compiler-core",
     "semantic-compiler-cli",
+    # Contracts (#5): JSON (de)serialization and the SHA-256 of CON-2, with their dependencies.
+    "serde",
+    "serde_core",
+    "serde_derive",
+    "serde_json",
+    "itoa",
+    "memchr",
+    "zmij",
+    "proc-macro2",
+    "quote",
+    "syn",
+    "unicode-ident",
+    "sha2",
+    "digest",
+    "block-buffer",
+    "crypto-common",
+    "generic-array",
+    "typenum",
+    "version_check",
+    "cfg-if",
+    "cpufeatures",
+    "libc",
 ]
 # A2: network, filesystem, clock and database libraries are banned in every crate except the
 # command-line wrapper, which is the only crate allowed to depend on them directly. cargo-deny

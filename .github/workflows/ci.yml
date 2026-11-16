@@ -141,6 +141,9 @@ jobs:
       - name: Install the example checker's dependencies
         run: |
           python3 -m venv "$RUNNER_TEMP/venv"
-          "$RUNNER_TEMP/venv/bin/pip" install --disable-pip-version-check jsonschema==4.26.0 pyyaml==6.0.3
+          "$RUNNER_TEMP/venv/bin/pip" install --disable-pip-version-check jsonschema==4.26.0 pyyaml==6.0.3 rfc3339-validator==0.1.4
       - name: Validate the contract examples against their schemas
         run: '"$RUNNER_TEMP/venv/bin/python" -I scripts/check_examples.py'
+      # The Rust evaluator checks the same corpus in the `test` job (crates/contracts/tests/corpus.rs).
+      - name: Validate the contract corpus with the reference implementation
+        run: '"$RUNNER_TEMP/venv/bin/python" -I scripts/check_contract_corpus.py'
