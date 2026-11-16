@@ -1,0 +1,19 @@
+id: e0-numeric-semantics-001
+rules: [E0F-2.5]
+model: expressions
+security_context: analyst.json
+query:
+  contract: semantic_compiler.query
+  contract_version: "1.0.0"
+  reference_time: "2026-11-15T12:00:00-04:00"
+  time_zone: UTC
+  query:
+    dimensions: [orders.status]
+    metrics:
+      - {metric: half_amount, alias: half_amount}
+      - {metric: rounded_half_amount, alias: rounded_half_amount}
+expect:
+  outcome: plan
+  rows: e0-numeric-semantics-001.csv
+  row_order: any
+  tolerance: 1.0e-9
