@@ -20,6 +20,7 @@ deny:
 conformance area="":
     cargo run --locked --quiet -p semantic-compiler-conformance-runner -- conformance "{{area}}"
 
-# List rule IDs without a conformance case, CI check or review item (T1). Requires PyYAML.
+# List rule IDs without a conformance case, CI check or review item (T1); fails only for the
+# files of spec/coverage-scope.txt (CS-2.6). Requires PyYAML.
 rule-coverage:
     python3 scripts/ci/check_rule_coverage.py

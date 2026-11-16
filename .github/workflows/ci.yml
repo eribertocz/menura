@@ -150,7 +150,7 @@ jobs:
           "$RUNNER_TEMP/venv/bin/pip" install --disable-pip-version-check pyyaml==6.0.3
       - name: Test the check
         run: '"$RUNNER_TEMP/venv/bin/python" -m unittest discover -s scripts/ci -p "test_rule_coverage.py" -v'
-      - name: List rule IDs without a case, CI check or review item (T1; reports only before 0.2.0)
+      - name: List rule IDs without a case, CI check or review item (T1; fails only for the coverage scope, CS-2.6)
         run: '"$RUNNER_TEMP/venv/bin/python" -I scripts/ci/check_rule_coverage.py'
 
   index:
