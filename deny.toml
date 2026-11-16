@@ -26,6 +26,10 @@ confidence-threshold = 0.9
 # conformance runner uses (#6, ARC-5.3).
 exceptions = [
     { crate = "tiny-keccak", allow = ["CC0-1.0"] },
+    # CDLA-Permissive-2.0 is allowed for this one crate only: the root certificates of the
+    # build-time download of the prebuilt DuckDB library, which only the conformance runner uses
+    # (#46, ARC-5.3).
+    { crate = "webpki-roots", allow = ["CDLA-Permissive-2.0"] },
 ]
 
 [bans]
@@ -98,6 +102,32 @@ allow = [
     "arrow-schema@=60.1.0",
     "arrow-select@=60.1.0",
     "arrow-string@=60.1.0",
+    # Build-time download of the prebuilt DuckDB library (`download-lib`, #46), approved by the
+    # maintainer for the conformance runner only (#23). `ureq` and `rustls` are banned below with
+    # `libduckdb-sys` and `ureq` as their only extra wrappers; allowed here at their exact version.
+    "ureq@=3.5.2",
+    "rustls@=0.23.46",
+    "http",
+    "httparse",
+    "percent-encoding",
+    "ring",
+    "rustls-pki-types",
+    "rustls-webpki",
+    "subtle",
+    "untrusted",
+    "ureq-proto",
+    "utf8-zero",
+    "webpki-roots",
+    "windows-targets",
+    "windows_aarch64_gnullvm",
+    "windows_aarch64_msvc",
+    "windows_i686_gnu",
+    "windows_i686_gnullvm",
+    "windows_i686_msvc",
+    "windows_x86_64_gnu",
+    "windows_x86_64_gnullvm",
+    "windows_x86_64_msvc",
+    "zeroize",
     "adler2",
     "ahash",
     "aho-corasick",
@@ -209,7 +239,7 @@ deny = [
     # Network
     { crate = "reqwest", wrappers = ["semantic-compiler-cli", "semantic-compiler-conformance-runner"], reason = "A2: network access is forbidden outside the command-line wrapper and the conformance runner" },
     { crate = "hyper", wrappers = ["semantic-compiler-cli", "semantic-compiler-conformance-runner"], reason = "A2: network access is forbidden outside the command-line wrapper and the conformance runner" },
-    { crate = "ureq", wrappers = ["semantic-compiler-cli", "semantic-compiler-conformance-runner"], reason = "A2: network access is forbidden outside the command-line wrapper and the conformance runner" },
+    { crate = "ureq", wrappers = ["semantic-compiler-cli", "semantic-compiler-conformance-runner", "libduckdb-sys"], reason = "A2: network access is forbidden outside the command-line wrapper and the conformance runner" },
     { crate = "curl", wrappers = ["semantic-compiler-cli", "semantic-compiler-conformance-runner"], reason = "A2: network access is forbidden outside the command-line wrapper and the conformance runner" },
     { crate = "isahc", wrappers = ["semantic-compiler-cli", "semantic-compiler-conformance-runner"], reason = "A2: network access is forbidden outside the command-line wrapper and the conformance runner" },
     { crate = "surf", wrappers = ["semantic-compiler-cli", "semantic-compiler-conformance-runner"], reason = "A2: network access is forbidden outside the command-line wrapper and the conformance runner" },
@@ -220,7 +250,7 @@ deny = [
     { crate = "socket2", wrappers = ["semantic-compiler-cli", "semantic-compiler-conformance-runner"], reason = "A2: network access is forbidden outside the command-line wrapper and the conformance runner" },
     { crate = "tungstenite", wrappers = ["semantic-compiler-cli", "semantic-compiler-conformance-runner"], reason = "A2: network access is forbidden outside the command-line wrapper and the conformance runner" },
     { crate = "native-tls", wrappers = ["semantic-compiler-cli", "semantic-compiler-conformance-runner"], reason = "A2: network access is forbidden outside the command-line wrapper and the conformance runner" },
-    { crate = "rustls", wrappers = ["semantic-compiler-cli", "semantic-compiler-conformance-runner"], reason = "A2: network access is forbidden outside the command-line wrapper and the conformance runner" },
+    { crate = "rustls", wrappers = ["semantic-compiler-cli", "semantic-compiler-conformance-runner", "ureq"], reason = "A2: network access is forbidden outside the command-line wrapper and the conformance runner" },
     { crate = "openssl", wrappers = ["semantic-compiler-cli", "semantic-compiler-conformance-runner"], reason = "A2: network access is forbidden outside the command-line wrapper and the conformance runner" },
     # Filesystem
     { crate = "walkdir", wrappers = ["semantic-compiler-cli", "semantic-compiler-conformance-runner"], reason = "A2: filesystem access is forbidden outside the command-line wrapper and the conformance runner" },
