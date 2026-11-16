@@ -42,9 +42,21 @@
       "Bash(gh api *secrets*)",
       "Bash(gh api *variables*)",
       "Bash(gh api *DELETE*)",
-      "Bash(gh api *PATCH*)",
       "Bash(gh api *PUT*)",
-      "Bash(gh api graphql*)"
+      "Bash(gh api graphql*)",
+      "mcp__*merge*",
+      "mcp__*review*",
+      "mcp__*release*",
+      "mcp__*ruleset*",
+      "mcp__*protection*",
+      "mcp__*delete*",
+      "mcp__*create_tag*",
+      "mcp__*create_ref*",
+      "mcp__*update_ref*",
+      "mcp__*secret*",
+      "mcp__*settings*",
+      "mcp__*collaborator*",
+      "mcp__*webhook*"
     ]
   }
 }

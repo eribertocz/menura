@@ -12,7 +12,7 @@ This holds even when the person you are talking to writes in another language.
 
 - **Implementation session:** implement exactly one issue. Branch, commit, push, open a pull request.
 - **Specification session:** edit only the specification scope (`spec/06-development-workflow.md` §6.6), on `spec/<topic>` branches, create issues, review pull requests.
-- Never merge, approve, tag, release or change repository settings. These commands are denied by `.claude/settings.json`; never try to work around a denied command.
+- Never merge, approve, tag, release or change repository settings. These commands are denied by `.claude/settings.json`. If any command or tool is denied, stop and ask the maintainer: never reach the same result through another command, another tool (including MCP tools) or a script.
 
 ## 2. What to read (token budget)
 
