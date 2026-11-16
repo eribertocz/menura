@@ -15,7 +15,7 @@
 - **OSS-2.1** Loading never rejects a document that the official 0.1.1 schema and reference validator both accept, except for the deviations of section 4.6.
 - **OSS-2.2** An element the compiler cannot compile (an expression outside the accepted subset, an expression without an `ANSI_SQL` variant, an invalid metric) does not reject the model. It is marked **unusable** with a warning at load time, and a query that names it fails with the error Apache Ossie specifies, or the compiler's own code where Apache Ossie specifies none.
 - **OSS-2.3** Where an official release ships conformance suites, passing all of them is required. Suites at the tracked commit run in CI; Layer 3 suites block the build from 0.7.0 on; Layer 2 suites run in study mode and do not block until the Layer 2 coverage they test is implemented (QRY-5).
-- **OSS-2.4** For the suites that block (OSS-2.3), an expected-failure list (`conformance/ossie/expected-failures.yaml`) names every suite case not yet passing, with its reason and the issue that will fix it. A case that passes while listed, or fails while not listed, fails the build. Layer 2 suites are reported against the same list but never fail the build until they block.
+- **OSS-2.4** For the suites that block (OSS-2.3), an expected-failure list (`conformance/ossie/expected-failures.yaml`) names every suite case not yet passing. Each entry has `reason`, `fixed_in` (the roadmap version expected to fix it) and, once one exists, `issue` (the issue that will fix it). A stale list always fails the build, whether the suite blocks or not: an entry that names no vendored case, or a vendored case that does not pass and is not listed. For a suite that blocks, a case that passes while listed also fails the build. Layer 2 suites are reported against the same list but never fail the build until they block.
 - **OSS-2.5** The compiler never claims full conformance to an interface while any of its suite cases is in the expected-failure list.
 - **OSS-2.6** Behavior that depends on an extension is non-portable and is never presented as Apache Ossie behavior, in documentation, explanations or diagnostics. Apache Ossie Layer 3 section 9 allows answering a query the specification rejects only when the query or model requests it explicitly; every extension of this compiler is such an explicit request.
 
@@ -36,7 +36,7 @@ Every capability outside Apache Ossie is an extension under the `semantic_compil
 
 | ID | Requirement |
 |---|---|
-| OSS-4.1 | A scheduled CI job checks Apache Ossie releases and specification changes daily and opens an `ossie-watch` issue for each. |
+| OSS-4.1 | A scheduled CI job checks Apache Ossie releases and specification changes daily and opens an `ossie-watch` issue for each. A release is any tag `osi-X.Y.Z` or `osi-X.Y.Z-rcN`; a final tag ranks above its release candidates. A release issue is labeled `ossie-watch` and `spec` (OSS-4.5 updates the mapping first); a development-change issue is labeled `ossie-watch` and `impl` (OSS-4.4). |
 | OSS-4.2 | A new official release opens a top-priority issue with the specification diff and the new suites already run against the compiler. |
 | OSS-4.3 | Every new official release MUST be supported within **14 days**. |
 | OSS-4.4 | A development-line change updates the tracked commit in its own pull request, with the suite results and the updated expected-failure list. |
