@@ -215,3 +215,32 @@ fn e0f_9_4_call_forms_only_where_listed() {
         "PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY a NULLS FIRST) FILTER (WHERE b)",
     ]);
 }
+
+#[test]
+fn e0f_9_1_window_clauses_follow_the_grammar() {
+    assert_code(
+        ExpressionCode::Unparsable,
+        &[
+            "SUM(a) OVER (ORDER BY)",
+            "SUM(a) OVER w",
+            "SUM(a) OVER",
+            "SUM(a) OVER (PARTITION a)",
+            "SUM(a) OVER (ORDER BY a NULLS)",
+            "SUM(a) OVER (ROWS)",
+            "SUM(a) OVER (ROWS 1)",
+            "SUM(a) OVER (ROWS BETWEEN 1 PRECEDING)",
+            "SUM(a) OVER (ROWS BETWEEN CURRENT AND 1 FOLLOWING)",
+            "SUM(a) OVER (ORDER BY a PARTITION BY b)",
+            "ROW_NUMBER() OVER (ORDER BY a",
+            "UPPER(a) OVER (GROUPS 1 PRECEDING)",
+        ],
+    );
+    assert_code(
+        ExpressionCode::OutsideSubset,
+        &[
+            "SUM(a) OVER ()",
+            "RANK() OVER (ORDER BY revenue DESC NULLS LAST)",
+            "SUM(a) OVER (ORDER BY d ROWS UNBOUNDED PRECEDING)",
+        ],
+    );
+}

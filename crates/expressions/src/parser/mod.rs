@@ -9,6 +9,7 @@ mod dates;
 mod literals;
 mod operators;
 mod primary;
+mod windows;
 
 use semantic_compiler_model::expression::{Expression, Identifier};
 

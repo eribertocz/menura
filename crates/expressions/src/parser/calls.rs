@@ -96,12 +96,9 @@ impl Parser<'_> {
 
     /// After a call that is not an aggregate: `OVER` makes it a window function (E0F-2.4), and
     /// `FILTER` or `WITHIN GROUP` is outside the subset (E0F-9.4).
-    pub(super) fn reject_aggregate_clauses(&self, start: Span) -> Parsed<()> {
+    pub(super) fn reject_aggregate_clauses(&mut self, start: Span) -> Parsed<()> {
         if self.keyword_at(0, "OVER") {
-            return Err(ExpressionError::new(
-                ExpressionErrorKind::WindowFunction,
-                start.to(self.next_span()),
-            ));
+            return Err(self.window_function(start));
         }
         let clause = (self.keyword_at(0, "FILTER") && self.symbol_at(1, Symbol::LeftParenthesis))
             || (self.keyword_at(0, "WITHIN") && self.keyword_at(1, "GROUP"));
@@ -139,13 +136,10 @@ impl Parser<'_> {
     /// The call is read with the grammar's generic call form first (E0F-9.1), so a text the
     /// grammar rejects stays `E0F-01`: the arguments (with `*`, `DISTINCT`, or the `x AS type`
     /// of `TRY_CAST`), then an optional `WITHIN GROUP (ORDER BY …)` and `FILTER (WHERE …)`. An
-    /// `OVER` after them makes it a window function (E0F-2.4); otherwise it is `E0F-02`.
+    /// `OVER (…)` after them makes it a window function (E0F-2.4); otherwise it is `E0F-02`.
     fn unsupported_call(&mut self, start: Span) -> ExpressionError {
         match self.generic_call(start) {
-            Ok(()) if self.keyword_at(0, "OVER") => ExpressionError::new(
-                ExpressionErrorKind::WindowFunction,
-                start.to(self.next_span()),
-            ),
+            Ok(()) if self.keyword_at(0, "OVER") => self.window_function(start),
             Ok(()) => {
                 let name = self.text[start.start..start.end].to_owned();
                 ExpressionError::new(ExpressionErrorKind::UnsupportedFunction(name), start)

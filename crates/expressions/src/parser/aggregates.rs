@@ -32,10 +32,7 @@ impl Parser<'_> {
         }
         let filter = self.filter()?;
         if self.keyword_at(0, "OVER") {
-            return Err(ExpressionError::new(
-                ExpressionErrorKind::WindowFunction,
-                start.to(self.next_span()),
-            ));
+            return Err(self.window_function(start));
         }
         Ok(Some(Expression::Aggregate { call, filter }))
     }

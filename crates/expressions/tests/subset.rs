@@ -192,10 +192,13 @@ fn e0f_2_3_forbidden_constructs() {
 fn e0f_2_4_window_functions_are_reported_as_such() {
     for text in [
         "SUM(a) OVER (PARTITION BY b)",
-        "SUM(a) FILTER (WHERE b) OVER w",
+        "SUM(a) FILTER (WHERE b) OVER ()",
         "ROW_NUMBER() OVER (ORDER BY a)",
-        "1 + LAG(a, 1) OVER w",
+        "1 + LAG(a, 1) OVER (PARTITION BY b, c ORDER BY d DESC NULLS FIRST)",
         "UPPER(a) OVER ()",
+        "AVG(a) OVER (ORDER BY d ROWS BETWEEN 6 PRECEDING AND CURRENT ROW)",
+        "SUM(a) OVER (ORDER BY d RANGE BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING)",
+        "SUM(a) OVER (ROWS 2 + 1 PRECEDING)",
     ] {
         let error = parse(text).unwrap_err();
         assert_eq!(error.kind(), &ExpressionErrorKind::WindowFunction, "{text}");
