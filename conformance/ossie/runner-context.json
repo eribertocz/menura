@@ -1,0 +1,7 @@
+{
+  "contract": "semantic_compiler.security_context",
+  "contract_version": "1.0.0",
+  "subject": "conformance-runner",
+  "roles": [],
+  "attributes": {}
+}

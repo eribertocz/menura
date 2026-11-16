@@ -1,0 +1,240 @@
+# Apache Ossie suite cases that do not pass yet (spec/04-ossie-conformance.md OSS-2.4).
+#
+# One entry per case, keyed `<suite>/<case folder>`. `reason` says why the case does not pass;
+# `fixed_in` is the version expected to make it pass (spec/07-roadmap.md): Layer 3 suites block
+# from 0.7.0 (OSS-2.3); the Layer 2 single-relation subset arrives in 0.5.0; joins, HAVING,
+# CTEs, subqueries and set operators arrive after 1.0.0, one construct per release (F28).
+# The runner fails when an entry names no vendored case, or a case that does not pass is not
+# listed. Only the ossie-update skill changes this file (CS-3.2).
+
+wide_table/a01_shared_dimension:
+  reason: not implemented
+  fixed_in: "0.7.0"
+wide_table/a02_count_empty_input:
+  reason: not implemented
+  fixed_in: "0.7.0"
+wide_table/a03_three_branches:
+  reason: not implemented
+  fixed_in: "0.7.0"
+wide_table/a04_filter_on_dimension:
+  reason: not implemented
+  fixed_in: "0.7.0"
+wide_table/a05_groups_from_orders:
+  reason: not implemented
+  fixed_in: "0.7.0"
+wide_table/a06_groups_from_returns:
+  reason: not implemented
+  fixed_in: "0.7.0"
+wide_table/a07_dimension_only:
+  reason: not implemented
+  fixed_in: "0.7.0"
+wide_table/a08_model_metric_components:
+  reason: not implemented
+  fixed_in: "0.7.0"
+wide_table/a09_aliases:
+  reason: not implemented
+  fixed_in: "0.7.0"
+wide_table/a10_filter_without_dimension:
+  reason: not implemented
+  fixed_in: "0.7.0"
+wide_table/a11_filter_on_home_dataset:
+  reason: not implemented
+  fixed_in: "0.7.0"
+wide_table/a12_anchor_from_dimensions:
+  reason: not implemented
+  fixed_in: "0.7.0"
+wide_table/a13_filter_false_with_dimension:
+  reason: not implemented
+  fixed_in: "0.7.0"
+wide_table/a14_filter_false_without_dimension:
+  reason: not implemented
+  fixed_in: "0.7.0"
+wide_table/a15_unconnected_filter_false:
+  reason: not implemented
+  fixed_in: "0.7.0"
+wide_table/a16_shared_dimensions_stores:
+  reason: not implemented
+  fixed_in: "0.7.0"
+wide_table/a17_unmatched_home_null_group:
+  reason: not implemented
+  fixed_in: "0.7.0"
+wide_table/a18_anchor_with_metric:
+  reason: not implemented
+  fixed_in: "0.7.0"
+wide_table/a19_sales_by_year:
+  reason: not implemented
+  fixed_in: "0.7.0"
+wide_table/a20_filter_on_sale_year:
+  reason: not implemented
+  fixed_in: "0.7.0"
+wide_table/e01_invalid_query_unknown_key:
+  reason: not implemented
+  fixed_in: "0.7.0"
+wide_table/e02_invalid_query_null:
+  reason: not implemented
+  fixed_in: "0.7.0"
+wide_table/e03_empty_aggregation_query:
+  reason: not implemented
+  fixed_in: "0.7.0"
+wide_table/e04_name_not_found:
+  reason: not implemented
+  fixed_in: "0.7.0"
+wide_table/e05_metric_in_dimensions:
+  reason: not implemented
+  fixed_in: "0.7.0"
+wide_table/e06_field_in_metrics:
+  reason: not implemented
+  fixed_in: "0.7.0"
+wide_table/e07_aggregate_in_filter:
+  reason: not implemented
+  fixed_in: "0.7.0"
+wide_table/e08_window_in_filter:
+  reason: not implemented
+  fixed_in: "0.7.0"
+wide_table/e09_cross_dataset_filter:
+  reason: not implemented
+  fixed_in: "0.7.0"
+wide_table/e10_name_collision:
+  reason: not implemented
+  fixed_in: "0.7.0"
+wide_table/e11_unaggregated_field_in_metric:
+  reason: not implemented
+  fixed_in: "0.7.0"
+wide_table/e12_windowed_metric:
+  reason: not implemented
+  fixed_in: "0.7.0"
+wide_table/e13_measure_grain_two_datasets:
+  reason: not implemented
+  fixed_in: "0.7.0"
+wide_table/e14_measure_grain_no_dataset:
+  reason: not implemented
+  fixed_in: "0.7.0"
+wide_table/e15_no_path:
+  reason: not implemented
+  fixed_in: "0.7.0"
+wide_table/e16_partial_dimension_reachability:
+  reason: not implemented
+  fixed_in: "0.7.0"
+wide_table/e17_no_anchor:
+  reason: not implemented
+  fixed_in: "0.7.0"
+wide_table/e18_filter_path_from_metric:
+  reason: not implemented
+  fixed_in: "0.7.0"
+wide_table/e19_filter_path_from_anchor:
+  reason: not implemented
+  fixed_in: "0.7.0"
+wide_table/e20_order_invalid_before_name:
+  reason: not implemented
+  fixed_in: "0.7.0"
+wide_table/e21_order_name_before_filter:
+  reason: not implemented
+  fixed_in: "0.7.0"
+wide_table/e22_ambiguous_path_dimension:
+  reason: not implemented
+  fixed_in: "0.7.0"
+wide_table/e23_ambiguous_path_filter:
+  reason: not implemented
+  fixed_in: "0.7.0"
+wide_table/e24_no_path_stores:
+  reason: not implemented
+  fixed_in: "0.7.0"
+wide_table/e25_no_anchor_stores:
+  reason: not implemented
+  fixed_in: "0.7.0"
+query/a01_grand_total:
+  reason: not implemented
+  fixed_in: "0.5.0"
+query/a02_measure_per_group:
+  reason: not implemented
+  fixed_in: "0.5.0"
+query/a03_where_before_measure:
+  reason: not implemented
+  fixed_in: "0.5.0"
+query/a04_having_on_unselected_measure:
+  reason: not implemented
+  fixed_in: "1.x"
+query/a05_scalar_ops_on_measure_values:
+  reason: not implemented
+  fixed_in: "0.5.0"
+query/a06_nulls_follow_aggregate:
+  reason: not implemented
+  fixed_in: "0.5.0"
+query/a07_empty_input_set:
+  reason: not implemented
+  fixed_in: "0.5.0"
+query/a08_group_by_all_skips_measures:
+  reason: not implemented
+  fixed_in: "0.5.0"
+query/a09_rollup_not_average_of_averages:
+  reason: not implemented
+  fixed_in: "0.5.0"
+query/a10_cte_passes_measures_through:
+  reason: not implemented
+  fixed_in: "1.x"
+query/a11_agg_in_where_subquery:
+  reason: not implemented
+  fixed_in: "1.x"
+query/a12_aggregate_over_agg_values:
+  reason: not implemented
+  fixed_in: "1.x"
+query/b01_many_to_one_no_fan_out:
+  reason: not implemented
+  fixed_in: "1.x"
+query/b02_filter_on_joined_relation:
+  reason: not implemented
+  fixed_in: "1.x"
+query/b03_top_n_join_as_filter:
+  reason: not implemented
+  fixed_in: "1.x"
+query/b04_one_side_counted_once:
+  reason: not implemented
+  fixed_in: "1.x"
+query/b05_manager_counted_once:
+  reason: not implemented
+  fixed_in: "1.x"
+query/b06_range_join_fan_out:
+  reason: not implemented
+  fixed_in: "1.x"
+query/b07_three_way_join_fan_out:
+  reason: not implemented
+  fixed_in: "1.x"
+query/b08_many_to_many_chasm_trap:
+  reason: not implemented
+  fixed_in: "1.x"
+query/b09_inner_join_matched_rows:
+  reason: not implemented
+  fixed_in: "1.x"
+query/b10_left_join_null_padding:
+  reason: not implemented
+  fixed_in: "1.x"
+query/b11_right_join_keeps_non_managers:
+  reason: not implemented
+  fixed_in: "1.x"
+query/b12_full_join_each_row_once:
+  reason: not implemented
+  fixed_in: "1.x"
+query/b13_cross_join_no_inflation:
+  reason: not implemented
+  fixed_in: "1.x"
+query/b14_ratio_across_relations:
+  reason: not implemented
+  fixed_in: "1.x"
+query/b15_left_join_changes_ratio:
+  reason: not implemented
+  fixed_in: "1.x"
+query/b16_on_filter_keeps_left_rows:
+  reason: not implemented
+  fixed_in: "1.x"
+query/b17_left_join_empty_group:
+  reason: not implemented
+  fixed_in: "1.x"
+query/b18_filter_restricts_one_side_measure:
+  reason: not implemented
+  fixed_in: "1.x"
+query/b19_nonunique_filter_no_fan_out:
+  reason: not implemented
+  fixed_in: "1.x"
+query/b20_having_on_one_side_measure:
+  reason: not implemented
+  fixed_in: "1.x"
