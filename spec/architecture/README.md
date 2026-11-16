@@ -69,7 +69,6 @@ All functions are pure. Inputs and outputs are the contract documents of `spec/c
 | `integrity_checks` | handle, dialect | Integrity-check document ([contract](../contracts/integrity-checks.md)) |
 | `compile` | handle, query, security context, compile options | Compiled plan, or compile error; with `audit: true`, also an audit record in both cases |
 | `migrate` | model document | Model document with deprecated extensions rewritten to their native form, and a report |
-| `run_conformance` | conformance directory | Conformance report per rule ID (CS-4.3) |
 | `explain` | handle, query, security context, compile options | The compiled plan with `sql` and `parameters` replaced by empty values (same schema, `contract` `semantic_compiler.explanation`) |
 | `describe` | handle, security context | Model description |
 
@@ -91,6 +90,8 @@ All functions are pure. Inputs and outputs are the contract documents of `spec/c
 - **ARC-5.1** A handle is immutable. A new model means `load`; a new catalog state means `with_state`.
 - **ARC-5.2** The catalog state is validated by `load` and `with_state`. An invalid state produces a warning (`WCAT-01`–`WCAT-04`) and is ignored: the handle has no state, and E5 applies only rewrites that need no evidence.
 
+- **ARC-5.3** The conformance runner (chapter 8) is **test tooling, not part of the compiler**. It lives in its own crate, `conformance-runner`, which calls the public functions, reads case files and executes SQL on DuckDB. Like `cli`, it is exempt from A2 (I/O, clock, database). No other crate may depend on it, and it is never shipped as part of the compiler. `just conformance` runs it.
+
 ## 3.6 Delivery forms
 
 One core, written in Rust (reference implementation). Every other form is a thin wrapper without logic of its own:
@@ -99,7 +100,7 @@ One core, written in Rust (reference implementation). Every other form is a thin
 |---|---|
 | Rust crate | Native embedding |
 | Python package | Embedding in Python hosts |
-| CLI | `validate`, `compile`, `explain`, `describe`, `integrity-checks`, `migrate`, `conformance` |
+| CLI | `validate`, `compile`, `explain`, `describe`, `integrity-checks`, `migrate` |
 | HTTP service (optional, after the MVP) | Same JSON contracts, for remote hosts. A Rust wrapper built on `axum` |
 
 The public functions are those of section 3.5.
@@ -120,7 +121,7 @@ from the first commit, and a violation fails the build.
 | ID | Rule | Check |
 |---|---|---|
 | A1 | The core MUST NOT depend on any crate or package of another module. | Dependency allowlist (`cargo deny`) |
-| A2 | The core MUST NOT depend on network, filesystem, clock or database libraries. | Banned dependency list |
+| A2 | The core MUST NOT depend on network, filesystem, clock or database libraries. Only `cli` and the test-tooling crate `conformance-runner` (ARC-5.3) are exempt. | Banned dependency list |
 | A3 | Cross-module data MUST be a contract document validated against its JSON Schema. | Contract tests at every boundary |
 | A4 | Wrappers (Python, CLI, HTTP) MUST contain no compilation logic. | Wrappers may depend only on `core` (allowlist), and the conformance suite runs through each wrapper with identical results |
 | A5 | Every contract change MUST bump its version and update its examples. | Schema diff check in CI |

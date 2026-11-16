@@ -19,7 +19,7 @@ tool can check them; the rest are checked in review against this chapter.
 contracts  ←  model  ←  security  ←  e0 … e5  ←  generator-duckdb (e6)  ←  core  ←  wrappers (python, cli, http)
 ```
 
-`security` holds access and row-policy logic (S5) and is used by E0, E2, E4 and E5. `core` orchestrates the stages and calls the generator for plans and integrity checks.
+`security` holds access and row-policy logic (S5) and is used by E0, E2, E4 and E5. `core` orchestrates the stages and calls the generator for plans and integrity checks. The test-tooling crate `conformance-runner` (ARC-5.3) depends on `core` and `contracts`; nothing depends on it.
 
 | ID | Rule | Check |
 |---|---|---|
