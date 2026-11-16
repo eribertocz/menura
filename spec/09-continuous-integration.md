@@ -16,7 +16,7 @@ GitHub Actions (WF-8.0). Blocking checks are required by branch protection.
 | `conformance` | `just conformance` with non-default DuckDB settings | T1–T4, E6-5.4 | Yes |
 | `conformance-wrappers` | The suite run through the Python package and the CLI, results identical | A4 | Yes |
 | `ossie-suites` | Apache Ossie suites at the tracked commit against `expected-failures.yaml` | OSS-2.3, OSS-2.4 | Layer 3 from 0.7.0; Layer 2 never until it blocks (OSS-2.3) |
-| `rule-coverage` | Every behavioral rule ID in `spec/INDEX.md` is cited by a case; every process rule ID by a CI check or review item | T1 | Yes |
+| `rule-coverage` | Every behavioral rule ID of the coverage scope (CS-2.6) is cited by a case, and every process rule ID of the scope by a CI check or review item; the rest is reported | T1, CS-2.6 | Yes |
 | `contracts` | Each contract schema is valid; a changed schema has a bumped version and updated examples | A3, A5 | Yes |
 | `examples` | `python3 scripts/check_examples.py` | Contracts chapter | Yes |
 | `index` | `python3 scripts/build_index.py --check` | Index | Yes |

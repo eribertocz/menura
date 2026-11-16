@@ -30,7 +30,7 @@ Every version closes only when its gates pass in CI; 1.0.0 needs all of them.
 
 | Gate | Verifiable criterion |
 |---|---|
-| Conformance | Every behavioral rule ID implemented so far has a passing case (T1); Apache Ossie suites match `expected-failures.yaml` (OSS-2.4) |
+| Conformance | The specification files of the version are added to the coverage scope (CS-2.6) and every rule ID of the scope has a passing case or check (T1); Apache Ossie suites match `expected-failures.yaml` (OSS-2.4) |
 | Security | Every case of `e2-*` authorization and `e4-*` row-policy rules passes, including denied access, exemption, propagation, policy preservation in summaries, and unauthorized names reported as `E_NAME_NOT_FOUND`; no plan in the suite contains a query or attribute value outside its parameters |
 | Determinism | Property tests compile every suite case twice, in separate processes and with shuffled input key order, and get byte-identical plans and hashes |
 | Compatibility | Every contract example validates; every schema change bumps its version (A5); documents of the previous minor versions are still accepted |

@@ -43,7 +43,7 @@ contracts  ←  model  ←  security  ←  e0 … e5  ←  generator-duckdb (e6)
 
 | ID | Rule |
 |---|---|
-| T1 | Every behavioral rule ID has at least one conformance case, and every process rule ID a named CI check or review item (README conventions); CI fails otherwise. |
+| T1 | Every behavioral rule ID has at least one conformance case, and every process rule ID a named CI check or review item (README conventions). CI fails when a rule ID of the coverage scope (CS-2.6) is not covered; other rule IDs are reported only. |
 | T2 | Unit tests live next to the code; conformance tests live in the shared suite. |
 | T3 | Generated SQL is always executed on the reference engine (`rows`). A golden SQL file is added when the SQL text itself is the subject of a rule (E6), and is then compared byte for byte. |
 | T4 | Property-based tests cover the determinism (P3) and security (P9) principles. |

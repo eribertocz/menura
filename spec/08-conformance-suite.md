@@ -38,11 +38,12 @@ expect:
 
 | ID | Rule |
 |---|---|
-| CS-2.1 | `rules` lists at least one rule ID. CI fails if any rule ID of the specification has no case (T1). |
+| CS-2.1 | `rules` lists at least one rule ID. CI fails if a rule ID of the coverage scope (CS-2.6) has no case (T1). |
 | CS-2.2 | `outcome: plan` cases MUST have `rows`, so the generated SQL is executed, not only compared. |
 | CS-2.3 | A golden `sql` file is compared byte for byte (P3). Regenerating golden files requires a pull request that touches only golden files and states why. |
 | CS-2.4 | `rows` are compared with NULLs equal, decimals exactly, floats within `tolerance` (relative), and the row order as declared. |
 | CS-2.5 | Runtime-policy cases expect `outcome: runtime_error` with the runtime code (`RADD-01`, …). |
+| CS-2.6 | The **coverage scope** is the list of specification files in `spec/coverage-scope.txt`, one path per line; lines starting with `#` are comments. `rule-coverage` fails when a rule ID defined in a listed file is not covered (T1), and only reports the rule IDs of other files. The specification session adds the files of a version at its gate (7.1a); a file is never removed, so later work cannot lose coverage. |
 
 ## CS-3 Apache Ossie suites
 
@@ -52,7 +53,7 @@ expect:
 ## CS-4 Running
 
 - **CS-4.1** `just conformance` runs every case. `just conformance <area>` runs one area.
-- **CS-4.2** Each case runs in a fresh in-memory DuckDB database. For each source with three parts (`catalog.schema.table`), the runner attaches an in-memory database named after the first part before running `data.sql`; two-part sources (`schema.table`) live in the default database, and `data.sql` creates their schema. This applies to the compiler's own cases and to the Apache Ossie suites (CS-4.4). The session uses non-default settings (`TimeZone` not UTC, `integer_division = true`) to prove E6-4.10.
+- **CS-4.2** Each case runs in a fresh in-memory DuckDB database. For each source with three parts (`catalog.schema.table`), the runner attaches an in-memory database named after the first part before running `data.sql`; two-part sources (`schema.table`) live in the default database, and `data.sql` creates their schema. This applies to the compiler's own cases and to the Apache Ossie suites (CS-4.4). The session uses non-default settings (`TimeZone` not UTC, `integer_division = true`) to prove E6-4.10. The runner's DuckDB build includes the `icu` extension, which provides time zones, so no setting or query ever downloads an extension at run time.
 - **CS-4.3** The runner reports, per rule ID, the cases that cover it and their result.
 - **CS-4.4** For Apache Ossie suites, the runner loads the fixture with `ossie_format: development` and `grant_authenticated_to_all: true`, builds the catalog schema by reading the created tables, wraps each `query.json` in a query envelope with `time_zone: UTC`, and compares the first error code or the rows. SQL-form cases refer to relations as `<model name>.<dataset name>` (QRY-5.1).
 - **CS-4.5** Runner security context for Apache Ossie suites: `{"contract": "semantic_compiler.security_context", "contract_version": "1.0.0", "subject": "conformance-runner", "roles": [], "attributes": {}}`, stored as `conformance/ossie/runner-context.json`.
