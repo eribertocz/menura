@@ -1,6 +1,6 @@
 version: "0.1.1"
 semantic_model:
-  - name: cat_state_rules_first_001
+  - name: cat_state_schema_id_first_001
     description: Catalog state for another schema that also violates a CAT-8 rule
     custom_extensions:
       - vendor_name: COMMON

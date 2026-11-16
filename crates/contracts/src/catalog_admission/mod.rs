@@ -1,6 +1,6 @@
 //! Admission of the catalog schema and catalog state documents, in the order of checks of
-//! CAT-9.1: JSON, then `contract` and `contract_version`, then the JSON Schema, then the CAT-8
-//! rules, then, for the state document, `schema_document_id`.
+//! CAT-9.1: JSON, then `contract` and `contract_version`, then the JSON Schema, then, for the
+//! state document, `schema_document_id`, then the CAT-8 rules.
 
 mod period;
 mod schema_rules;
@@ -43,15 +43,16 @@ pub fn admit_catalog_schema(text: &str) -> Result<CatalogSchemaDocument, Admissi
 /// Admits a catalog state document against `schema`, the admitted schema document in use
 /// (CAT-2.2, CAT-3, CAT-8, CAT-9).
 ///
-/// The CAT-8 rules that need a schema (CAT-8.4, CAT-8.5) are checked against `schema`.
+/// `schema_document_id` is checked before the CAT-8 rules, so the rules that need a schema
+/// (CAT-8.4, CAT-8.5) are always checked against the schema the state refers to.
 /// CAT-8.8 needs the model's summaries and is checked by the caller.
 ///
 /// # Errors
 ///
 /// The first failure, in the order of CAT-9.1: `WCAT-01` when the text is not JSON, `WCAT-02`
 /// when `contract` or `contract_version` is not supported, `WCAT-01` when the document does not
-/// satisfy its JSON Schema, `WCAT-03` when it violates a CAT-8 rule, and `WCAT-04` when its
-/// `schema_document_id` is not the `document_id` of `schema`. Every code is a warning
+/// satisfy its JSON Schema, `WCAT-04` when its `schema_document_id` is not the `document_id` of
+/// `schema`, and `WCAT-03` when it violates a CAT-8 rule. Every code is a warning
 /// ([`AdmissionCode::is_warning`]): the state document is then ignored.
 pub fn admit_catalog_state(
     text: &str,
@@ -62,8 +63,6 @@ pub fn admit_catalog_state(
     contract.check_contract(&document)?;
     contract.validate(&document)?;
     let state: CatalogStateDocument = decode(contract, &document)?;
-    state_rules::check(&state, schema)
-        .map_err(|violation| violation.into_error(contract, AdmissionCode::Wcat03))?;
     if state.schema_document_id != schema.document_id {
         return Err(contract.error(
             AdmissionCode::Wcat04,
@@ -78,6 +77,8 @@ pub fn admit_catalog_state(
             ),
         ));
     }
+    state_rules::check(&state, schema)
+        .map_err(|violation| violation.into_error(contract, AdmissionCode::Wcat03))?;
     Ok(state)
 }
 

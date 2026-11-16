@@ -1,7 +1,7 @@
 version: "0.1.1"
 semantic_model:
   - name: cat_state_other_schema_001
-    description: Catalog state for a schema token that only looks equal to the schema in use
+    description: Catalog state for a schema token that only looks equal to the schema in use, with a relation of that other schema
     custom_extensions:
       - vendor_name: COMMON
         data: '{"namespace": "semantic_compiler", "version": 1, "security_context": {"roles": ["analyst"], "attributes": []}}'

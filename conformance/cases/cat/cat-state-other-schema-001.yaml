@@ -1,5 +1,5 @@
 id: cat-state-other-schema-001
-rules: [CAT-2.2, CAT-6.1, CAT-9]
+rules: [CAT-2.2, CAT-6.1, CAT-9, CAT-9.1]
 model: cat-state-other-schema-001
 security_context: analyst.json
 query:

@@ -35,7 +35,7 @@
       }
     },
     {
-      "source": "shop.main.customers",
+      "source": "shop.main.stores",
       "row_count_estimate": 1,
       "version": {
         "origin": "conformance:catalog",

@@ -146,8 +146,8 @@ fn partition_periods(pointer: &str, partitions: &Partitions) -> Result<(), RuleV
 
 /// The periods of a summary, which all have the grain of `coverage.from`.
 ///
-/// The state document does not carry the summary's grain; its comparison with the model's
-/// summary belongs to CAT-8.8.
+/// Where the document declares no grain, a period has the grain its shape denotes (CAT-8.6);
+/// the comparison with the model's summary grain belongs to CAT-8.8.
 fn summary_periods(pointer: &str, build: &AggregateBuild) -> Result<(), RuleViolation> {
     let base = format!("{pointer}/aggregate_build");
     let from = &build.coverage.from;

@@ -573,19 +573,25 @@ fn cat_9_1_the_contract_version_is_checked_before_the_json_schema() {
 }
 
 #[test]
-fn cat_9_1_the_semantic_rules_are_checked_before_the_schema_document_id() {
-    let state = with(
+fn cat_9_1_the_schema_document_id_is_checked_before_the_semantic_rules() {
+    // A repeated source (CAT-8.1) in a state for another schema: `WCAT-04` is reported.
+    let repeated = with(
         state_example(),
-        "/schema_document_id/snapshot",
-        json!("schema-0043"),
-    );
-    let state = with(
-        state,
         "/relations/1/source",
         json!("sales.public.fact_invoice"),
     );
+    let other_schema = with(
+        repeated.clone(),
+        "/schema_document_id/snapshot",
+        json!("schema-0043"),
+    );
     assert_eq!(
-        state_failure(&state),
+        state_failure(&other_schema),
+        (AdmissionCode::Wcat04, pointer("/schema_document_id"))
+    );
+    // The same violation in a state for the schema in use is `WCAT-03`.
+    assert_eq!(
+        state_failure(&repeated),
         (AdmissionCode::Wcat03, pointer("/relations/1/source"))
     );
 }

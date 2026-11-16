@@ -1,5 +1,5 @@
 id: cat-state-duplicate-source-001
-rules: [CAT-8.1, CAT-9]
+rules: [CAT-8.1, CAT-9, CAT-9.1]
 model: cat-state-duplicate-source-001
 security_context: analyst.json
 query:
