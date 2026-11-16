@@ -127,8 +127,6 @@ jobs:
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         with:
           persist-credentials: false
-      - name: Throwaway - make the index stale in the runner only
-        run: echo "| stale | 0 | rule | X-0 |" >> spec/INDEX.md
       - name: Check spec/INDEX.md is up to date
         run: python3 -I scripts/build_index.py --check
 
@@ -144,8 +142,5 @@ jobs:
         run: |
           python3 -m venv "$RUNNER_TEMP/venv"
           "$RUNNER_TEMP/venv/bin/pip" install --disable-pip-version-check jsonschema==4.26.0 pyyaml==6.0.3
-      - name: Throwaway - break an example in the runner only
-        run: |
-          sed -i 's/"snapshot": "schema-0042"/"snapshot": "throwaway"/' spec/contracts/examples/catalog-state.example.json
       - name: Validate the contract examples against their schemas
         run: '"$RUNNER_TEMP/venv/bin/python" -I scripts/check_examples.py'

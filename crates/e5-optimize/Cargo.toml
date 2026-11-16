@@ -8,7 +8,6 @@ publish.workspace = true
 
 [dependencies]
 semantic-compiler-security.workspace = true
-itoa = "1"
 
 [lints]
 workspace = true
