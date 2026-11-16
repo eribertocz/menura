@@ -8,6 +8,7 @@ publish.workspace = true
 
 [dependencies]
 semantic-compiler-model.workspace = true
+semantic-compiler-representations.workspace = true
 
 [lints]
 workspace = true

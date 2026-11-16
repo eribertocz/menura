@@ -20,6 +20,8 @@ PACKAGE_PREFIX = "semantic-compiler-"
 LAYERS = [
     ["contracts"],
     ["model"],
+    ["expressions"],
+    ["representations"],
     ["security"],
     ["e0-load", "e1-parse", "e2-bind", "e3-paths", "e4-plan", "e5-optimize"],
     ["generator-duckdb"],

@@ -1,0 +1,13 @@
+[package]
+name = "semantic-compiler-representations"
+description = "Data types passed between compilation stages (S9)."
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[dependencies]
+semantic-compiler-model.workspace = true
+
+[lints]
+workspace = true
