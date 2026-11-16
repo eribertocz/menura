@@ -14,10 +14,10 @@ The document is read as the official Apache Ossie reference loader reads it (YAM
 | E0A-2.2 | YAML 1.1 safe loading: only standard tags; no arbitrary object construction. JSON documents are read as YAML. |
 | E0A-2.3 | Duplicate keys are an error, at every nesting level. |
 | E0A-2.4 | Anchors, aliases and the merge key `<<` are allowed and expanded. |
-| E0A-2.5 | A tag or value the loader cannot construct (`!!int abc`, an invalid date) is an error. |
+| E0A-2.5 | A tag or value the loader cannot construct (`!!int abc`, an invalid date) is an error. So are the standard tags whose values have no JSON form: `!!binary`, `!!set`, `!!omap` and `!!pairs`. |
 | E0A-2.6 | Exactly one YAML document per file. |
 | E0A-2.7 | Every node keeps its line and column for diagnostics. |
-| E0A-2.8 | Scalars that YAML 1.1 reads as non-JSON values (dates, timestamps) are converted to their ISO 8601 text form before any hashing or validation. |
+| E0A-2.8 | Scalars that YAML 1.1 reads as non-JSON values (dates, timestamps) are converted to their ISO 8601 text form before any hashing or validation. A date becomes `YYYY-MM-DD`. A timestamp becomes `YYYY-MM-DDTHH:MM:SS`, then `.ffffff` only when the microseconds are not zero (digits beyond the sixth are dropped), then `+HH:MM` or `-HH:MM` only when a time zone is written (`Z` becomes `+00:00`): the text of the reference loader's value. |
 
 Because YAML 1.1 reads `yes`, `no`, `on` and `off` as booleans, text values that could be read
 that way should be quoted. The reader does not reinterpret them.
