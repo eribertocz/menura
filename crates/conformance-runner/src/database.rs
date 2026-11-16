@@ -8,8 +8,8 @@ use crate::fixture::ModelFixture;
 /// an in-memory database for every three-part source, then runs `data.sql`.
 ///
 /// Extensions are never installed or loaded automatically, so a run never reaches the network.
-/// The non-UTC `TimeZone` of CS-4.2 needs the ICU extension, which the bundled `DuckDB` build
-/// does not contain; it is blocked by issue #23 and not set yet.
+/// The non-UTC `TimeZone` of CS-4.2 comes from the `icu` extension built into the prebuilt
+/// `DuckDB` library the runner links against (issue #23).
 ///
 /// # Errors
 ///
@@ -27,9 +27,16 @@ pub fn prepare_database(fixture: &ModelFixture) -> Result<Connection, duckdb::Er
     Ok(connection)
 }
 
-/// Turns on `integer_division` (CS-4.2).
+/// The session time zone of CS-4.2. It is not UTC and has no daylight saving time, so the
+/// offset is the same for every timestamp.
+const SESSION_TIME_ZONE: &str = "America/La_Paz";
+
+/// Sets the non-default session settings of CS-4.2: a non-UTC `TimeZone` and
+/// `integer_division`.
 fn apply_session_settings(connection: &Connection) -> Result<(), duckdb::Error> {
-    connection.execute_batch("SET integer_division = true;")
+    connection.execute_batch(&format!(
+        "SET TimeZone = '{SESSION_TIME_ZONE}'; SET integer_division = true;"
+    ))
 }
 
 /// A `DuckDB` identifier in double quotes. Identifiers cannot be bound as parameters, so the
@@ -60,6 +67,33 @@ mod tests {
             )
             .unwrap();
         assert!(!install);
+    }
+
+    fn setting(connection: &Connection, name: &str) -> String {
+        connection
+            .query_row("SELECT current_setting(?)::VARCHAR", [name], |row| {
+                row.get(0)
+            })
+            .unwrap()
+    }
+
+    #[test]
+    fn cs_4_2_session_time_zone_is_not_utc_without_automatic_extensions() {
+        let connection = prepare_database(&empty_fixture()).unwrap();
+        let offset_hours: i64 = connection
+            .query_row(
+                "SELECT date_part('timezone_hour', TIMESTAMPTZ '2024-01-15 12:00:00+00')",
+                [],
+                |row| row.get(0),
+            )
+            .unwrap();
+        assert_eq!(setting(&connection, "TimeZone"), SESSION_TIME_ZONE);
+        assert_ne!(offset_hours, 0);
+        assert_eq!(
+            setting(&connection, "autoinstall_known_extensions"),
+            "false"
+        );
+        assert_eq!(setting(&connection, "autoload_known_extensions"), "false");
     }
 
     #[test]
