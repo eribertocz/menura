@@ -1,6 +1,6 @@
 # Checks of spec/09-continuous-integration.md CI-1 that run on every pull request and every
 # push to main (WF-8.0): format, lint, unsafe, test, dependencies, dependency-graph, conformance,
-# rule-coverage, index and examples. Every job is named exactly as its check in CI-1.
+# ossie-suites, rule-coverage, index and examples. Every job is named exactly as its check in CI-1.
 #
 # Tool versions are pinned so that the same commit always gets the same verdict.
 name: ci
@@ -135,6 +135,21 @@ jobs:
         run: cargo test --locked -p semantic-compiler-conformance-runner
       - name: Run every case with non-default DuckDB settings and report per rule ID (CS-4.1, CS-4.2, CS-4.3)
         run: cargo run --locked --quiet -p semantic-compiler-conformance-runner -- conformance
+
+  ossie-suites:
+    name: ossie-suites
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the commit
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+      - name: Install the Rust toolchain
+        run: |
+          rustup toolchain install "$RUST_TOOLCHAIN" --profile minimal
+          rustup default "$RUST_TOOLCHAIN"
+      - name: Run the Apache Ossie suites at the tracked commit against expected-failures.yaml (OSS-2.3, OSS-2.4)
+        run: cargo run --locked --quiet -p semantic-compiler-conformance-runner -- conformance ossie
 
   rule-coverage:
     name: rule-coverage

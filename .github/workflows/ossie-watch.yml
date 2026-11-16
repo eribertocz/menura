@@ -1,0 +1,46 @@
+# Check `ossie-watch` of spec/09-continuous-integration.md CI-2 (OSS-4.1): every day, compare the
+# latest Apache Ossie release and the head of its default branch with conformance/ossie/upstream.json
+# and open an `ossie-watch` issue for each change, with the diff link.
+#
+# A manual run may replace the recorded commit or release, to prove that a change opens an issue.
+name: ossie-watch
+
+on:
+  schedule:
+    - cron: "23 5 * * *"
+  workflow_dispatch:
+    inputs:
+      recorded_commit:
+        description: Commit to compare with instead of the tracked commit (manual test only)
+        required: false
+        default: ""
+      recorded_release:
+        description: Release to compare with instead of the recorded release (manual test only)
+        required: false
+        default: ""
+
+permissions:
+  contents: read
+  issues: write
+
+concurrency:
+  group: ossie-watch
+  cancel-in-progress: false
+
+jobs:
+  ossie-watch:
+    name: ossie-watch
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the commit
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+      - name: Test the check
+        run: python3 -m unittest discover -s scripts/ci -p 'test_ossie_watch.py' -v
+      - name: Open an issue for each Apache Ossie release or development change (OSS-4.1)
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RECORDED_COMMIT: ${{ inputs.recorded_commit }}
+          RECORDED_RELEASE: ${{ inputs.recorded_release }}
+        run: python3 -I scripts/ci/ossie_watch.py
