@@ -2,7 +2,10 @@
 
 Reads `cargo metadata` and fails when a dependency between workspace crates breaks the
 direction of spec/05-engineering-standards.md section 5.2 (S6, S7), when the graph has a
-cycle (S6), or when a wrapper depends on a workspace crate other than `core` (S8).
+cycle (S6), when a wrapper depends on a workspace crate other than `core` (S8), or when any
+crate depends on a tool. Tools (the test-tooling crate `conformance-runner`, ARC-5.3) are
+outside the layers of section 5.2: nothing may depend on them, and they depend only on the
+crates listed for them.
 Every dependency kind counts: normal, build and dev.
 
 Usage: python3 scripts/ci/check_dependency_graph.py [metadata.json]
@@ -28,6 +31,8 @@ LAYERS = [
 ]
 
 WRAPPERS = ["cli"]
+# ARC-5.3: each tool and the only workspace crates it may depend on.
+TOOLS = {"conformance-runner": ["contracts", "core"]}
 WRAPPER_DEPENDENCY = "core"
 
 
@@ -96,11 +101,20 @@ def find_violations(graph):
     """Every S6, S7 and S8 violation of the graph, as readable lines."""
     violations = []
     for name in graph:
-        if layer_of(name) is None:
+        if layer_of(name) is None and name not in TOOLS:
             violations.append(f"S6: `{name}` is not in a layer of section 5.2")
     for dependent, dependencies in graph.items():
         dependent_layer = layer_of(dependent)
         for dependency in dependencies:
+            if dependency in TOOLS:
+                violations.append(f"S6: `{dependent}` depends on the tool `{dependency}`")
+                continue
+            if dependent in TOOLS:
+                if dependency not in TOOLS[dependent]:
+                    violations.append(
+                        f"ARC-5.3: tool `{dependent}` depends on `{dependency}`, which is not allowed"
+                    )
+                continue
             dependency_layer = layer_of(dependency)
             if dependent_layer is None or dependency_layer is None:
                 continue

@@ -6,7 +6,8 @@ allow-panic-in-tests = true
 too-many-lines-threshold = 50
 
 # A2 for the standard library: cargo-deny cannot see std, so clippy forbids its filesystem,
-# network, environment, process and clock access. Only the `cli` crate allows these lints.
+# network, environment, process and clock access. Only the `cli` and `conformance-runner` crates
+# allow these lints.
 disallowed-methods = [
     { path = "std::fs::read", reason = "A2: filesystem access is forbidden outside the command-line wrapper" },
     { path = "std::fs::read_to_string", reason = "A2: filesystem access is forbidden outside the command-line wrapper" },
