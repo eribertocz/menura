@@ -16,16 +16,18 @@ tool can check them; the rest are checked in review against this chapter.
 ## 5.2 Dependency direction
 
 ```
-contracts  ←  model  ←  security  ←  e0 … e5  ←  generator-duckdb (e6)  ←  core  ←  wrappers (python, cli, http)
+contracts  ←  model  ←  expressions  ←  representations  ←  security  ←  e0 … e5  ←  generator-duckdb (e6)  ←  core  ←  wrappers (python, cli, http)
 ```
 
-`security` holds access and row-policy logic (S5) and is used by E0, E2, E4 and E5. `core` orchestrates the stages and calls the generator for plans and integrity checks. The test-tooling crate `conformance-runner` (ARC-5.3) depends on `core` and `contracts`; nothing depends on it.
+`expressions` holds the expression parser and its normalization (S10), used by E0, E1 and `security`. `representations` holds the data passed between stages (S9) and depends on `model`, because a bound query and a plan refer to model elements. `security` holds access and row-policy logic (S5) and is used by E0, E2, E4 and E5. `core` orchestrates the stages and calls the generator for plans and integrity checks. The test-tooling crate `conformance-runner` (ARC-5.3) depends on `core` and `contracts`; nothing depends on it.
 
 | ID | Rule | Check |
 |---|---|---|
 | S6 | Dependencies point in one direction only; cycles are forbidden. | Workspace dependency graph test |
 | S7 | A stage depends only on the intermediate representation it consumes, never on another stage's internals. | Crate visibility (`pub(crate)`) and dependency allowlist |
 | S8 | Wrappers depend only on `core`. | Dependency allowlist |
+| S9 | Every representation passed between stages is a data type in a shared crate, never in a stage crate: the internal model (E0H) in `model`; the query tree (E1), the bound query (E2), the paths (E3) and the logical plan (E4, E5 and the integrity checks of E0H-4.2) in `representations`. These crates hold data and the constructors that keep it valid, never stage logic (S3). A stage crate exports only its stage function and its error type. | Workspace dependency graph test plus review |
+| S10 | Expression text (E0F-2) is parsed and normalized (E0H-1.3) in one place, the crate `expressions`, which produces the expression tree type of `model`. Every stage and `security` that reads expression text calls it; none has its own parser. | Workspace dependency graph test plus review |
 
 ## 5.3 Code quality
 
@@ -43,7 +45,7 @@ contracts  ←  model  ←  security  ←  e0 … e5  ←  generator-duckdb (e6)
 
 | ID | Rule |
 |---|---|
-| T1 | Every behavioral rule ID has at least one conformance case, and every process rule ID a named CI check or review item (README conventions); CI fails otherwise. |
+| T1 | Every behavioral rule ID has at least one conformance case, and every process rule ID a named CI check or review item (README conventions). CI fails when a rule ID of the coverage scope (CS-2.6) is not covered; other rule IDs are reported only. |
 | T2 | Unit tests live next to the code; conformance tests live in the shared suite. |
 | T3 | Generated SQL is always executed on the reference engine (`rows`). A golden SQL file is added when the SQL text itself is the subject of a rule (E6), and is then compared byte for byte. |
 | T4 | Property-based tests cover the determinism (P3) and security (P9) principles. |

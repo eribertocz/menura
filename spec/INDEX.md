@@ -65,25 +65,27 @@ Find a rule ID or a section here, then open only that file at that line.
 | [05-engineering-standards.md](05-engineering-standards.md#L26) | 26 | rule | S6 |
 | [05-engineering-standards.md](05-engineering-standards.md#L27) | 27 | rule | S7 |
 | [05-engineering-standards.md](05-engineering-standards.md#L28) | 28 | rule | S8 |
-| [05-engineering-standards.md](05-engineering-standards.md#L30) | 30 | section | 5.3 Code quality |
-| [05-engineering-standards.md](05-engineering-standards.md#L34) | 34 | rule | Q1 |
-| [05-engineering-standards.md](05-engineering-standards.md#L35) | 35 | rule | Q2 |
-| [05-engineering-standards.md](05-engineering-standards.md#L36) | 36 | rule | Q3 |
-| [05-engineering-standards.md](05-engineering-standards.md#L37) | 37 | rule | Q4 |
-| [05-engineering-standards.md](05-engineering-standards.md#L38) | 38 | rule | Q5 |
-| [05-engineering-standards.md](05-engineering-standards.md#L39) | 39 | rule | Q6 |
-| [05-engineering-standards.md](05-engineering-standards.md#L40) | 40 | rule | Q7 |
-| [05-engineering-standards.md](05-engineering-standards.md#L42) | 42 | section | 5.4 Testing |
-| [05-engineering-standards.md](05-engineering-standards.md#L46) | 46 | rule | T1 |
-| [05-engineering-standards.md](05-engineering-standards.md#L47) | 47 | rule | T2 |
-| [05-engineering-standards.md](05-engineering-standards.md#L48) | 48 | rule | T3 |
-| [05-engineering-standards.md](05-engineering-standards.md#L49) | 49 | rule | T4 |
-| [05-engineering-standards.md](05-engineering-standards.md#L50) | 50 | rule | T5 |
-| [05-engineering-standards.md](05-engineering-standards.md#L52) | 52 | section | 5.5 Decisions and changes |
-| [05-engineering-standards.md](05-engineering-standards.md#L58) | 58 | section | 5.6 Performance targets |
-| [05-engineering-standards.md](05-engineering-standards.md#L62) | 62 | rule | R1 |
-| [05-engineering-standards.md](05-engineering-standards.md#L63) | 63 | rule | R2 |
-| [05-engineering-standards.md](05-engineering-standards.md#L64) | 64 | rule | R3 |
+| [05-engineering-standards.md](05-engineering-standards.md#L29) | 29 | rule | S9 |
+| [05-engineering-standards.md](05-engineering-standards.md#L30) | 30 | rule | S10 |
+| [05-engineering-standards.md](05-engineering-standards.md#L32) | 32 | section | 5.3 Code quality |
+| [05-engineering-standards.md](05-engineering-standards.md#L36) | 36 | rule | Q1 |
+| [05-engineering-standards.md](05-engineering-standards.md#L37) | 37 | rule | Q2 |
+| [05-engineering-standards.md](05-engineering-standards.md#L38) | 38 | rule | Q3 |
+| [05-engineering-standards.md](05-engineering-standards.md#L39) | 39 | rule | Q4 |
+| [05-engineering-standards.md](05-engineering-standards.md#L40) | 40 | rule | Q5 |
+| [05-engineering-standards.md](05-engineering-standards.md#L41) | 41 | rule | Q6 |
+| [05-engineering-standards.md](05-engineering-standards.md#L42) | 42 | rule | Q7 |
+| [05-engineering-standards.md](05-engineering-standards.md#L44) | 44 | section | 5.4 Testing |
+| [05-engineering-standards.md](05-engineering-standards.md#L48) | 48 | rule | T1 |
+| [05-engineering-standards.md](05-engineering-standards.md#L49) | 49 | rule | T2 |
+| [05-engineering-standards.md](05-engineering-standards.md#L50) | 50 | rule | T3 |
+| [05-engineering-standards.md](05-engineering-standards.md#L51) | 51 | rule | T4 |
+| [05-engineering-standards.md](05-engineering-standards.md#L52) | 52 | rule | T5 |
+| [05-engineering-standards.md](05-engineering-standards.md#L54) | 54 | section | 5.5 Decisions and changes |
+| [05-engineering-standards.md](05-engineering-standards.md#L60) | 60 | section | 5.6 Performance targets |
+| [05-engineering-standards.md](05-engineering-standards.md#L64) | 64 | rule | R1 |
+| [05-engineering-standards.md](05-engineering-standards.md#L65) | 65 | rule | R2 |
+| [05-engineering-standards.md](05-engineering-standards.md#L66) | 66 | rule | R3 |
 | [06-development-workflow.md](06-development-workflow.md#L1) | 1 | section | 6. Development workflow |
 | [06-development-workflow.md](06-development-workflow.md#L3) | 3 | section | 6.1 Roles |
 | [06-development-workflow.md](06-development-workflow.md#L12) | 12 | section | 6.2 Who does what |
@@ -120,16 +122,17 @@ Find a rule ID or a section here, then open only that file at that line.
 | [08-conformance-suite.md](08-conformance-suite.md#L43) | 43 | rule | CS-2.3 |
 | [08-conformance-suite.md](08-conformance-suite.md#L44) | 44 | rule | CS-2.4 |
 | [08-conformance-suite.md](08-conformance-suite.md#L45) | 45 | rule | CS-2.5 |
-| [08-conformance-suite.md](08-conformance-suite.md#L47) | 47 | section | CS-3 Apache Ossie suites |
-| [08-conformance-suite.md](08-conformance-suite.md#L49) | 49 | rule | CS-3.1 |
-| [08-conformance-suite.md](08-conformance-suite.md#L50) | 50 | rule | CS-3.2 |
-| [08-conformance-suite.md](08-conformance-suite.md#L52) | 52 | section | CS-4 Running |
-| [08-conformance-suite.md](08-conformance-suite.md#L54) | 54 | rule | CS-4.1 |
-| [08-conformance-suite.md](08-conformance-suite.md#L55) | 55 | rule | CS-4.2 |
-| [08-conformance-suite.md](08-conformance-suite.md#L56) | 56 | rule | CS-4.3 |
-| [08-conformance-suite.md](08-conformance-suite.md#L57) | 57 | rule | CS-4.4 |
-| [08-conformance-suite.md](08-conformance-suite.md#L58) | 58 | rule | CS-4.5 |
-| [08-conformance-suite.md](08-conformance-suite.md#L59) | 59 | rule | CS-4.6 |
+| [08-conformance-suite.md](08-conformance-suite.md#L46) | 46 | rule | CS-2.6 |
+| [08-conformance-suite.md](08-conformance-suite.md#L48) | 48 | section | CS-3 Apache Ossie suites |
+| [08-conformance-suite.md](08-conformance-suite.md#L50) | 50 | rule | CS-3.1 |
+| [08-conformance-suite.md](08-conformance-suite.md#L51) | 51 | rule | CS-3.2 |
+| [08-conformance-suite.md](08-conformance-suite.md#L53) | 53 | section | CS-4 Running |
+| [08-conformance-suite.md](08-conformance-suite.md#L55) | 55 | rule | CS-4.1 |
+| [08-conformance-suite.md](08-conformance-suite.md#L56) | 56 | rule | CS-4.2 |
+| [08-conformance-suite.md](08-conformance-suite.md#L57) | 57 | rule | CS-4.3 |
+| [08-conformance-suite.md](08-conformance-suite.md#L58) | 58 | rule | CS-4.4 |
+| [08-conformance-suite.md](08-conformance-suite.md#L59) | 59 | rule | CS-4.5 |
+| [08-conformance-suite.md](08-conformance-suite.md#L60) | 60 | rule | CS-4.6 |
 | [09-continuous-integration.md](09-continuous-integration.md#L1) | 1 | section | 9. Continuous integration |
 | [09-continuous-integration.md](09-continuous-integration.md#L6) | 6 | section | CI-1 On every pull request and every push to `main` |
 | [09-continuous-integration.md](09-continuous-integration.md#L30) | 30 | section | CI-2 Scheduled |
@@ -651,10 +654,10 @@ Find a rule ID or a section here, then open only that file at that line.
 | [stages/README.md](stages/README.md#L1) | 1 | section | Stages |
 | [stages/README.md](stages/README.md#L5) | 5 | section | STG-1 Load |
 | [stages/README.md](stages/README.md#L11) | 11 | section | STG-2 Compile |
-| [stages/README.md](stages/README.md#L22) | 22 | section | STG-3 Rules |
-| [stages/README.md](stages/README.md#L24) | 24 | rule | STG-3.1 |
-| [stages/README.md](stages/README.md#L25) | 25 | rule | STG-3.2 |
-| [stages/README.md](stages/README.md#L26) | 26 | rule | STG-3.3 |
-| [stages/README.md](stages/README.md#L27) | 27 | rule | STG-3.4 |
-| [stages/README.md](stages/README.md#L28) | 28 | rule | STG-3.5 |
-| [stages/README.md](stages/README.md#L29) | 29 | rule | STG-3.6 |
+| [stages/README.md](stages/README.md#L24) | 24 | section | STG-3 Rules |
+| [stages/README.md](stages/README.md#L26) | 26 | rule | STG-3.1 |
+| [stages/README.md](stages/README.md#L27) | 27 | rule | STG-3.2 |
+| [stages/README.md](stages/README.md#L28) | 28 | rule | STG-3.3 |
+| [stages/README.md](stages/README.md#L29) | 29 | rule | STG-3.4 |
+| [stages/README.md](stages/README.md#L30) | 30 | rule | STG-3.5 |
+| [stages/README.md](stages/README.md#L31) | 31 | rule | STG-3.6 |

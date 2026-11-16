@@ -19,6 +19,8 @@ The compiler has two moments: **load** a model once, and **compile** queries man
 | [E5 Optimize](E5-optimize.md) | Logical plan + catalog state + security context | Equivalent, cheaper logical plan (summary selection) |
 | [E6 Generate](E6-generate.md) | Logical plan + dialect | Compiled plan |
 
+Every output in these tables is a data type of a shared crate (S9): the E0 output in `model`, the E1–E5 outputs in `representations`.
+
 ## STG-3 Rules
 
 - **STG-3.1** Each stage consumes only the output of the previous stages, never the model or query documents; the security context reaches E2, E4 and E5 already validated at the `compile` entry (E2-5 row 0a), and the catalog state reaches E5 already validated by `load`/`with_state` (P8).

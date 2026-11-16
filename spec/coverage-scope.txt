@@ -1,0 +1,3 @@
+# Coverage scope (spec/08-conformance-suite.md CS-2.6).
+# Every rule ID defined in a file listed here must be covered, or `rule-coverage` fails.
+# The specification session adds the files of a version at its gate (7.1a). Never remove a line.

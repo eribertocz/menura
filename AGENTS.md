@@ -44,7 +44,7 @@ security, or determinism.
 
 **Architecture**
 - One responsibility per crate, module, file and function. If a description needs "and", split it.
-- Dependencies point one way: `contracts ← model ← security ← e0…e5 ← generator-duckdb ← core ← wrappers`. No cycles.
+- Dependencies point one way: `contracts ← model ← expressions ← representations ← security ← e0…e5 ← generator-duckdb ← core ← wrappers`. No cycles.
 - Each stage depends only on the representation it consumes, never on another stage's internals.
 - Data types are separate from the logic that transforms them.
 - Keep the core pure and deterministic: the same input always yields the same output, byte for byte.
