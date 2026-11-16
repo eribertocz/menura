@@ -1,5 +1,10 @@
 //! Workspace dependency graph test: dependencies between crates point in one direction (S6).
 
+#![expect(
+    clippy::disallowed_methods,
+    reason = "S6: the graph test reads the workspace manifests from disk; A2 allows I/O in the cli crate only"
+)]
+
 use std::collections::BTreeSet;
 use std::fs;
 use std::io;
