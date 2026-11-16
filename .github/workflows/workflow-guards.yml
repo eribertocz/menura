@@ -1,0 +1,156 @@
+# Workflow guards of spec/09-continuous-integration.md CI-1:
+# scope (WF-6.3), co-author (WF-6.4), issue-label (WF-6.5) and language (WF-9.3).
+#
+# Every job runs the guard scripts and reads .github/specification-scope.txt from the
+# base commit, never from the pull request, so a pull request cannot change the rules
+# it is judged by. The pull request head is checked out separately, as data only.
+name: workflow-guards
+
+on:
+  pull_request:
+    branches: [main]
+    types: [opened, edited, reopened, synchronize]
+
+permissions:
+  contents: read
+  issues: read
+  pull-requests: read
+
+concurrency:
+  group: workflow-guards-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  scope:
+    name: scope
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the base commit (the rules on main)
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          ref: ${{ github.event.pull_request.base.sha }}
+          path: base
+          persist-credentials: false
+      - name: Check out the pull request head (the changes to judge)
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          path: head
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Select the guard script from the base commit
+        env:
+          SCRIPT: scripts/ci/check_scope.py
+        run: |
+          if [ -f "base/$SCRIPT" ]; then
+            echo "GUARD=$GITHUB_WORKSPACE/base/$SCRIPT" >> "$GITHUB_ENV"
+          else
+            echo "::warning title=bootstrap::$SCRIPT is not on the base commit yet; using the pull request's copy. This happens only for the pull request that introduces it."
+            echo "GUARD=$GITHUB_WORKSPACE/head/$SCRIPT" >> "$GITHUB_ENV"
+          fi
+      - name: Check changed files against the branch prefix (WF-6.3)
+        working-directory: head
+        env:
+          BRANCH: ${{ github.head_ref }}
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: python3 -I "$GUARD" "$BRANCH" "$BASE_SHA" "$HEAD_SHA"
+
+  co-author:
+    name: co-author
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the base commit (the rules on main)
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          ref: ${{ github.event.pull_request.base.sha }}
+          path: base
+          persist-credentials: false
+      - name: Check out the pull request head (the changes to judge)
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          path: head
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Select the guard script from the base commit
+        env:
+          SCRIPT: scripts/ci/check_co_author.py
+        run: |
+          if [ -f "base/$SCRIPT" ]; then
+            echo "GUARD=$GITHUB_WORKSPACE/base/$SCRIPT" >> "$GITHUB_ENV"
+          else
+            echo "::warning title=bootstrap::$SCRIPT is not on the base commit yet; using the pull request's copy. This happens only for the pull request that introduces it."
+            echo "GUARD=$GITHUB_WORKSPACE/head/$SCRIPT" >> "$GITHUB_ENV"
+          fi
+      - name: Check every commit for a Co-Authored-By trailer (WF-6.4)
+        working-directory: head
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: python3 -I "$GUARD" "$BASE_SHA" "$HEAD_SHA"
+
+  issue-label:
+    name: issue-label
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the base commit (the rules on main)
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          ref: ${{ github.event.pull_request.base.sha }}
+          path: base
+          persist-credentials: false
+      - name: Check out the pull request head (used only to introduce the guard)
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          path: head
+          persist-credentials: false
+      - name: Select the guard script from the base commit
+        env:
+          SCRIPT: scripts/ci/check_issue_label.py
+        run: |
+          if [ -f "base/$SCRIPT" ]; then
+            echo "GUARD=$GITHUB_WORKSPACE/base/$SCRIPT" >> "$GITHUB_ENV"
+          else
+            echo "::warning title=bootstrap::$SCRIPT is not on the base commit yet; using the pull request's copy. This happens only for the pull request that introduces it."
+            echo "GUARD=$GITHUB_WORKSPACE/head/$SCRIPT" >> "$GITHUB_ENV"
+          fi
+      - name: Check the closed issue carries exactly one of spec or impl (WF-6.5)
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: python3 -I "$GUARD"
+
+  language:
+    name: language
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the base commit (the rules on main)
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          ref: ${{ github.event.pull_request.base.sha }}
+          path: base
+          persist-credentials: false
+      - name: Check out the pull request head (the changes to judge)
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          path: head
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Select the guard script from the base commit
+        env:
+          SCRIPT: scripts/ci/check_language.py
+        run: |
+          if [ -f "base/$SCRIPT" ]; then
+            echo "GUARD=$GITHUB_WORKSPACE/base/$SCRIPT" >> "$GITHUB_ENV"
+          else
+            echo "::warning title=bootstrap::$SCRIPT is not on the base commit yet; using the pull request's copy. This happens only for the pull request that introduces it."
+            echo "GUARD=$GITHUB_WORKSPACE/head/$SCRIPT" >> "$GITHUB_ENV"
+          fi
+      - name: Warn about non-English text (WF-9.3, never blocks)
+        working-directory: head
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: python3 -I "$GUARD" "$BASE_SHA" "$HEAD_SHA"
