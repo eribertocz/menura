@@ -33,10 +33,16 @@ pub enum AdmissionCode {
     Ecat01,
     /// `ECAT-02`: catalog schema `contract` or `contract_version` not supported.
     Ecat02,
+    /// `ECAT-03`: the catalog schema violates a CAT-8 rule.
+    Ecat03,
     /// `WCAT-01`: the catalog state does not satisfy its JSON Schema.
     Wcat01,
     /// `WCAT-02`: catalog state `contract` or `contract_version` not supported.
     Wcat02,
+    /// `WCAT-03`: the catalog state violates a CAT-8 rule.
+    Wcat03,
+    /// `WCAT-04`: the catalog state's `schema_document_id` does not match the schema in use.
+    Wcat04,
     /// `E_INVALID_QUERY`: the query is not JSON or fails its JSON Schema.
     InvalidQuery,
     /// `EQRY-01`: both or neither of `query` and `sql`.
@@ -56,14 +62,27 @@ impl AdmissionCode {
         match self {
             Self::Ecat01 => "ECAT-01",
             Self::Ecat02 => "ECAT-02",
+            Self::Ecat03 => "ECAT-03",
             Self::Wcat01 => "WCAT-01",
             Self::Wcat02 => "WCAT-02",
+            Self::Wcat03 => "WCAT-03",
+            Self::Wcat04 => "WCAT-04",
             Self::InvalidQuery => "E_INVALID_QUERY",
             Self::Eqry01 => "EQRY-01",
             Self::Eqry08 => "EQRY-08",
             Self::Esec01 => "ESEC-01",
             Self::Esec03 => "ESEC-03",
         }
+    }
+
+    /// Whether the code is a warning: the document is ignored and compilation goes on (CAT-9).
+    /// Every other code makes the operation fail.
+    #[must_use]
+    pub fn is_warning(self) -> bool {
+        matches!(
+            self,
+            Self::Wcat01 | Self::Wcat02 | Self::Wcat03 | Self::Wcat04
+        )
     }
 }
 
@@ -201,7 +220,12 @@ impl IncomingContract {
         })
     }
 
-    fn error(self, code: AdmissionCode, pointer: &str, message: String) -> AdmissionError {
+    pub(crate) fn error(
+        self,
+        code: AdmissionCode,
+        pointer: &str,
+        message: String,
+    ) -> AdmissionError {
         AdmissionError {
             code,
             document: self.document(),

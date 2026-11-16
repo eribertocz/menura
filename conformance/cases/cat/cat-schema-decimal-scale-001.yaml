@@ -1,0 +1,6 @@
+id: cat-schema-decimal-scale-001
+rules: [CAT-8.3, CAT-9]
+model: cat-schema-decimal-scale-001
+expect:
+  outcome: load_error
+  error: ECAT-03

@@ -1,0 +1,6 @@
+id: cat-schema-unknown-member-001
+rules: [CAT-3.1, CAT-3.3, CAT-9]
+model: cat-schema-unknown-member-001
+expect:
+  outcome: load_error
+  error: ECAT-01
