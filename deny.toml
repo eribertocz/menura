@@ -1,0 +1,103 @@
+# Dependency policy, checked by `cargo deny check` (spec/09-continuous-integration.md CI-1 `dependencies`).
+# Changes require the maintainer's approval (CODEOWNERS).
+
+[graph]
+all-features = true
+
+[advisories]
+version = 2
+yanked = "deny"
+
+[licenses]
+version = 2
+# Licenses compatible with Apache-2.0.
+allow = [
+    "Apache-2.0",
+    "Apache-2.0 WITH LLVM-exception",
+    "MIT",
+    "BSD-2-Clause",
+    "BSD-3-Clause",
+    "ISC",
+    "Unicode-3.0",
+    "Zlib",
+]
+confidence-threshold = 0.9
+
+[bans]
+multiple-versions = "deny"
+wildcards = "deny"
+allow-wildcard-paths = true
+# A1: dependency allowlist. Only the crates listed here may appear in the dependency graph.
+# A new dependency is added here only with the maintainer's approval (AGENTS.md section 4).
+allow = [
+    "semantic-compiler-contracts",
+    "semantic-compiler-model",
+    "semantic-compiler-security",
+    "semantic-compiler-e0-load",
+    "semantic-compiler-e1-parse",
+    "semantic-compiler-e2-bind",
+    "semantic-compiler-e3-paths",
+    "semantic-compiler-e4-plan",
+    "semantic-compiler-e5-optimize",
+    "semantic-compiler-generator-duckdb",
+    "semantic-compiler-core",
+    "semantic-compiler-cli",
+]
+# A2: network, filesystem, clock and database libraries are banned in every crate except the
+# command-line wrapper, which is the only crate allowed to depend on them directly. cargo-deny
+# reports each exemption as an `unused-wrapper` warning until the wrapper uses that crate.
+deny = [
+    # Network
+    { crate = "reqwest", wrappers = ["semantic-compiler-cli"], reason = "A2: network access is forbidden outside the command-line wrapper" },
+    { crate = "hyper", wrappers = ["semantic-compiler-cli"], reason = "A2: network access is forbidden outside the command-line wrapper" },
+    { crate = "ureq", wrappers = ["semantic-compiler-cli"], reason = "A2: network access is forbidden outside the command-line wrapper" },
+    { crate = "curl", wrappers = ["semantic-compiler-cli"], reason = "A2: network access is forbidden outside the command-line wrapper" },
+    { crate = "isahc", wrappers = ["semantic-compiler-cli"], reason = "A2: network access is forbidden outside the command-line wrapper" },
+    { crate = "surf", wrappers = ["semantic-compiler-cli"], reason = "A2: network access is forbidden outside the command-line wrapper" },
+    { crate = "attohttpc", wrappers = ["semantic-compiler-cli"], reason = "A2: network access is forbidden outside the command-line wrapper" },
+    { crate = "tokio", wrappers = ["semantic-compiler-cli"], reason = "A2: network access is forbidden outside the command-line wrapper" },
+    { crate = "async-std", wrappers = ["semantic-compiler-cli"], reason = "A2: network access is forbidden outside the command-line wrapper" },
+    { crate = "mio", wrappers = ["semantic-compiler-cli"], reason = "A2: network access is forbidden outside the command-line wrapper" },
+    { crate = "socket2", wrappers = ["semantic-compiler-cli"], reason = "A2: network access is forbidden outside the command-line wrapper" },
+    { crate = "tungstenite", wrappers = ["semantic-compiler-cli"], reason = "A2: network access is forbidden outside the command-line wrapper" },
+    { crate = "native-tls", wrappers = ["semantic-compiler-cli"], reason = "A2: network access is forbidden outside the command-line wrapper" },
+    { crate = "rustls", wrappers = ["semantic-compiler-cli"], reason = "A2: network access is forbidden outside the command-line wrapper" },
+    { crate = "openssl", wrappers = ["semantic-compiler-cli"], reason = "A2: network access is forbidden outside the command-line wrapper" },
+    # Filesystem
+    { crate = "walkdir", wrappers = ["semantic-compiler-cli"], reason = "A2: filesystem access is forbidden outside the command-line wrapper" },
+    { crate = "tempfile", wrappers = ["semantic-compiler-cli"], reason = "A2: filesystem access is forbidden outside the command-line wrapper" },
+    { crate = "notify", wrappers = ["semantic-compiler-cli"], reason = "A2: filesystem access is forbidden outside the command-line wrapper" },
+    { crate = "fs-err", wrappers = ["semantic-compiler-cli"], reason = "A2: filesystem access is forbidden outside the command-line wrapper" },
+    { crate = "fs_extra", wrappers = ["semantic-compiler-cli"], reason = "A2: filesystem access is forbidden outside the command-line wrapper" },
+    { crate = "glob", wrappers = ["semantic-compiler-cli"], reason = "A2: filesystem access is forbidden outside the command-line wrapper" },
+    { crate = "globwalk", wrappers = ["semantic-compiler-cli"], reason = "A2: filesystem access is forbidden outside the command-line wrapper" },
+    { crate = "ignore", wrappers = ["semantic-compiler-cli"], reason = "A2: filesystem access is forbidden outside the command-line wrapper" },
+    { crate = "memmap2", wrappers = ["semantic-compiler-cli"], reason = "A2: filesystem access is forbidden outside the command-line wrapper" },
+    { crate = "dirs", wrappers = ["semantic-compiler-cli"], reason = "A2: filesystem access is forbidden outside the command-line wrapper" },
+    { crate = "directories", wrappers = ["semantic-compiler-cli"], reason = "A2: filesystem access is forbidden outside the command-line wrapper" },
+    # Clock
+    { crate = "chrono", wrappers = ["semantic-compiler-cli"], reason = "A2: clock access is forbidden outside the command-line wrapper" },
+    { crate = "time", wrappers = ["semantic-compiler-cli"], reason = "A2: clock access is forbidden outside the command-line wrapper" },
+    { crate = "jiff", wrappers = ["semantic-compiler-cli"], reason = "A2: clock access is forbidden outside the command-line wrapper" },
+    { crate = "humantime", wrappers = ["semantic-compiler-cli"], reason = "A2: clock access is forbidden outside the command-line wrapper" },
+    { crate = "coarsetime", wrappers = ["semantic-compiler-cli"], reason = "A2: clock access is forbidden outside the command-line wrapper" },
+    { crate = "quanta", wrappers = ["semantic-compiler-cli"], reason = "A2: clock access is forbidden outside the command-line wrapper" },
+    # Database
+    { crate = "duckdb", wrappers = ["semantic-compiler-cli"], reason = "A2: database access is forbidden outside the command-line wrapper" },
+    { crate = "libduckdb-sys", wrappers = ["semantic-compiler-cli"], reason = "A2: database access is forbidden outside the command-line wrapper" },
+    { crate = "rusqlite", wrappers = ["semantic-compiler-cli"], reason = "A2: database access is forbidden outside the command-line wrapper" },
+    { crate = "libsqlite3-sys", wrappers = ["semantic-compiler-cli"], reason = "A2: database access is forbidden outside the command-line wrapper" },
+    { crate = "sqlx", wrappers = ["semantic-compiler-cli"], reason = "A2: database access is forbidden outside the command-line wrapper" },
+    { crate = "diesel", wrappers = ["semantic-compiler-cli"], reason = "A2: database access is forbidden outside the command-line wrapper" },
+    { crate = "postgres", wrappers = ["semantic-compiler-cli"], reason = "A2: database access is forbidden outside the command-line wrapper" },
+    { crate = "tokio-postgres", wrappers = ["semantic-compiler-cli"], reason = "A2: database access is forbidden outside the command-line wrapper" },
+    { crate = "mysql", wrappers = ["semantic-compiler-cli"], reason = "A2: database access is forbidden outside the command-line wrapper" },
+    { crate = "mongodb", wrappers = ["semantic-compiler-cli"], reason = "A2: database access is forbidden outside the command-line wrapper" },
+    { crate = "redis", wrappers = ["semantic-compiler-cli"], reason = "A2: database access is forbidden outside the command-line wrapper" },
+    { crate = "odbc-api", wrappers = ["semantic-compiler-cli"], reason = "A2: database access is forbidden outside the command-line wrapper" },
+]
+
+[sources]
+unknown-registry = "deny"
+unknown-git = "deny"
+allow-registry = ["https://github.com/rust-lang/crates.io-index"]

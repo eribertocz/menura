@@ -1,0 +1,62 @@
+# Tests may use unwrap, expect and panic (AGENTS.md section 3); library code may not (Q2).
+allow-unwrap-in-tests = true
+allow-expect-in-tests = true
+allow-panic-in-tests = true
+# Function length target of Q5.
+too-many-lines-threshold = 50
+
+# A2 for the standard library: cargo-deny cannot see std, so clippy forbids its filesystem,
+# network, environment, process and clock access. Only the `cli` crate allows these lints.
+disallowed-methods = [
+    { path = "std::fs::read", reason = "A2: filesystem access is forbidden outside the command-line wrapper" },
+    { path = "std::fs::read_to_string", reason = "A2: filesystem access is forbidden outside the command-line wrapper" },
+    { path = "std::fs::read_dir", reason = "A2: filesystem access is forbidden outside the command-line wrapper" },
+    { path = "std::fs::write", reason = "A2: filesystem access is forbidden outside the command-line wrapper" },
+    { path = "std::fs::copy", reason = "A2: filesystem access is forbidden outside the command-line wrapper" },
+    { path = "std::fs::rename", reason = "A2: filesystem access is forbidden outside the command-line wrapper" },
+    { path = "std::fs::create_dir", reason = "A2: filesystem access is forbidden outside the command-line wrapper" },
+    { path = "std::fs::create_dir_all", reason = "A2: filesystem access is forbidden outside the command-line wrapper" },
+    { path = "std::fs::remove_file", reason = "A2: filesystem access is forbidden outside the command-line wrapper" },
+    { path = "std::fs::remove_dir", reason = "A2: filesystem access is forbidden outside the command-line wrapper" },
+    { path = "std::fs::remove_dir_all", reason = "A2: filesystem access is forbidden outside the command-line wrapper" },
+    { path = "std::fs::metadata", reason = "A2: filesystem access is forbidden outside the command-line wrapper" },
+    { path = "std::fs::symlink_metadata", reason = "A2: filesystem access is forbidden outside the command-line wrapper" },
+    { path = "std::fs::canonicalize", reason = "A2: filesystem access is forbidden outside the command-line wrapper" },
+    { path = "std::fs::hard_link", reason = "A2: filesystem access is forbidden outside the command-line wrapper" },
+    { path = "std::fs::read_link", reason = "A2: filesystem access is forbidden outside the command-line wrapper" },
+    { path = "std::fs::set_permissions", reason = "A2: filesystem access is forbidden outside the command-line wrapper" },
+    { path = "std::fs::exists", reason = "A2: filesystem access is forbidden outside the command-line wrapper" },
+    { path = "std::net::TcpStream::connect", reason = "A2: network access is forbidden outside the command-line wrapper" },
+    { path = "std::net::TcpStream::connect_timeout", reason = "A2: network access is forbidden outside the command-line wrapper" },
+    { path = "std::net::TcpListener::bind", reason = "A2: network access is forbidden outside the command-line wrapper" },
+    { path = "std::net::UdpSocket::bind", reason = "A2: network access is forbidden outside the command-line wrapper" },
+    { path = "std::net::ToSocketAddrs::to_socket_addrs", reason = "A2: network access is forbidden outside the command-line wrapper" },
+    { path = "std::env::var", reason = "A2: environment access is forbidden outside the command-line wrapper" },
+    { path = "std::env::var_os", reason = "A2: environment access is forbidden outside the command-line wrapper" },
+    { path = "std::env::vars", reason = "A2: environment access is forbidden outside the command-line wrapper" },
+    { path = "std::env::vars_os", reason = "A2: environment access is forbidden outside the command-line wrapper" },
+    { path = "std::env::args", reason = "A2: environment access is forbidden outside the command-line wrapper" },
+    { path = "std::env::args_os", reason = "A2: environment access is forbidden outside the command-line wrapper" },
+    { path = "std::env::current_dir", reason = "A2: environment access is forbidden outside the command-line wrapper" },
+    { path = "std::env::set_current_dir", reason = "A2: environment access is forbidden outside the command-line wrapper" },
+    { path = "std::env::current_exe", reason = "A2: environment access is forbidden outside the command-line wrapper" },
+    { path = "std::env::temp_dir", reason = "A2: environment access is forbidden outside the command-line wrapper" },
+    { path = "std::env::home_dir", reason = "A2: environment access is forbidden outside the command-line wrapper" },
+    { path = "std::process::exit", reason = "A2: process access is forbidden outside the command-line wrapper" },
+    { path = "std::process::abort", reason = "A2: process access is forbidden outside the command-line wrapper" },
+    { path = "std::process::id", reason = "A2: process access is forbidden outside the command-line wrapper" },
+    { path = "std::time::SystemTime::now", reason = "A2: clock access is forbidden outside the command-line wrapper" },
+    { path = "std::time::Instant::now", reason = "A2: clock access is forbidden outside the command-line wrapper" },
+]
+disallowed-types = [
+    { path = "std::fs::File", reason = "A2: filesystem access is forbidden outside the command-line wrapper" },
+    { path = "std::fs::OpenOptions", reason = "A2: filesystem access is forbidden outside the command-line wrapper" },
+    { path = "std::fs::DirBuilder", reason = "A2: filesystem access is forbidden outside the command-line wrapper" },
+    { path = "std::net::TcpStream", reason = "A2: network access is forbidden outside the command-line wrapper" },
+    { path = "std::net::TcpListener", reason = "A2: network access is forbidden outside the command-line wrapper" },
+    { path = "std::net::UdpSocket", reason = "A2: network access is forbidden outside the command-line wrapper" },
+    { path = "std::process::Command", reason = "A2: process access is forbidden outside the command-line wrapper" },
+    { path = "std::process::Child", reason = "A2: process access is forbidden outside the command-line wrapper" },
+    { path = "std::time::SystemTime", reason = "A2: clock access is forbidden outside the command-line wrapper" },
+    { path = "std::time::Instant", reason = "A2: clock access is forbidden outside the command-line wrapper" },
+]

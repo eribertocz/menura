@@ -1,0 +1,13 @@
+[package]
+name = "semantic-compiler-security"
+description = "Access and row-policy logic, the single home of security rules (S5)."
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[dependencies]
+semantic-compiler-model.workspace = true
+
+[lints]
+workspace = true
