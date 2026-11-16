@@ -32,6 +32,8 @@ allow-wildcard-paths = true
 allow = [
     "semantic-compiler-contracts",
     "semantic-compiler-model",
+    "semantic-compiler-expressions",
+    "semantic-compiler-representations",
     "semantic-compiler-security",
     "semantic-compiler-e0-load",
     "semantic-compiler-e1-parse",
