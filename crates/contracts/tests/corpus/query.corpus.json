@@ -1,0 +1,470 @@
+{
+  "schema": "query",
+  "example": "query.json-form.example.json",
+  "cases": [
+    {
+      "name": "published wide-table example",
+      "valid": true,
+      "patch": []
+    },
+    {
+      "name": "published SQL example",
+      "valid": true,
+      "patch": [],
+      "example": "query.sql-form.example.json"
+    },
+    {
+      "name": "aliased dimension",
+      "valid": true,
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/query/dimensions/0",
+          "value": {
+            "field": "customers.region",
+            "alias": "region"
+          }
+        }
+      ]
+    },
+    {
+      "name": "absolute date range",
+      "valid": true,
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/query/nonportable_extensions/0/data/date_range",
+          "value": {
+            "dimension": "invoices.invoice_date",
+            "from": "2024-02-29",
+            "to": "2024-03-31"
+          }
+        }
+      ]
+    },
+    {
+      "name": "relative range without include_current",
+      "valid": true,
+      "patch": [
+        {
+          "op": "remove",
+          "path": "/query/nonportable_extensions/0/data/date_range/relative/include_current"
+        }
+      ]
+    },
+    {
+      "name": "reference time in UTC",
+      "valid": true,
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/reference_time",
+          "value": "2026-11-15T16:00:00Z"
+        }
+      ]
+    },
+    {
+      "name": "reference time with fraction",
+      "valid": true,
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/reference_time",
+          "value": "2026-11-15T16:00:00.125+01:00"
+        }
+      ]
+    },
+    {
+      "name": "no reference time",
+      "valid": true,
+      "patch": [
+        {
+          "op": "remove",
+          "path": "/reference_time"
+        }
+      ]
+    },
+    {
+      "name": "path choice",
+      "valid": true,
+      "patch": [
+        {
+          "op": "add",
+          "path": "/query/nonportable_extensions/0/data/paths",
+          "value": [
+            {
+              "from": "invoices",
+              "to": "customers",
+              "relationships": [
+                "invoices_customer"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "numeric time zone",
+      "valid": false,
+      "keywords": [
+        "type",
+        "properties"
+      ],
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/time_zone",
+          "value": 5
+        }
+      ]
+    },
+    {
+      "name": "another vendor",
+      "valid": false,
+      "keywords": [
+        "const",
+        "$ref"
+      ],
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/query/nonportable_extensions/0/vendor_name",
+          "value": "ACME"
+        }
+      ]
+    },
+    {
+      "name": "another namespace",
+      "valid": false,
+      "keywords": [
+        "const"
+      ],
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/query/nonportable_extensions/0/data/namespace",
+          "value": "acme"
+        }
+      ]
+    },
+    {
+      "name": "unknown direction",
+      "valid": false,
+      "keywords": [
+        "enum"
+      ],
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/query/nonportable_extensions/0/data/order_by/0/direction",
+          "value": "up"
+        }
+      ]
+    },
+    {
+      "name": "time zone missing",
+      "valid": false,
+      "keywords": [
+        "required"
+      ],
+      "patch": [
+        {
+          "op": "remove",
+          "path": "/time_zone"
+        }
+      ]
+    },
+    {
+      "name": "unknown query member",
+      "valid": false,
+      "keywords": [
+        "additionalProperties"
+      ],
+      "patch": [
+        {
+          "op": "add",
+          "path": "/query/extra",
+          "value": 1
+        }
+      ]
+    },
+    {
+      "name": "unknown envelope member",
+      "valid": false,
+      "keywords": [
+        "additionalProperties"
+      ],
+      "patch": [
+        {
+          "op": "add",
+          "path": "/extra",
+          "value": 1
+        }
+      ]
+    },
+    {
+      "name": "empty filter",
+      "valid": false,
+      "keywords": [
+        "minLength",
+        "properties"
+      ],
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/query/filter",
+          "value": ""
+        }
+      ]
+    },
+    {
+      "name": "empty time zone",
+      "valid": false,
+      "keywords": [
+        "minLength"
+      ],
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/time_zone",
+          "value": ""
+        }
+      ]
+    },
+    {
+      "name": "two extension entries",
+      "valid": false,
+      "keywords": [
+        "maxItems"
+      ],
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/query/nonportable_extensions",
+          "value": [
+            {
+              "vendor_name": "COMMON",
+              "data": {
+                "namespace": "semantic_compiler",
+                "version": 1
+              }
+            },
+            {
+              "vendor_name": "COMMON",
+              "data": {
+                "namespace": "semantic_compiler",
+                "version": 1
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "path without relationships",
+      "valid": false,
+      "keywords": [
+        "minItems",
+        "items"
+      ],
+      "patch": [
+        {
+          "op": "add",
+          "path": "/query/nonportable_extensions/0/data/paths",
+          "value": [
+            {
+              "from": "invoices",
+              "to": "customers",
+              "relationships": []
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "limit 0",
+      "valid": false,
+      "keywords": [
+        "minimum"
+      ],
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/query/nonportable_extensions/0/data/limit",
+          "value": 0
+        }
+      ]
+    },
+    {
+      "name": "extension version 0",
+      "valid": false,
+      "keywords": [
+        "minimum"
+      ],
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/query/nonportable_extensions/0/data/version",
+          "value": 0
+        }
+      ]
+    },
+    {
+      "name": "pre-release version",
+      "valid": false,
+      "keywords": [
+        "pattern",
+        "$ref"
+      ],
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/contract_version",
+          "value": "1.0.0-beta"
+        }
+      ]
+    },
+    {
+      "name": "reference time without offset",
+      "valid": false,
+      "keywords": [
+        "format"
+      ],
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/reference_time",
+          "value": "2026-11-15T12:00:00"
+        }
+      ]
+    },
+    {
+      "name": "reference time with space",
+      "valid": false,
+      "keywords": [
+        "format"
+      ],
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/reference_time",
+          "value": "2026-11-15 12:00:00Z"
+        }
+      ]
+    },
+    {
+      "name": "absolute range on February 30",
+      "valid": false,
+      "keywords": [
+        "format"
+      ],
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/query/nonportable_extensions/0/data/date_range",
+          "value": {
+            "dimension": "invoices.invoice_date",
+            "from": "2026-01-01",
+            "to": "2026-02-30"
+          }
+        }
+      ]
+    },
+    {
+      "name": "numeric dimension",
+      "valid": false,
+      "keywords": [
+        "items",
+        "oneOf"
+      ],
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/query/dimensions/0",
+          "value": 5
+        }
+      ]
+    },
+    {
+      "name": "empty metric reference",
+      "valid": false,
+      "keywords": [
+        "$ref",
+        "minLength",
+        "oneOf"
+      ],
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/query/metrics/0",
+          "value": {
+            "metric": ""
+          }
+        }
+      ]
+    },
+    {
+      "name": "both query and sql",
+      "valid": false,
+      "keywords": [
+        "oneOf",
+        "not"
+      ],
+      "patch": [
+        {
+          "op": "add",
+          "path": "/sql",
+          "value": "SELECT 1"
+        }
+      ]
+    },
+    {
+      "name": "neither query nor sql",
+      "valid": false,
+      "keywords": [
+        "oneOf",
+        "required"
+      ],
+      "patch": [
+        {
+          "op": "remove",
+          "path": "/query"
+        }
+      ]
+    },
+    {
+      "name": "relative and absolute range",
+      "valid": false,
+      "keywords": [
+        "oneOf",
+        "not",
+        "anyOf"
+      ],
+      "patch": [
+        {
+          "op": "add",
+          "path": "/query/nonportable_extensions/0/data/date_range/from",
+          "value": "2026-01-01"
+        }
+      ]
+    },
+    {
+      "name": "half an absolute range",
+      "valid": false,
+      "keywords": [
+        "oneOf",
+        "required"
+      ],
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/query/nonportable_extensions/0/data/date_range",
+          "value": {
+            "dimension": "invoices.invoice_date",
+            "from": "2026-01-01"
+          }
+        }
+      ]
+    }
+  ]
+}

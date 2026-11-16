@@ -1,0 +1,297 @@
+{
+  "schema": "catalog-schema",
+  "example": "catalog-schema.example.json",
+  "cases": [
+    {
+      "name": "published example",
+      "valid": true,
+      "patch": []
+    },
+    {
+      "name": "no relations",
+      "valid": true,
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/relations",
+          "value": []
+        }
+      ]
+    },
+    {
+      "name": "nested list type",
+      "valid": true,
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/relations/0/columns/6/logical_type",
+          "value": {
+            "kind": "list",
+            "element": {
+              "kind": "list",
+              "element": {
+                "kind": "text"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "timestamp type",
+      "valid": true,
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/relations/0/columns/1/logical_type",
+          "value": {
+            "kind": "timestamp",
+            "precision": "ns",
+            "with_time_zone": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "integral floats are integers",
+      "valid": true,
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/relations/0/columns/5/logical_type/precision",
+          "value": 38.0
+        },
+        {
+          "op": "replace",
+          "path": "/relations/0/columns/0/logical_type/bits",
+          "value": 64.0
+        }
+      ]
+    },
+    {
+      "name": "nullable is not a boolean",
+      "valid": false,
+      "keywords": [
+        "type"
+      ],
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/relations/0/columns/0/nullable",
+          "value": "no"
+        }
+      ]
+    },
+    {
+      "name": "another contract",
+      "valid": false,
+      "keywords": [
+        "const"
+      ],
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/contract",
+          "value": "semantic_compiler.catalog_state"
+        }
+      ]
+    },
+    {
+      "name": "integer width 12",
+      "valid": false,
+      "keywords": [
+        "enum",
+        "oneOf",
+        "$ref"
+      ],
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/relations/0/columns/0/logical_type/bits",
+          "value": 12
+        }
+      ]
+    },
+    {
+      "name": "engine missing",
+      "valid": false,
+      "keywords": [
+        "required"
+      ],
+      "patch": [
+        {
+          "op": "remove",
+          "path": "/engine"
+        }
+      ]
+    },
+    {
+      "name": "unknown engine member next to properties",
+      "valid": false,
+      "keywords": [
+        "additionalProperties",
+        "properties"
+      ],
+      "patch": [
+        {
+          "op": "add",
+          "path": "/engine/build",
+          "value": "x"
+        }
+      ]
+    },
+    {
+      "name": "empty engine name",
+      "valid": false,
+      "keywords": [
+        "properties",
+        "minLength"
+      ],
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/engine/name",
+          "value": ""
+        }
+      ]
+    },
+    {
+      "name": "relation without columns",
+      "valid": false,
+      "keywords": [
+        "minItems",
+        "items",
+        "$ref"
+      ],
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/relations/0/columns",
+          "value": []
+        }
+      ]
+    },
+    {
+      "name": "relation is a string",
+      "valid": false,
+      "keywords": [
+        "items",
+        "type"
+      ],
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/relations/0",
+          "value": "x"
+        }
+      ]
+    },
+    {
+      "name": "document id without snapshot",
+      "valid": false,
+      "keywords": [
+        "$ref",
+        "required"
+      ],
+      "patch": [
+        {
+          "op": "remove",
+          "path": "/document_id/snapshot"
+        }
+      ]
+    },
+    {
+      "name": "two-part version",
+      "valid": false,
+      "keywords": [
+        "pattern",
+        "$ref"
+      ],
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/contract_version",
+          "value": "1.0"
+        }
+      ]
+    },
+    {
+      "name": "precision 0",
+      "valid": false,
+      "keywords": [
+        "minimum",
+        "oneOf"
+      ],
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/relations/0/columns/5/logical_type/precision",
+          "value": 0
+        }
+      ]
+    },
+    {
+      "name": "scale 39",
+      "valid": false,
+      "keywords": [
+        "maximum",
+        "oneOf"
+      ],
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/relations/0/columns/5/logical_type/scale",
+          "value": 39
+        }
+      ]
+    },
+    {
+      "name": "integer without signed",
+      "valid": false,
+      "keywords": [
+        "oneOf",
+        "required"
+      ],
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/relations/0/columns/0/logical_type",
+          "value": {
+            "kind": "integer",
+            "bits": 32
+          }
+        }
+      ]
+    },
+    {
+      "name": "decimal with bits",
+      "valid": false,
+      "keywords": [
+        "oneOf",
+        "additionalProperties"
+      ],
+      "patch": [
+        {
+          "op": "add",
+          "path": "/relations/0/columns/5/logical_type/bits",
+          "value": 8
+        }
+      ]
+    },
+    {
+      "name": "fractional precision",
+      "valid": false,
+      "keywords": [
+        "type",
+        "oneOf"
+      ],
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/relations/0/columns/5/logical_type/precision",
+          "value": 18.5
+        }
+      ]
+    }
+  ]
+}
