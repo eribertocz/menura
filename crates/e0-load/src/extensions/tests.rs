@@ -198,6 +198,17 @@ fn e0c_2_1_e0c_01_version_of_another_json_type() {
 
 #[test]
 fn e0c_1_3_a_repeated_namespace_is_ours_when_any_value_matches() {
+    let found = errors(
+        conformance_model!("e0-extensions-repeated-namespace-001"),
+        DEFAULT_NAMESPACE,
+    );
+    assert_eq!(
+        found,
+        [pair(
+            "E0C-06",
+            &format!("{MODEL}/datasets/0/custom_extensions/0/data")
+        )]
+    );
     for data in [
         r#"{"namespace": "acme", "namespace": "semantic_compiler", "version": 1}"#,
         r#"{"namespace": "semantic_compiler", "namespace": "acme", "version": 1}"#,
