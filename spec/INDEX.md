@@ -431,15 +431,17 @@ Find a rule ID or a section here, then open only that file at that line.
 | [stages/E0/expressions.md](stages/E0/expressions.md#L137) | 137 | rule | E0F-11.1 |
 | [stages/E0/expressions.md](stages/E0/expressions.md#L138) | 138 | rule | E0F-11.2 |
 | [stages/E0/expressions.md](stages/E0/expressions.md#L140) | 140 | section | E0F-3 Implicit conversions |
-| [stages/E0/expressions.md](stages/E0/expressions.md#L153) | 153 | section | E0F-4 Relationship keys |
-| [stages/E0/expressions.md](stages/E0/expressions.md#L155) | 155 | rule | E0F-4.1 |
-| [stages/E0/expressions.md](stages/E0/expressions.md#L157) | 157 | section | E0F-5 Result types of aggregates |
-| [stages/E0/expressions.md](stages/E0/expressions.md#L178) | 178 | section | E0F-5a Result types of scalar expressions |
-| [stages/E0/expressions.md](stages/E0/expressions.md#L197) | 197 | section | E0F-6 Division |
-| [stages/E0/expressions.md](stages/E0/expressions.md#L199) | 199 | rule | E0F-6.1 |
-| [stages/E0/expressions.md](stages/E0/expressions.md#L201) | 201 | section | E0F-7 Nullability |
-| [stages/E0/expressions.md](stages/E0/expressions.md#L203) | 203 | rule | E0F-7.1 |
-| [stages/E0/expressions.md](stages/E0/expressions.md#L205) | 205 | section | E0F-8 Diagnostics |
+| [stages/E0/expressions.md](stages/E0/expressions.md#L153) | 153 | rule | E0F-3.1 |
+| [stages/E0/expressions.md](stages/E0/expressions.md#L154) | 154 | rule | E0F-3.2 |
+| [stages/E0/expressions.md](stages/E0/expressions.md#L156) | 156 | section | E0F-4 Relationship keys |
+| [stages/E0/expressions.md](stages/E0/expressions.md#L158) | 158 | rule | E0F-4.1 |
+| [stages/E0/expressions.md](stages/E0/expressions.md#L160) | 160 | section | E0F-5 Result types of aggregates |
+| [stages/E0/expressions.md](stages/E0/expressions.md#L181) | 181 | section | E0F-5a Result types of scalar expressions |
+| [stages/E0/expressions.md](stages/E0/expressions.md#L201) | 201 | section | E0F-6 Division |
+| [stages/E0/expressions.md](stages/E0/expressions.md#L203) | 203 | rule | E0F-6.1 |
+| [stages/E0/expressions.md](stages/E0/expressions.md#L205) | 205 | section | E0F-7 Nullability |
+| [stages/E0/expressions.md](stages/E0/expressions.md#L207) | 207 | rule | E0F-7.1 |
+| [stages/E0/expressions.md](stages/E0/expressions.md#L209) | 209 | section | E0F-8 Diagnostics |
 | [stages/E0/extensions.md](stages/E0/extensions.md#L1) | 1 | section | E0.c Validate extensions |
 | [stages/E0/extensions.md](stages/E0/extensions.md#L3) | 3 | section | E0C-1 Which entries are ours |
 | [stages/E0/extensions.md](stages/E0/extensions.md#L11) | 11 | rule | E0C-1.1 |
@@ -514,11 +516,11 @@ Find a rule ID or a section here, then open only that file at that line.
 | [stages/E0/references.md](stages/E0/references.md#L11) | 11 | rule | E0D-1.5 |
 | [stages/E0/references.md](stages/E0/references.md#L17) | 17 | section | E0D-2 Uniqueness |
 | [stages/E0/references.md](stages/E0/references.md#L30) | 30 | section | E0D-3 Existence |
-| [stages/E0/references.md](stages/E0/references.md#L41) | 41 | rule | E0D-3.1 |
-| [stages/E0/references.md](stages/E0/references.md#L42) | 42 | rule | E0D-3.2 |
-| [stages/E0/references.md](stages/E0/references.md#L43) | 43 | rule | E0D-3.3 |
-| [stages/E0/references.md](stages/E0/references.md#L44) | 44 | rule | E0D-3.4 |
-| [stages/E0/references.md](stages/E0/references.md#L46) | 46 | section | E0D-4 Diagnostics |
+| [stages/E0/references.md](stages/E0/references.md#L42) | 42 | rule | E0D-3.1 |
+| [stages/E0/references.md](stages/E0/references.md#L43) | 43 | rule | E0D-3.2 |
+| [stages/E0/references.md](stages/E0/references.md#L44) | 44 | rule | E0D-3.3 |
+| [stages/E0/references.md](stages/E0/references.md#L45) | 45 | rule | E0D-3.4 |
+| [stages/E0/references.md](stages/E0/references.md#L47) | 47 | section | E0D-4 Diagnostics |
 | [stages/E0/relationships.md](stages/E0/relationships.md#L1) | 1 | section | E0.e Analyze relationships |
 | [stages/E0/relationships.md](stages/E0/relationships.md#L3) | 3 | section | E0E-1 Purpose |
 | [stages/E0/relationships.md](stages/E0/relationships.md#L8) | 8 | section | E0E-2 Graph |
@@ -532,16 +534,17 @@ Find a rule ID or a section here, then open only that file at that line.
 | [stages/E0/relationships.md](stages/E0/relationships.md#L21) | 21 | rule | E0E-3.3 |
 | [stages/E0/relationships.md](stages/E0/relationships.md#L22) | 22 | rule | E0E-3.4 |
 | [stages/E0/relationships.md](stages/E0/relationships.md#L23) | 23 | rule | E0E-3.5 |
-| [stages/E0/relationships.md](stages/E0/relationships.md#L24) | 24 | rule | E0E-3.6 |
-| [stages/E0/relationships.md](stages/E0/relationships.md#L25) | 25 | rule | E0E-3.7 |
-| [stages/E0/relationships.md](stages/E0/relationships.md#L27) | 27 | section | E0E-4 Multiple paths |
-| [stages/E0/relationships.md](stages/E0/relationships.md#L29) | 29 | rule | E0E-4.1 |
-| [stages/E0/relationships.md](stages/E0/relationships.md#L30) | 30 | rule | E0E-4.2 |
-| [stages/E0/relationships.md](stages/E0/relationships.md#L31) | 31 | rule | E0E-4.3 |
-| [stages/E0/relationships.md](stages/E0/relationships.md#L33) | 33 | section | E0E-5 Unconnected datasets |
-| [stages/E0/relationships.md](stages/E0/relationships.md#L35) | 35 | rule | E0E-5.1 |
-| [stages/E0/relationships.md](stages/E0/relationships.md#L37) | 37 | section | E0E-6 Output |
-| [stages/E0/relationships.md](stages/E0/relationships.md#L43) | 43 | section | E0E-7 Diagnostics |
+| [stages/E0/relationships.md](stages/E0/relationships.md#L24) | 24 | rule | E0E-3.5 |
+| [stages/E0/relationships.md](stages/E0/relationships.md#L25) | 25 | rule | E0E-3.6 |
+| [stages/E0/relationships.md](stages/E0/relationships.md#L26) | 26 | rule | E0E-3.7 |
+| [stages/E0/relationships.md](stages/E0/relationships.md#L28) | 28 | section | E0E-4 Multiple paths |
+| [stages/E0/relationships.md](stages/E0/relationships.md#L30) | 30 | rule | E0E-4.1 |
+| [stages/E0/relationships.md](stages/E0/relationships.md#L31) | 31 | rule | E0E-4.2 |
+| [stages/E0/relationships.md](stages/E0/relationships.md#L32) | 32 | rule | E0E-4.3 |
+| [stages/E0/relationships.md](stages/E0/relationships.md#L34) | 34 | section | E0E-5 Unconnected datasets |
+| [stages/E0/relationships.md](stages/E0/relationships.md#L36) | 36 | rule | E0E-5.1 |
+| [stages/E0/relationships.md](stages/E0/relationships.md#L38) | 38 | section | E0E-6 Output |
+| [stages/E0/relationships.md](stages/E0/relationships.md#L44) | 44 | section | E0E-7 Diagnostics |
 | [stages/E0/structure.md](stages/E0/structure.md#L1) | 1 | section | E0.b Validate structure |
 | [stages/E0/structure.md](stages/E0/structure.md#L3) | 3 | section | E0B-1 Reference |
 | [stages/E0/structure.md](stages/E0/structure.md#L5) | 5 | rule | E0B-1.1 |
