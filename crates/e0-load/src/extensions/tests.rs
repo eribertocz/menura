@@ -1,4 +1,5 @@
-//! The common extension rules: E0C-1.1, E0C-1.2, E0C-2.1 to E0C-2.5, E0C-01 to E0C-05, W0C-01,
+//! The common extension rules: E0C-1.1, E0C-1.2, E0C-2.1 to E0C-2.7, E0C-01, E0C-02, E0C-04 to
+//! E0C-06, W0C-01,
 //! MDL-2.1 to MDL-2.3 and MDL-2.5.
 //!
 //! The model documents of the `e0-extensions-*` conformance cases are read here at compile
@@ -171,7 +172,7 @@ fn e0c_2_1_mdl_2_2_e0c_01_version_missing_or_not_supported() {
 }
 
 #[test]
-fn e0c_03_wrong_value_type() {
+fn e0c_2_1_e0c_01_version_of_another_json_type() {
     let found = errors(
         conformance_model!("e0-extensions-wrong-type-001"),
         DEFAULT_NAMESPACE,
@@ -179,20 +180,67 @@ fn e0c_03_wrong_value_type() {
     assert_eq!(
         found,
         [pair(
-            "E0C-03",
+            "E0C-01",
             &format!("{MODEL}/datasets/0/custom_extensions/0/data")
         )]
     );
-    for version in ["1.0", "null", "true", "[1]"] {
+    for version in ["1.0", "1e0", "null", "true", "[1]", "{}"] {
         let document = on_orders(&format!(
             r#"{{"namespace": "semantic_compiler", "version": {version}}}"#
         ));
         assert_eq!(
             errors(document.as_bytes(), DEFAULT_NAMESPACE),
-            [pair("E0C-03", ORDERS_DATA)],
+            [pair("E0C-01", ORDERS_DATA)],
             "{version}"
         );
     }
+}
+
+#[test]
+fn e0c_2_7_e0c_06_repeated_member_inside_data() {
+    let found = errors(
+        conformance_model!("e0-extensions-repeated-member-001"),
+        DEFAULT_NAMESPACE,
+    );
+    assert_eq!(
+        found,
+        [pair(
+            "E0C-06",
+            &format!("{MODEL}/datasets/0/custom_extensions/0/data")
+        )]
+    );
+    for data in [
+        r#"{"namespace": "semantic_compiler", "version": 2, "version": 1}"#,
+        r#"{"namespace": "semantic_compiler", "version": 1, "row_access": [{"a": 1, "b": {"c": 1, "c": 2}}]}"#,
+        r#"{"namespace": "acme", "namespace": "semantic_compiler", "version": 1}"#,
+        r#"{"namespace": "semantic_compiler", "namespace": "semantic_compiler", "version": 1}"#,
+    ] {
+        let document = on_orders(data);
+        assert_eq!(
+            errors(document.as_bytes(), DEFAULT_NAMESPACE),
+            [pair("E0C-06", ORDERS_DATA)],
+            "{data}"
+        );
+    }
+    let failure = validate(
+        on_orders(
+            r#"{"namespace": "semantic_compiler", "version": 1, "x": {"k": 1, "k": 2}, "k": 0}"#,
+        )
+        .as_bytes(),
+        DEFAULT_NAMESPACE,
+    )
+    .expect_err("rejected");
+    assert!(
+        failure.errors[0].message.contains("`k`"),
+        "{}",
+        failure.errors[0].message
+    );
+    let foreign = on_orders(r#"{"namespace": "acme", "version": 1, "version": 2}"#);
+    assert!(accepted(foreign.as_bytes()).entries.is_empty());
+    let same_names_apart = on_orders(
+        r#"{"namespace": "semantic_compiler", "version": 1, "access": {"version": 1, "fields": [{"names": []}, {"names": []}]}}"#,
+    );
+    assert_eq!(accepted(same_names_apart.as_bytes()).entries.len(), 1);
 }
 
 #[test]
@@ -300,7 +348,7 @@ fn mdl_2_3_the_namespace_is_configurable() {
 }
 
 #[test]
-fn e0_4_3_diagnostics_follow_document_order() {
+fn e0c_2_6_e0_4_3_diagnostics_are_located_and_follow_document_order() {
     let document = concat!(
         "version: \"0.1.1\"\n",
         "semantic_model:\n",

@@ -9,6 +9,7 @@ mod diagnostic;
 mod entry;
 mod envelope;
 mod keys;
+mod members;
 mod objects;
 mod output;
 

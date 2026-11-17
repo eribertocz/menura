@@ -3,7 +3,7 @@
 use serde_json::{Map, Value as Json};
 
 use super::diagnostic::{ExtensionCode, ExtensionDiagnostic};
-use super::keys::NAMESPACE;
+use super::members::scan_members;
 use super::objects::{EntryNode, member};
 use crate::pointer::JsonPointer;
 use crate::read::{Node, Value};
@@ -29,15 +29,19 @@ pub(crate) struct OwnData<'document> {
     /// The `data` node.
     pub(crate) node: &'document Node,
     /// The members of the JSON object `data` holds. When a member name is repeated, the last
-    /// value is kept, as the JSON reader does.
+    /// value is kept, as the JSON reader does, and [`Self::repeated_member`] names it.
     pub(crate) members: Map<String, Json>,
+    /// The first member name repeated in an object anywhere inside `data` (E0C-2.7).
+    pub(crate) repeated_member: Option<String>,
 }
 
 /// What `entry` is, for the configured `namespace` (E0C-1, MDL-2.3).
 ///
 /// An entry is ours only when its vendor is `COMMON`, its `data` is a JSON object and
 /// `data.namespace` equals `namespace`. A JSON `data` that is not an object has no namespace,
-/// so it is someone else's.
+/// so it is someone else's. When `namespace` is repeated in `data`, the entry is ours if any of
+/// its values equals `namespace`: it then has a reading as ours, and the repeated member
+/// rejects it (E0C-2.7).
 pub(crate) fn classify<'document>(
     entry: &EntryNode<'document>,
     namespace: &str,
@@ -65,18 +69,28 @@ pub(crate) fn classify<'document>(
             });
         }
     };
-    match parsed {
-        Json::Object(members)
-            if members.get(NAMESPACE).and_then(Json::as_str) == Some(namespace) =>
-        {
-            EntryKind::Ours(OwnData {
-                pointer,
-                node,
-                members,
-            })
-        }
-        _ => EntryKind::Foreign,
+    let Json::Object(members) = parsed else {
+        return EntryKind::Foreign;
+    };
+    let scanned = scan_members(text);
+    if !scanned
+        .namespaces
+        .iter()
+        .any(|value| is_json_text(value, namespace))
+    {
+        return EntryKind::Foreign;
     }
+    EntryKind::Ours(OwnData {
+        pointer,
+        node,
+        members,
+        repeated_member: scanned.repeated,
+    })
+}
+
+/// Whether the JSON text `value` is the string `text`.
+fn is_json_text(value: &str, text: &str) -> bool {
+    serde_json::from_str::<Json>(value).is_ok_and(|value| value.as_str() == Some(text))
 }
 
 fn is_text(node: Option<&Node>, text: &str) -> bool {

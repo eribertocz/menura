@@ -11,8 +11,9 @@ use super::output::ObjectKind;
 /// The extension keys of `data`, without `namespace` and `version`, or the diagnostics that
 /// reject the entry.
 ///
-/// The version is checked first: when it is missing, of the wrong type or not supported, the
-/// keys are not checked, because the version decides which keys exist. Otherwise every key
+/// A repeated member name is checked first (`E0C-06`, E0C-2.7), then the version (`E0C-01`,
+/// E0C-2.1). Either one stops the checks of the entry: with a repeated member `data` has more
+/// than one reading, and the version decides which keys exist. Otherwise every key
 /// that no extension defines is reported once as `E0C-02`, and every key on the wrong object
 /// type once as `E0C-05`, each diagnostic naming its keys in order.
 pub(crate) fn extension_keys(
@@ -25,8 +26,12 @@ pub(crate) fn extension_keys(
         location: data.node.location,
         message,
     };
-    if let Some((code, message)) = version_problem(data.members.get(VERSION)) {
-        return Err(vec![diagnostic(code, message)]);
+    if let Some(name) = &data.repeated_member {
+        let message = format!("the member name `{name}` is repeated inside data");
+        return Err(vec![diagnostic(ExtensionCode::RepeatedMember, message)]);
+    }
+    if let Some(message) = version_problem(data.members.get(VERSION)) {
+        return Err(vec![diagnostic(ExtensionCode::Version, message)]);
     }
     let mut unknown = Vec::new();
     let mut misplaced = Vec::new();
@@ -63,34 +68,18 @@ pub(crate) fn extension_keys(
     }
 }
 
-/// Why `version` is not acceptable (E0C-2.1): missing or not supported is `E0C-01`, a value
-/// that is not an integer is `E0C-03`.
-fn version_problem(version: Option<&Json>) -> Option<(ExtensionCode, String)> {
-    let Some(version) = version else {
-        return Some((ExtensionCode::Version, "data.version is missing".to_owned()));
-    };
+/// Why `version` is not acceptable (E0C-2.1): it is missing, or it is not the JSON integer 1,
+/// whatever its JSON type.
+fn version_problem(version: Option<&Json>) -> Option<String> {
     match version {
-        Json::Number(number) if number.as_u64() == Some(SUPPORTED_VERSION) => None,
-        Json::Number(number) if number.is_u64() || number.is_i64() => Some((
-            ExtensionCode::Version,
-            format!(
-                "data.version {number} is not supported; the supported version is {SUPPORTED_VERSION}"
-            ),
+        None => Some("data.version is missing".to_owned()),
+        Some(Json::Number(number))
+            if number.is_u64() && number.as_u64() == Some(SUPPORTED_VERSION) =>
+        {
+            None
+        }
+        Some(other) => Some(format!(
+            "data.version {other} is not supported; the supported version is the integer {SUPPORTED_VERSION}"
         )),
-        other => Some((
-            ExtensionCode::WrongType,
-            format!("data.version must be an integer, not {}", json_type(other)),
-        )),
-    }
-}
-
-fn json_type(value: &Json) -> &'static str {
-    match value {
-        Json::Null => "null",
-        Json::Bool(_) => "a boolean",
-        Json::Number(_) => "a number with a fraction or exponent",
-        Json::String(_) => "a string",
-        Json::Array(_) => "an array",
-        Json::Object(_) => "an object",
     }
 }

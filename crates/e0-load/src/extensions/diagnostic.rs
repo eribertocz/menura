@@ -6,18 +6,21 @@ use crate::pointer::JsonPointer;
 use crate::read::Location;
 
 /// The code of a common extension diagnostic (E0C-3).
+///
+/// `E0C-03`, a wrong value type of an extension key, is raised by the validation of each
+/// extension (E0C-2.5), not by the common rules.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum ExtensionCode {
     /// `E0C-01`: `data.version` is missing or not supported.
     Version,
     /// `E0C-02`: a key of `data` that no extension defines.
     UnknownKey,
-    /// `E0C-03`: a value of `data` has the wrong type.
-    WrongType,
     /// `E0C-04`: more than one entry of ours on the same object.
     SeveralEntries,
     /// `E0C-05`: an extension key on an object type it is not valid on.
     WrongObject,
+    /// `E0C-06`: a member name repeated in an object inside `data` of an entry of ours.
+    RepeatedMember,
     /// `W0C-01`: a `COMMON` entry whose `data` is not valid JSON; kept, not interpreted.
     NotJson,
 }
@@ -29,9 +32,9 @@ impl ExtensionCode {
         match self {
             Self::Version => "E0C-01",
             Self::UnknownKey => "E0C-02",
-            Self::WrongType => "E0C-03",
             Self::SeveralEntries => "E0C-04",
             Self::WrongObject => "E0C-05",
+            Self::RepeatedMember => "E0C-06",
             Self::NotJson => "W0C-01",
         }
     }
