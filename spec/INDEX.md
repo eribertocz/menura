@@ -441,15 +441,16 @@ Find a rule ID or a section here, then open only that file at that line.
 | [stages/E0/extensions.md](stages/E0/extensions.md#L3) | 3 | section | E0C-1 Which entries are ours |
 | [stages/E0/extensions.md](stages/E0/extensions.md#L11) | 11 | rule | E0C-1.1 |
 | [stages/E0/extensions.md](stages/E0/extensions.md#L12) | 12 | rule | E0C-1.2 |
-| [stages/E0/extensions.md](stages/E0/extensions.md#L14) | 14 | section | E0C-2 Rules for our entries |
-| [stages/E0/extensions.md](stages/E0/extensions.md#L18) | 18 | rule | E0C-2.1 |
-| [stages/E0/extensions.md](stages/E0/extensions.md#L19) | 19 | rule | E0C-2.2 |
-| [stages/E0/extensions.md](stages/E0/extensions.md#L20) | 20 | rule | E0C-2.3 |
-| [stages/E0/extensions.md](stages/E0/extensions.md#L21) | 21 | rule | E0C-2.4 |
-| [stages/E0/extensions.md](stages/E0/extensions.md#L22) | 22 | rule | E0C-2.5 |
-| [stages/E0/extensions.md](stages/E0/extensions.md#L23) | 23 | rule | E0C-2.6 |
-| [stages/E0/extensions.md](stages/E0/extensions.md#L24) | 24 | rule | E0C-2.7 |
-| [stages/E0/extensions.md](stages/E0/extensions.md#L26) | 26 | section | E0C-3 Diagnostics |
+| [stages/E0/extensions.md](stages/E0/extensions.md#L13) | 13 | rule | E0C-1.3 |
+| [stages/E0/extensions.md](stages/E0/extensions.md#L15) | 15 | section | E0C-2 Rules for our entries |
+| [stages/E0/extensions.md](stages/E0/extensions.md#L19) | 19 | rule | E0C-2.1 |
+| [stages/E0/extensions.md](stages/E0/extensions.md#L20) | 20 | rule | E0C-2.2 |
+| [stages/E0/extensions.md](stages/E0/extensions.md#L21) | 21 | rule | E0C-2.3 |
+| [stages/E0/extensions.md](stages/E0/extensions.md#L22) | 22 | rule | E0C-2.4 |
+| [stages/E0/extensions.md](stages/E0/extensions.md#L23) | 23 | rule | E0C-2.5 |
+| [stages/E0/extensions.md](stages/E0/extensions.md#L24) | 24 | rule | E0C-2.6 |
+| [stages/E0/extensions.md](stages/E0/extensions.md#L25) | 25 | rule | E0C-2.7 |
+| [stages/E0/extensions.md](stages/E0/extensions.md#L27) | 27 | section | E0C-3 Diagnostics |
 | [stages/E0/internal-model.md](stages/E0/internal-model.md#L1) | 1 | section | E0.h Build the internal model |
 | [stages/E0/internal-model.md](stages/E0/internal-model.md#L3) | 3 | section | E0H-1 Properties |
 | [stages/E0/internal-model.md](stages/E0/internal-model.md#L7) | 7 | rule | E0H-1.1 |

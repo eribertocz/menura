@@ -10,6 +10,7 @@ An entry of `custom_extensions` is a compiler extension only if all of these hol
 
 - **E0C-1.1** An entry that fails 1 or 3 belongs to someone else: it is kept and never interpreted.
 - **E0C-1.2** A `COMMON` entry whose `data` is not valid JSON is kept, not interpreted, and produces `W0C-01`.
+- **E0C-1.3** If `data` repeats the member `namespace`, condition 3 holds when **any** of its values equals the configured namespace; the entry is then ours and rejected with `E0C-06` (E0C-2.7). A document with one reading as ours is never silently ignored (P1).
 
 ## E0C-2 Rules for our entries
 
