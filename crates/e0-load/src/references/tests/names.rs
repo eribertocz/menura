@@ -95,19 +95,20 @@ fn e0d_2_semantic_model_names_are_unique_in_the_document() {
             orders("order_id", "")
         )
     };
-    let two = format!(
-        "version: \"0.1.1\"\nsemantic_model:\n{}{}",
+    // A `model_name` that names both duplicates is `E0B-07` (E0B-3.2), so a third model is
+    // selected: the duplicates are rejected even though neither is selected.
+    let three = format!(
+        "version: \"0.1.1\"\nsemantic_model:\n{}{}{}",
         model("shop"),
-        model("SHOP")
+        model("SHOP"),
+        model("other")
     );
-    for selected in ["shop", "SHOP"] {
-        let rejection =
-            resolve_selecting((&two, CATALOG), Some(selected)).expect_err("the model is rejected");
-        assert_eq!(
-            summary(&rejection.errors),
-            [pair("E0D-01", "/semantic_model/1/name")]
-        );
-    }
+    let rejection =
+        resolve_selecting((&three, CATALOG), Some("other")).expect_err("the model is rejected");
+    assert_eq!(
+        summary(&rejection.errors),
+        [pair("E0D-01", "/semantic_model/1/name")]
+    );
     let distinct = format!(
         "version: \"0.1.1\"\nsemantic_model:\n{}{}",
         model("shop"),

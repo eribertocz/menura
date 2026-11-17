@@ -7,6 +7,7 @@
 use super::diagnostic::{StructureCode, StructureDiagnostic};
 use super::output::{AnsiSqlVariant, ElementExpression, ElementKind, Structure};
 use super::schema::OFFICIAL_SCHEMA_SOURCE;
+use super::selection::select_model;
 use super::validate_structure;
 use crate::read::{Node, read_document};
 
@@ -173,6 +174,92 @@ fn e0b_3_2_e0b_07_dev_7_several_models_need_model_name() {
 
     let unknown = validate_structure(&document, Some("missing")).expect_err("names no model");
     assert_eq!(unknown[0].code, StructureCode::ModelSelection);
+}
+
+#[test]
+fn e0b_3_2_e0b_07_model_name_naming_two_semantic_models_is_rejected() {
+    let document = read(conformance_model!("e0-structure-repeated-model-name-001"));
+    let rejected = validate_structure(&document, Some("e0_structure_repeated_model_name_001"))
+        .expect_err("model_name names two semantic models");
+    assert_eq!(rejected.len(), 1);
+    assert_eq!(rejected[0].code, StructureCode::ModelSelection);
+    assert_eq!(rejected[0].pointer.as_str(), "/semantic_model");
+
+    let without = validate_structure(&document, None).expect_err("model_name is required");
+    assert_eq!(without[0].code, StructureCode::ModelSelection);
+}
+
+#[test]
+fn e0b_07_a_repeated_name_is_rejected_only_when_model_name_selects_it() {
+    let document = "version: \"0.1.1\"\nsemantic_model:\n  - {name: shop, datasets: []}\n  - {name: shop, datasets: []}\n  - {name: other, datasets: []}\n";
+    let found = errors(document.as_bytes(), Some("shop"));
+    assert_eq!(found[0].code, StructureCode::ModelSelection);
+    assert_eq!(found[0].pointer.as_str(), "/semantic_model");
+    let other = errors(document.as_bytes(), Some("other"));
+    assert!(
+        other
+            .iter()
+            .all(|diagnostic| diagnostic.code != StructureCode::ModelSelection)
+    );
+}
+
+/// The index `select_model` returns for semantic models with the given names.
+fn selected(names: &[&str], model_name: &str) -> Result<Option<usize>, StructureCode> {
+    let models = names
+        .iter()
+        .map(|name| format!("  - {{name: '{name}', datasets: []}}\n"))
+        .collect::<Vec<_>>()
+        .concat();
+    let document = read(format!("version: \"0.1.1\"\nsemantic_model:\n{models}").as_bytes());
+    select_model(&document, Some(model_name)).map_err(|diagnostic| diagnostic.code)
+}
+
+#[test]
+fn e0b_3_2_a_regular_model_name_matches_case_insensitively() {
+    assert_eq!(selected(&["other", "SHOP"], "shop"), Ok(Some(1)));
+    assert_eq!(selected(&["other", "shop"], "Shop"), Ok(Some(1)));
+    assert_eq!(
+        selected(&["other", "r\u{e9}gion"], "R\u{c9}GION"),
+        Ok(Some(1))
+    );
+}
+
+#[test]
+fn e0b_3_2_e0b_07_names_equal_after_normalization_are_ambiguous() {
+    assert_eq!(
+        selected(&["shop", "SHOP"], "shop"),
+        Err(StructureCode::ModelSelection)
+    );
+    assert_eq!(
+        selected(&["shop", "\"SHOP\""], "SHOP"),
+        Err(StructureCode::ModelSelection)
+    );
+}
+
+#[test]
+fn e0b_3_2_a_delimited_model_name_is_compared_exactly() {
+    assert_eq!(selected(&["\"Shop\"", "shop"], "\"Shop\""), Ok(Some(0)));
+    assert_eq!(selected(&["\"Shop\"", "shop"], "\"SHOP\""), Ok(Some(1)));
+    assert_eq!(
+        selected(&["\"Shop\"", "other"], "shop"),
+        Err(StructureCode::ModelSelection)
+    );
+    assert_eq!(
+        selected(&["\"Shop\"", "other"], "Shop"),
+        Err(StructureCode::ModelSelection)
+    );
+}
+
+#[test]
+fn e0b_3_2_doubled_quotes_in_a_delimited_name_stand_for_one_quote() {
+    assert_eq!(
+        selected(&["other", "\"a\"\"b\""], "\"a\"\"b\""),
+        Ok(Some(1))
+    );
+    assert_eq!(
+        selected(&["other", "\"a\"\"b\""], "\"a\"\"\"\"b\""),
+        Err(StructureCode::ModelSelection)
+    );
 }
 
 #[test]

@@ -20,7 +20,8 @@ pub enum StructureCode {
     OutsideEnumeration,
     /// `E0B-06`: a list that needs at least one item is empty.
     EmptyList,
-    /// `E0B-07`: several semantic models and no `model_name`, or `model_name` names none of them.
+    /// `E0B-07`: no semantic model, several semantic models and no `model_name`, or
+    /// `model_name` names none or more than one of them.
     ModelSelection,
     /// `W0B-01`: a variant in a dialect other than `ANSI_SQL`, kept and not compiled.
     OtherDialect,
