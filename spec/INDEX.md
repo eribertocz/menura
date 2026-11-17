@@ -232,7 +232,7 @@ Find a rule ID or a section here, then open only that file at that line.
 | [contracts/integrity-checks.md](contracts/integrity-checks.md#L23) | 23 | rule | CHK-2.1 |
 | [contracts/integrity-checks.md](contracts/integrity-checks.md#L24) | 24 | rule | CHK-2.2 |
 | [contracts/integrity-checks.md](contracts/integrity-checks.md#L26) | 26 | section | CHK-3 Definition hash |
-| [contracts/integrity-checks.md](contracts/integrity-checks.md#L33) | 33 | rule | CHK-3.1 |
+| [contracts/integrity-checks.md](contracts/integrity-checks.md#L35) | 35 | rule | CHK-3.1 |
 | [contracts/model-description.md](contracts/model-description.md#L1) | 1 | section | Contract: model description |
 | [contracts/model-description.md](contracts/model-description.md#L5) | 5 | section | DSC-1 Purpose |
 | [contracts/model-description.md](contracts/model-description.md#L11) | 11 | section | DSC-2 Content |
