@@ -5,8 +5,8 @@ use std::collections::HashSet;
 
 use super::diagnostic::ReferenceCode;
 use super::finding::Finding;
-use super::outline::{DeclaredName, ElementOutline, ModelOutline};
 use crate::names::{MAXIMUM_LENGTH, identifier_text, is_too_long};
+use crate::outline::{DeclaredName, ElementOutline, ModelOutline};
 
 /// Every `E0D-01` finding of the document: the names of every semantic model, selected or not,
 /// and the names inside `model`, the selected one.

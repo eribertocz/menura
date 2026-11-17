@@ -45,6 +45,14 @@ mod nodes;
         reason = "called by the E0 stage function, which issue #45 adds; until then only the tests call it"
     )
 )]
+mod outline;
+#[cfg_attr(
+    not(test),
+    expect(
+        dead_code,
+        reason = "called by the E0 stage function, which issue #45 adds; until then only the tests call it"
+    )
+)]
 mod pointer;
 #[cfg_attr(
     not(test),

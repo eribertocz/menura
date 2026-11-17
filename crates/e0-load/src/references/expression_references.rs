@@ -10,11 +10,11 @@ use semantic_compiler_model::expression::Reference;
 
 use super::diagnostic::ReferenceCode;
 use super::finding::Finding;
-use super::outline::ElementOutline;
 use super::output::ElementKind;
-use super::scope::{Scope, field};
+use super::scope::Scope;
 use super::walk::references;
 use crate::names::Name;
+use crate::outline::ElementOutline;
 
 /// Every `E0D-03` finding of the model: one per field that reads a missing column.
 ///
@@ -100,7 +100,7 @@ pub(crate) fn form_findings(scope: &Scope<'_, '_>) -> Vec<Finding> {
 fn exists(scope: &Scope<'_, '_>, dataset: &Name, name: &Name) -> bool {
     scope
         .dataset(dataset)
-        .is_some_and(|dataset| field(dataset, name).is_some())
+        .is_some_and(|dataset| dataset.field(name).is_some())
 }
 
 /// The references of `element` that `is_missing` selects, written for a message, or `None`
