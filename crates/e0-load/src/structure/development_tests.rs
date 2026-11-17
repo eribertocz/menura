@@ -341,3 +341,17 @@ fn e0b_3_2_model_name_is_matched_as_an_identifier() {
         assert_eq!(summary(&rejected), [pair("E0B-07", "")]);
     }
 }
+
+#[test]
+fn e0b_3_2_e0b_07_a_malformed_delimited_model_name_names_no_development_model() {
+    for model_name in ["\"a\"b\"", "\"", "\"\"", "\"a"] {
+        let document = read(
+            with_sql("")
+                .replace("name: shop", &format!("name: '{model_name}'"))
+                .as_bytes(),
+        );
+        let rejected = validate_structure(&document, OssieFormat::Development, Some(model_name))
+            .expect_err("a malformed model_name names no model");
+        assert_eq!(summary(&rejected), [pair("E0B-07", "")], "{model_name}");
+    }
+}

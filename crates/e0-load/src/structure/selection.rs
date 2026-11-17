@@ -4,6 +4,7 @@
 use semantic_compiler_contracts::normalize_unquoted_identifier;
 
 use super::diagnostic::{StructureCode, StructureDiagnostic};
+use crate::names::is_malformed;
 use crate::nodes::member;
 use crate::pointer::JsonPointer;
 use crate::read::{Node, Value};
@@ -15,7 +16,8 @@ use crate::read::{Node, Value};
 /// `model_name` is given (E0B-3.2). With several semantic models, `model_name` must name one;
 /// with one, a `model_name` that is given must name it. A `model_name` that names more than one
 /// semantic model is rejected too (`E0B-07`). `model_name` and each `name` are read as declared
-/// names (E0D-1.4) and match when they are the same name (E0D-1.1, E0D-1.3).
+/// names (E0D-1.4) and match when they are the same name (E0D-1.1, E0D-1.3); a malformed
+/// delimited `model_name` (E0D-1.4) names no semantic model.
 pub(crate) fn select_model(
     document: &Node,
     model_name: Option<&str>,
@@ -62,7 +64,8 @@ pub(crate) fn select_model(
 /// The flat root is the one semantic model (section 4.5), so a `model_name` that is given must
 /// name it (E0B-3.2). `model_name` and `name` are compared as in [`select_model`], as declared
 /// names (E0D-1.4) that match when they are the same name (E0D-1.1, E0D-1.3), so `shop` names a
-/// model named `SHOP`. A missing or non-text `name` is left to the schema diagnostics.
+/// model named `SHOP`. A malformed delimited `model_name` (E0D-1.4) names no model. A missing
+/// or non-text `name` is left to the schema diagnostics.
 pub(crate) fn check_root_model(
     document: &Node,
     model_name: Option<&str>,
@@ -73,7 +76,7 @@ pub(crate) fn check_root_model(
     let Value::String(root_name) = &node.value else {
         return Ok(());
     };
-    if declared_name_key(root_name) == declared_name_key(name) {
+    if !is_malformed(name) && declared_name_key(root_name) == declared_name_key(name) {
         return Ok(());
     }
     Err(StructureDiagnostic {
@@ -84,8 +87,12 @@ pub(crate) fn check_root_model(
     })
 }
 
-/// The indexes of the semantic models whose `name` is the same name as `name` (E0D-1.3).
+/// The indexes of the semantic models whose `name` is the same name as `name` (E0D-1.3): none
+/// when `name` is a malformed delimited name (E0D-1.4).
 fn named_models(models: &[Node], name: &str) -> Vec<usize> {
+    if is_malformed(name) {
+        return Vec::new();
+    }
     let wanted = declared_name_key(name);
     models
         .iter()

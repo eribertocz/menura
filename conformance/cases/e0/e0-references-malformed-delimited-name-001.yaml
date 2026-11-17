@@ -1,0 +1,6 @@
+id: e0-references-malformed-delimited-name-001
+rules: [E0D-1.4, E0D-01]
+model: e0-references-malformed-delimited-name-001
+expect:
+  outcome: load_error
+  error: E0D-01

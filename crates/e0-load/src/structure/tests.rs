@@ -278,6 +278,22 @@ fn e0b_3_2_doubled_quotes_in_a_delimited_name_stand_for_one_quote() {
 }
 
 #[test]
+fn e0b_3_2_e0b_07_a_malformed_delimited_model_name_names_no_model() {
+    for model_name in ["\"a\"b\"", "\"", "\"\"", "\"a"] {
+        assert_eq!(
+            selected(&["other", model_name], model_name),
+            Err(StructureCode::ModelSelection),
+            "{model_name} names no model"
+        );
+    }
+    let document = read(minimal("").as_bytes());
+    let rejected = validate_structure(&document, OssieFormat::Release, Some("\"shop"))
+        .expect_err("a malformed model_name names no model");
+    assert_eq!(rejected[0].code, StructureCode::ModelSelection);
+    assert_eq!(rejected[0].pointer.as_str(), "/semantic_model");
+}
+
+#[test]
 fn e0b_07_model_name_must_name_the_only_model() {
     let document = read(minimal("").as_bytes());
     assert!(validate_structure(&document, OssieFormat::Release, Some("shop")).is_ok());
