@@ -1,6 +1,7 @@
 //! Resolving references in the development-line format (section 4.5, OSS-5.1): the compiled
 //! `sql` variant and dataset-scoped metrics give the codes of the release format (E0D-3.1,
-//! E0D-3.4, `E0D-03` to `E0D-07`, `E0F-02`).
+//! E0D-3.4, `E0D-03` to `E0D-07`, `E0F-02`). In a dataset metric, a bare name is a field of
+//! its dataset and `source.column` a column of its catalog relation (E0D-3).
 //!
 //! The models of the `e0-references-development-*` conformance cases are read here with
 //! `ossie_format: development`, as their `load_options` set (CS-2.7).
@@ -34,6 +35,7 @@ fn oss_5_1_e0d_3_1_sql_expressions_and_dataset_metrics_give_the_release_codes() 
         [
             pair("E0D-03", "/datasets/0/fields/4/expression"),
             pair("E0D-04", "/datasets/0/metrics/1/expression"),
+            pair("E0D-03", "/datasets/0/metrics/2/expression"),
             pair("E0D-07", "/datasets/2/primary_key/0"),
             pair("E0D-05", "/relationships/1/to"),
             pair("E0D-06", "/relationships/2/from_columns/0"),
@@ -53,6 +55,7 @@ fn oss_5_1_e0d_3_1_sql_expressions_and_dataset_metrics_give_the_release_codes() 
         [
             element(ElementKind::Field, "/datasets/0/fields/4", "E0D-03"),
             element(ElementKind::Metric, "/datasets/0/metrics/1", "E0D-04"),
+            element(ElementKind::Metric, "/datasets/0/metrics/2", "E0D-03"),
             element(ElementKind::Dataset, "/datasets/2", "E0D-07"),
             element(ElementKind::Relationship, "/relationships/1", "E0D-05"),
             element(ElementKind::Relationship, "/relationships/2", "E0D-06"),
@@ -71,6 +74,7 @@ fn oss_5_1_e0d_3_4_e0f_02_unlisted_reference_forms_in_sql() {
         summary(&references.warnings),
         [
             pair("E0F-02", "/datasets/0/fields/3/expression"),
+            pair("E0F-02", "/datasets/0/metrics/1/expression"),
             pair("E0F-02", "/metrics/1/expression"),
         ]
     );
@@ -86,6 +90,11 @@ fn oss_5_1_e0d_3_4_e0f_02_unlisted_reference_forms_in_sql() {
             (
                 ElementKind::Field,
                 "/datasets/0/fields/3".to_owned(),
+                "E0F-02"
+            ),
+            (
+                ElementKind::Metric,
+                "/datasets/0/metrics/1".to_owned(),
                 "E0F-02"
             ),
             (ElementKind::Metric, "/metrics/1".to_owned(), "E0F-02"),
@@ -109,15 +118,73 @@ fn oss_5_1_a_dataset_metric_reads_the_fields_of_its_dataset_by_bare_name() {
 }
 
 #[test]
-fn oss_5_1_qualified_references_in_dataset_metrics_are_left_unchecked() {
+fn e0d_03_source_column_in_a_dataset_metric_reads_the_catalog_relation() {
     let metrics = [
-        dataset_metric("from_source", "SUM(source.discount)"),
-        dataset_metric("other_dataset", "SUM(customers.name)"),
+        dataset_metric("missing", "SUM(source.discount)"),
+        dataset_metric("column_only", "SUM(source.customer_id)"),
+        dataset_metric("upper_case", "SUM(SOURCE.amount) + SUM(Source.status)"),
+        dataset_metric("delimited_upper_case", "SUM(\"SOURCE\".amount)"),
     ]
     .join(", ");
+    let references = development((&with_dataset_metrics(&metrics), CATALOG));
     assert_eq!(
-        development((&with_dataset_metrics(&metrics), CATALOG)),
-        References::default()
+        summary(&references.warnings),
+        [pair("E0D-03", "/datasets/0/metrics/0/expression")]
+    );
+    assert_eq!(
+        unusable(&references),
+        [(
+            ElementKind::Metric,
+            "/datasets/0/metrics/0".to_owned(),
+            "E0D-03"
+        )]
+    );
+}
+
+#[test]
+fn e0d_3_4_e0f_02_other_qualified_references_in_a_dataset_metric() {
+    let metrics = [
+        dataset_metric("own_dataset", "SUM(orders.amount)"),
+        dataset_metric("other_dataset", "MAX(customers.name)"),
+        dataset_metric("delimited_lower_case", "SUM(\"source\".amount)"),
+    ]
+    .join(", ");
+    let references = development((&with_dataset_metrics(&metrics), CATALOG));
+    assert_eq!(
+        summary(&references.warnings),
+        [
+            pair("E0F-02", "/datasets/0/metrics/0/expression"),
+            pair("E0F-02", "/datasets/0/metrics/1/expression"),
+            pair("E0F-02", "/datasets/0/metrics/2/expression"),
+        ]
+    );
+    assert!(
+        references
+            .warnings
+            .iter()
+            .all(|warning| warning.code.load_code() == ReferenceCode::EXPRESSION_WARNING)
+    );
+}
+
+#[test]
+fn e0d_3_4_a_missing_reference_comes_before_an_unlisted_form_in_a_dataset_metric() {
+    let metric = dataset_metric("both", "SUM(tax) + SUM(source.fee) + SUM(orders.amount)");
+    let references = development((&with_dataset_metrics(&metric), CATALOG));
+    assert_eq!(
+        summary(&references.warnings),
+        [
+            pair("E0D-03", "/datasets/0/metrics/0/expression"),
+            pair("E0D-04", "/datasets/0/metrics/0/expression"),
+            pair("E0F-02", "/datasets/0/metrics/0/expression"),
+        ]
+    );
+    assert_eq!(
+        unusable(&references),
+        [(
+            ElementKind::Metric,
+            "/datasets/0/metrics/0".to_owned(),
+            "E0D-03"
+        )]
     );
 }
 

@@ -1,6 +1,6 @@
 version: "0.3.0.dev0"
 name: e0_references_development_missing
-description: Development-line model with sql expressions and dataset metrics, with missing references, each making its element unusable, and keys that resolve to source columns
+description: Development-line model with sql expressions and dataset metrics that read fields and source columns, with missing references, each making its element unusable, and keys that resolve to source columns
 nonportable_extensions:
   - vendor_name: COMMON
     data: {namespace: semantic_compiler, version: 1, security_context: {roles: [analyst], attributes: []}}
@@ -24,6 +24,10 @@ datasets:
         expression: {sql: SUM(amount)}
       - name: total_tax
         expression: {sql: SUM(tax)}
+      - name: total_source_discount
+        expression: {sql: SUM(source.discount)}
+      - name: total_source_amount
+        expression: {sql: SUM(SOURCE.amount)}
     nonportable_extensions:
       - vendor_name: COMMON
         data: {namespace: semantic_compiler, version: 1, access: {mode: roles, roles: [analyst]}}

@@ -1,6 +1,6 @@
 version: "0.3.0.dev0"
 name: e0_references_development_reference_forms
-description: Development-line model with a qualified reference in a field expression and an unqualified one in a model metric expression, both written as sql
+description: Development-line model with a qualified reference in a field expression an unqualified one in a model metric expression, and a qualified one other than source in a dataset metric expression, all written as sql
 nonportable_extensions:
   - vendor_name: COMMON
     data: {namespace: semantic_compiler, version: 1, security_context: {roles: [analyst], attributes: []}}
@@ -17,6 +17,11 @@ datasets:
         expression: {sql: amount}
       - name: qualified_amount
         expression: {sql: orders.amount}
+    metrics:
+      - name: amount_sum
+        expression: {sql: SUM(amount)}
+      - name: qualified_amount_sum
+        expression: {sql: SUM(orders.amount)}
     nonportable_extensions:
       - vendor_name: COMMON
         data: {namespace: semantic_compiler, version: 1, access: {mode: roles, roles: [analyst]}}
