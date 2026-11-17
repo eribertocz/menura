@@ -1,4 +1,5 @@
-//! Identifier normalization and comparison (E0D-1, CON-5).
+//! Identifier normalization and comparison (E0D-1, CON-5), shared by the substages that compare
+//! names.
 
 use semantic_compiler_model::expression::Identifier;
 

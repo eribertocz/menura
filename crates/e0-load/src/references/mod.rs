@@ -11,12 +11,10 @@
 //! References inside extensions are resolved by each extension with its own codes (E0D-3.2),
 //! never by the generic checks here.
 
-mod columns;
 mod diagnostic;
 mod expression_references;
 mod finding;
 mod keys;
-mod name;
 mod outline;
 mod output;
 mod query_sources;

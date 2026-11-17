@@ -5,6 +5,14 @@
 
 #![forbid(unsafe_code)]
 
+#[cfg_attr(
+    not(test),
+    expect(
+        dead_code,
+        reason = "called by the E0 stage function, which issue #45 adds; until then only the tests call it"
+    )
+)]
+mod columns;
 mod expressions;
 #[cfg_attr(
     not(test),
@@ -14,6 +22,14 @@ mod expressions;
     )
 )]
 mod extensions;
+#[cfg_attr(
+    not(test),
+    expect(
+        dead_code,
+        reason = "called by the E0 stage function, which issue #45 adds; until then only the tests call it"
+    )
+)]
+mod names;
 #[cfg_attr(
     not(test),
     expect(

@@ -3,12 +3,12 @@
 
 use semantic_compiler_model::expression::Expression;
 
-use super::columns::Columns;
 use super::diagnostic::ReferenceCode;
 use super::finding::Finding;
 use super::outline::{DatasetOutline, DeclaredName, RelationshipOutline};
 use super::output::ElementKind;
 use super::scope::{Scope, field};
+use crate::columns::Columns;
 use crate::pointer::JsonPointer;
 
 /// Every finding of the keys of every dataset, which make the dataset unusable.
