@@ -14,6 +14,7 @@ use crate::read::read_document;
 use crate::structure::validate_structure;
 
 mod codes;
+mod development;
 mod results;
 
 const MODEL: &str = include_str!("../../../../../conformance/models/e0-typing/model.yaml");
@@ -29,10 +30,14 @@ const CATALOG: &str =
 const ORDERS: &str = "/semantic_model/0/datasets/0";
 
 fn type_document(model: &str) -> Typing {
+    type_in_format(model, CATALOG, OssieFormat::Release)
+}
+
+/// Types `model`, read in `format`, against the catalog schema `catalog`.
+fn type_in_format(model: &str, catalog: &str, format: OssieFormat) -> Typing {
     let document = read_document(model.as_bytes()).expect("the document is read");
-    let structure =
-        validate_structure(&document, OssieFormat::Release, None).expect("the structure is valid");
-    let catalog = admit_catalog_schema(CATALOG).expect("the catalog schema is admitted");
+    let structure = validate_structure(&document, format, None).expect("the structure is valid");
+    let catalog = admit_catalog_schema(catalog).expect("the catalog schema is admitted");
     type_expressions(&document, &structure, &catalog)
 }
 

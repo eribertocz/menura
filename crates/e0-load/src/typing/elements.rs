@@ -1,10 +1,10 @@
-//! Types every field and metric expression (E0F-1, E0F-3 to E0F-7): fields against the columns
-//! of their catalog relation, metrics against the types of the fields they read.
+//! Types every field and model metric expression (E0F-1, E0F-3 to E0F-7): fields against the
+//! columns of their catalog relation, metrics against the types of the fields they read.
 
 use std::collections::HashMap;
 
 use semantic_compiler_contracts::types::common::LogicalType;
-use semantic_compiler_model::expression::Reference;
+use semantic_compiler_model::expression::{Identifier, Reference};
 
 use super::diagnostic::{TypingCode, TypingDiagnostic};
 use super::output::ElementKind;
@@ -65,7 +65,7 @@ pub(crate) fn type_metrics<'model>(
 }
 
 /// Types the expression of `element`, if it parses, and records its type or its problem.
-fn record<'model>(
+pub(super) fn record<'model>(
     scope: &Scope<'model, '_>,
     expression_typer: &ExpressionTyper<'_>,
     element: &'model ElementOutline<'_>,
@@ -119,8 +119,14 @@ fn column_type(relation: &Relation<'_>, reference: &Reference) -> Outcome<Typed>
     if reference.qualifier.is_some() {
         return Err(Stop::ReportedElsewhere);
     }
+    column(relation, &reference.name)
+}
+
+/// The type of the column `name` of `relation` (E0D-1.5); `E0F-04` when it is `unsupported`
+/// (CAT-4.3). A missing column is reported by E0.d.
+pub(super) fn column(relation: &Relation<'_>, name: &Identifier) -> Outcome<Typed> {
     let column = relation
-        .find_identifier(&reference.name)
+        .find_identifier(name)
         .ok_or(Stop::ReportedElsewhere)?;
     if column.logical_type == LogicalType::Unsupported {
         return problem(

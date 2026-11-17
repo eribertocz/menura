@@ -1,6 +1,8 @@
 //! Substage E0.f, typing: types every field and metric expression of the selected semantic
 //! model against the catalog schema, and the relationship key pairs (E0F-1, E0F-3 to E0F-8,
-//! E0E-3.7).
+//! E0E-3.7). The expression typed is the compiled variant E0.b selects: the single `ANSI_SQL`
+//! variant, or the development-line `sql`; the dataset-scoped metrics of the development format
+//! are typed too (section 4.5).
 //!
 //! Each expression gets a result type (E0F-5, E0F-5a, E0F-10) and whether it can be NULL
 //! (E0F-7.1). A typing problem (`E0F-03` to `E0F-08`) makes its element unusable and is
@@ -13,6 +15,7 @@
 mod aggregates;
 mod arithmetic;
 mod conversion;
+mod dataset_metrics;
 mod dates;
 mod diagnostic;
 mod elements;
@@ -36,6 +39,7 @@ use crate::outline::outline;
 use crate::pointer::{JsonPointer, position};
 use crate::read::Node;
 use crate::structure::Structure;
+use dataset_metrics::type_dataset_metrics;
 use elements::{ElementTypes, Finding, type_fields, type_metrics};
 use scope::Scope;
 
@@ -55,11 +59,14 @@ pub fn type_expressions(
     );
     let scope = Scope::new(&model, catalog, &structure.expressions);
     let fields = type_fields(&scope);
+    let dataset_metrics = type_dataset_metrics(&scope, &fields.types);
     let metrics = type_metrics(&scope, &fields.types);
     let mut findings = keys::key_findings(&scope, &fields.types);
     let mut elements = typed_elements(&fields, ElementKind::Field);
+    elements.extend(typed_elements(&dataset_metrics, ElementKind::DatasetMetric));
     elements.extend(typed_elements(&metrics, ElementKind::Metric));
     findings.extend(fields.findings);
+    findings.extend(dataset_metrics.findings);
     findings.extend(metrics.findings);
     elements.sort_by_cached_key(|element| position(document, &element.pointer));
     findings.sort_by_cached_key(|finding| {

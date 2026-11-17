@@ -21,8 +21,9 @@ pub(crate) struct Scope<'model, 'document> {
     datasets: HashMap<&'model Name, &'model DatasetOutline<'document>>,
     /// Each catalog relation, by `source` text.
     relations: HashMap<&'model str, Relation<'model>>,
-    /// The tree of each field and metric whose single `ANSI_SQL` variant parses, by element
-    /// pointer. An expression that does not parse is reported by the parsing of E0.f.
+    /// The tree of each field, dataset metric and model metric whose compiled variant parses
+    /// (E0.b: the single `ANSI_SQL` variant, or the development-line `sql`), by element pointer.
+    /// An expression that does not parse is reported by the parsing of E0.f.
     trees: HashMap<&'model JsonPointer, Expression>,
 }
 
@@ -99,18 +100,18 @@ impl<'model, 'document> Scope<'model, 'document> {
     }
 }
 
-/// The tree of a field or metric with a single `ANSI_SQL` variant. Development-line `sql`
-/// expressions and dataset-scoped metrics (section 4.5) are not typed yet, as in E0.d.
+/// The tree of the compiled variant of a field, dataset metric or model metric (E0B-3.3,
+/// section 4.5).
 fn parsed<'model>(
     expression: &'model ElementExpression<'_>,
 ) -> Option<(&'model JsonPointer, Expression)> {
-    let CompiledVariant::AnsiSql(text) = expression.variant else {
-        return None;
+    let text = match expression.variant {
+        CompiledVariant::AnsiSql(text) | CompiledVariant::OssieSql2026(text) => text,
+        CompiledVariant::Unusable => return None,
     };
     let place = match expression.kind {
         ElementKind::Field => ExpressionPlace::Field,
-        ElementKind::Metric => ExpressionPlace::Metric,
-        ElementKind::DatasetMetric => return None,
+        ElementKind::Metric | ElementKind::DatasetMetric => ExpressionPlace::Metric,
     };
     let tree = parse_element_expression(text, place).ok()?;
     Some((&expression.pointer, tree))

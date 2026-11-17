@@ -9,8 +9,8 @@ use crate::pointer::JsonPointer;
 /// unusable (E0-4 table).
 #[derive(Debug, Clone, PartialEq, Eq, Default)]
 pub struct Typing {
-    /// The result type and nullability of every field and metric that could be typed, in
-    /// document order (E0F-7.1).
+    /// The result type and nullability of every field, dataset metric and model metric that
+    /// could be typed, in document order (E0F-7.1).
     pub elements: Vec<TypedElement>,
     /// One entry per element a typing problem makes unusable, in document order.
     pub unusable: Vec<UnusableElement>,
@@ -26,6 +26,8 @@ pub enum ElementKind {
     Field,
     /// A metric of the semantic model.
     Metric,
+    /// A dataset-scoped metric of the development format (section 4.5).
+    DatasetMetric,
     /// A relationship, whose key pairs are typed (E0F-4.1).
     Relationship,
 }
@@ -33,7 +35,7 @@ pub enum ElementKind {
 /// The result type of a field or metric expression.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct TypedElement {
-    /// [`ElementKind::Field`] or [`ElementKind::Metric`].
+    /// [`ElementKind::Field`], [`ElementKind::Metric`] or [`ElementKind::DatasetMetric`].
     pub kind: ElementKind,
     /// Its JSON Pointer, such as `/semantic_model/0/metrics/2`.
     pub pointer: JsonPointer,
