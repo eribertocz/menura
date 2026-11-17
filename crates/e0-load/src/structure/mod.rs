@@ -2,7 +2,7 @@
 //! (E0B-1, MDL-1.1), selects the semantic model to compile (E0B-3.2) and picks the single
 //! `ANSI_SQL` variant of each expression (E0B-3.3, E0B-3.4).
 //!
-//! The structure is the official JSON Schema, embedded at compile time ([`OFFICIAL_SCHEMA_SOURCE`])
+//! The structure is the official JSON Schema, embedded at compile time ([`schema::OFFICIAL_SCHEMA_SOURCE`])
 //! and evaluated by the evaluator of `semantic-compiler-contracts`. `dialects`, `vendors` and
 //! `ai_context` are validated and kept, and never affect compilation (E0B-3.5).
 
@@ -14,9 +14,8 @@ mod selection;
 mod variants;
 mod violations;
 
-pub use diagnostic::{StructureCode, StructureDiagnostic};
-pub use output::{AnsiSqlVariant, ElementExpression, ElementKind, SelectedModel, Structure};
-pub use schema::{OFFICIAL_SCHEMA_SOURCE, SchemaSource};
+use diagnostic::{StructureCode, StructureDiagnostic};
+use output::{SelectedModel, Structure};
 
 use crate::pointer::{JsonPointer, position};
 use crate::read::{Node, Value};
@@ -32,41 +31,6 @@ use violations::official_schema_diagnostics;
 /// # Errors
 ///
 /// Returns every rejecting diagnostic, `E0B-01` to `E0B-07`, sorted; the list is never empty.
-///
-/// # Example
-///
-/// ```
-/// use semantic_compiler_e0_load::read::read_document;
-/// use semantic_compiler_e0_load::structure::{AnsiSqlVariant, StructureCode, validate_structure};
-///
-/// let document = read_document(
-///     br#"
-/// version: "0.1.1"
-/// semantic_model:
-///   - name: shop
-///     datasets:
-///       - name: orders
-///         source: shop.main.orders
-///         fields:
-///           - name: status
-///             expression:
-///               dialects:
-///                 - {dialect: ANSI_SQL, expression: status}
-///                 - {dialect: SNOWFLAKE, expression: status}
-/// "#,
-/// )?;
-/// let structure = validate_structure(&document, None).expect("the structure is valid");
-/// assert_eq!(structure.expressions[0].variant, AnsiSqlVariant::Single("status"));
-/// assert_eq!(structure.warnings[0].code, StructureCode::OtherDialect);
-/// assert_eq!(
-///     structure.warnings[0].pointer.as_str(),
-///     "/semantic_model/0/datasets/0/fields/0/expression/dialects/1"
-/// );
-///
-/// let errors = validate_structure(&document, Some("other")).unwrap_err();
-/// assert_eq!(errors[0].code, StructureCode::ModelSelection);
-/// # Ok::<(), semantic_compiler_e0_load::read::ReadError>(())
-/// ```
 pub fn validate_structure<'document>(
     document: &'document Node,
     model_name: Option<&str>,
@@ -123,3 +87,6 @@ fn sorted(document: &Node, mut diagnostics: Vec<StructureDiagnostic>) -> Vec<Str
         .dedup_by(|later, earlier| later.pointer == earlier.pointer && later.code == earlier.code);
     diagnostics
 }
+
+#[cfg(test)]
+mod tests;

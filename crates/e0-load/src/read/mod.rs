@@ -16,8 +16,8 @@ mod scalar;
 mod timestamp;
 mod tree;
 
-pub use error::{ReadError, ReadErrorCode};
-pub use tree::{Entry, Integer, Location, Node, Value};
+pub(crate) use error::{ReadError, ReadErrorCode};
+pub(crate) use tree::{Integer, Location, Node, Value};
 
 /// Reads a model document into its located data tree.
 ///
@@ -28,21 +28,6 @@ pub use tree::{Entry, Integer, Location, Node, Value};
 /// Returns a [`ReadError`] with the code of E0A-3: `E0A-01` when the bytes are not UTF-8, `E0A-02`
 /// when the YAML cannot be parsed, `E0A-03` when there is more than one document, `E0A-04` for a
 /// repeated key and `E0A-05` for a tag or value that cannot be constructed.
-///
-/// # Example
-///
-/// ```
-/// use semantic_compiler_e0_load::read::{ReadErrorCode, Value, read_document};
-///
-/// let document = read_document(b"enabled: yes\nsince: 2026-11-16\n")?;
-/// let Value::Mapping(entries) = &document.value else { unreachable!() };
-/// assert_eq!(entries[0].value.value, Value::Boolean(true));
-/// assert_eq!(entries[1].value.value, Value::String("2026-11-16".to_owned()));
-///
-/// let error = read_document(b"a: 1\na: 2\n").unwrap_err();
-/// assert_eq!(error.code, ReadErrorCode::DuplicateKey);
-/// # Ok::<(), semantic_compiler_e0_load::read::ReadError>(())
-/// ```
 pub fn read_document(bytes: &[u8]) -> Result<Node, ReadError> {
     let text = decode(bytes)?;
     let raw = compose::compose(text)?;
@@ -68,3 +53,6 @@ fn decode(bytes: &[u8]) -> Result<&str, ReadError> {
         )
     })
 }
+
+#[cfg(test)]
+mod tests;

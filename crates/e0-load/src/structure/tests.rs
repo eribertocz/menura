@@ -4,36 +4,31 @@
 //! The model documents of the `e0-structure-*` conformance cases are read here at compile time,
 //! so structure validation is checked against the same files the conformance suite uses.
 
-use semantic_compiler_e0_load::read::{Node, read_document};
-use semantic_compiler_e0_load::structure::{
-    AnsiSqlVariant, ElementKind, OFFICIAL_SCHEMA_SOURCE, Structure, StructureCode,
-    StructureDiagnostic, validate_structure,
-};
-
-// `cfg(test)` marks the helpers as test code, where `expect` and `panic` are allowed (clippy.toml).
+use super::diagnostic::{StructureCode, StructureDiagnostic};
+use super::output::{AnsiSqlVariant, ElementExpression, ElementKind, Structure};
+use super::schema::OFFICIAL_SCHEMA_SOURCE;
+use super::validate_structure;
+use crate::read::{Node, read_document};
 
 macro_rules! conformance_model {
     ($name:literal) => {
         include_bytes!(concat!(
-            "../../../conformance/models/",
+            "../../../../conformance/models/",
             $name,
             "/model.yaml"
         ))
     };
 }
 
-#[cfg(test)]
 fn read(bytes: &[u8]) -> Node {
     read_document(bytes).expect("the document is read")
 }
 
-#[cfg(test)]
 fn errors(bytes: &[u8], model_name: Option<&str>) -> Vec<StructureDiagnostic> {
     validate_structure(&read(bytes), model_name).expect_err("the structure is rejected")
 }
 
 /// The code and JSON Pointer of every rejecting diagnostic.
-#[cfg(test)]
 fn summary(bytes: &[u8]) -> Vec<(&'static str, String)> {
     errors(bytes, None)
         .iter()
@@ -41,7 +36,6 @@ fn summary(bytes: &[u8]) -> Vec<(&'static str, String)> {
         .collect()
 }
 
-#[cfg(test)]
 fn warnings(structure: &Structure<'_>) -> Vec<(&'static str, String)> {
     structure
         .warnings
@@ -50,13 +44,11 @@ fn warnings(structure: &Structure<'_>) -> Vec<(&'static str, String)> {
         .collect()
 }
 
-#[cfg(test)]
 fn pair(code: &'static str, pointer: &str) -> (&'static str, String) {
     (code, pointer.to_owned())
 }
 
 /// A minimal valid document, with `dataset_lines` added to its only dataset.
-#[cfg(test)]
 fn minimal(dataset_lines: &str) -> String {
     format!(
         "version: \"0.1.1\"\nsemantic_model:\n  - name: shop\n    datasets:\n      - name: orders\n        source: shop.main.orders\n{dataset_lines}"
@@ -255,6 +247,7 @@ fn e0b_3_3_w0b_02_oss_2_2_a_field_without_ansi_sql_is_unusable() {
     );
     assert_eq!(status_code.variant, AnsiSqlVariant::Unusable);
     assert!(!status_code.is_usable());
+    assert_eq!(ElementExpression::UNUSABLE_QUERY_ERROR, "E0B-08");
     assert_eq!(
         warnings(&structure),
         [
