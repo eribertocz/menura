@@ -20,10 +20,10 @@ ambiguous join or an inflated number (P6). E3 uses the graph to choose paths.
 | E0E-3.2 | The relationship direction declares many-to-one cardinality. If `to_columns` matches neither the `primary_key` nor a `unique_keys` entry of `to`, the model is valid but produces `W0E-02`, because the data could violate the declared cardinality. |
 | E0E-3.3 | Correctness under violated cardinality: a home row counts once in each group it matches (E4-4 step 5), using a synthesized row identity (Apache Ossie Layer 2 section 3.2). |
 | E0E-3.4 | If `from_columns` also matches a key of `from`, the relationship is one-to-one. It is recorded, and in version 1 it is still traversed only from `from` to `to`. |
-| E0E-3.5 | A column list matches a key when both hold the same set of columns, compared as names normalized by E0D-1.1; order and repetition are ignored, because uniqueness does not depend on column order. |
 | E0E-3.5 | Self-relationships are allowed, never take part in a path, and produce `W0E-03`. Cycles are allowed; paths stay finite because they never repeat a dataset (E0E-2.4). |
 | E0E-3.6 | A relationship whose `from` or `to` is a summary dataset is an error (`E0E-02`). |
 | E0E-3.7 | Key types are checked in E0.f. |
+| E0E-3.8 | A column list matches a key when both hold the same set of columns, compared as names normalized by E0D-1.1; order and repetition are ignored, because uniqueness does not depend on column order. |
 
 ## E0E-4 Multiple paths
 

@@ -48,8 +48,25 @@ def render(rows):
     return "\n".join(lines) + "\n"
 
 
+def duplicate_rule_ids(rows):
+    seen = set()
+    duplicates = []
+    for _relative, _number, kind, entry in rows:
+        if kind != "rule":
+            continue
+        if entry in seen and entry not in duplicates:
+            duplicates.append(entry)
+        seen.add(entry)
+    return duplicates
+
+
 def main():
-    content = render(collect())
+    rows = collect()
+    duplicates = duplicate_rule_ids(rows)
+    if duplicates:
+        print("duplicate rule IDs in spec/: " + ", ".join(duplicates))
+        sys.exit(1)
+    content = render(rows)
     if "--check" in sys.argv:
         current = INDEX.read_text(encoding="utf-8") if INDEX.exists() else ""
         if current != content:
