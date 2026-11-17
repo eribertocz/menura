@@ -1,0 +1,17 @@
+id: e0-relationships-cycle-001
+rules: [E0E-2.3, E0E-2.4, E0E-3.5]
+model: e0-relationships
+security_context: analyst.json
+query:
+  contract: semantic_compiler.query
+  contract_version: "1.0.0"
+  reference_time: "2026-11-15T12:00:00-04:00"
+  time_zone: UTC
+  query:
+    dimensions: [stores.store_name]
+    metrics:
+      - {metric: employee_count, alias: employee_count}
+expect:
+  outcome: plan
+  rows: e0-relationships-cycle-001.csv
+  row_order: any

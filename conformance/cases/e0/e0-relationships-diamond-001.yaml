@@ -1,0 +1,25 @@
+id: e0-relationships-diamond-001
+rules: [E0E-2.1, E0E-2.2, E0E-4.1, E0E-4.2, W0E-01]
+model: e0-relationships
+security_context: analyst.json
+query:
+  contract: semantic_compiler.query
+  contract_version: "1.0.0"
+  reference_time: "2026-11-15T12:00:00-04:00"
+  time_zone: UTC
+  query:
+    dimensions: [regions.region_name]
+    metrics:
+      - {metric: total_amount, alias: total_amount}
+    nonportable_extensions:
+      - vendor_name: COMMON
+        data:
+          namespace: semantic_compiler
+          version: 1
+          paths:
+            - {from: orders, to: regions, relationships: [orders_customers, customers_regions]}
+expect:
+  outcome: plan
+  warnings: [W0E-01]
+  rows: e0-relationships-diamond-001.csv
+  row_order: any
