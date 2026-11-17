@@ -1,0 +1,6 @@
+id: e0-development-without-option-001
+rules: [MDL-1.1, MDL-2.4, OSS-5.1]
+model: e0-development-format
+expect:
+  outcome: load_error
+  error: E0B-02

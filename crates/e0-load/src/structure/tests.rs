@@ -4,8 +4,10 @@
 //! The model documents of the `e0-structure-*` conformance cases are read here at compile time,
 //! so structure validation is checked against the same files the conformance suite uses.
 
+use semantic_compiler_contracts::types::audit_record::OssieFormat;
+
 use super::diagnostic::{StructureCode, StructureDiagnostic};
-use super::output::{CompiledVariant, ElementExpression, ElementKind, Structure};
+use super::output::{CompiledVariant, ElementKind, Structure};
 use super::schema::OFFICIAL_SCHEMA_SOURCE;
 use super::validate_structure;
 use crate::read::{Node, read_document};
@@ -25,7 +27,8 @@ fn read(bytes: &[u8]) -> Node {
 }
 
 fn errors(bytes: &[u8], model_name: Option<&str>) -> Vec<StructureDiagnostic> {
-    validate_structure(&read(bytes), model_name).expect_err("the structure is rejected")
+    validate_structure(&read(bytes), OssieFormat::Release, model_name)
+        .expect_err("the structure is rejected")
 }
 
 /// The code and JSON Pointer of every rejecting diagnostic.
@@ -63,10 +66,11 @@ fn e0b_1_1_the_official_schema_is_embedded_with_its_source() {
         OFFICIAL_SCHEMA_SOURCE.repository,
         "https://github.com/apache/ossie"
     );
-    assert_eq!(OFFICIAL_SCHEMA_SOURCE.tag, "osi-0.1.1-rc1");
+    assert_eq!(OFFICIAL_SCHEMA_SOURCE.tag, Some("osi-0.1.1-rc1"));
     assert_eq!(OFFICIAL_SCHEMA_SOURCE.path, "core-spec/osi-schema.json");
     let document = read(minimal("").as_bytes());
-    let structure = validate_structure(&document, None).expect("a minimal document is valid");
+    let structure = validate_structure(&document, OssieFormat::Release, None)
+        .expect("a minimal document is valid");
     assert!(structure.expressions.is_empty());
     assert!(structure.warnings.is_empty());
 }
@@ -155,13 +159,18 @@ fn e0b_06_empty_list_where_one_item_is_required() {
 #[test]
 fn e0b_3_2_e0b_07_dev_7_several_models_need_model_name() {
     let document = read(conformance_model!("e0-structure-several-models-001"));
-    let rejected = validate_structure(&document, None).expect_err("model_name is required");
+    let rejected = validate_structure(&document, OssieFormat::Release, None)
+        .expect_err("model_name is required");
     assert_eq!(rejected.len(), 1);
     assert_eq!(rejected[0].code, StructureCode::ModelSelection);
     assert_eq!(rejected[0].pointer.as_str(), "/semantic_model");
 
-    let second = validate_structure(&document, Some("e0_structure_several_models_001_other"))
-        .expect("model_name selects the second model");
+    let second = validate_structure(
+        &document,
+        OssieFormat::Release,
+        Some("e0_structure_several_models_001_other"),
+    )
+    .expect("model_name selects the second model");
     assert_eq!(second.semantic_model.index, 1);
     assert_eq!(second.semantic_model.pointer.as_str(), "/semantic_model/1");
     assert!(second.expressions.iter().all(|expression| {
@@ -171,15 +180,17 @@ fn e0b_3_2_e0b_07_dev_7_several_models_need_model_name() {
             .starts_with("/semantic_model/1/")
     }));
 
-    let unknown = validate_structure(&document, Some("missing")).expect_err("names no model");
+    let unknown = validate_structure(&document, OssieFormat::Release, Some("missing"))
+        .expect_err("names no model");
     assert_eq!(unknown[0].code, StructureCode::ModelSelection);
 }
 
 #[test]
 fn e0b_07_model_name_must_name_the_only_model() {
     let document = read(minimal("").as_bytes());
-    assert!(validate_structure(&document, Some("shop")).is_ok());
-    let rejected = validate_structure(&document, Some("other")).expect_err("names no model");
+    assert!(validate_structure(&document, OssieFormat::Release, Some("shop")).is_ok());
+    let rejected = validate_structure(&document, OssieFormat::Release, Some("other"))
+        .expect_err("names no model");
     assert_eq!(rejected[0].code, StructureCode::ModelSelection);
 }
 
@@ -187,7 +198,8 @@ fn e0b_07_model_name_must_name_the_only_model() {
 fn e0b_3_2_e0b_07_a_document_without_semantic_models_is_rejected() {
     let document = read(conformance_model!("e0-structure-no-semantic-model-001"));
     for model_name in [None, Some("shop")] {
-        let rejected = validate_structure(&document, model_name).expect_err("there is no model");
+        let rejected = validate_structure(&document, OssieFormat::Release, model_name)
+            .expect_err("there is no model");
         assert_eq!(rejected.len(), 1);
         assert_eq!(rejected[0].code, StructureCode::ModelSelection);
         assert_eq!(rejected[0].pointer.as_str(), "/semantic_model");
@@ -228,7 +240,8 @@ fn e0b_3_6_diagnostics_carry_the_location_of_the_node() {
 #[test]
 fn e0b_3_4_w0b_01_other_dialects_are_kept_and_not_compiled() {
     let document = read(conformance_model!("e0-structure-variants"));
-    let structure = validate_structure(&document, None).expect("the model loads");
+    let structure =
+        validate_structure(&document, OssieFormat::Release, None).expect("the model loads");
     let status = &structure.expressions[1];
     assert_eq!(status.kind, ElementKind::Field);
     assert_eq!(status.pointer.to_string(), format!("{ORDERS}/fields/1"));
@@ -242,7 +255,8 @@ fn e0b_3_4_w0b_01_other_dialects_are_kept_and_not_compiled() {
 #[test]
 fn e0b_3_3_w0b_02_oss_2_2_a_field_without_ansi_sql_is_unusable() {
     let document = read(conformance_model!("e0-structure-variants"));
-    let structure = validate_structure(&document, None).expect("the model loads");
+    let structure =
+        validate_structure(&document, OssieFormat::Release, None).expect("the model loads");
     let status_code = &structure.expressions[3];
     assert_eq!(
         status_code.pointer.to_string(),
@@ -250,7 +264,7 @@ fn e0b_3_3_w0b_02_oss_2_2_a_field_without_ansi_sql_is_unusable() {
     );
     assert_eq!(status_code.variant, CompiledVariant::Unusable);
     assert!(!status_code.is_usable());
-    assert_eq!(ElementExpression::UNUSABLE_QUERY_ERROR, "E0B-08");
+    assert_eq!(status_code.query_error(), Some("E0B-08"));
     assert_eq!(
         warnings(&structure),
         [
@@ -284,7 +298,8 @@ fn e0b_3_3_w0b_02_two_ansi_sql_variants_make_a_metric_unusable() {
         minimal("")
     );
     let document = read(document.as_bytes());
-    let structure = validate_structure(&document, None).expect("the model loads");
+    let structure =
+        validate_structure(&document, OssieFormat::Release, None).expect("the model loads");
     assert_eq!(structure.expressions[0].kind, ElementKind::Metric);
     assert_eq!(structure.expressions[0].variant, CompiledVariant::Unusable);
     assert_eq!(
@@ -296,7 +311,8 @@ fn e0b_3_3_w0b_02_two_ansi_sql_variants_make_a_metric_unusable() {
 #[test]
 fn e0b_3_5_oss_2_1_ai_context_dialects_and_vendors_are_kept() {
     let document = read(conformance_model!("e0-structure-variants"));
-    let structure = validate_structure(&document, None).expect("the model loads");
+    let structure =
+        validate_structure(&document, OssieFormat::Release, None).expect("the model loads");
     let codes: Vec<StructureCode> = structure.warnings.iter().map(|w| w.code).collect();
     assert!(codes.iter().all(|code| code.is_warning()));
     assert_eq!(structure.expressions.len(), 9);
@@ -305,6 +321,7 @@ fn e0b_3_5_oss_2_1_ai_context_dialects_and_vendors_are_kept() {
 #[test]
 fn mdl_1_1_the_sample_model_has_a_valid_structure() {
     let document = read(conformance_model!("sample"));
-    let structure = validate_structure(&document, None).expect("the sample model loads");
+    let structure =
+        validate_structure(&document, OssieFormat::Release, None).expect("the sample model loads");
     assert!(structure.warnings.is_empty());
 }

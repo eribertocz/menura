@@ -1,18 +1,20 @@
-//! Validation against the official schema (E0B-1), with each schema violation turned into its
-//! E0B-4 diagnostic.
+//! Validation against the schema of the model format (E0B-1, OSS-5.1), with each schema
+//! violation turned into its E0B-4 diagnostic.
 
+use semantic_compiler_contracts::types::audit_record::OssieFormat;
 use semantic_compiler_contracts::{SchemaViolation, SchemaViolationKind, schema_violations};
-use serde_json::Value as Json;
 
 use super::diagnostic::{StructureCode, StructureDiagnostic};
+use super::evaluable_schema::evaluable_schema;
 use super::json::to_json;
-use super::schema::OFFICIAL_SCHEMA_TEXT;
+use super::schema::schema_text;
 use crate::pointer::{JsonPointer, resolve};
 use crate::read::Node;
 
-/// Every diagnostic of `document` against the official 0.1.1 schema, unordered.
-pub(crate) fn official_schema_diagnostics(document: &Node) -> Vec<StructureDiagnostic> {
-    match serde_json::from_str::<Json>(OFFICIAL_SCHEMA_TEXT) {
+/// Every diagnostic of `document` against the schema of `format`, unordered: the official 0.1.1
+/// schema, or the development-line schema (MDL-1.1).
+pub(crate) fn schema_diagnostics(document: &Node, format: OssieFormat) -> Vec<StructureDiagnostic> {
+    match evaluable_schema(schema_text(format)) {
         Ok(schema) => schema_violations(&schema, &to_json(document))
             .into_iter()
             .map(|violation| diagnostic(document, violation))
@@ -21,7 +23,7 @@ pub(crate) fn official_schema_diagnostics(document: &Node) -> Vec<StructureDiagn
             code: StructureCode::WrongType,
             pointer: JsonPointer::root(),
             location: document.location,
-            message: format!("the embedded official schema is not valid JSON: {error}"),
+            message: format!("the embedded model schema is not valid JSON: {error}"),
         }],
     }
 }
@@ -40,8 +42,11 @@ fn diagnostic(document: &Node, violation: SchemaViolation) -> StructureDiagnosti
 /// The E0B-4 code of a violation. Any problem with `version` is `E0B-01`.
 ///
 /// The official schema uses only `type`, `const`, `enum`, `required`, `properties`,
-/// `additionalProperties`, `items`, `minItems`, `oneOf` and `$ref` (checked by a test). Its only
-/// `oneOf` chooses between a string and an object (`AIContext`), so failing it is a wrong type.
+/// `additionalProperties`, `items`, `minItems`, `oneOf` and `$ref`; the development-line schema
+/// adds `minLength` and `anyOf` (checked by tests). The only `oneOf` of both chooses between a
+/// string and an object (`AIContext`), so failing it is a wrong type. The only `anyOf`, of the
+/// development line, requires `sql` or `dialects` (`Expression`), so failing it is a missing
+/// property.
 fn code_of(pointer: &JsonPointer, kind: &SchemaViolationKind) -> StructureCode {
     let version = JsonPointer::root().member("version");
     match kind {
@@ -51,13 +56,14 @@ fn code_of(pointer: &JsonPointer, kind: &SchemaViolationKind) -> StructureCode {
             StructureCode::Version
         }
         _ if *pointer == version => StructureCode::Version,
-        SchemaViolationKind::Required(_) => StructureCode::MissingProperty,
+        SchemaViolationKind::Required(_) | SchemaViolationKind::AnyOf => {
+            StructureCode::MissingProperty
+        }
         SchemaViolationKind::AdditionalProperties => StructureCode::PropertyNotAllowed,
         SchemaViolationKind::Enum | SchemaViolationKind::Const => StructureCode::OutsideEnumeration,
         SchemaViolationKind::MinItems => StructureCode::EmptyList,
         SchemaViolationKind::Type
         | SchemaViolationKind::OneOf
-        | SchemaViolationKind::AnyOf
         | SchemaViolationKind::Not
         | SchemaViolationKind::FalseSchema
         | SchemaViolationKind::Minimum
@@ -76,7 +82,7 @@ fn code_of(pointer: &JsonPointer, kind: &SchemaViolationKind) -> StructureCode {
 mod tests {
     use serde_json::Value as Json;
 
-    use super::OFFICIAL_SCHEMA_TEXT;
+    use crate::structure::schema::{DEVELOPMENT_SCHEMA_TEXT, OFFICIAL_SCHEMA_TEXT};
 
     /// The keywords `code_of` maps, plus annotations.
     const MAPPED: [&str; 15] = [
@@ -109,7 +115,7 @@ mod tests {
                     .into_iter()
                     .flat_map(|map| map.values())
                     .for_each(|subschema| keywords(subschema, found)),
-                "oneOf" => member
+                "oneOf" | "anyOf" => member
                     .as_array()
                     .into_iter()
                     .flatten()
@@ -120,13 +126,47 @@ mod tests {
         }
     }
 
-    #[test]
-    fn e0b_1_1_the_official_schema_uses_only_mapped_keywords() {
-        let schema: Json = serde_json::from_str(OFFICIAL_SCHEMA_TEXT).expect("the schema is JSON");
+    /// The keywords the development-line schema adds, and the annotation `examples`.
+    const DEVELOPMENT_ONLY: [&str; 3] = ["minLength", "anyOf", "examples"];
+
+    fn schema_keywords(text: &str) -> Vec<String> {
+        let schema: Json = serde_json::from_str(text).expect("the schema is JSON");
         let mut found = Vec::new();
         keywords(&schema, &mut found);
-        for name in found {
+        found
+    }
+
+    #[test]
+    fn e0b_1_1_the_official_schema_uses_only_mapped_keywords() {
+        for name in schema_keywords(OFFICIAL_SCHEMA_TEXT) {
             assert!(MAPPED.contains(&name.as_str()), "unmapped keyword {name}");
         }
+    }
+
+    #[test]
+    fn oss_5_1_the_development_schema_uses_only_mapped_keywords() {
+        for name in schema_keywords(DEVELOPMENT_SCHEMA_TEXT) {
+            assert!(
+                MAPPED.contains(&name.as_str()) || DEVELOPMENT_ONLY.contains(&name.as_str()),
+                "unmapped keyword {name}"
+            );
+        }
+    }
+
+    #[test]
+    fn oss_5_1_every_any_of_of_the_development_schema_only_requires_members() {
+        let schema: Json =
+            serde_json::from_str(DEVELOPMENT_SCHEMA_TEXT).expect("the schema is JSON");
+        let alternatives = schema["$defs"]["Expression"]["anyOf"]
+            .as_array()
+            .expect("Expression has anyOf");
+        for alternative in alternatives {
+            let members = alternative
+                .as_object()
+                .expect("an alternative is an object");
+            assert!(members.keys().all(|name| name == "required"));
+        }
+        let count = DEVELOPMENT_SCHEMA_TEXT.matches("\"anyOf\"").count();
+        assert_eq!(count, 1, "the development schema has one anyOf");
     }
 }

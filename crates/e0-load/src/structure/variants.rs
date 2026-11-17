@@ -1,5 +1,7 @@
-//! The `ANSI_SQL` variant of every expression of the selected model (E0B-3.3, E0B-3.4).
+//! The compiled variant of every expression of the selected model (E0B-3.3, E0B-3.4, section
+//! 4.5).
 
+use super::datatype::declared_datatype;
 use super::diagnostic::{StructureCode, StructureDiagnostic};
 use super::output::{CompiledVariant, ElementExpression, ElementKind};
 use super::selection::member;
@@ -15,8 +17,9 @@ pub(crate) struct Variants<'document> {
     pub(crate) warnings: Vec<StructureDiagnostic>,
 }
 
-/// Picks the `ANSI_SQL` variant of every field and metric of a structurally valid `model`,
-/// located at `pointer`. Fields come before metrics; the caller sorts the warnings.
+/// Picks the compiled variant of every field and metric of a structurally valid `model`, located
+/// at `pointer`: each dataset's fields, then its dataset-scoped metrics (development format),
+/// then the model metrics. The caller sorts the expressions and the warnings.
 pub(crate) fn pick_variants<'document>(
     model: &'document Node,
     pointer: &JsonPointer,
@@ -25,12 +28,17 @@ pub(crate) fn pick_variants<'document>(
         expressions: Vec::new(),
         warnings: Vec::new(),
     };
-    let datasets_pointer = pointer.member("datasets");
+    let dataset_list = pointer.member("datasets");
     for (index, dataset) in items(member(model, "datasets")) {
-        let fields_pointer = datasets_pointer.item(index).member("fields");
-        for (field_index, field) in items(member(dataset, "fields")) {
-            let element = fields_pointer.item(field_index);
-            variants.add(ElementKind::Field, field, element);
+        let dataset_pointer = dataset_list.item(index);
+        for (list, kind) in [
+            ("fields", ElementKind::Field),
+            ("metrics", ElementKind::DatasetMetric),
+        ] {
+            let list_pointer = dataset_pointer.member(list);
+            for (element_index, element) in items(member(dataset, list)) {
+                variants.add(kind, element, list_pointer.item(element_index));
+            }
         }
     }
     let metrics_pointer = pointer.member("metrics");
@@ -46,6 +54,40 @@ impl<'document> Variants<'document> {
             return;
         };
         let expression_pointer = pointer.member("expression");
+        let ansi_sql = self.dialect_variants(expression, &expression_pointer);
+        let variant = if let Some(sql) = text(member(expression, "sql")) {
+            CompiledVariant::OssieSql2026(sql)
+        } else if let [sql] = ansi_sql.as_slice() {
+            CompiledVariant::AnsiSql(sql)
+        } else {
+            self.warnings.push(StructureDiagnostic {
+                code: StructureCode::NoSingleAnsiSql,
+                pointer: expression_pointer,
+                location: expression.location,
+                message: format!(
+                    "the expression has {} ANSI_SQL variants instead of one; the element is unusable",
+                    ansi_sql.len()
+                ),
+            });
+            CompiledVariant::Unusable
+        };
+        let (datatype, warning) = declared_datatype(element, &pointer);
+        self.warnings.extend(warning);
+        self.expressions.push(ElementExpression {
+            kind,
+            pointer,
+            variant,
+            datatype,
+        });
+    }
+
+    /// The text of every `ANSI_SQL` variant of `expression`, with a `W0B-01` warning for each
+    /// variant in another dialect.
+    fn dialect_variants(
+        &mut self,
+        expression: &'document Node,
+        expression_pointer: &JsonPointer,
+    ) -> Vec<&'document str> {
         let dialects_pointer = expression_pointer.member("dialects");
         let mut ansi_sql = Vec::new();
         for (index, variant) in items(member(expression, "dialects")) {
@@ -63,30 +105,12 @@ impl<'document> Variants<'document> {
                 (None, _) => {}
             }
         }
-        let variant = if let [sql] = ansi_sql.as_slice() {
-            CompiledVariant::AnsiSql(sql)
-        } else {
-            self.warnings.push(StructureDiagnostic {
-                code: StructureCode::NoSingleAnsiSql,
-                pointer: expression_pointer,
-                location: expression.location,
-                message: format!(
-                    "the expression has {} ANSI_SQL variants instead of one; the element is unusable",
-                    ansi_sql.len()
-                ),
-            });
-            CompiledVariant::Unusable
-        };
-        self.expressions.push(ElementExpression {
-            kind,
-            pointer,
-            variant,
-        });
+        ansi_sql
     }
 }
 
 /// The items of a sequence node with their indices; nothing for any other node.
-fn items(node: Option<&Node>) -> impl Iterator<Item = (usize, &Node)> {
+pub(crate) fn items(node: Option<&Node>) -> impl Iterator<Item = (usize, &Node)> {
     let items: &[Node] = match node.map(|node| &node.value) {
         Some(Value::Sequence(items)) => items,
         _ => &[],
@@ -94,7 +118,7 @@ fn items(node: Option<&Node>) -> impl Iterator<Item = (usize, &Node)> {
     items.iter().enumerate()
 }
 
-fn text(node: Option<&Node>) -> Option<&str> {
+pub(crate) fn text(node: Option<&Node>) -> Option<&str> {
     match node.map(|node| &node.value) {
         Some(Value::String(text)) => Some(text),
         _ => None,
