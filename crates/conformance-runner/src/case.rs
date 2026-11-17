@@ -4,6 +4,7 @@
 
 use std::fmt;
 
+use semantic_compiler_contracts::types::audit_record::OssieFormat;
 use serde::Deserialize;
 
 /// A rule ID of the specification, such as `E3-3.2` or `CS-2.1`.
@@ -71,8 +72,25 @@ pub struct Case {
     pub security_context: Option<String>,
     /// The query document, or `None` for load-only cases.
     pub query: Option<serde_json::Value>,
+    /// The load options the case loads its model with, or `None` for all defaults (CS-2.7).
+    pub load_options: Option<CaseLoadOptions>,
     /// The expected result.
     pub expect: Expectation,
+}
+
+/// The load options a case sets (CS-2.7), as written: an omitted option is `None` and takes the
+/// default of architecture section 3.5 (see [`crate::load_options::resolve_load_options`]).
+#[derive(Debug, Clone, Default, PartialEq, Eq, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct CaseLoadOptions {
+    /// `release` or `development`.
+    pub ossie_format: Option<OssieFormat>,
+    /// The semantic model to load when the document has several (DEV-7).
+    pub model_name: Option<String>,
+    /// The extension namespace (MDL-2.3).
+    pub namespace: Option<String>,
+    /// Treat datasets without `access` as `authenticated` (DEV-4).
+    pub grant_authenticated_to_all: Option<bool>,
 }
 
 /// The expected result of a case (CS-2 `expect`).

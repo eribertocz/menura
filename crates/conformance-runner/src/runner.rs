@@ -4,11 +4,14 @@
 use std::fs;
 use std::path::{Path, PathBuf};
 
+use semantic_compiler_contracts::types::audit_record::LoadOptions;
+
 use crate::case::Case;
 use crate::case_file::read_case;
 use crate::database::prepare_database;
 use crate::error::{RunnerError, RunnerErrorKind};
 use crate::fixture::{ModelFixture, security_context_path};
+use crate::load_options::resolve_load_options;
 use crate::ossie::{OSSIE_AREA, check_layout, run_suites};
 use crate::report::{CaseResult, CaseStatus, Report};
 
@@ -70,12 +73,14 @@ fn run_cases(
 
 fn run_case(conformance_directory: &Path, case: &Case) -> CaseStatus {
     match prepare_case(conformance_directory, case) {
-        Ok(()) => CaseStatus::Pending(PENDING_REASON.to_owned()),
+        Ok(_load_options) => CaseStatus::Pending(PENDING_REASON.to_owned()),
         Err(error) => CaseStatus::Failed(error.to_string()),
     }
 }
 
-fn prepare_case(conformance_directory: &Path, case: &Case) -> Result<(), RunnerError> {
+/// Checks the fixtures of `case`, prepares its database and returns the load options its model
+/// is loaded with (CS-2.7). They are passed to `load` once that stage function exists.
+fn prepare_case(conformance_directory: &Path, case: &Case) -> Result<LoadOptions, RunnerError> {
     let model_folder = conformance_directory.join("models").join(&case.model);
     let fixture = ModelFixture::read(&model_folder)?;
     if let Some(file_name) = &case.security_context {
@@ -85,7 +90,7 @@ fn prepare_case(conformance_directory: &Path, case: &Case) -> Result<(), RunnerE
     }
     prepare_database(&fixture)
         .map_err(|error| RunnerError::new(RunnerErrorKind::Database(error), &model_folder))?;
-    Ok(())
+    Ok(resolve_load_options(case.load_options.as_ref()))
 }
 
 /// The area folders to run, sorted by name.
@@ -121,4 +126,43 @@ pub(crate) fn list_directory(directory: &Path) -> Result<Vec<PathBuf>, RunnerErr
     }
     paths.sort();
     Ok(paths)
+}
+
+#[cfg(test)]
+mod tests {
+    use semantic_compiler_contracts::types::audit_record::OssieFormat;
+
+    use super::*;
+    use crate::case_file::parse_case;
+
+    const LOAD_ERROR_CASE: &str = "
+id: sample-load-options-001
+rules: [CS-2.7]
+model: sample
+expect: {outcome: load_error, error: E0D-02}
+";
+
+    fn conformance_directory() -> PathBuf {
+        Path::new(env!("CARGO_MANIFEST_DIR")).join("../../conformance")
+    }
+
+    #[test]
+    fn cs_2_7_the_load_options_of_a_case_reach_the_load_call() {
+        let text = LOAD_ERROR_CASE.replace(
+            "model: sample",
+            "model: sample\nload_options: {ossie_format: development}",
+        );
+        let case = parse_case(&text).unwrap();
+        let options = prepare_case(&conformance_directory(), &case).unwrap();
+        assert_eq!(options.ossie_format, OssieFormat::Development);
+        assert!(!options.grant_authenticated_to_all);
+        assert_eq!(options.namespace, "semantic_compiler");
+    }
+
+    #[test]
+    fn cs_2_7_a_case_without_load_options_is_loaded_with_the_defaults() {
+        let case = parse_case(LOAD_ERROR_CASE).unwrap();
+        let options = prepare_case(&conformance_directory(), &case).unwrap();
+        assert_eq!(options, resolve_load_options(None));
+    }
 }

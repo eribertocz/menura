@@ -56,6 +56,8 @@ fn check_file_name(case: &Case, path: &Path) -> Result<(), RunnerErrorKind> {
 
 #[cfg(test)]
 mod tests {
+    use semantic_compiler_contracts::types::audit_record::OssieFormat;
+
     use super::*;
 
     const PLAN_CASE: &str = "
@@ -117,6 +119,61 @@ expect: {outcome: load_error, error: E0D-02}
     #[test]
     fn cs_2_rejects_an_unknown_field() {
         let text = PLAN_CASE.replace("model: sample", "model: sample\nmodle: typo");
+        assert!(matches!(
+            parse_case(&text),
+            Err(RunnerErrorKind::Malformed(_))
+        ));
+    }
+
+    #[test]
+    fn cs_2_7_reads_a_case_without_load_options() {
+        assert_eq!(parse_case(PLAN_CASE).unwrap().load_options, None);
+    }
+
+    #[test]
+    fn cs_2_7_reads_the_load_options_of_a_case() {
+        let text = PLAN_CASE.replace(
+            "model: sample",
+            "model: sample\nload_options: {ossie_format: development, model_name: shop}",
+        );
+        let options = parse_case(&text).unwrap().load_options.unwrap();
+        assert_eq!(options.ossie_format, Some(OssieFormat::Development));
+        assert_eq!(options.model_name.as_deref(), Some("shop"));
+        assert_eq!(options.namespace, None);
+        assert_eq!(options.grant_authenticated_to_all, None);
+    }
+
+    #[test]
+    fn cs_2_7_reads_every_load_option() {
+        let text = PLAN_CASE.replace(
+            "model: sample",
+            "model: sample\nload_options:\n  ossie_format: release\n  model_name: shop\n  \
+             namespace: acme\n  grant_authenticated_to_all: true",
+        );
+        let options = parse_case(&text).unwrap().load_options.unwrap();
+        assert_eq!(options.ossie_format, Some(OssieFormat::Release));
+        assert_eq!(options.namespace.as_deref(), Some("acme"));
+        assert_eq!(options.grant_authenticated_to_all, Some(true));
+    }
+
+    #[test]
+    fn cs_2_7_rejects_an_unknown_load_option() {
+        let text = PLAN_CASE.replace(
+            "model: sample",
+            "model: sample\nload_options: {data_source: warehouse}",
+        );
+        assert!(matches!(
+            parse_case(&text),
+            Err(RunnerErrorKind::Malformed(_))
+        ));
+    }
+
+    #[test]
+    fn cs_2_7_rejects_an_unknown_ossie_format() {
+        let text = PLAN_CASE.replace(
+            "model: sample",
+            "model: sample\nload_options: {ossie_format: nightly}",
+        );
         assert!(matches!(
             parse_case(&text),
             Err(RunnerErrorKind::Malformed(_))

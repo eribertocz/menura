@@ -10,14 +10,12 @@ use serde_json::{Value, json};
 use crate::database::prepare_database;
 use crate::error::{RunnerError, RunnerErrorKind};
 use crate::fixture::{ModelFixture, read_text};
+use crate::load_options::DEFAULT_NAMESPACE;
 use crate::ossie::created_tables::{CreatedRelation, read_created_tables};
 use crate::ossie::expected::{
     ExpectedResult, WideTableFixture, expected_rows_of, parse_wide_table_expectation,
 };
 use crate::ossie::suite::{OssieCase, Suite};
-
-/// The extension namespace of the load options (MDL-2 default).
-const NAMESPACE: &str = "semantic_compiler";
 
 /// Everything the compiler needs to run a case, and what the case expects.
 #[derive(Debug, Clone, PartialEq)]
@@ -136,7 +134,7 @@ fn load_options() -> LoadOptions {
     LoadOptions {
         grant_authenticated_to_all: true,
         ossie_format: OssieFormat::Development,
-        namespace: NAMESPACE.to_owned(),
+        namespace: DEFAULT_NAMESPACE.to_owned(),
         model_name: None,
     }
 }
