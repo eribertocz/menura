@@ -1,4 +1,4 @@
-//! The common extension rules: E0C-1.1, E0C-1.2, E0C-2.1 to E0C-2.7, E0C-01, E0C-02, E0C-04 to
+//! The common extension rules: E0C-1.1 to E0C-1.3, E0C-2.1 to E0C-2.7, E0C-01, E0C-02, E0C-04 to
 //! E0C-06, W0C-01,
 //! MDL-2.1 to MDL-2.3 and MDL-2.5.
 //!
@@ -197,6 +197,24 @@ fn e0c_2_1_e0c_01_version_of_another_json_type() {
 }
 
 #[test]
+fn e0c_1_3_a_repeated_namespace_is_ours_when_any_value_matches() {
+    for data in [
+        r#"{"namespace": "acme", "namespace": "semantic_compiler", "version": 1}"#,
+        r#"{"namespace": "semantic_compiler", "namespace": "acme", "version": 1}"#,
+        r#"{"namespace": "semantic_compiler", "namespace": "semantic_compiler", "version": 1}"#,
+    ] {
+        let document = on_orders(data);
+        assert_eq!(
+            errors(document.as_bytes(), DEFAULT_NAMESPACE),
+            [pair("E0C-06", ORDERS_DATA)],
+            "{data}"
+        );
+    }
+    let neither = on_orders(r#"{"namespace": "acme", "namespace": "other", "version": 1}"#);
+    assert!(accepted(neither.as_bytes()).entries.is_empty());
+}
+
+#[test]
 fn e0c_2_7_e0c_06_repeated_member_inside_data() {
     let found = errors(
         conformance_model!("e0-extensions-repeated-member-001"),
@@ -212,8 +230,6 @@ fn e0c_2_7_e0c_06_repeated_member_inside_data() {
     for data in [
         r#"{"namespace": "semantic_compiler", "version": 2, "version": 1}"#,
         r#"{"namespace": "semantic_compiler", "version": 1, "row_access": [{"a": 1, "b": {"c": 1, "c": 2}}]}"#,
-        r#"{"namespace": "acme", "namespace": "semantic_compiler", "version": 1}"#,
-        r#"{"namespace": "semantic_compiler", "namespace": "semantic_compiler", "version": 1}"#,
     ] {
         let document = on_orders(data);
         assert_eq!(

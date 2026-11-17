@@ -40,8 +40,8 @@ pub(crate) struct OwnData<'document> {
 /// An entry is ours only when its vendor is `COMMON`, its `data` is a JSON object and
 /// `data.namespace` equals `namespace`. A JSON `data` that is not an object has no namespace,
 /// so it is someone else's. When `namespace` is repeated in `data`, the entry is ours if any of
-/// its values equals `namespace`: it then has a reading as ours, and the repeated member
-/// rejects it (E0C-2.7).
+/// its values equals `namespace` (E0C-1.3): it then has a reading as ours, and the repeated
+/// member rejects it (E0C-2.7).
 pub(crate) fn classify<'document>(
     entry: &EntryNode<'document>,
     namespace: &str,
