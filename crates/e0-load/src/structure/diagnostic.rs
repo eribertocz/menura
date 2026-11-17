@@ -27,6 +27,9 @@ pub enum StructureCode {
     OtherDialect,
     /// `W0B-02`: an expression without a single `ANSI_SQL` variant; its element is unusable.
     NoSingleAnsiSql,
+    /// `W0B-03`: a development-line `datatype` without a logical kind (OSS-5.2); its element is
+    /// unusable.
+    UnknownDatatype,
 }
 
 impl StructureCode {
@@ -43,13 +46,17 @@ impl StructureCode {
             Self::ModelSelection => "E0B-07",
             Self::OtherDialect => "W0B-01",
             Self::NoSingleAnsiSql => "W0B-02",
+            Self::UnknownDatatype => "W0B-03",
         }
     }
 
     /// Whether the code is a load warning; every other code rejects the model (E0-4.1).
     #[must_use]
     pub fn is_warning(self) -> bool {
-        matches!(self, Self::OtherDialect | Self::NoSingleAnsiSql)
+        matches!(
+            self,
+            Self::OtherDialect | Self::NoSingleAnsiSql | Self::UnknownDatatype
+        )
     }
 }
 

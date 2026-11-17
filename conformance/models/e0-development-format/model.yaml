@@ -1,0 +1,55 @@
+version: "0.3.0.dev0"
+name: e0_development_format
+description: Development-line model with sql and dialects expressions, datatypes, a dataset-scoped metric and nonportable extensions with object data
+nonportable_extensions:
+  - vendor_name: COMMON
+    data: {namespace: semantic_compiler, version: 1, security_context: {roles: [analyst], attributes: []}}
+datasets:
+  - name: orders
+    source: shop.main.orders
+    primary_key: [order_id]
+    fields:
+      - name: order_id
+        expression: {sql: order_id}
+        datatype: Integer
+      - name: status
+        expression:
+          dialects:
+            - {dialect: ANSI_SQL, expression: status}
+            - {dialect: SNOWFLAKE, expression: status}
+        datatype: String
+      - name: amount
+        expression: {sql: amount}
+        datatype: Opaque
+    metrics:
+      - name: order_count
+        expression: {sql: COUNT(*)}
+        datatype: Integer
+    nonportable_extensions:
+      - vendor_name: COMMON
+        data: {namespace: semantic_compiler, version: 1, access: {mode: roles, roles: [analyst]}}
+  - name: balances
+    source: shop.main.balances
+    primary_key: [branch, customer_id]
+    fields:
+      - name: branch
+        expression: {sql: branch}
+      - name: customer_id
+        expression: {sql: customer_id}
+        datatype: Integer
+      - name: balance
+        expression: {sql: balance}
+        datatype: Decimal
+    nonportable_extensions:
+      - vendor_name: COMMON
+        data: {namespace: semantic_compiler, version: 1, access: {mode: roles, roles: [analyst]}}
+metrics:
+  - name: total_amount
+    expression: {sql: SUM(orders.amount)}
+    datatype: Float
+  - name: total_balance
+    expression: {sql: SUM(balances.balance)}
+    datatype: Decimal
+    nonportable_extensions:
+      - vendor_name: ACME
+        data: {owner: finance}

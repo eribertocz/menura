@@ -6,6 +6,7 @@
 //! suite uses.
 
 use semantic_compiler_contracts::admit_catalog_schema;
+use semantic_compiler_contracts::types::audit_record::OssieFormat;
 
 use super::diagnostic::ReferenceDiagnostic;
 use super::{ElementKind, ReferenceRejection, References, resolve_references};
@@ -47,7 +48,8 @@ fn resolve_selecting(
     model_name: Option<&str>,
 ) -> Result<References, ReferenceRejection> {
     let document = read_document(model.as_bytes()).expect("the document is read");
-    let structure = validate_structure(&document, model_name).expect("the structure is valid");
+    let structure = validate_structure(&document, OssieFormat::Release, model_name)
+        .expect("the structure is valid");
     let catalog = admit_catalog_schema(catalog).expect("the catalog schema is admitted");
     resolve_references(&document, &structure, &catalog)
 }

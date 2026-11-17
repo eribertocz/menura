@@ -5,6 +5,7 @@
 //! The model documents of the `e0-extensions-*` conformance cases are read here at compile
 //! time, so the rules are checked against the same files the conformance suite uses.
 
+use semantic_compiler_contracts::types::audit_record::OssieFormat;
 use serde_json::json;
 
 use super::output::{Extensions, ExtensionsFailure, ObjectKind};
@@ -24,7 +25,8 @@ macro_rules! conformance_model {
 
 fn validate(bytes: &[u8], namespace: &str) -> Result<Extensions, ExtensionsFailure> {
     let document = read_document(bytes).expect("the document is read");
-    let structure = validate_structure(&document, None).expect("the structure is valid");
+    let structure =
+        validate_structure(&document, OssieFormat::Release, None).expect("the structure is valid");
     validate_extensions(&document, &structure.semantic_model, namespace)
 }
 

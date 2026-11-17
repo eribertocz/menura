@@ -11,7 +11,7 @@ use super::name::Name;
 use super::outline::{DatasetOutline, ElementOutline, ModelOutline};
 use crate::expressions::{ExpressionPlace, parse_element_expression};
 use crate::pointer::JsonPointer;
-use crate::structure::{AnsiSqlVariant, ElementExpression, ElementKind};
+use crate::structure::{CompiledVariant, ElementExpression, ElementKind};
 
 /// What the checks look names up in.
 pub(crate) struct Scope<'model, 'document> {
@@ -23,6 +23,8 @@ pub(crate) struct Scope<'model, 'document> {
     relations: HashMap<&'model str, Columns<'model>>,
     /// The tree of each field and metric whose single `ANSI_SQL` variant parses, by element
     /// pointer. Elements whose expression cannot be used are left out: E0.b and E0.f report them.
+    /// Development-line `sql` expressions and dataset-scoped metrics (section 4.5) are not
+    /// parsed here yet.
     trees: HashMap<&'model JsonPointer, Expression>,
 }
 
@@ -90,12 +92,13 @@ pub(crate) fn field<'model, 'document>(
 fn parsed<'model>(
     expression: &'model ElementExpression<'_>,
 ) -> Option<(&'model JsonPointer, Expression)> {
-    let AnsiSqlVariant::Single(text) = expression.variant else {
+    let CompiledVariant::AnsiSql(text) = expression.variant else {
         return None;
     };
     let place = match expression.kind {
         ElementKind::Field => ExpressionPlace::Field,
         ElementKind::Metric => ExpressionPlace::Metric,
+        ElementKind::DatasetMetric => return None,
     };
     let tree = parse_element_expression(text, place).ok()?;
     Some((&expression.pointer, tree))
