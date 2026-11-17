@@ -5,6 +5,11 @@
 //! unqualified references, never other fields; a metric expression reads `dataset.field`. A
 //! qualified reference in a field expression, or an unqualified one in a metric expression, is
 //! outside the accepted subset.
+//!
+//! A dataset-scoped metric of the development format (section 4.5) reads the fields of its
+//! dataset by their bare name; a missing one is `E0D-04`, as for any metric. Its qualified
+//! references (`source.column` and others) are not checked here: how E0.d treats them is open
+//! in the specification (issue #134).
 
 use semantic_compiler_model::expression::Reference;
 
@@ -45,10 +50,10 @@ pub(crate) fn column_findings(scope: &Scope<'_, '_>) -> Vec<Finding> {
     findings
 }
 
-/// Every `E0D-04` finding of the model: one per metric that refers to a missing dataset or
-/// field.
+/// Every `E0D-04` finding of the model: one per dataset metric that refers to a missing field
+/// of its dataset, then one per model metric that refers to a missing dataset or field.
 pub(crate) fn metric_findings(scope: &Scope<'_, '_>) -> Vec<Finding> {
-    let mut findings = Vec::new();
+    let mut findings = dataset_metric_findings(scope);
     for element in &scope.model.metrics {
         let missing = missing_names(scope, element, |reference| {
             reference.qualifier.as_ref().is_some_and(|qualifier| {
@@ -62,6 +67,29 @@ pub(crate) fn metric_findings(scope: &Scope<'_, '_>) -> Vec<Finding> {
                 format!("the metric refers to {missing}, not a field of a dataset of the model"),
                 ElementKind::Metric,
             ));
+        }
+    }
+    findings
+}
+
+/// Every `E0D-04` finding of the dataset-scoped metrics: one per metric whose bare reference
+/// names no field of its dataset.
+fn dataset_metric_findings(scope: &Scope<'_, '_>) -> Vec<Finding> {
+    let mut findings = Vec::new();
+    for dataset in &scope.model.datasets {
+        for element in &dataset.metrics {
+            let missing = missing_names(scope, element, |reference| {
+                reference.qualifier.is_none()
+                    && field(dataset, &Name::of(&reference.name)).is_none()
+            });
+            if let Some(missing) = missing {
+                findings.push(finding(
+                    ReferenceCode::MissingMetricReference,
+                    element,
+                    format!("the dataset metric refers to {missing}, not a field of its dataset"),
+                    ElementKind::Metric,
+                ));
+            }
         }
     }
     findings

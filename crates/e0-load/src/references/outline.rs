@@ -50,6 +50,8 @@ pub(crate) struct DatasetOutline<'document> {
     pub(crate) source: Option<LocatedText<'document>>,
     /// Its fields, in document order.
     pub(crate) fields: Vec<ElementOutline<'document>>,
+    /// Its dataset-scoped metrics (development format, section 4.5), in document order.
+    pub(crate) metrics: Vec<ElementOutline<'document>>,
     /// The names of `primary_key`, then of every `unique_keys` entry, in document order.
     pub(crate) keys: Vec<DeclaredName<'document>>,
 }
@@ -120,6 +122,7 @@ fn dataset(node: &Node, pointer: JsonPointer) -> DatasetOutline<'_> {
         name: declared(node, &pointer, "name"),
         source: located(node, &pointer, "source"),
         fields: elements(node, &pointer, "fields"),
+        metrics: elements(node, &pointer, "metrics"),
         keys,
         pointer,
     }
