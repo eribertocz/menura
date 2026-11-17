@@ -1,0 +1,22 @@
+version: "0.1.1"
+semantic_model:
+  - name: e0_references_relation_named_like_keyword
+    description: Model whose dataset source is a relation name that starts with the letters of WITH
+    custom_extensions:
+      - vendor_name: COMMON
+        data: '{"namespace": "semantic_compiler", "version": 1, "security_context": {"roles": ["analyst"], "attributes": []}}'
+    datasets:
+      - name: entries
+        source: withdrawals.main.entries
+        primary_key: [entry_id]
+        fields:
+          - name: entry_id
+            expression: {dialects: [{dialect: ANSI_SQL, expression: entry_id}]}
+          - name: amount
+            expression: {dialects: [{dialect: ANSI_SQL, expression: amount}]}
+        custom_extensions:
+          - vendor_name: COMMON
+            data: '{"namespace": "semantic_compiler", "version": 1, "access": {"mode": "roles", "roles": ["analyst"]}}'
+    metrics:
+      - name: total_amount
+        expression: {dialects: [{dialect: ANSI_SQL, expression: SUM(entries.amount)}]}

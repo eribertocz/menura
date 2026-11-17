@@ -226,3 +226,13 @@ fn e0d_3_4_a_missing_column_comes_before_an_unlisted_form() {
         [(ElementKind::Field, format!("{ORDERS}/fields/2"), "E0D-03")]
     );
 }
+
+#[test]
+fn e6_4_3_a_relation_name_that_starts_with_with_is_not_a_query() {
+    assert_eq!(
+        loaded(conformance_model!(
+            "e0-references-relation-named-like-keyword"
+        )),
+        References::default()
+    );
+}

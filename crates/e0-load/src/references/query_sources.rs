@@ -59,16 +59,28 @@ pub(crate) fn query_source_findings(scope: &Scope<'_, '_>) -> Vec<Finding> {
         .collect()
 }
 
-/// Whether `source` is a query: after leading whitespace, it starts with `SELECT` or `WITH`,
-/// in any case (E6-4.3). This is a test on characters, as E6-4.3 is written; whether it should
-/// be a test on a keyword is issue #101.
+/// Whether `source` is a query (E6-4.3): after leading whitespace, it starts with the word
+/// `SELECT` or `WITH`, in any case, followed by a character that cannot continue an unquoted
+/// identifier or by the end of the text.
+///
+/// Pending: this is the wording of specification PR #105, not yet merged into `main`.
 pub(crate) fn is_query(source: &str) -> bool {
     let start = source.trim_start();
     ["SELECT", "WITH"].iter().any(|keyword| {
-        start
-            .get(..keyword.len())
-            .is_some_and(|prefix| prefix.eq_ignore_ascii_case(keyword))
+        let ends_word = start
+            .get(keyword.len()..)
+            .is_some_and(|rest| !rest.starts_with(continues_identifier));
+        ends_word
+            && start
+                .get(..keyword.len())
+                .is_some_and(|prefix| prefix.eq_ignore_ascii_case(keyword))
     })
+}
+
+/// Whether `character` can continue an unquoted identifier: a letter, a digit, `_` or `$`
+/// (E6-4.3).
+fn continues_identifier(character: char) -> bool {
+    character.is_alphanumeric() || character == '_' || character == '$'
 }
 
 /// Why the query `text` fails E0D-3.3, or `None` when it passes.
@@ -104,7 +116,7 @@ fn problem(text: &str) -> Option<String> {
 /// operators, numbers) is skipped.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 enum Token<'text> {
-    /// A run of letters, digits and `_` that starts with a letter or `_`.
+    /// A letter or `_`, then the characters that can continue an unquoted identifier.
     Word(&'text str),
     /// `;`.
     Semicolon,
@@ -134,13 +146,13 @@ fn tokens(text: &str) -> Result<Vec<Token<'_>>, &'static str> {
             }
             _ if character.is_alphabetic() || character == '_' => {
                 let length = rest
-                    .find(|next: char| !(next.is_alphanumeric() || next == '_'))
+                    .find(|next: char| !continues_identifier(next))
                     .unwrap_or(rest.len());
                 tokens.push(Token::Word(&rest[..length]));
                 length
             }
             _ if character.is_numeric() => rest
-                .find(|next: char| !(next.is_alphanumeric() || next == '_'))
+                .find(|next: char| !continues_identifier(next))
                 .unwrap_or(rest.len()),
             _ => character.len_utf8(),
         };
@@ -173,8 +185,18 @@ mod tests {
     }
 
     #[test]
-    fn e6_4_3_a_source_is_a_query_when_it_starts_with_select_or_with() {
+    fn e6_4_3_a_source_is_a_query_when_it_starts_with_the_word_select_or_with() {
         assert!(is_query("  select 1"));
+        assert!(is_query("SELECT"));
+        assert!(is_query("select*from t"));
+        assert!(is_query("WITH\nt AS (SELECT 1) SELECT * FROM t"));
+        assert!(is_query("SELECT(1)"));
+        assert!(!is_query("withdrawals.main.entries"));
+        assert!(!is_query("selected.main.items"));
+        assert!(!is_query("SELECT_ALL.main.items"));
+        assert!(!is_query("with$.main.t"));
+        assert!(!is_query("selecté.main.t"));
+        assert!(!is_query("with1.main.t"));
         assert!(is_query("WITH t AS (SELECT 1) SELECT * FROM t"));
         assert!(!is_query("shop.main.orders"));
         assert!(!is_query("/* c */ SELECT 1"));
@@ -190,7 +212,7 @@ mod tests {
         assert!(passes(
             "SELECT 'DROP; it' AS \"INSERT\"\"x;\", 2e5 -- DELETE\nFROM t /* UPDATE; */"
         ));
-        assert!(passes("SELECT updated_at, inserts FROM t"));
+        assert!(passes("SELECT updated_at, inserts, set$1 FROM t"));
     }
 
     #[test]
