@@ -164,17 +164,17 @@ Find a rule ID or a section here, then open only that file at that line.
 | [architecture/README.md](architecture/README.md#L129) | 129 | rule | A6 |
 | [architecture/README.md](architecture/README.md#L134) | 134 | section | 3.9 Lineage and audit |
 | [contracts/README.md](contracts/README.md#L1) | 1 | section | Contracts |
-| [contracts/README.md](contracts/README.md#L20) | 20 | section | Public contracts |
-| [contracts/README.md](contracts/README.md#L22) | 22 | rule | CON-0.1 |
-| [contracts/README.md](contracts/README.md#L23) | 23 | rule | CON-0.2 |
-| [contracts/README.md](contracts/README.md#L24) | 24 | rule | CON-0.3 |
-| [contracts/README.md](contracts/README.md#L25) | 25 | rule | CON-0.4 |
-| [contracts/README.md](contracts/README.md#L27) | 27 | section | Shared rules |
-| [contracts/README.md](contracts/README.md#L29) | 29 | rule | CON-1 |
-| [contracts/README.md](contracts/README.md#L30) | 30 | rule | CON-2 |
-| [contracts/README.md](contracts/README.md#L31) | 31 | rule | CON-3 |
-| [contracts/README.md](contracts/README.md#L32) | 32 | rule | CON-4 |
-| [contracts/README.md](contracts/README.md#L33) | 33 | rule | CON-5 |
+| [contracts/README.md](contracts/README.md#L19) | 19 | section | Public contracts |
+| [contracts/README.md](contracts/README.md#L21) | 21 | rule | CON-0.1 |
+| [contracts/README.md](contracts/README.md#L22) | 22 | rule | CON-0.2 |
+| [contracts/README.md](contracts/README.md#L23) | 23 | rule | CON-0.3 |
+| [contracts/README.md](contracts/README.md#L24) | 24 | rule | CON-0.4 |
+| [contracts/README.md](contracts/README.md#L26) | 26 | section | Shared rules |
+| [contracts/README.md](contracts/README.md#L28) | 28 | rule | CON-1 |
+| [contracts/README.md](contracts/README.md#L29) | 29 | rule | CON-2 |
+| [contracts/README.md](contracts/README.md#L30) | 30 | rule | CON-3 |
+| [contracts/README.md](contracts/README.md#L31) | 31 | rule | CON-4 |
+| [contracts/README.md](contracts/README.md#L32) | 32 | rule | CON-5 |
 | [contracts/catalog.md](contracts/catalog.md#L1) | 1 | section | Contract: catalog |
 | [contracts/catalog.md](contracts/catalog.md#L5) | 5 | section | CAT-1 Purpose |
 | [contracts/catalog.md](contracts/catalog.md#L10) | 10 | section | CAT-2 Two documents |
@@ -224,9 +224,10 @@ Find a rule ID or a section here, then open only that file at that line.
 | [contracts/compiled-plan.md](contracts/compiled-plan.md#L55) | 55 | section | PLN-5 Compile error |
 | [contracts/compiled-plan.md](contracts/compiled-plan.md#L66) | 66 | rule | PLN-5.1 |
 | [contracts/compiled-plan.md](contracts/compiled-plan.md#L67) | 67 | rule | PLN-5.2 |
-| [contracts/compiled-plan.md](contracts/compiled-plan.md#L71) | 71 | section | PLN-6 Audit record |
-| [contracts/compiled-plan.md](contracts/compiled-plan.md#L83) | 83 | rule | PLN-6.1 |
-| [contracts/compiled-plan.md](contracts/compiled-plan.md#L84) | 84 | rule | PLN-6.2 |
+| [contracts/compiled-plan.md](contracts/compiled-plan.md#L68) | 68 | rule | PLN-5.3 |
+| [contracts/compiled-plan.md](contracts/compiled-plan.md#L72) | 72 | section | PLN-6 Audit record |
+| [contracts/compiled-plan.md](contracts/compiled-plan.md#L84) | 84 | rule | PLN-6.1 |
+| [contracts/compiled-plan.md](contracts/compiled-plan.md#L85) | 85 | rule | PLN-6.2 |
 | [contracts/integrity-checks.md](contracts/integrity-checks.md#L1) | 1 | section | Contract: integrity checks |
 | [contracts/integrity-checks.md](contracts/integrity-checks.md#L5) | 5 | section | CHK-1 Purpose |
 | [contracts/integrity-checks.md](contracts/integrity-checks.md#L10) | 10 | section | CHK-2 Document |
