@@ -15,6 +15,7 @@ PAIRS = {
     "catalog-schema": "catalog-schema",
     "catalog-state": "catalog-state",
     "compile-error": "compile-error",
+    "validation-report": "compile-error",
     "compiled-plan": "compiled-plan",
     "integrity-checks": "integrity-checks",
     "model-description": "model-description",
