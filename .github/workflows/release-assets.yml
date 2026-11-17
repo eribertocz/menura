@@ -1,0 +1,48 @@
+# Check `release-assets` of spec/09-continuous-integration.md CI-2 (CON-0.3): when a release is
+# published, or when dispatched by hand with a tag, attach every spec/contracts/schemas/*.schema.json
+# of the release's tag as a release asset, replacing an asset of the same name, then fail if any
+# schema of the tag is missing from the release.
+#
+# The script runs from the workflow's commit; the schemas are read from a checkout of the tag, so a
+# manual run can attach the schemas of a tag older than the script (for example v0.1.0).
+name: release-assets
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Tag of the release whose schemas are attached
+        required: true
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release-assets-${{ github.event.release.tag_name || inputs.tag }}
+  cancel-in-progress: false
+
+jobs:
+  release-assets:
+    name: release-assets
+    runs-on: ubuntu-latest
+    env:
+      RELEASE_TAG: ${{ github.event.release.tag_name || inputs.tag }}
+    steps:
+      - name: Check out the workflow's commit
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+      - name: Check out the release tag
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          ref: refs/tags/${{ env.RELEASE_TAG }}
+          path: release-tag
+          persist-credentials: false
+      - name: Test the check
+        run: python3 -m unittest discover -s scripts/ci -p 'test_release_assets.py' -v
+      - name: Attach every contract schema of the tag and check that none is missing (CON-0.3)
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: python3 -I scripts/ci/release_assets.py release-tag

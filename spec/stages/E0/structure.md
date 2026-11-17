@@ -46,7 +46,7 @@ Name uniqueness and existence of references are checked in E0.d, not here.
 | `E0B-04` | Property not allowed |
 | `E0B-05` | Value outside an enumeration |
 | `E0B-06` | Empty list where at least one item is required |
-| `E0B-07` | No semantic model, several semantic models and no `model_name`, or `model_name` names none of them |
+| `E0B-07` | No semantic model, several semantic models and no `model_name`, or `model_name` names none or more than one of them |
 | `W0B-01` | Variant in a dialect other than `ANSI_SQL`; not compiled |
 | `W0B-02` | No single `ANSI_SQL` variant; the field or metric is unusable |
 | `W0B-03` | Unknown development-line `datatype`; the element is unusable |
