@@ -34,6 +34,7 @@ A metric and a dataset may share a name: metric references and field references 
 | `datasets[].source` | The catalog schema, with identical text |
 | Columns read by a field expression | The catalog relation of the dataset's `source`. A field expression reads source columns only, never other fields. |
 | `dataset.field` in a metric expression | A dataset of the model and one of its fields |
+| A bare name, and `source.column`, in a development-line dataset metric expression (section 4.5) | A field of that dataset (`E0D-04` if missing); a column of the catalog relation of its `source` (`E0D-03` if missing). The qualifier `source` is compared as a regular identifier (E0D-1.1, E0D-1.3); any other qualified reference is `E0F-02` (E0D-3.4) |
 | `relationships[].from`, `to` | Datasets of the model |
 | `primary_key`, `unique_keys`, `from_columns`, `to_columns` | Fields of the corresponding dataset |
 | References inside extensions | As defined by each extension |
