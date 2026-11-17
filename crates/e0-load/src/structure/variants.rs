@@ -1,7 +1,7 @@
 //! The `ANSI_SQL` variant of every expression of the selected model (E0B-3.3, E0B-3.4).
 
 use super::diagnostic::{StructureCode, StructureDiagnostic};
-use super::output::{AnsiSqlVariant, ElementExpression, ElementKind};
+use super::output::{CompiledVariant, ElementExpression, ElementKind};
 use super::selection::member;
 use crate::pointer::JsonPointer;
 use crate::read::{Node, Value};
@@ -64,7 +64,7 @@ impl<'document> Variants<'document> {
             }
         }
         let variant = if let [sql] = ansi_sql.as_slice() {
-            AnsiSqlVariant::Single(sql)
+            CompiledVariant::AnsiSql(sql)
         } else {
             self.warnings.push(StructureDiagnostic {
                 code: StructureCode::NoSingleAnsiSql,
@@ -75,7 +75,7 @@ impl<'document> Variants<'document> {
                     ansi_sql.len()
                 ),
             });
-            AnsiSqlVariant::Unusable
+            CompiledVariant::Unusable
         };
         self.expressions.push(ElementExpression {
             kind,

@@ -44,7 +44,7 @@ pub struct ElementExpression<'document> {
     /// The JSON Pointer of the element, such as `/semantic_model/0/datasets/2/fields/1`.
     pub pointer: JsonPointer,
     /// Its `ANSI_SQL` variant, or why it has none to compile.
-    pub variant: AnsiSqlVariant<'document>,
+    pub variant: CompiledVariant<'document>,
 }
 
 impl ElementExpression<'_> {
@@ -54,15 +54,15 @@ impl ElementExpression<'_> {
     /// Whether the element can be compiled.
     #[must_use]
     pub fn is_usable(&self) -> bool {
-        matches!(self.variant, AnsiSqlVariant::Single(_))
+        matches!(self.variant, CompiledVariant::AnsiSql(_))
     }
 }
 
 /// The variant of an expression that is compiled (E0B-3.3).
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum AnsiSqlVariant<'document> {
+pub enum CompiledVariant<'document> {
     /// The text of the single `ANSI_SQL` variant.
-    Single(&'document str),
+    AnsiSql(&'document str),
     /// No `ANSI_SQL` variant, or more than one: the element is unusable (`W0B-02`, OSS-2.2), and a
     /// query that names it fails with [`ElementExpression::UNUSABLE_QUERY_ERROR`].
     Unusable,

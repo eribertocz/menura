@@ -5,7 +5,7 @@
 //! so structure validation is checked against the same files the conformance suite uses.
 
 use super::diagnostic::{StructureCode, StructureDiagnostic};
-use super::output::{AnsiSqlVariant, ElementExpression, ElementKind, Structure};
+use super::output::{CompiledVariant, ElementExpression, ElementKind, Structure};
 use super::schema::OFFICIAL_SCHEMA_SOURCE;
 use super::validate_structure;
 use crate::read::{Node, read_document};
@@ -232,7 +232,7 @@ fn e0b_3_4_w0b_01_other_dialects_are_kept_and_not_compiled() {
     let status = &structure.expressions[1];
     assert_eq!(status.kind, ElementKind::Field);
     assert_eq!(status.pointer.to_string(), format!("{ORDERS}/fields/1"));
-    assert_eq!(status.variant, AnsiSqlVariant::Single("status"));
+    assert_eq!(status.variant, CompiledVariant::AnsiSql("status"));
     assert!(warnings(&structure).contains(&pair(
         "W0B-01",
         &format!("{ORDERS}/fields/1/expression/dialects/1")
@@ -248,7 +248,7 @@ fn e0b_3_3_w0b_02_oss_2_2_a_field_without_ansi_sql_is_unusable() {
         status_code.pointer.to_string(),
         format!("{ORDERS}/fields/3")
     );
-    assert_eq!(status_code.variant, AnsiSqlVariant::Unusable);
+    assert_eq!(status_code.variant, CompiledVariant::Unusable);
     assert!(!status_code.is_usable());
     assert_eq!(ElementExpression::UNUSABLE_QUERY_ERROR, "E0B-08");
     assert_eq!(
@@ -286,7 +286,7 @@ fn e0b_3_3_w0b_02_two_ansi_sql_variants_make_a_metric_unusable() {
     let document = read(document.as_bytes());
     let structure = validate_structure(&document, None).expect("the model loads");
     assert_eq!(structure.expressions[0].kind, ElementKind::Metric);
-    assert_eq!(structure.expressions[0].variant, AnsiSqlVariant::Unusable);
+    assert_eq!(structure.expressions[0].variant, CompiledVariant::Unusable);
     assert_eq!(
         warnings(&structure),
         [pair("W0B-02", "/semantic_model/0/metrics/0/expression")]
