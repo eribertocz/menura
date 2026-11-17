@@ -23,7 +23,7 @@ for the target dialect. Priorities, in order: correct, then fast, then readable.
 |---|---|
 | E6-4.1 | One read-only statement: `SELECT`, optionally with `WITH`. |
 | E6-4.2 | Every value from the query or the security context is a positional bound parameter (`$1`, `$2`, …), in order of first appearance. |
-| E6-4.3 | Identifiers are always quoted. A dataset `source` that is a relation name is parsed as an SQL qualified name (quoted parts may contain dots) and each part is quoted. A `source` is a query if its text, after leading whitespace, starts with `SELECT` or `WITH` (case-insensitive); otherwise it is a relation name. A query `source` is emitted as a parenthesized subquery; it MUST be a single read-only `SELECT`, checked at load (`E0D-08`). |
+| E6-4.3 | Identifiers are always quoted. A dataset `source` that is a relation name is parsed as an SQL qualified name (quoted parts may contain dots) and each part is quoted. A `source` is a query if its text, after leading whitespace, starts with the word `SELECT` or `WITH` (case-insensitive) followed by a character that cannot continue an unquoted identifier (anything but a letter, a digit, `_` or `$`) or by the end of the text; otherwise it is a relation name, so `withdrawals.main.entries` is a relation. A query `source` is emitted as a parenthesized subquery; it MUST be a single read-only `SELECT`, checked at load (`E0D-08`). |
 | E6-4.4 | Every plan node becomes a named common table expression in plan order, so the SQL reads top-down and each step is inspectable. |
 | E6-4.5 | Every metric result is cast to its fixed result type (E0F-5). |
 | E6-4.6 | Every division outside derived metrics is generated as `CASE WHEN d = 0 THEN NULL ELSE n / d END` (E0F-6). |
