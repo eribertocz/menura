@@ -1,164 +1,141 @@
-//! The member names of the JSON text of `data`, which a JSON reader does not keep (E0C-2.7).
+//! Reading the JSON text of `data` without losing repeated member names (E0C-2.7).
 //!
-//! A JSON reader keeps one value of a repeated member name and drops the others silently. This
-//! scanner walks text that the JSON reader has already accepted and reports what it drops: the
-//! first repeated member name, and every value of the top-level `namespace` member.
+//! A JSON reader keeps one value of a repeated member name and drops the others silently. The
+//! text is read here with a `serde` visitor over the `serde_json` reader instead, which builds
+//! the same value and also reports what a plain value cannot keep: the first repeated member
+//! name, and every value of the top-level `namespace` member (E0C-1.3).
 
 use std::collections::BTreeSet;
+use std::fmt;
+
+use serde::Deserialize;
+use serde::de::{self, Deserializer, MapAccess, SeqAccess, Visitor};
+use serde_json::{Map, Number, Value as Json};
 
 use super::keys::NAMESPACE;
 
-/// What the JSON reader does not keep of a valid JSON text.
-#[derive(Debug, Default, PartialEq, Eq)]
-pub(crate) struct Members<'text> {
-    /// The first member name, in text order, repeated in one object anywhere in the text.
+/// A JSON value read from the text of `data`, with what a plain JSON value cannot keep.
+#[derive(Debug, PartialEq)]
+pub(crate) struct Members {
+    /// The value. When a member name is repeated in an object, the last value is kept, as the
+    /// JSON reader keeps it.
+    pub(crate) value: Json,
+    /// The first member name, in text order, repeated in one object anywhere in the value.
     pub(crate) repeated: Option<String>,
-    /// The JSON text of every value of the top-level object's `namespace` member, in text order.
-    pub(crate) namespaces: Vec<&'text str>,
+    /// When the value is an object, every value of its own `namespace` member, in text order.
+    pub(crate) namespaces: Vec<Json>,
 }
 
-/// Scans `text`, which MUST be valid JSON. On any other text the result is incomplete.
-pub(crate) fn scan_members(text: &str) -> Members<'_> {
-    let mut scanner = Scanner {
-        text,
-        position: 0,
-        members: Members::default(),
-    };
-    scanner.value(true);
-    scanner.members
+impl Members {
+    fn plain(value: Json) -> Self {
+        Self {
+            value,
+            repeated: None,
+            namespaces: Vec::new(),
+        }
+    }
 }
 
-struct Scanner<'text> {
-    text: &'text str,
-    /// A byte offset into `text`, always on a character boundary.
-    position: usize,
-    members: Members<'text>,
+/// Reads `text` as one JSON value.
+///
+/// # Errors
+///
+/// Returns the JSON reader's error when `text` is not valid JSON.
+pub(crate) fn read_members(text: &str) -> Result<Members, serde_json::Error> {
+    serde_json::from_str(text)
 }
 
-impl Scanner<'_> {
-    fn peek(&self) -> Option<char> {
-        self.text.get(self.position..)?.chars().next()
+impl<'de> Deserialize<'de> for Members {
+    fn deserialize<D: Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
+        deserializer.deserialize_any(MembersVisitor)
+    }
+}
+
+/// Builds [`Members`] from the events of the JSON reader.
+struct MembersVisitor;
+
+impl<'de> Visitor<'de> for MembersVisitor {
+    type Value = Members;
+
+    fn expecting(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+        formatter.write_str("a JSON value")
     }
 
-    fn advance(&mut self) -> Option<char> {
-        let next = self.peek()?;
-        self.position += next.len_utf8();
-        Some(next)
+    fn visit_bool<E: de::Error>(self, value: bool) -> Result<Members, E> {
+        Ok(Members::plain(Json::Bool(value)))
     }
 
-    fn skip_whitespace(&mut self) {
-        while self.peek().is_some_and(|next| " \t\n\r".contains(next)) {
-            self.position += 1;
+    fn visit_i64<E: de::Error>(self, value: i64) -> Result<Members, E> {
+        Ok(Members::plain(Json::Number(value.into())))
+    }
+
+    fn visit_u64<E: de::Error>(self, value: u64) -> Result<Members, E> {
+        Ok(Members::plain(Json::Number(value.into())))
+    }
+
+    fn visit_f64<E: de::Error>(self, value: f64) -> Result<Members, E> {
+        Number::from_f64(value)
+            .map(|number| Members::plain(Json::Number(number)))
+            .ok_or_else(|| E::custom("a number that is not finite"))
+    }
+
+    fn visit_str<E: de::Error>(self, value: &str) -> Result<Members, E> {
+        Ok(Members::plain(Json::String(value.to_owned())))
+    }
+
+    fn visit_string<E: de::Error>(self, value: String) -> Result<Members, E> {
+        Ok(Members::plain(Json::String(value)))
+    }
+
+    fn visit_unit<E: de::Error>(self) -> Result<Members, E> {
+        Ok(Members::plain(Json::Null))
+    }
+
+    fn visit_seq<A: SeqAccess<'de>>(self, mut sequence: A) -> Result<Members, A::Error> {
+        let mut items = Vec::new();
+        let mut repeated = None;
+        while let Some(item) = sequence.next_element::<Members>()? {
+            repeated = repeated.or(item.repeated);
+            items.push(item.value);
         }
+        Ok(Members {
+            repeated,
+            ..Members::plain(Json::Array(items))
+        })
     }
 
-    /// Scans one value; `top_level` tells whether it is the whole text.
-    fn value(&mut self, top_level: bool) {
-        self.skip_whitespace();
-        match self.peek() {
-            Some('{') => self.object(top_level),
-            Some('[') => self.array(),
-            Some('"') => {
-                self.string();
-            }
-            Some(_) => {
-                while self.peek().is_some_and(|next| !",]} \t\n\r".contains(next)) {
-                    self.advance();
-                }
-            }
-            None => {}
-        }
-    }
-
-    fn array(&mut self) {
-        self.advance();
-        loop {
-            self.skip_whitespace();
-            match self.peek() {
-                Some(']') | None => break,
-                Some(',') => {
-                    self.advance();
-                }
-                Some(_) => self.value(false),
-            }
-        }
-        self.advance();
-    }
-
-    fn object(&mut self, top_level: bool) {
-        self.advance();
+    fn visit_map<A: MapAccess<'de>>(self, mut object: A) -> Result<Members, A::Error> {
+        let mut members = Map::new();
         let mut names = BTreeSet::new();
-        loop {
-            self.skip_whitespace();
-            match self.peek() {
-                Some('}') | None => break,
-                Some(',') => {
-                    self.advance();
-                    continue;
-                }
-                Some(_) => {}
+        let mut repeated = None;
+        let mut namespaces = Vec::new();
+        while let Some(name) = object.next_key::<String>()? {
+            if !names.insert(name.clone()) {
+                repeated = repeated.or_else(|| Some(name.clone()));
             }
-            let name = self.string();
-            self.skip_whitespace();
-            self.advance();
-            self.skip_whitespace();
-            let start = self.position;
-            if names.contains(&name) {
-                self.members.repeated.get_or_insert_with(|| name.clone());
+            let member: Members = object.next_value()?;
+            repeated = repeated.or(member.repeated);
+            if name == NAMESPACE {
+                namespaces.push(member.value.clone());
             }
-            self.value(false);
-            if top_level && name == NAMESPACE {
-                let value = self.text.get(start..self.position).unwrap_or_default();
-                self.members.namespaces.push(value);
-            }
-            names.insert(name);
+            members.insert(name, member.value);
         }
-        self.advance();
-    }
-
-    /// Scans a string and returns its value, with its escapes decoded.
-    fn string(&mut self) -> String {
-        self.advance();
-        let mut units: Vec<u16> = Vec::new();
-        while let Some(next) = self.advance() {
-            match next {
-                '"' => break,
-                '\\' => self.escape(&mut units),
-                other => units.extend(other.encode_utf16(&mut [0; 2]).iter()),
-            }
-        }
-        char::decode_utf16(units)
-            .map(|unit| unit.unwrap_or(char::REPLACEMENT_CHARACTER))
-            .collect()
-    }
-
-    /// Decodes the escape after a backslash into UTF-16 code units, so that a surrogate pair
-    /// written as two `\u` escapes decodes to one character.
-    fn escape(&mut self, units: &mut Vec<u16>) {
-        let decoded = match self.advance() {
-            Some('u') => {
-                let digits = self.text.get(self.position..self.position + 4);
-                self.position += 4;
-                digits.and_then(|digits| u16::from_str_radix(digits, 16).ok())
-            }
-            Some('b') => Some(0x08),
-            Some('f') => Some(0x0C),
-            Some('n') => Some(0x0A),
-            Some('r') => Some(0x0D),
-            Some('t') => Some(0x09),
-            Some(other) => u16::try_from(u32::from(other)).ok(),
-            None => None,
-        };
-        units.extend(decoded);
+        Ok(Members {
+            value: Json::Object(members),
+            repeated,
+            namespaces,
+        })
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use super::{Members, scan_members};
+    use serde_json::json;
+
+    use super::read_members;
 
     fn repeated(text: &str) -> Option<String> {
-        scan_members(text).repeated
+        read_members(text).expect("valid JSON").repeated
     }
 
     #[test]
@@ -185,8 +162,16 @@ mod tests {
 
     #[test]
     fn e0c_2_7_names_are_compared_after_decoding_escapes() {
-        assert_eq!(repeated(r#"{"a": 1, "a": 2}"#).as_deref(), Some("a"));
-        assert_eq!(repeated(r#"{"😀": 1, "😀": 2}"#).as_deref(), Some("😀"));
+        let escape = |hex: &str| format!("{}u{hex}", '\\');
+        let letter = format!(r#"{{"a": 1, "{}": 2}}"#, escape("0061"));
+        assert_eq!(repeated(&letter).as_deref(), Some("a"));
+        let pair = format!(
+            r#"{{"{}": 1, "{}{}": 2}}"#,
+            '\u{1F600}',
+            escape("d83d"),
+            escape("de00")
+        );
+        assert_eq!(repeated(&pair).as_deref(), Some("\u{1F600}"));
         assert_eq!(
             repeated(r#"{"q\"\\\/\b\f\n\r\t": 1, "q\"\\/\b\f\n\r\t": 2}"#).as_deref(),
             Some("q\"\\/\u{8}\u{c}\n\r\t")
@@ -195,14 +180,22 @@ mod tests {
     }
 
     #[test]
-    fn every_top_level_namespace_value_is_kept() {
+    fn the_value_is_the_json_reader_value() {
+        let text = r#"{"n": [1, -2, 1.5, 18446744073709551615, true, null, "t"], "k": 1, "k": 2}"#;
+        let expected: serde_json::Value = serde_json::from_str(text).expect("valid JSON");
+        assert_eq!(read_members(text).expect("valid JSON").value, expected);
+        assert!(read_members("{\"a\": 1,}").is_err());
+        assert!(read_members("not json").is_err());
+    }
+
+    #[test]
+    fn e0c_1_3_every_top_level_namespace_value_is_kept() {
         let text = r#"{"namespace": "acme", "x": {"namespace": "inner"}, "namespace" : "semantic_compiler" }"#;
+        let members = read_members(text).expect("valid JSON");
+        assert_eq!(members.repeated.as_deref(), Some("namespace"));
         assert_eq!(
-            scan_members(text),
-            Members {
-                repeated: Some("namespace".to_owned()),
-                namespaces: vec![r#""acme""#, r#""semantic_compiler""#],
-            }
+            members.namespaces,
+            [json!("acme"), json!("semantic_compiler")]
         );
     }
 }

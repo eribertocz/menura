@@ -3,7 +3,7 @@
 use serde_json::{Map, Value as Json};
 
 use super::diagnostic::{ExtensionCode, ExtensionDiagnostic};
-use super::members::scan_members;
+use super::members::read_members;
 use super::objects::{EntryNode, member};
 use crate::pointer::JsonPointer;
 use crate::read::{Node, Value};
@@ -56,7 +56,7 @@ pub(crate) fn classify<'document>(
         return EntryKind::Foreign;
     };
     let pointer = entry.pointer.member("data");
-    let parsed = match serde_json::from_str::<Json>(text) {
+    let parsed = match read_members(text) {
         Ok(parsed) => parsed,
         Err(error) => {
             return EntryKind::NotJson(ExtensionDiagnostic {
@@ -69,14 +69,13 @@ pub(crate) fn classify<'document>(
             });
         }
     };
-    let Json::Object(members) = parsed else {
+    let Json::Object(members) = parsed.value else {
         return EntryKind::Foreign;
     };
-    let scanned = scan_members(text);
-    if !scanned
+    if !parsed
         .namespaces
         .iter()
-        .any(|value| is_json_text(value, namespace))
+        .any(|value| value.as_str() == Some(namespace))
     {
         return EntryKind::Foreign;
     }
@@ -84,13 +83,8 @@ pub(crate) fn classify<'document>(
         pointer,
         node,
         members,
-        repeated_member: scanned.repeated,
+        repeated_member: parsed.repeated,
     })
-}
-
-/// Whether the JSON text `value` is the string `text`.
-fn is_json_text(value: &str, text: &str) -> bool {
-    serde_json::from_str::<Json>(value).is_ok_and(|value| value.as_str() == Some(text))
 }
 
 fn is_text(node: Option<&Node>, text: &str) -> bool {
