@@ -3,7 +3,7 @@
 use semantic_compiler_contracts::types::common::LogicalType;
 use semantic_compiler_model::expression::{DateUnit, Expression, ExtractPart};
 
-use super::stop::{Outcome, Stop, incompatible};
+use super::stop::{Outcome, Stop, incompatible, untyped_null};
 use super::typer::{ExpressionTyper, expect_type};
 use super::value_type::{Typed, big_integer, describe, is_integer};
 
@@ -90,7 +90,9 @@ fn is_time_unit(unit: DateUnit) -> bool {
 /// `minute` and `second` need a timestamp.
 fn expect_unit_operand(operand: &Typed, unit: DateUnit) -> Outcome<LogicalType> {
     expect_temporal(operand, false)?;
-    let value_type = operand.logical().ok_or(Stop::Undecided)?;
+    let Some(value_type) = operand.logical() else {
+        return untyped_null("the date or timestamp");
+    };
     if is_time_unit(unit) && *value_type == LogicalType::Date {
         return incompatible("a time unit needs a timestamp, not a date".to_owned());
     }

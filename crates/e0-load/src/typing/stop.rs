@@ -20,8 +20,10 @@ pub(crate) enum Stop {
     /// and context metrics) or `USER_ATTRIBUTE` (row policies). The element gets no type and no
     /// typing diagnostic.
     ReportedElsewhere,
-    /// A case the specification does not define yet (issue #126). The element gets no type and
-    /// no typing diagnostic until the issue is settled.
+    /// A case the specification does not define yet, raised with the maintainer on pull request
+    /// #131: a simple `CASE` comparing numeric values of different kinds, and an expression that
+    /// is the bare literal `NULL`. The element gets no type and no typing diagnostic until it is
+    /// settled.
     Undecided,
 }
 
@@ -33,4 +35,11 @@ pub(crate) fn problem<T>(code: TypingCode, message: String) -> Outcome<T> {
 /// `E0F-03` with `message`.
 pub(crate) fn incompatible<T>(message: String) -> Outcome<T> {
     problem(TypingCode::IncompatibleTypes, message)
+}
+
+/// `E0F-03` for a literal `NULL` that no other operand gives a type (E0F-3.2).
+pub(crate) fn untyped_null<T>(role: &str) -> Outcome<T> {
+    incompatible(format!(
+        "{role} is the literal NULL, and no other operand gives it a type; a CAST gives it one"
+    ))
 }

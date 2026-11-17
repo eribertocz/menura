@@ -5,7 +5,7 @@ use semantic_compiler_model::expression::{Expression, Literal, ScalarFunction, U
 
 use super::arithmetic::{Arithmetic, floor, widened};
 use super::operators::arithmetic_type;
-use super::stop::{Outcome, Stop, incompatible};
+use super::stop::{Outcome, Stop, incompatible, untyped_null};
 use super::typer::{any_nullable, expect_numeric};
 use super::value_type::{Numeric, Typed, big_integer, decimal, double, huge_integer};
 
@@ -46,16 +46,17 @@ fn numeric_arguments(typed: &[Typed]) -> Outcome<Vec<Option<Numeric>>> {
         .collect()
 }
 
-/// The single numeric argument of `typed` with its type; [`Stop::Undecided`] for the literal
-/// `NULL`, whose result type is not defined (issue #126).
+/// The single numeric argument of `typed` with its type; `E0F-03` for the literal `NULL`, which
+/// no other argument gives a type (E0F-3.2).
 fn single_number(typed: &[Typed]) -> Outcome<(Numeric, &LogicalType, bool)> {
     let [argument] = typed else {
         return Err(Stop::ReportedElsewhere);
     };
-    let kind = expect_numeric(argument, "the argument of a number function")?;
+    let role = "the argument of a number function";
+    let kind = expect_numeric(argument, role)?;
     match (kind, argument.logical()) {
         (Some(kind), Some(value_type)) => Ok((kind, value_type, argument.nullable)),
-        _ => Err(Stop::Undecided),
+        _ => untyped_null(role),
     }
 }
 
@@ -88,17 +89,20 @@ fn round(arguments: &[Expression], typed: &[Typed]) -> Outcome<Typed> {
     let (kind, _, nullable) = single_number(std::slice::from_ref(operand))?;
     let value_type = match kind {
         Numeric::Float => double(),
-        Numeric::Decimal { .. } if digits < 0 => return Err(Stop::Undecided),
         Numeric::Decimal { precision, scale } => match u8::try_from(digits) {
             Ok(digits) if digits <= scale => decimal(precision, digits),
             _ => {
                 return incompatible(format!(
-                    "ROUND and TRUNC of decimal({precision},{scale}) to {digits} digits, more than its scale"
+                    "ROUND and TRUNC of decimal({precision},{scale}) need from 0 to {scale} digits, not {digits}"
                 ));
             }
         },
         Numeric::Integer { .. } if digits <= 0 => huge_integer(),
-        Numeric::Integer { .. } => return Err(Stop::Undecided),
+        Numeric::Integer { .. } => {
+            return incompatible(format!(
+                "ROUND and TRUNC of an integer need at most 0 digits, not {digits}"
+            ));
+        }
     };
     Ok(Typed::value(value_type, nullable))
 }

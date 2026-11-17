@@ -1,0 +1,18 @@
+id: e0-typing-integer-times-decimal-001
+rules: [E0F-5a]
+model: e0-typing
+security_context: analyst.json
+query:
+  contract: semantic_compiler.query
+  contract_version: "1.0.0"
+  reference_time: "2026-11-15T12:00:00-04:00"
+  time_zone: UTC
+  query:
+    dimensions: [orders.price_band]
+    metrics:
+      - {metric: total_line_price, alias: total_line_price}
+expect:
+  outcome: plan
+  warnings: [W0F-01]
+  rows: e0-typing-integer-times-decimal-001.csv
+  row_order: any

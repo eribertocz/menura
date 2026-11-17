@@ -16,6 +16,10 @@ fn w0f_01_every_typing_problem_makes_its_element_unusable() {
             pair("E0F-05", "/semantic_model/0/relationships/1/from_columns/0"),
             pair("E0F-08", "/semantic_model/0/metrics/5/expression"),
             pair("E0F-07", "/semantic_model/0/metrics/6/expression"),
+            pair("E0F-03", "/semantic_model/0/metrics/10/expression"),
+            pair("E0F-03", "/semantic_model/0/metrics/11/expression"),
+            pair("E0F-03", "/semantic_model/0/metrics/12/expression"),
+            pair("E0F-03", "/semantic_model/0/metrics/13/expression"),
         ]
     );
     assert_eq!(TypingCode::WARNING, "W0F-01");
@@ -40,29 +44,39 @@ fn e0_4_1_the_query_error_of_an_unusable_element_is_its_e0f_code() {
             )
         })
         .collect();
-    let element = |kind, pointer: String, code| (kind, pointer, code);
+    let element = |kind, pointer: &str, code| (kind, pointer.to_owned(), code);
+    let field = |index: usize, code| {
+        element(
+            ElementKind::Field,
+            &format!("{ORDERS}/fields/{index}"),
+            code,
+        )
+    };
+    let metric = |index: usize, code| {
+        element(
+            ElementKind::Metric,
+            &format!("/semantic_model/0/metrics/{index}"),
+            code,
+        )
+    };
     assert_eq!(
         unusable,
         [
-            element(ElementKind::Field, format!("{ORDERS}/fields/7"), "E0F-04"),
-            element(ElementKind::Field, format!("{ORDERS}/fields/8"), "E0F-03"),
-            element(ElementKind::Field, format!("{ORDERS}/fields/9"), "E0F-07"),
-            element(ElementKind::Field, format!("{ORDERS}/fields/10"), "E0F-06"),
+            field(7, "E0F-04"),
+            field(8, "E0F-03"),
+            field(9, "E0F-07"),
+            field(10, "E0F-06"),
             element(
                 ElementKind::Relationship,
-                "/semantic_model/0/relationships/1".to_owned(),
+                "/semantic_model/0/relationships/1",
                 "E0F-05"
             ),
-            element(
-                ElementKind::Metric,
-                "/semantic_model/0/metrics/5".to_owned(),
-                "E0F-08"
-            ),
-            element(
-                ElementKind::Metric,
-                "/semantic_model/0/metrics/6".to_owned(),
-                "E0F-07"
-            ),
+            metric(5, "E0F-08"),
+            metric(6, "E0F-07"),
+            metric(10, "E0F-03"),
+            metric(11, "E0F-03"),
+            metric(12, "E0F-03"),
+            metric(13, "E0F-03"),
         ]
     );
 }

@@ -3,7 +3,7 @@
 use semantic_compiler_contracts::types::common::LogicalType;
 
 use super::diagnostic::TypingCode;
-use super::stop::{Outcome, Stop, problem};
+use super::stop::{Outcome, problem};
 use super::value_type::{Numeric, decimal, double, huge_integer};
 
 /// The largest decimal precision and scale (E0F-5a).
@@ -24,8 +24,7 @@ pub(crate) enum Arithmetic {
 ///
 /// # Errors
 ///
-/// `E0F-08` when a decimal product has a scale over 38, and [`Stop::Undecided`] for the product
-/// of an integer and a decimal (issue #126).
+/// `E0F-08` when a decimal product has a scale over 38.
 pub(crate) fn arithmetic(
     operation: Arithmetic,
     left: Numeric,
@@ -36,23 +35,13 @@ pub(crate) fn arithmetic(
     }
     match (operation, left, right) {
         (_, Numeric::Integer { .. }, Numeric::Integer { .. }) => Ok(huge_integer()),
-        (
-            Arithmetic::Multiply,
-            Numeric::Decimal {
-                precision: left_precision,
-                scale: left_scale,
-            },
-            Numeric::Decimal {
-                precision: right_precision,
-                scale: right_scale,
-            },
-        ) => product((left_precision, left_scale), (right_precision, right_scale)),
-        (Arithmetic::Multiply, _, _) => Err(Stop::Undecided),
+        (Arithmetic::Multiply, _, _) => product(as_decimal(left), as_decimal(right)),
         _ => Ok(sum(as_decimal(left), as_decimal(right))),
     }
 }
 
-/// The digits of a decimal operand of `+`, `-` and `%`: an integer counts as `decimal(38,0)`.
+/// The digits of a decimal operand of `+`, `-`, `%` and `*`: an integer counts as
+/// `decimal(38,0)`.
 fn as_decimal(operand: Numeric) -> (u8, u8) {
     match operand {
         Numeric::Decimal { precision, scale } => (precision, scale),
@@ -170,7 +159,7 @@ mod tests {
         );
         assert_eq!(
             arithmetic(Arithmetic::Multiply, number(10, 2), INTEGER),
-            Err(Stop::Undecided)
+            Ok(decimal(38, 2))
         );
     }
 

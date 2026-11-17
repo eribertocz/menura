@@ -5,7 +5,7 @@ use semantic_compiler_model::expression::{BinaryOperator, CaseBranch, Expression
 
 use super::arithmetic::{Arithmetic, arithmetic, widened};
 use super::conversion::common_type;
-use super::stop::{Outcome, Stop, incompatible};
+use super::stop::{Outcome, Stop, incompatible, untyped_null};
 use super::typer::{ExpressionTyper, any_nullable, expect_numeric, expect_text};
 use super::value_type::{ExpressionType, Typed, describe};
 
@@ -68,8 +68,11 @@ impl ExpressionTyper<'_> {
             return Ok(Typed::value(LogicalType::Boolean, nullable));
         }
         let typed = self.type_of(operand)?;
-        let kind = expect_numeric(&typed, "the operand of a sign")?.ok_or(Stop::Undecided)?;
-        let value_type = typed.logical().cloned().ok_or(Stop::Undecided)?;
+        let role = "the operand of a sign";
+        let Some(kind) = expect_numeric(&typed, role)? else {
+            return untyped_null(role);
+        };
+        let value_type = typed.logical().cloned().ok_or(Stop::ReportedElsewhere)?;
         let value_type = match operator {
             UnaryOperator::Minus => widened(kind, &value_type),
             UnaryOperator::Plus | UnaryOperator::Not => value_type,
@@ -122,7 +125,7 @@ impl ExpressionTyper<'_> {
             match &compared {
                 Some(compared) => {
                     let value = self.type_of(&branch.condition)?;
-                    comparable(&[compared.clone(), value])?;
+                    comparable_in_simple_case(&[compared.clone(), value])?;
                 }
                 None => {
                     self.condition(&branch.condition, "a WHEN condition")?;
@@ -150,32 +153,55 @@ pub(super) fn arithmetic_type(operation: Arithmetic, operands: &[Typed]) -> Outc
     let role = "an operand of arithmetic";
     let left = expect_numeric(left, role)?;
     let right = expect_numeric(right, role)?;
-    match (left, right) {
+    // The literal `NULL` takes the type of the other operand (E0F-3.2).
+    match (left.or(right), right.or(left)) {
         (Some(left), Some(right)) => arithmetic(operation, left, right),
-        _ => Err(Stop::Undecided),
+        _ => untyped_null(role),
     }
 }
 
-/// The CASE rule over `typed` (E0F-5a): `E0F-03` when no type receives every other.
+/// The CASE rule over `typed` (E0F-5a): `E0F-03` when no type receives every other, or when
+/// every operand is the literal `NULL` (E0F-3.2).
 pub(super) fn case_rule(operands: &[Typed], role: &str) -> Outcome<ExpressionType> {
     let types: Vec<&ExpressionType> = operands.iter().map(|typed| &typed.value_type).collect();
-    common_type(&types).map_or_else(|| incompatible(no_common_type(role, &types)), Ok)
+    match common_type(&types) {
+        Some(ExpressionType::Null) => untyped_null(role),
+        Some(found) => Ok(found),
+        None => incompatible(no_common_type(role, &types)),
+    }
 }
 
-/// Checks that `operands` can be compared: one of them receives every other implicitly. When
-/// none does and every operand is numeric, the case is [`Stop::Undecided`] (issue #126).
+/// Checks the operands of a comparison, `[NOT] IN`, `[NOT] BETWEEN` or `IS [NOT] DISTINCT
+/// FROM` (E0F-3.1): numeric operands of any kinds are accepted, and any others need one type
+/// that receives every other implicitly (the CASE rule).
 pub(super) fn comparable(operands: &[Typed]) -> Outcome<()> {
-    let types: Vec<&ExpressionType> = operands.iter().map(|typed| &typed.value_type).collect();
-    if common_type(&types).is_some() {
+    if all_numeric(operands) {
         return Ok(());
     }
-    let all_numeric = operands
-        .iter()
-        .all(|typed| expect_numeric(typed, "").is_ok());
-    if all_numeric {
-        return Err(Stop::Undecided);
+    let types: Vec<&ExpressionType> = operands.iter().map(|typed| &typed.value_type).collect();
+    match common_type(&types) {
+        Some(_) => Ok(()),
+        None => incompatible(no_common_type("the compared values", &types)),
     }
-    incompatible(no_common_type("the compared values", &types))
+}
+
+/// Checks a `WHEN` value of a simple `CASE` against the compared value with the CASE rule. Two
+/// numeric values of different kinds are [`Stop::Undecided`]: E0F-3.1 does not list the simple
+/// `CASE`.
+fn comparable_in_simple_case(operands: &[Typed]) -> Outcome<()> {
+    let types: Vec<&ExpressionType> = operands.iter().map(|typed| &typed.value_type).collect();
+    match common_type(&types) {
+        Some(_) => Ok(()),
+        None if all_numeric(operands) => Err(Stop::Undecided),
+        None => incompatible(no_common_type("the compared values", &types)),
+    }
+}
+
+/// Whether every operand is numeric or the literal `NULL`.
+fn all_numeric(operands: &[Typed]) -> bool {
+    operands
+        .iter()
+        .all(|typed| expect_numeric(typed, "").is_ok())
 }
 
 fn no_common_type(role: &str, types: &[&ExpressionType]) -> String {

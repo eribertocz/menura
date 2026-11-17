@@ -1,12 +1,10 @@
-//! Result types and nullability: E0F-3, E0F-5, E0F-5a, E0F-6.1, E0F-7.1 and E0F-10, and the
-//! cases of issue #126, which get no type and no diagnostic.
+//! Result types and nullability: E0F-3, E0F-3.1, E0F-3.2, E0F-5, E0F-5a, E0F-6.1, E0F-7.1 and
+//! E0F-10.
 
 use semantic_compiler_contracts::types::common::{FloatBits, LogicalType};
 
 use super::*;
-use crate::typing::value_type::{
-    ExpressionType, big_integer, decimal, double, huge_integer, integer, timestamp,
-};
+use crate::typing::value_type::{big_integer, decimal, double, huge_integer, integer, timestamp};
 
 fn typed(value_type: LogicalType, nullable: bool) -> Probe {
     Probe::Typed(Typed::value(value_type, nullable))
@@ -43,13 +41,6 @@ fn e0f_7_1_nullability_comes_from_the_catalog() {
         typed(LogicalType::Text, true)
     );
     assert_eq!(field("CAST(note AS INTEGER)"), typed(integer(), true));
-    assert_eq!(
-        field("NULL"),
-        Probe::Typed(Typed {
-            value_type: ExpressionType::Null,
-            nullable: true
-        })
-    );
     assert_eq!(metric("COUNT(orders.note)"), typed(big_integer(), false));
     assert_eq!(metric("MAX(orders.status)"), typed(LogicalType::Text, true));
 }
@@ -214,26 +205,125 @@ fn e0f_5_aggregate_result_types() {
 }
 
 #[test]
-fn issue_126_undefined_cases_get_no_type_and_no_diagnostic() {
+fn e0f_3_1_numeric_operands_of_any_kinds_are_comparable() {
+    let boolean = |nullable| typed(LogicalType::Boolean, nullable);
+    assert_eq!(field("price > 0"), boolean(false));
+    assert_eq!(field("discount > 1"), boolean(true));
+    assert_eq!(field("price BETWEEN 0 AND discount"), boolean(true));
+    assert_eq!(field("quantity IN (1.5, 2E0, NULL)"), boolean(true));
+    assert_eq!(field("price IS DISTINCT FROM rate"), boolean(false));
+    assert_eq!(field("price = status"), Probe::Problem("E0F-03"));
+    assert_eq!(
+        field("ordered_on IN (ordered_at)"),
+        Probe::Problem("E0F-03")
+    );
+    assert_eq!(field("NULL = NULL"), boolean(true));
+}
+
+#[test]
+fn e0f_3_2_null_takes_the_type_of_another_operand() {
+    assert_eq!(field("NULL + 1"), typed(huge_integer(), true));
+    assert_eq!(field("price * NULL"), typed(decimal(20, 4), true));
+    assert_eq!(field("NULL / quantity"), typed(double(), true));
+    assert_eq!(
+        field("NULLIF(NULL, status)"),
+        typed(LogicalType::Text, true)
+    );
+    assert_eq!(field("COALESCE(NULL, quantity)"), typed(integer(), false));
+    assert_eq!(field("SIGN(NULL)"), typed(big_integer(), true));
+    assert_eq!(field("LENGTH(NULL)"), typed(big_integer(), true));
+    assert_eq!(
+        field("CAST(NULL AS INTEGER) + 1"),
+        typed(huge_integer(), true)
+    );
+    assert_eq!(metric("AVG(NULL)"), typed(double(), true));
+    assert_eq!(metric("COUNT(NULL)"), typed(big_integer(), false));
+}
+
+#[test]
+fn e0f_3_2_e0f_03_null_without_another_operand_has_no_type() {
     for expression in [
-        "price > 0",
-        "discount > 1",
-        "price * quantity",
-        "NULL + 1",
-        "ROUND(price, -1)",
-        "ROUND(quantity, 1)",
+        "-NULL",
+        "NULL + NULL",
+        "ABS(NULL)",
+        "FLOOR(NULL)",
+        "ROUND(NULL)",
+        "ZEROIFNULL(NULL)",
+        "DATE_TRUNC('day', NULL)",
+        "DATEADD(day, 1, NULL)",
+        "COALESCE(NULL, NULL)",
+        "CASE WHEN quantity > 1 THEN NULL END",
+        "NULLIF(NULL, NULL)",
+    ] {
+        assert_eq!(field(expression), Probe::Problem("E0F-03"), "{expression}");
+    }
+    assert_eq!(metric("SUM(NULL)"), Probe::Problem("E0F-03"));
+    assert_eq!(metric("MIN(NULL)"), Probe::Problem("E0F-03"));
+}
+
+#[test]
+fn e0f_5_median_and_percentiles_of_a_float() {
+    assert_eq!(metric("MEDIAN(orders.discount)"), typed(double(), true));
+    assert_eq!(
+        metric("PERCENTILE_DISC(0.25) WITHIN GROUP (ORDER BY orders.discount DESC)"),
+        typed(double(), true)
+    );
+}
+
+#[test]
+fn e0f_5a_an_integer_counts_as_decimal_38_0_in_a_product() {
+    assert_eq!(field("price * quantity"), typed(decimal(38, 2), false));
+    assert_eq!(field("quantity * rate"), typed(decimal(38, 20), false));
+}
+
+#[test]
+fn e0f_5a_e0f_03_round_and_trunc_digits_outside_the_table() {
+    assert_eq!(field("ROUND(price, -1)"), Probe::Problem("E0F-03"));
+    assert_eq!(field("TRUNC(quantity, 1)"), Probe::Problem("E0F-03"));
+    assert_eq!(field("ROUND(quantity, 0)"), typed(huge_integer(), false));
+    assert_eq!(field("TRUNC(price, 0)"), typed(decimal(10, 0), false));
+}
+
+#[test]
+fn e0f_5a_e0f_03_split_part_and_percentile_literals() {
+    for expression in [
         "SPLIT_PART(status, '-', quantity)",
         "SPLIT_PART(status, '-', 0)",
+        "SPLIT_PART(status, '-', 1 + 1)",
     ] {
-        assert_eq!(field(expression), Probe::Untyped, "{expression}");
+        assert_eq!(field(expression), Probe::Problem("E0F-03"), "{expression}");
+    }
+    assert_eq!(
+        field("SPLIT_PART(status, '-', 1)"),
+        typed(LogicalType::Text, false)
+    );
+    for expression in [
+        "PERCENTILE_CONT(orders.discount) WITHIN GROUP (ORDER BY orders.quantity)",
+        "PERCENTILE_DISC(1.5) WITHIN GROUP (ORDER BY orders.quantity)",
+        "PERCENTILE_CONT(2E0) WITHIN GROUP (ORDER BY orders.quantity)",
+        "PERCENTILE_CONT(10) WITHIN GROUP (ORDER BY orders.quantity)",
+    ] {
+        assert_eq!(metric(expression), Probe::Problem("E0F-03"), "{expression}");
     }
     for expression in [
-        "MEDIAN(orders.discount)",
-        "PERCENTILE_DISC(orders.quantity) WITHIN GROUP (ORDER BY orders.quantity)",
-        "PERCENTILE_DISC(1.5) WITHIN GROUP (ORDER BY orders.quantity)",
+        "PERCENTILE_CONT(0) WITHIN GROUP (ORDER BY orders.quantity)",
+        "PERCENTILE_CONT(1) WITHIN GROUP (ORDER BY orders.quantity)",
+        "PERCENTILE_CONT(1.000) WITHIN GROUP (ORDER BY orders.quantity)",
+        "PERCENTILE_CONT(5E-1) WITHIN GROUP (ORDER BY orders.quantity)",
+        "PERCENTILE_CONT(.5) WITHIN GROUP (ORDER BY orders.quantity)",
     ] {
-        assert_eq!(metric(expression), Probe::Untyped, "{expression}");
+        assert_eq!(metric(expression), typed(double(), true), "{expression}");
     }
+}
+
+#[test]
+fn not_yet_settled_cases_get_no_type_and_no_diagnostic() {
+    assert_eq!(field("CASE price WHEN 1 THEN 'one' END"), Probe::Untyped);
+    assert_eq!(field("NULL"), Probe::Untyped);
+    assert_eq!(
+        field("CASE quantity WHEN 1 THEN 'one' END"),
+        typed(LogicalType::Text, true)
+    );
 }
 
 #[test]

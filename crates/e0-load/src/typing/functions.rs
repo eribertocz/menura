@@ -6,9 +6,9 @@ use semantic_compiler_model::expression::{Expression, Literal, ScalarFunction};
 
 use super::numbers::number_function;
 use super::operators::case_rule;
-use super::stop::{Outcome, Stop};
+use super::stop::{Outcome, Stop, incompatible};
 use super::typer::{ExpressionTyper, any_nullable, expect_text, expect_type};
-use super::value_type::{Typed, big_integer, is_integer, timestamp};
+use super::value_type::{ExpressionType, Typed, big_integer, is_integer, timestamp};
 
 impl ExpressionTyper<'_> {
     /// The type of a scalar function call.
@@ -74,9 +74,14 @@ impl ExpressionTyper<'_> {
                 })
             }
             (ScalarFunction::Nullif, [first, _]) => {
-                case_rule(typed, "the arguments of NULLIF")?;
+                let common = case_rule(typed, "the arguments of NULLIF")?;
+                // The type of `a`; a literal `NULL` takes the type of `b` (E0F-3.2).
+                let value_type = match first.value_type {
+                    ExpressionType::Null => common,
+                    ExpressionType::Value(_) => first.value_type.clone(),
+                };
                 Ok(Typed {
-                    value_type: first.value_type.clone(),
+                    value_type,
                     nullable: true,
                 })
             }
@@ -129,8 +134,12 @@ fn slice_function(
     }
     let last = arguments.last().ok_or(Stop::ReportedElsewhere)?;
     let nullable = match function {
-        // `n` must be an integer literal `n ≥ 1` (E0F-10.2); any other is issue #126.
-        ScalarFunction::SplitPart if !is_positive_literal(last) => return Err(Stop::Undecided),
+        // `n` must be an integer literal `n ≥ 1` (E0F-10.2, E0F-5a).
+        ScalarFunction::SplitPart if !is_positive_literal(last) => {
+            return incompatible(
+                "the part number of SPLIT_PART must be an integer literal of at least 1".to_owned(),
+            );
+        }
         // `n < 0` and `length < 0` give NULL (E0F-10.2).
         ScalarFunction::Left | ScalarFunction::Right => !is_integer_literal(last),
         ScalarFunction::Substring => arguments.len() == 3 && !is_integer_literal(last),

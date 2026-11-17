@@ -11,7 +11,7 @@ use super::output::ElementKind;
 use super::scope::{Relation, Scope};
 use super::stop::{Outcome, Stop, problem};
 use super::typer::{Aggregates, ExpressionTyper};
-use super::value_type::Typed;
+use super::value_type::{ExpressionType, Typed};
 use crate::names::Name;
 use crate::outline::ElementOutline;
 use crate::pointer::JsonPointer;
@@ -76,6 +76,8 @@ fn record<'model>(
         return;
     };
     match expression_typer.type_of(tree) {
+        // An expression that is the bare literal `NULL` is not settled (see [`Stop::Undecided`]).
+        Ok(typed) if typed.value_type == ExpressionType::Null => {}
         Ok(typed) => {
             found.types.insert(&element.pointer, typed);
         }
