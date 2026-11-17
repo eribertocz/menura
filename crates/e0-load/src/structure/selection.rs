@@ -8,9 +8,10 @@ use crate::read::{Node, Value};
 /// The index of the semantic model to compile, or the `E0B-07` diagnostic.
 ///
 /// Returns `Ok(None)` when `semantic_model` is not a list: the schema diagnostics already reject
-/// the document. With several semantic models, `model_name` must name one; with one, a
-/// `model_name` that is given must name it. When two semantic models have the name, the first
-/// is selected: name uniqueness is checked in E0.d.
+/// the document. A document without any semantic model is rejected, whether or not
+/// `model_name` is given (E0B-3.2). With several semantic models, `model_name` must name one;
+/// with one, a `model_name` that is given must name it. When two semantic models have the
+/// name, the first is selected: name uniqueness is checked in E0.d.
 pub(crate) fn select_model(
     document: &Node,
     model_name: Option<&str>,
@@ -28,20 +29,21 @@ pub(crate) fn select_model(
         location: list.location,
         message,
     };
-    match (model_name, models.len()) {
-        (Some(name), _) => models
+    if models.is_empty() {
+        return Err(rejection(
+            "the document has no semantic model to load".to_owned(),
+        ));
+    }
+    match model_name {
+        Some(name) => models
             .iter()
             .position(|model| member(model, "name").is_some_and(|node| is_text(node, name)))
             .map(Some)
             .ok_or_else(|| rejection(format!("`model_name` `{name}` names no semantic model"))),
-        (None, 1) => Ok(Some(0)),
-        // Provisional: the specification defines no outcome for an empty list without
-        // `model_name` (spec-defect #69); it is rejected like a `model_name` that names none.
-        (None, 0) => Err(rejection(
-            "the document has no semantic model to load".to_owned(),
-        )),
-        (None, count) => Err(rejection(format!(
-            "the document has {count} semantic models; the load option `model_name` must name one"
+        None if models.len() == 1 => Ok(Some(0)),
+        None => Err(rejection(format!(
+            "the document has {} semantic models; the load option `model_name` must name one",
+            models.len()
         ))),
     }
 }
