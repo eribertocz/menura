@@ -1,0 +1,6 @@
+id: e0-structure-empty-list-001
+rules: [E0B-1.1, E0B-06]
+model: e0-structure-empty-list-001
+expect:
+  outcome: load_error
+  error: E0B-06

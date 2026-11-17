@@ -1,0 +1,6 @@
+id: e0-structure-version-001
+rules: [E0B-3.1, E0B-01, MDL-1.1]
+model: e0-structure-version-001
+expect:
+  outcome: load_error
+  error: E0B-01
