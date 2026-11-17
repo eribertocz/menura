@@ -130,7 +130,7 @@ difference. Only then may E5 use it: skip deduplication (`key_uniqueness`) or us
 ## CAT-8 Semantic rules
 
 1. `source` is unique within each document.
-2. Column names are unique within a relation.
+2. Column names are unique within a relation after normalization as an unquoted identifier (E0D-1.1), so a regular reference to a column is never ambiguous (E0D-1.5).
 3. For `decimal`, `scale` ≤ `precision`.
 4. Every `source` in the state exists in the referenced schema document.
 5. `partitions.column` exists in the relation and is of kind `date` or `timestamp`.
