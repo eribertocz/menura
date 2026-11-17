@@ -11,6 +11,7 @@
 //! References inside extensions are resolved by each extension with its own codes (E0D-3.2),
 //! never by the generic checks here.
 
+mod dataset_metric_references;
 mod diagnostic;
 mod expression_references;
 mod finding;
@@ -62,6 +63,7 @@ pub fn resolve_references(
     findings.extend(expression_references::column_findings(&scope));
     findings.extend(expression_references::metric_findings(&scope));
     findings.extend(expression_references::form_findings(&scope));
+    findings.extend(dataset_metric_references::dataset_metric_findings(&scope));
     findings.extend(keys::dataset_key_findings(&scope));
     findings.extend(keys::relationship_findings(&scope));
     findings.sort_by_cached_key(|finding| {

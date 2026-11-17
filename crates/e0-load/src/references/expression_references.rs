@@ -5,6 +5,9 @@
 //! unqualified references, never other fields; a metric expression reads `dataset.field`. A
 //! qualified reference in a field expression, or an unqualified one in a metric expression, is
 //! outside the accepted subset.
+//!
+//! The dataset-scoped metrics of the development format have their own forms, checked in
+//! `dataset_metric_references`.
 
 use semantic_compiler_model::expression::Reference;
 
@@ -45,8 +48,8 @@ pub(crate) fn column_findings(scope: &Scope<'_, '_>) -> Vec<Finding> {
     findings
 }
 
-/// Every `E0D-04` finding of the model: one per metric that refers to a missing dataset or
-/// field.
+/// Every `E0D-04` finding of the model metrics: one per metric that refers to a missing dataset
+/// or field.
 pub(crate) fn metric_findings(scope: &Scope<'_, '_>) -> Vec<Finding> {
     let mut findings = Vec::new();
     for element in &scope.model.metrics {
@@ -105,7 +108,7 @@ fn exists(scope: &Scope<'_, '_>, dataset: &Name, name: &Name) -> bool {
 
 /// The references of `element` that `is_missing` selects, written for a message, or `None`
 /// when there are none.
-fn missing_names(
+pub(super) fn missing_names(
     scope: &Scope<'_, '_>,
     element: &ElementOutline<'_>,
     is_missing: impl Fn(&Reference) -> bool,
@@ -133,7 +136,8 @@ fn written(reference: &Reference) -> String {
     }
 }
 
-fn finding(
+/// A finding at the expression of `element` that makes it unusable as `kind`.
+pub(super) fn finding(
     code: ReferenceCode,
     element: &ElementOutline<'_>,
     message: String,

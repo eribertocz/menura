@@ -1,5 +1,6 @@
 //! Resolving references: E0D-1.1 to E0D-1.3, E0D-3.1, E0D-3.2, E0D-01 to E0D-07, W0D-01,
-//! DEV-2, DEV-3 and the dispositions of E0-4.
+//! DEV-2, DEV-3, the dispositions of E0-4, and the same checks in the development-line format
+//! (section 4.5).
 //!
 //! The model documents and catalog schemas of the `e0-references-*` conformance cases are read
 //! here at compile time, so reference resolution is checked against the files the conformance
@@ -39,17 +40,26 @@ macro_rules! conformance_model {
 const CATALOG: &str = conformance_file!("e0-references-missing", "catalog-schema.json");
 
 fn resolve(files: (&str, &str)) -> Result<References, ReferenceRejection> {
-    resolve_selecting(files, None)
+    resolve_with(files, OssieFormat::Release, None)
 }
 
 /// Resolves with the load option `model_name`.
 fn resolve_selecting(
+    files: (&str, &str),
+    model_name: Option<&str>,
+) -> Result<References, ReferenceRejection> {
+    resolve_with(files, OssieFormat::Release, model_name)
+}
+
+/// Resolves with the load options `ossie_format` and `model_name`.
+fn resolve_with(
     (model, catalog): (&str, &str),
+    format: OssieFormat,
     model_name: Option<&str>,
 ) -> Result<References, ReferenceRejection> {
     let document = read_document(model.as_bytes()).expect("the document is read");
-    let structure = validate_structure(&document, OssieFormat::Release, model_name)
-        .expect("the structure is valid");
+    let structure =
+        validate_structure(&document, format, model_name).expect("the structure is valid");
     let catalog = admit_catalog_schema(catalog).expect("the catalog schema is admitted");
     resolve_references(&document, &structure, &catalog)
 }
@@ -112,5 +122,6 @@ fn field(name: &str, expression: &str) -> String {
 
 const ORDERS: &str = "/semantic_model/0/datasets/0";
 
+mod development;
 mod existence;
 mod names;
