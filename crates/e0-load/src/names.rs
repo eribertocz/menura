@@ -1,6 +1,7 @@
 //! Identifier normalization and comparison (E0D-1, CON-5), shared by the substages that compare
 //! names.
 
+use semantic_compiler_contracts::normalize_unquoted_identifier;
 use semantic_compiler_model::expression::Identifier;
 
 /// The most characters an identifier may have (E0D-1.2).
@@ -27,7 +28,7 @@ impl Name {
     /// The name of a regular identifier spelled `text`, such as a catalog column name compared
     /// with a regular reference (E0D-1.5).
     pub(crate) fn regular(text: &str) -> Self {
-        Self(upper_case(text))
+        Self(normalize_unquoted_identifier(text))
     }
 
     /// The name an identifier of an expression refers to (E0D-1.1).
@@ -66,36 +67,6 @@ fn delimited_content(text: &str) -> Option<String> {
 /// count.
 pub(crate) fn is_too_long(text: &str) -> bool {
     text.chars().nth(MAXIMUM_LENGTH).is_some()
-}
-
-/// `text` with every character replaced by its Unicode simple upper-case mapping, so the length
-/// never changes (CON-5).
-fn upper_case(text: &str) -> String {
-    text.chars().map(simple_upper_case).collect()
-}
-
-/// The simple upper-case mapping of one character.
-///
-/// The standard library gives the full mapping. Where it is one character, it is the simple
-/// mapping. Where it is several, the simple mapping is the character itself, except for the
-/// Greek letters with ypogegrammeni, whose simple mapping is the letter with prosgegrammeni.
-fn simple_upper_case(character: char) -> char {
-    let mut full = character.to_uppercase();
-    match (full.next(), full.next()) {
-        (Some(single), None) => single,
-        _ => with_prosgegrammeni(character).unwrap_or(character),
-    }
-}
-
-/// The simple upper-case mapping of a lower-case Greek letter with ypogegrammeni.
-fn with_prosgegrammeni(character: char) -> Option<char> {
-    let code = u32::from(character);
-    let upper = match code {
-        0x1F80..=0x1F87 | 0x1F90..=0x1F97 | 0x1FA0..=0x1FA7 => code + 8,
-        0x1FB3 | 0x1FC3 | 0x1FF3 => code + 9,
-        _ => return None,
-    };
-    char::from_u32(upper)
 }
 
 #[cfg(test)]
