@@ -1,0 +1,159 @@
+{
+  "contract": "semantic_compiler.catalog_schema",
+  "contract_version": "0.9.0",
+  "document_id": {
+    "origin": "warehouse:gold",
+    "snapshot": "schema-0042"
+  },
+  "engine": {
+    "name": "duckdb",
+    "version": "2.0.0"
+  },
+  "relations": [
+    {
+      "source": "sales.public.fact_invoice",
+      "columns": [
+        {
+          "name": "invoice_id",
+          "logical_type": {
+            "kind": "integer",
+            "bits": 64,
+            "signed": true
+          },
+          "physical_type": "BIGINT",
+          "nullable": false
+        },
+        {
+          "name": "invoice_date",
+          "logical_type": {
+            "kind": "date"
+          },
+          "physical_type": "DATE",
+          "nullable": false
+        },
+        {
+          "name": "customer_id",
+          "logical_type": {
+            "kind": "integer",
+            "bits": 32,
+            "signed": true
+          },
+          "physical_type": "INTEGER",
+          "nullable": true
+        },
+        {
+          "name": "category_id",
+          "logical_type": {
+            "kind": "integer",
+            "bits": 32,
+            "signed": true
+          },
+          "physical_type": "INTEGER",
+          "nullable": false
+        },
+        {
+          "name": "area_id",
+          "logical_type": {
+            "kind": "integer",
+            "bits": 32,
+            "signed": true
+          },
+          "physical_type": "INTEGER",
+          "nullable": false
+        },
+        {
+          "name": "amount",
+          "logical_type": {
+            "kind": "decimal",
+            "precision": 18,
+            "scale": 2
+          },
+          "physical_type": "DECIMAL(18,2)",
+          "nullable": true
+        },
+        {
+          "name": "status",
+          "logical_type": {
+            "kind": "text"
+          },
+          "physical_type": "VARCHAR",
+          "nullable": false
+        }
+      ]
+    },
+    {
+      "source": "sales.public.dim_customer",
+      "columns": [
+        {
+          "name": "customer_id",
+          "logical_type": {
+            "kind": "integer",
+            "bits": 32,
+            "signed": true
+          },
+          "physical_type": "INTEGER",
+          "nullable": false
+        },
+        {
+          "name": "region",
+          "logical_type": {
+            "kind": "text"
+          },
+          "physical_type": "VARCHAR",
+          "nullable": true
+        },
+        {
+          "name": "segment",
+          "logical_type": {
+            "kind": "text"
+          },
+          "physical_type": "VARCHAR",
+          "nullable": false
+        }
+      ]
+    },
+    {
+      "source": "sales.public.agg_invoice_month",
+      "columns": [
+        {
+          "name": "month",
+          "logical_type": {
+            "kind": "date"
+          },
+          "physical_type": "DATE",
+          "nullable": false
+        },
+        {
+          "name": "customer_id",
+          "logical_type": {
+            "kind": "integer",
+            "bits": 32,
+            "signed": true
+          },
+          "physical_type": "INTEGER",
+          "nullable": true
+        },
+        {
+          "name": "amount_sum",
+          "logical_type": {
+            "kind": "decimal",
+            "precision": 38,
+            "scale": 2
+          },
+          "physical_type": "DECIMAL(38,2)",
+          "nullable": true
+        },
+        {
+          "name": "amount_count",
+          "logical_type": {
+            "kind": "integer",
+            "bits": 64,
+            "signed": true
+          },
+          "physical_type": "BIGINT",
+          "nullable": false
+        }
+      ]
+    }
+  ]
+}
