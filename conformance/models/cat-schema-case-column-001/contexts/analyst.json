@@ -1,0 +1,9 @@
+{
+  "contract": "semantic_compiler.security_context",
+  "contract_version": "1.0.0",
+  "subject": "catalog-analyst",
+  "roles": [
+    "analyst"
+  ],
+  "attributes": {}
+}
