@@ -534,9 +534,9 @@ Find a rule ID or a section here, then open only that file at that line.
 | [stages/E0/relationships.md](stages/E0/relationships.md#L21) | 21 | rule | E0E-3.3 |
 | [stages/E0/relationships.md](stages/E0/relationships.md#L22) | 22 | rule | E0E-3.4 |
 | [stages/E0/relationships.md](stages/E0/relationships.md#L23) | 23 | rule | E0E-3.5 |
-| [stages/E0/relationships.md](stages/E0/relationships.md#L24) | 24 | rule | E0E-3.5 |
-| [stages/E0/relationships.md](stages/E0/relationships.md#L25) | 25 | rule | E0E-3.6 |
-| [stages/E0/relationships.md](stages/E0/relationships.md#L26) | 26 | rule | E0E-3.7 |
+| [stages/E0/relationships.md](stages/E0/relationships.md#L24) | 24 | rule | E0E-3.6 |
+| [stages/E0/relationships.md](stages/E0/relationships.md#L25) | 25 | rule | E0E-3.7 |
+| [stages/E0/relationships.md](stages/E0/relationships.md#L26) | 26 | rule | E0E-3.8 |
 | [stages/E0/relationships.md](stages/E0/relationships.md#L28) | 28 | section | E0E-4 Multiple paths |
 | [stages/E0/relationships.md](stages/E0/relationships.md#L30) | 30 | rule | E0E-4.1 |
 | [stages/E0/relationships.md](stages/E0/relationships.md#L31) | 31 | rule | E0E-4.2 |
