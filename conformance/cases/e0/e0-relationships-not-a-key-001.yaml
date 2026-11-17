@@ -1,0 +1,18 @@
+id: e0-relationships-not-a-key-001
+rules: [E0E-3.2, E0E-3.3, W0E-02]
+model: e0-relationships
+security_context: analyst.json
+query:
+  contract: semantic_compiler.query
+  contract_version: "1.0.0"
+  reference_time: "2026-11-15T12:00:00-04:00"
+  time_zone: UTC
+  query:
+    dimensions: [promotions.promotion_name]
+    metrics:
+      - {metric: total_amount, alias: total_amount}
+expect:
+  outcome: plan
+  warnings: [W0E-02]
+  rows: e0-relationships-not-a-key-001.csv
+  row_order: any

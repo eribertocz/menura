@@ -11,9 +11,9 @@ use semantic_compiler_model::expression::Reference;
 use super::diagnostic::ReferenceCode;
 use super::expression_references::{finding, missing_names};
 use super::finding::Finding;
-use super::name::Name;
 use super::output::ElementKind;
 use super::scope::{Scope, field};
+use crate::names::Name;
 
 /// The qualifier of a source column reference.
 const SOURCE_QUALIFIER: &str = "source";

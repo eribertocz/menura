@@ -1,0 +1,17 @@
+id: e0-relationships-unconnected-001
+rules: [E0E-5.1]
+model: e0-relationships
+security_context: analyst.json
+query:
+  contract: semantic_compiler.query
+  contract_version: "1.0.0"
+  reference_time: "2026-11-15T12:00:00-04:00"
+  time_zone: UTC
+  query:
+    dimensions: [exchange_rates.currency]
+    metrics:
+      - {metric: total_rate, alias: total_rate}
+expect:
+  outcome: plan
+  rows: e0-relationships-unconnected-001.csv
+  row_order: any

@@ -21,6 +21,14 @@ mod extensions;
         reason = "called by the E0 stage function, which issue #45 adds; until then only the tests call it"
     )
 )]
+mod names;
+#[cfg_attr(
+    not(test),
+    expect(
+        dead_code,
+        reason = "called by the E0 stage function, which issue #45 adds; until then only the tests call it"
+    )
+)]
 mod nodes;
 #[cfg_attr(
     not(test),
@@ -46,6 +54,14 @@ mod read;
     )
 )]
 mod references;
+#[cfg_attr(
+    not(test),
+    expect(
+        dead_code,
+        reason = "called by the E0 stage function, which issue #45 adds; until then only the tests call it"
+    )
+)]
+mod relationships;
 #[cfg_attr(
     not(test),
     expect(

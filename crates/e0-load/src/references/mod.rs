@@ -17,7 +17,6 @@ mod diagnostic;
 mod expression_references;
 mod finding;
 mod keys;
-mod name;
 mod outline;
 mod output;
 mod query_sources;

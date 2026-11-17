@@ -1,0 +1,251 @@
+version: "0.1.1"
+semantic_model:
+  - name: e0_relationships
+    description: >-
+      Relationship graph with a diamond through customers and stores to regions, two relationships
+      to the calendar, a cycle between stores and employees, a self-relationship, a one-to-one
+      relationship, a relationship whose to_columns are not a key, a dataset without
+      relationships, a relationship to a two-column key listed in another order, and two invalid
+      relationships
+    custom_extensions:
+      - vendor_name: COMMON
+        data: '{"namespace": "semantic_compiler", "version": 1, "security_context": {"roles": ["analyst"], "attributes": []}}'
+    datasets:
+      - name: orders
+        source: shop.main.orders
+        primary_key: [order_id]
+        fields:
+          - name: order_id
+            expression: {dialects: [{dialect: ANSI_SQL, expression: order_id}]}
+          - name: customer_id
+            expression: {dialects: [{dialect: ANSI_SQL, expression: customer_id}]}
+          - name: store_id
+            expression: {dialects: [{dialect: ANSI_SQL, expression: store_id}]}
+          - name: promotion_code
+            expression: {dialects: [{dialect: ANSI_SQL, expression: promotion_code}]}
+          - name: order_date
+            expression: {dialects: [{dialect: ANSI_SQL, expression: order_date}]}
+          - name: ship_date
+            expression: {dialects: [{dialect: ANSI_SQL, expression: ship_date}]}
+          - name: amount
+            expression: {dialects: [{dialect: ANSI_SQL, expression: amount}]}
+        custom_extensions:
+          - vendor_name: COMMON
+            data: '{"namespace": "semantic_compiler", "version": 1, "access": {"mode": "roles", "roles": ["analyst"]}}'
+      - name: customers
+        source: shop.main.customers
+        primary_key: [customer_id]
+        fields:
+          - name: customer_id
+            expression: {dialects: [{dialect: ANSI_SQL, expression: customer_id}]}
+          - name: region_id
+            expression: {dialects: [{dialect: ANSI_SQL, expression: region_id}]}
+          - name: customer_name
+            expression: {dialects: [{dialect: ANSI_SQL, expression: name}]}
+        custom_extensions:
+          - vendor_name: COMMON
+            data: '{"namespace": "semantic_compiler", "version": 1, "access": {"mode": "roles", "roles": ["analyst"]}}'
+      - name: customer_profiles
+        source: shop.main.customer_profiles
+        primary_key: [customer_id]
+        fields:
+          - name: customer_id
+            expression: {dialects: [{dialect: ANSI_SQL, expression: customer_id}]}
+          - name: segment
+            expression: {dialects: [{dialect: ANSI_SQL, expression: segment}]}
+        custom_extensions:
+          - vendor_name: COMMON
+            data: '{"namespace": "semantic_compiler", "version": 1, "access": {"mode": "roles", "roles": ["analyst"]}}'
+      - name: stores
+        source: shop.main.stores
+        primary_key: [store_id]
+        fields:
+          - name: store_id
+            expression: {dialects: [{dialect: ANSI_SQL, expression: store_id}]}
+          - name: region_id
+            expression: {dialects: [{dialect: ANSI_SQL, expression: region_id}]}
+          - name: manager_id
+            expression: {dialects: [{dialect: ANSI_SQL, expression: manager_id}]}
+          - name: store_name
+            expression: {dialects: [{dialect: ANSI_SQL, expression: name}]}
+        custom_extensions:
+          - vendor_name: COMMON
+            data: '{"namespace": "semantic_compiler", "version": 1, "access": {"mode": "roles", "roles": ["analyst"]}}'
+      - name: regions
+        source: shop.main.regions
+        primary_key: [region_id]
+        fields:
+          - name: region_id
+            expression: {dialects: [{dialect: ANSI_SQL, expression: region_id}]}
+          - name: region_name
+            expression: {dialects: [{dialect: ANSI_SQL, expression: name}]}
+        custom_extensions:
+          - vendor_name: COMMON
+            data: '{"namespace": "semantic_compiler", "version": 1, "access": {"mode": "roles", "roles": ["analyst"]}}'
+      - name: calendar
+        source: shop.main.calendar
+        primary_key: [date_key]
+        fields:
+          - name: date_key
+            expression: {dialects: [{dialect: ANSI_SQL, expression: date_key}]}
+        custom_extensions:
+          - vendor_name: COMMON
+            data: '{"namespace": "semantic_compiler", "version": 1, "access": {"mode": "roles", "roles": ["analyst"]}}'
+      - name: promotions
+        source: shop.main.promotions
+        primary_key: [promotion_id]
+        fields:
+          - name: promotion_id
+            expression: {dialects: [{dialect: ANSI_SQL, expression: promotion_id}]}
+          - name: promotion_code
+            expression: {dialects: [{dialect: ANSI_SQL, expression: promotion_code}]}
+          - name: promotion_name
+            expression: {dialects: [{dialect: ANSI_SQL, expression: name}]}
+        custom_extensions:
+          - vendor_name: COMMON
+            data: '{"namespace": "semantic_compiler", "version": 1, "access": {"mode": "roles", "roles": ["analyst"]}}'
+      - name: employees
+        source: shop.main.employees
+        primary_key: [employee_id]
+        fields:
+          - name: employee_id
+            expression: {dialects: [{dialect: ANSI_SQL, expression: employee_id}]}
+          - name: manager_id
+            expression: {dialects: [{dialect: ANSI_SQL, expression: manager_id}]}
+          - name: store_id
+            expression: {dialects: [{dialect: ANSI_SQL, expression: store_id}]}
+          - name: employee_name
+            expression: {dialects: [{dialect: ANSI_SQL, expression: name}]}
+        custom_extensions:
+          - vendor_name: COMMON
+            data: '{"namespace": "semantic_compiler", "version": 1, "access": {"mode": "roles", "roles": ["analyst"]}}'
+      - name: exchange_rates
+        source: shop.main.exchange_rates
+        primary_key: [currency]
+        fields:
+          - name: currency
+            expression: {dialects: [{dialect: ANSI_SQL, expression: currency}]}
+          - name: rate
+            expression: {dialects: [{dialect: ANSI_SQL, expression: rate}]}
+        custom_extensions:
+          - vendor_name: COMMON
+            data: '{"namespace": "semantic_compiler", "version": 1, "access": {"mode": "roles", "roles": ["analyst"]}}'
+      - name: orders_by_day
+        source: shop.main.orders_by_day
+        primary_key: [order_date]
+        fields:
+          - name: order_date
+            expression: {dialects: [{dialect: ANSI_SQL, expression: order_date}]}
+          - name: amount
+            expression: {dialects: [{dialect: ANSI_SQL, expression: amount}]}
+        custom_extensions:
+          - vendor_name: COMMON
+            data: '{"namespace": "semantic_compiler", "version": 1, "access": {"mode": "internal"}, "aggregate": {"of": "orders", "dimensions": [{"field": "order_date", "base": "order_date", "grain": "day"}], "measures": [{"field": "amount", "base_aggregate": "SUM(orders.amount)"}], "coverage_field": "order_date"}}'
+      - name: deliveries
+        source: shop.main.deliveries
+        primary_key: [delivery_id]
+        fields:
+          - name: delivery_id
+            expression: {dialects: [{dialect: ANSI_SQL, expression: delivery_id}]}
+          - name: store_id
+            expression: {dialects: [{dialect: ANSI_SQL, expression: store_id}]}
+          - name: date_key
+            expression: {dialects: [{dialect: ANSI_SQL, expression: date_key}]}
+          - name: packages
+            expression: {dialects: [{dialect: ANSI_SQL, expression: packages}]}
+        custom_extensions:
+          - vendor_name: COMMON
+            data: '{"namespace": "semantic_compiler", "version": 1, "access": {"mode": "roles", "roles": ["analyst"]}}'
+      - name: store_days
+        source: shop.main.store_days
+        primary_key: [store_id, date_key]
+        fields:
+          - name: store_id
+            expression: {dialects: [{dialect: ANSI_SQL, expression: store_id}]}
+          - name: date_key
+            expression: {dialects: [{dialect: ANSI_SQL, expression: date_key}]}
+          - name: opening_hours
+            expression: {dialects: [{dialect: ANSI_SQL, expression: opening_hours}]}
+        custom_extensions:
+          - vendor_name: COMMON
+            data: '{"namespace": "semantic_compiler", "version": 1, "access": {"mode": "roles", "roles": ["analyst"]}}'
+    relationships:
+      - name: orders_customers
+        from: orders
+        to: customers
+        from_columns: [customer_id]
+        to_columns: [customer_id]
+      - name: orders_stores
+        from: orders
+        to: stores
+        from_columns: [store_id]
+        to_columns: [store_id]
+      - name: customers_regions
+        from: customers
+        to: regions
+        from_columns: [region_id]
+        to_columns: [region_id]
+      - name: stores_regions
+        from: stores
+        to: regions
+        from_columns: [region_id]
+        to_columns: [region_id]
+      - name: orders_order_date
+        from: orders
+        to: calendar
+        from_columns: [order_date]
+        to_columns: [date_key]
+      - name: orders_ship_date
+        from: orders
+        to: calendar
+        from_columns: [ship_date]
+        to_columns: [date_key]
+      - name: orders_promotions
+        from: orders
+        to: promotions
+        from_columns: [promotion_code]
+        to_columns: [promotion_code]
+      - name: customers_profiles
+        from: customers
+        to: customer_profiles
+        from_columns: [customer_id]
+        to_columns: [customer_id]
+      - name: employees_stores
+        from: employees
+        to: stores
+        from_columns: [store_id]
+        to_columns: [store_id]
+      - name: stores_managers
+        from: stores
+        to: employees
+        from_columns: [manager_id]
+        to_columns: [employee_id]
+      - name: employees_managers
+        from: employees
+        to: employees
+        from_columns: [manager_id]
+        to_columns: [employee_id]
+      - name: orders_customers_wide
+        from: orders
+        to: customers
+        from_columns: [customer_id, store_id]
+        to_columns: [customer_id]
+      - name: orders_by_day_calendar
+        from: orders_by_day
+        to: calendar
+        from_columns: [order_date]
+        to_columns: [date_key]
+      - name: deliveries_store_days
+        from: deliveries
+        to: store_days
+        from_columns: [date_key, store_id]
+        to_columns: [date_key, store_id]
+    metrics:
+      - name: total_amount
+        expression: {dialects: [{dialect: ANSI_SQL, expression: SUM(orders.amount)}]}
+      - name: employee_count
+        expression: {dialects: [{dialect: ANSI_SQL, expression: COUNT(employees.employee_id)}]}
+      - name: total_rate
+        expression: {dialects: [{dialect: ANSI_SQL, expression: SUM(exchange_rates.rate)}]}
+      - name: total_packages
+        expression: {dialects: [{dialect: ANSI_SQL, expression: SUM(deliveries.packages)}]}

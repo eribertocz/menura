@@ -1,7 +1,7 @@
 //! The names and references declared by the selected semantic model, read from the data tree
 //! once so that every check works on the same located values.
 
-use super::name::{Name, is_delimited};
+use crate::names::{Name, is_delimited};
 use crate::nodes::{items, member, text};
 use crate::pointer::JsonPointer;
 use crate::read::{Location, Node};

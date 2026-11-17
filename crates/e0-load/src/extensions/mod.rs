@@ -17,7 +17,8 @@ use diagnostic::{ExtensionCode, ExtensionDiagnostic};
 use entry::{EntryKind, classify};
 use envelope::extension_keys;
 use objects::{EntryNode, extension_entries};
-use output::{Extensions, ExtensionsFailure, OwnEntry};
+pub(crate) use output::{Extensions, ObjectKind};
+use output::{ExtensionsFailure, OwnEntry};
 
 use crate::pointer::{JsonPointer, position};
 use crate::read::Node;

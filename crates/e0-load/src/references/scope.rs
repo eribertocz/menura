@@ -7,9 +7,9 @@ use semantic_compiler_contracts::types::catalog::CatalogSchemaDocument;
 use semantic_compiler_model::expression::Expression;
 
 use super::columns::Columns;
-use super::name::Name;
 use super::outline::{DatasetOutline, ElementOutline, ModelOutline};
 use crate::expressions::{ExpressionPlace, parse_element_expression};
+use crate::names::Name;
 use crate::pointer::JsonPointer;
 use crate::structure::{CompiledVariant, ElementExpression, ElementKind};
 

@@ -5,7 +5,7 @@ use std::collections::{HashMap, HashSet};
 use semantic_compiler_contracts::types::catalog::RelationSchema;
 use semantic_compiler_model::expression::Identifier;
 
-use super::name::Name;
+use crate::names::Name;
 
 /// The column names of a catalog relation, each the column's exact spelling.
 #[derive(Debug, Clone, PartialEq, Eq)]

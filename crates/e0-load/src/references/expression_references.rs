@@ -13,11 +13,11 @@ use semantic_compiler_model::expression::Reference;
 
 use super::diagnostic::ReferenceCode;
 use super::finding::Finding;
-use super::name::Name;
 use super::outline::ElementOutline;
 use super::output::ElementKind;
 use super::scope::{Scope, field};
 use super::walk::references;
+use crate::names::Name;
 
 /// Every `E0D-03` finding of the model: one per field that reads a missing column.
 ///
