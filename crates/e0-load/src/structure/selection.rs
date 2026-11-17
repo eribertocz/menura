@@ -10,8 +10,9 @@ use crate::read::{Node, Value};
 /// Returns `Ok(None)` when `semantic_model` is not a list: the schema diagnostics already reject
 /// the document. A document without any semantic model is rejected, whether or not
 /// `model_name` is given (E0B-3.2). With several semantic models, `model_name` must name one;
-/// with one, a `model_name` that is given must name it. When two semantic models have the
-/// name, the first is selected: name uniqueness is checked in E0.d.
+/// with one, a `model_name` that is given must name it. A `model_name` that names more than one
+/// semantic model is rejected too (`E0B-07`). `model_name` is compared with each `name` as exact
+/// text.
 pub(crate) fn select_model(
     document: &Node,
     model_name: Option<&str>,
@@ -35,17 +36,32 @@ pub(crate) fn select_model(
         ));
     }
     match model_name {
-        Some(name) => models
-            .iter()
-            .position(|model| member(model, "name").is_some_and(|node| is_text(node, name)))
-            .map(Some)
-            .ok_or_else(|| rejection(format!("`model_name` `{name}` names no semantic model"))),
+        Some(name) => match named_models(models, name).as_slice() {
+            [index] => Ok(Some(*index)),
+            [] => Err(rejection(format!(
+                "`model_name` `{name}` names no semantic model"
+            ))),
+            several => Err(rejection(format!(
+                "`model_name` `{name}` names {} semantic models",
+                several.len()
+            ))),
+        },
         None if models.len() == 1 => Ok(Some(0)),
         None => Err(rejection(format!(
             "the document has {} semantic models; the load option `model_name` must name one",
             models.len()
         ))),
     }
+}
+
+/// The indexes of the semantic models whose `name` is the text `name`.
+fn named_models(models: &[Node], name: &str) -> Vec<usize> {
+    models
+        .iter()
+        .enumerate()
+        .filter(|(_, model)| member(model, "name").is_some_and(|node| is_text(node, name)))
+        .map(|(index, _)| index)
+        .collect()
 }
 
 /// The value of the member `name` of a mapping node.

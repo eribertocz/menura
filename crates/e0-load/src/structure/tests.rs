@@ -176,6 +176,33 @@ fn e0b_3_2_e0b_07_dev_7_several_models_need_model_name() {
 }
 
 #[test]
+fn e0b_3_2_e0b_07_model_name_naming_two_semantic_models_is_rejected() {
+    let document = read(conformance_model!("e0-structure-repeated-model-name-001"));
+    let rejected = validate_structure(&document, Some("e0_structure_repeated_model_name_001"))
+        .expect_err("model_name names two semantic models");
+    assert_eq!(rejected.len(), 1);
+    assert_eq!(rejected[0].code, StructureCode::ModelSelection);
+    assert_eq!(rejected[0].pointer.as_str(), "/semantic_model");
+
+    let without = validate_structure(&document, None).expect_err("model_name is required");
+    assert_eq!(without[0].code, StructureCode::ModelSelection);
+}
+
+#[test]
+fn e0b_07_a_repeated_name_is_rejected_only_when_model_name_selects_it() {
+    let document = "version: \"0.1.1\"\nsemantic_model:\n  - {name: shop, datasets: []}\n  - {name: shop, datasets: []}\n  - {name: other, datasets: []}\n";
+    let found = errors(document.as_bytes(), Some("shop"));
+    assert_eq!(found[0].code, StructureCode::ModelSelection);
+    assert_eq!(found[0].pointer.as_str(), "/semantic_model");
+    let other = errors(document.as_bytes(), Some("other"));
+    assert!(
+        other
+            .iter()
+            .all(|diagnostic| diagnostic.code != StructureCode::ModelSelection)
+    );
+}
+
+#[test]
 fn e0b_07_model_name_must_name_the_only_model() {
     let document = read(minimal("").as_bytes());
     assert!(validate_structure(&document, Some("shop")).is_ok());
