@@ -1,0 +1,127 @@
+{
+  "contract": "semantic_compiler.catalog_state",
+  "contract_version": "1.0.0",
+  "document_id": {
+    "origin": "warehouse:gold",
+    "snapshot": "state-9120"
+  },
+  "schema_document_id": {
+    "origin": "warehouse:gold",
+    "snapshot": "schema-0042"
+  },
+  "relations": [
+    {
+      "source": "sales.public.fact_invoice",
+      "row_count_estimate": 60000000,
+      "partitions": {
+        "column": "invoice_date",
+        "grain": "month",
+        "versions": [
+          {
+            "period": "2026-09",
+            "version": {
+              "origin": "warehouse:gold",
+              "snapshot": "8801"
+            }
+          },
+          {
+            "period": "2026-10",
+            "version": {
+              "origin": "warehouse:gold",
+              "snapshot": "8812"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "source": "sales.public.dim_customer",
+      "row_count_estimate": 1000000,
+      "version": {
+        "origin": "warehouse:gold",
+        "snapshot": "c-0099"
+      }
+    },
+    {
+      "source": "sales.public.agg_invoice_month",
+      "row_count_estimate": 4800,
+      "aggregate_build": {
+        "definition_hash": "50d858e0985ecc7f60418aaf0cc5ab587f42c2570a884095a9e8ccacd0f6545c",
+        "coverage": {
+          "from": "2026-09",
+          "to": "2026-10"
+        },
+        "built_from": [
+          {
+            "period": "2026-09",
+            "version": {
+              "origin": "warehouse:gold",
+              "snapshot": "8801"
+            }
+          },
+          {
+            "period": "2026-10",
+            "version": {
+              "origin": "warehouse:gold",
+              "snapshot": "8812"
+            }
+          }
+        ],
+        "integrity_check": {
+          "status": "passed",
+          "definition_hash": "50d858e0985ecc7f60418aaf0cc5ab587f42c2570a884095a9e8ccacd0f6545c",
+          "verified": [
+            {
+              "period": "2026-09",
+              "version": {
+                "origin": "warehouse:gold",
+                "snapshot": "8801"
+              }
+            },
+            {
+              "period": "2026-10",
+              "version": {
+                "origin": "warehouse:gold",
+                "snapshot": "8812"
+              }
+            }
+          ]
+        },
+        "time_zone": "America/La_Paz"
+      }
+    }
+  ],
+  "checks": [
+    {
+      "target": "invoices_customer",
+      "check": "orphan_keys",
+      "definition_hash": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+      "status": "passed",
+      "verified": [
+        {
+          "source": "sales.public.fact_invoice",
+          "period": "2026-09",
+          "version": {
+            "origin": "warehouse:gold",
+            "snapshot": "8801"
+          }
+        },
+        {
+          "source": "sales.public.fact_invoice",
+          "period": "2026-10",
+          "version": {
+            "origin": "warehouse:gold",
+            "snapshot": "8812"
+          }
+        },
+        {
+          "source": "sales.public.dim_product",
+          "version": {
+            "origin": "warehouse:gold",
+            "snapshot": "c-0099"
+          }
+        }
+      ]
+    }
+  ]
+}

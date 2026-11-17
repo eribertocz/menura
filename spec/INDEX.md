@@ -42,19 +42,19 @@ Find a rule ID or a section here, then open only that file at that line.
 | [04-ossie-conformance.md](04-ossie-conformance.md#L43) | 43 | rule | OSS-4.5 |
 | [04-ossie-conformance.md](04-ossie-conformance.md#L44) | 44 | rule | OSS-4.6 |
 | [04-ossie-conformance.md](04-ossie-conformance.md#L48) | 48 | section | 4.5 Development-line model reader |
-| [04-ossie-conformance.md](04-ossie-conformance.md#L64) | 64 | rule | OSS-5.1 |
-| [04-ossie-conformance.md](04-ossie-conformance.md#L65) | 65 | rule | OSS-5.2 |
-| [04-ossie-conformance.md](04-ossie-conformance.md#L67) | 67 | section | 4.6 Declared deviations |
-| [04-ossie-conformance.md](04-ossie-conformance.md#L73) | 73 | rule | DEV-1 |
-| [04-ossie-conformance.md](04-ossie-conformance.md#L74) | 74 | rule | DEV-2 |
-| [04-ossie-conformance.md](04-ossie-conformance.md#L75) | 75 | rule | DEV-3 |
-| [04-ossie-conformance.md](04-ossie-conformance.md#L76) | 76 | rule | DEV-4 |
-| [04-ossie-conformance.md](04-ossie-conformance.md#L77) | 77 | rule | DEV-5 |
-| [04-ossie-conformance.md](04-ossie-conformance.md#L78) | 78 | rule | DEV-6 |
-| [04-ossie-conformance.md](04-ossie-conformance.md#L79) | 79 | rule | DEV-7 |
-| [04-ossie-conformance.md](04-ossie-conformance.md#L80) | 80 | rule | DEV-8 |
-| [04-ossie-conformance.md](04-ossie-conformance.md#L81) | 81 | rule | DEV-9 |
-| [04-ossie-conformance.md](04-ossie-conformance.md#L82) | 82 | rule | DEV-10 |
+| [04-ossie-conformance.md](04-ossie-conformance.md#L65) | 65 | rule | OSS-5.1 |
+| [04-ossie-conformance.md](04-ossie-conformance.md#L66) | 66 | rule | OSS-5.2 |
+| [04-ossie-conformance.md](04-ossie-conformance.md#L68) | 68 | section | 4.6 Declared deviations |
+| [04-ossie-conformance.md](04-ossie-conformance.md#L74) | 74 | rule | DEV-1 |
+| [04-ossie-conformance.md](04-ossie-conformance.md#L75) | 75 | rule | DEV-2 |
+| [04-ossie-conformance.md](04-ossie-conformance.md#L76) | 76 | rule | DEV-3 |
+| [04-ossie-conformance.md](04-ossie-conformance.md#L77) | 77 | rule | DEV-4 |
+| [04-ossie-conformance.md](04-ossie-conformance.md#L78) | 78 | rule | DEV-5 |
+| [04-ossie-conformance.md](04-ossie-conformance.md#L79) | 79 | rule | DEV-6 |
+| [04-ossie-conformance.md](04-ossie-conformance.md#L80) | 80 | rule | DEV-7 |
+| [04-ossie-conformance.md](04-ossie-conformance.md#L81) | 81 | rule | DEV-8 |
+| [04-ossie-conformance.md](04-ossie-conformance.md#L82) | 82 | rule | DEV-9 |
+| [04-ossie-conformance.md](04-ossie-conformance.md#L83) | 83 | rule | DEV-10 |
 | [05-engineering-standards.md](05-engineering-standards.md#L1) | 1 | section | 5. Engineering standards |
 | [05-engineering-standards.md](05-engineering-standards.md#L6) | 6 | section | 5.1 Single responsibility |
 | [05-engineering-standards.md](05-engineering-standards.md#L10) | 10 | rule | S1 |
@@ -118,27 +118,28 @@ Find a rule ID or a section here, then open only that file at that line.
 | [08-conformance-suite.md](08-conformance-suite.md#L1) | 1 | section | 8. Conformance suite |
 | [08-conformance-suite.md](08-conformance-suite.md#L5) | 5 | section | CS-1 Layout |
 | [08-conformance-suite.md](08-conformance-suite.md#L21) | 21 | section | CS-2 Case format |
-| [08-conformance-suite.md](08-conformance-suite.md#L41) | 41 | rule | CS-2.1 |
-| [08-conformance-suite.md](08-conformance-suite.md#L42) | 42 | rule | CS-2.2 |
-| [08-conformance-suite.md](08-conformance-suite.md#L43) | 43 | rule | CS-2.3 |
-| [08-conformance-suite.md](08-conformance-suite.md#L44) | 44 | rule | CS-2.4 |
-| [08-conformance-suite.md](08-conformance-suite.md#L45) | 45 | rule | CS-2.5 |
-| [08-conformance-suite.md](08-conformance-suite.md#L46) | 46 | rule | CS-2.6 |
-| [08-conformance-suite.md](08-conformance-suite.md#L48) | 48 | section | CS-3 Apache Ossie suites |
-| [08-conformance-suite.md](08-conformance-suite.md#L50) | 50 | rule | CS-3.1 |
-| [08-conformance-suite.md](08-conformance-suite.md#L51) | 51 | rule | CS-3.2 |
-| [08-conformance-suite.md](08-conformance-suite.md#L53) | 53 | section | CS-4 Running |
-| [08-conformance-suite.md](08-conformance-suite.md#L55) | 55 | rule | CS-4.1 |
-| [08-conformance-suite.md](08-conformance-suite.md#L56) | 56 | rule | CS-4.2 |
-| [08-conformance-suite.md](08-conformance-suite.md#L57) | 57 | rule | CS-4.3 |
-| [08-conformance-suite.md](08-conformance-suite.md#L58) | 58 | rule | CS-4.4 |
-| [08-conformance-suite.md](08-conformance-suite.md#L59) | 59 | rule | CS-4.5 |
-| [08-conformance-suite.md](08-conformance-suite.md#L60) | 60 | rule | CS-4.6 |
-| [08-conformance-suite.md](08-conformance-suite.md#L62) | 62 | section | CS-5 Producer suite |
-| [08-conformance-suite.md](08-conformance-suite.md#L67) | 67 | rule | CS-5.1 |
-| [08-conformance-suite.md](08-conformance-suite.md#L68) | 68 | rule | CS-5.2 |
-| [08-conformance-suite.md](08-conformance-suite.md#L69) | 69 | rule | CS-5.3 |
-| [08-conformance-suite.md](08-conformance-suite.md#L70) | 70 | rule | CS-5.4 |
+| [08-conformance-suite.md](08-conformance-suite.md#L42) | 42 | rule | CS-2.1 |
+| [08-conformance-suite.md](08-conformance-suite.md#L43) | 43 | rule | CS-2.2 |
+| [08-conformance-suite.md](08-conformance-suite.md#L44) | 44 | rule | CS-2.3 |
+| [08-conformance-suite.md](08-conformance-suite.md#L45) | 45 | rule | CS-2.4 |
+| [08-conformance-suite.md](08-conformance-suite.md#L46) | 46 | rule | CS-2.5 |
+| [08-conformance-suite.md](08-conformance-suite.md#L47) | 47 | rule | CS-2.6 |
+| [08-conformance-suite.md](08-conformance-suite.md#L48) | 48 | rule | CS-2.7 |
+| [08-conformance-suite.md](08-conformance-suite.md#L50) | 50 | section | CS-3 Apache Ossie suites |
+| [08-conformance-suite.md](08-conformance-suite.md#L52) | 52 | rule | CS-3.1 |
+| [08-conformance-suite.md](08-conformance-suite.md#L53) | 53 | rule | CS-3.2 |
+| [08-conformance-suite.md](08-conformance-suite.md#L55) | 55 | section | CS-4 Running |
+| [08-conformance-suite.md](08-conformance-suite.md#L57) | 57 | rule | CS-4.1 |
+| [08-conformance-suite.md](08-conformance-suite.md#L58) | 58 | rule | CS-4.2 |
+| [08-conformance-suite.md](08-conformance-suite.md#L59) | 59 | rule | CS-4.3 |
+| [08-conformance-suite.md](08-conformance-suite.md#L60) | 60 | rule | CS-4.4 |
+| [08-conformance-suite.md](08-conformance-suite.md#L61) | 61 | rule | CS-4.5 |
+| [08-conformance-suite.md](08-conformance-suite.md#L62) | 62 | rule | CS-4.6 |
+| [08-conformance-suite.md](08-conformance-suite.md#L64) | 64 | section | CS-5 Producer suite |
+| [08-conformance-suite.md](08-conformance-suite.md#L69) | 69 | rule | CS-5.1 |
+| [08-conformance-suite.md](08-conformance-suite.md#L70) | 70 | rule | CS-5.2 |
+| [08-conformance-suite.md](08-conformance-suite.md#L71) | 71 | rule | CS-5.3 |
+| [08-conformance-suite.md](08-conformance-suite.md#L72) | 72 | rule | CS-5.4 |
 | [09-continuous-integration.md](09-continuous-integration.md#L1) | 1 | section | 9. Continuous integration |
 | [09-continuous-integration.md](09-continuous-integration.md#L6) | 6 | section | CI-1 On every pull request and every push to `main` |
 | [09-continuous-integration.md](09-continuous-integration.md#L30) | 30 | section | CI-2 Scheduled |
@@ -443,15 +444,16 @@ Find a rule ID or a section here, then open only that file at that line.
 | [stages/E0/extensions.md](stages/E0/extensions.md#L3) | 3 | section | E0C-1 Which entries are ours |
 | [stages/E0/extensions.md](stages/E0/extensions.md#L11) | 11 | rule | E0C-1.1 |
 | [stages/E0/extensions.md](stages/E0/extensions.md#L12) | 12 | rule | E0C-1.2 |
-| [stages/E0/extensions.md](stages/E0/extensions.md#L14) | 14 | section | E0C-2 Rules for our entries |
-| [stages/E0/extensions.md](stages/E0/extensions.md#L18) | 18 | rule | E0C-2.1 |
-| [stages/E0/extensions.md](stages/E0/extensions.md#L19) | 19 | rule | E0C-2.2 |
-| [stages/E0/extensions.md](stages/E0/extensions.md#L20) | 20 | rule | E0C-2.3 |
-| [stages/E0/extensions.md](stages/E0/extensions.md#L21) | 21 | rule | E0C-2.4 |
-| [stages/E0/extensions.md](stages/E0/extensions.md#L22) | 22 | rule | E0C-2.5 |
-| [stages/E0/extensions.md](stages/E0/extensions.md#L23) | 23 | rule | E0C-2.6 |
-| [stages/E0/extensions.md](stages/E0/extensions.md#L24) | 24 | rule | E0C-2.7 |
-| [stages/E0/extensions.md](stages/E0/extensions.md#L26) | 26 | section | E0C-3 Diagnostics |
+| [stages/E0/extensions.md](stages/E0/extensions.md#L13) | 13 | rule | E0C-1.3 |
+| [stages/E0/extensions.md](stages/E0/extensions.md#L15) | 15 | section | E0C-2 Rules for our entries |
+| [stages/E0/extensions.md](stages/E0/extensions.md#L19) | 19 | rule | E0C-2.1 |
+| [stages/E0/extensions.md](stages/E0/extensions.md#L20) | 20 | rule | E0C-2.2 |
+| [stages/E0/extensions.md](stages/E0/extensions.md#L21) | 21 | rule | E0C-2.3 |
+| [stages/E0/extensions.md](stages/E0/extensions.md#L22) | 22 | rule | E0C-2.4 |
+| [stages/E0/extensions.md](stages/E0/extensions.md#L23) | 23 | rule | E0C-2.5 |
+| [stages/E0/extensions.md](stages/E0/extensions.md#L24) | 24 | rule | E0C-2.6 |
+| [stages/E0/extensions.md](stages/E0/extensions.md#L25) | 25 | rule | E0C-2.7 |
+| [stages/E0/extensions.md](stages/E0/extensions.md#L27) | 27 | section | E0C-3 Diagnostics |
 | [stages/E0/internal-model.md](stages/E0/internal-model.md#L1) | 1 | section | E0.h Build the internal model |
 | [stages/E0/internal-model.md](stages/E0/internal-model.md#L3) | 3 | section | E0H-1 Properties |
 | [stages/E0/internal-model.md](stages/E0/internal-model.md#L7) | 7 | rule | E0H-1.1 |

@@ -55,6 +55,7 @@ the same internal model:
 | Flat root: `version`, `name`, `datasets`, `relationships`, `metrics` | One semantic model |
 | `expression: {sql: …}` | The expression, interpreted as `OSSIE_SQL_2026` |
 | `expression: {dialects: […]}` | As in 0.1.1 |
+| `expression` with both `sql` and `dialects` | `sql` is compiled, as `OSSIE_SQL_2026`; the `dialects` entries are kept and not compiled, with `W0B-01` for each entry in a dialect other than `ANSI_SQL`, and no `W0B-02` |
 | `datatype` on fields and metrics | Checked against the catalog type; a mismatch is `E0F-03` |
 | Dataset-scoped `metrics` | Dataset metrics: one component each, referenced as `dataset.metric`. In their expressions a bare name is a field of that dataset, `source.column` is a source column, and `COUNT(*)` counts the dataset's rows |
 | `version: 0.3.0.dev0` (or the tracked commit's version) | Accepted instead of E0B-3.1 |
@@ -62,7 +63,7 @@ the same internal model:
 | `nonportable_extensions` with object `data` | Extensions; ours use the same keys as in MDL-2 |
 
 - **OSS-5.1** The development-line JSON Schema at the tracked commit is the structure of reference for this format.
-- **OSS-5.2** `datatype` mapping: `String` → `text`; `Integer` → `integer` (any width); `Decimal` → `decimal` (any precision and scale); `Float` → `float`; `Boolean` → `boolean`; `Date` → `date`; `DateTime` → `timestamp` without time zone; `DateTimeTz` → `timestamp` with time zone; `Time` → `time`. Any other value makes the element unusable (`W0B-03`).
+- **OSS-5.2** `datatype` mapping: `String` → `text`; `Integer` → `integer` (any width); `Decimal` → `decimal` (any precision and scale); `Float` → `float`; `Boolean` → `boolean`; `Date` → `date`; `DateTime` → `timestamp` without time zone; `DateTimeTz` → `timestamp` with time zone; `Time` → `time`. The schema decides first (OSS-5.1): a value outside its `datatype` enumeration is `E0B-05` and rejects the model. A value the schema accepts but this table does not map (today `Opaque`) makes the element unusable (`W0B-03`).
 
 ## 4.6 Declared deviations
 
