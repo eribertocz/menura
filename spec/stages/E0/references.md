@@ -7,7 +7,7 @@
 | E0D-1.1 | An unquoted identifier is case-insensitive and normalized to upper case. A double-quoted identifier is compared exactly. |
 | E0D-1.2 | An identifier has at most 128 characters. |
 | E0D-1.3 | Two names in the same scope that are equal after normalization are the same name. |
-| E0D-1.4 | A declared name (a YAML string naming a dataset, field, metric, relationship or semantic model, or a key or relationship column) is a delimited identifier when its text starts and ends with `"`, with `""` standing for `"`; it is then compared exactly, without the quotes. Any other declared name is a regular identifier. |
+| E0D-1.4 | A declared name (a YAML string naming a dataset, field, metric, relationship or semantic model, or a key or relationship column) is a delimited identifier when its text starts and ends with `"`, with `""` standing for `"`; it is then compared exactly, without the quotes. Any other declared name is a regular identifier. A delimited name has at least one character between its quotes, and inside them `"` appears only doubled; a text that starts with `"` and breaks either rule (`"a"b"`, `"`, `""`) is malformed: `E0D-01`, because reading it would need a second interpretation (P1). |
 | E0D-1.5 | A catalog column name is the column's exact spelling. A regular reference matches the column whose name, normalized as E0D-1.1, equals the reference's normalized name; a delimited reference matches the column whose name is exactly its text (CAT-8.2 makes the first unambiguous). |
 
 These rules are those of the Apache Ossie development line; Apache Ossie 0.1.1 does not define
@@ -47,7 +47,7 @@ A metric and a dataset may share a name: metric references and field references 
 
 | Code | Condition |
 |---|---|
-| `E0D-01` | Duplicate name, or name longer than 128 characters |
+| `E0D-01` | Duplicate name, name longer than 128 characters, or malformed delimited name (E0D-1.4) |
 | `E0D-02` | Dataset `source` not in the catalog schema |
 | `E0D-03` | Field expression reads a column not in its catalog relation |
 | `E0D-04` | Metric refers to a missing dataset or field |
