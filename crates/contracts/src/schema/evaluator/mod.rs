@@ -9,9 +9,24 @@ use super::instance::child_pointer;
 use super::{SchemaViolation, SchemaViolationKind};
 use local::{collect_bounds, collect_text, collect_type, collect_unique, collect_value_set};
 
-/// Keywords that carry no assertion and are ignored during evaluation.
-pub(crate) const ANNOTATION_KEYWORDS: [&str; 6] =
-    ["$schema", "$id", "$defs", "title", "description", "default"];
+/// Keywords that carry no assertion and are ignored during evaluation: the identifiers and
+/// definitions, and the annotation keywords of JSON Schema 2020-12.
+pub(crate) const ANNOTATION_KEYWORDS: [&str; 11] = [
+    "$schema",
+    "$id",
+    "$defs",
+    "$comment",
+    "title",
+    "description",
+    "default",
+    "deprecated",
+    "readOnly",
+    "writeOnly",
+    "examples",
+];
+
+/// The only `$ref` form resolved: a JSON Pointer (RFC 6901) into `$defs` of the root schema.
+const DEFINITIONS_REFERENCE_PREFIX: &str = "#/$defs/";
 
 /// Assertion and applicator keywords this evaluator implements.
 pub(crate) const ASSERTION_KEYWORDS: [&str; 24] = [
@@ -126,11 +141,7 @@ impl<'schema> Evaluator<'schema> {
         let Some(reference) = keywords.get("$ref") else {
             return;
         };
-        let target = reference
-            .as_str()
-            .and_then(|text| text.strip_prefix("#/$defs/"))
-            .and_then(|name| self.root.get("$defs")?.get(name));
-        match target {
+        match reference.as_str().and_then(|text| self.resolve(text)) {
             Some(target) => self.collect(target, instance, pointer, found),
             None => found.push(violation(
                 pointer,
@@ -138,6 +149,16 @@ impl<'schema> Evaluator<'schema> {
                 "the schema has an unresolvable `$ref`",
             )),
         }
+    }
+
+    /// The subschema a `$ref` names: a JSON Pointer into `$defs` of the root schema, such as
+    /// `#/$defs/Model` or `#/$defs/Model/properties/name`. Any other form, and a fragment with
+    /// percent-encoding, is not resolved.
+    fn resolve(&self, reference: &str) -> Option<&'schema Value> {
+        if !reference.starts_with(DEFINITIONS_REFERENCE_PREFIX) || reference.contains('%') {
+            return None;
+        }
+        self.root.pointer(reference.strip_prefix('#')?)
     }
 
     fn collect_array(

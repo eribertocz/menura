@@ -11,7 +11,6 @@
 
 mod datatype;
 mod diagnostic;
-mod evaluable_schema;
 mod json;
 mod nonportable;
 mod output;

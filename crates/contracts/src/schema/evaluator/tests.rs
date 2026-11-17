@@ -163,3 +163,99 @@ fn every_schema_keyword_is_supported() {
         }
     }
 }
+
+/// OSS-5.1 needs the development-line schema evaluated unchanged: it refers to JSON Pointers
+/// inside definitions (`#/$defs/SemanticModel/properties/name`).
+#[test]
+fn con_1_oss_5_1_a_reference_to_a_pointer_inside_a_definition_is_resolved() {
+    let schema = json!({
+        "$defs": {"Model": {"properties": {"name": {"type": "string", "minLength": 2}}}},
+        "properties": {"name": {"$ref": "#/$defs/Model/properties/name"}}
+    });
+    assert_eq!(pointer_of_violation(&schema, &json!({"name": "ok"})), None);
+    assert_eq!(
+        pointer_of_violation(&schema, &json!({"name": "x"})),
+        Some("/name".to_owned())
+    );
+    assert_eq!(
+        pointer_of_violation(&schema, &json!({"name": 1})),
+        Some("/name".to_owned())
+    );
+}
+
+#[test]
+fn con_1_reference_tokens_are_unescaped_as_json_pointers() {
+    let schema = json!({
+        "$defs": {"a/b": {"properties": {"x": {"type": "integer"}}}, "c~d": {"type": "integer"}},
+        "properties": {
+            "slash": {"$ref": "#/$defs/a~1b/properties/x"},
+            "tilde": {"$ref": "#/$defs/c~0d"}
+        }
+    });
+    assert_eq!(
+        pointer_of_violation(&schema, &json!({"slash": 1, "tilde": 2})),
+        None
+    );
+    assert_eq!(
+        pointer_of_violation(&schema, &json!({"slash": "x"})),
+        Some("/slash".to_owned())
+    );
+    assert_eq!(
+        pointer_of_violation(&schema, &json!({"tilde": "x"})),
+        Some("/tilde".to_owned())
+    );
+}
+
+#[test]
+fn con_1_references_outside_definitions_or_unresolvable_fail_closed() {
+    for reference in [
+        "#/properties/name",
+        "#",
+        "#/$defs/Missing/properties/name",
+        "#/$defs/Model/properties/missing",
+        "#/$defs/Model%2Fname",
+        "other.json#/$defs/Model",
+    ] {
+        let schema = json!({
+            "$defs": {"Model": {"properties": {"name": {"type": "string"}}}},
+            "properties": {"name": {"$ref": reference}}
+        });
+        let violation = Evaluator::new(&schema)
+            .validate(&schema, &json!({"name": "ok"}), "")
+            .expect_err(reference);
+        assert_eq!(violation.kind, SchemaViolationKind::UnsupportedSchema);
+        assert_eq!(violation.pointer, "/name");
+    }
+}
+
+/// The annotation keywords of JSON Schema 2020-12 assert nothing, whatever their value.
+#[test]
+fn con_1_oss_5_1_annotation_keywords_are_ignored() {
+    let schema = json!({
+        "type": "object",
+        "title": "Model",
+        "description": "A model.",
+        "$comment": "Annotations only.",
+        "default": {},
+        "deprecated": true,
+        "readOnly": true,
+        "writeOnly": false,
+        "examples": [{"name": 1}],
+        "properties": {
+            "name": {"type": "string", "examples": ["shop"], "deprecated": false},
+            "examples": {"type": "array"}
+        }
+    });
+    assert_eq!(
+        pointer_of_violation(&schema, &json!({"name": "shop", "examples": []})),
+        None
+    );
+    assert_eq!(
+        pointer_of_violation(&schema, &json!({"name": 1})),
+        Some("/name".to_owned())
+    );
+    assert_eq!(
+        pointer_of_violation(&schema, &json!({"examples": {}})),
+        Some("/examples".to_owned())
+    );
+}
