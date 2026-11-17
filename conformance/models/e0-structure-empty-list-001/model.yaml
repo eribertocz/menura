@@ -1,0 +1,42 @@
+version: "0.1.1"
+semantic_model:
+  - name: e0_structure_empty_list_001
+    description: Model with an expression that has no variant
+    custom_extensions:
+      - vendor_name: COMMON
+        data: '{"namespace": "semantic_compiler", "version": 1, "security_context": {"roles": ["analyst"], "attributes": []}}'
+    datasets:
+      - name: orders
+        source: shop.main.orders
+        primary_key: [order_id]
+        fields:
+          - name: order_id
+            expression: {dialects: [{dialect: ANSI_SQL, expression: order_id}]}
+          - name: status
+            expression: {dialects: []}
+          - name: amount
+            expression: {dialects: [{dialect: ANSI_SQL, expression: amount}]}
+        custom_extensions:
+          - vendor_name: COMMON
+            data: '{"namespace": "semantic_compiler", "version": 1, "access": {"mode": "roles", "roles": ["analyst"]}}'
+      - name: balances
+        source: shop.main.balances
+        primary_key: [branch, customer_id]
+        fields:
+          - name: branch
+            expression: {dialects: [{dialect: ANSI_SQL, expression: branch}]}
+          - name: customer_id
+            expression: {dialects: [{dialect: ANSI_SQL, expression: customer_id}]}
+          - name: balance
+            expression: {dialects: [{dialect: ANSI_SQL, expression: balance}]}
+        custom_extensions:
+          - vendor_name: COMMON
+            data: '{"namespace": "semantic_compiler", "version": 1, "access": {"mode": "roles", "roles": ["analyst"]}}'
+    metrics:
+      - name: total_amount
+        expression: {dialects: [{dialect: ANSI_SQL, expression: SUM(orders.amount)}]}
+      - name: total_balance
+        expression: {dialects: [{dialect: ANSI_SQL, expression: SUM(balances.balance)}]}
+        custom_extensions:
+          - vendor_name: COMMON
+            data: '{"namespace": "semantic_compiler", "version": 1, "additivity": {"type": "semi_additive", "over": "balances.branch", "entity": ["balances.customer_id"], "aggregation": "max", "nulls": "error"}}'

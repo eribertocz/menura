@@ -1,7 +1,9 @@
 //! Contract documents exchanged between modules and the types that represent them.
 //!
 //! - [`types`]: a Rust type for every contract document, serialized exactly as its JSON Schema.
-//! - [`validate_structure`]: validation of a document against its published JSON Schema.
+//! - [`validate_structure`]: validation of a document against its published JSON Schema, and
+//!   [`validate_against_schema`] and [`schema_violations`]: the same evaluator for a schema the
+//!   caller provides, with the first violation or all of them.
 //! - [`IncomingContract`]: admission of incoming documents with each contract's error codes.
 //! - [`admit_catalog_schema`] and [`admit_catalog_state`]: admission of the catalog documents in
 //!   the order of CAT-9.1, with the CAT-8 rules.
@@ -26,5 +28,8 @@ pub use catalog_admission::{admit_catalog_schema, admit_catalog_state};
 pub use contract::{ContractKind, ContractVersion};
 pub use hash::{InvalidSha256Hash, Sha256Hash, hash_value};
 pub use ordering::compare_names;
-pub use schema::{SchemaViolation, validate_structure};
+pub use schema::{
+    SchemaViolation, SchemaViolationKind, schema_violations, validate_against_schema,
+    validate_structure,
+};
 pub use value_encoding::encode_integer;

@@ -1,0 +1,6 @@
+id: e0-structure-several-models-001
+rules: [E0B-3.2, E0B-07, DEV-7]
+model: e0-structure-several-models-001
+expect:
+  outcome: load_error
+  error: E0B-07

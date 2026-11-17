@@ -59,17 +59,6 @@ pub struct Entry {
 }
 
 /// An integer of any size, kept as its canonical decimal digits.
-///
-/// # Example
-///
-/// ```
-/// use semantic_compiler_e0_load::read::{Value, read_document};
-///
-/// let document = read_document(b"0x1F")?;
-/// let Value::Integer(integer) = document.value else { unreachable!() };
-/// assert_eq!(integer.to_string(), "31");
-/// # Ok::<(), semantic_compiler_e0_load::read::ReadError>(())
-/// ```
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct Integer {
     negative: bool,

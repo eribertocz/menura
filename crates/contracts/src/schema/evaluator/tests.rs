@@ -4,6 +4,7 @@ use serde_json::{Value, json};
 
 use super::{ANNOTATION_KEYWORDS, ASSERTION_KEYWORDS, Evaluator};
 use crate::contract::ContractKind;
+use crate::schema::SchemaViolationKind;
 use crate::schema::schema_text;
 
 /// Collects the keywords of `schema` and of every subschema below it.
@@ -116,6 +117,34 @@ fn pointers_escape_member_names() {
         pointer_of_violation(&schema, &json!({"a/b~c": 1})),
         Some("/a~1b~0c".to_owned())
     );
+}
+
+#[test]
+fn every_violation_is_collected_and_the_first_is_the_one_validate_returns() {
+    let schema = json!({
+        "required": ["a", "b"],
+        "properties": {"x": {"type": "string", "enum": ["y"]}, "list": {"minItems": 2}},
+        "additionalProperties": false
+    });
+    let instance = json!({"x": 1, "list": [], "zz": true});
+    let found = Evaluator::new(&schema).violations(&schema, &instance, "");
+    let summary: Vec<(&str, &SchemaViolationKind)> = found
+        .iter()
+        .map(|violation| (violation.pointer.as_str(), &violation.kind))
+        .collect();
+    assert_eq!(
+        summary,
+        [
+            ("", &SchemaViolationKind::Required("a".to_owned())),
+            ("", &SchemaViolationKind::Required("b".to_owned())),
+            ("/list", &SchemaViolationKind::MinItems),
+            ("/x", &SchemaViolationKind::Type),
+            ("/x", &SchemaViolationKind::Enum),
+            ("/zz", &SchemaViolationKind::AdditionalProperties),
+        ]
+    );
+    let first = Evaluator::new(&schema).validate(&schema, &instance, "");
+    assert_eq!(first, Err(found[0].clone()));
 }
 
 /// Every keyword of every published schema is implemented or a pure annotation.

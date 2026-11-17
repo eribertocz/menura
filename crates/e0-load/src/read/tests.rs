@@ -3,29 +3,23 @@
 //! The model documents of the `e0` conformance cases are read here at compile time, so the
 //! reader is checked against the same files the conformance suite uses.
 
-use semantic_compiler_e0_load::read::{Location, Node, ReadErrorCode, Value, read_document};
+use super::{Location, Node, ReadErrorCode, Value, read_document};
 
-// `cfg(test)` marks the helpers as test code, where `expect` and `panic` are allowed (clippy.toml).
-
-#[cfg(test)]
 fn read(text: &str) -> Node {
     read_document(text.as_bytes()).expect("the document is read")
 }
 
 /// The code and location of the error of a document that is rejected.
-#[cfg(test)]
 fn failure(bytes: &[u8]) -> (ReadErrorCode, Location) {
     let error = read_document(bytes).expect_err("the document is rejected");
     (error.code, error.location)
 }
 
-#[cfg(test)]
 fn at(line: usize, column: usize) -> Location {
     Location { line, column }
 }
 
 /// The value of `key` in a mapping node.
-#[cfg(test)]
 fn get<'node>(node: &'node Node, key: &str) -> &'node Node {
     let Value::Mapping(entries) = &node.value else {
         panic!("not a mapping: {node:?}");
@@ -37,7 +31,6 @@ fn get<'node>(node: &'node Node, key: &str) -> &'node Node {
 }
 
 /// The item `index` of a sequence node.
-#[cfg(test)]
 fn item(node: &Node, index: usize) -> &Node {
     let Value::Sequence(items) = &node.value else {
         panic!("not a sequence: {node:?}");
@@ -46,7 +39,6 @@ fn item(node: &Node, index: usize) -> &Node {
 }
 
 /// The keys of a mapping node, as text, in order.
-#[cfg(test)]
 fn keys(node: &Node) -> Vec<String> {
     let Value::Mapping(entries) = &node.value else {
         panic!("not a mapping: {node:?}");
@@ -60,12 +52,10 @@ fn keys(node: &Node) -> Vec<String> {
         .collect()
 }
 
-#[cfg(test)]
 fn text(value: &str) -> Value {
     Value::String(value.to_owned())
 }
 
-#[cfg(test)]
 fn integer(node: &Node) -> String {
     let Value::Integer(value) = &node.value else {
         panic!("not an integer: {node:?}");
@@ -73,7 +63,6 @@ fn integer(node: &Node) -> String {
     value.to_string()
 }
 
-#[cfg(test)]
 fn float(node: &Node) -> f64 {
     let Value::Float(value) = node.value else {
         panic!("not a float: {node:?}");
@@ -82,7 +71,6 @@ fn float(node: &Node) -> f64 {
 }
 
 /// The `fields` of the first dataset of the first semantic model of a model document.
-#[cfg(test)]
 fn first_dataset_fields(document: &Node) -> &Node {
     get(
         item(get(item(get(document, "semantic_model"), 0), "datasets"), 0),
@@ -94,7 +82,8 @@ fn first_dataset_fields(document: &Node) -> &Node {
 
 #[test]
 fn e0a_2_1_invalid_utf8_is_e0a_01() {
-    let model = include_bytes!("../../../conformance/models/e0-read-invalid-utf8-001/model.yaml");
+    let model =
+        include_bytes!("../../../../conformance/models/e0-read-invalid-utf8-001/model.yaml");
     assert_eq!(failure(model), (ReadErrorCode::InvalidEncoding, at(4, 59)));
 }
 
@@ -130,7 +119,7 @@ fn e0a_2_2_yes_no_on_off_read_as_booleans() {
 
 #[test]
 fn e0a_2_2_yes_case_model_reads_description_as_boolean() {
-    let model = include_bytes!("../../../conformance/models/e0-read-yes-boolean-001/model.yaml");
+    let model = include_bytes!("../../../../conformance/models/e0-read-yes-boolean-001/model.yaml");
     let document = read_document(model).expect("the document is read");
     let description = get(item(get(&document, "semantic_model"), 0), "description");
     assert_eq!(description.value, Value::Boolean(true));
@@ -211,7 +200,7 @@ fn e0a_2_2_json_document_reads_as_yaml() {
 
 #[test]
 fn e0a_2_2_tag_outside_the_standard_tags_is_e0a_05() {
-    let model = include_bytes!("../../../conformance/models/e0-read-unknown-tag-001/model.yaml");
+    let model = include_bytes!("../../../../conformance/models/e0-read-unknown-tag-001/model.yaml");
     assert_eq!(failure(model), (ReadErrorCode::Unconstructible, at(4, 18)));
     assert_eq!(
         failure(b"a: !local value\n"),
@@ -230,7 +219,7 @@ fn e0a_2_2_value_key_is_text_and_value_scalar_is_e0a_05() {
 
 #[test]
 fn e0a_2_2_unparsable_yaml_is_e0a_02() {
-    let model = include_bytes!("../../../conformance/models/e0-read-unparsable-001/model.yaml");
+    let model = include_bytes!("../../../../conformance/models/e0-read-unparsable-001/model.yaml");
     assert_eq!(failure(model).0, ReadErrorCode::Unparsable);
     assert_eq!(failure(b"a: *unknown\n").0, ReadErrorCode::Unparsable);
 }
@@ -239,7 +228,8 @@ fn e0a_2_2_unparsable_yaml_is_e0a_02() {
 
 #[test]
 fn e0a_2_3_duplicate_key_in_nested_mapping_is_e0a_04() {
-    let model = include_bytes!("../../../conformance/models/e0-read-duplicate-key-001/model.yaml");
+    let model =
+        include_bytes!("../../../../conformance/models/e0-read-duplicate-key-001/model.yaml");
     assert_eq!(failure(model), (ReadErrorCode::DuplicateKey, at(17, 13)));
 }
 
@@ -284,7 +274,7 @@ fn e0a_2_3_collection_key_is_e0a_05() {
 
 #[test]
 fn e0a_2_4_merge_key_case_expands() {
-    let model = include_bytes!("../../../conformance/models/e0-read-merge-key-001/model.yaml");
+    let model = include_bytes!("../../../../conformance/models/e0-read-merge-key-001/model.yaml");
     let document = read_document(model).expect("the document is read");
     let fields = first_dataset_fields(&document);
     let names: Vec<&Value> = (0..3)
@@ -345,8 +335,9 @@ fn e0a_2_4_alias_inside_its_own_anchor_is_e0a_05() {
 
 #[test]
 fn e0a_2_5_tag_value_that_cannot_be_constructed_is_e0a_05() {
-    let model =
-        include_bytes!("../../../conformance/models/e0-read-unconstructible-value-001/model.yaml");
+    let model = include_bytes!(
+        "../../../../conformance/models/e0-read-unconstructible-value-001/model.yaml"
+    );
     assert_eq!(failure(model), (ReadErrorCode::Unconstructible, at(1, 10)));
     for document in [
         "a: !!bool maybe\n",
@@ -382,7 +373,8 @@ fn e0a_2_5_standard_tags_without_a_json_form_are_e0a_05() {
 
 #[test]
 fn e0a_2_5_invalid_date_is_e0a_05() {
-    let model = include_bytes!("../../../conformance/models/e0-read-invalid-date-001/model.yaml");
+    let model =
+        include_bytes!("../../../../conformance/models/e0-read-invalid-date-001/model.yaml");
     assert_eq!(failure(model), (ReadErrorCode::Unconstructible, at(4, 18)));
     for document in [
         "a: 2025-02-29\n",
@@ -403,7 +395,8 @@ fn e0a_2_5_invalid_date_is_e0a_05() {
 
 #[test]
 fn e0a_2_6_second_document_is_e0a_03() {
-    let model = include_bytes!("../../../conformance/models/e0-read-two-documents-001/model.yaml");
+    let model =
+        include_bytes!("../../../../conformance/models/e0-read-two-documents-001/model.yaml");
     assert_eq!(failure(model), (ReadErrorCode::SeveralDocuments, at(43, 1)));
 }
 
@@ -434,7 +427,7 @@ fn e0a_2_7_every_node_keeps_line_and_column() {
 
 #[test]
 fn e0a_2_8_date_case_converts_to_iso_text() {
-    let model = include_bytes!("../../../conformance/models/e0-read-date-text-001/model.yaml");
+    let model = include_bytes!("../../../../conformance/models/e0-read-date-text-001/model.yaml");
     let document = read_document(model).expect("the document is read");
     let description = get(item(get(&document, "semantic_model"), 0), "description");
     assert_eq!(description.value, text("2026-11-16"));
@@ -463,7 +456,7 @@ fn e0a_2_8_timestamps_convert_to_iso_text() {
 
 #[test]
 fn mdl_1_2_sample_model_is_read() {
-    let model = include_bytes!("../../../conformance/models/sample/model.yaml");
+    let model = include_bytes!("../../../../conformance/models/sample/model.yaml");
     let document = read_document(model).expect("the document is read");
     assert_eq!(get(&document, "version").value, text("0.1.1"));
     assert_eq!(keys(&document), vec!["version", "semantic_model"]);

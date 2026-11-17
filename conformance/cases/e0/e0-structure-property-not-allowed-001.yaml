@@ -1,0 +1,6 @@
+id: e0-structure-property-not-allowed-001
+rules: [E0B-1.2, E0B-04]
+model: e0-structure-property-not-allowed-001
+expect:
+  outcome: load_error
+  error: E0B-04
