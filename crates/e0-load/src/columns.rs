@@ -33,8 +33,8 @@ impl<'catalog> Columns<'catalog> {
 
     /// The exact spelling of the column a reference to `name` matches (E0D-1.5): for a regular
     /// reference, the column whose normalized name is `name`; for a delimited one, the column
-    /// spelled exactly as `name`. When CAT-8.2 is not yet enforced and several columns
-    /// normalize alike, a regular reference matches the first of them.
+    /// spelled exactly as `name`. Catalog admission guarantees at most one column per normalized
+    /// name (CAT-8.2), so a regular reference matches at most one column.
     pub(crate) fn find(&self, name: &Name, delimited: bool) -> Option<&'catalog str> {
         if delimited {
             self.exact.get(name.as_str()).copied()
