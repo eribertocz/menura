@@ -447,7 +447,9 @@ Find a rule ID or a section here, then open only that file at that line.
 | [stages/E0/extensions.md](stages/E0/extensions.md#L20) | 20 | rule | E0C-2.3 |
 | [stages/E0/extensions.md](stages/E0/extensions.md#L21) | 21 | rule | E0C-2.4 |
 | [stages/E0/extensions.md](stages/E0/extensions.md#L22) | 22 | rule | E0C-2.5 |
-| [stages/E0/extensions.md](stages/E0/extensions.md#L24) | 24 | section | E0C-3 Diagnostics |
+| [stages/E0/extensions.md](stages/E0/extensions.md#L23) | 23 | rule | E0C-2.6 |
+| [stages/E0/extensions.md](stages/E0/extensions.md#L24) | 24 | rule | E0C-2.7 |
+| [stages/E0/extensions.md](stages/E0/extensions.md#L26) | 26 | section | E0C-3 Diagnostics |
 | [stages/E0/internal-model.md](stages/E0/internal-model.md#L1) | 1 | section | E0.h Build the internal model |
 | [stages/E0/internal-model.md](stages/E0/internal-model.md#L3) | 3 | section | E0H-1 Properties |
 | [stages/E0/internal-model.md](stages/E0/internal-model.md#L7) | 7 | rule | E0H-1.1 |
