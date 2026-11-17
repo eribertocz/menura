@@ -157,16 +157,17 @@ Find a rule ID or a section here, then open only that file at that line.
 | [architecture/README.md](architecture/README.md#L90) | 90 | rule | ARC-5.1 |
 | [architecture/README.md](architecture/README.md#L91) | 91 | rule | ARC-5.2 |
 | [architecture/README.md](architecture/README.md#L93) | 93 | rule | ARC-5.3 |
-| [architecture/README.md](architecture/README.md#L95) | 95 | section | 3.6 Delivery forms |
-| [architecture/README.md](architecture/README.md#L108) | 108 | section | 3.7 Integration |
-| [architecture/README.md](architecture/README.md#L116) | 116 | section | 3.8 Boundary enforcement (from the first commit) |
-| [architecture/README.md](architecture/README.md#L123) | 123 | rule | A1 |
-| [architecture/README.md](architecture/README.md#L124) | 124 | rule | A2 |
-| [architecture/README.md](architecture/README.md#L125) | 125 | rule | A3 |
-| [architecture/README.md](architecture/README.md#L126) | 126 | rule | A4 |
-| [architecture/README.md](architecture/README.md#L127) | 127 | rule | A5 |
-| [architecture/README.md](architecture/README.md#L128) | 128 | rule | A6 |
-| [architecture/README.md](architecture/README.md#L133) | 133 | section | 3.9 Lineage and audit |
+| [architecture/README.md](architecture/README.md#L94) | 94 | rule | ARC-5.4 |
+| [architecture/README.md](architecture/README.md#L96) | 96 | section | 3.6 Delivery forms |
+| [architecture/README.md](architecture/README.md#L109) | 109 | section | 3.7 Integration |
+| [architecture/README.md](architecture/README.md#L117) | 117 | section | 3.8 Boundary enforcement (from the first commit) |
+| [architecture/README.md](architecture/README.md#L124) | 124 | rule | A1 |
+| [architecture/README.md](architecture/README.md#L125) | 125 | rule | A2 |
+| [architecture/README.md](architecture/README.md#L126) | 126 | rule | A3 |
+| [architecture/README.md](architecture/README.md#L127) | 127 | rule | A4 |
+| [architecture/README.md](architecture/README.md#L128) | 128 | rule | A5 |
+| [architecture/README.md](architecture/README.md#L129) | 129 | rule | A6 |
+| [architecture/README.md](architecture/README.md#L134) | 134 | section | 3.9 Lineage and audit |
 | [contracts/README.md](contracts/README.md#L1) | 1 | section | Contracts |
 | [contracts/README.md](contracts/README.md#L19) | 19 | section | Public contracts |
 | [contracts/README.md](contracts/README.md#L21) | 21 | rule | CON-0.1 |
@@ -230,9 +231,10 @@ Find a rule ID or a section here, then open only that file at that line.
 | [contracts/compiled-plan.md](contracts/compiled-plan.md#L55) | 55 | section | PLN-5 Compile error |
 | [contracts/compiled-plan.md](contracts/compiled-plan.md#L66) | 66 | rule | PLN-5.1 |
 | [contracts/compiled-plan.md](contracts/compiled-plan.md#L67) | 67 | rule | PLN-5.2 |
-| [contracts/compiled-plan.md](contracts/compiled-plan.md#L71) | 71 | section | PLN-6 Audit record |
-| [contracts/compiled-plan.md](contracts/compiled-plan.md#L83) | 83 | rule | PLN-6.1 |
-| [contracts/compiled-plan.md](contracts/compiled-plan.md#L84) | 84 | rule | PLN-6.2 |
+| [contracts/compiled-plan.md](contracts/compiled-plan.md#L68) | 68 | rule | PLN-5.3 |
+| [contracts/compiled-plan.md](contracts/compiled-plan.md#L72) | 72 | section | PLN-6 Audit record |
+| [contracts/compiled-plan.md](contracts/compiled-plan.md#L84) | 84 | rule | PLN-6.1 |
+| [contracts/compiled-plan.md](contracts/compiled-plan.md#L85) | 85 | rule | PLN-6.2 |
 | [contracts/integrity-checks.md](contracts/integrity-checks.md#L1) | 1 | section | Contract: integrity checks |
 | [contracts/integrity-checks.md](contracts/integrity-checks.md#L5) | 5 | section | CHK-1 Purpose |
 | [contracts/integrity-checks.md](contracts/integrity-checks.md#L10) | 10 | section | CHK-2 Document |
@@ -441,15 +443,16 @@ Find a rule ID or a section here, then open only that file at that line.
 | [stages/E0/extensions.md](stages/E0/extensions.md#L3) | 3 | section | E0C-1 Which entries are ours |
 | [stages/E0/extensions.md](stages/E0/extensions.md#L11) | 11 | rule | E0C-1.1 |
 | [stages/E0/extensions.md](stages/E0/extensions.md#L12) | 12 | rule | E0C-1.2 |
-| [stages/E0/extensions.md](stages/E0/extensions.md#L14) | 14 | section | E0C-2 Rules for our entries |
-| [stages/E0/extensions.md](stages/E0/extensions.md#L18) | 18 | rule | E0C-2.1 |
-| [stages/E0/extensions.md](stages/E0/extensions.md#L19) | 19 | rule | E0C-2.2 |
-| [stages/E0/extensions.md](stages/E0/extensions.md#L20) | 20 | rule | E0C-2.3 |
-| [stages/E0/extensions.md](stages/E0/extensions.md#L21) | 21 | rule | E0C-2.4 |
-| [stages/E0/extensions.md](stages/E0/extensions.md#L22) | 22 | rule | E0C-2.5 |
-| [stages/E0/extensions.md](stages/E0/extensions.md#L23) | 23 | rule | E0C-2.6 |
-| [stages/E0/extensions.md](stages/E0/extensions.md#L24) | 24 | rule | E0C-2.7 |
-| [stages/E0/extensions.md](stages/E0/extensions.md#L26) | 26 | section | E0C-3 Diagnostics |
+| [stages/E0/extensions.md](stages/E0/extensions.md#L13) | 13 | rule | E0C-1.3 |
+| [stages/E0/extensions.md](stages/E0/extensions.md#L15) | 15 | section | E0C-2 Rules for our entries |
+| [stages/E0/extensions.md](stages/E0/extensions.md#L19) | 19 | rule | E0C-2.1 |
+| [stages/E0/extensions.md](stages/E0/extensions.md#L20) | 20 | rule | E0C-2.2 |
+| [stages/E0/extensions.md](stages/E0/extensions.md#L21) | 21 | rule | E0C-2.3 |
+| [stages/E0/extensions.md](stages/E0/extensions.md#L22) | 22 | rule | E0C-2.4 |
+| [stages/E0/extensions.md](stages/E0/extensions.md#L23) | 23 | rule | E0C-2.5 |
+| [stages/E0/extensions.md](stages/E0/extensions.md#L24) | 24 | rule | E0C-2.6 |
+| [stages/E0/extensions.md](stages/E0/extensions.md#L25) | 25 | rule | E0C-2.7 |
+| [stages/E0/extensions.md](stages/E0/extensions.md#L27) | 27 | section | E0C-3 Diagnostics |
 | [stages/E0/internal-model.md](stages/E0/internal-model.md#L1) | 1 | section | E0.h Build the internal model |
 | [stages/E0/internal-model.md](stages/E0/internal-model.md#L3) | 3 | section | E0H-1 Properties |
 | [stages/E0/internal-model.md](stages/E0/internal-model.md#L7) | 7 | rule | E0H-1.1 |

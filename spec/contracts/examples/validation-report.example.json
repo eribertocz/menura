@@ -1,0 +1,15 @@
+{
+  "contract": "semantic_compiler.validation_report",
+  "contract_version": "1.0.0",
+  "errors": [],
+  "warnings": [
+    {
+      "code": "W0D-01",
+      "message": "Field 'invoices.discount' reads column 'discount', which the catalog schema does not describe for source 'warehouse.billing.invoices'. The field is unusable until the column exists or the field is removed.",
+      "location": {
+        "document": "model",
+        "pointer": "/semantic_model/0/datasets/0/fields/3"
+      }
+    }
+  ]
+}

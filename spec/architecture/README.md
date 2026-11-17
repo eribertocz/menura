@@ -91,6 +91,7 @@ All functions are pure. Inputs and outputs are the contract documents of `spec/c
 - **ARC-5.2** The catalog state is validated by `load` and `with_state`. An invalid state produces a warning (`WCAT-01`–`WCAT-04`) and is ignored: the handle has no state, and E5 applies only rewrites that need no evidence.
 
 - **ARC-5.3** The conformance runner (chapter 8) is **test tooling, not part of the compiler**. It lives in its own crate, `conformance-runner`, which calls the public functions, reads case files and executes SQL on DuckDB. Like `cli`, it is exempt from A2 (I/O, clock, database). No other crate may depend on it, and it is never shipped as part of the compiler. `just conformance` runs it.
+- **ARC-5.4** Every CLI command (section 3.6) writes its output document as JSON on standard output. Its exit status is `0` when the document is neither a compile error nor a validation report with errors (warnings do not change it); `1` when the document is a compile error or a validation report with at least one error; `2` when the command cannot run (usage error, or an input file that cannot be read or is not UTF-8), with a message on standard error and nothing on standard output.
 
 ## 3.6 Delivery forms
 
