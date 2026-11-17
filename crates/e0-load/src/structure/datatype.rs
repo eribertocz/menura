@@ -8,6 +8,9 @@ use crate::read::{Node, Value};
 
 /// The `datatype` of `element`, located at `pointer`, with the `W0B-03` warning when it has no
 /// logical kind.
+///
+/// The schema decides first (OSS-5.2): a value outside its `datatype` enumeration is already
+/// `E0B-05`, so a value without a logical kind is one the schema accepts, today `Opaque`.
 pub(crate) fn declared_datatype<'document>(
     element: &'document Node,
     pointer: &JsonPointer,

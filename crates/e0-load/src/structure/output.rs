@@ -92,7 +92,8 @@ impl ElementExpression<'_> {
 pub enum CompiledVariant<'document> {
     /// The text of the single `ANSI_SQL` variant.
     AnsiSql(&'document str),
-    /// The text of a development-line `sql` expression, interpreted as `OSSIE_SQL_2026`.
+    /// The text of a development-line `sql` expression, interpreted as `OSSIE_SQL_2026`. It is
+    /// compiled even when `dialects` is also given (section 4.5).
     OssieSql2026(&'document str),
     /// No `sql` and no single `ANSI_SQL` variant: the element is unusable (`W0B-02`, OSS-2.2),
     /// and a query that names it fails with [`ElementExpression::NO_SINGLE_ANSI_SQL_QUERY_ERROR`].
@@ -106,7 +107,8 @@ pub enum DeclaredDatatype<'document> {
     NotDeclared,
     /// The logical kind the `datatype` maps to.
     Mapped(LogicalKind),
-    /// A `datatype` without a logical kind: the element is unusable (`W0B-03`), and a query
+    /// A `datatype` the schema accepts without a logical kind, today `Opaque`: the element is
+    /// unusable (`W0B-03`), and a query
     /// that names it fails with [`ElementExpression::UNKNOWN_DATATYPE_QUERY_ERROR`].
     Unknown(&'document str),
 }

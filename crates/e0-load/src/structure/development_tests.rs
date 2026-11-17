@@ -1,8 +1,9 @@
 //! Validating the development-line format: MDL-1.1 (`ossie_format: development`), MDL-2.4,
 //! OSS-5.1, OSS-5.2, `W0B-03` and `E0B-09`.
 //!
-//! The model of the `e0-development-*` conformance cases is read here at compile time, with the
-//! load option the case format cannot carry yet (#109).
+//! The model of the `e0-development-*` conformance cases is read here at compile time, with
+//! `ossie_format: development`. Cases with `load_options` (CS-2.7) follow once the runner reads
+//! them (#115).
 
 use semantic_compiler_contracts::types::audit_record::OssieFormat;
 
@@ -213,8 +214,8 @@ fn w0b_03_e0b_08_comes_before_e0b_09_for_an_element_with_both_causes() {
 }
 
 #[test]
-fn oss_5_1_a_datatype_outside_the_schema_enumeration_is_rejected() {
-    // Follows option 1 of the specification defect #107: the schema decides first.
+fn oss_5_2_a_datatype_outside_the_schema_enumeration_is_rejected() {
+    // OSS-5.2: the schema decides first, so a value outside its enumeration is `E0B-05`.
     assert_eq!(
         errors(
             &with_sql("        datatype: Money\n"),
@@ -226,7 +227,8 @@ fn oss_5_1_a_datatype_outside_the_schema_enumeration_is_rejected() {
 
 #[test]
 fn oss_5_1_sql_is_compiled_when_dialects_are_also_given() {
-    // Follows option 1 of the specification defect #108.
+    // Section 4.5, `expression` with both `sql` and `dialects`: `sql` is compiled, `W0B-01` for
+    // each entry in a dialect other than `ANSI_SQL`, and no `W0B-02`.
     let text = minimal(
         "        expression:\n          sql: amount\n          dialects:\n            - {dialect: ANSI_SQL, expression: total}\n            - {dialect: SNOWFLAKE, expression: total}\n",
     );
