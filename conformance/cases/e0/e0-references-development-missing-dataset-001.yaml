@@ -1,0 +1,25 @@
+id: e0-references-development-missing-dataset-001
+rules: [OSS-5.1, E0D-05, W0D-01]
+model: e0-references-development-missing
+security_context: analyst.json
+query:
+  contract: semantic_compiler.query
+  contract_version: "1.0.0"
+  reference_time: "2026-11-15T12:00:00-04:00"
+  time_zone: UTC
+  query:
+    dimensions: [customers.customer_name]
+    metrics:
+      - {metric: total_amount, alias: total_amount}
+    nonportable_extensions:
+      - vendor_name: COMMON
+        data:
+          namespace: semantic_compiler
+          version: 1
+          paths:
+            - {from: orders, to: customers, relationships: [orders_clients]}
+load_options: {ossie_format: development}
+expect:
+  outcome: error
+  error: E0D-05
+  warnings: [W0D-01]

@@ -50,6 +50,8 @@ pub(crate) struct DatasetOutline<'document> {
     pub(crate) source: Option<LocatedText<'document>>,
     /// Its fields, in document order.
     pub(crate) fields: Vec<ElementOutline<'document>>,
+    /// Its dataset-scoped metrics (development format, section 4.5), in document order.
+    pub(crate) metrics: Vec<ElementOutline<'document>>,
     /// The names of `primary_key`, then of every `unique_keys` entry, in document order.
     pub(crate) keys: Vec<DeclaredName<'document>>,
 }
@@ -91,7 +93,6 @@ pub(crate) fn outline<'document>(
 ) -> ModelOutline<'document> {
     let datasets_pointer = pointer.member("datasets");
     let relationships_pointer = pointer.member("relationships");
-    let metrics_pointer = pointer.member("metrics");
     ModelOutline {
         datasets: items(member(model, "datasets"))
             .map(|(index, node)| dataset(node, datasets_pointer.item(index)))
@@ -99,9 +100,7 @@ pub(crate) fn outline<'document>(
         relationships: items(member(model, "relationships"))
             .map(|(index, node)| relationship(node, relationships_pointer.item(index)))
             .collect(),
-        metrics: items(member(model, "metrics"))
-            .map(|(index, node)| element(node, metrics_pointer.item(index)))
-            .collect(),
+        metrics: elements(model, pointer, "metrics"),
     }
 }
 
@@ -114,7 +113,6 @@ pub(crate) fn semantic_model_names(document: &Node) -> Vec<DeclaredName<'_>> {
 }
 
 fn dataset(node: &Node, pointer: JsonPointer) -> DatasetOutline<'_> {
-    let fields_pointer = pointer.member("fields");
     let unique_keys_pointer = pointer.member("unique_keys");
     let mut keys = names(node, &pointer, "primary_key");
     for (index, key) in items(member(node, "unique_keys")) {
@@ -123,12 +121,23 @@ fn dataset(node: &Node, pointer: JsonPointer) -> DatasetOutline<'_> {
     DatasetOutline {
         name: declared(node, &pointer, "name"),
         source: located(node, &pointer, "source"),
-        fields: items(member(node, "fields"))
-            .map(|(index, field)| element(field, fields_pointer.item(index)))
-            .collect(),
+        fields: elements(node, &pointer, "fields"),
+        metrics: elements(node, &pointer, "metrics"),
         keys,
         pointer,
     }
+}
+
+/// The items of the list member `key` of `node`, as elements.
+fn elements<'document>(
+    node: &'document Node,
+    pointer: &JsonPointer,
+    key: &str,
+) -> Vec<ElementOutline<'document>> {
+    let list_pointer = pointer.member(key);
+    items(member(node, key))
+        .map(|(index, item)| element(item, list_pointer.item(index)))
+        .collect()
 }
 
 fn element(node: &Node, pointer: JsonPointer) -> ElementOutline<'_> {
