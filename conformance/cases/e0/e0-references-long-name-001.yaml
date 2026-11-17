@@ -1,0 +1,6 @@
+id: e0-references-long-name-001
+rules: [E0D-1.2, E0D-01, DEV-9]
+model: e0-references-long-name-001
+expect:
+  outcome: load_error
+  error: E0D-01

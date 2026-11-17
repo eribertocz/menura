@@ -14,8 +14,8 @@ mod selection;
 mod variants;
 mod violations;
 
-use diagnostic::{StructureCode, StructureDiagnostic};
-use output::{SelectedModel, Structure};
+pub(crate) use diagnostic::{StructureCode, StructureDiagnostic};
+pub(crate) use output::{AnsiSqlVariant, ElementExpression, ElementKind, SelectedModel, Structure};
 
 use crate::nodes::member;
 use crate::pointer::{JsonPointer, position};

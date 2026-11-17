@@ -1,0 +1,111 @@
+//! Stage E0.d: resolves the names and references of the selected semantic model against the
+//! model itself and the catalog schema (E0D-1 to E0D-4, DEV-2, DEV-3).
+//!
+//! Names are compared after normalization (E0D-1). Duplicate and over-long names (`E0D-01`) and
+//! sources the catalog does not describe (`E0D-02`) reject the model; a missing reference
+//! (`E0D-03` to `E0D-07`) makes its element unusable and is reported as `W0D-01` (E0-4).
+//!
+//! References inside extensions are resolved by each extension with its own codes (E0D-3.2),
+//! never by the generic checks here. `E0D-08` is not checked yet (issue #78).
+
+mod diagnostic;
+mod expression_references;
+mod finding;
+mod keys;
+mod name;
+mod outline;
+mod output;
+mod scope;
+mod sources;
+mod uniqueness;
+mod walk;
+
+pub(crate) use diagnostic::ReferenceCode;
+pub(crate) use output::{ElementKind, ReferenceRejection, References, UnusableElement};
+
+use std::collections::HashMap;
+
+use semantic_compiler_contracts::types::catalog::CatalogSchemaDocument;
+
+use crate::pointer::{JsonPointer, position};
+use crate::read::Node;
+use crate::structure::Structure;
+use finding::Finding;
+use outline::outline;
+use scope::Scope;
+
+/// Resolves the references of the semantic model that `structure` selected in `document`,
+/// against `catalog`, the admitted catalog schema document.
+///
+/// Diagnostics are sorted in document order, then by code (E0-4.3).
+///
+/// # Errors
+///
+/// Returns a [`ReferenceRejection`] when any `E0D-01` or `E0D-02` diagnostic is found, with the
+/// missing-reference warnings found with them.
+pub fn resolve_references(
+    document: &Node,
+    structure: &Structure<'_>,
+    catalog: &CatalogSchemaDocument,
+) -> Result<References, ReferenceRejection> {
+    let model = outline(
+        structure.semantic_model.node,
+        &structure.semantic_model.pointer,
+    );
+    let scope = Scope::new(&model, catalog, &structure.expressions);
+    let mut findings = uniqueness::name_findings(&model);
+    findings.extend(sources::source_findings(&scope));
+    findings.extend(expression_references::column_findings(&scope));
+    findings.extend(expression_references::metric_findings(&scope));
+    findings.extend(keys::dataset_key_findings(&scope));
+    findings.extend(keys::relationship_findings(&scope));
+    findings.sort_by_cached_key(|finding| {
+        (
+            position(document, &finding.diagnostic.pointer),
+            finding.diagnostic.code,
+        )
+    });
+    let mut errors = Vec::new();
+    let mut warnings = Vec::new();
+    let mut unusable: HashMap<JsonPointer, UnusableElement> = HashMap::new();
+    for Finding {
+        diagnostic,
+        element,
+    } in findings
+    {
+        match element {
+            None => errors.push(diagnostic),
+            Some((kind, pointer)) => {
+                mark_unusable(&mut unusable, kind, pointer, diagnostic.code);
+                warnings.push(diagnostic);
+            }
+        }
+    }
+    if !errors.is_empty() {
+        return Err(ReferenceRejection { errors, warnings });
+    }
+    let mut unusable: Vec<UnusableElement> = unusable.into_values().collect();
+    unusable.sort_by_cached_key(|element| position(document, &element.pointer));
+    Ok(References { unusable, warnings })
+}
+
+/// Records that `pointer` is unusable because of `code`, keeping the lowest code of an element
+/// (E2-5 row 12a).
+fn mark_unusable(
+    unusable: &mut HashMap<JsonPointer, UnusableElement>,
+    kind: ElementKind,
+    pointer: JsonPointer,
+    code: ReferenceCode,
+) {
+    unusable
+        .entry(pointer.clone())
+        .and_modify(|element| element.query_error = element.query_error.min(code))
+        .or_insert(UnusableElement {
+            kind,
+            pointer,
+            query_error: code,
+        });
+}
+
+#[cfg(test)]
+mod tests;

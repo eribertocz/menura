@@ -37,4 +37,12 @@ mod read;
         reason = "called by the E0 stage function, which issue #45 adds; until then only the tests call it"
     )
 )]
+mod references;
+#[cfg_attr(
+    not(test),
+    expect(
+        dead_code,
+        reason = "called by the E0 stage function, which issue #45 adds; until then only the tests call it"
+    )
+)]
 mod structure;

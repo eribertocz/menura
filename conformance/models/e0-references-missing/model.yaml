@@ -1,0 +1,68 @@
+version: "0.1.1"
+semantic_model:
+  - name: e0_references_missing
+    description: Model with missing references, each making its element unusable, and keys that resolve to source columns
+    custom_extensions:
+      - vendor_name: COMMON
+        data: '{"namespace": "semantic_compiler", "version": 1, "security_context": {"roles": ["analyst"], "attributes": []}}'
+    datasets:
+      - name: orders
+        source: shop.main.orders
+        primary_key: [order_id]
+        fields:
+          - name: order_id
+            expression: {dialects: [{dialect: ANSI_SQL, expression: order_id}]}
+          - name: customer_id
+            expression: {dialects: [{dialect: ANSI_SQL, expression: customer_id}]}
+          - name: status
+            expression: {dialects: [{dialect: ANSI_SQL, expression: status}]}
+          - name: amount
+            expression: {dialects: [{dialect: ANSI_SQL, expression: amount}]}
+          - name: discount
+            expression: {dialects: [{dialect: ANSI_SQL, expression: discount}]}
+        custom_extensions:
+          - vendor_name: COMMON
+            data: '{"namespace": "semantic_compiler", "version": 1, "access": {"mode": "roles", "roles": ["analyst"]}}'
+      - name: customers
+        source: shop.main.customers
+        primary_key: [customer_id]
+        fields:
+          - name: customer_name
+            expression: {dialects: [{dialect: ANSI_SQL, expression: name}]}
+        custom_extensions:
+          - vendor_name: COMMON
+            data: '{"namespace": "semantic_compiler", "version": 1, "access": {"mode": "roles", "roles": ["analyst"]}}'
+      - name: labels
+        source: shop.main.labels
+        primary_key: [name]
+        fields:
+          - name: label_id
+            expression: {dialects: [{dialect: ANSI_SQL, expression: label_id}]}
+          - name: name
+            expression: {dialects: [{dialect: ANSI_SQL, expression: UPPER(name)}]}
+        custom_extensions:
+          - vendor_name: COMMON
+            data: '{"namespace": "semantic_compiler", "version": 1, "access": {"mode": "roles", "roles": ["analyst"]}}'
+    relationships:
+      - name: orders_customers
+        from: orders
+        to: customers
+        from_columns: [customer_id]
+        to_columns: [customer_id]
+      - name: orders_clients
+        from: orders
+        to: clients
+        from_columns: [customer_id]
+        to_columns: [customer_id]
+      - name: orders_customers_by_client
+        from: orders
+        to: customers
+        from_columns: [client_id]
+        to_columns: [customer_id]
+    metrics:
+      - name: total_amount
+        expression: {dialects: [{dialect: ANSI_SQL, expression: SUM(orders.amount)}]}
+      - name: total_missing_field
+        expression: {dialects: [{dialect: ANSI_SQL, expression: SUM(orders.tax)}]}
+      - name: total_missing_dataset
+        expression: {dialects: [{dialect: ANSI_SQL, expression: SUM(refunds.amount)}]}
