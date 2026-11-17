@@ -2,6 +2,7 @@
 //! DEV-7).
 
 use super::diagnostic::{StructureCode, StructureDiagnostic};
+use super::identifier::normalized_name;
 use crate::pointer::JsonPointer;
 use crate::read::{Node, Value};
 
@@ -51,8 +52,9 @@ pub(crate) fn select_model(
 /// The `E0B-07` diagnostic of a development-line document whose `name` is not `model_name`.
 ///
 /// The flat root is the one semantic model (section 4.5), so a `model_name` that is given must
-/// name it, as with a single semantic model in the release format (E0B-3.2). A missing or
-/// non-text `name` is left to the schema diagnostics.
+/// name it (E0B-3.2). `model_name` and `name` are read as identifiers (E0D-1.4) and match when
+/// their normalized forms are equal (E0D-1.1, E0D-1.3), so `shop` names a model named `SHOP`. A
+/// missing or non-text `name` is left to the schema diagnostics.
 pub(crate) fn check_root_model(
     document: &Node,
     model_name: Option<&str>,
@@ -60,7 +62,10 @@ pub(crate) fn check_root_model(
     let (Some(name), Some(node)) = (model_name, member(document, "name")) else {
         return Ok(());
     };
-    if !matches!(&node.value, Value::String(_)) || is_text(node, name) {
+    let Value::String(root_name) = &node.value else {
+        return Ok(());
+    };
+    if normalized_name(root_name) == normalized_name(name) {
         return Ok(());
     }
     Err(StructureDiagnostic {

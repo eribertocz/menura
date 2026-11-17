@@ -313,3 +313,29 @@ fn e0b_07_model_name_must_name_the_development_model() {
         .expect_err("names no model");
     assert_eq!(summary(&rejected), [pair("E0B-07", "")]);
 }
+
+#[test]
+fn e0b_3_2_model_name_is_matched_as_an_identifier() {
+    let regular = read(with_sql("").as_bytes());
+    for model_name in ["shop", "SHOP", "Shop", "\"SHOP\""] {
+        assert!(
+            validate_structure(&regular, OssieFormat::Development, Some(model_name)).is_ok(),
+            "{model_name} names the model shop"
+        );
+    }
+    let rejected = validate_structure(&regular, OssieFormat::Development, Some("\"shop\""))
+        .expect_err("a delimited name is compared exactly with the normalized SHOP");
+    assert_eq!(summary(&rejected), [pair("E0B-07", "")]);
+
+    let delimited = read(
+        with_sql("")
+            .replace("name: shop", "name: '\"Shop\"'")
+            .as_bytes(),
+    );
+    assert!(validate_structure(&delimited, OssieFormat::Development, Some("\"Shop\"")).is_ok());
+    for model_name in ["shop", "SHOP", "Shop"] {
+        let rejected = validate_structure(&delimited, OssieFormat::Development, Some(model_name))
+            .expect_err("a regular name never matches the delimited Shop");
+        assert_eq!(summary(&rejected), [pair("E0B-07", "")]);
+    }
+}
