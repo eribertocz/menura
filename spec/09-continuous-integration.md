@@ -32,6 +32,7 @@ GitHub Actions (WF-8.0). Blocking checks are required by branch protection.
 | Check name | Schedule | Action |
 |---|---|---|
 | `ossie-watch` | Daily | Opens an `ossie-watch` issue for each Apache Ossie release or specification change (OSS-4.1) |
+| `release-assets` | When a release is published | Attaches every `spec/contracts/schemas/*.schema.json` of the release's tag as a release asset, replacing an asset of the same name, then fails if any schema of the tag is missing from the release (CON-0.3) |
 
 ## CI-3 Rules
 
