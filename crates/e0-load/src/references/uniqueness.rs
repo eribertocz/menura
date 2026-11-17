@@ -5,17 +5,22 @@ use std::collections::HashSet;
 
 use super::diagnostic::ReferenceCode;
 use super::finding::Finding;
-use super::name::{MAXIMUM_LENGTH, is_too_long};
+use super::name::{MAXIMUM_LENGTH, identifier_text, is_too_long};
 use super::outline::{DeclaredName, ElementOutline, ModelOutline};
 
-/// Every `E0D-01` finding of `model`.
+/// Every `E0D-01` finding of the document: the names of every semantic model, selected or not,
+/// and the names inside `model`, the selected one.
 ///
-/// Each kind of element has its own scope: dataset, metric and relationship names are unique
-/// within the model, and field names within their dataset. A metric and a dataset may share a
-/// name (E0D-2). A duplicate is reported at every name after the first.
-pub(crate) fn name_findings(model: &ModelOutline<'_>) -> Vec<Finding> {
+/// Each kind of element has its own scope: semantic model names are unique within the
+/// document; dataset, metric and relationship names within the model; field names within their
+/// dataset. A metric and a dataset may share a name (E0D-2). A duplicate is reported at every
+/// name after the first.
+pub(crate) fn name_findings(
+    semantic_models: &[DeclaredName<'_>],
+    model: &ModelOutline<'_>,
+) -> Vec<Finding> {
     let mut findings = Vec::new();
-    findings.extend(model.name.iter().filter_map(too_long));
+    scope(semantic_models.iter(), "semantic model", &mut findings);
     let dataset_names = model
         .datasets
         .iter()
@@ -57,7 +62,7 @@ fn scope<'outline, 'document: 'outline>(
                 ReferenceCode::InvalidName,
                 &name.written,
                 format!(
-                    "`{}` is the name of an earlier {kind}; names that differ only in case are the same name",
+                    "`{}` is the name of an earlier {kind}; names equal after normalization are the same name",
                     name.written.text
                 ),
             ));
@@ -66,13 +71,14 @@ fn scope<'outline, 'document: 'outline>(
 }
 
 fn too_long(name: &DeclaredName<'_>) -> Option<Finding> {
-    is_too_long(name.written.text).then(|| {
+    let text = identifier_text(name.written.text);
+    is_too_long(&text).then(|| {
         Finding::rejecting(
             ReferenceCode::InvalidName,
             &name.written,
             format!(
                 "the name has {} characters; an identifier has at most {MAXIMUM_LENGTH}",
-                name.written.text.chars().count()
+                text.chars().count()
             ),
         )
     })

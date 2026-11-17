@@ -3,14 +3,14 @@
 use super::diagnostic::{ReferenceCode, ReferenceDiagnostic};
 use crate::pointer::JsonPointer;
 
-/// The references of a model that loads: the elements a missing reference makes unusable, and
-/// their `W0D-01` warnings.
+/// The references of a model that loads: the elements a missing reference or an unlisted
+/// reference form makes unusable, and their warnings.
 #[derive(Debug, Clone, PartialEq, Eq, Default)]
 pub struct References {
     /// One entry per unusable element, in document order.
     pub unusable: Vec<UnusableElement>,
-    /// One diagnostic per missing reference, in document order then by code (E0-4.3). Each is
-    /// reported as `W0D-01` ([`ReferenceCode::load_code`]).
+    /// One diagnostic per missing reference or unlisted reference form, in document order then
+    /// by code (E0-4.3). Each is reported as `W0D-01` or `W0F-01` ([`ReferenceCode::load_code`]).
     pub warnings: Vec<ReferenceDiagnostic>,
 }
 
@@ -18,9 +18,10 @@ pub struct References {
 /// the compile error document can report both (E0-2).
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ReferenceRejection {
-    /// `E0D-01` and `E0D-02` diagnostics, in document order then by code; never empty.
+    /// `E0D-01`, `E0D-02` and `E0D-08` diagnostics, in document order then by code; never
+    /// empty.
     pub errors: Vec<ReferenceDiagnostic>,
-    /// The missing-reference diagnostics, as in [`References::warnings`].
+    /// The other diagnostics, as in [`References::warnings`].
     pub warnings: Vec<ReferenceDiagnostic>,
 }
 
@@ -29,15 +30,15 @@ pub struct ReferenceRejection {
 pub enum ElementKind {
     /// A dataset whose key cannot be resolved.
     Dataset,
-    /// A field whose expression reads a missing column.
+    /// A field whose expression reads a missing column or has an unlisted reference form.
     Field,
-    /// A metric that refers to a missing dataset or field.
+    /// A metric that refers to a missing dataset or field, or has an unlisted reference form.
     Metric,
     /// A relationship that refers to a missing dataset or column.
     Relationship,
 }
 
-/// An element marked unusable by a missing reference (E0-4.1).
+/// An element marked unusable by a missing reference or an unlisted reference form (E0-4.1).
 ///
 /// Only the element that holds the reference is recorded. What follows from it (E0-4.2: the
 /// fields, metrics and relationships of an unusable dataset) is derived when the internal model

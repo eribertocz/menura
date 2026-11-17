@@ -1,0 +1,15 @@
+id: e0-references-catalog-column-002
+rules: [E0D-1.5, E0D-03, W0D-01]
+model: e0-references-catalog-columns
+security_context: analyst.json
+query:
+  contract: semantic_compiler.query
+  contract_version: "1.0.0"
+  reference_time: "2026-11-15T12:00:00-04:00"
+  time_zone: UTC
+  query:
+    dimensions: [payments.amount_lower]
+expect:
+  outcome: error
+  error: E0D-03
+  warnings: [W0D-01]

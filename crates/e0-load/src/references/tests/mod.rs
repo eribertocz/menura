@@ -8,7 +8,7 @@
 use semantic_compiler_contracts::admit_catalog_schema;
 
 use super::diagnostic::ReferenceDiagnostic;
-use super::{ElementKind, ReferenceCode, ReferenceRejection, References, resolve_references};
+use super::{ElementKind, ReferenceRejection, References, resolve_references};
 use crate::read::read_document;
 use crate::structure::validate_structure;
 
@@ -37,9 +37,17 @@ macro_rules! conformance_model {
 /// `name`) and `shop.main.labels` (`label_id`, `name`).
 const CATALOG: &str = conformance_file!("e0-references-missing", "catalog-schema.json");
 
-fn resolve((model, catalog): (&str, &str)) -> Result<References, ReferenceRejection> {
+fn resolve(files: (&str, &str)) -> Result<References, ReferenceRejection> {
+    resolve_selecting(files, None)
+}
+
+/// Resolves with the load option `model_name`.
+fn resolve_selecting(
+    (model, catalog): (&str, &str),
+    model_name: Option<&str>,
+) -> Result<References, ReferenceRejection> {
     let document = read_document(model.as_bytes()).expect("the document is read");
-    let structure = validate_structure(&document, None).expect("the structure is valid");
+    let structure = validate_structure(&document, model_name).expect("the structure is valid");
     let catalog = admit_catalog_schema(catalog).expect("the catalog schema is admitted");
     resolve_references(&document, &structure, &catalog)
 }

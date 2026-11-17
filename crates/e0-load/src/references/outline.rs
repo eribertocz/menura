@@ -1,7 +1,7 @@
 //! The names and references declared by the selected semantic model, read from the data tree
 //! once so that every check works on the same located values.
 
-use super::name::Name;
+use super::name::{Name, is_delimited};
 use crate::nodes::{items, member, text};
 use crate::pointer::JsonPointer;
 use crate::read::{Location, Node};
@@ -22,15 +22,15 @@ pub(crate) struct LocatedText<'document> {
 pub(crate) struct DeclaredName<'document> {
     /// Where the name is written.
     pub(crate) written: LocatedText<'document>,
-    /// The name after normalization (E0D-1.1).
+    /// The name after normalization (E0D-1.1, E0D-1.4).
     pub(crate) name: Name,
+    /// Whether it is written as a delimited identifier (E0D-1.4).
+    pub(crate) delimited: bool,
 }
 
 /// The selected semantic model, reduced to what reference resolution reads.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(crate) struct ModelOutline<'document> {
-    /// The name of the semantic model.
-    pub(crate) name: Option<DeclaredName<'document>>,
     /// The datasets, in document order.
     pub(crate) datasets: Vec<DatasetOutline<'document>>,
     /// The relationships, in document order.
@@ -93,7 +93,6 @@ pub(crate) fn outline<'document>(
     let relationships_pointer = pointer.member("relationships");
     let metrics_pointer = pointer.member("metrics");
     ModelOutline {
-        name: declared(model, pointer, "name"),
         datasets: items(member(model, "datasets"))
             .map(|(index, node)| dataset(node, datasets_pointer.item(index)))
             .collect(),
@@ -104,6 +103,14 @@ pub(crate) fn outline<'document>(
             .map(|(index, node)| element(node, metrics_pointer.item(index)))
             .collect(),
     }
+}
+
+/// The name of every semantic model of `document`, selected or not (E0D-2).
+pub(crate) fn semantic_model_names(document: &Node) -> Vec<DeclaredName<'_>> {
+    let pointer = JsonPointer::root().member("semantic_model");
+    items(member(document, "semantic_model"))
+        .filter_map(|(index, model)| declared(model, &pointer.item(index), "name"))
+        .collect()
 }
 
 fn dataset(node: &Node, pointer: JsonPointer) -> DatasetOutline<'_> {
@@ -195,6 +202,7 @@ fn name_list<'document>(
 fn into_name(written: LocatedText<'_>) -> DeclaredName<'_> {
     DeclaredName {
         name: Name::declared(written.text),
+        delimited: is_delimited(written.text),
         written,
     }
 }

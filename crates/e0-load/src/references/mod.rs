@@ -5,9 +5,13 @@
 //! sources the catalog does not describe (`E0D-02`) reject the model; a missing reference
 //! (`E0D-03` to `E0D-07`) makes its element unusable and is reported as `W0D-01` (E0-4).
 //!
+//! A query `source` that is not a single read-only `SELECT` (`E0D-08`) rejects the model too,
+//! and a reference form E0D-3 does not list is `E0F-02`, reported as `W0F-01` (E0D-3.4).
+//!
 //! References inside extensions are resolved by each extension with its own codes (E0D-3.2),
-//! never by the generic checks here. `E0D-08` is not checked yet (issue #78).
+//! never by the generic checks here.
 
+mod columns;
 mod diagnostic;
 mod expression_references;
 mod finding;
@@ -15,6 +19,7 @@ mod keys;
 mod name;
 mod outline;
 mod output;
+mod query_sources;
 mod scope;
 mod sources;
 mod uniqueness;
@@ -41,8 +46,8 @@ use scope::Scope;
 ///
 /// # Errors
 ///
-/// Returns a [`ReferenceRejection`] when any `E0D-01` or `E0D-02` diagnostic is found, with the
-/// missing-reference warnings found with them.
+/// Returns a [`ReferenceRejection`] when any `E0D-01`, `E0D-02` or `E0D-08` diagnostic is
+/// found, with the warnings found with them.
 pub fn resolve_references(
     document: &Node,
     structure: &Structure<'_>,
@@ -53,10 +58,13 @@ pub fn resolve_references(
         &structure.semantic_model.pointer,
     );
     let scope = Scope::new(&model, catalog, &structure.expressions);
-    let mut findings = uniqueness::name_findings(&model);
+    let semantic_models = outline::semantic_model_names(document);
+    let mut findings = uniqueness::name_findings(&semantic_models, &model);
     findings.extend(sources::source_findings(&scope));
+    findings.extend(query_sources::query_source_findings(&scope));
     findings.extend(expression_references::column_findings(&scope));
     findings.extend(expression_references::metric_findings(&scope));
+    findings.extend(expression_references::form_findings(&scope));
     findings.extend(keys::dataset_key_findings(&scope));
     findings.extend(keys::relationship_findings(&scope));
     findings.sort_by_cached_key(|finding| {

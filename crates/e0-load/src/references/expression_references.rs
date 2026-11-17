@@ -1,9 +1,10 @@
-//! `E0D-03` and `E0D-04`: the references of field and metric expressions exist (E0D-3).
+//! `E0D-03` and `E0D-04`: the references of field and metric expressions exist (E0D-3), and
+//! `E0F-02` for a reference form E0D-3 does not list (E0D-3.4).
 //!
-//! A field expression reads columns of the catalog relation of its dataset's `source`, never
-//! other fields; a metric expression reads `dataset.field`. Other reference forms (a qualified
-//! name in a field expression, a bare name in a metric expression) are not checked here: which
-//! code they get is open (issue #78).
+//! A field expression reads columns of the catalog relation of its dataset's `source` with
+//! unqualified references, never other fields; a metric expression reads `dataset.field`. A
+//! qualified reference in a field expression, or an unqualified one in a metric expression, is
+//! outside the accepted subset.
 
 use semantic_compiler_model::expression::Reference;
 
@@ -27,7 +28,7 @@ pub(crate) fn column_findings(scope: &Scope<'_, '_>) -> Vec<Finding> {
         };
         for element in &dataset.fields {
             let missing = missing_names(scope, element, |reference| {
-                reference.qualifier.is_none() && !columns.contains(&Name::of(&reference.name))
+                reference.qualifier.is_none() && columns.find_identifier(&reference.name).is_none()
             });
             if let Some(missing) = missing {
                 findings.push(finding(
@@ -64,6 +65,35 @@ pub(crate) fn metric_findings(scope: &Scope<'_, '_>) -> Vec<Finding> {
         }
     }
     findings
+}
+
+/// Every `E0F-02` finding of E0D-3.4: one per field with a qualified reference and one per
+/// metric with an unqualified reference.
+pub(crate) fn form_findings(scope: &Scope<'_, '_>) -> Vec<Finding> {
+    let fields = scope
+        .model
+        .datasets
+        .iter()
+        .flat_map(|dataset| &dataset.fields);
+    let field_findings = fields.filter_map(|element| {
+        let unlisted = missing_names(scope, element, |reference| reference.qualifier.is_some())?;
+        Some(finding(
+            ReferenceCode::UnlistedReferenceForm,
+            element,
+            format!("the field expression refers to {unlisted}; a field expression reads source columns by their bare name"),
+            ElementKind::Field,
+        ))
+    });
+    let metric_findings = scope.model.metrics.iter().filter_map(|element| {
+        let unlisted = missing_names(scope, element, |reference| reference.qualifier.is_none())?;
+        Some(finding(
+            ReferenceCode::UnlistedReferenceForm,
+            element,
+            format!("the metric refers to {unlisted}; a metric expression reads fields as `dataset.field`"),
+            ElementKind::Metric,
+        ))
+    });
+    field_findings.chain(metric_findings).collect()
 }
 
 /// Whether the model has a dataset `dataset` with a field `name`.

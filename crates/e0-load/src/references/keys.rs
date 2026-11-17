@@ -3,9 +3,9 @@
 
 use semantic_compiler_model::expression::Expression;
 
+use super::columns::Columns;
 use super::diagnostic::ReferenceCode;
 use super::finding::Finding;
-use super::name::Name;
 use super::outline::{DatasetOutline, DeclaredName, RelationshipOutline};
 use super::output::ElementKind;
 use super::scope::{Scope, field};
@@ -83,24 +83,25 @@ fn resolve(
     element: (ElementKind, &JsonPointer),
 ) -> Option<Finding> {
     let columns = scope.columns(dataset);
-    let is_column = columns.map(|columns| columns.contains(&key.name));
+    let column = columns.map(|columns| columns.find(&key.name, key.delimited));
     let dataset_name = dataset.name.as_ref().map_or("", |name| name.written.text);
-    match (field(dataset, &key.name), is_column) {
-        (Some(found), Some(true)) => {
+    match (field(dataset, &key.name), column) {
+        (Some(found), Some(Some(column))) => {
             let tree = scope.tree(&found.pointer)?;
-            (!reads_exactly(tree, &key.name)).then(|| {
+            let reads_column = columns.is_some_and(|columns| reads_exactly(tree, columns, column));
+            (!reads_column).then(|| {
                 Finding::missing(
                     ReferenceCode::KeyFieldIsOtherColumn,
                     key.written.place(),
                     format!(
-                        "`{}` is a field of `{dataset_name}` that is not exactly the source column of the same name",
+                        "`{}` is a field of `{dataset_name}` that is not exactly the source column `{column}`",
                         key.written.text
                     ),
                     element,
                 )
             })
         }
-        (None, Some(false)) => Some(Finding::missing(
+        (None, Some(None)) => Some(Finding::missing(
             ReferenceCode::UnresolvedKeyName,
             key.written.place(),
             format!(
@@ -113,8 +114,9 @@ fn resolve(
     }
 }
 
-/// Whether `tree` is exactly the source column `column`.
-fn reads_exactly(tree: &Expression, column: &Name) -> bool {
+/// Whether `tree` is exactly the source column spelled `column`: an unqualified reference that
+/// matches that column (E0D-1.5).
+fn reads_exactly(tree: &Expression, columns: &Columns<'_>, column: &str) -> bool {
     matches!(tree, Expression::Reference(reference)
-        if reference.qualifier.is_none() && Name::of(&reference.name) == *column)
+        if reference.qualifier.is_none() && columns.find_identifier(&reference.name) == Some(column))
 }

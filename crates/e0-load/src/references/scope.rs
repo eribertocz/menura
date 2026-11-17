@@ -1,11 +1,12 @@
 //! The lookups every reference check shares: datasets and fields of the model by name, columns
 //! of the catalog relations, and the parsed expression of each field and metric.
 
-use std::collections::{HashMap, HashSet};
+use std::collections::HashMap;
 
 use semantic_compiler_contracts::types::catalog::CatalogSchemaDocument;
 use semantic_compiler_model::expression::Expression;
 
+use super::columns::Columns;
 use super::name::Name;
 use super::outline::{DatasetOutline, ElementOutline, ModelOutline};
 use crate::expressions::{ExpressionPlace, parse_element_expression};
@@ -19,7 +20,7 @@ pub(crate) struct Scope<'model, 'document> {
     /// The first dataset of each name.
     datasets: HashMap<&'model Name, &'model DatasetOutline<'document>>,
     /// The columns of each catalog relation, by `source` text.
-    relations: HashMap<&'model str, HashSet<Name>>,
+    relations: HashMap<&'model str, Columns<'model>>,
     /// The tree of each field and metric whose single `ANSI_SQL` variant parses, by element
     /// pointer. Elements whose expression cannot be used are left out: E0.b and E0.f report them.
     trees: HashMap<&'model JsonPointer, Expression>,
@@ -42,14 +43,7 @@ impl<'model, 'document> Scope<'model, 'document> {
         let relations = catalog
             .relations
             .iter()
-            .map(|relation| {
-                let columns = relation
-                    .columns
-                    .iter()
-                    .map(|column| Name::declared(&column.name))
-                    .collect();
-                (relation.source.as_str(), columns)
-            })
+            .map(|relation| (relation.source.as_str(), Columns::new(relation)))
             .collect();
         let trees = expressions.iter().filter_map(parsed).collect();
         Self {
@@ -72,7 +66,7 @@ impl<'model, 'document> Scope<'model, 'document> {
 
     /// The column names of the catalog relation of `dataset`, if the catalog describes its
     /// `source`.
-    pub(crate) fn columns(&self, dataset: &DatasetOutline<'_>) -> Option<&HashSet<Name>> {
+    pub(crate) fn columns(&self, dataset: &DatasetOutline<'_>) -> Option<&Columns<'model>> {
         self.relations.get(dataset.source.as_ref()?.text)
     }
 

@@ -1,7 +1,8 @@
-//! Existence of references: E0D-3, `E0D-02` to `E0D-07`, `W0D-01`, DEV-3 and the
+//! Existence of references: E0D-3, `E0D-02` to `E0D-08`, `W0D-01`, `E0F-02`, DEV-3 and the
 //! dispositions of E0-4.
 
 use super::*;
+use crate::references::ReferenceCode;
 
 #[test]
 fn e0d_02_dev_3_a_source_the_catalog_does_not_describe() {
@@ -163,5 +164,65 @@ fn elements_whose_expression_cannot_be_used_are_left_to_e0b_and_e0f() {
     assert_eq!(
         loaded((&document(&dataset, metrics), CATALOG)),
         References::default()
+    );
+}
+
+#[test]
+fn e0d_3_3_e0d_08_a_query_source_is_a_single_read_only_select() {
+    assert_eq!(
+        loaded(conformance_model!("e0-references-query-source")),
+        References::default()
+    );
+    let rejection = rejected(conformance_model!("e0-references-query-source-001"));
+    assert_eq!(
+        summary(&rejection.errors),
+        [pair("E0D-08", "/semantic_model/0/datasets/1/source")]
+    );
+    assert_eq!(rejection.errors[0].code.load_code(), "E0D-08");
+}
+
+#[test]
+fn e0d_3_4_e0f_02_unlisted_reference_forms_make_elements_unusable() {
+    let references = loaded(conformance_model!("e0-references-reference-forms"));
+    assert_eq!(
+        summary(&references.warnings),
+        [
+            pair("E0F-02", &format!("{ORDERS}/fields/3/expression")),
+            pair("E0F-02", "/semantic_model/0/metrics/1/expression"),
+        ]
+    );
+    assert!(
+        references
+            .warnings
+            .iter()
+            .all(|warning| warning.code.load_code() == ReferenceCode::EXPRESSION_WARNING)
+    );
+    assert_eq!(
+        unusable(&references),
+        [
+            (ElementKind::Field, format!("{ORDERS}/fields/3"), "E0F-02"),
+            (
+                ElementKind::Metric,
+                "/semantic_model/0/metrics/1".to_owned(),
+                "E0F-02"
+            ),
+        ]
+    );
+}
+
+#[test]
+fn e0d_3_4_a_missing_column_comes_before_an_unlisted_form() {
+    let dataset = orders("order_id", &field("both", "orders.amount + discount"));
+    let references = loaded((&document(&dataset, ""), CATALOG));
+    assert_eq!(
+        summary(&references.warnings),
+        [
+            pair("E0D-03", &format!("{ORDERS}/fields/2/expression")),
+            pair("E0F-02", &format!("{ORDERS}/fields/2/expression")),
+        ]
+    );
+    assert_eq!(
+        unusable(&references),
+        [(ElementKind::Field, format!("{ORDERS}/fields/2"), "E0D-03")]
     );
 }

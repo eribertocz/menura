@@ -7,32 +7,62 @@ pub(crate) const MAXIMUM_LENGTH: usize = 128;
 
 /// An identifier after normalization (E0D-1.1): two names are the same name exactly when their
 /// normalized forms are equal (E0D-1.3).
+///
+/// A regular identifier is normalized to upper case; a delimited one is kept exactly, without
+/// its quotes.
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub(crate) struct Name(String);
 
 impl Name {
-    /// The name declared by a string of the model document or the catalog schema.
-    ///
-    /// A declared name is an unquoted identifier: names that differ only in case are the same
-    /// name (DEV-2). Whether a declared name may be written as a delimited identifier is open
-    /// (issue #78).
+    /// The name declared by a string of the model document (E0D-1.4): a delimited identifier
+    /// when the string starts and ends with `"`, otherwise a regular identifier.
     pub(crate) fn declared(text: &str) -> Self {
+        match delimited_content(text) {
+            Some(content) => Self(content),
+            None => Self::regular(text),
+        }
+    }
+
+    /// The name of a regular identifier spelled `text`, such as a catalog column name compared
+    /// with a regular reference (E0D-1.5).
+    pub(crate) fn regular(text: &str) -> Self {
         Self(upper_case(text))
     }
 
-    /// The name an identifier of an expression refers to: a regular identifier in upper case,
-    /// a delimited one exactly as written (E0D-1.1).
+    /// The name an identifier of an expression refers to (E0D-1.1).
     pub(crate) fn of(identifier: &Identifier) -> Self {
         if identifier.is_delimited() {
             Self(identifier.text().to_owned())
         } else {
-            Self::declared(identifier.text())
+            Self::regular(identifier.text())
         }
+    }
+
+    /// The normalized text.
+    pub(crate) fn as_str(&self) -> &str {
+        &self.0
     }
 }
 
-/// Whether `text` has more characters than an identifier may have (E0D-1.2). Characters are
-/// Unicode scalar values.
+/// Whether the declared name `text` is a delimited identifier (E0D-1.4).
+pub(crate) fn is_delimited(text: &str) -> bool {
+    text.len() >= 2 && text.starts_with('"') && text.ends_with('"')
+}
+
+/// The identifier text of the declared name `text`: without its quotes and with `""` read as
+/// `"` when it is delimited, otherwise `text` itself.
+pub(crate) fn identifier_text(text: &str) -> String {
+    delimited_content(text).unwrap_or_else(|| text.to_owned())
+}
+
+fn delimited_content(text: &str) -> Option<String> {
+    let inner = text.strip_prefix('"')?.strip_suffix('"')?;
+    is_delimited(text).then(|| inner.replace("\"\"", "\""))
+}
+
+/// Whether the identifier text `text` has more characters than an identifier may have
+/// (E0D-1.2). Characters are Unicode scalar values; the quotes of a delimited identifier do not
+/// count.
 pub(crate) fn is_too_long(text: &str) -> bool {
     text.chars().nth(MAXIMUM_LENGTH).is_some()
 }
@@ -71,7 +101,7 @@ fn with_prosgegrammeni(character: char) -> Option<char> {
 mod tests {
     use semantic_compiler_model::expression::Identifier;
 
-    use super::{MAXIMUM_LENGTH, Name, is_too_long};
+    use super::{MAXIMUM_LENGTH, Name, identifier_text, is_delimited, is_too_long};
 
     fn regular(text: &str) -> Identifier {
         Identifier::regular(text).expect("a regular identifier")
@@ -90,6 +120,19 @@ mod tests {
     }
 
     #[test]
+    fn e0d_1_4_a_declared_name_between_double_quotes_is_delimited() {
+        assert_eq!(Name::declared("\"Orders\""), Name::of(&delimited("Orders")));
+        assert_ne!(Name::declared("\"Orders\""), Name::declared("orders"));
+        assert_eq!(Name::declared("\"ORDERS\""), Name::declared("orders"));
+        assert_eq!(Name::declared("\"a\"\"b\""), Name::of(&delimited("a\"b")));
+        assert_eq!(identifier_text("\"a\"\"b\""), "a\"b");
+        assert!(is_delimited("\"\""));
+        assert!(!is_delimited("\""));
+        assert!(!is_delimited("\"Orders"));
+        assert_eq!(Name::declared("\"Orders"), Name::regular("\"ORDERS"));
+    }
+
+    #[test]
     fn e0d_1_1_normalization_is_the_simple_mapping() {
         assert_eq!(Name::declared("straße"), Name::of(&delimited("STRAßE")));
         assert_eq!(Name::declared("ǆ"), Name::of(&delimited("Ǆ")));
@@ -103,5 +146,7 @@ mod tests {
     fn e0d_1_2_at_most_128_characters() {
         assert!(!is_too_long(&"é".repeat(MAXIMUM_LENGTH)));
         assert!(is_too_long(&"a".repeat(MAXIMUM_LENGTH + 1)));
+        let quoted = format!("\"{}\"", "a".repeat(MAXIMUM_LENGTH));
+        assert!(!is_too_long(&identifier_text(&quoted)));
     }
 }

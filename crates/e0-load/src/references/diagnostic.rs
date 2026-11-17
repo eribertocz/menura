@@ -5,7 +5,10 @@ use std::fmt;
 use crate::pointer::JsonPointer;
 use crate::read::Location;
 
-/// The code of a reference diagnostic (E0D-4).
+/// The code of a reference diagnostic (E0D-4, and `E0F-02` of E0D-3.4).
+///
+/// The order of the variants is the order of E2-5 row 12a, so the lowest code of an unusable
+/// element is the query error a query that names it raises.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum ReferenceCode {
     /// `E0D-01`: a duplicate name, or a name longer than 128 characters.
@@ -22,11 +25,18 @@ pub enum ReferenceCode {
     UnresolvedKeyName,
     /// `E0D-07`: a key name is both a field and a different source column.
     KeyFieldIsOtherColumn,
+    /// `E0D-08`: a `source` that is a query is not a single read-only `SELECT` (E0D-3.3).
+    UnsafeQuerySource,
+    /// `E0F-02`: a reference form E0D-3 does not list, outside the accepted subset (E0D-3.4).
+    UnlistedReferenceForm,
 }
 
 impl ReferenceCode {
     /// The load warning reported for every missing reference (E0-4 table).
     pub const MISSING_REFERENCE_WARNING: &'static str = "W0D-01";
+
+    /// The load warning reported for every expression problem, `E0F-02` included (E0-4 table).
+    pub const EXPRESSION_WARNING: &'static str = "W0F-01";
 
     /// The code as the specification writes it, such as `E0D-04`.
     #[must_use]
@@ -39,25 +49,30 @@ impl ReferenceCode {
             Self::MissingRelationshipDataset => "E0D-05",
             Self::UnresolvedKeyName => "E0D-06",
             Self::KeyFieldIsOtherColumn => "E0D-07",
+            Self::UnsafeQuerySource => "E0D-08",
+            Self::UnlistedReferenceForm => "E0F-02",
         }
     }
 
-    /// Whether the code rejects the model (E0-4 table: `E0D-01`, DEV-2, and `E0D-02`, DEV-3).
-    /// Every other code makes its element unusable.
+    /// Whether the code rejects the model (E0-4 table: `E0D-01`, DEV-2, `E0D-02`, DEV-3, and
+    /// `E0D-08`). Every other code makes its element unusable.
     #[must_use]
     pub fn rejects(self) -> bool {
-        matches!(self, Self::InvalidName | Self::SourceNotInCatalog)
+        matches!(
+            self,
+            Self::InvalidName | Self::SourceNotInCatalog | Self::UnsafeQuerySource
+        )
     }
 
-    /// The code the load reports: the code itself when it rejects, otherwise
-    /// [`Self::MISSING_REFERENCE_WARNING`]; the code itself is then the query error of the
-    /// unusable element (E0-4.1).
+    /// The code the load reports: the code itself when it rejects, otherwise its load warning,
+    /// [`Self::MISSING_REFERENCE_WARNING`] or, for `E0F-02`, [`Self::EXPRESSION_WARNING`]; the
+    /// code itself is then the query error of the unusable element (E0-4.1).
     #[must_use]
     pub fn load_code(self) -> &'static str {
-        if self.rejects() {
-            self.as_str()
-        } else {
-            Self::MISSING_REFERENCE_WARNING
+        match self {
+            Self::UnlistedReferenceForm => Self::EXPRESSION_WARNING,
+            code if code.rejects() => code.as_str(),
+            _ => Self::MISSING_REFERENCE_WARNING,
         }
     }
 }
