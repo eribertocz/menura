@@ -59,8 +59,8 @@ pub(crate) struct Edge {
     pub(crate) from: DatasetIndex,
     /// The dataset on the one side.
     pub(crate) to: DatasetIndex,
-    /// Whether `from_columns` also matches a key of `from` (the key-matching rule E0E-3.5), so the
-    /// relationship is one-to-one; it is still traversed only from `from` to `to` (E0E-3.4).
+    /// Whether `from_columns` also matches a key of `from` (E0E-3.8), so the relationship is
+    /// one-to-one; it is still traversed only from `from` to `to` (E0E-3.4).
     pub(crate) one_to_one: bool,
 }
 

@@ -224,7 +224,7 @@ fn e0e_4_2_w0e_01_is_located_at_the_from_dataset_and_ordered_by_target() {
 }
 
 #[test]
-fn e0e_3_5_a_key_listed_in_another_order_matches() {
+fn e0e_3_8_a_key_listed_in_another_order_matches() {
     let relationships = analyze(RELATIONSHIPS);
     let undeclared: Vec<String> = relationships
         .warnings

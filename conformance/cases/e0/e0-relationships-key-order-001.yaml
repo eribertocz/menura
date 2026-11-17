@@ -1,5 +1,5 @@
 id: e0-relationships-key-order-001
-rules: [E0E-3.2, E0E-3.5]
+rules: [E0E-3.2, E0E-3.8]
 model: e0-relationships
 security_context: analyst.json
 query:

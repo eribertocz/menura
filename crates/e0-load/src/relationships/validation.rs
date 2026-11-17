@@ -154,8 +154,7 @@ fn invalid_diagnostics(
 }
 
 /// Whether `columns` matches the primary key or a unique key of `dataset` (E0E-3.2, E0E-3.4):
-/// both hold the same set of normalized names, whatever their order and repetition (the
-/// key-matching rule E0E-3.5).
+/// both hold the same set of normalized names, whatever their order and repetition (E0E-3.8).
 pub(crate) fn is_key(dataset: &DatasetDeclaration<'_>, columns: &[Name]) -> bool {
     let columns: BTreeSet<&Name> = columns.iter().collect();
     dataset

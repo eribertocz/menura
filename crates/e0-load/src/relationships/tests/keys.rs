@@ -1,5 +1,4 @@
-//! Matching a column list with a key: the key-matching rule E0E-3.5, used by E0E-3.2 and
-//! E0E-3.4.
+//! Matching a column list with a key: E0E-3.8, used by E0E-3.2 and E0E-3.4.
 
 use super::super::declarations::{DatasetDeclaration, Place, WrittenName};
 use super::super::validation::is_key;
@@ -35,14 +34,14 @@ fn columns(names: &[&str]) -> Vec<Name> {
 }
 
 #[test]
-fn e0e_3_5_keys_match_as_sets_whatever_the_order() {
+fn e0e_3_8_keys_match_as_sets_whatever_the_order() {
     let store_days = dataset(&[&["store_id", "date_key"]]);
     assert!(is_key(&store_days, &columns(&["store_id", "date_key"])));
     assert!(is_key(&store_days, &columns(&["date_key", "store_id"])));
 }
 
 #[test]
-fn e0e_3_5_repetition_is_ignored() {
+fn e0e_3_8_repetition_is_ignored() {
     let store_days = dataset(&[&["store_id", "date_key"]]);
     assert!(is_key(
         &store_days,
@@ -53,7 +52,7 @@ fn e0e_3_5_repetition_is_ignored() {
 }
 
 #[test]
-fn e0e_3_5_names_are_compared_after_normalization() {
+fn e0e_3_8_names_are_compared_after_normalization() {
     let store_days = dataset(&[&["store_id", "date_key"]]);
     assert!(is_key(&store_days, &columns(&["STORE_ID", "\"DATE_KEY\""])));
     assert!(!is_key(
@@ -63,7 +62,7 @@ fn e0e_3_5_names_are_compared_after_normalization() {
 }
 
 #[test]
-fn e0e_3_5_a_subset_superset_or_other_set_does_not_match() {
+fn e0e_3_8_a_subset_superset_or_other_set_does_not_match() {
     let store_days = dataset(&[&["store_id", "date_key"], &["opening_hours"]]);
     assert!(!is_key(&store_days, &columns(&["store_id"])));
     assert!(!is_key(

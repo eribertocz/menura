@@ -1,6 +1,5 @@
-//! Analyzing relationships: E0E-2.1 to E0E-2.4, E0E-3.1 to E0E-3.6 (both rules numbered
-//! E0E-3.5), E0E-4.1, E0E-4.2, E0E-5.1,
-//! E0E-01, E0E-02, W0E-01 to W0E-04, and the dispositions of E0-4.
+//! Analyzing relationships: E0E-2.1 to E0E-2.4, E0E-3.1 to E0E-3.6, E0E-3.8, E0E-4.1, E0E-4.2,
+//! E0E-5.1, E0E-01, E0E-02, W0E-01 to W0E-04, and the dispositions of E0-4.
 //!
 //! The model documents and catalog schemas of the `e0-relationships-*` conformance cases are
 //! read here at compile time, so the analysis is checked against the files the conformance suite
