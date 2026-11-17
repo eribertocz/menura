@@ -1,15 +1,15 @@
-//! The lookups every reference check shares: datasets and fields of the model by name, columns
-//! of the catalog relations, and the parsed expression of each field and metric.
+//! The lookups every reference check shares: datasets of the model by name, columns of the
+//! catalog relations, and the parsed expression of each field and metric.
 
 use std::collections::HashMap;
 
 use semantic_compiler_contracts::types::catalog::CatalogSchemaDocument;
 use semantic_compiler_model::expression::Expression;
 
-use super::columns::Columns;
-use super::outline::{DatasetOutline, ElementOutline, ModelOutline};
+use crate::columns::Columns;
 use crate::expressions::{ExpressionPlace, parse_element_expression};
 use crate::names::Name;
+use crate::outline::{DatasetOutline, ModelOutline};
 use crate::pointer::JsonPointer;
 use crate::structure::{CompiledVariant, ElementExpression, ElementKind};
 
@@ -75,17 +75,6 @@ impl<'model, 'document> Scope<'model, 'document> {
     pub(crate) fn tree(&self, pointer: &JsonPointer) -> Option<&Expression> {
         self.trees.get(pointer)
     }
-}
-
-/// The first field of `dataset` named `name`.
-pub(crate) fn field<'model, 'document>(
-    dataset: &'model DatasetOutline<'document>,
-    name: &Name,
-) -> Option<&'model ElementOutline<'document>> {
-    dataset
-        .fields
-        .iter()
-        .find(|field| field.name.as_ref().is_some_and(|field| field.name == *name))
 }
 
 fn parsed<'model>(

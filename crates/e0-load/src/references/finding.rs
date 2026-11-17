@@ -1,8 +1,8 @@
 //! A diagnostic together with the element it makes unusable, as checks report it.
 
 use super::diagnostic::{ReferenceCode, ReferenceDiagnostic};
-use super::outline::LocatedText;
 use super::output::ElementKind;
+use crate::outline::LocatedText;
 use crate::pointer::JsonPointer;
 use crate::read::Location;
 

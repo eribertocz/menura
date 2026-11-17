@@ -1,0 +1,97 @@
+version: "0.1.1"
+semantic_model:
+  - name: e0_typing
+    description: Model whose expressions and relationship keys are typed against the catalog schema, with one unusable element per E0F typing code
+    custom_extensions:
+      - vendor_name: COMMON
+        data: '{"namespace": "semantic_compiler", "version": 1, "security_context": {"roles": ["analyst"], "attributes": []}}'
+    datasets:
+      - name: orders
+        source: shop.main.orders
+        primary_key: [order_id]
+        fields:
+          - name: order_id
+            expression: {dialects: [{dialect: ANSI_SQL, expression: order_id}]}
+          - name: customer_id
+            expression: {dialects: [{dialect: ANSI_SQL, expression: customer_id}]}
+          - name: status
+            expression: {dialects: [{dialect: ANSI_SQL, expression: status}]}
+          - name: quantity
+            expression: {dialects: [{dialect: ANSI_SQL, expression: quantity}]}
+          - name: price
+            expression: {dialects: [{dialect: ANSI_SQL, expression: price}]}
+          - name: rate
+            expression: {dialects: [{dialect: ANSI_SQL, expression: rate}]}
+          - name: discount
+            expression: {dialects: [{dialect: ANSI_SQL, expression: discount}]}
+          - name: payload
+            expression: {dialects: [{dialect: ANSI_SQL, expression: payload}]}
+          - name: status_plus_one
+            expression: {dialects: [{dialect: ANSI_SQL, expression: status + 1}]}
+          - name: total_quantity_field
+            expression: {dialects: [{dialect: ANSI_SQL, expression: SUM(quantity)}]}
+          - name: is_open
+            expression: {dialects: [{dialect: ANSI_SQL, expression: CASE WHEN status THEN 1 ELSE 0 END}]}
+          - name: price_band
+            expression: {dialects: [{dialect: ANSI_SQL, expression: "CASE WHEN price < 8 THEN 'low' ELSE 'high' END"}]}
+          - name: pair_marker
+            expression: {dialects: [{dialect: ANSI_SQL, expression: "CASE quantity WHEN 2.0 THEN 'pair' ELSE 'other' END"}]}
+        custom_extensions:
+          - vendor_name: COMMON
+            data: '{"namespace": "semantic_compiler", "version": 1, "access": {"mode": "roles", "roles": ["analyst"]}}'
+      - name: customers
+        source: shop.main.customers
+        primary_key: [customer_id]
+        unique_keys: [[customer_code]]
+        fields:
+          - name: customer_id
+            expression: {dialects: [{dialect: ANSI_SQL, expression: customer_id}]}
+          - name: customer_code
+            expression: {dialects: [{dialect: ANSI_SQL, expression: customer_code}]}
+          - name: name
+            expression: {dialects: [{dialect: ANSI_SQL, expression: name}]}
+        custom_extensions:
+          - vendor_name: COMMON
+            data: '{"namespace": "semantic_compiler", "version": 1, "access": {"mode": "roles", "roles": ["analyst"]}}'
+    relationships:
+      - name: orders_customers
+        from: orders
+        to: customers
+        from_columns: [customer_id]
+        to_columns: [customer_id]
+      - name: orders_customers_by_code
+        from: orders
+        to: customers
+        from_columns: [customer_id]
+        to_columns: [customer_code]
+    metrics:
+      - name: total_quantity
+        expression: {dialects: [{dialect: ANSI_SQL, expression: SUM(orders.quantity)}]}
+      - name: quantity_per_order
+        expression: {dialects: [{dialect: ANSI_SQL, expression: SUM(orders.quantity) / COUNT(*)}]}
+      - name: quantity_per_nothing
+        expression: {dialects: [{dialect: ANSI_SQL, expression: "COALESCE(SUM(orders.quantity) / 0, -1.0E0)"}]}
+      - name: total_price
+        expression: {dialects: [{dialect: ANSI_SQL, expression: SUM(orders.price)}]}
+      - name: average_discount
+        expression: {dialects: [{dialect: ANSI_SQL, expression: AVG(orders.discount)}]}
+      - name: squared_rate
+        expression: {dialects: [{dialect: ANSI_SQL, expression: SUM(orders.rate * orders.rate)}]}
+      - name: total_order_count
+        expression: {dialects: [{dialect: ANSI_SQL, expression: SUM(COUNT(orders.order_id))}]}
+      - name: total_line_price
+        expression: {dialects: [{dialect: ANSI_SQL, expression: SUM(orders.price * orders.quantity)}]}
+      - name: median_discount
+        expression: {dialects: [{dialect: ANSI_SQL, expression: MEDIAN(orders.discount)}]}
+      - name: padded_quantity
+        expression: {dialects: [{dialect: ANSI_SQL, expression: "SUM(COALESCE(orders.quantity + NULL, -1))"}]}
+      - name: total_of_null
+        expression: {dialects: [{dialect: ANSI_SQL, expression: SUM(NULL)}]}
+      - name: total_rounded_to_tens
+        expression: {dialects: [{dialect: ANSI_SQL, expression: "SUM(ROUND(orders.price, -1))"}]}
+      - name: status_part_count
+        expression: {dialects: [{dialect: ANSI_SQL, expression: "COUNT(DISTINCT SPLIT_PART(orders.status, 'O', orders.quantity))"}]}
+      - name: quantity_at_discount
+        expression: {dialects: [{dialect: ANSI_SQL, expression: PERCENTILE_CONT(orders.discount) WITHIN GROUP (ORDER BY orders.quantity)}]}
+      - name: nothing
+        expression: {dialects: [{dialect: ANSI_SQL, expression: "NULL"}]}

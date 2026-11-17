@@ -11,8 +11,9 @@ use semantic_compiler_model::expression::Reference;
 use super::diagnostic::ReferenceCode;
 use super::expression_references::{finding, missing_names};
 use super::finding::Finding;
+
 use super::output::ElementKind;
-use super::scope::{Scope, field};
+use super::scope::Scope;
 use crate::names::Name;
 
 /// The qualifier of a source column reference.
@@ -58,7 +59,7 @@ pub(crate) fn dataset_metric_findings(scope: &Scope<'_, '_>) -> Vec<Finding> {
             });
             let missing_fields = missing_names(scope, element, |reference| {
                 matches!(form(reference), Form::Field)
-                    && field(dataset, &Name::of(&reference.name)).is_none()
+                    && dataset.field(&Name::of(&reference.name)).is_none()
             });
             report(
                 ReferenceCode::MissingMetricReference,

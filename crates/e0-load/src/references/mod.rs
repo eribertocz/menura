@@ -11,13 +11,11 @@
 //! References inside extensions are resolved by each extension with its own codes (E0D-3.2),
 //! never by the generic checks here.
 
-mod columns;
 mod dataset_metric_references;
 mod diagnostic;
 mod expression_references;
 mod finding;
 mod keys;
-mod outline;
 mod output;
 mod query_sources;
 mod scope;
@@ -32,11 +30,11 @@ use std::collections::HashMap;
 
 use semantic_compiler_contracts::types::catalog::CatalogSchemaDocument;
 
+use crate::outline::{self, outline};
 use crate::pointer::{JsonPointer, position};
 use crate::read::Node;
 use crate::structure::Structure;
 use finding::Finding;
-use outline::outline;
 use scope::Scope;
 
 /// Resolves the references of the semantic model that `structure` selected in `document`,

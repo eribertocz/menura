@@ -1,4 +1,5 @@
-//! The columns of one catalog relation, as references find them (E0D-1.5).
+//! The columns of one catalog relation, as references to them find them (E0D-1.5), shared by
+//! the substages that look columns up.
 
 use std::collections::{HashMap, HashSet};
 
@@ -58,7 +59,7 @@ mod tests {
     #[test]
     fn e0d_1_5_regular_references_match_normalized_and_delimited_ones_exactly() {
         let catalog = admit_catalog_schema(include_str!(
-            "../../../../conformance/models/e0-references-catalog-columns/catalog-schema.json"
+            "../../../conformance/models/e0-references-catalog-columns/catalog-schema.json"
         ))
         .expect("the catalog schema is admitted");
         let columns = Columns::new(&catalog.relations[0]);

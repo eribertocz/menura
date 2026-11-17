@@ -1,0 +1,16 @@
+id: e0-typing-split-part-number-001
+rules: [E0F-5a, E0F-03, W0F-01]
+model: e0-typing
+security_context: analyst.json
+query:
+  contract: semantic_compiler.query
+  contract_version: "1.0.0"
+  reference_time: "2026-11-15T12:00:00-04:00"
+  time_zone: UTC
+  query:
+    metrics:
+      - {metric: status_part_count, alias: status_part_count}
+expect:
+  outcome: error
+  error: E0F-03
+  warnings: [W0F-01]

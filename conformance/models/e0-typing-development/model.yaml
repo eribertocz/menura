@@ -1,0 +1,42 @@
+version: "0.3.0.dev0"
+name: e0_typing_development
+description: Development-line model whose sql expressions and dataset metrics are typed against the catalog schema, with one unusable element per typing problem
+nonportable_extensions:
+  - vendor_name: COMMON
+    data: {namespace: semantic_compiler, version: 1, security_context: {roles: [analyst], attributes: []}}
+datasets:
+  - name: orders
+    source: shop.main.orders
+    primary_key: [order_id]
+    fields:
+      - name: order_id
+        expression: {sql: order_id}
+      - name: status
+        expression: {sql: status}
+      - name: quantity
+        expression: {sql: quantity}
+      - name: price
+        expression: {sql: price}
+      - name: payload
+        expression: {sql: payload}
+      - name: status_plus_one
+        expression: {sql: status + 1}
+    metrics:
+      - name: total_quantity
+        expression: {sql: SUM(quantity)}
+      - name: source_total_price
+        expression: {sql: SUM(source.price)}
+      - name: source_payload_count
+        expression: {sql: COUNT(source.payload)}
+      - name: nested_count
+        expression: {sql: SUM(COUNT(quantity))}
+      - name: status_total
+        expression: {sql: SUM(status)}
+    nonportable_extensions:
+      - vendor_name: COMMON
+        data: {namespace: semantic_compiler, version: 1, access: {mode: roles, roles: [analyst]}}
+metrics:
+  - name: total_line_price
+    expression: {sql: SUM(orders.price * orders.quantity)}
+  - name: total_of_status
+    expression: {sql: SUM(orders.status)}

@@ -1,5 +1,5 @@
 //! The names and references declared by the selected semantic model, read from the data tree
-//! once so that every check works on the same located values.
+//! once so that every substage that checks them works on the same located values.
 
 use crate::names::{Name, is_delimited};
 use crate::nodes::{items, member, text};
@@ -28,7 +28,7 @@ pub(crate) struct DeclaredName<'document> {
     pub(crate) delimited: bool,
 }
 
-/// The selected semantic model, reduced to what reference resolution reads.
+/// The selected semantic model, reduced to its names, references and expressions.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(crate) struct ModelOutline<'document> {
     /// The datasets, in document order.
@@ -54,6 +54,15 @@ pub(crate) struct DatasetOutline<'document> {
     pub(crate) metrics: Vec<ElementOutline<'document>>,
     /// The names of `primary_key`, then of every `unique_keys` entry, in document order.
     pub(crate) keys: Vec<DeclaredName<'document>>,
+}
+
+impl<'document> DatasetOutline<'document> {
+    /// The first field named `name`.
+    pub(crate) fn field(&self, name: &Name) -> Option<&ElementOutline<'document>> {
+        self.fields
+            .iter()
+            .find(|field| field.name.as_ref().is_some_and(|field| field.name == *name))
+    }
 }
 
 /// One field or metric: an element with a name and an expression.
