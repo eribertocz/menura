@@ -57,6 +57,33 @@ pub(crate) fn identifier_text(text: &str) -> String {
     delimited_content(text).unwrap_or_else(|| text.to_owned())
 }
 
+/// Whether the declared name `text` is a malformed delimited name (E0D-1.4): it starts with
+/// `"` but is not a delimited identifier, because it does not end with `"`, has no character
+/// between its quotes, or has a `"` inside them that is not doubled.
+///
+/// `"a"b"`, `"`, `""` and `"a` are malformed; `"a"`, `"a""b"` and `a"b` are not.
+pub(crate) fn is_malformed(text: &str) -> bool {
+    let Some(rest) = text.strip_prefix('"') else {
+        return false;
+    };
+    match rest.strip_suffix('"') {
+        Some(inner) => inner.is_empty() || !quotes_are_doubled(inner),
+        None => true,
+    }
+}
+
+/// Whether every `"` of `inner`, the text between the quotes of a delimited name, is part of a
+/// `""` pair.
+fn quotes_are_doubled(inner: &str) -> bool {
+    let mut characters = inner.chars();
+    while let Some(character) = characters.next() {
+        if character == '"' && characters.next() != Some('"') {
+            return false;
+        }
+    }
+    true
+}
+
 fn delimited_content(text: &str) -> Option<String> {
     let inner = text.strip_prefix('"')?.strip_suffix('"')?;
     is_delimited(text).then(|| inner.replace("\"\"", "\""))
@@ -73,7 +100,7 @@ pub(crate) fn is_too_long(text: &str) -> bool {
 mod tests {
     use semantic_compiler_model::expression::Identifier;
 
-    use super::{MAXIMUM_LENGTH, Name, identifier_text, is_delimited, is_too_long};
+    use super::{MAXIMUM_LENGTH, Name, identifier_text, is_delimited, is_malformed, is_too_long};
 
     fn regular(text: &str) -> Identifier {
         Identifier::regular(text).expect("a regular identifier")
@@ -120,5 +147,23 @@ mod tests {
         assert!(is_too_long(&"a".repeat(MAXIMUM_LENGTH + 1)));
         let quoted = format!("\"{}\"", "a".repeat(MAXIMUM_LENGTH));
         assert!(!is_too_long(&identifier_text(&quoted)));
+    }
+
+    #[test]
+    fn e0d_1_4_e0d_01_a_quoted_name_that_is_not_delimited_is_malformed() {
+        for text in ["\"a\"b\"", "\"", "\"\"", "\"a", "\"\"\"", "\"a\"\"\"b\""] {
+            assert!(is_malformed(text), "{text} is malformed");
+        }
+        for text in [
+            "\"a\"",
+            "\"a\"\"b\"",
+            "\"\"\"\"",
+            "a\"",
+            "a\"b",
+            "orders",
+            "",
+        ] {
+            assert!(!is_malformed(text), "{text} is not malformed");
+        }
     }
 }

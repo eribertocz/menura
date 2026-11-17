@@ -199,3 +199,14 @@ fn oss_5_1_the_compiled_sql_variant_is_the_one_resolved() {
         [pair("E0D-03", "/datasets/0/fields/1/expression")]
     );
 }
+
+#[test]
+fn e0d_1_4_e0d_01_a_malformed_dataset_metric_name_is_rejected() {
+    let document = with_dataset_metrics(&dataset_metric("'\"total'", "SUM(amount)"));
+    let rejection = resolve_with((&document, CATALOG), OssieFormat::Development, None)
+        .expect_err("the model is rejected");
+    assert_eq!(
+        summary(&rejection.errors),
+        [pair("E0D-01", "/datasets/0/metrics/0/name")]
+    );
+}
