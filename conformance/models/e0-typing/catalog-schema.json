@@ -1,0 +1,151 @@
+{
+  "contract": "semantic_compiler.catalog_schema",
+  "contract_version": "1.0.0",
+  "document_id": {
+    "origin": "conformance:e0-typing",
+    "snapshot": "e0-typing-001"
+  },
+  "engine": {
+    "name": "duckdb",
+    "version": "2.0.0"
+  },
+  "relations": [
+    {
+      "source": "shop.main.orders",
+      "columns": [
+        {
+          "name": "order_id",
+          "logical_type": {
+            "kind": "integer",
+            "bits": 32,
+            "signed": true
+          },
+          "physical_type": "INTEGER",
+          "nullable": false
+        },
+        {
+          "name": "customer_id",
+          "logical_type": {
+            "kind": "integer",
+            "bits": 64,
+            "signed": true
+          },
+          "physical_type": "BIGINT",
+          "nullable": false
+        },
+        {
+          "name": "status",
+          "logical_type": {
+            "kind": "text"
+          },
+          "physical_type": "VARCHAR",
+          "nullable": false
+        },
+        {
+          "name": "quantity",
+          "logical_type": {
+            "kind": "integer",
+            "bits": 32,
+            "signed": true
+          },
+          "physical_type": "INTEGER",
+          "nullable": false
+        },
+        {
+          "name": "price",
+          "logical_type": {
+            "kind": "decimal",
+            "precision": 10,
+            "scale": 2
+          },
+          "physical_type": "DECIMAL(10,2)",
+          "nullable": false
+        },
+        {
+          "name": "rate",
+          "logical_type": {
+            "kind": "decimal",
+            "precision": 30,
+            "scale": 20
+          },
+          "physical_type": "DECIMAL(30,20)",
+          "nullable": false
+        },
+        {
+          "name": "discount",
+          "logical_type": {
+            "kind": "float",
+            "bits": 64
+          },
+          "physical_type": "DOUBLE",
+          "nullable": true
+        },
+        {
+          "name": "payload",
+          "logical_type": {
+            "kind": "unsupported"
+          },
+          "physical_type": "STRUCT(a INTEGER)",
+          "nullable": true
+        },
+        {
+          "name": "ordered_on",
+          "logical_type": {
+            "kind": "date"
+          },
+          "physical_type": "DATE",
+          "nullable": false
+        },
+        {
+          "name": "ordered_at",
+          "logical_type": {
+            "kind": "timestamp",
+            "precision": "us",
+            "with_time_zone": false
+          },
+          "physical_type": "TIMESTAMP",
+          "nullable": true
+        },
+        {
+          "name": "note",
+          "logical_type": {
+            "kind": "text"
+          },
+          "physical_type": "VARCHAR",
+          "nullable": true
+        }
+      ]
+    },
+    {
+      "source": "shop.main.customers",
+      "columns": [
+        {
+          "name": "customer_id",
+          "logical_type": {
+            "kind": "integer",
+            "bits": 32,
+            "signed": true
+          },
+          "physical_type": "INTEGER",
+          "nullable": false
+        },
+        {
+          "name": "customer_code",
+          "logical_type": {
+            "kind": "text"
+          },
+          "physical_type": "VARCHAR",
+          "nullable": false
+        },
+        {
+          "name": "name",
+          "logical_type": {
+            "kind": "text"
+          },
+          "physical_type": "VARCHAR",
+          "nullable": false
+        }
+      ]
+    }
+  ]
+}

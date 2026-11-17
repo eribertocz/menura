@@ -78,3 +78,11 @@ mod references;
     )
 )]
 mod structure;
+#[cfg_attr(
+    not(test),
+    expect(
+        dead_code,
+        reason = "called by the E0 stage function, which issue #45 adds; until then only the tests call it"
+    )
+)]
+mod typing;

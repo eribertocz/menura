@@ -1,0 +1,23 @@
+id: e0-typing-result-types-001
+rules: [E0F-5, E0F-5a, E0F-6.1, E0F-7.1]
+model: e0-typing
+security_context: analyst.json
+query:
+  contract: semantic_compiler.query
+  contract_version: "1.0.0"
+  reference_time: "2026-11-15T12:00:00-04:00"
+  time_zone: UTC
+  query:
+    dimensions: [orders.status]
+    metrics:
+      - {metric: total_quantity, alias: total_quantity}
+      - {metric: quantity_per_order, alias: quantity_per_order}
+      - {metric: quantity_per_nothing, alias: quantity_per_nothing}
+      - {metric: total_price, alias: total_price}
+      - {metric: average_discount, alias: average_discount}
+expect:
+  outcome: plan
+  warnings: [W0F-01]
+  rows: e0-typing-result-types-001.csv
+  row_order: any
+  tolerance: 1.0e-9
