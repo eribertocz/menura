@@ -12,6 +12,7 @@ examples in `examples/`, all checked in CI.
 | Security context | `semantic_compiler.security_context` | In | [security-context.md](security-context.md) |
 | Compiled plan | `semantic_compiler.compiled_plan` | Out | [compiled-plan.md](compiled-plan.md) |
 | Compile error | `semantic_compiler.compile_error` | Out | [compiled-plan.md](compiled-plan.md) |
+| Validation report | `semantic_compiler.validation_report` | Out | [compiled-plan.md](compiled-plan.md) (the compile error schema, with `errors` possibly empty) |
 | Audit record | `semantic_compiler.audit_record` | Out | [compiled-plan.md](compiled-plan.md) |
 | Model description | `semantic_compiler.model_description` | Out | [model-description.md](model-description.md) |
 | Integrity checks | `semantic_compiler.integrity_checks` | Out | [integrity-checks.md](integrity-checks.md) |

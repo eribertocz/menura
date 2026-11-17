@@ -152,28 +152,29 @@ Find a rule ID or a section here, then open only that file at that line.
 | [architecture/README.md](architecture/README.md#L90) | 90 | rule | ARC-5.1 |
 | [architecture/README.md](architecture/README.md#L91) | 91 | rule | ARC-5.2 |
 | [architecture/README.md](architecture/README.md#L93) | 93 | rule | ARC-5.3 |
-| [architecture/README.md](architecture/README.md#L95) | 95 | section | 3.6 Delivery forms |
-| [architecture/README.md](architecture/README.md#L108) | 108 | section | 3.7 Integration |
-| [architecture/README.md](architecture/README.md#L116) | 116 | section | 3.8 Boundary enforcement (from the first commit) |
-| [architecture/README.md](architecture/README.md#L123) | 123 | rule | A1 |
-| [architecture/README.md](architecture/README.md#L124) | 124 | rule | A2 |
-| [architecture/README.md](architecture/README.md#L125) | 125 | rule | A3 |
-| [architecture/README.md](architecture/README.md#L126) | 126 | rule | A4 |
-| [architecture/README.md](architecture/README.md#L127) | 127 | rule | A5 |
-| [architecture/README.md](architecture/README.md#L128) | 128 | rule | A6 |
-| [architecture/README.md](architecture/README.md#L133) | 133 | section | 3.9 Lineage and audit |
+| [architecture/README.md](architecture/README.md#L94) | 94 | rule | ARC-5.4 |
+| [architecture/README.md](architecture/README.md#L96) | 96 | section | 3.6 Delivery forms |
+| [architecture/README.md](architecture/README.md#L109) | 109 | section | 3.7 Integration |
+| [architecture/README.md](architecture/README.md#L117) | 117 | section | 3.8 Boundary enforcement (from the first commit) |
+| [architecture/README.md](architecture/README.md#L124) | 124 | rule | A1 |
+| [architecture/README.md](architecture/README.md#L125) | 125 | rule | A2 |
+| [architecture/README.md](architecture/README.md#L126) | 126 | rule | A3 |
+| [architecture/README.md](architecture/README.md#L127) | 127 | rule | A4 |
+| [architecture/README.md](architecture/README.md#L128) | 128 | rule | A5 |
+| [architecture/README.md](architecture/README.md#L129) | 129 | rule | A6 |
+| [architecture/README.md](architecture/README.md#L134) | 134 | section | 3.9 Lineage and audit |
 | [contracts/README.md](contracts/README.md#L1) | 1 | section | Contracts |
-| [contracts/README.md](contracts/README.md#L19) | 19 | section | Public contracts |
-| [contracts/README.md](contracts/README.md#L21) | 21 | rule | CON-0.1 |
-| [contracts/README.md](contracts/README.md#L22) | 22 | rule | CON-0.2 |
-| [contracts/README.md](contracts/README.md#L23) | 23 | rule | CON-0.3 |
-| [contracts/README.md](contracts/README.md#L24) | 24 | rule | CON-0.4 |
-| [contracts/README.md](contracts/README.md#L26) | 26 | section | Shared rules |
-| [contracts/README.md](contracts/README.md#L28) | 28 | rule | CON-1 |
-| [contracts/README.md](contracts/README.md#L29) | 29 | rule | CON-2 |
-| [contracts/README.md](contracts/README.md#L30) | 30 | rule | CON-3 |
-| [contracts/README.md](contracts/README.md#L31) | 31 | rule | CON-4 |
-| [contracts/README.md](contracts/README.md#L32) | 32 | rule | CON-5 |
+| [contracts/README.md](contracts/README.md#L20) | 20 | section | Public contracts |
+| [contracts/README.md](contracts/README.md#L22) | 22 | rule | CON-0.1 |
+| [contracts/README.md](contracts/README.md#L23) | 23 | rule | CON-0.2 |
+| [contracts/README.md](contracts/README.md#L24) | 24 | rule | CON-0.3 |
+| [contracts/README.md](contracts/README.md#L25) | 25 | rule | CON-0.4 |
+| [contracts/README.md](contracts/README.md#L27) | 27 | section | Shared rules |
+| [contracts/README.md](contracts/README.md#L29) | 29 | rule | CON-1 |
+| [contracts/README.md](contracts/README.md#L30) | 30 | rule | CON-2 |
+| [contracts/README.md](contracts/README.md#L31) | 31 | rule | CON-3 |
+| [contracts/README.md](contracts/README.md#L32) | 32 | rule | CON-4 |
+| [contracts/README.md](contracts/README.md#L33) | 33 | rule | CON-5 |
 | [contracts/catalog.md](contracts/catalog.md#L1) | 1 | section | Contract: catalog |
 | [contracts/catalog.md](contracts/catalog.md#L5) | 5 | section | CAT-1 Purpose |
 | [contracts/catalog.md](contracts/catalog.md#L10) | 10 | section | CAT-2 Two documents |
