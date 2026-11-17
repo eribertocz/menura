@@ -150,6 +150,9 @@ A conversion is implicit only if it cannot lose information. Everything else req
 | Date | Timestamp | No |
 | Anything | Text, or text to anything | No |
 
+- **E0F-3.1** Comparisons, `[NOT] IN`, `[NOT] BETWEEN` and `IS [NOT] DISTINCT FROM` accept any two numeric operands: they are compared in the type E0F-5a gives their `-` (exact for integers and decimals, float when either is a float). Other operands follow the CASE rule (E0F-5a).
+- **E0F-3.2** The literal `NULL` takes the type of another operand of the same operator or function wherever the result type follows the operands. Where no other operand gives a type (`ABS(NULL)`, `-NULL`, `SUM(NULL)`, `MIN(NULL)`, `DATE_TRUNC('day', NULL)`), it is `E0F-03`; a `CAST` gives it one. A function with a fixed result type accepts `NULL`.
+
 ## E0F-4 Relationship keys
 
 - **E0F-4.1** Each pair in `from_columns` / `to_columns` MUST have the same logical kind. Integers may differ in width; decimals MUST have the same scale.
@@ -167,7 +170,7 @@ metric returns the same type from a base relation and from a summary.
 | `SUM`, `AVG` | float | 64-bit float |
 | `AVG` | integer or decimal | 64-bit float, always computed as exact `SUM` divided by `COUNT` |
 | `STDDEV*`, `VAR*` | numeric | 64-bit float |
-| `MEDIAN`, `PERCENTILE_*` | integer or decimal | 64-bit float; the argument is cast to float first |
+| `MEDIAN`, `PERCENTILE_*` | integer, decimal or float | 64-bit float; an integer or decimal argument is cast to float first |
 | `MIN`, `MAX` | any | argument type |
 
 Rationale, verified on DuckDB: computing `AVG` as exact sum over count keeps the only
@@ -183,14 +186,15 @@ The compiler fixes these types, and E6 enforces them with casts, whatever the en
 |---|---|---|
 | `+`, `-`, `*`, `%` | integers | 128-bit integer |
 | `+`, `-`, `%` | `decimal(p1,s1)`, `decimal(p2,s2)` (an integer counts as `decimal(38,0)`) | `decimal(min(38, max(p1−s1, p2−s2) + max(s1,s2) + 1), max(s1,s2))` |
-| `*` | `decimal(p1,s1)`, `decimal(p2,s2)` | `decimal(min(38, p1+p2), s1+s2)`; `s1+s2 > 38` is `E0F-08` |
+| `*` | `decimal(p1,s1)`, `decimal(p2,s2)` (an integer counts as `decimal(38,0)`) | `decimal(min(38, p1+p2), s1+s2)`; `s1+s2 > 38` is `E0F-08` |
 | `/` | integers or decimals | 64-bit float (true division, E0F-2.5) |
 | any arithmetic | at least one float | 64-bit float |
 | `CASE`, `COALESCE`, `NULLIF` | branch types | The branch type to which every other branch converts implicitly (E0F-3); none is `E0F-03` |
 | `ROUND(x, n)` | `decimal(p,s)`, literal `0 ≤ n ≤ s` | `decimal(p, n)` |
 | `ROUND(x, n)` | float | 64-bit float |
 | `ROUND(x, n)` | integer, literal `n ≤ 0` | 128-bit integer |
-| `ROUND(x, n)` | non-literal `n`, or decimal with `n > s` | `E0F-03` |
+| `ROUND(x, n)` | non-literal `n`; decimal with `n > s` or `n < 0`; integer with `n > 0` | `E0F-03` |
+| `SPLIT_PART`, `PERCENTILE_*` | a non-literal or out-of-range `n` or fraction (E0F-10.2, E0F-10.5) | `E0F-03` |
 | unary `-` | any numeric | Operand type (integers widen to 128-bit) |
 | Scalar functions | As E0F-10 | As E0F-10 |
 
