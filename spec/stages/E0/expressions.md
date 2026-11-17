@@ -150,8 +150,8 @@ A conversion is implicit only if it cannot lose information. Everything else req
 | Date | Timestamp | No |
 | Anything | Text, or text to anything | No |
 
-- **E0F-3.1** Comparisons, `[NOT] IN`, `[NOT] BETWEEN` and `IS [NOT] DISTINCT FROM` accept any two numeric operands: they are compared in the type E0F-5a gives their `-` (exact for integers and decimals, float when either is a float). Other operands follow the CASE rule (E0F-5a).
-- **E0F-3.2** The literal `NULL` takes the type of another operand of the same operator or function wherever the result type follows the operands. Where no other operand gives a type (`ABS(NULL)`, `-NULL`, `SUM(NULL)`, `MIN(NULL)`, `DATE_TRUNC('day', NULL)`), it is `E0F-03`; a `CAST` gives it one. A function with a fixed result type accepts `NULL`.
+- **E0F-3.1** Comparisons, `[NOT] IN`, `[NOT] BETWEEN`, `IS [NOT] DISTINCT FROM` and the `WHEN` values of a simple `CASE` (each compared with the `CASE` operand) accept any two numeric operands: they are compared in the type E0F-5a gives their `-` (exact for integers and decimals, float when either is a float). Other operands follow the CASE rule (E0F-5a).
+- **E0F-3.2** The literal `NULL` takes the type of another operand of the same operator or function wherever the result type follows the operands. Where no other operand gives a type (`ABS(NULL)`, `-NULL`, `SUM(NULL)`, `MIN(NULL)`, `DATE_TRUNC('day', NULL)`), it is `E0F-03`; a `CAST` gives it one. A function with a fixed result type accepts `NULL`. An expression that is only the literal `NULL` has no other operand, so it is `E0F-03`; `CAST(NULL AS t)` gives it type `t`.
 
 ## E0F-4 Relationship keys
 
