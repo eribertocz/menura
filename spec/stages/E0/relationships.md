@@ -16,10 +16,11 @@ ambiguous join or an inflated number (P6). E3 uses the graph to choose paths.
 
 | ID | Rule |
 |---|---|
-| E0E-3.1 | `from_columns` and `to_columns` have the same length (`E0E-01`). |
+| E0E-3.1 | `from_columns` and `to_columns` have the same length (`E0E-01`, located at the relationship). |
 | E0E-3.2 | The relationship direction declares many-to-one cardinality. If `to_columns` matches neither the `primary_key` nor a `unique_keys` entry of `to`, the model is valid but produces `W0E-02`, because the data could violate the declared cardinality. |
 | E0E-3.3 | Correctness under violated cardinality: a home row counts once in each group it matches (E4-4 step 5), using a synthesized row identity (Apache Ossie Layer 2 section 3.2). |
 | E0E-3.4 | If `from_columns` also matches a key of `from`, the relationship is one-to-one. It is recorded, and in version 1 it is still traversed only from `from` to `to`. |
+| E0E-3.5 | A column list matches a key when both hold the same set of columns, compared as names normalized by E0D-1.1; order and repetition are ignored, because uniqueness does not depend on column order. |
 | E0E-3.5 | Self-relationships are allowed, never take part in a path, and produce `W0E-03`. Cycles are allowed; paths stay finite because they never repeat a dataset (E0E-2.4). |
 | E0E-3.6 | A relationship whose `from` or `to` is a summary dataset is an error (`E0E-02`). |
 | E0E-3.7 | Key types are checked in E0.f. |
@@ -27,7 +28,7 @@ ambiguous join or an inflated number (P6). E3 uses the graph to choose paths.
 ## E0E-4 Multiple paths
 
 - **E0E-4.1** More than one path between two datasets is allowed (for example two relationships to a calendar, or a diamond through two intermediate datasets).
-- **E0E-4.2** E0 computes every pair of datasets with more than one path and emits `W0E-01` for each.
+- **E0E-4.2** E0 computes every pair of datasets with more than one path and emits `W0E-01` for each, located at the `from` dataset of the pair; warnings with the same `from` are ordered by their target dataset in document order.
 - **E0E-4.3** The compiler never chooses between paths. A query that needs such a pair MUST name the path (query `paths` extension); otherwise E3 fails with `E_AMBIGUOUS_PATH`.
 
 ## E0E-5 Unconnected datasets
