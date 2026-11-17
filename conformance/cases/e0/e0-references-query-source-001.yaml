@@ -1,0 +1,6 @@
+id: e0-references-query-source-001
+rules: [E0D-3.3, E0D-08]
+model: e0-references-query-source-001
+expect:
+  outcome: load_error
+  error: E0D-08

@@ -1,0 +1,28 @@
+version: "0.1.1"
+semantic_model:
+  - name: e0_references_catalog_columns
+    description: Model whose catalog spells a column in mixed case, read with regular and delimited references
+    custom_extensions:
+      - vendor_name: COMMON
+        data: '{"namespace": "semantic_compiler", "version": 1, "security_context": {"roles": ["analyst"], "attributes": []}}'
+    datasets:
+      - name: payments
+        source: shop.main.payments
+        primary_key: [payment_id]
+        fields:
+          - name: payment_id
+            expression: {dialects: [{dialect: ANSI_SQL, expression: payment_id}]}
+          - name: amount_regular
+            expression: {dialects: [{dialect: ANSI_SQL, expression: amount}]}
+          - name: amount_exact
+            expression: {dialects: [{dialect: ANSI_SQL, expression: '"Amount"'}]}
+          - name: amount_lower
+            expression: {dialects: [{dialect: ANSI_SQL, expression: '"amount"'}]}
+        custom_extensions:
+          - vendor_name: COMMON
+            data: '{"namespace": "semantic_compiler", "version": 1, "access": {"mode": "roles", "roles": ["analyst"]}}'
+    metrics:
+      - name: total_regular
+        expression: {dialects: [{dialect: ANSI_SQL, expression: SUM(payments.amount_regular)}]}
+      - name: total_exact
+        expression: {dialects: [{dialect: ANSI_SQL, expression: SUM(payments.amount_exact)}]}

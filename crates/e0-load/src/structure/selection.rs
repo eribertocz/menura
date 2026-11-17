@@ -4,6 +4,7 @@
 use semantic_compiler_contracts::normalize_unquoted_identifier;
 
 use super::diagnostic::{StructureCode, StructureDiagnostic};
+use crate::nodes::member;
 use crate::pointer::JsonPointer;
 use crate::read::{Node, Value};
 
@@ -83,19 +84,4 @@ fn declared_name_key(text: &str) -> String {
         Some(delimited) => delimited.replace("\"\"", "\""),
         None => normalize_unquoted_identifier(text),
     }
-}
-
-/// The value of the member `name` of a mapping node.
-pub(crate) fn member<'node>(node: &'node Node, name: &str) -> Option<&'node Node> {
-    let Value::Mapping(entries) = &node.value else {
-        return None;
-    };
-    entries
-        .iter()
-        .find(|entry| is_text(&entry.key, name))
-        .map(|entry| &entry.value)
-}
-
-fn is_text(node: &Node, text: &str) -> bool {
-    matches!(&node.value, Value::String(value) if value == text)
 }
