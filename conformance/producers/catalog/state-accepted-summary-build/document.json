@@ -1,0 +1,62 @@
+{
+  "contract": "semantic_compiler.catalog_state",
+  "contract_version": "1.0.0",
+  "document_id": {
+    "origin": "warehouse:gold",
+    "snapshot": "state-9120"
+  },
+  "schema_document_id": {
+    "origin": "warehouse:gold",
+    "snapshot": "schema-0042"
+  },
+  "relations": [
+    {
+      "source": "sales.public.agg_invoice_month",
+      "row_count_estimate": 4800,
+      "aggregate_build": {
+        "definition_hash": "50d858e0985ecc7f60418aaf0cc5ab587f42c2570a884095a9e8ccacd0f6545c",
+        "coverage": {
+          "from": "2026-09",
+          "to": "2026-10"
+        },
+        "built_from": [
+          {
+            "period": "2026-09",
+            "version": {
+              "origin": "warehouse:gold",
+              "snapshot": "8801"
+            }
+          },
+          {
+            "period": "2026-10",
+            "version": {
+              "origin": "warehouse:gold",
+              "snapshot": "8812"
+            }
+          }
+        ],
+        "integrity_check": {
+          "status": "passed",
+          "definition_hash": "50d858e0985ecc7f60418aaf0cc5ab587f42c2570a884095a9e8ccacd0f6545c",
+          "verified": [
+            {
+              "period": "2026-09",
+              "version": {
+                "origin": "warehouse:gold",
+                "snapshot": "8801"
+              }
+            },
+            {
+              "period": "2026-10",
+              "version": {
+                "origin": "warehouse:gold",
+                "snapshot": "8812"
+              }
+            }
+          ]
+        },
+        "time_zone": "America/La_Paz"
+      }
+    }
+  ]
+}
