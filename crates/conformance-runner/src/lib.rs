@@ -26,6 +26,7 @@ pub mod case_file;
 pub mod database;
 pub mod error;
 pub mod fixture;
+pub mod load_options;
 pub mod ossie;
 pub mod report;
 pub mod runner;
