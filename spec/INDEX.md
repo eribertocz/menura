@@ -532,16 +532,17 @@ Find a rule ID or a section here, then open only that file at that line.
 | [stages/E0/relationships.md](stages/E0/relationships.md#L21) | 21 | rule | E0E-3.3 |
 | [stages/E0/relationships.md](stages/E0/relationships.md#L22) | 22 | rule | E0E-3.4 |
 | [stages/E0/relationships.md](stages/E0/relationships.md#L23) | 23 | rule | E0E-3.5 |
-| [stages/E0/relationships.md](stages/E0/relationships.md#L24) | 24 | rule | E0E-3.6 |
-| [stages/E0/relationships.md](stages/E0/relationships.md#L25) | 25 | rule | E0E-3.7 |
-| [stages/E0/relationships.md](stages/E0/relationships.md#L27) | 27 | section | E0E-4 Multiple paths |
-| [stages/E0/relationships.md](stages/E0/relationships.md#L29) | 29 | rule | E0E-4.1 |
-| [stages/E0/relationships.md](stages/E0/relationships.md#L30) | 30 | rule | E0E-4.2 |
-| [stages/E0/relationships.md](stages/E0/relationships.md#L31) | 31 | rule | E0E-4.3 |
-| [stages/E0/relationships.md](stages/E0/relationships.md#L33) | 33 | section | E0E-5 Unconnected datasets |
-| [stages/E0/relationships.md](stages/E0/relationships.md#L35) | 35 | rule | E0E-5.1 |
-| [stages/E0/relationships.md](stages/E0/relationships.md#L37) | 37 | section | E0E-6 Output |
-| [stages/E0/relationships.md](stages/E0/relationships.md#L43) | 43 | section | E0E-7 Diagnostics |
+| [stages/E0/relationships.md](stages/E0/relationships.md#L24) | 24 | rule | E0E-3.5 |
+| [stages/E0/relationships.md](stages/E0/relationships.md#L25) | 25 | rule | E0E-3.6 |
+| [stages/E0/relationships.md](stages/E0/relationships.md#L26) | 26 | rule | E0E-3.7 |
+| [stages/E0/relationships.md](stages/E0/relationships.md#L28) | 28 | section | E0E-4 Multiple paths |
+| [stages/E0/relationships.md](stages/E0/relationships.md#L30) | 30 | rule | E0E-4.1 |
+| [stages/E0/relationships.md](stages/E0/relationships.md#L31) | 31 | rule | E0E-4.2 |
+| [stages/E0/relationships.md](stages/E0/relationships.md#L32) | 32 | rule | E0E-4.3 |
+| [stages/E0/relationships.md](stages/E0/relationships.md#L34) | 34 | section | E0E-5 Unconnected datasets |
+| [stages/E0/relationships.md](stages/E0/relationships.md#L36) | 36 | rule | E0E-5.1 |
+| [stages/E0/relationships.md](stages/E0/relationships.md#L38) | 38 | section | E0E-6 Output |
+| [stages/E0/relationships.md](stages/E0/relationships.md#L44) | 44 | section | E0E-7 Diagnostics |
 | [stages/E0/structure.md](stages/E0/structure.md#L1) | 1 | section | E0.b Validate structure |
 | [stages/E0/structure.md](stages/E0/structure.md#L3) | 3 | section | E0B-1 Reference |
 | [stages/E0/structure.md](stages/E0/structure.md#L5) | 5 | rule | E0B-1.1 |
