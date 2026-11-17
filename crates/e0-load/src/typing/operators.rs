@@ -125,7 +125,7 @@ impl ExpressionTyper<'_> {
             match &compared {
                 Some(compared) => {
                     let value = self.type_of(&branch.condition)?;
-                    comparable_in_simple_case(&[compared.clone(), value])?;
+                    comparable(&[compared.clone(), value])?;
                 }
                 None => {
                     self.condition(&branch.condition, "a WHEN condition")?;
@@ -171,9 +171,10 @@ pub(super) fn case_rule(operands: &[Typed], role: &str) -> Outcome<ExpressionTyp
     }
 }
 
-/// Checks the operands of a comparison, `[NOT] IN`, `[NOT] BETWEEN` or `IS [NOT] DISTINCT
-/// FROM` (E0F-3.1): numeric operands of any kinds are accepted, and any others need one type
-/// that receives every other implicitly (the CASE rule).
+/// Checks the operands of a comparison, `[NOT] IN`, `[NOT] BETWEEN`, `IS [NOT] DISTINCT FROM`,
+/// or a `WHEN` value of a simple `CASE` with its operand (E0F-3.1): numeric operands of any
+/// kinds are accepted, and any others need one type that receives every other implicitly (the
+/// CASE rule).
 pub(super) fn comparable(operands: &[Typed]) -> Outcome<()> {
     if all_numeric(operands) {
         return Ok(());
@@ -181,18 +182,6 @@ pub(super) fn comparable(operands: &[Typed]) -> Outcome<()> {
     let types: Vec<&ExpressionType> = operands.iter().map(|typed| &typed.value_type).collect();
     match common_type(&types) {
         Some(_) => Ok(()),
-        None => incompatible(no_common_type("the compared values", &types)),
-    }
-}
-
-/// Checks a `WHEN` value of a simple `CASE` against the compared value with the CASE rule. Two
-/// numeric values of different kinds are [`Stop::Undecided`]: E0F-3.1 does not list the simple
-/// `CASE`.
-fn comparable_in_simple_case(operands: &[Typed]) -> Outcome<()> {
-    let types: Vec<&ExpressionType> = operands.iter().map(|typed| &typed.value_type).collect();
-    match common_type(&types) {
-        Some(_) => Ok(()),
-        None if all_numeric(operands) => Err(Stop::Undecided),
         None => incompatible(no_common_type("the compared values", &types)),
     }
 }

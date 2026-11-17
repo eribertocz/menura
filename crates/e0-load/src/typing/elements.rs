@@ -76,21 +76,40 @@ fn record<'model>(
         return;
     };
     match expression_typer.type_of(tree) {
-        // An expression that is the bare literal `NULL` is not settled (see [`Stop::Undecided`]).
-        Ok(typed) if typed.value_type == ExpressionType::Null => {}
+        Ok(typed) if typed.value_type == ExpressionType::Null => {
+            // An expression that is only the literal `NULL` has no type (E0F-3.2).
+            found.findings.push(finding(
+                element,
+                kind,
+                TypingCode::IncompatibleTypes,
+                "the expression is only the literal NULL; a CAST gives it a type".to_owned(),
+            ));
+        }
         Ok(typed) => {
             found.types.insert(&element.pointer, typed);
         }
-        Err(Stop::Problem { code, message }) => found.findings.push(Finding {
-            diagnostic: TypingDiagnostic {
-                code,
-                pointer: element.expression_pointer.clone(),
-                location: element.expression_location,
-                message,
-            },
-            element: (kind, element.pointer.clone()),
-        }),
-        Err(Stop::ReportedElsewhere | Stop::Undecided) => {}
+        Err(Stop::Problem { code, message }) => {
+            found.findings.push(finding(element, kind, code, message));
+        }
+        Err(Stop::ReportedElsewhere) => {}
+    }
+}
+
+/// The finding of a typing problem `code` in the expression of `element`.
+fn finding(
+    element: &ElementOutline<'_>,
+    kind: ElementKind,
+    code: TypingCode,
+    message: String,
+) -> Finding {
+    Finding {
+        diagnostic: TypingDiagnostic {
+            code,
+            pointer: element.expression_pointer.clone(),
+            location: element.expression_location,
+            message,
+        },
+        element: (kind, element.pointer.clone()),
     }
 }
 

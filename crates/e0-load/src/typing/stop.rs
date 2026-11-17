@@ -20,11 +20,6 @@ pub(crate) enum Stop {
     /// and context metrics) or `USER_ATTRIBUTE` (row policies). The element gets no type and no
     /// typing diagnostic.
     ReportedElsewhere,
-    /// A case the specification does not define yet, raised with the maintainer on pull request
-    /// #131: a simple `CASE` comparing numeric values of different kinds, and an expression that
-    /// is the bare literal `NULL`. The element gets no type and no typing diagnostic until it is
-    /// settled.
-    Undecided,
 }
 
 /// A typing problem with `code`.

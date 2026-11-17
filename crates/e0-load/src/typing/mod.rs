@@ -9,7 +9,6 @@
 //! An expression that does not parse, a reference that does not resolve and the reference
 //! forms of E0D-3.4 are reported by their own checks, never here: such an element gets no type
 //! and no typing diagnostic. Expressions inside extensions are typed by each extension.
-//! The cases issue #126 asks about get no type and no diagnostic until it is settled.
 
 mod aggregates;
 mod arithmetic;

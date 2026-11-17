@@ -34,6 +34,8 @@ semantic_model:
             expression: {dialects: [{dialect: ANSI_SQL, expression: CASE WHEN status THEN 1 ELSE 0 END}]}
           - name: price_band
             expression: {dialects: [{dialect: ANSI_SQL, expression: "CASE WHEN price < 8 THEN 'low' ELSE 'high' END"}]}
+          - name: pair_marker
+            expression: {dialects: [{dialect: ANSI_SQL, expression: "CASE quantity WHEN 2.0 THEN 'pair' ELSE 'other' END"}]}
         custom_extensions:
           - vendor_name: COMMON
             data: '{"namespace": "semantic_compiler", "version": 1, "access": {"mode": "roles", "roles": ["analyst"]}}'
@@ -91,3 +93,5 @@ semantic_model:
         expression: {dialects: [{dialect: ANSI_SQL, expression: "COUNT(DISTINCT SPLIT_PART(orders.status, 'O', orders.quantity))"}]}
       - name: quantity_at_discount
         expression: {dialects: [{dialect: ANSI_SQL, expression: PERCENTILE_CONT(orders.discount) WITHIN GROUP (ORDER BY orders.quantity)}]}
+      - name: nothing
+        expression: {dialects: [{dialect: ANSI_SQL, expression: "NULL"}]}

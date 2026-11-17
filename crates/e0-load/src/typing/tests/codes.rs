@@ -20,6 +20,7 @@ fn w0f_01_every_typing_problem_makes_its_element_unusable() {
             pair("E0F-03", "/semantic_model/0/metrics/11/expression"),
             pair("E0F-03", "/semantic_model/0/metrics/12/expression"),
             pair("E0F-03", "/semantic_model/0/metrics/13/expression"),
+            pair("E0F-03", "/semantic_model/0/metrics/14/expression"),
         ]
     );
     assert_eq!(TypingCode::WARNING, "W0F-01");
@@ -77,6 +78,7 @@ fn e0_4_1_the_query_error_of_an_unusable_element_is_its_e0f_code() {
             metric(11, "E0F-03"),
             metric(12, "E0F-03"),
             metric(13, "E0F-03"),
+            metric(14, "E0F-03"),
         ]
     );
 }

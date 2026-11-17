@@ -317,12 +317,37 @@ fn e0f_5a_e0f_03_split_part_and_percentile_literals() {
 }
 
 #[test]
-fn not_yet_settled_cases_get_no_type_and_no_diagnostic() {
-    assert_eq!(field("CASE price WHEN 1 THEN 'one' END"), Probe::Untyped);
-    assert_eq!(field("NULL"), Probe::Untyped);
+fn e0f_3_1_simple_case_when_values_are_compared_with_the_operand() {
+    let text = |nullable| typed(LogicalType::Text, nullable);
+    assert_eq!(field("CASE price WHEN 1 THEN 'one' END"), text(true));
     assert_eq!(
-        field("CASE quantity WHEN 1 THEN 'one' END"),
-        typed(LogicalType::Text, true)
+        field("CASE quantity WHEN 2.0 THEN 'pair' ELSE 'other' END"),
+        text(false)
+    );
+    assert_eq!(
+        field("CASE discount WHEN 1 THEN 'one' WHEN 0.5 THEN 'half' END"),
+        text(true)
+    );
+    assert_eq!(
+        field("CASE status WHEN 1 THEN 'one' END"),
+        Probe::Problem("E0F-03")
+    );
+    assert_eq!(
+        field("CASE quantity WHEN 1 THEN status ELSE quantity END"),
+        Probe::Problem("E0F-03"),
+        "the result branches still follow the CASE rule"
+    );
+}
+
+#[test]
+fn e0f_3_2_e0f_03_an_expression_that_is_only_null() {
+    assert_eq!(field("NULL"), Probe::Problem("E0F-03"));
+    assert_eq!(field("(NULL)"), Probe::Problem("E0F-03"));
+    assert_eq!(metric("NULL"), Probe::Problem("E0F-03"));
+    assert_eq!(field("CAST(NULL AS INTEGER)"), typed(integer(), true));
+    assert_eq!(
+        field("CAST(NULL AS DECIMAL(12, 2))"),
+        typed(decimal(12, 2), true)
     );
 }
 
