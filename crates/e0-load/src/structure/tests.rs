@@ -183,12 +183,15 @@ fn e0b_07_model_name_must_name_the_only_model() {
     assert_eq!(rejected[0].code, StructureCode::ModelSelection);
 }
 
-/// Provisional until spec-defect #69 is decided.
 #[test]
-fn e0b_07_provisional_empty_semantic_model_list() {
-    let document = read(b"version: \"0.1.1\"\nsemantic_model: []\n");
-    let rejected = validate_structure(&document, None).expect_err("there is no model");
-    assert_eq!(rejected[0].code, StructureCode::ModelSelection);
+fn e0b_3_2_e0b_07_a_document_without_semantic_models_is_rejected() {
+    let document = read(conformance_model!("e0-structure-no-semantic-model-001"));
+    for model_name in [None, Some("shop")] {
+        let rejected = validate_structure(&document, model_name).expect_err("there is no model");
+        assert_eq!(rejected.len(), 1);
+        assert_eq!(rejected[0].code, StructureCode::ModelSelection);
+        assert_eq!(rejected[0].pointer.as_str(), "/semantic_model");
+    }
 }
 
 #[test]
