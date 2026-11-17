@@ -506,11 +506,15 @@ Find a rule ID or a section here, then open only that file at that line.
 | [stages/E0/references.md](stages/E0/references.md#L7) | 7 | rule | E0D-1.1 |
 | [stages/E0/references.md](stages/E0/references.md#L8) | 8 | rule | E0D-1.2 |
 | [stages/E0/references.md](stages/E0/references.md#L9) | 9 | rule | E0D-1.3 |
-| [stages/E0/references.md](stages/E0/references.md#L15) | 15 | section | E0D-2 Uniqueness |
-| [stages/E0/references.md](stages/E0/references.md#L27) | 27 | section | E0D-3 Existence |
-| [stages/E0/references.md](stages/E0/references.md#L38) | 38 | rule | E0D-3.1 |
-| [stages/E0/references.md](stages/E0/references.md#L39) | 39 | rule | E0D-3.2 |
-| [stages/E0/references.md](stages/E0/references.md#L41) | 41 | section | E0D-4 Diagnostics |
+| [stages/E0/references.md](stages/E0/references.md#L10) | 10 | rule | E0D-1.4 |
+| [stages/E0/references.md](stages/E0/references.md#L11) | 11 | rule | E0D-1.5 |
+| [stages/E0/references.md](stages/E0/references.md#L17) | 17 | section | E0D-2 Uniqueness |
+| [stages/E0/references.md](stages/E0/references.md#L30) | 30 | section | E0D-3 Existence |
+| [stages/E0/references.md](stages/E0/references.md#L41) | 41 | rule | E0D-3.1 |
+| [stages/E0/references.md](stages/E0/references.md#L42) | 42 | rule | E0D-3.2 |
+| [stages/E0/references.md](stages/E0/references.md#L43) | 43 | rule | E0D-3.3 |
+| [stages/E0/references.md](stages/E0/references.md#L44) | 44 | rule | E0D-3.4 |
+| [stages/E0/references.md](stages/E0/references.md#L46) | 46 | section | E0D-4 Diagnostics |
 | [stages/E0/relationships.md](stages/E0/relationships.md#L1) | 1 | section | E0.e Analyze relationships |
 | [stages/E0/relationships.md](stages/E0/relationships.md#L3) | 3 | section | E0E-1 Purpose |
 | [stages/E0/relationships.md](stages/E0/relationships.md#L8) | 8 | section | E0E-2 Graph |

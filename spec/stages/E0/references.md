@@ -7,6 +7,8 @@
 | E0D-1.1 | An unquoted identifier is case-insensitive and normalized to upper case. A double-quoted identifier is compared exactly. |
 | E0D-1.2 | An identifier has at most 128 characters. |
 | E0D-1.3 | Two names in the same scope that are equal after normalization are the same name. |
+| E0D-1.4 | A declared name (a YAML string naming a dataset, field, metric, relationship or semantic model, or a key or relationship column) is a delimited identifier when its text starts and ends with `"`, with `""` standing for `"`; it is then compared exactly, without the quotes. Any other declared name is a regular identifier. |
+| E0D-1.5 | A catalog column name is the column's exact spelling. A regular reference matches the column whose name, normalized as E0D-1.1, equals the reference's normalized name; a delimited reference matches the column whose name is exactly its text (CAT-8.2 makes the first unambiguous). |
 
 These rules are those of the Apache Ossie development line; Apache Ossie 0.1.1 does not define
 identifier comparison, and the compiler adopts them now so that models stay valid when they
@@ -16,6 +18,7 @@ become normative.
 
 | Name | Unique within |
 |---|---|
+| `semantic_model[].name` | The document (checked even for models not selected) |
 | `datasets[].name` | The model |
 | `fields[].name` | Its dataset |
 | `metrics[].name` | The model |
@@ -37,6 +40,8 @@ A metric and a dataset may share a name: metric references and field references 
 
 - **E0D-3.1** A name in `primary_key`, `unique_keys`, `from_columns` or `to_columns` resolves to the dataset field of that name (development-line rule); if no field has it, to the `source` column of that name (0.1.1 wording). If both exist and the field is not exactly that column, it is an error (`E0D-07`). The type is checked in E0.f.
 - **E0D-3.2** When an extension defines a specific code for a missing reference, that code is used instead of the generic one.
+- **E0D-3.3** A `source` that is a query passes `E0D-08` only if, outside string literals, quoted identifiers and comments, it has no `;` except one at the end, its first keyword is `SELECT` or `WITH`, and it contains none of these keywords as a word: `INSERT`, `UPDATE`, `DELETE`, `MERGE`, `UPSERT`, `REPLACE`, `CREATE`, `DROP`, `ALTER`, `TRUNCATE`, `COPY`, `ATTACH`, `DETACH`, `INSTALL`, `LOAD`, `PRAGMA`, `SET`, `RESET`, `CALL`, `EXPORT`, `IMPORT`, `INTO`, `VACUUM`, `CHECKPOINT`, `GRANT`, `REVOKE`, `BEGIN`, `COMMIT`, `ROLLBACK`. The check guards the model text; the executor's read-only identity remains the protection at run time.
+- **E0D-3.4** A reference form the table above does not list (a qualified reference in a field expression, an unqualified one in a metric expression) is outside the accepted subset: `E0F-02` (E0F-2.2, row "References").
 
 ## E0D-4 Diagnostics
 
