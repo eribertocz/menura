@@ -59,6 +59,31 @@ queries the database (P2) and never assumes anything the catalog does not prove.
 - **CAT-4.2** Mapping a physical type to a logical type is the producer's duty and MUST be exact: precision is never rounded and types are never widened.
 - **CAT-4.3** An `unsupported` column may exist; using it in a model expression is an error in E0.
 
+### CAT-4.4 DuckDB and DuckLake mapping
+
+- **CAT-4.4** A producer for DuckDB, or for DuckLake (whose column types are DuckDB's), maps physical types exactly as this table states. Every type the table does not list is `unsupported`.
+
+| DuckDB type | Logical type |
+|---|---|
+| `BOOLEAN` | `boolean` |
+| `TINYINT`, `SMALLINT`, `INTEGER`, `BIGINT`, `HUGEINT` | `integer`, `bits` 8, 16, 32, 64, 128, `signed: true` |
+| `UTINYINT`, `USMALLINT`, `UINTEGER`, `UBIGINT`, `UHUGEINT` | `integer`, `bits` 8, 16, 32, 64, 128, `signed: false` |
+| `DECIMAL(p,s)` | `decimal`, `precision` p, `scale` s |
+| `FLOAT` | `float`, `bits` 32 |
+| `DOUBLE` | `float`, `bits` 64 |
+| `VARCHAR` | `text` |
+| `BLOB` | `binary` |
+| `UUID` | `uuid` |
+| `DATE` | `date` |
+| `TIME` | `time` |
+| `INTERVAL` | `interval` |
+| `TIMESTAMP_S`, `TIMESTAMP_MS`, `TIMESTAMP`, `TIMESTAMP_NS` | `timestamp`, `precision` `s`, `ms`, `us`, `ns`, `with_time_zone: false` |
+| `TIMESTAMP WITH TIME ZONE` (`TIMESTAMPTZ`) | `timestamp`, `precision` `us`, `with_time_zone: true` |
+| `T[]` (`LIST`) where `T` maps to a type other than `unsupported` | `list`, `element` the mapping of `T` |
+| `STRUCT`, `MAP`, `UNION`, fixed-size `ARRAY`, `ENUM`, `BIT`, `TIMETZ`, `VARINT`, `JSON`, and a `LIST` of an `unsupported` type | `unsupported` |
+
+`ENUM` sorts by declaration order, not as text, and `JSON` has its own comparison functions. Neither has an exact neutral equivalent, so a producer that wants them queried casts them to `VARCHAR` in the relation it publishes.
+
 ## CAT-5 State document
 
 | Field | Purpose |
@@ -94,7 +119,7 @@ immutable state of it.
 |---|---|
 | CAT-7.1.1 | A token is never reused for different data. |
 | CAT-7.1.2 | `schema_document_id` names exactly the schema the state is consistent with. |
-| CAT-7.1.3 | `aggregate_build.definition_hash` is the hash the compiler computed for the definition the summary was built from. |
+| CAT-7.1.3 | `aggregate_build.definition_hash` is the hash the compiler computed for the definition the summary was built from: the `definition_hash` of the summary's `summary` check (CHK-3), copied unchanged. `aggregate_build.integrity_check.definition_hash` is the same value. |
 | CAT-7.1.4 | `integrity_check` reports the result of the check query the compiler generated for that same hash, run on the versions listed in `verified`. |
 | CAT-7.1.5 | `partitions.versions` lists every period of the relation that contains rows. |
 
@@ -108,7 +133,7 @@ R is valid only if **all** of the following hold:
 3. For every period of P, B's version in `partitions` exists and equals R's version in `built_from`.
 4. R's `definition_hash` equals the hash of the current definition.
 5. `aggregate_build.time_zone` equals the query's time zone.
-6. `integrity_check.status` is `passed`, its `definition_hash` equals the current hash, and for every period of P its `verified` version equals B's current version.
+6. `integrity_check.status` is `passed`, its `definition_hash` equals the current summary definition hash, and for every period of P its `verified` version equals B's current version.
 
 If any datum is missing or any condition fails, R is not used and the base relation is queried.
 The explanation states which condition failed.
@@ -130,7 +155,7 @@ difference. Only then may E5 use it: skip deduplication (`key_uniqueness`) or us
 ## CAT-8 Semantic rules
 
 1. `source` is unique within each document.
-2. Column names are unique within a relation.
+2. Column names are unique within a relation after normalization as an unquoted identifier (E0D-1.1), so a regular reference to a column is never ambiguous (E0D-1.5).
 3. For `decimal`, `scale` ≤ `precision`.
 4. Every `source` in the state exists in the referenced schema document.
 5. `partitions.column` exists in the relation and is of kind `date` or `timestamp`.

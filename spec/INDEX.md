@@ -134,12 +134,17 @@ Find a rule ID or a section here, then open only that file at that line.
 | [08-conformance-suite.md](08-conformance-suite.md#L58) | 58 | rule | CS-4.4 |
 | [08-conformance-suite.md](08-conformance-suite.md#L59) | 59 | rule | CS-4.5 |
 | [08-conformance-suite.md](08-conformance-suite.md#L60) | 60 | rule | CS-4.6 |
+| [08-conformance-suite.md](08-conformance-suite.md#L62) | 62 | section | CS-5 Producer suite |
+| [08-conformance-suite.md](08-conformance-suite.md#L67) | 67 | rule | CS-5.1 |
+| [08-conformance-suite.md](08-conformance-suite.md#L68) | 68 | rule | CS-5.2 |
+| [08-conformance-suite.md](08-conformance-suite.md#L69) | 69 | rule | CS-5.3 |
+| [08-conformance-suite.md](08-conformance-suite.md#L70) | 70 | rule | CS-5.4 |
 | [09-continuous-integration.md](09-continuous-integration.md#L1) | 1 | section | 9. Continuous integration |
 | [09-continuous-integration.md](09-continuous-integration.md#L6) | 6 | section | CI-1 On every pull request and every push to `main` |
 | [09-continuous-integration.md](09-continuous-integration.md#L30) | 30 | section | CI-2 Scheduled |
-| [09-continuous-integration.md](09-continuous-integration.md#L36) | 36 | section | CI-3 Rules |
-| [09-continuous-integration.md](09-continuous-integration.md#L38) | 38 | rule | CI-3.1 |
-| [09-continuous-integration.md](09-continuous-integration.md#L39) | 39 | rule | CI-3.2 |
+| [09-continuous-integration.md](09-continuous-integration.md#L37) | 37 | section | CI-3 Rules |
+| [09-continuous-integration.md](09-continuous-integration.md#L39) | 39 | rule | CI-3.1 |
+| [09-continuous-integration.md](09-continuous-integration.md#L40) | 40 | rule | CI-3.2 |
 | [README.md](README.md#L1) | 1 | section | semantic_compiler — Specification |
 | [README.md](README.md#L9) | 9 | section | Reading order |
 | [README.md](README.md#L28) | 28 | section | Conventions |
@@ -188,23 +193,25 @@ Find a rule ID or a section here, then open only that file at that line.
 | [contracts/catalog.md](contracts/catalog.md#L41) | 41 | section | CAT-4.1 Logical types |
 | [contracts/catalog.md](contracts/catalog.md#L59) | 59 | rule | CAT-4.2 |
 | [contracts/catalog.md](contracts/catalog.md#L60) | 60 | rule | CAT-4.3 |
-| [contracts/catalog.md](contracts/catalog.md#L62) | 62 | section | CAT-5 State document |
-| [contracts/catalog.md](contracts/catalog.md#L72) | 72 | section | CAT-5.1 Canonical periods |
-| [contracts/catalog.md](contracts/catalog.md#L82) | 82 | section | CAT-6 Data versions are opaque tokens |
-| [contracts/catalog.md](contracts/catalog.md#L87) | 87 | rule | CAT-6.1 |
-| [contracts/catalog.md](contracts/catalog.md#L89) | 89 | section | CAT-7 Freshness |
-| [contracts/catalog.md](contracts/catalog.md#L91) | 91 | section | CAT-7.1 Producer guarantees |
-| [contracts/catalog.md](contracts/catalog.md#L95) | 95 | rule | CAT-7.1.1 |
-| [contracts/catalog.md](contracts/catalog.md#L96) | 96 | rule | CAT-7.1.2 |
-| [contracts/catalog.md](contracts/catalog.md#L97) | 97 | rule | CAT-7.1.3 |
-| [contracts/catalog.md](contracts/catalog.md#L98) | 98 | rule | CAT-7.1.4 |
-| [contracts/catalog.md](contracts/catalog.md#L99) | 99 | rule | CAT-7.1.5 |
-| [contracts/catalog.md](contracts/catalog.md#L101) | 101 | section | CAT-7.2 Summary validity |
-| [contracts/catalog.md](contracts/catalog.md#L116) | 116 | section | CAT-7.3 Check evidence |
-| [contracts/catalog.md](contracts/catalog.md#L124) | 124 | section | CAT-7.4 Never |
-| [contracts/catalog.md](contracts/catalog.md#L130) | 130 | section | CAT-8 Semantic rules |
-| [contracts/catalog.md](contracts/catalog.md#L142) | 142 | section | CAT-9 Errors |
-| [contracts/catalog.md](contracts/catalog.md#L154) | 154 | rule | CAT-9.1 |
+| [contracts/catalog.md](contracts/catalog.md#L62) | 62 | section | CAT-4.4 DuckDB and DuckLake mapping |
+| [contracts/catalog.md](contracts/catalog.md#L64) | 64 | rule | CAT-4.4 |
+| [contracts/catalog.md](contracts/catalog.md#L87) | 87 | section | CAT-5 State document |
+| [contracts/catalog.md](contracts/catalog.md#L97) | 97 | section | CAT-5.1 Canonical periods |
+| [contracts/catalog.md](contracts/catalog.md#L107) | 107 | section | CAT-6 Data versions are opaque tokens |
+| [contracts/catalog.md](contracts/catalog.md#L112) | 112 | rule | CAT-6.1 |
+| [contracts/catalog.md](contracts/catalog.md#L114) | 114 | section | CAT-7 Freshness |
+| [contracts/catalog.md](contracts/catalog.md#L116) | 116 | section | CAT-7.1 Producer guarantees |
+| [contracts/catalog.md](contracts/catalog.md#L120) | 120 | rule | CAT-7.1.1 |
+| [contracts/catalog.md](contracts/catalog.md#L121) | 121 | rule | CAT-7.1.2 |
+| [contracts/catalog.md](contracts/catalog.md#L122) | 122 | rule | CAT-7.1.3 |
+| [contracts/catalog.md](contracts/catalog.md#L123) | 123 | rule | CAT-7.1.4 |
+| [contracts/catalog.md](contracts/catalog.md#L124) | 124 | rule | CAT-7.1.5 |
+| [contracts/catalog.md](contracts/catalog.md#L126) | 126 | section | CAT-7.2 Summary validity |
+| [contracts/catalog.md](contracts/catalog.md#L141) | 141 | section | CAT-7.3 Check evidence |
+| [contracts/catalog.md](contracts/catalog.md#L149) | 149 | section | CAT-7.4 Never |
+| [contracts/catalog.md](contracts/catalog.md#L155) | 155 | section | CAT-8 Semantic rules |
+| [contracts/catalog.md](contracts/catalog.md#L167) | 167 | section | CAT-9 Errors |
+| [contracts/catalog.md](contracts/catalog.md#L179) | 179 | rule | CAT-9.1 |
 | [contracts/compiled-plan.md](contracts/compiled-plan.md#L1) | 1 | section | Contract: compiled plan and compile error |
 | [contracts/compiled-plan.md](contracts/compiled-plan.md#L7) | 7 | section | PLN-1 Compiled plan |
 | [contracts/compiled-plan.md](contracts/compiled-plan.md#L25) | 25 | section | PLN-2 SQL rules |
@@ -232,7 +239,7 @@ Find a rule ID or a section here, then open only that file at that line.
 | [contracts/integrity-checks.md](contracts/integrity-checks.md#L23) | 23 | rule | CHK-2.1 |
 | [contracts/integrity-checks.md](contracts/integrity-checks.md#L24) | 24 | rule | CHK-2.2 |
 | [contracts/integrity-checks.md](contracts/integrity-checks.md#L26) | 26 | section | CHK-3 Definition hash |
-| [contracts/integrity-checks.md](contracts/integrity-checks.md#L33) | 33 | rule | CHK-3.1 |
+| [contracts/integrity-checks.md](contracts/integrity-checks.md#L35) | 35 | rule | CHK-3.1 |
 | [contracts/model-description.md](contracts/model-description.md#L1) | 1 | section | Contract: model description |
 | [contracts/model-description.md](contracts/model-description.md#L5) | 5 | section | DSC-1 Purpose |
 | [contracts/model-description.md](contracts/model-description.md#L11) | 11 | section | DSC-2 Content |
@@ -440,7 +447,9 @@ Find a rule ID or a section here, then open only that file at that line.
 | [stages/E0/extensions.md](stages/E0/extensions.md#L20) | 20 | rule | E0C-2.3 |
 | [stages/E0/extensions.md](stages/E0/extensions.md#L21) | 21 | rule | E0C-2.4 |
 | [stages/E0/extensions.md](stages/E0/extensions.md#L22) | 22 | rule | E0C-2.5 |
-| [stages/E0/extensions.md](stages/E0/extensions.md#L24) | 24 | section | E0C-3 Diagnostics |
+| [stages/E0/extensions.md](stages/E0/extensions.md#L23) | 23 | rule | E0C-2.6 |
+| [stages/E0/extensions.md](stages/E0/extensions.md#L24) | 24 | rule | E0C-2.7 |
+| [stages/E0/extensions.md](stages/E0/extensions.md#L26) | 26 | section | E0C-3 Diagnostics |
 | [stages/E0/internal-model.md](stages/E0/internal-model.md#L1) | 1 | section | E0.h Build the internal model |
 | [stages/E0/internal-model.md](stages/E0/internal-model.md#L3) | 3 | section | E0H-1 Properties |
 | [stages/E0/internal-model.md](stages/E0/internal-model.md#L7) | 7 | rule | E0H-1.1 |
@@ -497,11 +506,15 @@ Find a rule ID or a section here, then open only that file at that line.
 | [stages/E0/references.md](stages/E0/references.md#L7) | 7 | rule | E0D-1.1 |
 | [stages/E0/references.md](stages/E0/references.md#L8) | 8 | rule | E0D-1.2 |
 | [stages/E0/references.md](stages/E0/references.md#L9) | 9 | rule | E0D-1.3 |
-| [stages/E0/references.md](stages/E0/references.md#L15) | 15 | section | E0D-2 Uniqueness |
-| [stages/E0/references.md](stages/E0/references.md#L27) | 27 | section | E0D-3 Existence |
-| [stages/E0/references.md](stages/E0/references.md#L38) | 38 | rule | E0D-3.1 |
-| [stages/E0/references.md](stages/E0/references.md#L39) | 39 | rule | E0D-3.2 |
-| [stages/E0/references.md](stages/E0/references.md#L41) | 41 | section | E0D-4 Diagnostics |
+| [stages/E0/references.md](stages/E0/references.md#L10) | 10 | rule | E0D-1.4 |
+| [stages/E0/references.md](stages/E0/references.md#L11) | 11 | rule | E0D-1.5 |
+| [stages/E0/references.md](stages/E0/references.md#L17) | 17 | section | E0D-2 Uniqueness |
+| [stages/E0/references.md](stages/E0/references.md#L30) | 30 | section | E0D-3 Existence |
+| [stages/E0/references.md](stages/E0/references.md#L41) | 41 | rule | E0D-3.1 |
+| [stages/E0/references.md](stages/E0/references.md#L42) | 42 | rule | E0D-3.2 |
+| [stages/E0/references.md](stages/E0/references.md#L43) | 43 | rule | E0D-3.3 |
+| [stages/E0/references.md](stages/E0/references.md#L44) | 44 | rule | E0D-3.4 |
+| [stages/E0/references.md](stages/E0/references.md#L46) | 46 | section | E0D-4 Diagnostics |
 | [stages/E0/relationships.md](stages/E0/relationships.md#L1) | 1 | section | E0.e Analyze relationships |
 | [stages/E0/relationships.md](stages/E0/relationships.md#L3) | 3 | section | E0E-1 Purpose |
 | [stages/E0/relationships.md](stages/E0/relationships.md#L8) | 8 | section | E0E-2 Graph |

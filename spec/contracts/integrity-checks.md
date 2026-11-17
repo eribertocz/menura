@@ -25,10 +25,12 @@ after each load and report the results in the catalog state (`checks`, `aggregat
 
 ## CHK-3 Definition hash
 
-The SHA-256 (CON-2) of the canonical JSON of `{kind, target, definition}`, where `definition`
-is the normalized tree of every model element the check depends on: the relationship and the
-keys and fields of both datasets (`key_uniqueness`, `orphan_keys`); the summary definition hash (`summary`); the population and metric
-extensions (`population`, `semi_additive`).
+For a `summary` check, `definition_hash` **is** the summary definition hash (E0H-3.3). This is
+how a pipeline learns that hash: it copies it, unchanged, into the catalog state (CAT-7.1.3).
+For every other kind, it is the SHA-256 (CON-2) of the canonical JSON of `{kind, target,
+definition}`, where `definition` is the normalized tree of every model element the check depends
+on: the relationship and the keys and fields of both datasets (`key_uniqueness`, `orphan_keys`);
+the population and metric extensions (`population`, `semi_additive`).
 
 - **CHK-3.1** A model change that affects a check changes its hash, so old evidence stops counting (CAT-7.3).
 

@@ -58,3 +58,13 @@ expect:
 - **CS-4.4** For Apache Ossie suites, the runner loads the fixture with `ossie_format: development` and `grant_authenticated_to_all: true`, builds the catalog schema by reading the created tables, wraps each `query.json` in a query envelope with `time_zone: UTC`, and compares the first error code or the rows. SQL-form cases refer to relations as `<model name>.<dataset name>` (QRY-5.1).
 - **CS-4.5** Runner security context for Apache Ossie suites: `{"contract": "semantic_compiler.security_context", "contract_version": "1.0.0", "subject": "conformance-runner", "roles": [], "attributes": {}}`, stored as `conformance/ossie/runner-context.json`.
 - **CS-4.6** Layer 2 cases: the runner wraps the text of `query.ossie.sql` in the `sql` field of a query envelope (`time_zone: UTC`), runs `expected.sql` on the fixture to obtain the expected rows, and compares them under the case's comparison rules; an expected error is compared by its first code.
+
+## CS-5 Producer suite
+
+Architecture 3.3, item 5: the owner of a contract publishes a suite that its producers run in
+their own CI. For the catalog contracts it is a set of documents with their expected outcome.
+
+- **CS-5.1** Each case is a folder `conformance/producers/catalog/<case-id>/` with `document.json` (a catalog schema or state document), `schema.json` for a state case (the schema document it is checked against), and `expected.yaml`: `outcome` (`accepted`, `rejected` or `ignored`) and, unless accepted, the first `code` (CAT-9).
+- **CS-5.2** The suite has at least one case per code `ECAT-01`–`ECAT-03` and `WCAT-01`–`WCAT-04`, one per CAT-8 rule that applies to the document kind, and accepted cases for a partitioned relation, a non-partitioned relation and a summary build.
+- **CS-5.3** The compiler's CI runs every case through its public catalog admission and checks the outcome and the first code (CAT-9.1).
+- **CS-5.4** Producers take the suite from this repository at the release tag they depend on. A document suite cannot prove the producer guarantees of CAT-7.1, which compare successive publications; each producer tests those itself.
