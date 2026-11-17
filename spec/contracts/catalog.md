@@ -94,7 +94,7 @@ immutable state of it.
 |---|---|
 | CAT-7.1.1 | A token is never reused for different data. |
 | CAT-7.1.2 | `schema_document_id` names exactly the schema the state is consistent with. |
-| CAT-7.1.3 | `aggregate_build.definition_hash` is the hash the compiler computed for the definition the summary was built from. |
+| CAT-7.1.3 | `aggregate_build.definition_hash` is the hash the compiler computed for the definition the summary was built from: the `definition_hash` of the summary's `summary` check (CHK-3), copied unchanged. `aggregate_build.integrity_check.definition_hash` is the same value. |
 | CAT-7.1.4 | `integrity_check` reports the result of the check query the compiler generated for that same hash, run on the versions listed in `verified`. |
 | CAT-7.1.5 | `partitions.versions` lists every period of the relation that contains rows. |
 
@@ -108,7 +108,7 @@ R is valid only if **all** of the following hold:
 3. For every period of P, B's version in `partitions` exists and equals R's version in `built_from`.
 4. R's `definition_hash` equals the hash of the current definition.
 5. `aggregate_build.time_zone` equals the query's time zone.
-6. `integrity_check.status` is `passed`, its `definition_hash` equals the current hash, and for every period of P its `verified` version equals B's current version.
+6. `integrity_check.status` is `passed`, its `definition_hash` equals the current summary definition hash, and for every period of P its `verified` version equals B's current version.
 
 If any datum is missing or any condition fails, R is not used and the base relation is queried.
 The explanation states which condition failed.
