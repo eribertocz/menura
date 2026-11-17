@@ -1,0 +1,46 @@
+{
+  "contract": "semantic_compiler.catalog_state",
+  "contract_version": "2.0.0",
+  "document_id": {
+    "origin": "warehouse:gold",
+    "snapshot": "state-9120"
+  },
+  "schema_document_id": {
+    "origin": "warehouse:gold",
+    "snapshot": "schema-0042"
+  },
+  "relations": "not a list",
+  "checks": [
+    {
+      "target": "invoices_customer",
+      "check": "orphan_keys",
+      "definition_hash": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+      "status": "passed",
+      "verified": [
+        {
+          "source": "sales.public.fact_invoice",
+          "period": "2026-09",
+          "version": {
+            "origin": "warehouse:gold",
+            "snapshot": "8801"
+          }
+        },
+        {
+          "source": "sales.public.fact_invoice",
+          "period": "2026-10",
+          "version": {
+            "origin": "warehouse:gold",
+            "snapshot": "8812"
+          }
+        },
+        {
+          "source": "sales.public.dim_customer",
+          "version": {
+            "origin": "warehouse:gold",
+            "snapshot": "c-0099"
+          }
+        }
+      ]
+    }
+  ]
+}
