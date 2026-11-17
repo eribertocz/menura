@@ -1,11 +1,19 @@
 //! Normalization of an unquoted identifier (E0D-1.1) with the Unicode simple upper-case mapping
 //! (CON-5).
 
-/// The normalized form of `name` read as an unquoted identifier.
+/// The normalized form of `name` read as an unquoted identifier (E0D-1.1).
 ///
 /// Each character is replaced by its Unicode simple upper-case mapping, so the number of
 /// characters never changes (CON-5).
-pub(crate) fn normalize_unquoted(name: &str) -> String {
+///
+/// ```
+/// use semantic_compiler_contracts::normalize_unquoted_identifier;
+///
+/// assert_eq!(normalize_unquoted_identifier("amount"), "AMOUNT");
+/// assert_eq!(normalize_unquoted_identifier("stra\u{df}e"), "STRA\u{df}E");
+/// ```
+#[must_use]
+pub fn normalize_unquoted_identifier(name: &str) -> String {
     name.chars().map(simple_upper_case).collect()
 }
 
@@ -37,7 +45,7 @@ fn iota_subscript_upper_case(character: char) -> Option<char> {
 
 #[cfg(test)]
 mod tests {
-    use super::normalize_unquoted;
+    use super::normalize_unquoted_identifier as normalize_unquoted;
 
     #[test]
     fn e0d_1_1_letters_are_upper_case() {

@@ -1,7 +1,7 @@
 //! The CAT-8 rules of the catalog schema document: CAT-8.1 to CAT-8.3.
 
 use super::{RuleViolation, first_repeated};
-use crate::identifier::normalize_unquoted;
+use crate::identifier::normalize_unquoted_identifier;
 use crate::types::catalog::{CatalogSchemaDocument, RelationSchema};
 use crate::types::common::LogicalType;
 
@@ -41,7 +41,7 @@ fn unique_column_names(index: usize, relation: &RelationSchema) -> Result<(), Ru
     let names = relation
         .columns
         .iter()
-        .map(|column| normalize_unquoted(&column.name));
+        .map(|column| normalize_unquoted_identifier(&column.name));
     match first_repeated(names) {
         Some(column) => Err(RuleViolation::new(
             format!("/relations/{index}/columns/{column}/name"),
