@@ -1,0 +1,6 @@
+id: e0-extensions-wrong-object-001
+rules: [E0C-2.3, E0C-05]
+model: e0-extensions-wrong-object-001
+expect:
+  outcome: load_error
+  error: E0C-05

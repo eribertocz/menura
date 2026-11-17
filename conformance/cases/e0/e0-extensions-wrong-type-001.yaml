@@ -1,0 +1,6 @@
+id: e0-extensions-wrong-type-001
+rules: [E0C-03]
+model: e0-extensions-wrong-type-001
+expect:
+  outcome: load_error
+  error: E0C-03
