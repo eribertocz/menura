@@ -239,6 +239,99 @@ fn cat_8_2_a_repeated_column_name_is_ecat_03() {
 }
 
 #[test]
+fn cat_8_2_column_names_that_differ_only_in_case_are_ecat_03() {
+    let document = with(
+        schema_example(),
+        "/relations/1/columns/2/name",
+        json!("CUSTOMER_ID"),
+    );
+    assert_eq!(
+        schema_failure(&document),
+        (
+            AdmissionCode::Ecat03,
+            pointer("/relations/1/columns/2/name")
+        )
+    );
+}
+
+#[test]
+fn cat_8_2_amount_and_upper_case_amount_in_one_relation_are_ecat_03() {
+    let document = with(
+        schema_example(),
+        "/relations/0/columns/6/name",
+        json!("AMOUNT"),
+    );
+    assert_eq!(
+        schema_failure(&document),
+        (
+            AdmissionCode::Ecat03,
+            pointer("/relations/0/columns/6/name")
+        )
+    );
+}
+
+#[test]
+fn cat_8_2_the_case_column_conformance_schema_is_ecat_03() {
+    let document = parse(include_str!(
+        "../../../conformance/models/cat-schema-case-column-001/catalog-schema.json"
+    ));
+    assert_eq!(
+        schema_failure(&document),
+        (
+            AdmissionCode::Ecat03,
+            pointer("/relations/0/columns/4/name")
+        )
+    );
+}
+
+#[test]
+fn cat_8_2_non_ascii_letters_are_compared_after_upper_case_mapping() {
+    let region = with(
+        schema_example(),
+        "/relations/1/columns/1/name",
+        json!("r\u{e9}gion"),
+    );
+    let document = with(region, "/relations/1/columns/2/name", json!("R\u{c9}GION"));
+    assert_eq!(
+        schema_failure(&document),
+        (
+            AdmissionCode::Ecat03,
+            pointer("/relations/1/columns/2/name")
+        )
+    );
+}
+
+#[test]
+fn cat_8_2_the_simple_mapping_keeps_the_length_of_a_name() {
+    // The full mapping of `ß` is `SS`; the simple mapping keeps `ß` (CON-5).
+    let street = with(
+        schema_example(),
+        "/relations/1/columns/1/name",
+        json!("stra\u{df}e"),
+    );
+    let document = with(street, "/relations/1/columns/2/name", json!("STRASSE"));
+    assert!(admit_schema(&document).is_ok());
+}
+
+#[test]
+fn cat_8_2_iota_subscript_letters_use_their_simple_upper_case_mapping() {
+    // U+1FB3 has the full mapping `ΑΙ` and the simple mapping U+1FBC.
+    let small = with(
+        schema_example(),
+        "/relations/1/columns/1/name",
+        json!("\u{1fb3}"),
+    );
+    let document = with(small, "/relations/1/columns/2/name", json!("\u{1fbc}"));
+    assert_eq!(
+        schema_failure(&document),
+        (
+            AdmissionCode::Ecat03,
+            pointer("/relations/1/columns/2/name")
+        )
+    );
+}
+
+#[test]
 fn cat_8_2_the_same_column_name_in_two_relations_is_admitted() {
     // `customer_id` is a column of three relations of the example.
     assert!(admit_schema(&schema_example()).is_ok());

@@ -1,6 +1,7 @@
 //! The CAT-8 rules of the catalog schema document: CAT-8.1 to CAT-8.3.
 
 use super::{RuleViolation, first_repeated};
+use crate::identifier::normalize_unquoted;
 use crate::types::catalog::{CatalogSchemaDocument, RelationSchema};
 use crate::types::common::LogicalType;
 
@@ -34,14 +35,18 @@ fn unique_sources(schema: &CatalogSchemaDocument) -> Result<(), RuleViolation> {
     }
 }
 
-/// CAT-8.2: column names are unique within a relation.
+/// CAT-8.2: column names are unique within a relation after normalization as an unquoted
+/// identifier (E0D-1.1), so `amount` and `AMOUNT` are the same name.
 fn unique_column_names(index: usize, relation: &RelationSchema) -> Result<(), RuleViolation> {
-    let names = relation.columns.iter().map(|column| column.name.as_str());
+    let names = relation
+        .columns
+        .iter()
+        .map(|column| normalize_unquoted(&column.name));
     match first_repeated(names) {
         Some(column) => Err(RuleViolation::new(
             format!("/relations/{index}/columns/{column}/name"),
             format!(
-                "column `{}` appears more than once in relation `{}`",
+                "column `{}` repeats a column name of relation `{}` after normalization",
                 relation.columns[column].name, relation.source
             ),
         )),

@@ -17,6 +17,7 @@ mod canonical;
 mod catalog_admission;
 mod contract;
 mod hash;
+mod identifier;
 mod ordering;
 mod schema;
 pub mod types;

@@ -1,0 +1,6 @@
+id: cat-schema-case-column-001
+rules: [CAT-8.2, CAT-9, ECAT-03]
+model: cat-schema-case-column-001
+expect:
+  outcome: load_error
+  error: ECAT-03
