@@ -65,6 +65,7 @@ YAML or SQL text when known.
 
 - **PLN-5.1** The first error follows the precedence of E2-5 (queries) or E0-4.3 (models). Further errors MAY follow it.
 - **PLN-5.2** A message never reveals data a user is not authorized to see. An unauthorized dataset, field or metric is reported exactly as a nonexistent one (`E_NAME_NOT_FOUND`).
+- **PLN-5.3** `validate` returns the same document with `contract` `semantic_compiler.validation_report`, where `errors` may be empty. It shares this schema and is not a separate contract. Example: [`examples/validation-report.example.json`](examples/validation-report.example.json).
 
 Schema: [`schemas/compile-error.schema.json`](schemas/compile-error.schema.json) · Example: [`examples/compile-error.example.json`](examples/compile-error.example.json)
 
