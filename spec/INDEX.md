@@ -188,23 +188,25 @@ Find a rule ID or a section here, then open only that file at that line.
 | [contracts/catalog.md](contracts/catalog.md#L41) | 41 | section | CAT-4.1 Logical types |
 | [contracts/catalog.md](contracts/catalog.md#L59) | 59 | rule | CAT-4.2 |
 | [contracts/catalog.md](contracts/catalog.md#L60) | 60 | rule | CAT-4.3 |
-| [contracts/catalog.md](contracts/catalog.md#L62) | 62 | section | CAT-5 State document |
-| [contracts/catalog.md](contracts/catalog.md#L72) | 72 | section | CAT-5.1 Canonical periods |
-| [contracts/catalog.md](contracts/catalog.md#L82) | 82 | section | CAT-6 Data versions are opaque tokens |
-| [contracts/catalog.md](contracts/catalog.md#L87) | 87 | rule | CAT-6.1 |
-| [contracts/catalog.md](contracts/catalog.md#L89) | 89 | section | CAT-7 Freshness |
-| [contracts/catalog.md](contracts/catalog.md#L91) | 91 | section | CAT-7.1 Producer guarantees |
-| [contracts/catalog.md](contracts/catalog.md#L95) | 95 | rule | CAT-7.1.1 |
-| [contracts/catalog.md](contracts/catalog.md#L96) | 96 | rule | CAT-7.1.2 |
-| [contracts/catalog.md](contracts/catalog.md#L97) | 97 | rule | CAT-7.1.3 |
-| [contracts/catalog.md](contracts/catalog.md#L98) | 98 | rule | CAT-7.1.4 |
-| [contracts/catalog.md](contracts/catalog.md#L99) | 99 | rule | CAT-7.1.5 |
-| [contracts/catalog.md](contracts/catalog.md#L101) | 101 | section | CAT-7.2 Summary validity |
-| [contracts/catalog.md](contracts/catalog.md#L116) | 116 | section | CAT-7.3 Check evidence |
-| [contracts/catalog.md](contracts/catalog.md#L124) | 124 | section | CAT-7.4 Never |
-| [contracts/catalog.md](contracts/catalog.md#L130) | 130 | section | CAT-8 Semantic rules |
-| [contracts/catalog.md](contracts/catalog.md#L142) | 142 | section | CAT-9 Errors |
-| [contracts/catalog.md](contracts/catalog.md#L154) | 154 | rule | CAT-9.1 |
+| [contracts/catalog.md](contracts/catalog.md#L62) | 62 | section | CAT-4.4 DuckDB and DuckLake mapping |
+| [contracts/catalog.md](contracts/catalog.md#L64) | 64 | rule | CAT-4.4 |
+| [contracts/catalog.md](contracts/catalog.md#L87) | 87 | section | CAT-5 State document |
+| [contracts/catalog.md](contracts/catalog.md#L97) | 97 | section | CAT-5.1 Canonical periods |
+| [contracts/catalog.md](contracts/catalog.md#L107) | 107 | section | CAT-6 Data versions are opaque tokens |
+| [contracts/catalog.md](contracts/catalog.md#L112) | 112 | rule | CAT-6.1 |
+| [contracts/catalog.md](contracts/catalog.md#L114) | 114 | section | CAT-7 Freshness |
+| [contracts/catalog.md](contracts/catalog.md#L116) | 116 | section | CAT-7.1 Producer guarantees |
+| [contracts/catalog.md](contracts/catalog.md#L120) | 120 | rule | CAT-7.1.1 |
+| [contracts/catalog.md](contracts/catalog.md#L121) | 121 | rule | CAT-7.1.2 |
+| [contracts/catalog.md](contracts/catalog.md#L122) | 122 | rule | CAT-7.1.3 |
+| [contracts/catalog.md](contracts/catalog.md#L123) | 123 | rule | CAT-7.1.4 |
+| [contracts/catalog.md](contracts/catalog.md#L124) | 124 | rule | CAT-7.1.5 |
+| [contracts/catalog.md](contracts/catalog.md#L126) | 126 | section | CAT-7.2 Summary validity |
+| [contracts/catalog.md](contracts/catalog.md#L141) | 141 | section | CAT-7.3 Check evidence |
+| [contracts/catalog.md](contracts/catalog.md#L149) | 149 | section | CAT-7.4 Never |
+| [contracts/catalog.md](contracts/catalog.md#L155) | 155 | section | CAT-8 Semantic rules |
+| [contracts/catalog.md](contracts/catalog.md#L167) | 167 | section | CAT-9 Errors |
+| [contracts/catalog.md](contracts/catalog.md#L179) | 179 | rule | CAT-9.1 |
 | [contracts/compiled-plan.md](contracts/compiled-plan.md#L1) | 1 | section | Contract: compiled plan and compile error |
 | [contracts/compiled-plan.md](contracts/compiled-plan.md#L7) | 7 | section | PLN-1 Compiled plan |
 | [contracts/compiled-plan.md](contracts/compiled-plan.md#L25) | 25 | section | PLN-2 SQL rules |
