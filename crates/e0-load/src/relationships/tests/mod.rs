@@ -1,4 +1,5 @@
-//! Analyzing relationships: E0E-2.1 to E0E-2.4, E0E-3.1 to E0E-3.6, E0E-4.1, E0E-4.2, E0E-5.1,
+//! Analyzing relationships: E0E-2.1 to E0E-2.4, E0E-3.1 to E0E-3.6 (both rules numbered
+//! E0E-3.5), E0E-4.1, E0E-4.2, E0E-5.1,
 //! E0E-01, E0E-02, W0E-01 to W0E-04, and the dispositions of E0-4.
 //!
 //! The model documents and catalog schemas of the `e0-relationships-*` conformance cases are
@@ -10,7 +11,8 @@ use semantic_compiler_contracts::types::audit_record::OssieFormat;
 
 use super::{RelationshipDiagnostic, Relationships, analyze_relationships};
 use crate::extensions::{DEFAULT_NAMESPACE, validate_extensions};
-use crate::read::read_document;
+use crate::pointer::{JsonPointer, resolve};
+use crate::read::{Location, Node, read_document};
 use crate::references::resolve_references;
 use crate::structure::validate_structure;
 
@@ -38,7 +40,12 @@ const RELATIONSHIPS: (&str, &str) = conformance_model!("e0-relationships");
 const REFERENCES_MISSING: (&str, &str) = conformance_model!("e0-references-missing");
 
 /// Runs E0.a to E0.e on a model that loads.
-fn analyze((model, catalog): (&str, &str)) -> Relationships {
+fn analyze(files: (&str, &str)) -> Relationships {
+    analyze_with_document(files).1
+}
+
+/// Runs E0.a to E0.e on a model that loads, and returns the data tree with the result.
+fn analyze_with_document((model, catalog): (&str, &str)) -> (Node, Relationships) {
     let document = read_document(model.as_bytes()).expect("the document is read");
     let structure =
         validate_structure(&document, OssieFormat::Release, None).expect("the structure is valid");
@@ -47,12 +54,20 @@ fn analyze((model, catalog): (&str, &str)) -> Relationships {
     let catalog = admit_catalog_schema(catalog).expect("the catalog schema is admitted");
     let references =
         resolve_references(&document, &structure, &catalog).expect("the references resolve");
-    analyze_relationships(
+    let relationships = analyze_relationships(
         &document,
         &structure.semantic_model,
         &extensions,
         &references,
-    )
+    );
+    (document, relationships)
+}
+
+/// Where the node at `pointer` starts in `document`.
+fn node_location(document: &Node, pointer: &str) -> Location {
+    resolve(document, &JsonPointer::from_text(pointer))
+        .expect("the pointer names a node")
+        .location
 }
 
 /// The load code, code and JSON Pointer of every diagnostic.
@@ -97,5 +112,6 @@ fn index_of(relationships: &Relationships, name: &str) -> usize {
         .expect("the dataset is a node")
 }
 
+mod keys;
 mod model;
 mod paths;

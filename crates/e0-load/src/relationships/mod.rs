@@ -95,7 +95,7 @@ fn summaries(extensions: &Extensions) -> HashSet<&JsonPointer> {
         .collect()
 }
 
-/// The `W0E-01` diagnostic of `pair`, about the dataset its paths start from (E0E-4.2).
+/// The `W0E-01` diagnostic of `pair`, located at the `from` dataset of the pair (E0E-4.2).
 fn several_paths_warning(
     nodes: &[&DatasetDeclaration<'_>],
     pair: DatasetPair,
@@ -112,8 +112,9 @@ fn several_paths_warning(
     ))
 }
 
-/// `warnings` in document order, then by code, then by `sequence`, which orders the `W0E-01`
-/// diagnostics of one dataset by target (E0-4.3).
+/// `warnings` in document order, then by code (E0-4.3), then by `sequence`, which orders the
+/// `W0E-01` diagnostics with the same `from` dataset by their target in document order
+/// (E0E-4.2). Graph order is document order, so the order of [`DatasetPair`]s is that order.
 fn sorted(
     document: &Node,
     warnings: Vec<RelationshipDiagnostic>,

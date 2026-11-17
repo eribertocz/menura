@@ -24,8 +24,8 @@ pub(crate) struct Relationships {
     /// A query that names one fails with
     /// [`RelationshipCode::INVALID_RELATIONSHIP_QUERY_ERROR`](super::RelationshipCode::INVALID_RELATIONSHIP_QUERY_ERROR).
     pub(crate) unusable: Vec<JsonPointer>,
-    /// Every diagnostic, in document order then by code (E0-4.3); `W0E-01` diagnostics of the
-    /// same dataset follow the graph order of their target.
+    /// Every diagnostic, in document order then by code (E0-4.3); `W0E-01` diagnostics with the
+    /// same `from` dataset are ordered by their target dataset in document order (E0E-4.2).
     pub(crate) warnings: Vec<RelationshipDiagnostic>,
 }
 
@@ -59,8 +59,8 @@ pub(crate) struct Edge {
     pub(crate) from: DatasetIndex,
     /// The dataset on the one side.
     pub(crate) to: DatasetIndex,
-    /// Whether `from_columns` is also a key of `from`, so the relationship is one-to-one; it is
-    /// still traversed only from `from` to `to` (E0E-3.4).
+    /// Whether `from_columns` also matches a key of `from` (the key-matching rule E0E-3.5), so the
+    /// relationship is one-to-one; it is still traversed only from `from` to `to` (E0E-3.4).
     pub(crate) one_to_one: bool,
 }
 

@@ -70,7 +70,7 @@ pub(crate) enum Verdict<'model, 'document> {
         from: &'model DatasetDeclaration<'document>,
         /// The dataset on the one side.
         to: &'model DatasetDeclaration<'document>,
-        /// Whether `from_columns` is also a key of `from` (E0E-3.4).
+        /// Whether `from_columns` also matches a key of `from` (E0E-3.4).
         one_to_one: bool,
     },
 }
@@ -153,9 +153,10 @@ fn invalid_diagnostics(
     diagnostics
 }
 
-/// Whether the set of `columns` is the primary key or a unique key of `dataset` (E0E-3.2,
-/// E0E-3.4).
-fn is_key(dataset: &DatasetDeclaration<'_>, columns: &[Name]) -> bool {
+/// Whether `columns` matches the primary key or a unique key of `dataset` (E0E-3.2, E0E-3.4):
+/// both hold the same set of normalized names, whatever their order and repetition (the
+/// key-matching rule E0E-3.5).
+pub(crate) fn is_key(dataset: &DatasetDeclaration<'_>, columns: &[Name]) -> bool {
     let columns: BTreeSet<&Name> = columns.iter().collect();
     dataset
         .keys

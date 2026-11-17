@@ -5,7 +5,8 @@ semantic_model:
       Relationship graph with a diamond through customers and stores to regions, two relationships
       to the calendar, a cycle between stores and employees, a self-relationship, a one-to-one
       relationship, a relationship whose to_columns are not a key, a dataset without
-      relationships, and two invalid relationships
+      relationships, a relationship to a two-column key listed in another order, and two invalid
+      relationships
     custom_extensions:
       - vendor_name: COMMON
         data: '{"namespace": "semantic_compiler", "version": 1, "security_context": {"roles": ["analyst"], "attributes": []}}'
@@ -140,6 +141,34 @@ semantic_model:
         custom_extensions:
           - vendor_name: COMMON
             data: '{"namespace": "semantic_compiler", "version": 1, "access": {"mode": "internal"}, "aggregate": {"of": "orders", "dimensions": [{"field": "order_date", "base": "order_date", "grain": "day"}], "measures": [{"field": "amount", "base_aggregate": "SUM(orders.amount)"}], "coverage_field": "order_date"}}'
+      - name: deliveries
+        source: shop.main.deliveries
+        primary_key: [delivery_id]
+        fields:
+          - name: delivery_id
+            expression: {dialects: [{dialect: ANSI_SQL, expression: delivery_id}]}
+          - name: store_id
+            expression: {dialects: [{dialect: ANSI_SQL, expression: store_id}]}
+          - name: date_key
+            expression: {dialects: [{dialect: ANSI_SQL, expression: date_key}]}
+          - name: packages
+            expression: {dialects: [{dialect: ANSI_SQL, expression: packages}]}
+        custom_extensions:
+          - vendor_name: COMMON
+            data: '{"namespace": "semantic_compiler", "version": 1, "access": {"mode": "roles", "roles": ["analyst"]}}'
+      - name: store_days
+        source: shop.main.store_days
+        primary_key: [store_id, date_key]
+        fields:
+          - name: store_id
+            expression: {dialects: [{dialect: ANSI_SQL, expression: store_id}]}
+          - name: date_key
+            expression: {dialects: [{dialect: ANSI_SQL, expression: date_key}]}
+          - name: opening_hours
+            expression: {dialects: [{dialect: ANSI_SQL, expression: opening_hours}]}
+        custom_extensions:
+          - vendor_name: COMMON
+            data: '{"namespace": "semantic_compiler", "version": 1, "access": {"mode": "roles", "roles": ["analyst"]}}'
     relationships:
       - name: orders_customers
         from: orders
@@ -206,6 +235,11 @@ semantic_model:
         to: calendar
         from_columns: [order_date]
         to_columns: [date_key]
+      - name: deliveries_store_days
+        from: deliveries
+        to: store_days
+        from_columns: [date_key, store_id]
+        to_columns: [date_key, store_id]
     metrics:
       - name: total_amount
         expression: {dialects: [{dialect: ANSI_SQL, expression: SUM(orders.amount)}]}
@@ -213,3 +247,5 @@ semantic_model:
         expression: {dialects: [{dialect: ANSI_SQL, expression: COUNT(employees.employee_id)}]}
       - name: total_rate
         expression: {dialects: [{dialect: ANSI_SQL, expression: SUM(exchange_rates.rate)}]}
+      - name: total_packages
+        expression: {dialects: [{dialect: ANSI_SQL, expression: SUM(deliveries.packages)}]}

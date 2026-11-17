@@ -3,8 +3,8 @@
 use super::super::RelationshipCode;
 use super::super::output::PathCount;
 use super::{
-    REFERENCES_MISSING, RELATIONSHIPS, analyze, dataset, dataset_names, index_of, relationship,
-    summary,
+    REFERENCES_MISSING, RELATIONSHIPS, analyze, analyze_with_document, dataset, dataset_names,
+    index_of, node_location, relationship, summary,
 };
 
 #[test]
@@ -22,6 +22,8 @@ fn e0e_2_1_every_dataset_except_summaries_is_a_node() {
             "PROMOTIONS",
             "EMPLOYEES",
             "EXCHANGE_RATES",
+            "DELIVERIES",
+            "STORE_DAYS",
         ]
     );
 }
@@ -49,6 +51,7 @@ fn e0e_2_2_one_named_edge_per_usable_relationship_from_many_to_one() {
             ("CUSTOMERS_PROFILES", "CUSTOMERS", "CUSTOMER_PROFILES"),
             ("EMPLOYEES_STORES", "EMPLOYEES", "STORES"),
             ("STORES_MANAGERS", "STORES", "EMPLOYEES"),
+            ("DELIVERIES_STORE_DAYS", "DELIVERIES", "STORE_DAYS"),
         ]
     );
     assert_eq!(
@@ -186,4 +189,48 @@ fn e0_4_2_relationships_already_unusable_are_excluded_without_a_warning() {
     assert_eq!(edges, ["ORDERS_CUSTOMERS"]);
     assert!(relationships.warnings.is_empty());
     assert!(relationships.unusable.is_empty());
+}
+
+#[test]
+fn e0e_3_1_e0e_01_is_located_at_the_relationship() {
+    let (document, relationships) = analyze_with_document(RELATIONSHIPS);
+    let mismatch = relationships
+        .warnings
+        .iter()
+        .find(|warning| warning.code == RelationshipCode::ColumnCountMismatch)
+        .expect("an E0E-01 diagnostic");
+    assert_eq!(mismatch.pointer.to_string(), relationship(11));
+    assert_eq!(
+        mismatch.location,
+        node_location(&document, &relationship(11))
+    );
+}
+
+#[test]
+fn e0e_4_2_w0e_01_is_located_at_the_from_dataset_and_ordered_by_target() {
+    let (document, relationships) = analyze_with_document(RELATIONSHIPS);
+    let several: Vec<_> = relationships
+        .warnings
+        .iter()
+        .filter(|warning| warning.code == RelationshipCode::SeveralPaths)
+        .collect();
+    assert_eq!(several.len(), 2);
+    for warning in &several {
+        assert_eq!(warning.pointer.to_string(), dataset(0));
+        assert_eq!(warning.location, node_location(&document, &dataset(0)));
+    }
+    assert!(several[0].message.contains("`regions`"));
+    assert!(several[1].message.contains("`calendar`"));
+}
+
+#[test]
+fn e0e_3_5_a_key_listed_in_another_order_matches() {
+    let relationships = analyze(RELATIONSHIPS);
+    let undeclared: Vec<String> = relationships
+        .warnings
+        .iter()
+        .filter(|warning| warning.code == RelationshipCode::UndeclaredKey)
+        .map(|warning| warning.pointer.to_string())
+        .collect();
+    assert_eq!(undeclared, [format!("{}/to_columns", relationship(6))]);
 }

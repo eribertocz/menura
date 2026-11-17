@@ -333,6 +333,82 @@
           "nullable": false
         }
       ]
+    },
+    {
+      "source": "shop.main.deliveries",
+      "columns": [
+        {
+          "name": "delivery_id",
+          "logical_type": {
+            "kind": "integer",
+            "bits": 32,
+            "signed": true
+          },
+          "physical_type": "INTEGER",
+          "nullable": false
+        },
+        {
+          "name": "store_id",
+          "logical_type": {
+            "kind": "integer",
+            "bits": 32,
+            "signed": true
+          },
+          "physical_type": "INTEGER",
+          "nullable": false
+        },
+        {
+          "name": "date_key",
+          "logical_type": {
+            "kind": "date"
+          },
+          "physical_type": "DATE",
+          "nullable": false
+        },
+        {
+          "name": "packages",
+          "logical_type": {
+            "kind": "integer",
+            "bits": 32,
+            "signed": true
+          },
+          "physical_type": "INTEGER",
+          "nullable": false
+        }
+      ]
+    },
+    {
+      "source": "shop.main.store_days",
+      "columns": [
+        {
+          "name": "store_id",
+          "logical_type": {
+            "kind": "integer",
+            "bits": 32,
+            "signed": true
+          },
+          "physical_type": "INTEGER",
+          "nullable": false
+        },
+        {
+          "name": "date_key",
+          "logical_type": {
+            "kind": "date"
+          },
+          "physical_type": "DATE",
+          "nullable": false
+        },
+        {
+          "name": "opening_hours",
+          "logical_type": {
+            "kind": "integer",
+            "bits": 32,
+            "signed": true
+          },
+          "physical_type": "INTEGER",
+          "nullable": false
+        }
+      ]
     }
   ]
 }

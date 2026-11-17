@@ -18,3 +18,7 @@ CREATE TABLE shop.main.exchange_rates (currency VARCHAR NOT NULL, rate INTEGER N
 INSERT INTO shop.main.exchange_rates VALUES ('EUR', 2), ('USD', 1);
 CREATE TABLE shop.main.orders_by_day (order_date DATE NOT NULL, amount BIGINT NOT NULL);
 INSERT INTO shop.main.orders_by_day VALUES (DATE '2026-01-01', 15), (DATE '2026-01-02', 7);
+CREATE TABLE shop.main.deliveries (delivery_id INTEGER NOT NULL, store_id INTEGER NOT NULL, date_key DATE NOT NULL, packages INTEGER NOT NULL);
+INSERT INTO shop.main.deliveries VALUES (1, 1, DATE '2026-01-01', 3), (2, 1, DATE '2026-01-02', 4), (3, 2, DATE '2026-01-01', 5);
+CREATE TABLE shop.main.store_days (store_id INTEGER NOT NULL, date_key DATE NOT NULL, opening_hours INTEGER NOT NULL);
+INSERT INTO shop.main.store_days VALUES (1, DATE '2026-01-01', 8), (1, DATE '2026-01-02', 10), (2, DATE '2026-01-01', 8);
