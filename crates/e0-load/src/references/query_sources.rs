@@ -62,8 +62,6 @@ pub(crate) fn query_source_findings(scope: &Scope<'_, '_>) -> Vec<Finding> {
 /// Whether `source` is a query (E6-4.3): after leading whitespace, it starts with the word
 /// `SELECT` or `WITH`, in any case, followed by a character that cannot continue an unquoted
 /// identifier or by the end of the text.
-///
-/// Pending: this is the wording of specification PR #105, not yet merged into `main`.
 pub(crate) fn is_query(source: &str) -> bool {
     let start = source.trim_start();
     ["SELECT", "WITH"].iter().any(|keyword| {
