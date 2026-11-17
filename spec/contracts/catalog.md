@@ -59,6 +59,31 @@ queries the database (P2) and never assumes anything the catalog does not prove.
 - **CAT-4.2** Mapping a physical type to a logical type is the producer's duty and MUST be exact: precision is never rounded and types are never widened.
 - **CAT-4.3** An `unsupported` column may exist; using it in a model expression is an error in E0.
 
+### CAT-4.4 DuckDB and DuckLake mapping
+
+- **CAT-4.4** A producer for DuckDB, or for DuckLake (whose column types are DuckDB's), maps physical types exactly as this table states. Every type the table does not list is `unsupported`.
+
+| DuckDB type | Logical type |
+|---|---|
+| `BOOLEAN` | `boolean` |
+| `TINYINT`, `SMALLINT`, `INTEGER`, `BIGINT`, `HUGEINT` | `integer`, `bits` 8, 16, 32, 64, 128, `signed: true` |
+| `UTINYINT`, `USMALLINT`, `UINTEGER`, `UBIGINT`, `UHUGEINT` | `integer`, `bits` 8, 16, 32, 64, 128, `signed: false` |
+| `DECIMAL(p,s)` | `decimal`, `precision` p, `scale` s |
+| `FLOAT` | `float`, `bits` 32 |
+| `DOUBLE` | `float`, `bits` 64 |
+| `VARCHAR` | `text` |
+| `BLOB` | `binary` |
+| `UUID` | `uuid` |
+| `DATE` | `date` |
+| `TIME` | `time` |
+| `INTERVAL` | `interval` |
+| `TIMESTAMP_S`, `TIMESTAMP_MS`, `TIMESTAMP`, `TIMESTAMP_NS` | `timestamp`, `precision` `s`, `ms`, `us`, `ns`, `with_time_zone: false` |
+| `TIMESTAMP WITH TIME ZONE` (`TIMESTAMPTZ`) | `timestamp`, `precision` `us`, `with_time_zone: true` |
+| `T[]` (`LIST`) where `T` maps to a type other than `unsupported` | `list`, `element` the mapping of `T` |
+| `STRUCT`, `MAP`, `UNION`, fixed-size `ARRAY`, `ENUM`, `BIT`, `TIMETZ`, `VARINT`, `JSON`, and a `LIST` of an `unsupported` type | `unsupported` |
+
+`ENUM` sorts by declaration order, not as text, and `JSON` has its own comparison functions. Neither has an exact neutral equivalent, so a producer that wants them queried casts them to `VARCHAR` in the relation it publishes.
+
 ## CAT-5 State document
 
 | Field | Purpose |
