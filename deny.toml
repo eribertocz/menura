@@ -7,6 +7,9 @@ all-features = true
 [advisories]
 version = 2
 yanked = "deny"
+ignore = [
+    { id = "RUSTSEC-2026-0543", reason = "chrono is unmaintained (informational, no patched version). It reaches only the test-tooling crate conformance-runner, through duckdb's arrow; no compiler crate depends on it, and the chrono ban keeps it that way (A2). Remove when duckdb/arrow stop depending on chrono." },
+]
 
 [licenses]
 version = 2

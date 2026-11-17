@@ -26,6 +26,7 @@ rules: [E3-3.2]                 # every rule ID this case covers
 model: stores                   # folder under models/
 security_context: analyst.json  # required for error, plan and runtime_error; under models/<model-name>/contexts/
 query: { ... }                  # query document, or omitted for load-only cases
+load_options: { ossie_format: development, model_name: shop }  # optional (CS-2.7)
 expect:
   outcome: error                # load_error | error | plan | runtime_error
   error: E_AMBIGUOUS_PATH       # the first error code (E2-5.2)
@@ -44,6 +45,7 @@ expect:
 | CS-2.4 | `rows` are compared with NULLs equal, decimals exactly, floats within `tolerance` (relative), and the row order as declared. |
 | CS-2.5 | Runtime-policy cases expect `outcome: runtime_error` with the runtime code (`RADD-01`, …). |
 | CS-2.6 | The **coverage scope** is the list of specification files in `spec/coverage-scope.txt`, one path per line; lines starting with `#` are comments. `rule-coverage` fails when a rule ID defined in a listed file is not covered (T1), and only reports the rule IDs of other files. The specification session adds the files of a version at its gate (7.1a); a file is never removed, so later work cannot lose coverage. |
+| CS-2.7 | `load_options` holds load options of architecture section 3.5 (`ossie_format`, `model_name`, `namespace`, `grant_authenticated_to_all`); an option it omits takes its default. It lets a case cover a rule that applies only with a load option. |
 
 ## CS-3 Apache Ossie suites
 
