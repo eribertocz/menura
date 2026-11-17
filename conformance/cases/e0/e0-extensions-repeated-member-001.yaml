@@ -1,0 +1,6 @@
+id: e0-extensions-repeated-member-001
+rules: [E0C-2.7, E0C-06]
+model: e0-extensions-repeated-member-001
+expect:
+  outcome: load_error
+  error: E0C-06

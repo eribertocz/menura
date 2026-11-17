@@ -12,7 +12,6 @@
 mod datatype;
 mod diagnostic;
 mod evaluable_schema;
-mod identifier;
 mod json;
 mod nonportable;
 mod output;
@@ -24,7 +23,7 @@ mod violations;
 use semantic_compiler_contracts::types::audit_record::OssieFormat;
 
 use diagnostic::{StructureCode, StructureDiagnostic};
-use output::{SelectedModel, Structure};
+pub(crate) use output::{SelectedModel, Structure};
 
 use crate::pointer::{JsonPointer, position};
 use crate::read::{Node, Value};

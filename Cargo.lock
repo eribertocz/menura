@@ -1028,6 +1028,7 @@ dependencies = [
  "semantic-compiler-expressions",
  "semantic-compiler-model",
  "semantic-compiler-security",
+ "serde",
  "serde_json",
 ]
 
