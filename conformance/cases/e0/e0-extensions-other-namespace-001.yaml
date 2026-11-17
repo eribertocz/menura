@@ -1,0 +1,17 @@
+id: e0-extensions-other-namespace-001
+rules: [E0C-1.1, MDL-2.1, MDL-2.3, MDL-2.5]
+model: e0-extensions-other-namespace-001
+security_context: analyst.json
+query:
+  contract: semantic_compiler.query
+  contract_version: "1.0.0"
+  reference_time: "2026-11-15T12:00:00-04:00"
+  time_zone: UTC
+  query:
+    dimensions: [orders.status]
+    metrics:
+      - {metric: total_amount, alias: total_amount}
+expect:
+  outcome: plan
+  rows: e0-extensions-other-namespace-001.csv
+  row_order: any

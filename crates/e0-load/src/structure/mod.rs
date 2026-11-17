@@ -15,7 +15,7 @@ mod variants;
 mod violations;
 
 use diagnostic::{StructureCode, StructureDiagnostic};
-use output::{SelectedModel, Structure};
+pub(crate) use output::{SelectedModel, Structure};
 
 use crate::pointer::{JsonPointer, position};
 use crate::read::{Node, Value};
