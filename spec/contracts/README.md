@@ -20,7 +20,7 @@ examples in `examples/`, all checked in CI.
 
 - **CON-0.1** Every contract listed above is **public**: it is the only interface other modules may rely on. Anything not in a contract (internal types, plan nodes, crate APIs other than the public functions) is private and may change at any time.
 - **CON-0.2** A contract is published as its chapter, its JSON Schema and its examples, in this repository, under the Apache 2.0 license. Any module, in any language, can implement a producer or consumer from them alone, without depending on the compiler's code.
-- **CON-0.3** Each release attaches every JSON Schema as a release asset, and each schema keeps a stable `$id` per contract version. The `$id` base (`https://semantic-compiler.invalid/`) is a placeholder, replaced by the project's public URL before 1.0.0.
+- **CON-0.3** Each release attaches every JSON Schema as a release asset (the `release-assets` workflow, CI-2), and each schema keeps a stable `$id` per contract version. The `$id` base (`https://semantic-compiler.invalid/`) is a placeholder, replaced by the project's public URL before 1.0.0.
 - **CON-0.4** Changing a public contract follows the evolution rules of architecture section 3.3.
 
 ## Shared rules

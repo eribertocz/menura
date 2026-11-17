@@ -137,9 +137,9 @@ Find a rule ID or a section here, then open only that file at that line.
 | [09-continuous-integration.md](09-continuous-integration.md#L1) | 1 | section | 9. Continuous integration |
 | [09-continuous-integration.md](09-continuous-integration.md#L6) | 6 | section | CI-1 On every pull request and every push to `main` |
 | [09-continuous-integration.md](09-continuous-integration.md#L30) | 30 | section | CI-2 Scheduled |
-| [09-continuous-integration.md](09-continuous-integration.md#L36) | 36 | section | CI-3 Rules |
-| [09-continuous-integration.md](09-continuous-integration.md#L38) | 38 | rule | CI-3.1 |
-| [09-continuous-integration.md](09-continuous-integration.md#L39) | 39 | rule | CI-3.2 |
+| [09-continuous-integration.md](09-continuous-integration.md#L37) | 37 | section | CI-3 Rules |
+| [09-continuous-integration.md](09-continuous-integration.md#L39) | 39 | rule | CI-3.1 |
+| [09-continuous-integration.md](09-continuous-integration.md#L40) | 40 | rule | CI-3.2 |
 | [README.md](README.md#L1) | 1 | section | semantic_compiler — Specification |
 | [README.md](README.md#L9) | 9 | section | Reading order |
 | [README.md](README.md#L28) | 28 | section | Conventions |
