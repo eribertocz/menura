@@ -1,5 +1,5 @@
 id: e0-extensions-two-entries-001
-rules: [E0C-2.2, E0C-04, MDL-2.1]
+rules: [E0C-2.2, E0C-2.6, E0C-04, MDL-2.1]
 model: e0-extensions-two-entries-001
 expect:
   outcome: load_error
