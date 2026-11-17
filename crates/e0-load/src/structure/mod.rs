@@ -17,6 +17,7 @@ mod violations;
 use diagnostic::{StructureCode, StructureDiagnostic};
 use output::{SelectedModel, Structure};
 
+use crate::nodes::member;
 use crate::pointer::{JsonPointer, position};
 use crate::read::{Node, Value};
 use selection::select_model;
@@ -67,7 +68,7 @@ pub fn validate_structure<'document>(
 
 /// The semantic model at `index` of `semantic_model`.
 fn model_at(document: &Node, index: usize) -> Option<SelectedModel<'_>> {
-    let list = selection::member(document, "semantic_model")?;
+    let list = member(document, "semantic_model")?;
     let Value::Sequence(models) = &list.value else {
         return None;
     };

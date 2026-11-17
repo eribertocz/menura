@@ -2,6 +2,7 @@
 //! DEV-7).
 
 use super::diagnostic::{StructureCode, StructureDiagnostic};
+use crate::nodes::{is_text, member};
 use crate::pointer::JsonPointer;
 use crate::read::{Node, Value};
 
@@ -46,19 +47,4 @@ pub(crate) fn select_model(
             models.len()
         ))),
     }
-}
-
-/// The value of the member `name` of a mapping node.
-pub(crate) fn member<'node>(node: &'node Node, name: &str) -> Option<&'node Node> {
-    let Value::Mapping(entries) = &node.value else {
-        return None;
-    };
-    entries
-        .iter()
-        .find(|entry| is_text(&entry.key, name))
-        .map(|entry| &entry.value)
-}
-
-fn is_text(node: &Node, text: &str) -> bool {
-    matches!(&node.value, Value::String(value) if value == text)
 }
