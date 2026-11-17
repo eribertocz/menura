@@ -2,7 +2,7 @@
 
 use super::diagnostic::{StructureCode, StructureDiagnostic};
 use super::output::{DeclaredDatatype, LogicalKind};
-use super::selection::member;
+use crate::nodes::member;
 use crate::pointer::JsonPointer;
 use crate::read::{Node, Value};
 

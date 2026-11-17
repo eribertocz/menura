@@ -1,0 +1,19 @@
+id: e0-references-quoted-name-001
+rules: [E0D-1.1, W0D-01]
+model: e0-references-identifiers
+security_context: analyst.json
+query:
+  contract: semantic_compiler.query
+  contract_version: "1.0.0"
+  reference_time: "2026-11-15T12:00:00-04:00"
+  time_zone: UTC
+  query:
+    dimensions: [orders.status]
+    metrics:
+      - {metric: total_quoted, alias: total_quoted}
+      - {metric: total_mixed_case, alias: total_mixed_case}
+expect:
+  outcome: plan
+  warnings: [W0D-01]
+  rows: e0-references-quoted-name-001.csv
+  row_order: any

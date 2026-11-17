@@ -1,8 +1,7 @@
 //! The development-line `nonportable_extensions` entries of the selected model (MDL-2.4).
 
 use super::output::{ExtensionOwner, NonportableExtension};
-use super::selection::member;
-use super::variants::{items, text};
+use crate::nodes::{items, member, text};
 use crate::pointer::JsonPointer;
 use crate::read::Node;
 

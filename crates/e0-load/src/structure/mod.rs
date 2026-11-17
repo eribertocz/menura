@@ -22,9 +22,12 @@ mod violations;
 
 use semantic_compiler_contracts::types::audit_record::OssieFormat;
 
-use diagnostic::{StructureCode, StructureDiagnostic};
-pub(crate) use output::{SelectedModel, Structure};
+pub(crate) use diagnostic::{StructureCode, StructureDiagnostic};
+pub(crate) use output::{
+    CompiledVariant, ElementExpression, ElementKind, SelectedModel, Structure,
+};
 
+use crate::nodes::member;
 use crate::pointer::{JsonPointer, position};
 use crate::read::{Node, Value};
 use nonportable::nonportable_extensions;
@@ -94,7 +97,7 @@ fn model_at(document: &Node, format: OssieFormat, index: usize) -> Option<Select
             node: document,
         });
     }
-    let list = selection::member(document, "semantic_model")?;
+    let list = member(document, "semantic_model")?;
     let Value::Sequence(models) = &list.value else {
         return None;
     };

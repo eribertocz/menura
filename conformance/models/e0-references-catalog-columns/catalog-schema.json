@@ -1,0 +1,39 @@
+{
+  "contract": "semantic_compiler.catalog_schema",
+  "contract_version": "1.0.0",
+  "document_id": {
+    "origin": "conformance:e0-references-catalog-columns",
+    "snapshot": "e0-references-catalog-columns-001"
+  },
+  "engine": {
+    "name": "duckdb",
+    "version": "2.0.0"
+  },
+  "relations": [
+    {
+      "source": "shop.main.payments",
+      "columns": [
+        {
+          "name": "payment_id",
+          "logical_type": {
+            "kind": "integer",
+            "bits": 32,
+            "signed": true
+          },
+          "physical_type": "INTEGER",
+          "nullable": false
+        },
+        {
+          "name": "Amount",
+          "logical_type": {
+            "kind": "integer",
+            "bits": 32,
+            "signed": true
+          },
+          "physical_type": "INTEGER",
+          "nullable": false
+        }
+      ]
+    }
+  ]
+}

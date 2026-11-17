@@ -4,9 +4,9 @@
 use super::datatype::declared_datatype;
 use super::diagnostic::{StructureCode, StructureDiagnostic};
 use super::output::{CompiledVariant, ElementExpression, ElementKind};
-use super::selection::member;
+use crate::nodes::{items, member, text};
 use crate::pointer::JsonPointer;
-use crate::read::{Node, Value};
+use crate::read::Node;
 
 /// The dialect that is compiled.
 const ANSI_SQL: &str = "ANSI_SQL";
@@ -106,21 +106,5 @@ impl<'document> Variants<'document> {
             }
         }
         ansi_sql
-    }
-}
-
-/// The items of a sequence node with their indices; nothing for any other node.
-pub(crate) fn items(node: Option<&Node>) -> impl Iterator<Item = (usize, &Node)> {
-    let items: &[Node] = match node.map(|node| &node.value) {
-        Some(Value::Sequence(items)) => items,
-        _ => &[],
-    };
-    items.iter().enumerate()
-}
-
-pub(crate) fn text(node: Option<&Node>) -> Option<&str> {
-    match node.map(|node| &node.value) {
-        Some(Value::String(text)) => Some(text),
-        _ => None,
     }
 }

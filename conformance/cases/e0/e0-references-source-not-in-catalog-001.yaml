@@ -1,0 +1,6 @@
+id: e0-references-source-not-in-catalog-001
+rules: [E0D-02, DEV-3]
+model: e0-references-source-not-in-catalog-001
+expect:
+  outcome: load_error
+  error: E0D-02

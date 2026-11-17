@@ -1,0 +1,18 @@
+id: e0-references-catalog-column-001
+rules: [E0D-1.5, W0D-01]
+model: e0-references-catalog-columns
+security_context: analyst.json
+query:
+  contract: semantic_compiler.query
+  contract_version: "1.0.0"
+  reference_time: "2026-11-15T12:00:00-04:00"
+  time_zone: UTC
+  query:
+    metrics:
+      - {metric: total_regular, alias: total_regular}
+      - {metric: total_exact, alias: total_exact}
+expect:
+  outcome: plan
+  warnings: [W0D-01]
+  rows: e0-references-catalog-column-001.csv
+  row_order: any
