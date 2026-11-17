@@ -5,7 +5,6 @@ use semantic_compiler_contracts::types::audit_record::OssieFormat;
 use semantic_compiler_contracts::{SchemaViolation, SchemaViolationKind, schema_violations};
 
 use super::diagnostic::{StructureCode, StructureDiagnostic};
-use super::evaluable_schema::evaluable_schema;
 use super::json::to_json;
 use super::schema::schema_text;
 use crate::pointer::{JsonPointer, resolve};
@@ -14,7 +13,7 @@ use crate::read::Node;
 /// Every diagnostic of `document` against the schema of `format`, unordered: the official 0.1.1
 /// schema, or the development-line schema (MDL-1.1).
 pub(crate) fn schema_diagnostics(document: &Node, format: OssieFormat) -> Vec<StructureDiagnostic> {
-    match evaluable_schema(schema_text(format)) {
+    match serde_json::from_str::<serde_json::Value>(schema_text(format)) {
         Ok(schema) => schema_violations(&schema, &to_json(document))
             .into_iter()
             .map(|violation| diagnostic(document, violation))
