@@ -134,6 +134,11 @@ Find a rule ID or a section here, then open only that file at that line.
 | [08-conformance-suite.md](08-conformance-suite.md#L58) | 58 | rule | CS-4.4 |
 | [08-conformance-suite.md](08-conformance-suite.md#L59) | 59 | rule | CS-4.5 |
 | [08-conformance-suite.md](08-conformance-suite.md#L60) | 60 | rule | CS-4.6 |
+| [08-conformance-suite.md](08-conformance-suite.md#L62) | 62 | section | CS-5 Producer suite |
+| [08-conformance-suite.md](08-conformance-suite.md#L67) | 67 | rule | CS-5.1 |
+| [08-conformance-suite.md](08-conformance-suite.md#L68) | 68 | rule | CS-5.2 |
+| [08-conformance-suite.md](08-conformance-suite.md#L69) | 69 | rule | CS-5.3 |
+| [08-conformance-suite.md](08-conformance-suite.md#L70) | 70 | rule | CS-5.4 |
 | [09-continuous-integration.md](09-continuous-integration.md#L1) | 1 | section | 9. Continuous integration |
 | [09-continuous-integration.md](09-continuous-integration.md#L6) | 6 | section | CI-1 On every pull request and every push to `main` |
 | [09-continuous-integration.md](09-continuous-integration.md#L30) | 30 | section | CI-2 Scheduled |
