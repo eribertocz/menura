@@ -14,11 +14,15 @@ use crate::relationships::additivity::check_additivity_reachability;
 use crate::relationships::analyze_relationships;
 use crate::structure::validate_structure;
 
-/// The code and JSON Pointer of every `E0C-16` diagnostic of `model`.
+/// The code and JSON Pointer of every `E0C-16` diagnostic of the release-format `model`.
 fn problems(model: &str) -> Vec<(&'static str, String)> {
+    problems_in(model, OssieFormat::Release)
+}
+
+/// The code and JSON Pointer of every `E0C-16` diagnostic of `model`, read in `format`.
+fn problems_in(model: &str, format: OssieFormat) -> Vec<(&'static str, String)> {
     let document = read_document(model.as_bytes()).expect("the document is read");
-    let structure =
-        validate_structure(&document, OssieFormat::Release, None).expect("the structure is valid");
+    let structure = validate_structure(&document, format, None).expect("the structure is valid");
     let extensions = validate_extensions(&document, &structure.semantic_model, DEFAULT_NAMESPACE)
         .expect("the extensions are accepted");
     let catalog = admit_catalog_schema(CATALOG).expect("the catalog schema is admitted");
@@ -130,4 +134,42 @@ fn add_5_1_6_a_metric_unusable_before_e0e_is_not_checked() {
     let model = with_debt_balance_expression("SUM(debt.balance) + SUM(debt.missing_field)");
     let model = model.replacen(r#""over": "debt.period""#, r#""over": "debt.month""#, 1);
     assert!(problems(&model).is_empty());
+}
+
+/// The development-line model of `e0-additivity-development-unreachable-001`.
+const DEVELOPMENT_UNREACHABLE: &str = include_str!(
+    "../../../../../conformance/models/e0-additivity-development-unreachable-001/model.yaml"
+);
+
+#[test]
+fn add_5_1_6_e0g_1_4_e0c_16_the_home_dataset_of_a_dataset_metric_is_its_own_dataset() {
+    assert_eq!(
+        problems_in(DEVELOPMENT_UNREACHABLE, OssieFormat::Development),
+        [(
+            "E0C-16",
+            "/datasets/1/metrics/0/nonportable_extensions/0/data".to_owned()
+        )]
+    );
+    let reachable = DEVELOPMENT_UNREACHABLE
+        .replace("over: debt.period", "over: customers.valid_from")
+        .replace(
+            "entity: [debt.customer_id]",
+            "entity: [customers.customer_id]",
+        );
+    assert!(problems_in(&reachable, OssieFormat::Development).is_empty());
+}
+
+#[test]
+fn add_5_1_6_a_dataset_metric_unusable_before_e0e_is_not_checked() {
+    for expression in [
+        "{sql: SUM(missing_field)}",
+        "{sql: COUNT(*)}\n        datatype: Opaque",
+    ] {
+        let model = DEVELOPMENT_UNREACHABLE.replacen("{sql: COUNT(*)}", expression, 1);
+        assert_ne!(model, DEVELOPMENT_UNREACHABLE);
+        assert!(
+            problems_in(&model, OssieFormat::Development).is_empty(),
+            "{expression}"
+        );
+    }
 }
