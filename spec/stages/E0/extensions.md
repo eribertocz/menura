@@ -23,6 +23,7 @@ An entry of `custom_extensions` is a compiler extension only if all of these hol
 | E0C-2.5 | Each extension is then validated by its own chapter in [`spec/extensions/`](../../extensions/README.md). |
 | E0C-2.6 | `data` is a JSON string, so no pointer reaches inside it: every E0C diagnostic about an entry is located at that entry's `data` member, except `E0C-04`, which is located at the entry that repeats (the later one). |
 | E0C-2.7 | A member name repeated in any object inside `data` is an error (`E0C-06`), as a repeated YAML key is (E0A-2.3): a document with two readings violates P1. |
+| E0C-2.8 | In the development format (MDL-2.4), `data` is a YAML object, read as the JSON value it represents, so every rule of E0C applies unchanged. A key that is not a string, a number with no JSON form (`.inf`, `.nan`) or a YAML value with no JSON form is `E0C-03`, located at the entry's `data` member. An integer is read as the release format's JSON reader reads the same digits, so both formats give the same code. A YAML `null` is the JSON `null`, not the string `"null"`. |
 
 ## E0C-3 Diagnostics
 
