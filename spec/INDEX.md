@@ -348,6 +348,14 @@ Find a rule ID or a section here, then open only that file at that line.
 | [extensions/context.md](extensions/context.md#L37) | 37 | section | CTX-3a Definitions |
 | [extensions/context.md](extensions/context.md#L49) | 49 | section | CTX-4 Examples |
 | [extensions/context.md](extensions/context.md#L57) | 57 | section | CTX-5 Validation |
+| [extensions/context.md](extensions/context.md#L68) | 68 | section | CTX-5.1 Validation details |
+| [extensions/context.md](extensions/context.md#L72) | 72 | rule | CTX-5.1.1 |
+| [extensions/context.md](extensions/context.md#L73) | 73 | rule | CTX-5.1.2 |
+| [extensions/context.md](extensions/context.md#L74) | 74 | rule | CTX-5.1.3 |
+| [extensions/context.md](extensions/context.md#L75) | 75 | rule | CTX-5.1.4 |
+| [extensions/context.md](extensions/context.md#L76) | 76 | rule | CTX-5.1.5 |
+| [extensions/context.md](extensions/context.md#L77) | 77 | rule | CTX-5.1.6 |
+| [extensions/context.md](extensions/context.md#L78) | 78 | rule | CTX-5.1.7 |
 | [extensions/derived.md](extensions/derived.md#L1) | 1 | section | Extension: derived metrics |
 | [extensions/derived.md](extensions/derived.md#L5) | 5 | section | DER-1 Purpose |
 | [extensions/derived.md](extensions/derived.md#L9) | 9 | section | DER-2 Formula |
