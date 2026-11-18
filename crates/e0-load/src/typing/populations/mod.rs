@@ -9,7 +9,7 @@
 //! field without a type already has its own diagnostic (POP-4.5). A missing field is `E0C-22`,
 //! reported by E0.d.
 
-mod structure;
+pub(super) mod structure;
 
 use std::collections::HashMap;
 

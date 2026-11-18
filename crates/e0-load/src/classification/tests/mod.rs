@@ -9,16 +9,20 @@ use semantic_compiler_contracts::admit_catalog_schema;
 use semantic_compiler_contracts::types::audit_record::OssieFormat;
 
 use super::diagnostic::ClassificationCode;
-use super::output::{Additivity, DecomposabilityClass};
-use super::{Classification, ClassifiedMetric, MetricKind, classify_metrics};
+use super::output::{Additivity, DecomposabilityClass, QueryError};
+use super::{Classification, ClassificationInput, ClassifiedMetric, MetricKind, classify_metrics};
 use crate::extensions::{DEFAULT_NAMESPACE, validate_extensions};
 use crate::names::Name;
 use crate::read::read_document;
+use crate::references::derived::resolve_derived_references;
+use crate::references::resolve_references;
 use crate::structure::validate_structure;
+use crate::typing::derived::type_derived_metrics;
 use crate::typing::type_expressions;
 
 mod additivity;
 mod classes;
+mod derived;
 mod development;
 mod rules;
 
@@ -37,8 +41,21 @@ fn classify_in_format(model: &str, catalog: &str, format: OssieFormat) -> Classi
     let catalog = admit_catalog_schema(catalog).expect("the catalog schema is admitted");
     let extensions = validate_extensions(&document, &structure.semantic_model, DEFAULT_NAMESPACE)
         .expect("the extensions are accepted");
-    let typing = type_expressions(&document, &structure, &catalog);
-    classify_metrics(&document, &structure, &typing, &extensions)
+    let references =
+        resolve_references(&document, &structure, &catalog).expect("the references are accepted");
+    let derived = resolve_derived_references(&document, &structure, &extensions)
+        .expect("the inputs of derived metrics resolve");
+    let typing = type_expressions(&document, &structure, &catalog, &derived);
+    let derived_typing = type_derived_metrics(&document, &structure, &catalog, &typing, &derived)
+        .expect("the derived formulas are accepted");
+    let input = ClassificationInput {
+        extensions: &extensions,
+        references: &references,
+        derived: &derived,
+        typing: &typing,
+        derived_typing: &derived_typing,
+    };
+    classify_metrics(&document, &structure, &input)
 }
 
 fn classify(model: &str) -> Classification {
@@ -63,8 +80,10 @@ fn pair(code: ClassificationCode, pointer: &str) -> (&'static str, String) {
 enum Probe {
     /// The metric is classified.
     Classified(Box<ClassifiedMetric>),
-    /// The metric is unusable with this code.
+    /// The metric is unusable with this code of E0.g.
     Unusable(ClassificationCode),
+    /// The metric is unusable with the query error of an unusable input (DER-5.1.5).
+    UnusableInput(QueryError),
     /// The metric is neither: it is not usable after E0.f.
     NotClassified,
 }
@@ -82,7 +101,10 @@ fn probe(classification: &Classification, pointer: &str) -> Probe {
         .iter()
         .find(|metric| metric.pointer.as_str() == pointer)
     {
-        Some(metric) => Probe::Unusable(metric.query_error),
+        Some(metric) => match metric.query_error {
+            QueryError::Classification(code) => Probe::Unusable(code),
+            other => Probe::UnusableInput(other),
+        },
         None => Probe::NotClassified,
     }
 }

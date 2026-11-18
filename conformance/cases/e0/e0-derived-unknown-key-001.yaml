@@ -1,0 +1,6 @@
+id: e0-derived-unknown-key-001
+rules: [DER-3, DER-5.1.1, E0C-02]
+model: e0-derived-unknown-key-001
+expect:
+  outcome: load_error
+  error: E0C-02

@@ -1,5 +1,5 @@
-//! Substage E0.g: classifies the base metrics of the selected semantic model (E0G-1 to E0G-4,
-//! E0G-6): model metrics, and the dataset-scoped metrics of the development format.
+//! Substage E0.g: classifies the metrics of the selected semantic model (E0G-1 to E0G-6): base
+//! model metrics, the dataset-scoped metrics of the development format, and derived metrics.
 //!
 //! Each metric usable after E0.f is split into components, one per aggregate, each with its
 //! home dataset and decomposability class; its additivity and recomposability are deduced from
@@ -9,49 +9,56 @@
 //! Window functions (E0G-2.2) and nested aggregates (E0G-2.6) make the metric unusable in
 //! E0.f, which reports them; such a metric is not classified. The additivity declaration E0.c
 //! validated replaces the deduced additivity, and one that relaxes it or is semi-additive over
-//! several home datasets makes the metric unusable as `E0G-01` (E0G-4.1 to E0G-4.3). Derived
-//! metrics are classified by their extension.
+//! several home datasets makes the metric unusable as `E0G-01` (E0G-4.1 to E0G-4.3).
+//!
+//! Derived metrics are not base metrics, and E0G-2 does not apply to them: each is classified
+//! from its inputs (E0G-5.2, E0G-5.3, DER-5.1.6), and is unusable when one of them is
+//! (DER-5.1.5). Context metrics are classified by their extension (CTX-5.1.7, #41), not here.
 
 mod additivity;
 mod decomposability;
+mod derived;
 mod diagnostic;
+mod input;
 mod output;
 mod parts;
 mod rules;
 
 pub(crate) use diagnostic::ClassificationDiagnostic;
+pub(crate) use input::ClassificationInput;
 pub(crate) use output::{Classification, ClassifiedMetric, Component, MetricKind, UnusableMetric};
 
-use std::collections::HashMap;
+use std::collections::{BTreeSet, HashMap};
 
 use semantic_compiler_model::expression::Expression;
 
 use crate::expressions::{ExpressionPlace, parse_element_expression};
-use crate::extensions::Extensions;
 use crate::extensions::additivity::DeclaredAdditivity;
 use crate::outline::{ElementOutline, ModelOutline, outline};
 use crate::pointer::{JsonPointer, position, resolve};
 use crate::read::Node;
 use crate::structure::{CompiledVariant, ElementExpression, ElementKind, Structure};
-use crate::typing::{self, TypedElement, Typing};
+use crate::typing::{self, TypedElement};
 use additivity::additivity;
 use decomposability::is_recomposable;
+use derived::classify_derived;
 use output::Additivity;
 use parts::expression_parts;
 use rules::{MetricScope, Problem, components};
 
-/// Classifies the base metrics of the semantic model that `structure` selected in `document`,
-/// reading the types `typing` found for them in E0.f and the additivity declarations of
-/// `extensions` (E0G-4.3).
+/// Classifies the metrics of the semantic model that `structure` selected in `document`,
+/// reading what the substages before E0.g found in `input`: the types E0.f found, the
+/// additivity declarations (E0G-4.3), the derived metrics and their inputs, and the query error
+/// of every metric made unusable before E0.g (DER-5.1.5).
 ///
-/// Only the metrics `typing` typed are classified: the others are unusable after E0.f
+/// Only the base metrics E0.f typed are classified: the others are unusable after E0.f
 /// (E0G-2.8). Classified and unusable metrics, and diagnostics, are in document order (E0-4.3).
 pub fn classify_metrics(
     document: &Node,
     structure: &Structure<'_>,
-    typing: &Typing,
-    extensions: &Extensions,
+    input: &ClassificationInput<'_>,
 ) -> Classification {
+    let (typing, extensions) = (input.typing, input.extensions);
     let model = outline(
         structure.semantic_model.node,
         &structure.semantic_model.pointer,
@@ -73,7 +80,7 @@ pub fn classify_metrics(
         .map(|declaration| (&declaration.metric, &declaration.additivity))
         .collect();
     let mut classification = Classification::default();
-    for (metric, kind, scope) in base_metrics(&model) {
+    for (metric, kind, scope) in base_metrics(&model, input) {
         let (Some(tree), Some(typed)) = (trees.get(&metric.pointer), typed.get(&metric.pointer))
         else {
             continue;
@@ -97,15 +104,18 @@ pub fn classify_metrics(
             Err(problem) => record_problem(document, metric, kind, problem, &mut classification),
         }
     }
+    classify_derived(document, structure, input, &mut classification);
     sort_in_document_order(document, &mut classification);
     classification
 }
 
 /// Every base metric of `model`, with its kind and scope: the dataset metrics of each dataset,
 /// then the model metrics. A dataset metric of a dataset without a name is not a metric of any
-/// dataset, and is left out.
+/// dataset, and is left out; so are the derived metrics, the metrics `E0C-37` makes unusable,
+/// and the context metrics (DER-5.1.6, CTX-5.1.7).
 fn base_metrics<'model, 'document>(
     model: &'model ModelOutline<'document>,
+    input: &ClassificationInput<'_>,
 ) -> Vec<(
     &'model ElementOutline<'document>,
     MetricKind,
@@ -125,7 +135,13 @@ fn base_metrics<'model, 'document>(
         }
     }
     for metric in &model.metrics {
-        metrics.push((metric, MetricKind::Metric, MetricScope::Model));
+        let pointer = &metric.pointer;
+        let other = input.derived.metric(pointer).is_some()
+            || input.derived.unusable.contains(pointer)
+            || input.extensions.is_context_metric(pointer);
+        if !other {
+            metrics.push((metric, MetricKind::Metric, MetricScope::Model));
+        }
     }
     metrics
 }
@@ -185,9 +201,15 @@ fn classified(
     let recomposable = components
         .iter()
         .all(|component| is_recomposable(&component.call));
+    let home_datasets: BTreeSet<_> = components
+        .iter()
+        .map(|component| component.home_dataset.clone())
+        .collect();
     Some(ClassifiedMetric {
         kind,
         pointer: metric.pointer.clone(),
+        inputs: Vec::new(),
+        home_datasets,
         additivity,
         declaration,
         recomposable,
@@ -211,10 +233,10 @@ fn record_problem(
     classification.unusable.push(UnusableMetric {
         kind,
         pointer: metric.pointer.clone(),
-        query_error: problem.code,
+        query_error: problem.code.into(),
     });
     classification.warnings.push(ClassificationDiagnostic {
-        code: problem.code,
+        code: problem.code.into(),
         pointer: metric.pointer.clone(),
         location,
         message: problem.message,

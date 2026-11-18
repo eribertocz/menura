@@ -1,0 +1,6 @@
+id: e0-derived-unknown-metric-001
+rules: [DER-2.1, DER-5, DER-5.1.2, E0C-32]
+model: e0-derived-unknown-metric-001
+expect:
+  outcome: load_error
+  error: E0C-32

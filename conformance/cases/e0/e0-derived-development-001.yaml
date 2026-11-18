@@ -1,0 +1,19 @@
+id: e0-derived-development-001
+rules: [DER-2.2, DER-5.1.2, DER-5.1.6, E0G-5.2]
+model: e0-derived-development
+security_context: analyst.json
+query:
+  contract: semantic_compiler.query
+  contract_version: "1.0.0"
+  reference_time: "2026-11-15T12:00:00-04:00"
+  time_zone: UTC
+  query:
+    dimensions: [orders.status]
+    metrics:
+      - {metric: average_amount, alias: average_amount}
+load_options: {ossie_format: development}
+expect:
+  outcome: plan
+  rows: e0-derived-development-001.csv
+  row_order: any
+  tolerance: 1.0e-9

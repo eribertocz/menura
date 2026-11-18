@@ -10,9 +10,12 @@
 //!
 //! References inside extensions are resolved by each extension with its own codes (E0D-3.2),
 //! never by the generic checks here: the fields of populations by
-//! [`populations::resolve_population_references`] (`E0C-22`, POP-4.3).
+//! [`populations::resolve_population_references`] (`E0C-22`, POP-4.3), and the inputs of
+//! derived metrics by [`derived::resolve_derived_references`] (`E0C-32`, `E0C-33`, `E0C-37`,
+//! DER-5.1.2).
 
 mod dataset_metric_references;
+pub(crate) mod derived;
 mod diagnostic;
 mod expression_references;
 mod finding;

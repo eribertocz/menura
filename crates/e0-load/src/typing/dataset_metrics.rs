@@ -1,6 +1,7 @@
 //! Types the dataset-scoped metrics of the development format (section 4.5), reading their
 //! references as E0.d resolves them: a bare name is a field of the metric's dataset, and
-//! `source.column` a column of the catalog relation of the dataset's `source`.
+//! `source.column` a column of the catalog relation of the dataset's `source`. A dataset metric
+//! reads no other metric: `AGG(…)` in it is `E0F-02` (DER-5.1.2).
 
 use std::collections::HashMap;
 
@@ -10,7 +11,7 @@ use super::elements::{ElementTypes, column, record};
 use super::output::ElementKind;
 use super::scope::{Relation, Scope};
 use super::stop::{Outcome, Stop};
-use super::typer::{Aggregates, ExpressionTyper};
+use super::typer::{Aggregates, ExpressionTyper, MetricAggregates};
 use super::value_type::Typed;
 use crate::names::Name;
 use crate::outline::DatasetOutline;
@@ -32,7 +33,8 @@ pub(crate) fn type_dataset_metrics<'model>(
         };
         let resolve = |reference: &Reference| reference_type(dataset, relation, fields, reference);
         for metric in &dataset.metrics {
-            let typer = ExpressionTyper::new(&resolve, Aggregates::Allowed);
+            let typer = ExpressionTyper::new(&resolve, Aggregates::Allowed)
+                .with_metric_aggregates(MetricAggregates::OutsideSubset);
             record(
                 scope,
                 &typer,

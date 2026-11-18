@@ -28,25 +28,62 @@ pub(crate) enum Aggregates {
     Nested,
 }
 
+/// What `AGG(metric)` is where the typer is (DER-5.1.2).
+#[derive(Clone, Copy)]
+pub(crate) enum MetricAggregates<'resolver> {
+    /// In a model metric: whether it may read a metric is checked by the derived-metric
+    /// extension (`E0C-37`), and a derived formula is typed by its own typer. The expression
+    /// gets no type here.
+    ReportedElsewhere,
+    /// In a field or a dataset metric, where no metric may be read: `E0F-02`.
+    OutsideSubset,
+    /// In a derived formula: `AGG(m)` has the type and nullability of `m` (DER-5.1.3), which
+    /// this resolver finds.
+    Typed(&'resolver Resolver<'resolver>),
+}
+
 /// Types the expressions of one element.
 pub(crate) struct ExpressionTyper<'resolver> {
     resolve: &'resolver Resolver<'resolver>,
     pub(super) aggregates: Aggregates,
+    metric_aggregates: MetricAggregates<'resolver>,
 }
 
 impl<'resolver> ExpressionTyper<'resolver> {
     /// A typer that resolves references with `resolve`, where `aggregates` says whether an
-    /// aggregate may appear.
+    /// aggregate may appear. Where no aggregate is allowed, `AGG(…)` is `E0F-02`; elsewhere it
+    /// is reported by the derived-metric checks, unless [`Self::with_metric_aggregates`] says
+    /// otherwise.
     pub(crate) fn new(resolve: &'resolver Resolver<'resolver>, aggregates: Aggregates) -> Self {
+        let metric_aggregates = match aggregates {
+            Aggregates::NotAllowed => MetricAggregates::OutsideSubset,
+            Aggregates::Allowed | Aggregates::Nested => MetricAggregates::ReportedElsewhere,
+        };
         Self {
             resolve,
             aggregates,
+            metric_aggregates,
+        }
+    }
+
+    /// The same typer, where `AGG(…)` is `metric_aggregates`.
+    pub(crate) fn with_metric_aggregates(
+        self,
+        metric_aggregates: MetricAggregates<'resolver>,
+    ) -> Self {
+        Self {
+            metric_aggregates,
+            ..self
         }
     }
 
     /// The typer of an aggregate's argument and `FILTER`, where no aggregate may appear.
     pub(super) fn nested(&self) -> Self {
-        Self::new(self.resolve, Aggregates::Nested)
+        Self {
+            resolve: self.resolve,
+            aggregates: Aggregates::Nested,
+            metric_aggregates: self.metric_aggregates,
+        }
     }
 
     /// The type and nullability of `expression`.
@@ -54,9 +91,8 @@ impl<'resolver> ExpressionTyper<'resolver> {
         match expression {
             Expression::Literal(literal) => Ok(literal_type(literal)),
             Expression::Reference(reference) => (self.resolve)(reference),
-            Expression::MetricAggregate(_) | Expression::UserAttribute(_) => {
-                Err(Stop::ReportedElsewhere)
-            }
+            Expression::MetricAggregate(metric) => self.metric_aggregate(metric),
+            Expression::UserAttribute(_) => Err(Stop::ReportedElsewhere),
             Expression::CurrentDate => Ok(Typed::value(LogicalType::Date, false)),
             Expression::CurrentTime => Ok(Typed::value(LogicalType::Time, false)),
             Expression::CurrentTimestamp => Ok(Typed::value(timestamp(), false)),
@@ -81,6 +117,21 @@ impl<'resolver> ExpressionTyper<'resolver> {
             | Expression::Between { .. }
             | Expression::Like { .. }
             | Expression::Case { .. } => self.operator(expression),
+        }
+    }
+
+    /// The type of `AGG(metric)` (DER-5.1.2, DER-5.1.3).
+    fn metric_aggregate(&self, metric: &Reference) -> Outcome<Typed> {
+        match self.metric_aggregates {
+            MetricAggregates::ReportedElsewhere => Err(Stop::ReportedElsewhere),
+            MetricAggregates::OutsideSubset => problem(
+                TypingCode::OutsideSubset,
+                format!(
+                    "AGG({}) reads a metric, which only a model metric may do (DER-5.1.2)",
+                    metric.name.text()
+                ),
+            ),
+            MetricAggregates::Typed(resolve) => resolve(metric),
         }
     }
 

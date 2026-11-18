@@ -35,8 +35,9 @@ pub(super) fn bare_references(condition: &Expression) -> Vec<&Reference> {
         .collect()
 }
 
-/// Every node of `expression`, each before its subexpressions, in written order.
-fn nodes(expression: &Expression) -> Vec<&Expression> {
+/// Every node of `expression`, each before its subexpressions, in written order; the derived
+/// formulas are walked with it too.
+pub(in crate::typing) fn nodes(expression: &Expression) -> Vec<&Expression> {
     let mut found = vec![expression];
     for child in children(expression) {
         found.extend(nodes(child));

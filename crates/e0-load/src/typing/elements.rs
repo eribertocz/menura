@@ -15,6 +15,7 @@ use super::value_type::{ExpressionType, Typed};
 use crate::names::Name;
 use crate::outline::ElementOutline;
 use crate::pointer::JsonPointer;
+use crate::references::derived::DerivedMetrics;
 
 /// One typing problem and the element it makes unusable.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -50,14 +51,18 @@ pub(crate) fn type_fields<'model>(scope: &Scope<'model, '_>) -> ElementTypes<'mo
     found
 }
 
-/// Types every metric, reading the types of `fields`.
+/// Types every metric but the derived metrics of `derived`, reading the types of `fields`.
 pub(crate) fn type_metrics<'model>(
     scope: &Scope<'model, '_>,
     fields: &HashMap<&JsonPointer, Typed>,
+    derived: &DerivedMetrics,
 ) -> ElementTypes<'model> {
     let mut found = ElementTypes::default();
     let resolve = |reference: &Reference| field_type(scope, fields, reference);
     for metric in &scope.model.metrics {
+        if derived.metric(&metric.pointer).is_some() {
+            continue;
+        }
         let typer = ExpressionTyper::new(&resolve, Aggregates::Allowed);
         record(scope, &typer, metric, ElementKind::Metric, &mut found);
     }

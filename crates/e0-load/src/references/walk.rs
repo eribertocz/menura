@@ -1,4 +1,4 @@
-//! The column and field references of a normalized expression tree.
+//! The column and field references, and the `AGG(…)` terms, of a normalized expression tree.
 
 use semantic_compiler_model::expression::{AggregateCall, Expression, Reference};
 
@@ -9,6 +9,26 @@ pub(crate) fn references(expression: &Expression) -> Vec<&Reference> {
     let mut found = Vec::new();
     collect(expression, &mut found);
     found
+}
+
+/// The metric every `AGG(…)` term of `expression` names, in the order they are written
+/// (DER-2.1).
+pub(crate) fn metric_aggregates(expression: &Expression) -> Vec<&Reference> {
+    let mut found = Vec::new();
+    collect_metric_aggregates(expression, &mut found);
+    found
+}
+
+fn collect_metric_aggregates<'tree>(
+    expression: &'tree Expression,
+    found: &mut Vec<&'tree Reference>,
+) {
+    if let Expression::MetricAggregate(metric) = expression {
+        found.push(metric);
+    }
+    for child in children(expression) {
+        collect_metric_aggregates(child, found);
+    }
 }
 
 fn collect<'tree>(expression: &'tree Expression, found: &mut Vec<&'tree Reference>) {
@@ -89,7 +109,7 @@ fn aggregate_children(call: &AggregateCall) -> Vec<&Expression> {
 mod tests {
     use semantic_compiler_expressions::parse;
 
-    use super::references;
+    use super::{metric_aggregates, references};
 
     fn names(text: &str) -> Vec<String> {
         let tree = parse(text).expect("the expression parses");
@@ -103,6 +123,19 @@ mod tests {
                 }
             })
             .collect()
+    }
+
+    #[test]
+    fn der_2_1_every_metric_aggregate_is_found_in_written_order() {
+        let tree = parse("CASE WHEN AGG(a) > 0 THEN AGG(o.b) / NULLIF(AGG(c), 0) END + AGG(a)")
+            .expect("the expression parses");
+        let found: Vec<String> = metric_aggregates(&tree)
+            .iter()
+            .map(|reference| reference.name.text().to_owned())
+            .collect();
+        assert_eq!(found, ["a", "b", "c", "a"]);
+        let tree = parse("SUM(o.a) + o.b").expect("the expression parses");
+        assert!(metric_aggregates(&tree).is_empty());
     }
 
     #[test]

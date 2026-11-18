@@ -3,6 +3,7 @@
 use serde_json::{Map, Value as Json};
 
 use super::additivity::AdditivityDeclaration;
+use super::derived::DerivedDeclaration;
 use super::diagnostic::ExtensionDiagnostic;
 use super::populations::Population;
 use crate::pointer::JsonPointer;
@@ -46,15 +47,41 @@ pub struct Extensions {
     pub populations: Vec<Population>,
     /// Every additivity declaration of the model, in document order (ADD-3).
     pub additivity: Vec<AdditivityDeclaration>,
+    /// Every derived-metric declaration of the model, in document order (DER-3).
+    pub derived: Vec<DerivedDeclaration>,
     /// `W0C-01` warnings, in document order.
     pub warnings: Vec<ExtensionDiagnostic>,
+}
+
+impl Extensions {
+    /// The extension key that marks a context metric (MDL-2).
+    const CONTEXT: &'static str = "context";
+
+    /// Whether the metric at `metric` is marked `context`, whatever the value of the key: a
+    /// context metric, which the context extension validates (DER-2.2, CTX-5.1.7).
+    #[must_use]
+    pub fn is_context_metric(&self, metric: &JsonPointer) -> bool {
+        self.entries.iter().any(|entry| {
+            entry.object == ObjectKind::Metric
+                && entry.object_pointer == *metric
+                && entry.extensions.contains_key(Self::CONTEXT)
+        })
+    }
+
+    /// The derived-metric declaration of the metric at `metric`, when it has one.
+    #[must_use]
+    pub fn derived_declaration(&self, metric: &JsonPointer) -> Option<&DerivedDeclaration> {
+        self.derived
+            .iter()
+            .find(|declaration| declaration.metric == *metric)
+    }
 }
 
 /// The common extension rules do not hold: the model is rejected (E0-4.1).
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ExtensionsFailure {
     /// The rejecting diagnostics, `E0C-01` to `E0C-06`, `E0C-10`, `E0C-11`, `E0C-13` to
-    /// `E0C-15`, `E0C-20` and `E0C-21`, in document order then by code; never empty.
+    /// `E0C-15`, `E0C-20`, `E0C-21` and `E0C-36`, in document order then by code; never empty.
     pub errors: Vec<ExtensionDiagnostic>,
     /// `W0C-01` warnings, in document order, reported with the errors (E0-2).
     pub warnings: Vec<ExtensionDiagnostic>,

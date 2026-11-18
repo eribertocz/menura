@@ -1,0 +1,6 @@
+id: e0-derived-aggregate-001
+rules: [DER-2.3, DER-5, DER-5.1.3, E0C-30]
+model: e0-derived-aggregate-001
+expect:
+  outcome: load_error
+  error: E0C-30
