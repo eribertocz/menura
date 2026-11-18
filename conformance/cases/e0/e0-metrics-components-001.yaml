@@ -1,0 +1,22 @@
+id: e0-metrics-components-001
+rules: [E0G-1.1, E0G-1.2, E0G-1.3]
+model: e0-metrics
+security_context: analyst.json
+query:
+  contract: semantic_compiler.query
+  contract_version: "1.0.0"
+  reference_time: "2026-11-15T12:00:00-04:00"
+  time_zone: UTC
+  query:
+    dimensions: [customers.region]
+    metrics:
+      - {metric: total_amount, alias: total_amount}
+      - {metric: average_age, alias: average_age}
+      - {metric: ordering_customer_count, alias: ordering_customer_count}
+      - {metric: open_amount, alias: open_amount}
+expect:
+  outcome: plan
+  warnings: [W0G-01]
+  rows: e0-metrics-components-001.csv
+  row_order: any
+  tolerance: 1.0e-9

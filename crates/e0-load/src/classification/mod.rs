@@ -1,0 +1,188 @@
+//! Substage E0.g: classifies the base metrics of the selected semantic model (E0G-1 to E0G-4,
+//! E0G-6): model metrics, and the dataset-scoped metrics of the development format.
+//!
+//! Each metric usable after E0.f is split into components, one per aggregate, each with its
+//! home dataset and decomposability class; its additivity and recomposability are deduced from
+//! the classes. A metric that breaks E0G-2.1, E0G-2.3 to E0G-2.5 or E0G-2.7 is unusable and is
+//! reported once as `W0G-01`, at the metric (E0G-2.8); classification never rejects the model.
+//!
+//! Window functions (E0G-2.2) and nested aggregates (E0G-2.6) make the metric unusable in
+//! E0.f, which reports them; such a metric is not classified. Derived metrics and additivity
+//! declarations are classified by their extensions.
+
+mod decomposability;
+mod diagnostic;
+mod output;
+mod parts;
+mod rules;
+
+pub(crate) use diagnostic::ClassificationDiagnostic;
+pub(crate) use output::{Classification, ClassifiedMetric, Component, MetricKind, UnusableMetric};
+
+use std::collections::HashMap;
+
+use semantic_compiler_model::expression::Expression;
+
+use crate::expressions::{ExpressionPlace, parse_element_expression};
+use crate::outline::{ElementOutline, ModelOutline, outline};
+use crate::pointer::{JsonPointer, position, resolve};
+use crate::read::Node;
+use crate::structure::{CompiledVariant, ElementExpression, ElementKind, Structure};
+use crate::typing::{self, TypedElement, Typing};
+use decomposability::{deduced_additivity, is_recomposable};
+use parts::expression_parts;
+use rules::{MetricScope, Problem, components};
+
+/// Classifies the base metrics of the semantic model that `structure` selected in `document`,
+/// reading the types `typing` found for them in E0.f.
+///
+/// Only the metrics `typing` typed are classified: the others are unusable after E0.f
+/// (E0G-2.8). Classified and unusable metrics, and diagnostics, are in document order (E0-4.3).
+pub fn classify_metrics(
+    document: &Node,
+    structure: &Structure<'_>,
+    typing: &Typing,
+) -> Classification {
+    let model = outline(
+        structure.semantic_model.node,
+        &structure.semantic_model.pointer,
+    );
+    let trees: HashMap<&JsonPointer, Expression> = structure
+        .expressions
+        .iter()
+        .filter_map(metric_tree)
+        .collect();
+    let typed: HashMap<&JsonPointer, &TypedElement> = typing
+        .elements
+        .iter()
+        .filter(|element| element.kind != typing::ElementKind::Field)
+        .map(|element| (&element.pointer, element))
+        .collect();
+    let mut classification = Classification::default();
+    for (metric, kind, scope) in base_metrics(&model) {
+        let (Some(tree), Some(typed)) = (trees.get(&metric.pointer), typed.get(&metric.pointer))
+        else {
+            continue;
+        };
+        match components(&expression_parts(tree), scope) {
+            Ok(components) => {
+                if let Some(classified) = classified(metric, kind, components, typed) {
+                    classification.metrics.push(classified);
+                }
+            }
+            Err(problem) => record_problem(document, metric, kind, problem, &mut classification),
+        }
+    }
+    sort_in_document_order(document, &mut classification);
+    classification
+}
+
+/// Every base metric of `model`, with its kind and scope: the dataset metrics of each dataset,
+/// then the model metrics. A dataset metric of a dataset without a name is not a metric of any
+/// dataset, and is left out.
+fn base_metrics<'model, 'document>(
+    model: &'model ModelOutline<'document>,
+) -> Vec<(
+    &'model ElementOutline<'document>,
+    MetricKind,
+    MetricScope<'model>,
+)> {
+    let mut metrics = Vec::new();
+    for dataset in &model.datasets {
+        let Some(name) = &dataset.name else {
+            continue;
+        };
+        for metric in &dataset.metrics {
+            metrics.push((
+                metric,
+                MetricKind::DatasetMetric,
+                MetricScope::Dataset(&name.name),
+            ));
+        }
+    }
+    for metric in &model.metrics {
+        metrics.push((metric, MetricKind::Metric, MetricScope::Model));
+    }
+    metrics
+}
+
+/// Sorts the metrics and diagnostics of `classification` in document order (E0-4.3).
+fn sort_in_document_order(document: &Node, classification: &mut Classification) {
+    classification
+        .metrics
+        .sort_by_cached_key(|metric| position(document, &metric.pointer));
+    classification
+        .unusable
+        .sort_by_cached_key(|metric| position(document, &metric.pointer));
+    classification
+        .warnings
+        .sort_by_cached_key(|diagnostic| position(document, &diagnostic.pointer));
+}
+
+/// The tree of the compiled variant of a model metric or dataset metric, if it parses. An
+/// expression that does not parse is reported by E0.f.
+fn metric_tree<'structure>(
+    expression: &'structure ElementExpression<'_>,
+) -> Option<(&'structure JsonPointer, Expression)> {
+    if expression.kind == ElementKind::Field {
+        return None;
+    }
+    let text = match expression.variant {
+        CompiledVariant::AnsiSql(text) | CompiledVariant::OssieSql2026(text) => text,
+        CompiledVariant::Unusable => return None,
+    };
+    let tree = parse_element_expression(text, ExpressionPlace::Metric).ok()?;
+    Some((&expression.pointer, tree))
+}
+
+/// The classified metric `metric` of `components`, with the type E0.f found (E0G-6).
+///
+/// E0.f types no metric as the literal `NULL` (E0F-3.2), so a typed metric always has a
+/// logical type.
+fn classified(
+    metric: &ElementOutline<'_>,
+    kind: MetricKind,
+    components: Vec<Component>,
+    typed: &TypedElement,
+) -> Option<ClassifiedMetric> {
+    let result_type = typed.typed.logical()?.clone();
+    let recomposable = components
+        .iter()
+        .all(|component| is_recomposable(&component.call));
+    Some(ClassifiedMetric {
+        kind,
+        pointer: metric.pointer.clone(),
+        additivity: deduced_additivity(&components),
+        recomposable,
+        components,
+        result_type,
+        nullable: typed.typed.nullable,
+    })
+}
+
+/// Records that `metric` is unusable because of `problem`, with its `W0G-01` at the metric
+/// (E0G-2.8).
+fn record_problem(
+    document: &Node,
+    metric: &ElementOutline<'_>,
+    kind: MetricKind,
+    problem: Problem,
+    classification: &mut Classification,
+) {
+    let location =
+        resolve(document, &metric.pointer).map_or(metric.expression_location, |node| node.location);
+    classification.unusable.push(UnusableMetric {
+        kind,
+        pointer: metric.pointer.clone(),
+        query_error: problem.code,
+    });
+    classification.warnings.push(ClassificationDiagnostic {
+        code: problem.code,
+        pointer: metric.pointer.clone(),
+        location,
+        message: problem.message,
+    });
+}
+
+#[cfg(test)]
+mod tests;
