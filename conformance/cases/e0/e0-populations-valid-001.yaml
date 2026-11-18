@@ -1,0 +1,17 @@
+id: e0-populations-valid-001
+rules: [POP-2, POP-4.1, POP-4.2, POP-4.3, POP-4.4, POP-4.5]
+model: e0-populations
+security_context: analyst.json
+query:
+  contract: semantic_compiler.query
+  contract_version: "1.0.0"
+  reference_time: "2026-11-15T12:00:00-04:00"
+  time_zone: UTC
+  query:
+    dimensions: [customers.segment]
+    metrics:
+      - {metric: customer_count, alias: customer_count}
+expect:
+  outcome: plan
+  rows: e0-populations-valid-001.csv
+  row_order: any

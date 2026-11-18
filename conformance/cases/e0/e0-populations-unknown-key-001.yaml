@@ -1,0 +1,6 @@
+id: e0-populations-unknown-key-001
+rules: [POP-4.1, E0C-2.4, E0C-02]
+model: e0-populations-unknown-key-001
+expect:
+  outcome: load_error
+  error: E0C-02

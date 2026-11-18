@@ -1,0 +1,6 @@
+id: e0-populations-period-kind-001
+rules: [POP-4, POP-4.5, POP-4.6, E0C-24]
+model: e0-populations-period-kind-001
+expect:
+  outcome: load_error
+  error: E0C-24

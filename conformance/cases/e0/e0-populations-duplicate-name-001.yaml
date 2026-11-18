@@ -1,0 +1,6 @@
+id: e0-populations-duplicate-name-001
+rules: [POP-4, POP-4.3, POP-4.6, E0C-20]
+model: e0-populations-duplicate-name-001
+expect:
+  outcome: load_error
+  error: E0C-20

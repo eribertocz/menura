@@ -1,0 +1,6 @@
+id: e0-populations-wrong-value-001
+rules: [POP-4.2, E0C-03]
+model: e0-populations-wrong-value-001
+expect:
+  outcome: load_error
+  error: E0C-03

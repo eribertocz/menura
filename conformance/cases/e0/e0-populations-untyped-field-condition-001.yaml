@@ -1,0 +1,7 @@
+id: e0-populations-untyped-field-condition-001
+rules: [POP-4.4, POP-4.5, E0C-23, W0F-01]
+model: e0-populations-untyped-field-condition-001
+expect:
+  outcome: load_error
+  error: E0C-23
+  warnings: [W0F-01]

@@ -3,6 +3,7 @@
 use serde_json::{Map, Value as Json};
 
 use super::diagnostic::ExtensionDiagnostic;
+use super::populations::Population;
 use crate::pointer::JsonPointer;
 use crate::read::Location;
 
@@ -40,6 +41,8 @@ impl ObjectKind {
 pub struct Extensions {
     /// One entry per object that has an entry of ours, in document order.
     pub entries: Vec<OwnEntry>,
+    /// Every population of the model, in document order (POP-2).
+    pub populations: Vec<Population>,
     /// `W0C-01` warnings, in document order.
     pub warnings: Vec<ExtensionDiagnostic>,
 }
@@ -47,7 +50,7 @@ pub struct Extensions {
 /// The common extension rules do not hold: the model is rejected (E0-4.1).
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ExtensionsFailure {
-    /// The rejecting diagnostics, `E0C-01` to `E0C-05`, in document order then by code; never
+    /// The rejecting diagnostics, `E0C-01` to `E0C-06`, `E0C-20` and `E0C-21`, in document order then by code; never
     /// empty.
     pub errors: Vec<ExtensionDiagnostic>,
     /// `W0C-01` warnings, in document order, reported with the errors (E0-2).
