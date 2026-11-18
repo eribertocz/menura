@@ -20,6 +20,7 @@ mod object_data;
 mod objects;
 mod output;
 pub(crate) mod populations;
+mod problems;
 
 pub(crate) use diagnostic::{ExtensionCode, ExtensionDiagnostic};
 use entry::{EntryKind, classify};
