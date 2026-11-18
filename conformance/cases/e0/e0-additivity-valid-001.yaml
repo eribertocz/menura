@@ -1,0 +1,18 @@
+id: e0-additivity-valid-001
+rules: [ADD-2.1, ADD-2.2, ADD-5, ADD-5.1.1, ADD-5.1.2, ADD-5.1.3, ADD-5.1.4, ADD-5.1.5, ADD-5.1.6, ADD-5.1.7, ADD-5.1.8, E0G-4.1, E0G-4.3]
+model: e0-additivity
+security_context: analyst.json
+query:
+  contract: semantic_compiler.query
+  contract_version: "1.0.0"
+  reference_time: "2026-11-15T12:00:00-04:00"
+  time_zone: UTC
+  query:
+    dimensions: [customers.category]
+    metrics:
+      - {metric: strict_balance, alias: strict_balance}
+      - {metric: customer_count, alias: customer_count}
+expect:
+  outcome: plan
+  rows: e0-additivity-valid-001.csv
+  row_order: any

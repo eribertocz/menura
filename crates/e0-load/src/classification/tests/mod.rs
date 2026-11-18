@@ -1,5 +1,5 @@
-//! Metric classification: E0G-1.1 to E0G-1.4, E0G-2.1 to E0G-2.8, E0G-3.1, E0G-3.2, the
-//! deduction of E0G-4, E0G-6, `E0G-02` and `W0G-01`.
+//! Metric classification: E0G-1.1 to E0G-1.4, E0G-2.1 to E0G-2.8, E0G-3.1, E0G-3.2, E0G-4,
+//! E0G-6, `E0G-01`, `E0G-02` and `W0G-01`.
 //!
 //! The model documents and catalog schemas of the `e0-metrics` and `e0-metrics-development`
 //! conformance models are read here at compile time, so classification is checked against the
@@ -11,11 +11,13 @@ use semantic_compiler_contracts::types::audit_record::OssieFormat;
 use super::diagnostic::ClassificationCode;
 use super::output::{Additivity, DecomposabilityClass};
 use super::{Classification, ClassifiedMetric, MetricKind, classify_metrics};
+use crate::extensions::{DEFAULT_NAMESPACE, validate_extensions};
 use crate::names::Name;
 use crate::read::read_document;
 use crate::structure::validate_structure;
 use crate::typing::type_expressions;
 
+mod additivity;
 mod classes;
 mod development;
 mod rules;
@@ -33,8 +35,10 @@ fn classify_in_format(model: &str, catalog: &str, format: OssieFormat) -> Classi
     let document = read_document(model.as_bytes()).expect("the document is read");
     let structure = validate_structure(&document, format, None).expect("the structure is valid");
     let catalog = admit_catalog_schema(catalog).expect("the catalog schema is admitted");
+    let extensions = validate_extensions(&document, &structure.semantic_model, DEFAULT_NAMESPACE)
+        .expect("the extensions are accepted");
     let typing = type_expressions(&document, &structure, &catalog);
-    classify_metrics(&document, &structure, &typing)
+    classify_metrics(&document, &structure, &typing, &extensions)
 }
 
 fn classify(model: &str) -> Classification {
@@ -58,7 +62,7 @@ fn pair(code: ClassificationCode, pointer: &str) -> (&'static str, String) {
 #[derive(Debug, Clone, PartialEq, Eq)]
 enum Probe {
     /// The metric is classified.
-    Classified(ClassifiedMetric),
+    Classified(Box<ClassifiedMetric>),
     /// The metric is unusable with this code.
     Unusable(ClassificationCode),
     /// The metric is neither: it is not usable after E0.f.
@@ -71,7 +75,7 @@ fn probe(classification: &Classification, pointer: &str) -> Probe {
         .iter()
         .find(|metric| metric.pointer.as_str() == pointer)
     {
-        return Probe::Classified(metric.clone());
+        return Probe::Classified(Box::new(metric.clone()));
     }
     match classification
         .unusable
@@ -120,7 +124,7 @@ fn metric(expression: &str) -> Probe {
 /// The classified metric with `expression`.
 fn classified(expression: &str) -> ClassifiedMetric {
     match metric(expression) {
-        Probe::Classified(metric) => metric,
+        Probe::Classified(metric) => *metric,
         other => panic!("`{expression}` must be classified, found {other:?}"),
     }
 }

@@ -3,9 +3,11 @@
 //! Finds the `custom_extensions` entries of the selected semantic model that are ours, checks
 //! their version and the placement of their keys, and hands the extension keys of each object
 //! to the validation of each extension (E0C-2.5): the shape and keys of populations are checked
-//! here (POP-4.1 to POP-4.3). Other vendors' entries, and `COMMON` entries
+//! here (POP-4.1 to POP-4.3), and those of additivity declarations (ADD-5.1.1 to ADD-5.1.4).
+//! Other vendors' entries, and `COMMON` entries
 //! of another namespace, are kept in the data tree and never interpreted (E0C-1.1, MDL-2.5).
 
+pub(crate) mod additivity;
 mod diagnostic;
 mod entry;
 mod envelope;
@@ -38,9 +40,9 @@ pub(crate) const DEFAULT_NAMESPACE: &str = "semantic_compiler";
 ///
 /// # Errors
 ///
-/// Returns an [`ExtensionsFailure`] with every rejecting diagnostic, `E0C-01` to `E0C-06` and
-/// the E0.c codes of populations (`E0C-02`, `E0C-03`, `E0C-20`, `E0C-21`), and the `W0C-01`
-/// warnings.
+/// Returns an [`ExtensionsFailure`] with every rejecting diagnostic, `E0C-01` to `E0C-06`,
+/// the E0.c codes of populations (`E0C-02`, `E0C-03`, `E0C-20`, `E0C-21`) and of additivity
+/// (`E0C-02`, `E0C-03`, `E0C-10`, `E0C-11`, `E0C-13` to `E0C-15`), and the `W0C-01` warnings.
 pub fn validate_extensions(
     document: &Node,
     model: &SelectedModel<'_>,
@@ -78,6 +80,8 @@ pub fn validate_extensions(
     entries.sort_by_cached_key(|entry| position(document, &entry.data_pointer));
     let populations = populations::validate_populations(&entries);
     errors.extend(populations.errors);
+    let additivity = additivity::validate_additivity(&entries);
+    errors.extend(additivity.errors);
     let warnings = sorted(document, warnings);
     if !errors.is_empty() {
         return Err(ExtensionsFailure {
@@ -88,6 +92,7 @@ pub fn validate_extensions(
     Ok(Extensions {
         entries,
         populations: populations.populations,
+        additivity: additivity.declarations,
         warnings,
     })
 }

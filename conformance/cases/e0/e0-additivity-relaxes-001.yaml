@@ -1,0 +1,16 @@
+id: e0-additivity-relaxes-001
+rules: [ADD-2.2, ADD-5.1.8, E0G-4.1, E0G-4.3, E0G-01, W0G-01]
+model: e0-additivity-conflicts
+security_context: analyst.json
+query:
+  contract: semantic_compiler.query
+  contract_version: "1.0.0"
+  reference_time: "2026-11-15T12:00:00-04:00"
+  time_zone: UTC
+  query:
+    metrics:
+      - {metric: average_balance, alias: average_balance}
+expect:
+  outcome: error
+  error: E0G-01
+  warnings: [W0G-01]

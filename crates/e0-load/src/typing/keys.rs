@@ -84,7 +84,7 @@ fn key_type(
 
 /// Whether two key types pair (E0F-4.1): the same logical kind; integers may differ in width,
 /// and decimals must have the same scale. The literal `NULL` pairs with every type.
-fn same_kind(left: &ExpressionType, right: &ExpressionType) -> bool {
+pub(super) fn same_kind(left: &ExpressionType, right: &ExpressionType) -> bool {
     match (left, right) {
         (ExpressionType::Value(left), ExpressionType::Value(right)) => match (left, right) {
             (

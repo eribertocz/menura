@@ -12,8 +12,10 @@
 //! forms of E0D-3.4 are reported by their own checks, never here: such an element gets no type
 //! and no typing diagnostic. Expressions inside extensions are typed by each extension: the
 //! conditions and time fields of populations by [`populations::type_populations`] (`E0C-23`,
-//! `E0C-24`, POP-4.4, POP-4.5).
+//! `E0C-24`, POP-4.4, POP-4.5), and the `over` and population of additivity declarations by
+//! [`additivity::type_additivity`] (`E0C-12`, `E0C-17`, ADD-5.1.5, ADD-5.1.7).
 
+pub(crate) mod additivity;
 mod aggregates;
 mod arithmetic;
 mod conversion;

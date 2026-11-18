@@ -1,0 +1,6 @@
+id: e0-additivity-carry-forward-001
+rules: [ADD-5, ADD-5.1.2, ADD-5.1.4, E0C-13]
+model: e0-additivity-carry-forward-001
+expect:
+  outcome: load_error
+  error: E0C-13

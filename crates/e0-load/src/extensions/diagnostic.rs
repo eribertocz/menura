@@ -25,6 +25,27 @@ pub enum ExtensionCode {
     WrongObject,
     /// `E0C-06`: a member name repeated in an object inside `data` of an entry of ours.
     RepeatedMember,
+    /// `E0C-10`: a `non_additive` declaration has another key (ADD-5.1.1).
+    NonAdditiveKey,
+    /// `E0C-11`: an additivity declaration lacks `type`, or a `semi_additive` one lacks a
+    /// required key (ADD-5.1.1).
+    MissingAdditivityKey,
+    /// `E0C-12`: an additivity option that does not match the kind of `over` (ADD-5.1.5).
+    AdditivityTimeKind,
+    /// `E0C-13`: `max_carry_forward` or `on_stale` without `missing: carry_forward`, or the
+    /// other way round, or a `max_carry_forward` not greater than 0 (ADD-5.1.2, ADD-5.1.4).
+    CarryForwardKeys,
+    /// `E0C-14`: `selection` without `aggregation` `first` or `last`, or the other way round
+    /// (ADD-5.1.4).
+    SelectionPair,
+    /// `E0C-15`: `over` is part of `entity` (ADD-5.1.3).
+    OverInEntity,
+    /// `E0C-16`: a field of `over` or `entity` that does not exist or is not reachable from
+    /// the metric's home dataset (ADD-5.1.6).
+    UnreachableAdditivityField,
+    /// `E0C-17`: the population of an additivity declaration does not exist or does not match
+    /// it (ADD-5.1.7).
+    AdditivityPopulation,
     /// `E0C-20`: a population name repeated in the model (POP-4.3).
     DuplicatePopulation,
     /// `E0C-21`: a population lacks a key of its `mode`, or has a key of the other mode
@@ -53,6 +74,14 @@ impl ExtensionCode {
             Self::SeveralEntries => "E0C-04",
             Self::WrongObject => "E0C-05",
             Self::RepeatedMember => "E0C-06",
+            Self::NonAdditiveKey => "E0C-10",
+            Self::MissingAdditivityKey => "E0C-11",
+            Self::AdditivityTimeKind => "E0C-12",
+            Self::CarryForwardKeys => "E0C-13",
+            Self::SelectionPair => "E0C-14",
+            Self::OverInEntity => "E0C-15",
+            Self::UnreachableAdditivityField => "E0C-16",
+            Self::AdditivityPopulation => "E0C-17",
             Self::DuplicatePopulation => "E0C-20",
             Self::PopulationModeKeys => "E0C-21",
             Self::MissingPopulationField => "E0C-22",

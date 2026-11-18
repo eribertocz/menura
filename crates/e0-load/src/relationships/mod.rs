@@ -8,11 +8,17 @@
 //! diagnostic here (E0-4.2). For each dataset, the datasets it reaches are computed with whether
 //! one path or more lead there, and every pair with more than one path is reported as `W0E-01`.
 //! Paths are not enumerated: E3 does that on demand.
+//!
+//! Reachability inside extensions is checked by each extension with its own codes: the fields
+//! of additivity declarations by [`additivity::check_additivity_reachability`] (`E0C-16`,
+//! ADD-5.1.6).
 
+pub(crate) mod additivity;
 mod declarations;
 mod diagnostic;
 mod dominators;
 mod graph;
+mod home_datasets;
 mod output;
 mod paths;
 mod validation;

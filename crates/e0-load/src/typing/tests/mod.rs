@@ -13,6 +13,7 @@ use super::{ElementKind, Typing, type_expressions};
 use crate::read::read_document;
 use crate::structure::validate_structure;
 
+mod additivity;
 mod codes;
 mod development;
 mod populations;

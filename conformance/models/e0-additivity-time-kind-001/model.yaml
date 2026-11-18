@@ -1,0 +1,49 @@
+version: "0.1.1"
+semantic_model:
+  - name: e0_additivity
+    description: A semi_additive declaration over a text field with snapshot_grain
+    datasets:
+      - name: debt
+        source: shop.main.debt
+        primary_key: [customer_id, period]
+        fields:
+          - name: customer_id
+            expression: {dialects: [{dialect: ANSI_SQL, expression: customer_id}]}
+          - name: period
+            expression: {dialects: [{dialect: ANSI_SQL, expression: period}]}
+          - name: balance
+            expression: {dialects: [{dialect: ANSI_SQL, expression: balance}]}
+      - name: customers
+        source: shop.main.customers
+        primary_key: [customer_id]
+        fields:
+          - name: customer_id
+            expression: {dialects: [{dialect: ANSI_SQL, expression: customer_id}]}
+          - name: category
+            expression: {dialects: [{dialect: ANSI_SQL, expression: category}]}
+          - name: valid_from
+            expression: {dialects: [{dialect: ANSI_SQL, expression: valid_from}]}
+          - name: valid_to
+            expression: {dialects: [{dialect: ANSI_SQL, expression: valid_to}]}
+        custom_extensions:
+          - vendor_name: COMMON
+            data: '{"namespace": "semantic_compiler", "version": 1, "populations": [{"name": "active_customers", "mode": "validity", "entity": ["customer_id"], "valid_from": "valid_from", "valid_to": "valid_to", "partial_period": "any_day"}]}'
+    relationships:
+      - name: debt_customers
+        from: debt
+        to: customers
+        from_columns: [customer_id]
+        to_columns: [customer_id]
+    metrics:
+      - name: debt_balance
+        expression: {dialects: [{dialect: ANSI_SQL, expression: 'SUM(debt.balance)'}]}
+        custom_extensions:
+          - vendor_name: COMMON
+            data: '{"namespace": "semantic_compiler", "version": 1, "additivity": {"type": "semi_additive", "over": "customers.category", "entity": ["debt.customer_id"], "aggregation": "min", "nulls": "keep", "snapshot_grain": "month"}}'
+      - name: strict_balance
+        expression: {dialects: [{dialect: ANSI_SQL, expression: 'SUM(debt.balance)'}]}
+        custom_extensions:
+          - vendor_name: COMMON
+            data: '{"namespace": "semantic_compiler", "version": 1, "additivity": {"type": "non_additive"}}'
+      - name: customer_count
+        expression: {dialects: [{dialect: ANSI_SQL, expression: 'COUNT(customers.customer_id)'}]}
