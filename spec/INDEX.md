@@ -362,6 +362,13 @@ Find a rule ID or a section here, then open only that file at that line.
 | [extensions/derived.md](extensions/derived.md#L40) | 40 | rule | DER-4.3 |
 | [extensions/derived.md](extensions/derived.md#L41) | 41 | rule | DER-4.4 |
 | [extensions/derived.md](extensions/derived.md#L43) | 43 | section | DER-5 Validation |
+| [extensions/derived.md](extensions/derived.md#L56) | 56 | section | DER-5.1 Validation details |
+| [extensions/derived.md](extensions/derived.md#L60) | 60 | rule | DER-5.1.1 |
+| [extensions/derived.md](extensions/derived.md#L61) | 61 | rule | DER-5.1.2 |
+| [extensions/derived.md](extensions/derived.md#L62) | 62 | rule | DER-5.1.3 |
+| [extensions/derived.md](extensions/derived.md#L63) | 63 | rule | DER-5.1.4 |
+| [extensions/derived.md](extensions/derived.md#L64) | 64 | rule | DER-5.1.5 |
+| [extensions/derived.md](extensions/derived.md#L65) | 65 | rule | DER-5.1.6 |
 | [extensions/population.md](extensions/population.md#L1) | 1 | section | Extension: population |
 | [extensions/population.md](extensions/population.md#L5) | 5 | section | POP-1 Purpose |
 | [extensions/population.md](extensions/population.md#L10) | 10 | section | POP-2 Schema |
