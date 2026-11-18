@@ -21,6 +21,7 @@ mod graph;
 mod home_datasets;
 mod output;
 mod paths;
+mod reach;
 mod validation;
 
 pub(crate) use diagnostic::{RelationshipCode, RelationshipDiagnostic};
