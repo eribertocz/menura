@@ -47,7 +47,8 @@ Run in this order. A substage runs only if the substages it depends on succeeded
 | `E0D-03`–`E0D-07` (missing references) | Unusable | `W0D-01` | The `E0D` code |
 | `E0E-01`, `E0E-02` (relationships) | Unusable (relationship) | `W0E-04` | `E_NAME_NOT_FOUND` when named, otherwise the path errors of E3 |
 | `E0F-*` (expressions and types, including outside the subset) | Unusable | `W0F-01` | The `E0F` code |
-| Apache Ossie metric errors (E0G-2.1–2.5) | Unusable | `W0G-01` | The Apache Ossie code |
+| Window function in a metric (E0F-2.4, E0G-2.2) | Unusable | `W0F-01` | `E_DEFERRED_WINDOWED_METRIC` |
+| Apache Ossie metric errors (E0G-2.1, E0G-2.3–E0G-2.5) | Unusable | `W0G-01` | The Apache Ossie code |
 | `E0G-01`, `E0G-02` | Unusable | `W0G-01` | The `E0G` code |
 
 - **E0-4.4** The 0.1.1 reference validator also rejects duplicate names and missing references; the compiler's *unusable* disposition for missing references is therefore more lenient than Apache Ossie and never rejects a document Apache Ossie accepts (OSS-2.1).
