@@ -9,7 +9,8 @@
 //! and a reference form E0D-3 does not list is `E0F-02`, reported as `W0F-01` (E0D-3.4).
 //!
 //! References inside extensions are resolved by each extension with its own codes (E0D-3.2),
-//! never by the generic checks here.
+//! never by the generic checks here: the fields of populations by
+//! [`populations::resolve_population_references`] (`E0C-22`, POP-4.3).
 
 mod dataset_metric_references;
 mod diagnostic;
@@ -17,6 +18,7 @@ mod expression_references;
 mod finding;
 mod keys;
 mod output;
+pub(crate) mod populations;
 mod query_sources;
 mod scope;
 mod sources;

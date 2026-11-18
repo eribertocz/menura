@@ -10,7 +10,9 @@
 //!
 //! An expression that does not parse, a reference that does not resolve and the reference
 //! forms of E0D-3.4 are reported by their own checks, never here: such an element gets no type
-//! and no typing diagnostic. Expressions inside extensions are typed by each extension.
+//! and no typing diagnostic. Expressions inside extensions are typed by each extension: the
+//! conditions and time fields of populations by [`populations::type_populations`] (`E0C-23`,
+//! `E0C-24`, POP-4.4, POP-4.5).
 
 mod aggregates;
 mod arithmetic;
@@ -24,6 +26,7 @@ mod keys;
 mod numbers;
 mod operators;
 mod output;
+pub(crate) mod populations;
 mod scope;
 mod stop;
 mod typer;

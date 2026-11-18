@@ -1,0 +1,40 @@
+version: "0.1.1"
+semantic_model:
+  - name: e0_populations
+    description: Model with a valid validity population and a valid periodic population
+    datasets:
+      - name: customers
+        source: shop.main.customers
+        primary_key: [customer_id, valid_from]
+        fields:
+          - name: customer_id
+            expression: {dialects: [{dialect: ANSI_SQL, expression: customer_id}]}
+          - name: segment
+            expression: {dialects: [{dialect: ANSI_SQL, expression: segment}]}
+          - name: active
+            expression: {dialects: [{dialect: ANSI_SQL, expression: active}]}
+          - name: valid_from
+            expression: {dialects: [{dialect: ANSI_SQL, expression: valid_from}]}
+          - name: valid_to
+            expression: {dialects: [{dialect: ANSI_SQL, expression: valid_to}]}
+        custom_extensions:
+          - vendor_name: COMMON
+            data: '{"namespace": "semantic_compiler", "version": 1, "populations": [{"name": "active_customers", "mode": "validity", "entity": ["customer_id"], "valid_from": "valid_from", "valid_to": "valid_to", "partial_period": "any_day", "required_when": "active"}]}'
+      - name: account_months
+        source: shop.main.account_months
+        primary_key: [account_id, period_start]
+        fields:
+          - name: account_id
+            expression: {dialects: [{dialect: ANSI_SQL, expression: account_id}]}
+          - name: period_start
+            expression: {dialects: [{dialect: ANSI_SQL, expression: period_start}]}
+          - name: balance
+            expression: {dialects: [{dialect: ANSI_SQL, expression: balance}]}
+        custom_extensions:
+          - vendor_name: COMMON
+            data: '{"namespace": "semantic_compiler", "version": 1, "populations": [{"name": "monthly_accounts", "mode": "periodic", "entity": ["account_id"], "period": "period_start", "grain": "month"}]}'
+    metrics:
+      - name: customer_count
+        expression: {dialects: [{dialect: ANSI_SQL, expression: COUNT(customers.customer_id)}]}
+      - name: total_balance
+        expression: {dialects: [{dialect: ANSI_SQL, expression: SUM(account_months.balance)}]}

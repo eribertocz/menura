@@ -20,11 +20,24 @@ pub(crate) enum Stop {
     /// and context metrics) or `USER_ATTRIBUTE` (row policies). The element gets no type and no
     /// typing diagnostic.
     ReportedElsewhere,
+    /// A construct the place of the expression does not allow, which the parser cannot reject
+    /// because it does not know the place: in a population condition, a qualified reference, an
+    /// aggregate, `AGG(metric)` or `USER_ATTRIBUTE` (POP-4.4). Only a condition typer
+    /// ([`super::typer::Aggregates::Condition`]) stops with it.
+    NotAllowed {
+        /// What is not allowed, in English.
+        message: String,
+    },
 }
 
 /// A typing problem with `code`.
 pub(crate) fn problem<T>(code: TypingCode, message: String) -> Outcome<T> {
     Err(Stop::Problem { code, message })
+}
+
+/// [`Stop::NotAllowed`] with `message`.
+pub(crate) fn not_allowed<T>(message: String) -> Outcome<T> {
+    Err(Stop::NotAllowed { message })
 }
 
 /// `E0F-03` with `message`.

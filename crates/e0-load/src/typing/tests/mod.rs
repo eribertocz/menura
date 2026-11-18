@@ -15,6 +15,7 @@ use crate::structure::validate_structure;
 
 mod codes;
 mod development;
+mod populations;
 mod results;
 
 const MODEL: &str = include_str!("../../../../../conformance/models/e0-typing/model.yaml");

@@ -7,7 +7,7 @@ use semantic_compiler_model::expression::{
 };
 
 use super::diagnostic::TypingCode;
-use super::stop::{Outcome, Stop, incompatible, problem};
+use super::stop::{Outcome, Stop, incompatible, not_allowed, problem};
 use super::value_type::{
     ExpressionType, Numeric, Typed, big_integer, decimal, describe, double, integer, numeric,
     timestamp,
@@ -26,6 +26,9 @@ pub(crate) enum Aggregates {
     NotAllowed,
     /// Inside an aggregate's argument or `FILTER`.
     Nested,
+    /// In a row-level condition of an extension, such as a population `required_when`
+    /// (POP-4.4): no aggregate, `AGG(metric)` or `USER_ATTRIBUTE` may appear.
+    Condition,
 }
 
 /// Types the expressions of one element.
@@ -54,6 +57,11 @@ impl<'resolver> ExpressionTyper<'resolver> {
         match expression {
             Expression::Literal(literal) => Ok(literal_type(literal)),
             Expression::Reference(reference) => (self.resolve)(reference),
+            Expression::MetricAggregate(_) | Expression::UserAttribute(_)
+                if self.aggregates == Aggregates::Condition =>
+            {
+                not_allowed("AGG(metric) or USER_ATTRIBUTE in a row-level condition".to_owned())
+            }
             Expression::MetricAggregate(_) | Expression::UserAttribute(_) => {
                 Err(Stop::ReportedElsewhere)
             }

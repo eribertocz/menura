@@ -1,0 +1,6 @@
+id: e0-populations-invalid-condition-001
+rules: [POP-4, POP-4.4, POP-4.6, E0C-23]
+model: e0-populations-invalid-condition-001
+expect:
+  outcome: load_error
+  error: E0C-23

@@ -5,22 +5,39 @@ use std::fmt;
 use crate::pointer::JsonPointer;
 use crate::read::Location;
 
-/// The code of a common extension diagnostic (E0C-3).
+/// The code of an extension diagnostic: the common rules (E0C-3) and the codes each extension
+/// chapter defines (E0C-2.5).
 ///
 /// `E0C-03`, a wrong value type of an extension key, is raised by the validation of each
-/// extension (E0C-2.5), not by the common rules.
+/// extension, not by the common rules. The order of the variants is the order of the codes, so
+/// diagnostics of one node sort by code (E0-4.3).
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum ExtensionCode {
     /// `E0C-01`: `data.version` is missing or not supported.
     Version,
     /// `E0C-02`: a key of `data` that no extension defines.
     UnknownKey,
+    /// `E0C-03`: a wrong value type, or a value outside its set, of an extension key of ours.
+    WrongValue,
     /// `E0C-04`: more than one entry of ours on the same object.
     SeveralEntries,
     /// `E0C-05`: an extension key on an object type it is not valid on.
     WrongObject,
     /// `E0C-06`: a member name repeated in an object inside `data` of an entry of ours.
     RepeatedMember,
+    /// `E0C-20`: a population name repeated in the model (POP-4.3).
+    DuplicatePopulation,
+    /// `E0C-21`: a population lacks a key of its `mode`, or has a key of the other mode
+    /// (POP-4.1).
+    PopulationModeKeys,
+    /// `E0C-22`: a population names a field its dataset does not have (POP-4.3).
+    MissingPopulationField,
+    /// `E0C-23`: a population `required_when` that is not a valid boolean expression over its
+    /// dataset (POP-4.4).
+    InvalidPopulationCondition,
+    /// `E0C-24`: a population `valid_from`, `valid_to` or `period` field that is not of kind
+    /// `date` or `timestamp` (POP-4.5).
+    PopulationTimeKind,
     /// `W0C-01`: a `COMMON` entry whose `data` is not valid JSON; kept, not interpreted.
     NotJson,
 }
@@ -32,9 +49,15 @@ impl ExtensionCode {
         match self {
             Self::Version => "E0C-01",
             Self::UnknownKey => "E0C-02",
+            Self::WrongValue => "E0C-03",
             Self::SeveralEntries => "E0C-04",
             Self::WrongObject => "E0C-05",
             Self::RepeatedMember => "E0C-06",
+            Self::DuplicatePopulation => "E0C-20",
+            Self::PopulationModeKeys => "E0C-21",
+            Self::MissingPopulationField => "E0C-22",
+            Self::InvalidPopulationCondition => "E0C-23",
+            Self::PopulationTimeKind => "E0C-24",
             Self::NotJson => "W0C-01",
         }
     }

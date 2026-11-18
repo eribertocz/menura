@@ -2,7 +2,8 @@
 //!
 //! Finds the `custom_extensions` entries of the selected semantic model that are ours, checks
 //! their version and the placement of their keys, and hands the extension keys of each object
-//! to the validation of each extension (E0C-2.5). Other vendors' entries, and `COMMON` entries
+//! to the validation of each extension (E0C-2.5): the shape and keys of populations are checked
+//! here (POP-4.1 to POP-4.3). Other vendors' entries, and `COMMON` entries
 //! of another namespace, are kept in the data tree and never interpreted (E0C-1.1, MDL-2.5).
 
 mod diagnostic;
@@ -12,13 +13,15 @@ mod keys;
 mod members;
 mod objects;
 mod output;
+pub(crate) mod populations;
 
-use diagnostic::{ExtensionCode, ExtensionDiagnostic};
+pub(crate) use diagnostic::{ExtensionCode, ExtensionDiagnostic};
 use entry::{EntryKind, classify};
 use envelope::extension_keys;
 use objects::{EntryNode, extension_entries};
 pub(crate) use output::{Extensions, ObjectKind};
 use output::{ExtensionsFailure, OwnEntry};
+pub(crate) use populations::{Population, per_entry};
 
 use crate::pointer::{JsonPointer, position};
 use crate::read::Node;
@@ -35,8 +38,9 @@ pub(crate) const DEFAULT_NAMESPACE: &str = "semantic_compiler";
 ///
 /// # Errors
 ///
-/// Returns an [`ExtensionsFailure`] with every rejecting diagnostic, `E0C-01` to `E0C-05`, and
-/// the `W0C-01` warnings.
+/// Returns an [`ExtensionsFailure`] with every rejecting diagnostic, `E0C-01` to `E0C-06` and
+/// the E0.c codes of populations (`E0C-02`, `E0C-03`, `E0C-20`, `E0C-21`), and the `W0C-01`
+/// warnings.
 pub fn validate_extensions(
     document: &Node,
     model: &SelectedModel<'_>,
@@ -71,6 +75,9 @@ pub fn validate_extensions(
             Err(found) => errors.extend(found),
         }
     }
+    entries.sort_by_cached_key(|entry| position(document, &entry.data_pointer));
+    let populations = populations::validate_populations(&entries);
+    errors.extend(populations.errors);
     let warnings = sorted(document, warnings);
     if !errors.is_empty() {
         return Err(ExtensionsFailure {
@@ -78,8 +85,11 @@ pub fn validate_extensions(
             warnings,
         });
     }
-    entries.sort_by_cached_key(|entry| position(document, &entry.data_pointer));
-    Ok(Extensions { entries, warnings })
+    Ok(Extensions {
+        entries,
+        populations: populations.populations,
+        warnings,
+    })
 }
 
 /// The `E0C-04` diagnostic of an entry of ours that follows another on the same object

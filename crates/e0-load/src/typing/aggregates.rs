@@ -6,7 +6,7 @@ use semantic_compiler_model::expression::{
 };
 
 use super::diagnostic::TypingCode;
-use super::stop::{Outcome, incompatible, problem, untyped_null};
+use super::stop::{Outcome, incompatible, not_allowed, problem, untyped_null};
 use super::typer::{Aggregates, ExpressionTyper, expect_numeric};
 use super::value_type::{Numeric, Typed, big_integer, decimal, double, huge_integer};
 
@@ -30,6 +30,9 @@ impl ExpressionTyper<'_> {
                     TypingCode::MisplacedAggregate,
                     "an aggregate inside another aggregate".to_owned(),
                 );
+            }
+            Aggregates::Condition => {
+                return not_allowed("an aggregate in a row-level condition".to_owned());
             }
         }
         let inner = self.nested();
