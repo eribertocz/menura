@@ -434,6 +434,15 @@ Find a rule ID or a section here, then open only that file at that line.
 | [extensions/summaries.md](extensions/summaries.md#L40) | 40 | rule | SUM-4.2 |
 | [extensions/summaries.md](extensions/summaries.md#L42) | 42 | section | SUM-5 Integrity check |
 | [extensions/summaries.md](extensions/summaries.md#L47) | 47 | section | SUM-6 Validation |
+| [extensions/summaries.md](extensions/summaries.md#L60) | 60 | section | SUM-6.1 Validation details |
+| [extensions/summaries.md](extensions/summaries.md#L64) | 64 | rule | SUM-6.1.1 |
+| [extensions/summaries.md](extensions/summaries.md#L65) | 65 | rule | SUM-6.1.2 |
+| [extensions/summaries.md](extensions/summaries.md#L66) | 66 | rule | SUM-6.1.3 |
+| [extensions/summaries.md](extensions/summaries.md#L67) | 67 | rule | SUM-6.1.4 |
+| [extensions/summaries.md](extensions/summaries.md#L68) | 68 | rule | SUM-6.1.5 |
+| [extensions/summaries.md](extensions/summaries.md#L69) | 69 | rule | SUM-6.1.6 |
+| [extensions/summaries.md](extensions/summaries.md#L70) | 70 | rule | SUM-6.1.7 |
+| [extensions/summaries.md](extensions/summaries.md#L71) | 71 | rule | SUM-6.1.8 |
 | [glossary.md](glossary.md#L1) | 1 | section | Glossary |
 | [ossie-mapping.md](ossie-mapping.md#L1) | 1 | section | Apache Ossie mapping |
 | [stages/E0/README.md](stages/E0/README.md#L1) | 1 | section | E0 Load and validate the model |
