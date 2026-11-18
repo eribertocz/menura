@@ -19,7 +19,7 @@ use crate::extensions::additivity::{
 use crate::extensions::populations::PopulationMode;
 use crate::extensions::{ExtensionCode, ExtensionDiagnostic, Extensions, Population};
 use crate::names::Name;
-use crate::outline::{DatasetOutline, outline};
+use crate::outline::{DatasetOutline, ModelOutline, outline};
 use crate::pointer::JsonPointer;
 use crate::structure::Structure;
 
@@ -63,24 +63,7 @@ pub fn type_additivity(
         structure.semantic_model.node,
         &structure.semantic_model.pointer,
     );
-    let fields = Fields {
-        by_name: model
-            .datasets
-            .iter()
-            .filter_map(|dataset| Some((&dataset.name.as_ref()?.name, dataset)))
-            .collect(),
-        by_pointer: model
-            .datasets
-            .iter()
-            .map(|dataset| (&dataset.pointer, dataset))
-            .collect(),
-        types: typing
-            .elements
-            .iter()
-            .filter(|element| element.kind == ElementKind::Field)
-            .map(|element| (&element.pointer, &element.typed))
-            .collect(),
-    };
+    let fields = fields(&model, typing);
     let mut errors = Vec::new();
     for declaration in &extensions.additivity {
         let Some(keys) = declaration.additivity.semi_additive() else {
@@ -108,6 +91,31 @@ pub fn type_additivity(
         Ok(())
     } else {
         Err(errors)
+    }
+}
+
+/// The datasets of `model` and the field types of `typing`.
+fn fields<'model, 'document>(
+    model: &'model ModelOutline<'document>,
+    typing: &'model Typing,
+) -> Fields<'model, 'document> {
+    Fields {
+        by_name: model
+            .datasets
+            .iter()
+            .filter_map(|dataset| Some((&dataset.name.as_ref()?.name, dataset)))
+            .collect(),
+        by_pointer: model
+            .datasets
+            .iter()
+            .map(|dataset| (&dataset.pointer, dataset))
+            .collect(),
+        types: typing
+            .elements
+            .iter()
+            .filter(|element| element.kind == ElementKind::Field)
+            .map(|element| (&element.pointer, &element.typed))
+            .collect(),
     }
 }
 
