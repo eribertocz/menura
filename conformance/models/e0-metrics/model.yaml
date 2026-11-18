@@ -1,0 +1,75 @@
+version: "0.1.1"
+semantic_model:
+  - name: e0_metrics
+    description: Model whose metrics are classified into components, with one unusable metric per E0G-2 rule, including the two that E0.f reports
+    custom_extensions:
+      - vendor_name: COMMON
+        data: '{"namespace": "semantic_compiler", "version": 1, "security_context": {"roles": ["analyst"], "attributes": []}}'
+    datasets:
+      - name: orders
+        source: shop.main.orders
+        primary_key: [order_id]
+        fields:
+          - name: order_id
+            expression: {dialects: [{dialect: ANSI_SQL, expression: order_id}]}
+          - name: customer_id
+            expression: {dialects: [{dialect: ANSI_SQL, expression: customer_id}]}
+          - name: status
+            expression: {dialects: [{dialect: ANSI_SQL, expression: status}]}
+          - name: amount
+            expression: {dialects: [{dialect: ANSI_SQL, expression: amount}]}
+        custom_extensions:
+          - vendor_name: COMMON
+            data: '{"namespace": "semantic_compiler", "version": 1, "access": {"mode": "roles", "roles": ["analyst"]}}'
+      - name: customers
+        source: shop.main.customers
+        primary_key: [customer_id]
+        fields:
+          - name: customer_id
+            expression: {dialects: [{dialect: ANSI_SQL, expression: customer_id}]}
+          - name: region
+            expression: {dialects: [{dialect: ANSI_SQL, expression: region}]}
+          - name: age
+            expression: {dialects: [{dialect: ANSI_SQL, expression: age}]}
+        custom_extensions:
+          - vendor_name: COMMON
+            data: '{"namespace": "semantic_compiler", "version": 1, "access": {"mode": "roles", "roles": ["analyst"]}}'
+    relationships:
+      - name: orders_customers
+        from: orders
+        to: customers
+        from_columns: [customer_id]
+        to_columns: [customer_id]
+    metrics:
+      - name: total_amount
+        expression: {dialects: [{dialect: ANSI_SQL, expression: SUM(orders.amount)}]}
+      - name: average_age
+        expression: {dialects: [{dialect: ANSI_SQL, expression: AVG(customers.age)}]}
+      - name: ordering_customer_count
+        expression: {dialects: [{dialect: ANSI_SQL, expression: COUNT(DISTINCT orders.customer_id)}]}
+      - name: open_amount
+        expression: {dialects: [{dialect: ANSI_SQL, expression: "SUM(orders.amount) FILTER (WHERE orders.status = 'OPEN')"}]}
+      - name: amount_per_customer
+        expression: {dialects: [{dialect: ANSI_SQL, expression: SUM(orders.amount) / COUNT(DISTINCT customers.customer_id)}]}
+      - name: amount_range
+        expression: {dialects: [{dialect: ANSI_SQL, expression: MAX(orders.amount) - MIN(orders.amount)}]}
+      - name: median_age
+        expression: {dialects: [{dialect: ANSI_SQL, expression: MEDIAN(customers.age)}]}
+      - name: age_spread
+        expression: {dialects: [{dialect: ANSI_SQL, expression: STDDEV(customers.age)}]}
+      - name: amount_plus_amount
+        expression: {dialects: [{dialect: ANSI_SQL, expression: SUM(orders.amount) + orders.amount}]}
+      - name: raw_amount
+        expression: {dialects: [{dialect: ANSI_SQL, expression: orders.amount}]}
+      - name: amount_times_age
+        expression: {dialects: [{dialect: ANSI_SQL, expression: SUM(orders.amount * customers.age)}]}
+      - name: north_amount
+        expression: {dialects: [{dialect: ANSI_SQL, expression: "SUM(orders.amount) FILTER (WHERE customers.region = 'north')"}]}
+      - name: open_order_count
+        expression: {dialects: [{dialect: ANSI_SQL, expression: "COUNT(*) FILTER (WHERE orders.status = 'OPEN')"}]}
+      - name: constant_total
+        expression: {dialects: [{dialect: ANSI_SQL, expression: 1 + 2}]}
+      - name: windowed_amount
+        expression: {dialects: [{dialect: ANSI_SQL, expression: SUM(orders.amount) OVER (ORDER BY orders.order_id)}]}
+      - name: nested_count
+        expression: {dialects: [{dialect: ANSI_SQL, expression: SUM(COUNT(orders.order_id))}]}

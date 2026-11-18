@@ -68,7 +68,7 @@ semantic_model:
       - name: total_quantity
         expression: {dialects: [{dialect: ANSI_SQL, expression: SUM(orders.quantity)}]}
       - name: quantity_per_order
-        expression: {dialects: [{dialect: ANSI_SQL, expression: SUM(orders.quantity) / COUNT(*)}]}
+        expression: {dialects: [{dialect: ANSI_SQL, expression: SUM(orders.quantity) / COUNT(orders.order_id)}]}
       - name: quantity_per_nothing
         expression: {dialects: [{dialect: ANSI_SQL, expression: "COALESCE(SUM(orders.quantity) / 0, -1.0E0)"}]}
       - name: total_price

@@ -1,0 +1,16 @@
+id: e0-metrics-arguments-read-two-datasets-001
+rules: [E0G-2.3, W0G-01]
+model: e0-metrics
+security_context: analyst.json
+query:
+  contract: semantic_compiler.query
+  contract_version: "1.0.0"
+  reference_time: "2026-11-15T12:00:00-04:00"
+  time_zone: UTC
+  query:
+    metrics:
+      - {metric: amount_times_age, alias: amount_times_age}
+expect:
+  outcome: error
+  error: E_AMBIGUOUS_MEASURE_GRAIN
+  warnings: [W0G-01]

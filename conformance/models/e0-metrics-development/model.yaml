@@ -1,0 +1,31 @@
+version: "0.3.0.dev0"
+name: e0_metrics_development
+description: Development-line model whose dataset metrics are classified with the metric's own dataset as home dataset
+nonportable_extensions:
+  - vendor_name: COMMON
+    data: {namespace: semantic_compiler, version: 1, security_context: {roles: [analyst], attributes: []}}
+datasets:
+  - name: orders
+    source: shop.main.orders
+    primary_key: [order_id]
+    fields:
+      - name: order_id
+        expression: {sql: order_id}
+      - name: status
+        expression: {sql: status}
+      - name: amount
+        expression: {sql: amount}
+    metrics:
+      - name: order_count
+        expression: {sql: COUNT(*)}
+      - name: open_order_count
+        expression: {sql: "COUNT(*) FILTER (WHERE status = 'OPEN')"}
+      - name: source_total_amount
+        expression: {sql: SUM(source.amount)}
+      - name: amount_plus_amount
+        expression: {sql: SUM(amount) + amount}
+      - name: constant_total
+        expression: {sql: 1 + 2}
+    nonportable_extensions:
+      - vendor_name: COMMON
+        data: {namespace: semantic_compiler, version: 1, access: {mode: roles, roles: [analyst]}}
