@@ -11,10 +11,12 @@ use super::diagnostic::TypingDiagnostic;
 use super::value_type::Typed;
 use super::{ElementKind, Typing, type_expressions};
 use crate::read::read_document;
+use crate::references::derived::DerivedMetrics;
 use crate::structure::validate_structure;
 
 mod additivity;
 mod codes;
+mod derived;
 mod development;
 mod populations;
 mod results;
@@ -40,7 +42,7 @@ fn type_in_format(model: &str, catalog: &str, format: OssieFormat) -> Typing {
     let document = read_document(model.as_bytes()).expect("the document is read");
     let structure = validate_structure(&document, format, None).expect("the structure is valid");
     let catalog = admit_catalog_schema(catalog).expect("the catalog schema is admitted");
-    type_expressions(&document, &structure, &catalog)
+    type_expressions(&document, &structure, &catalog, &DerivedMetrics::default())
 }
 
 fn pair(code: &'static str, pointer: &str) -> (&'static str, String) {

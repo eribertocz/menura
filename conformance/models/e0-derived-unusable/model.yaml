@@ -1,0 +1,27 @@
+version: "0.1.1"
+semantic_model:
+  - name: e0_derived_unusable
+    description: AGG() outside a derived metric, a derived metric that reads it, and AGG() in a field
+    datasets:
+      - name: invoices
+        source: shop.main.invoices
+        primary_key: [invoice_id]
+        fields:
+          - name: invoice_id
+            expression: {dialects: [{dialect: ANSI_SQL, expression: invoice_id}]}
+          - name: customer_id
+            expression: {dialects: [{dialect: ANSI_SQL, expression: customer_id}]}
+          - name: billed
+            expression: {dialects: [{dialect: ANSI_SQL, expression: billed}]}
+          - name: billed_metric
+            expression: {dialects: [{dialect: ANSI_SQL, expression: 'AGG(total_billed)'}]}
+    metrics:
+      - name: total_billed
+        expression: {dialects: [{dialect: ANSI_SQL, expression: 'SUM(invoices.billed)'}]}
+      - name: billed_twice
+        expression: {dialects: [{dialect: ANSI_SQL, expression: 'AGG(total_billed) * 2'}]}
+      - name: twice_share
+        expression: {dialects: [{dialect: ANSI_SQL, expression: 'AGG(billed_twice) / AGG(total_billed)'}]}
+        custom_extensions:
+          - vendor_name: COMMON
+            data: '{"namespace": "semantic_compiler", "version": 1, "derived": {"on_division_by_zero": "null"}}'

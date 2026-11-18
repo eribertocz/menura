@@ -10,6 +10,7 @@ use crate::extensions::populations::fixture::{
 };
 use crate::extensions::{DEFAULT_NAMESPACE, validate_extensions};
 use crate::read::read_document;
+use crate::references::derived::DerivedMetrics;
 use crate::structure::validate_structure;
 use crate::typing::populations::type_populations;
 use crate::typing::type_expressions;
@@ -29,7 +30,7 @@ fn problems(model: &str) -> Vec<(&'static str, String)> {
     let catalog = admit_catalog_schema(CATALOG).expect("the catalog schema is admitted");
     let extensions = validate_extensions(&document, &structure.semantic_model, DEFAULT_NAMESPACE)
         .expect("the extensions are accepted");
-    let typing = type_expressions(&document, &structure, &catalog);
+    let typing = type_expressions(&document, &structure, &catalog, &DerivedMetrics::default());
     match type_populations(&structure, &typing, &extensions) {
         Ok(()) => Vec::new(),
         Err(errors) => errors

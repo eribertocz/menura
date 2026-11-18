@@ -1,0 +1,56 @@
+version: "0.1.1"
+semantic_model:
+  - name: e0_derived
+    description: A derived metric with an additivity declaration
+    datasets:
+      - name: invoices
+        source: shop.main.invoices
+        primary_key: [invoice_id]
+        fields:
+          - name: invoice_id
+            expression: {dialects: [{dialect: ANSI_SQL, expression: invoice_id}]}
+          - name: customer_id
+            expression: {dialects: [{dialect: ANSI_SQL, expression: customer_id}]}
+          - name: billed
+            expression: {dialects: [{dialect: ANSI_SQL, expression: billed}]}
+          - name: collected
+            expression: {dialects: [{dialect: ANSI_SQL, expression: collected}]}
+      - name: customers
+        source: shop.main.customers
+        primary_key: [customer_id]
+        fields:
+          - name: customer_id
+            expression: {dialects: [{dialect: ANSI_SQL, expression: customer_id}]}
+          - name: region
+            expression: {dialects: [{dialect: ANSI_SQL, expression: region}]}
+    relationships:
+      - name: invoices_customers
+        from: invoices
+        to: customers
+        from_columns: [customer_id]
+        to_columns: [customer_id]
+    metrics:
+      - name: billed
+        expression: {dialects: [{dialect: ANSI_SQL, expression: 'SUM(invoices.billed)'}]}
+      - name: collected
+        expression: {dialects: [{dialect: ANSI_SQL, expression: 'SUM(invoices.collected)'}]}
+      - name: collection_rate
+        expression:
+          dialects:
+            - dialect: ANSI_SQL
+              expression: AGG(collected) / AGG(billed)
+        custom_extensions:
+          - vendor_name: COMMON
+            data: '{"namespace": "semantic_compiler", "version": 1, "derived": {"on_division_by_zero": "null"}}'
+      - name: uncollected_rate
+        expression: {dialects: [{dialect: ANSI_SQL, expression: '1 - AGG(collection_rate)'}]}
+        custom_extensions:
+          - vendor_name: COMMON
+            data: '{"namespace": "semantic_compiler", "version": 1, "derived": {}}'
+      - name: customer_count
+        expression: {dialects: [{dialect: ANSI_SQL, expression: 'COUNT(DISTINCT customers.customer_id)'}]}
+      - name: billed_per_customer
+        expression: {dialects: [{dialect: ANSI_SQL, expression: 'AGG(billed) / AGG(customer_count)'}]}
+        custom_extensions:
+          - vendor_name: COMMON
+            data: '{"namespace": "semantic_compiler", "version": 1, "derived": {"on_division_by_zero": "error"}, "additivity": {"type": "non_additive"}}'

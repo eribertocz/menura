@@ -1,0 +1,28 @@
+version: "0.3.0.dev0"
+name: e0_derived_development
+description: Development-line model whose model metric reads dataset metrics with AGG(dataset.metric)
+nonportable_extensions:
+  - vendor_name: COMMON
+    data: {namespace: semantic_compiler, version: 1, security_context: {roles: [analyst], attributes: []}}
+datasets:
+  - name: orders
+    source: shop.main.orders
+    primary_key: [order_id]
+    fields:
+      - name: order_id
+        expression: {sql: order_id}
+      - name: status
+        expression: {sql: status}
+      - name: amount
+        expression: {sql: amount}
+    metrics:
+      - name: total_amount
+        expression: {sql: SUM(amount)}
+      - name: order_count
+        expression: {sql: COUNT(*)}
+    nonportable_extensions:
+      - vendor_name: COMMON
+        data: {namespace: semantic_compiler, version: 1, access: {mode: roles, roles: [analyst]}}
+metrics:
+  - name: average_amount
+    expression: {sql: AGG(orders.total_amount) / AGG(orders.order_count)}

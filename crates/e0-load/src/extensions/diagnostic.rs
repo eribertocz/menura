@@ -59,6 +59,23 @@ pub enum ExtensionCode {
     /// `E0C-24`: a population `valid_from`, `valid_to` or `period` field that is not of kind
     /// `date` or `timestamp` (POP-4.5).
     PopulationTimeKind,
+    /// `E0C-30`: an aggregate function in a derived formula (DER-5.1.3).
+    AggregateInFormula,
+    /// `E0C-31`: a field reference in a derived formula (DER-5.1.3).
+    FieldInFormula,
+    /// `E0C-32`: `AGG(…)` names a metric that does not exist (DER-5.1.2).
+    UnknownInput,
+    /// `E0C-33`: a derived formula that refers to no metric (DER-5.1.2).
+    NoInput,
+    /// `E0C-34`: a dependency cycle between metrics (DER-5.1.4).
+    DependencyCycle,
+    /// `E0C-35`: a derived formula that divides without `on_division_by_zero` (DER-5.1.3).
+    MissingDivisionRule,
+    /// `E0C-36`: a derived metric with an `additivity` extension (DER-5.1.1).
+    DerivedAdditivity,
+    /// `E0C-37`: `AGG(…)` in a metric marked neither `derived` nor `context` (DER-5.1.2). The
+    /// metric is unusable, reported as `W0G-01` (E0-4 table).
+    AggregateOutsideDerived,
     /// `W0C-01`: a `COMMON` entry whose `data` is not valid JSON; kept, not interpreted.
     NotJson,
 }
@@ -87,14 +104,36 @@ impl ExtensionCode {
             Self::MissingPopulationField => "E0C-22",
             Self::InvalidPopulationCondition => "E0C-23",
             Self::PopulationTimeKind => "E0C-24",
+            Self::AggregateInFormula => "E0C-30",
+            Self::FieldInFormula => "E0C-31",
+            Self::UnknownInput => "E0C-32",
+            Self::NoInput => "E0C-33",
+            Self::DependencyCycle => "E0C-34",
+            Self::MissingDivisionRule => "E0C-35",
+            Self::DerivedAdditivity => "E0C-36",
+            Self::AggregateOutsideDerived => "E0C-37",
             Self::NotJson => "W0C-01",
         }
     }
 
-    /// Whether the code is a load warning; every other code rejects the model (E0-4.1).
+    /// The load warning that `E0C-37` is reported as: the metric is unusable (E0-4 table).
+    pub const UNUSABLE_WARNING: &'static str = "W0G-01";
+
+    /// Whether the code is a load warning: `W0C-01`, and `E0C-37`, which makes its metric
+    /// unusable. Every other code rejects the model (E0-4.1).
     #[must_use]
     pub fn is_warning(self) -> bool {
-        matches!(self, Self::NotJson)
+        matches!(self, Self::NotJson | Self::AggregateOutsideDerived)
+    }
+
+    /// The code the load reports: [`Self::UNUSABLE_WARNING`] for `E0C-37`, whose own code is
+    /// then the query error of the metric (E0-4.1), and the code itself otherwise.
+    #[must_use]
+    pub fn load_code(self) -> &'static str {
+        match self {
+            Self::AggregateOutsideDerived => Self::UNUSABLE_WARNING,
+            code => code.as_str(),
+        }
     }
 }
 
@@ -121,10 +160,16 @@ pub struct ExtensionDiagnostic {
 
 impl fmt::Display for ExtensionDiagnostic {
     fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let load_code = self.code.load_code();
+        if load_code == self.code.as_str() {
+            write!(formatter, "{load_code}")?;
+        } else {
+            write!(formatter, "{load_code} ({})", self.code)?;
+        }
         write!(
             formatter,
-            "{} at `{}` (line {}, column {}): {}",
-            self.code, self.pointer, self.location.line, self.location.column, self.message
+            " at `{}` (line {}, column {}): {}",
+            self.pointer, self.location.line, self.location.column, self.message
         )
     }
 }

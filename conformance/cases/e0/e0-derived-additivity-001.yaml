@@ -1,0 +1,6 @@
+id: e0-derived-additivity-001
+rules: [DER-5, DER-5.1.1, E0C-36]
+model: e0-derived-additivity-001
+expect:
+  outcome: load_error
+  error: E0C-36

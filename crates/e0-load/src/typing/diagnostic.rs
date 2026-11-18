@@ -5,13 +5,17 @@ use std::fmt;
 use crate::pointer::JsonPointer;
 use crate::read::Location;
 
-/// The code of a typing diagnostic (E0F-8). Every one makes its element unusable and is
+/// The code of a typing diagnostic (E0F-8), and `E0F-02` for `AGG(…)` where no metric may be
+/// read (DER-5.1.2). Every one makes its element unusable and is
 /// reported as `W0F-01` (E0-4 table).
 ///
 /// The order of the variants is the order of the codes, so the lowest code of an unusable
 /// element is the first that E2-5 row 12a raises.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum TypingCode {
+    /// `E0F-02`: `AGG(…)` in a field or a dataset metric, outside the accepted subset
+    /// (DER-5.1.2).
+    OutsideSubset,
     /// `E0F-03`: incompatible types without an explicit `CAST`.
     IncompatibleTypes,
     /// `E0F-04`: use of an `unsupported` column (CAT-4.3).
@@ -34,6 +38,7 @@ impl TypingCode {
     #[must_use]
     pub fn as_str(self) -> &'static str {
         match self {
+            Self::OutsideSubset => "E0F-02",
             Self::IncompatibleTypes => "E0F-03",
             Self::UnsupportedColumn => "E0F-04",
             Self::IncompatibleKeyPair => "E0F-05",

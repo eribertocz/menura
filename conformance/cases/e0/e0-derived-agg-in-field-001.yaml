@@ -1,0 +1,17 @@
+id: e0-derived-agg-in-field-001
+rules: [DER-5.1.2, E0F-02, W0F-01]
+model: e0-derived-unusable
+security_context: analyst.json
+query:
+  contract: semantic_compiler.query
+  contract_version: "1.0.0"
+  reference_time: "2026-11-15T12:00:00-04:00"
+  time_zone: UTC
+  query:
+    dimensions: [invoices.billed_metric]
+    metrics:
+      - {metric: total_billed, alias: total_billed}
+expect:
+  outcome: error
+  error: E0F-02
+  warnings: [W0F-01]

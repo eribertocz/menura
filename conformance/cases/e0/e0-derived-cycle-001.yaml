@@ -1,0 +1,6 @@
+id: e0-derived-cycle-001
+rules: [DER-2.4, DER-5, DER-5.1.4, E0G-5.1, E0C-34]
+model: e0-derived-cycle-001
+expect:
+  outcome: load_error
+  error: E0C-34

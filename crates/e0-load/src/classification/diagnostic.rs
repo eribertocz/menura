@@ -2,6 +2,7 @@
 
 use std::fmt;
 
+use super::output::QueryError;
 use crate::pointer::JsonPointer;
 use crate::read::Location;
 
@@ -51,8 +52,8 @@ impl fmt::Display for ClassificationCode {
 /// One classification diagnostic: its code, the metric it is about and a description.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ClassificationDiagnostic {
-    /// The query error code of the metric (E0G-2.8).
-    pub code: ClassificationCode,
+    /// The query error code of the metric (E0G-2.8, DER-5.1.5).
+    pub code: QueryError,
     /// The JSON Pointer of the metric.
     pub pointer: JsonPointer,
     /// Where the metric starts in the document text.
@@ -67,7 +68,7 @@ impl fmt::Display for ClassificationDiagnostic {
             formatter,
             "{} ({}) at `{}` (line {}, column {}): {}",
             ClassificationCode::WARNING,
-            self.code,
+            self.code.as_str(),
             self.pointer,
             self.location.line,
             self.location.column,
