@@ -1,0 +1,7 @@
+id: e0-populations-development-wrong-value-001
+rules: [MDL-2.4, POP-4.2, E0C-03]
+model: e0-populations-development-wrong-value-001
+load_options: {ossie_format: development}
+expect:
+  outcome: load_error
+  error: E0C-03

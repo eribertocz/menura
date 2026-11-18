@@ -1,0 +1,7 @@
+id: e0-additivity-development-unreachable-001
+rules: [MDL-2.4, ADD-5.1.6, E0G-1.4, E0C-16]
+model: e0-additivity-development-unreachable-001
+load_options: {ossie_format: development}
+expect:
+  outcome: load_error
+  error: E0C-16

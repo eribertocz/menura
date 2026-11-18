@@ -1,0 +1,7 @@
+id: e0-additivity-development-non-additive-key-001
+rules: [MDL-2.4, ADD-5.1.1, E0C-10]
+model: e0-additivity-development-non-additive-key-001
+load_options: {ossie_format: development}
+expect:
+  outcome: load_error
+  error: E0C-10

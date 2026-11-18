@@ -1,0 +1,41 @@
+version: "0.3.0.dev0"
+name: e0_extensions_development_key_not_a_string_001
+description: Development-line model whose orders entry has the integer key 1, which has no JSON form
+nonportable_extensions:
+  - vendor_name: COMMON
+    data: {namespace: semantic_compiler, version: 1, security_context: {roles: [analyst], attributes: []}}
+datasets:
+  - name: orders
+    source: shop.main.orders
+    primary_key: [order_id]
+    fields:
+      - name: order_id
+        expression: {sql: order_id}
+      - name: status
+        expression: {sql: status}
+      - name: amount
+        expression: {sql: amount}
+    nonportable_extensions:
+      - vendor_name: COMMON
+        data: {namespace: semantic_compiler, version: 1, 1: sales, access: {mode: roles, roles: [analyst]}}
+  - name: balances
+    source: shop.main.balances
+    primary_key: [branch, customer_id]
+    fields:
+      - name: branch
+        expression: {sql: branch}
+      - name: customer_id
+        expression: {sql: customer_id}
+      - name: balance
+        expression: {sql: balance}
+    nonportable_extensions:
+      - vendor_name: COMMON
+        data: {namespace: semantic_compiler, version: 1, access: {mode: roles, roles: [analyst]}}
+metrics:
+  - name: total_amount
+    expression: {sql: SUM(orders.amount)}
+  - name: total_balance
+    expression: {sql: SUM(balances.balance)}
+    nonportable_extensions:
+      - vendor_name: COMMON
+        data: {namespace: semantic_compiler, version: 1, additivity: {type: semi_additive, over: balances.branch, entity: [balances.customer_id], aggregation: max, nulls: error}}

@@ -1,5 +1,6 @@
 //! `E0C-16`: the fields of `over` and `entity` of a semi-additive metric exist and are reachable
-//! from the metric's single home dataset (ADD-5.1.6).
+//! from the metric's single home dataset (ADD-5.1.6). The home dataset of a dataset metric of
+//! the development format is its own dataset (E0G-1.4).
 
 use std::collections::{BTreeSet, HashMap, HashSet};
 
@@ -20,8 +21,11 @@ use crate::structure::{CompiledVariant, ElementExpression, ElementKind, Structur
 struct Model<'model, 'document> {
     /// The datasets of the model, by name.
     datasets: HashMap<&'model Name, &'model DatasetOutline<'document>>,
-    /// The metrics usable after E0.d, by JSON Pointer, with their compiled tree.
+    /// The model metrics usable after E0.b, by JSON Pointer, with their compiled tree.
     metrics: HashMap<&'model JsonPointer, Expression>,
+    /// The dataset metrics usable after E0.b, by JSON Pointer, with the name of their own
+    /// dataset (E0G-1.4).
+    dataset_metrics: HashMap<&'model JsonPointer, &'model Name>,
     /// The elements E0.d made unusable.
     unusable: HashSet<&'model JsonPointer>,
     relationships: &'model Relationships,
@@ -56,6 +60,7 @@ pub(crate) fn check_additivity_reachability(
             .iter()
             .filter_map(metric_tree)
             .collect(),
+        dataset_metrics: dataset_metrics(structure, &outline),
         unusable: references
             .unusable
             .iter()
@@ -85,6 +90,42 @@ fn named_datasets<'model, 'document>(
         .collect()
 }
 
+/// Every dataset metric of `outline` that is usable after E0.b, with the name of its dataset.
+fn dataset_metrics<'model>(
+    structure: &Structure<'_>,
+    outline: &'model ModelOutline<'_>,
+) -> HashMap<&'model JsonPointer, &'model Name> {
+    let usable: HashSet<&JsonPointer> = structure
+        .expressions
+        .iter()
+        .filter(|expression| {
+            expression.kind == ElementKind::DatasetMetric && expression.is_usable()
+        })
+        .map(|expression| &expression.pointer)
+        .collect();
+    outline
+        .datasets
+        .iter()
+        .filter_map(|dataset| Some((&dataset.name.as_ref()?.name, dataset)))
+        .flat_map(|(name, dataset)| {
+            dataset
+                .metrics
+                .iter()
+                .map(move |metric| (&metric.pointer, name))
+        })
+        .filter(|(pointer, _)| usable.contains(pointer))
+        .collect()
+}
+
+/// The single home dataset of the metric at `metric`: the dataset of a dataset metric
+/// (E0G-1.4), or the one dataset the aggregate arguments of a model metric read (E0G-1.1).
+fn home_dataset(model: &Model<'_, '_>, metric: &JsonPointer) -> Option<Name> {
+    if let Some(name) = model.dataset_metrics.get(metric) {
+        return Some((*name).clone());
+    }
+    single(home_datasets(model.metrics.get(metric)?))
+}
+
 /// The tree of a usable model metric that parses. A metric made unusable in E0.b is left out
 /// (E0-4.1), and so is one that does not parse: it has no home dataset.
 fn metric_tree<'structure>(
@@ -111,8 +152,7 @@ fn unreachable_fields(
     if model.unusable.contains(&declaration.metric) {
         return None;
     }
-    let tree = model.metrics.get(&declaration.metric)?;
-    let home = single(home_datasets(tree))?;
+    let home = home_dataset(model, &declaration.metric)?;
     let home_dataset = model.datasets.get(&home)?;
     if model.unusable.contains(&home_dataset.pointer) {
         return None;

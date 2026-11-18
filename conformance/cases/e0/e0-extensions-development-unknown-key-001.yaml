@@ -1,0 +1,7 @@
+id: e0-extensions-development-unknown-key-001
+rules: [MDL-2.4, E0C-2.4, E0C-2.8, E0C-02]
+model: e0-extensions-development-unknown-key-001
+load_options: {ossie_format: development}
+expect:
+  outcome: load_error
+  error: E0C-02

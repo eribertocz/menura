@@ -1,0 +1,31 @@
+version: "0.3.0.dev0"
+name: e0_derived_development_dataset_metric_001
+description: Development-line model whose dataset metric total_amount is marked derived
+nonportable_extensions:
+  - vendor_name: COMMON
+    data: {namespace: semantic_compiler, version: 1, security_context: {roles: [analyst], attributes: []}}
+datasets:
+  - name: orders
+    source: shop.main.orders
+    primary_key: [order_id]
+    fields:
+      - name: order_id
+        expression: {sql: order_id}
+      - name: status
+        expression: {sql: status}
+      - name: amount
+        expression: {sql: amount}
+    metrics:
+      - name: total_amount
+        expression: {sql: SUM(amount)}
+        nonportable_extensions:
+          - vendor_name: COMMON
+            data: {namespace: semantic_compiler, version: 1, derived: {on_division_by_zero: error}}
+      - name: order_count
+        expression: {sql: COUNT(*)}
+    nonportable_extensions:
+      - vendor_name: COMMON
+        data: {namespace: semantic_compiler, version: 1, access: {mode: roles, roles: [analyst]}}
+metrics:
+  - name: average_amount
+    expression: {sql: AGG(orders.total_amount) / AGG(orders.order_count)}
