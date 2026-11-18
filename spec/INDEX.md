@@ -406,7 +406,7 @@ Find a rule ID or a section here, then open only that file at that line.
 | [stages/E0/README.md](stages/E0/README.md#L35) | 35 | rule | E0-4.1 |
 | [stages/E0/README.md](stages/E0/README.md#L36) | 36 | rule | E0-4.2 |
 | [stages/E0/README.md](stages/E0/README.md#L37) | 37 | rule | E0-4.3 |
-| [stages/E0/README.md](stages/E0/README.md#L53) | 53 | rule | E0-4.4 |
+| [stages/E0/README.md](stages/E0/README.md#L54) | 54 | rule | E0-4.4 |
 | [stages/E0/expressions.md](stages/E0/expressions.md#L1) | 1 | section | E0.f Type expressions |
 | [stages/E0/expressions.md](stages/E0/expressions.md#L3) | 3 | section | E0F-1 Scope |
 | [stages/E0/expressions.md](stages/E0/expressions.md#L9) | 9 | section | E0F-2 Language |
@@ -476,25 +476,30 @@ Find a rule ID or a section here, then open only that file at that line.
 | [stages/E0/metrics.md](stages/E0/metrics.md#L8) | 8 | rule | E0G-1.1 |
 | [stages/E0/metrics.md](stages/E0/metrics.md#L9) | 9 | rule | E0G-1.2 |
 | [stages/E0/metrics.md](stages/E0/metrics.md#L10) | 10 | rule | E0G-1.3 |
-| [stages/E0/metrics.md](stages/E0/metrics.md#L12) | 12 | section | E0G-2 Rules |
-| [stages/E0/metrics.md](stages/E0/metrics.md#L18) | 18 | rule | E0G-2.1 |
-| [stages/E0/metrics.md](stages/E0/metrics.md#L19) | 19 | rule | E0G-2.2 |
-| [stages/E0/metrics.md](stages/E0/metrics.md#L20) | 20 | rule | E0G-2.3 |
-| [stages/E0/metrics.md](stages/E0/metrics.md#L21) | 21 | rule | E0G-2.4 |
-| [stages/E0/metrics.md](stages/E0/metrics.md#L22) | 22 | rule | E0G-2.5 |
-| [stages/E0/metrics.md](stages/E0/metrics.md#L23) | 23 | rule | E0G-2.6 |
-| [stages/E0/metrics.md](stages/E0/metrics.md#L24) | 24 | rule | E0G-2.7 |
-| [stages/E0/metrics.md](stages/E0/metrics.md#L28) | 28 | section | E0G-3 Decomposability |
-| [stages/E0/metrics.md](stages/E0/metrics.md#L38) | 38 | rule | E0G-3.1 |
-| [stages/E0/metrics.md](stages/E0/metrics.md#L39) | 39 | rule | E0G-3.2 |
-| [stages/E0/metrics.md](stages/E0/metrics.md#L41) | 41 | section | E0G-4 Additivity |
-| [stages/E0/metrics.md](stages/E0/metrics.md#L49) | 49 | rule | E0G-4.1 |
-| [stages/E0/metrics.md](stages/E0/metrics.md#L50) | 50 | rule | E0G-4.2 |
-| [stages/E0/metrics.md](stages/E0/metrics.md#L52) | 52 | section | E0G-5 Derived and context metrics |
-| [stages/E0/metrics.md](stages/E0/metrics.md#L54) | 54 | rule | E0G-5.1 |
-| [stages/E0/metrics.md](stages/E0/metrics.md#L55) | 55 | rule | E0G-5.2 |
-| [stages/E0/metrics.md](stages/E0/metrics.md#L56) | 56 | rule | E0G-5.3 |
-| [stages/E0/metrics.md](stages/E0/metrics.md#L58) | 58 | section | E0G-6 Output |
+| [stages/E0/metrics.md](stages/E0/metrics.md#L11) | 11 | rule | E0G-1.4 |
+| [stages/E0/metrics.md](stages/E0/metrics.md#L13) | 13 | section | E0G-2 Rules |
+| [stages/E0/metrics.md](stages/E0/metrics.md#L19) | 19 | rule | E0G-2.1 |
+| [stages/E0/metrics.md](stages/E0/metrics.md#L20) | 20 | rule | E0G-2.2 |
+| [stages/E0/metrics.md](stages/E0/metrics.md#L21) | 21 | rule | E0G-2.3 |
+| [stages/E0/metrics.md](stages/E0/metrics.md#L22) | 22 | rule | E0G-2.4 |
+| [stages/E0/metrics.md](stages/E0/metrics.md#L23) | 23 | rule | E0G-2.5 |
+| [stages/E0/metrics.md](stages/E0/metrics.md#L24) | 24 | rule | E0G-2.6 |
+| [stages/E0/metrics.md](stages/E0/metrics.md#L25) | 25 | rule | E0G-2.7 |
+| [stages/E0/metrics.md](stages/E0/metrics.md#L29) | 29 | rule | E0G-2.8 |
+| [stages/E0/metrics.md](stages/E0/metrics.md#L31) | 31 | section | E0G-3 Decomposability |
+| [stages/E0/metrics.md](stages/E0/metrics.md#L41) | 41 | rule | E0G-3.1 |
+| [stages/E0/metrics.md](stages/E0/metrics.md#L42) | 42 | rule | E0G-3.2 |
+| [stages/E0/metrics.md](stages/E0/metrics.md#L44) | 44 | section | E0G-4 Additivity |
+| [stages/E0/metrics.md](stages/E0/metrics.md#L52) | 52 | rule | E0G-4.1 |
+| [stages/E0/metrics.md](stages/E0/metrics.md#L53) | 53 | rule | E0G-4.2 |
+| [stages/E0/metrics.md](stages/E0/metrics.md#L54) | 54 | rule | E0G-4.3 |
+| [stages/E0/metrics.md](stages/E0/metrics.md#L56) | 56 | section | E0G-5 Derived and context metrics |
+| [stages/E0/metrics.md](stages/E0/metrics.md#L58) | 58 | rule | E0G-5.1 |
+| [stages/E0/metrics.md](stages/E0/metrics.md#L59) | 59 | rule | E0G-5.2 |
+| [stages/E0/metrics.md](stages/E0/metrics.md#L60) | 60 | rule | E0G-5.3 |
+| [stages/E0/metrics.md](stages/E0/metrics.md#L61) | 61 | rule | E0G-5.4 |
+| [stages/E0/metrics.md](stages/E0/metrics.md#L63) | 63 | section | E0G-6 Output |
+| [stages/E0/metrics.md](stages/E0/metrics.md#L68) | 68 | section | E0G-7 Codes |
 | [stages/E0/read.md](stages/E0/read.md#L1) | 1 | section | E0.a Read |
 | [stages/E0/read.md](stages/E0/read.md#L3) | 3 | section | E0A-1 Purpose |
 | [stages/E0/read.md](stages/E0/read.md#L7) | 7 | section | E0A-2 Rules |
