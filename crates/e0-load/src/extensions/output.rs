@@ -2,6 +2,7 @@
 
 use serde_json::{Map, Value as Json};
 
+use super::additivity::AdditivityDeclaration;
 use super::diagnostic::ExtensionDiagnostic;
 use super::populations::Population;
 use crate::pointer::JsonPointer;
@@ -43,6 +44,8 @@ pub struct Extensions {
     pub entries: Vec<OwnEntry>,
     /// Every population of the model, in document order (POP-2).
     pub populations: Vec<Population>,
+    /// Every additivity declaration of the model, in document order (ADD-3).
+    pub additivity: Vec<AdditivityDeclaration>,
     /// `W0C-01` warnings, in document order.
     pub warnings: Vec<ExtensionDiagnostic>,
 }
@@ -50,8 +53,8 @@ pub struct Extensions {
 /// The common extension rules do not hold: the model is rejected (E0-4.1).
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ExtensionsFailure {
-    /// The rejecting diagnostics, `E0C-01` to `E0C-06`, `E0C-20` and `E0C-21`, in document order then by code; never
-    /// empty.
+    /// The rejecting diagnostics, `E0C-01` to `E0C-06`, `E0C-10`, `E0C-11`, `E0C-13` to
+    /// `E0C-15`, `E0C-20` and `E0C-21`, in document order then by code; never empty.
     pub errors: Vec<ExtensionDiagnostic>,
     /// `W0C-01` warnings, in document order, reported with the errors (E0-2).
     pub warnings: Vec<ExtensionDiagnostic>,

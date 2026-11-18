@@ -5,8 +5,8 @@ use std::fmt;
 use crate::pointer::JsonPointer;
 use crate::read::Location;
 
-/// The query error code of a metric an E0G-2 rule makes unusable. Every one is reported as
-/// `W0G-01` (E0-4 table).
+/// The query error code of a metric an E0G-2 rule or an additivity conflict (E0G-4.1, E0G-4.2)
+/// makes unusable. Every one is reported as `W0G-01` (E0-4 table).
 ///
 /// The order of the variants is the precedence of E2-5 (rows 10, 12 and 12a), so the lowest
 /// code among the rules a metric breaks is the one recorded (E0G-2.8).
@@ -19,6 +19,9 @@ pub enum ClassificationCode {
     /// (E0G-2.3), a `FILTER` that reads another dataset (E0G-2.4), or, in a model-level metric,
     /// aggregate arguments that read no dataset (E0G-2.5).
     AmbiguousMeasureGrain,
+    /// `E0G-01`: an additivity declaration that relaxes the deduced additivity (E0G-4.1), or a
+    /// semi-additive metric whose components are on more than one home dataset (E0G-4.2).
+    AdditivityConflict,
     /// `E0G-02`: a base metric with no aggregate (E0G-2.7).
     NoAggregate,
 }
@@ -33,6 +36,7 @@ impl ClassificationCode {
         match self {
             Self::UnaggregatedFinerGrainReference => "E_UNAGGREGATED_FINER_GRAIN_REFERENCE",
             Self::AmbiguousMeasureGrain => "E_AMBIGUOUS_MEASURE_GRAIN",
+            Self::AdditivityConflict => "E0G-01",
             Self::NoAggregate => "E0G-02",
         }
     }

@@ -7,9 +7,12 @@
 //! reported once as `W0G-01`, at the metric (E0G-2.8); classification never rejects the model.
 //!
 //! Window functions (E0G-2.2) and nested aggregates (E0G-2.6) make the metric unusable in
-//! E0.f, which reports them; such a metric is not classified. Derived metrics and additivity
-//! declarations are classified by their extensions.
+//! E0.f, which reports them; such a metric is not classified. The additivity declaration E0.c
+//! validated replaces the deduced additivity, and one that relaxes it or is semi-additive over
+//! several home datasets makes the metric unusable as `E0G-01` (E0G-4.1 to E0G-4.3). Derived
+//! metrics are classified by their extension.
 
+mod additivity;
 mod decomposability;
 mod diagnostic;
 mod output;
@@ -24,17 +27,22 @@ use std::collections::HashMap;
 use semantic_compiler_model::expression::Expression;
 
 use crate::expressions::{ExpressionPlace, parse_element_expression};
+use crate::extensions::Extensions;
+use crate::extensions::additivity::DeclaredAdditivity;
 use crate::outline::{ElementOutline, ModelOutline, outline};
 use crate::pointer::{JsonPointer, position, resolve};
 use crate::read::Node;
 use crate::structure::{CompiledVariant, ElementExpression, ElementKind, Structure};
 use crate::typing::{self, TypedElement, Typing};
-use decomposability::{deduced_additivity, is_recomposable};
+use additivity::additivity;
+use decomposability::is_recomposable;
+use output::Additivity;
 use parts::expression_parts;
 use rules::{MetricScope, Problem, components};
 
 /// Classifies the base metrics of the semantic model that `structure` selected in `document`,
-/// reading the types `typing` found for them in E0.f.
+/// reading the types `typing` found for them in E0.f and the additivity declarations of
+/// `extensions` (E0G-4.3).
 ///
 /// Only the metrics `typing` typed are classified: the others are unusable after E0.f
 /// (E0G-2.8). Classified and unusable metrics, and diagnostics, are in document order (E0-4.3).
@@ -42,6 +50,7 @@ pub fn classify_metrics(
     document: &Node,
     structure: &Structure<'_>,
     typing: &Typing,
+    extensions: &Extensions,
 ) -> Classification {
     let model = outline(
         structure.semantic_model.node,
@@ -58,15 +67,30 @@ pub fn classify_metrics(
         .filter(|element| element.kind != typing::ElementKind::Field)
         .map(|element| (&element.pointer, element))
         .collect();
+    let declarations: HashMap<&JsonPointer, &DeclaredAdditivity> = extensions
+        .additivity
+        .iter()
+        .map(|declaration| (&declaration.metric, &declaration.additivity))
+        .collect();
     let mut classification = Classification::default();
     for (metric, kind, scope) in base_metrics(&model) {
         let (Some(tree), Some(typed)) = (trees.get(&metric.pointer), typed.get(&metric.pointer))
         else {
             continue;
         };
-        match components(&expression_parts(tree), scope) {
-            Ok(components) => {
-                if let Some(classified) = classified(metric, kind, components, typed) {
+        let declaration = declarations.get(&metric.pointer).copied();
+        let found = components(&expression_parts(tree), scope).and_then(|components| {
+            let additivity = additivity(&components, declaration)?;
+            Ok((components, additivity))
+        });
+        match found {
+            Ok((components, additivity)) => {
+                let parts = ClassifiedParts {
+                    components,
+                    additivity,
+                    declaration: declaration.cloned(),
+                };
+                if let Some(classified) = classified(metric, kind, parts, typed) {
                     classification.metrics.push(classified);
                 }
             }
@@ -135,24 +159,37 @@ fn metric_tree<'structure>(
     Some((&expression.pointer, tree))
 }
 
-/// The classified metric `metric` of `components`, with the type E0.f found (E0G-6).
+/// What classification found for a metric that breaks no rule.
+struct ClassifiedParts {
+    components: Vec<Component>,
+    additivity: Additivity,
+    declaration: Option<DeclaredAdditivity>,
+}
+
+/// The classified metric `metric` of `parts`, with the type E0.f found (E0G-6).
 ///
 /// E0.f types no metric as the literal `NULL` (E0F-3.2), so a typed metric always has a
 /// logical type.
 fn classified(
     metric: &ElementOutline<'_>,
     kind: MetricKind,
-    components: Vec<Component>,
+    parts: ClassifiedParts,
     typed: &TypedElement,
 ) -> Option<ClassifiedMetric> {
     let result_type = typed.typed.logical()?.clone();
+    let ClassifiedParts {
+        components,
+        additivity,
+        declaration,
+    } = parts;
     let recomposable = components
         .iter()
         .all(|component| is_recomposable(&component.call));
     Some(ClassifiedMetric {
         kind,
         pointer: metric.pointer.clone(),
-        additivity: deduced_additivity(&components),
+        additivity,
+        declaration,
         recomposable,
         components,
         result_type,

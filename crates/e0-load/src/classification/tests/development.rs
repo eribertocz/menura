@@ -20,7 +20,7 @@ fn classify_development() -> Classification {
 
 fn dataset_metric(classification: &Classification, index: usize) -> ClassifiedMetric {
     match probe(classification, &format!("/datasets/0/metrics/{index}")) {
-        Probe::Classified(metric) => metric,
+        Probe::Classified(metric) => *metric,
         other => panic!("the dataset metric {index} must be classified, found {other:?}"),
     }
 }

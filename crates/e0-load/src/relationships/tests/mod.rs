@@ -111,6 +111,7 @@ fn index_of(relationships: &Relationships, name: &str) -> usize {
         .expect("the dataset is a node")
 }
 
+mod additivity;
 mod keys;
 mod model;
 mod paths;

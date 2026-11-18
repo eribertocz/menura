@@ -1,0 +1,86 @@
+{
+  "contract": "semantic_compiler.catalog_schema",
+  "contract_version": "1.0.0",
+  "document_id": {
+    "origin": "conformance:e0-additivity-selection-001",
+    "snapshot": "e0-additivity-selection-001"
+  },
+  "engine": {
+    "name": "duckdb",
+    "version": "2.0.0"
+  },
+  "relations": [
+    {
+      "source": "shop.main.debt",
+      "columns": [
+        {
+          "name": "customer_id",
+          "logical_type": {
+            "kind": "integer",
+            "bits": 32,
+            "signed": true
+          },
+          "physical_type": "INTEGER",
+          "nullable": false
+        },
+        {
+          "name": "period",
+          "logical_type": {
+            "kind": "date"
+          },
+          "physical_type": "DATE",
+          "nullable": false
+        },
+        {
+          "name": "balance",
+          "logical_type": {
+            "kind": "integer",
+            "bits": 32,
+            "signed": true
+          },
+          "physical_type": "INTEGER",
+          "nullable": false
+        }
+      ]
+    },
+    {
+      "source": "shop.main.customers",
+      "columns": [
+        {
+          "name": "customer_id",
+          "logical_type": {
+            "kind": "integer",
+            "bits": 32,
+            "signed": true
+          },
+          "physical_type": "INTEGER",
+          "nullable": false
+        },
+        {
+          "name": "category",
+          "logical_type": {
+            "kind": "text"
+          },
+          "physical_type": "VARCHAR",
+          "nullable": false
+        },
+        {
+          "name": "valid_from",
+          "logical_type": {
+            "kind": "date"
+          },
+          "physical_type": "DATE",
+          "nullable": false
+        },
+        {
+          "name": "valid_to",
+          "logical_type": {
+            "kind": "date"
+          },
+          "physical_type": "DATE",
+          "nullable": true
+        }
+      ]
+    }
+  ]
+}

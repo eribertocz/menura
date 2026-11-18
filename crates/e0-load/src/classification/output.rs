@@ -4,17 +4,20 @@ use semantic_compiler_contracts::types::common::LogicalType;
 use semantic_compiler_model::expression::{AggregateCall, Expression};
 
 use super::diagnostic::{ClassificationCode, ClassificationDiagnostic};
+use crate::extensions::additivity::DeclaredAdditivity;
 use crate::names::Name;
 use crate::pointer::JsonPointer;
 
 /// The classification of a model's base metrics: each usable metric split into its components,
-/// the metrics an E0G-2 rule makes unusable, and their warnings. Classification never rejects
-/// the model: every E0G-2 problem makes its metric unusable (E0-4 table).
+/// the metrics an E0G-2 rule or an additivity conflict makes unusable, and their warnings.
+/// Classification never rejects the model: every E0G-2 problem and every `E0G-01` makes its
+/// metric unusable (E0-4 table).
 #[derive(Debug, Clone, PartialEq, Eq, Default)]
 pub struct Classification {
-    /// Every metric usable after E0.f that breaks no E0G-2 rule, in document order (E0G-6).
+    /// Every metric usable after E0.f that breaks no E0G-2 rule and whose additivity
+    /// declaration holds, in document order (E0G-6).
     pub metrics: Vec<ClassifiedMetric>,
-    /// One entry per metric an E0G-2 rule makes unusable, in document order.
+    /// One entry per metric an E0G-2 rule or `E0G-01` makes unusable, in document order.
     pub unusable: Vec<UnusableMetric>,
     /// One diagnostic per unusable metric, located at the metric, in document order (E0G-2.8).
     /// Each is reported as [`ClassificationCode::WARNING`].
@@ -39,8 +42,13 @@ pub struct ClassifiedMetric {
     pub pointer: JsonPointer,
     /// Its components, one per aggregate, in written order (E0G-1.1); never empty.
     pub components: Vec<Component>,
-    /// Its deduced additivity (E0G-4).
+    /// Its additivity: the declared one when the additivity extension declares it, otherwise
+    /// the deduced one (E0G-4, E0G-4.3).
     pub additivity: Additivity,
+    /// The additivity declaration of the metric that E0.c validated, when it has one
+    /// (E0G-4.3); a declaration that conflicts with the deduced additivity makes the metric
+    /// unusable instead (`E0G-01`).
+    pub declaration: Option<DeclaredAdditivity>,
     /// Whether it can be recomposed from partial results: only when every component can
     /// (E0G-3.1).
     pub recomposable: bool,
@@ -80,11 +88,14 @@ pub enum DecomposabilityClass {
 pub enum Additivity {
     /// Every component is distributive.
     Additive,
-    /// A component is algebraic or holistic: the metric is always computed from base rows.
+    /// A component is algebraic or holistic, or the metric is declared `non_additive`: it is
+    /// always computed from base rows.
     NonAdditive,
+    /// The metric is declared `semi_additive`: it is not summed across `over` (ADD-3.2).
+    SemiAdditive,
 }
 
-/// A metric marked unusable by an E0G-2 rule (E0-4.1).
+/// A metric marked unusable by an E0G-2 rule or an additivity conflict (E0-4.1).
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct UnusableMetric {
     /// The kind of metric.
