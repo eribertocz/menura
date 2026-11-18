@@ -321,9 +321,18 @@ Find a rule ID or a section here, then open only that file at that line.
 | [extensions/additivity.md](extensions/additivity.md#L52) | 52 | rule | ADD-4.9 |
 | [extensions/additivity.md](extensions/additivity.md#L53) | 53 | rule | ADD-4.10 |
 | [extensions/additivity.md](extensions/additivity.md#L55) | 55 | section | ADD-5 Validation |
-| [extensions/additivity.md](extensions/additivity.md#L67) | 67 | section | ADD-6 Integrity checks |
-| [extensions/additivity.md](extensions/additivity.md#L73) | 73 | section | ADD-7 Runtime codes |
-| [extensions/additivity.md](extensions/additivity.md#L82) | 82 | section | ADD-8 Example |
+| [extensions/additivity.md](extensions/additivity.md#L67) | 67 | section | ADD-5.1 Validation details |
+| [extensions/additivity.md](extensions/additivity.md#L71) | 71 | rule | ADD-5.1.1 |
+| [extensions/additivity.md](extensions/additivity.md#L72) | 72 | rule | ADD-5.1.2 |
+| [extensions/additivity.md](extensions/additivity.md#L73) | 73 | rule | ADD-5.1.3 |
+| [extensions/additivity.md](extensions/additivity.md#L74) | 74 | rule | ADD-5.1.4 |
+| [extensions/additivity.md](extensions/additivity.md#L75) | 75 | rule | ADD-5.1.5 |
+| [extensions/additivity.md](extensions/additivity.md#L76) | 76 | rule | ADD-5.1.6 |
+| [extensions/additivity.md](extensions/additivity.md#L77) | 77 | rule | ADD-5.1.7 |
+| [extensions/additivity.md](extensions/additivity.md#L78) | 78 | rule | ADD-5.1.8 |
+| [extensions/additivity.md](extensions/additivity.md#L80) | 80 | section | ADD-6 Integrity checks |
+| [extensions/additivity.md](extensions/additivity.md#L86) | 86 | section | ADD-7 Runtime codes |
+| [extensions/additivity.md](extensions/additivity.md#L95) | 95 | section | ADD-8 Example |
 | [extensions/context.md](extensions/context.md#L1) | 1 | section | Extension: context modifiers |
 | [extensions/context.md](extensions/context.md#L5) | 5 | section | CTX-1 Purpose |
 | [extensions/context.md](extensions/context.md#L11) | 11 | section | CTX-2 Schema |
