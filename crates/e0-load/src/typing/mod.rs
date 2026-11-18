@@ -14,13 +14,16 @@
 //! conditions and time fields of populations by [`populations::type_populations`] (`E0C-23`,
 //! `E0C-24`, POP-4.4, POP-4.5), and the `over` and population of additivity declarations by
 //! [`additivity::type_additivity`] (`E0C-12`, `E0C-17`, ADD-5.1.5, ADD-5.1.7). The formulas of
-//! derived metrics, and the graph of the metrics they read, are checked and typed by
-//! [`derived::type_derived_metrics`] (`E0C-30`, `E0C-31`, `E0C-34`, `E0C-35`, DER-5.1.3,
-//! DER-5.1.4). `AGG(…)` in a field or a dataset metric is `E0F-02` (DER-5.1.2).
+//! derived metrics, the result types of context metrics and the graph of the metrics they read
+//! are checked and typed by [`derived::type_derived_metrics`] (`E0C-30`, `E0C-31`, `E0C-34`,
+//! `E0C-35`, DER-5.1.3, DER-5.1.4, CTX-5.1.5, CTX-5.1.7), and the kind of the time dimension of
+//! context metrics by [`context::check_context_time_kinds`] (`E0C-61`, CTX-5.1.4). `AGG(…)` in
+//! a field or a dataset metric is `E0F-02` (DER-5.1.2).
 
 pub(crate) mod additivity;
 mod aggregates;
 mod arithmetic;
+pub(crate) mod context;
 mod conversion;
 mod dataset_metrics;
 mod dates;

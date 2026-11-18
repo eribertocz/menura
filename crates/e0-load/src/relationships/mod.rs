@@ -11,9 +11,11 @@
 //!
 //! Reachability inside extensions is checked by each extension with its own codes: the fields
 //! of additivity declarations by [`additivity::check_additivity_reachability`] (`E0C-16`,
-//! ADD-5.1.6).
+//! ADD-5.1.6), and the time dimension of context metrics by
+//! [`context::check_context_reachability`] (`E0C-61`, CTX-5.1.4).
 
 pub(crate) mod additivity;
+pub(crate) mod context;
 mod declarations;
 mod diagnostic;
 mod dominators;

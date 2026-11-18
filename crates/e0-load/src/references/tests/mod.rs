@@ -122,6 +122,7 @@ fn field(name: &str, expression: &str) -> String {
 
 const ORDERS: &str = "/semantic_model/0/datasets/0";
 
+mod context;
 mod derived;
 mod development;
 mod existence;

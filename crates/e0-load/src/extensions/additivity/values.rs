@@ -50,7 +50,8 @@ pub(super) const NULL_HANDLINGS: [(&str, NullHandling); 4] = [
     ("error", NullHandling::Error),
 ];
 
-pub(super) const GRAINS: [(&str, Grain); 5] = [
+/// The values of a grain, shared with the `grain` of a context modifier (CTX-5.1.1).
+pub(crate) const GRAINS: [(&str, Grain); 5] = [
     ("day", Grain::Day),
     ("week", Grain::Week),
     ("month", Grain::Month),

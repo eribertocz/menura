@@ -112,6 +112,7 @@ fn index_of(relationships: &Relationships, name: &str) -> usize {
 }
 
 mod additivity;
+mod context;
 mod keys;
 mod model;
 mod paths;

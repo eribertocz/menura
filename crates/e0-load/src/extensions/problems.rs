@@ -2,13 +2,25 @@
 
 use super::diagnostic::{ExtensionCode, ExtensionDiagnostic};
 use super::output::OwnEntry;
+use crate::pointer::JsonPointer;
+use crate::read::Location;
 
 /// The problems an extension found in one entry: each code with a description in English.
-pub(super) type Problems = Vec<(ExtensionCode, String)>;
+pub(crate) type Problems = Vec<(ExtensionCode, String)>;
 
 /// One diagnostic per code of `problems`, in the order of the codes, at the `data` member of
 /// `entry` (E0C-2.6); the descriptions of one code are joined.
-pub(super) fn report(entry: &OwnEntry, mut problems: Problems) -> Vec<ExtensionDiagnostic> {
+pub(super) fn report(entry: &OwnEntry, problems: Problems) -> Vec<ExtensionDiagnostic> {
+    report_at(&entry.data_pointer, entry.location, problems)
+}
+
+/// One diagnostic per code of `problems`, in the order of the codes, at the node `pointer`
+/// that starts at `location`; the descriptions of one code are joined.
+pub(crate) fn report_at(
+    pointer: &JsonPointer,
+    location: Location,
+    mut problems: Problems,
+) -> Vec<ExtensionDiagnostic> {
     problems.sort_by_key(|(code, _)| *code);
     let mut diagnostics: Vec<ExtensionDiagnostic> = Vec::new();
     for (code, message) in problems {
@@ -19,8 +31,8 @@ pub(super) fn report(entry: &OwnEntry, mut problems: Problems) -> Vec<ExtensionD
             }
             _ => diagnostics.push(ExtensionDiagnostic {
                 code,
-                pointer: entry.data_pointer.clone(),
-                location: entry.location,
+                pointer: pointer.clone(),
+                location,
                 message,
             }),
         }

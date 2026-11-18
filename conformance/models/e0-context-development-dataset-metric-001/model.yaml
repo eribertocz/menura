@@ -1,0 +1,55 @@
+version: "0.3.0.dev0"
+name: e0_context_development_dataset_metric_001
+description: Development-line model whose dataset metric total_billed is marked context
+nonportable_extensions:
+  - vendor_name: COMMON
+    data: {namespace: semantic_compiler, version: 1, security_context: {roles: [analyst], attributes: []}}
+datasets:
+  - name: invoices
+    source: shop.main.invoices
+    primary_key: [invoice_id]
+    fields:
+      - name: invoice_id
+        expression: {sql: invoice_id}
+      - name: customer_id
+        expression: {sql: customer_id}
+      - name: invoice_date
+        expression: {sql: invoice_date}
+      - name: billed
+        expression: {sql: billed}
+    metrics:
+      - name: total_billed
+        expression: {sql: SUM(billed)}
+        nonportable_extensions:
+          - vendor_name: COMMON
+            data: {namespace: semantic_compiler, version: 1, context: {base: billed, modifier: {type: share_of_total, remove: all}}}
+    nonportable_extensions:
+      - vendor_name: COMMON
+        data: {namespace: semantic_compiler, version: 1, access: {mode: roles, roles: [analyst]}}
+  - name: customers
+    source: shop.main.customers
+    primary_key: [customer_id]
+    fields:
+      - name: customer_id
+        expression: {sql: customer_id}
+      - name: region
+        expression: {sql: region}
+relationships:
+  - name: invoices_customers
+    from: invoices
+    to: customers
+    from_columns: [customer_id]
+    to_columns: [customer_id]
+metrics:
+  - name: billed
+    expression: {sql: AGG(invoices.total_billed)}
+  - name: billed_ytd
+    expression: {sql: AGG(billed)}
+    nonportable_extensions:
+      - vendor_name: COMMON
+        data: {namespace: semantic_compiler, version: 1, context: {base: billed, modifier: {type: period_to_date, time_dimension: invoices.invoice_date, grain: year}}}
+  - name: billed_share
+    expression: {sql: AGG(billed)}
+    nonportable_extensions:
+      - vendor_name: COMMON
+        data: {namespace: semantic_compiler, version: 1, context: {base: billed, modifier: {type: share_of_total, remove: all}}}

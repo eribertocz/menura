@@ -16,6 +16,7 @@ use crate::structure::validate_structure;
 
 mod additivity;
 mod codes;
+mod context;
 mod derived;
 mod development;
 mod populations;

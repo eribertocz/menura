@@ -1,0 +1,17 @@
+id: e0-context-valid-001
+rules: [CTX-2.1, CTX-4, CTX-5, CTX-5.1.1, CTX-5.1.2, CTX-5.1.3, CTX-5.1.4, CTX-5.1.5, CTX-5.1.7, CTX-3.7, E0G-5.1]
+model: e0-context
+security_context: analyst.json
+query:
+  contract: semantic_compiler.query
+  contract_version: "1.0.0"
+  reference_time: "2026-11-15T12:00:00-04:00"
+  time_zone: UTC
+  query:
+    dimensions: [customers.region]
+    metrics:
+      - {metric: billed, alias: billed}
+expect:
+  outcome: plan
+  rows: e0-context-valid-001.csv
+  row_order: any

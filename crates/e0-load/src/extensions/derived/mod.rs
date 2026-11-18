@@ -72,10 +72,7 @@ pub(crate) fn validate_derived(entries: &[OwnEntry]) -> Derivations {
 
 /// The value of `on_division_by_zero` of the declaration `value`, recording in `problems` a
 /// value that is not an object or a listed string (`E0C-03`) and an unknown key (`E0C-02`).
-fn read_declaration(
-    value: &Json,
-    problems: &mut Problems,
-) -> Option<DivisionByZero> {
+fn read_declaration(value: &Json, problems: &mut Problems) -> Option<DivisionByZero> {
     let Json::Object(members) = value else {
         problems.push((
             ExtensionCode::WrongValue,

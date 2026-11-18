@@ -1,0 +1,7 @@
+id: e0-context-development-dataset-metric-001
+rules: [MDL-2.4, CTX-5.1.1, E0C-2.3, E0C-05]
+model: e0-context-development-dataset-metric-001
+load_options: {ossie_format: development}
+expect:
+  outcome: load_error
+  error: E0C-05

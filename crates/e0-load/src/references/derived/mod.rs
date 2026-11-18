@@ -7,8 +7,9 @@
 //! the metric is unusable (E0-4 table). In the development format, a model metric whose
 //! `AGG(…)` terms all name dataset metrics is read as a derived metric (DER-2.2).
 //!
-//! Context metrics are left to the context extension (#41). `AGG(…)` in a field or a dataset
-//! metric is `E0F-02`, reported by E0.f.
+//! Context metrics are left to the context extension, which resolves their base
+//! ([`super::context`]). `AGG(…)` in a field or a dataset metric is `E0F-02`, reported by
+//! E0.f.
 
 mod output;
 
@@ -232,7 +233,7 @@ fn written(reference: &Reference) -> String {
 
 /// The tree of the compiled variant of every model metric that parses (E0B-3.3). A metric
 /// whose expression cannot be used is reported by E0.b or E0.f.
-fn metric_trees<'structure>(
+pub(super) fn metric_trees<'structure>(
     structure: &'structure Structure<'_>,
 ) -> HashMap<&'structure JsonPointer, Expression> {
     structure

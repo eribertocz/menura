@@ -5,11 +5,13 @@
 //! their version and the placement of their keys, and hands the extension keys of each object
 //! to the validation of each extension (E0C-2.5): the shape and keys of populations are checked
 //! here (POP-4.1 to POP-4.3), those of additivity declarations (ADD-5.1.1 to ADD-5.1.4) and
-//! those of derived-metric declarations (DER-5.1.1).
+//! those of derived-metric declarations (DER-5.1.1) and those of context declarations
+//! (CTX-5.1.1, CTX-5.1.2).
 //! Other vendors' entries, and `COMMON` entries
 //! of another namespace, are kept in the data tree and never interpreted (E0C-1.1, MDL-2.5).
 
 pub(crate) mod additivity;
+pub(crate) mod context;
 pub(crate) mod derived;
 mod diagnostic;
 mod entry;
@@ -29,6 +31,7 @@ use objects::{EntryNode, extension_entries};
 pub(crate) use output::{Extensions, ObjectKind};
 use output::{ExtensionsFailure, OwnEntry};
 pub(crate) use populations::{Population, per_entry};
+pub(crate) use problems::{Problems, report_at};
 
 use crate::pointer::{JsonPointer, position};
 use crate::read::Node;
@@ -48,8 +51,9 @@ pub(crate) const DEFAULT_NAMESPACE: &str = "semantic_compiler";
 /// Returns an [`ExtensionsFailure`] with every rejecting diagnostic, `E0C-01` to `E0C-06`
 /// (`E0C-03` also for a development-line `data` without a JSON form, E0C-2.8),
 /// the E0.c codes of populations (`E0C-02`, `E0C-03`, `E0C-20`, `E0C-21`) and of additivity
-/// (`E0C-02`, `E0C-03`, `E0C-10`, `E0C-11`, `E0C-13` to `E0C-15`) and of derived metrics
-/// (`E0C-02`, `E0C-03`, `E0C-36`), and the `W0C-01` warnings.
+/// (`E0C-02`, `E0C-03`, `E0C-10`, `E0C-11`, `E0C-13` to `E0C-15`), of derived metrics
+/// (`E0C-02`, `E0C-03`, `E0C-36`) and of context metrics (`E0C-02`, `E0C-03`, `E0C-36`,
+/// `E0C-62`), and the `W0C-01` warnings.
 pub fn validate_extensions(
     document: &Node,
     model: &SelectedModel<'_>,
@@ -67,6 +71,8 @@ pub fn validate_extensions(
     errors.extend(additivity.errors);
     let derived = derived::validate_derived(&entries);
     errors.extend(derived.errors);
+    let context = context::validate_context(&entries);
+    errors.extend(context.errors);
     let warnings = sorted(document, warnings);
     if !errors.is_empty() {
         return Err(ExtensionsFailure {
@@ -79,6 +85,7 @@ pub fn validate_extensions(
         populations: populations.populations,
         additivity: additivity.declarations,
         derived: derived.declarations,
+        context: context.declarations,
         warnings,
     })
 }

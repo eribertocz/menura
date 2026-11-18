@@ -13,9 +13,11 @@
 //!
 //! Derived metrics are not base metrics, and E0G-2 does not apply to them: each is classified
 //! from its inputs (E0G-5.2, E0G-5.3, DER-5.1.6), and is unusable when one of them is
-//! (DER-5.1.5). Context metrics are classified by their extension (CTX-5.1.7, #41), not here.
+//! (DER-5.1.5). Context metrics are not base metrics either: each is classified from its base,
+//! and is unusable when its base is (CTX-5.1.6, CTX-5.1.7).
 
 mod additivity;
+mod context;
 mod decomposability;
 mod derived;
 mod diagnostic;
@@ -48,8 +50,9 @@ use rules::{MetricScope, Problem, components};
 
 /// Classifies the metrics of the semantic model that `structure` selected in `document`,
 /// reading what the substages before E0.g found in `input`: the types E0.f found, the
-/// additivity declarations (E0G-4.3), the derived metrics and their inputs, and the query error
-/// of every metric made unusable before E0.g (DER-5.1.5).
+/// additivity declarations (E0G-4.3), the derived metrics and their inputs, the context metrics
+/// and their bases, and the query error of every metric made unusable before E0.g (DER-5.1.5,
+/// CTX-5.1.6).
 ///
 /// Only the base metrics E0.f typed are classified: the others are unusable after E0.f
 /// (E0G-2.8). Classified and unusable metrics, and diagnostics, are in document order (E0-4.3).

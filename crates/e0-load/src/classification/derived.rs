@@ -1,5 +1,6 @@
-//! The classification of derived metrics (E0G-5.2, E0G-5.3, DER-5.1.5, DER-5.1.6): each is
-//! classified from its inputs, which are classified first, since E0.f rejected every cycle.
+//! The classification of derived metrics (E0G-5.2, E0G-5.3, DER-5.1.5, DER-5.1.6) and of
+//! context metrics (CTX-5.1.6, CTX-5.1.7, in [`super::context`]): each is classified from the
+//! metrics it reads, which are classified first, since E0.f rejected every cycle.
 
 use std::collections::{BTreeSet, HashMap};
 
@@ -9,13 +10,13 @@ use super::output::{
     Additivity, Classification, ClassifiedMetric, MetricKind, QueryError, UnusableMetric,
 };
 use crate::pointer::{JsonPointer, resolve};
-use crate::read::Node;
+use crate::read::{Location, Node};
 use crate::references::derived::DerivedMetric;
 use crate::structure::Structure;
 
 /// What classification found for a metric.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-enum Status {
+pub(super) enum Status {
     /// Classified, at this index of [`Classification::metrics`].
     Classified(usize),
     /// Unusable with this query error.
@@ -25,8 +26,8 @@ enum Status {
     Unknown,
 }
 
-/// Classifies every derived metric of `input`, adding each to `classification`, which already
-/// holds the base metrics.
+/// Classifies every derived and context metric of `input`, adding each to `classification`,
+/// which already holds the base metrics.
 pub(super) fn classify_derived(
     document: &Node,
     structure: &Structure<'_>,
@@ -42,20 +43,27 @@ pub(super) fn classify_derived(
     for metric in &input.derived.metrics {
         classifier.status(&metric.pointer, classification);
     }
+    for metric in &input.context.metrics {
+        classifier.status(&metric.pointer, classification);
+    }
 }
 
 /// The classification of derived metrics in progress, with what was found for each metric.
-struct Classifier<'run, 'document> {
+pub(super) struct Classifier<'run, 'document> {
     document: &'document Node,
     structure: &'run Structure<'document>,
-    input: &'run ClassificationInput<'run>,
+    pub(super) input: &'run ClassificationInput<'run>,
     statuses: HashMap<JsonPointer, Status>,
 }
 
 impl Classifier<'_, '_> {
     /// What classification finds for the metric at `pointer`, classifying it first when it is
-    /// a derived metric not yet classified.
-    fn status(&mut self, pointer: &JsonPointer, classification: &mut Classification) -> Status {
+    /// a derived or context metric not yet classified.
+    pub(super) fn status(
+        &mut self,
+        pointer: &JsonPointer,
+        classification: &mut Classification,
+    ) -> Status {
         if let Some(status) = self.statuses.get(pointer) {
             return *status;
         }
@@ -63,6 +71,8 @@ impl Classifier<'_, '_> {
             Status::Unusable(error)
         } else if let Some(metric) = self.input.derived.metric(pointer) {
             self.classify(metric, classification)
+        } else if let Some(metric) = self.input.context.metric(pointer) {
+            self.classify_context(metric, classification)
         } else {
             base_status(pointer, classification)
         };
@@ -80,12 +90,8 @@ impl Classifier<'_, '_> {
                 inputs.push((&input.metric, status));
             }
         }
-        if let Some((input, error)) = inputs.iter().find_map(|(input, status)| match status {
-            Status::Unusable(error) => Some((*input, *error)),
-            _ => None,
-        }) {
-            self.record_unusable(metric, input, error, classification);
-            return Status::Unusable(error);
+        if let Some(status) = self.unusable_input(metric, &inputs, classification) {
+            return status;
         }
         let classified: Vec<&ClassifiedMetric> = inputs
             .iter()
@@ -125,32 +131,64 @@ impl Classifier<'_, '_> {
         Status::Classified(classification.metrics.len() - 1)
     }
 
-    /// Records that `metric` is unusable because its input at `input` is, with that input's
-    /// query error and a `W0G-01` at the metric (DER-5.1.5).
-    fn record_unusable(
+    /// The status of `metric` when one of its `inputs` is unusable: unusable with the query
+    /// error of the first of them in the order written, recorded in `classification`
+    /// (DER-5.1.5).
+    fn unusable_input(
         &self,
         metric: &DerivedMetric,
+        inputs: &[(&JsonPointer, Status)],
+        classification: &mut Classification,
+    ) -> Option<Status> {
+        let (input, error) = inputs.iter().find_map(|(input, status)| match status {
+            Status::Unusable(error) => Some((*input, *error)),
+            _ => None,
+        })?;
+        let reading = Reading {
+            pointer: &metric.pointer,
+            description: format!("the derived metric `{}`", metric.name),
+            location: metric.diagnostic_location,
+        };
+        self.record_unusable(&reading, input, error, classification);
+        Some(Status::Unusable(error))
+    }
+
+    /// Records that the metric of `reading` is unusable because the metric it reads at `input`
+    /// is, with that metric's query error and a `W0G-01` at the metric (DER-5.1.5, CTX-5.1.6).
+    pub(super) fn record_unusable(
+        &self,
+        reading: &Reading<'_>,
         input: &JsonPointer,
         error: QueryError,
         classification: &mut Classification,
     ) {
-        let node = resolve(self.document, &metric.pointer);
+        let node = resolve(self.document, reading.pointer);
         classification.unusable.push(UnusableMetric {
             kind: MetricKind::Metric,
-            pointer: metric.pointer.clone(),
+            pointer: reading.pointer.clone(),
             query_error: error,
         });
         classification.warnings.push(ClassificationDiagnostic {
             code: error,
-            pointer: metric.pointer.clone(),
-            location: node.map_or(metric.diagnostic_location, |node| node.location),
+            pointer: reading.pointer.clone(),
+            location: node.map_or(reading.location, |node| node.location),
             message: format!(
-                "the derived metric `{}` reads the metric at `{input}`, which is unusable ({})",
-                metric.name,
+                "{} reads the metric at `{input}`, which is unusable ({})",
+                reading.description,
                 error.as_str()
             ),
         });
     }
+}
+
+/// A metric that reads another, for the diagnostic that makes it unusable.
+pub(super) struct Reading<'metric> {
+    /// The JSON Pointer of the metric.
+    pub(super) pointer: &'metric JsonPointer,
+    /// The metric in words, such as ``the derived metric `rate` ``.
+    pub(super) description: String,
+    /// Where the metric's diagnostics are located when its node is not found.
+    pub(super) location: Location,
 }
 
 /// What classification found for the base metric at `pointer`.

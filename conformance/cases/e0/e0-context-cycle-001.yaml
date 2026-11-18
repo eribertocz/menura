@@ -1,0 +1,6 @@
+id: e0-context-cycle-001
+rules: [CTX-5.1.5, DER-5.1.4, E0G-5.1, E0C-34]
+model: e0-context-cycle-001
+expect:
+  outcome: load_error
+  error: E0C-34
