@@ -1,0 +1,39 @@
+version: "0.3.0.dev0"
+name: e0_populations_development_wrong_value_001
+description: Development-line model whose validity population has a partial_period outside its set
+datasets:
+  - name: customers
+    source: shop.main.customers
+    primary_key: [customer_id, valid_from]
+    fields:
+      - name: customer_id
+        expression: {sql: customer_id}
+      - name: segment
+        expression: {sql: segment}
+      - name: active
+        expression: {sql: active}
+      - name: valid_from
+        expression: {sql: valid_from}
+      - name: valid_to
+        expression: {sql: valid_to}
+    nonportable_extensions:
+      - vendor_name: COMMON
+        data: {namespace: semantic_compiler, version: 1, populations: [{name: active_customers, mode: validity, entity: [customer_id], valid_from: valid_from, valid_to: valid_to, partial_period: some_day, required_when: active}]}
+  - name: account_months
+    source: shop.main.account_months
+    primary_key: [account_id, period_start]
+    fields:
+      - name: account_id
+        expression: {sql: account_id}
+      - name: period_start
+        expression: {sql: period_start}
+      - name: balance
+        expression: {sql: balance}
+    nonportable_extensions:
+      - vendor_name: COMMON
+        data: {namespace: semantic_compiler, version: 1, populations: [{name: monthly_accounts, mode: periodic, entity: [account_id], period: period_start, grain: month}]}
+metrics:
+  - name: customer_count
+    expression: {sql: COUNT(customers.customer_id)}
+  - name: total_balance
+    expression: {sql: SUM(account_months.balance)}

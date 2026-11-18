@@ -1,0 +1,48 @@
+version: "0.3.0.dev0"
+name: e0_additivity_development
+description: Development-line model with a non_additive declaration that has the key over
+datasets:
+  - name: debt
+    source: shop.main.debt
+    primary_key: [customer_id, period]
+    fields:
+      - name: customer_id
+        expression: {sql: customer_id}
+      - name: period
+        expression: {sql: period}
+      - name: balance
+        expression: {sql: balance}
+  - name: customers
+    source: shop.main.customers
+    primary_key: [customer_id]
+    fields:
+      - name: customer_id
+        expression: {sql: customer_id}
+      - name: category
+        expression: {sql: category}
+      - name: valid_from
+        expression: {sql: valid_from}
+      - name: valid_to
+        expression: {sql: valid_to}
+    nonportable_extensions:
+      - vendor_name: COMMON
+        data: {namespace: semantic_compiler, version: 1, populations: [{name: active_customers, mode: validity, entity: [customer_id], valid_from: valid_from, valid_to: valid_to, partial_period: any_day}]}
+relationships:
+  - name: debt_customers
+    from: debt
+    to: customers
+    from_columns: [customer_id]
+    to_columns: [customer_id]
+metrics:
+  - name: debt_balance
+    expression: {sql: 'SUM(debt.balance)'}
+    nonportable_extensions:
+      - vendor_name: COMMON
+        data: {namespace: semantic_compiler, version: 1, additivity: {type: non_additive, over: debt.period}}
+  - name: strict_balance
+    expression: {sql: 'SUM(debt.balance)'}
+    nonportable_extensions:
+      - vendor_name: COMMON
+        data: {namespace: semantic_compiler, version: 1, additivity: {type: non_additive}}
+  - name: customer_count
+    expression: {sql: 'COUNT(customers.customer_id)'}

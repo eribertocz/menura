@@ -9,7 +9,7 @@ use super::populations::Population;
 use crate::pointer::JsonPointer;
 use crate::read::Location;
 
-/// The object types of the selected semantic model that carry `custom_extensions`.
+/// The object types of the selected semantic model that carry extension entries.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum ObjectKind {
     /// The semantic model itself.
@@ -18,9 +18,11 @@ pub enum ObjectKind {
     Dataset,
     /// A field of a dataset.
     Field,
+    /// A dataset-scoped metric of the development format (section 4.5).
+    DatasetMetric,
     /// A relationship.
     Relationship,
-    /// A metric.
+    /// A metric of the semantic model.
     Metric,
 }
 
@@ -32,6 +34,7 @@ impl ObjectKind {
             Self::Model => "model",
             Self::Dataset => "dataset",
             Self::Field => "field",
+            Self::DatasetMetric => "dataset metric",
             Self::Relationship => "relationship",
             Self::Metric => "metric",
         }

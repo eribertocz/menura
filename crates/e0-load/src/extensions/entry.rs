@@ -1,17 +1,19 @@
-//! Which `custom_extensions` entries are ours (E0C-1, MDL-2.5).
+//! Which extension entries are ours (E0C-1, MDL-2.4, MDL-2.5).
 
 use serde_json::{Map, Value as Json};
 
 use super::diagnostic::{ExtensionCode, ExtensionDiagnostic};
+use super::keys::NAMESPACE;
 use super::members::read_members;
-use super::objects::{EntryNode, member};
+use super::object_data::json_value;
+use super::objects::{DataForm, EntryNode, member};
 use crate::pointer::JsonPointer;
 use crate::read::{Node, Value};
 
 /// The vendor of the entries that may be ours (E0C-1, condition 1).
 const COMMON: &str = "COMMON";
 
-/// What one `custom_extensions` entry is.
+/// What one extension entry is.
 pub(crate) enum EntryKind<'document> {
     /// Someone else's entry: it is kept and never interpreted (E0C-1.1).
     Foreign,
@@ -33,6 +35,9 @@ pub(crate) struct OwnData<'document> {
     pub(crate) members: Map<String, Json>,
     /// The first member name repeated in an object anywhere inside `data` (E0C-2.7).
     pub(crate) repeated_member: Option<String>,
+    /// Why the object `data` of a development-line entry has no JSON form (E0C-2.8); the
+    /// members are then empty.
+    pub(crate) without_json_form: Option<String>,
 }
 
 /// What `entry` is, for the configured `namespace` (E0C-1, MDL-2.3).
@@ -52,10 +57,22 @@ pub(crate) fn classify<'document>(
     let Some(node) = member(entry.node, "data") else {
         return EntryKind::Foreign;
     };
+    let pointer = entry.pointer.member("data");
+    match entry.form {
+        DataForm::Text => classify_text(node, pointer, namespace),
+        DataForm::Object => classify_object(node, pointer, namespace),
+    }
+}
+
+/// What a `COMMON` entry whose `data` is a JSON text is (E0C-1).
+fn classify_text<'document>(
+    node: &'document Node,
+    pointer: JsonPointer,
+    namespace: &str,
+) -> EntryKind<'document> {
     let Value::String(text) = &node.value else {
         return EntryKind::Foreign;
     };
-    let pointer = entry.pointer.member("data");
     let parsed = match read_members(text) {
         Ok(parsed) => parsed,
         Err(error) => {
@@ -84,6 +101,32 @@ pub(crate) fn classify<'document>(
         node,
         members,
         repeated_member: parsed.repeated,
+        without_json_form: None,
+    })
+}
+
+/// What a `COMMON` entry of the development format, whose `data` is a YAML object, is
+/// (MDL-2.4). `data` is read as the JSON value it represents (E0C-2.8). A YAML key is never
+/// repeated (E0A-2.3), so `namespace` has one value and no member is repeated.
+fn classify_object<'document>(
+    node: &'document Node,
+    pointer: JsonPointer,
+    namespace: &str,
+) -> EntryKind<'document> {
+    if !is_text(member(node, NAMESPACE), namespace) {
+        return EntryKind::Foreign;
+    }
+    let (members, without_json_form) = match json_value(node) {
+        Ok(Json::Object(members)) => (members, None),
+        Ok(_) => return EntryKind::Foreign,
+        Err(reason) => (Map::new(), Some(reason)),
+    };
+    EntryKind::Ours(OwnData {
+        pointer,
+        node,
+        members,
+        repeated_member: None,
+        without_json_form,
     })
 }
 

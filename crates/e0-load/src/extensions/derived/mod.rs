@@ -1,7 +1,8 @@
 //! The `derived` extension, in E0.c: the shape of every declaration (DER-5.1.1, `E0C-02`,
 //! `E0C-03`) and a derived metric with an `additivity` extension (`E0C-36`).
 //!
-//! `derived` is valid on metrics only (`E0C-05`), which the common rules check (E0C-2.3). The
+//! `derived` is valid on model metrics only, not on a dataset metric of the development format
+//! (`E0C-05`), which the common rules check (E0C-2.3). The
 //! inputs of a derived metric are resolved in E0.d (`E0C-32`, `E0C-33`, `E0C-37`), and its
 //! formula and the dependency graph are checked in E0.f (`E0C-30`, `E0C-31`, `E0C-34`,
 //! `E0C-35`), each against the [`DerivedDeclaration`] read here.

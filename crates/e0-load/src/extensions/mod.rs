@@ -1,6 +1,7 @@
 //! Stage E0.c: the common extension rules (E0C-1, E0C-2, MDL-2).
 //!
-//! Finds the `custom_extensions` entries of the selected semantic model that are ours, checks
+//! Finds the extension entries of the selected semantic model that are ours, `custom_extensions`
+//! in the release format and `nonportable_extensions` in the development format (MDL-2.4), checks
 //! their version and the placement of their keys, and hands the extension keys of each object
 //! to the validation of each extension (E0C-2.5): the shape and keys of populations are checked
 //! here (POP-4.1 to POP-4.3), those of additivity declarations (ADD-5.1.1 to ADD-5.1.4) and
@@ -15,6 +16,7 @@ mod entry;
 mod envelope;
 mod keys;
 mod members;
+mod object_data;
 mod objects;
 mod output;
 pub(crate) mod populations;
@@ -42,7 +44,8 @@ pub(crate) const DEFAULT_NAMESPACE: &str = "semantic_compiler";
 ///
 /// # Errors
 ///
-/// Returns an [`ExtensionsFailure`] with every rejecting diagnostic, `E0C-01` to `E0C-06`,
+/// Returns an [`ExtensionsFailure`] with every rejecting diagnostic, `E0C-01` to `E0C-06`
+/// (`E0C-03` also for a development-line `data` without a JSON form, E0C-2.8),
 /// the E0.c codes of populations (`E0C-02`, `E0C-03`, `E0C-20`, `E0C-21`) and of additivity
 /// (`E0C-02`, `E0C-03`, `E0C-10`, `E0C-11`, `E0C-13` to `E0C-15`) and of derived metrics
 /// (`E0C-02`, `E0C-03`, `E0C-36`), and the `W0C-01` warnings.
@@ -125,5 +128,7 @@ fn sorted(document: &Node, mut diagnostics: Vec<ExtensionDiagnostic>) -> Vec<Ext
     diagnostics
 }
 
+#[cfg(test)]
+mod development_tests;
 #[cfg(test)]
 mod tests;
