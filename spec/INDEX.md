@@ -408,6 +408,15 @@ Find a rule ID or a section here, then open only that file at that line.
 | [extensions/security.md](extensions/security.md#L57) | 57 | rule | SCY-4.3 |
 | [extensions/security.md](extensions/security.md#L59) | 59 | section | SCY-4a Confidentiality of the compiled plan |
 | [extensions/security.md](extensions/security.md#L63) | 63 | section | SCY-5 Validation |
+| [extensions/security.md](extensions/security.md#L79) | 79 | section | SCY-5.1 Validation details |
+| [extensions/security.md](extensions/security.md#L83) | 83 | rule | SCY-5.1.1 |
+| [extensions/security.md](extensions/security.md#L84) | 84 | rule | SCY-5.1.2 |
+| [extensions/security.md](extensions/security.md#L85) | 85 | rule | SCY-5.1.3 |
+| [extensions/security.md](extensions/security.md#L86) | 86 | rule | SCY-5.1.4 |
+| [extensions/security.md](extensions/security.md#L87) | 87 | rule | SCY-5.1.5 |
+| [extensions/security.md](extensions/security.md#L88) | 88 | rule | SCY-5.1.6 |
+| [extensions/security.md](extensions/security.md#L89) | 89 | rule | SCY-5.1.7 |
+| [extensions/security.md](extensions/security.md#L90) | 90 | rule | SCY-5.1.8 |
 | [extensions/summaries.md](extensions/summaries.md#L1) | 1 | section | Extension: summaries |
 | [extensions/summaries.md](extensions/summaries.md#L5) | 5 | section | SUM-1 Principle |
 | [extensions/summaries.md](extensions/summaries.md#L11) | 11 | section | SUM-2 Declaration |

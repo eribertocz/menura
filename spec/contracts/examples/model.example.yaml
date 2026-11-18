@@ -40,7 +40,7 @@ semantic_model:
             expression: {dialects: [{dialect: ANSI_SQL, expression: segment}]}
         custom_extensions:
           - vendor_name: COMMON
-            data: '{"namespace": "semantic_compiler", "version": 1, "access": {"mode": "roles", "roles": ["admin", "analyst"]}, "row_access": [{"name": "region_scope", "condition": "region IN USER_ATTRIBUTE(''regions'')", "roles": ["analyst"]}, {"name": "all_regions", "condition": "TRUE", "roles": ["admin"]}]}'
+            data: '{"namespace": "semantic_compiler", "version": 1, "access": {"mode": "roles", "roles": ["admin", "analyst"]}, "row_access": [{"name": "region_scope", "condition": "region IN (USER_ATTRIBUTE(''regions''))", "roles": ["analyst"]}, {"name": "all_regions", "condition": "TRUE", "roles": ["admin"]}]}'
       - name: invoices_by_month
         source: sales.public.agg_invoice_month
         fields:
