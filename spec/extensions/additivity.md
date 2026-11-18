@@ -64,6 +64,19 @@ Field references are written `dataset.field`.
 8. `population` exists, its `entity` matches in number, order and type, and a `periodic` population has `grain` = `snapshot_grain` (`E0C-17`).
 9. A semi-additive metric never uses summaries in version 1.
 
+### ADD-5.1 Validation details
+
+| ID | Rule |
+|---|---|
+| ADD-5.1.1 | **Keys.** A missing `type`, or a missing `over`, `entity`, `aggregation` or `nulls` in `semi_additive`, is `E0C-11`. Under `non_additive`, any other key is `E0C-10`, also one that ADD-3.2 defines. Under `semi_additive`, a key that ADD-3.2 does not define is `E0C-02`. |
+| ADD-5.1.2 | **Values.** `type` and every key with a listed set of values take one of those values; `max_carry_forward` is an integer; `over` and `population` are strings; `entity` is a non-empty list of strings without repeats. Any other type or value is `E0C-03`. A `max_carry_forward` that is an integer but not greater than 0 is `E0C-13`. |
+| ADD-5.1.3 | **Field references.** `over` and each item of `entity` are a qualified reference `dataset.field`, read with the identifier rules of E0F-9.3 (each part regular or quoted) and compared under E0D-1.1 and E0D-1.3. A text of any other form is `E0C-03`. E0C-15 compares them the same way. |
+| ADD-5.1.4 | **Pairs, in E0.c.** `selection` is present exactly when `aggregation` is `first` or `last` (`E0C-14`). `max_carry_forward` and `on_stale` are present exactly when `missing` is `carry_forward` (`E0C-13`). |
+| ADD-5.1.5 | **Time `over`, in E0.f.** `over` is a time field when E0.f gives it kind `date` or `timestamp`. With a time `over`, `snapshot_grain`, `population`, `missing` and `unexpected` are required. With any other `over`, these keys, `selection`, `max_carry_forward` and `on_stale`, `aggregation: first` or `last`, and `nulls: as_missing` are not allowed. Either failure is `E0C-12`. It is checked only when E0.f typed the `over` field. |
+| ADD-5.1.6 | **Reachability, in E0.e (`E0C-16`).** The metric's home datasets are the datasets its aggregate arguments read (E0G-1.1), or its own dataset for a dataset metric (E0G-1.4). With exactly one, the dataset and field of `over` and of each `entity` item must exist, and the dataset must be that home dataset or be reached from it by a path (E0E-2.3, E0E-2.4); otherwise `E0C-16`. With none or several, `E0C-16` is not checked and E0G-4.2 applies. A metric made unusable before E0.e is not checked. |
+| ADD-5.1.7 | **Population, in E0.f (`E0C-17`).** `population` names a population of the model, compared as POP-4.3. Its `entity` has as many fields as the metric's `entity`, in the same order, and each pair has the same logical kind under E0F-4.1. A `periodic` population has `grain` equal to `snapshot_grain`. Any failure is `E0C-17`. |
+| ADD-5.1.8 | **Base metrics only.** A derived metric with `additivity` is `E0C-36` (DER-4.4). E0G-4.1 and E0G-4.2 (`E0G-01`) are checked in E0.g on base metrics that E0.g classifies (E0G-2.8). |
+
 ## ADD-6 Integrity checks
 
 For a time `over`, E0 generates checks (E0H-4): one row per entity and period at most;
