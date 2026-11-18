@@ -15,6 +15,7 @@ use serde_json::Value as Json;
 
 use super::diagnostic::{ExtensionCode, ExtensionDiagnostic};
 use super::output::OwnEntry;
+use super::problems::{Problems, report};
 
 /// The extension key of derived metrics (MDL-2).
 const DERIVED: &str = "derived";
@@ -71,10 +72,7 @@ pub(crate) fn validate_derived(entries: &[OwnEntry]) -> Derivations {
 
 /// The value of `on_division_by_zero` of the declaration `value`, recording in `problems` a
 /// value that is not an object or a listed string (`E0C-03`) and an unknown key (`E0C-02`).
-fn read_declaration(
-    value: &Json,
-    problems: &mut Vec<(ExtensionCode, String)>,
-) -> Option<DivisionByZero> {
+fn read_declaration(value: &Json, problems: &mut Problems) -> Option<DivisionByZero> {
     let Json::Object(members) = value else {
         problems.push((
             ExtensionCode::WrongValue,
@@ -100,31 +98,6 @@ fn read_declaration(
         ));
     }
     found
-}
-
-/// One diagnostic per code of `problems`, in the order of the codes, at the `data` member of
-/// `entry` (E0C-2.6).
-fn report(
-    entry: &OwnEntry,
-    mut problems: Vec<(ExtensionCode, String)>,
-) -> Vec<ExtensionDiagnostic> {
-    problems.sort_by_key(|(code, _)| *code);
-    let mut diagnostics: Vec<ExtensionDiagnostic> = Vec::new();
-    for (code, message) in problems {
-        match diagnostics.last_mut() {
-            Some(last) if last.code == code => {
-                last.message.push_str("; ");
-                last.message.push_str(&message);
-            }
-            _ => diagnostics.push(ExtensionDiagnostic {
-                code,
-                pointer: entry.data_pointer.clone(),
-                location: entry.location,
-                message,
-            }),
-        }
-    }
-    diagnostics
 }
 
 #[cfg(test)]

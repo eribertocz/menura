@@ -71,11 +71,24 @@ pub enum ExtensionCode {
     DependencyCycle,
     /// `E0C-35`: a derived formula that divides without `on_division_by_zero` (DER-5.1.3).
     MissingDivisionRule,
-    /// `E0C-36`: a derived metric with an `additivity` extension (DER-5.1.1).
+    /// `E0C-36`: a derived or context metric with an `additivity` extension (DER-5.1.1,
+    /// CTX-5.1.1).
     DerivedAdditivity,
     /// `E0C-37`: `AGG(…)` in a metric marked neither `derived` nor `context` (DER-5.1.2). The
     /// metric is unusable, reported as `W0G-01` (E0-4 table).
     AggregateOutsideDerived,
+    /// `E0C-60`: a context `base` that names no model metric, an expression that is not
+    /// `AGG(<base>)`, or a metric with both `context` and `derived` (CTX-5.1.3).
+    ContextBase,
+    /// `E0C-61`: a `time_dimension` that is not a time field reachable from the base
+    /// (CTX-5.1.4).
+    ContextTimeDimension,
+    /// `E0C-62`: an `offset` that is not a positive integer (CTX-5.1.1).
+    ContextOffset,
+    /// `E0C-63`: a `remove` field that does not exist (CTX-5.1.3).
+    RemovedFieldMissing,
+    /// `E0C-64`: a context `base` that is itself a context metric (CTX-5.1.3).
+    NestedContext,
     /// `W0C-01`: a `COMMON` entry whose `data` is not valid JSON; kept, not interpreted.
     NotJson,
 }
@@ -112,6 +125,11 @@ impl ExtensionCode {
             Self::MissingDivisionRule => "E0C-35",
             Self::DerivedAdditivity => "E0C-36",
             Self::AggregateOutsideDerived => "E0C-37",
+            Self::ContextBase => "E0C-60",
+            Self::ContextTimeDimension => "E0C-61",
+            Self::ContextOffset => "E0C-62",
+            Self::RemovedFieldMissing => "E0C-63",
+            Self::NestedContext => "E0C-64",
             Self::NotJson => "W0C-01",
         }
     }

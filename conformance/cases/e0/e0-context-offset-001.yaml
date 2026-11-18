@@ -1,0 +1,6 @@
+id: e0-context-offset-001
+rules: [CTX-5, CTX-5.1.1, E0C-62]
+model: e0-context-offset-001
+expect:
+  outcome: load_error
+  error: E0C-62

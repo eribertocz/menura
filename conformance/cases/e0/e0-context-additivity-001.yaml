@@ -1,0 +1,6 @@
+id: e0-context-additivity-001
+rules: [CTX-5.1.1, DER-4.4, E0C-36]
+model: e0-context-additivity-001
+expect:
+  outcome: load_error
+  error: E0C-36

@@ -2,34 +2,18 @@
 //! from the metric's single home dataset (ADD-5.1.6). The home dataset of a dataset metric of
 //! the development format is its own dataset (E0G-1.4).
 
-use std::collections::{BTreeSet, HashMap, HashSet};
-
-use semantic_compiler_model::expression::Expression;
+use std::collections::{BTreeSet, HashSet};
 
 use super::home_datasets::home_datasets;
-use super::output::{DatasetIndex, Relationships};
-use crate::expressions::{ExpressionPlace, parse_element_expression};
+use super::output::Relationships;
+use super::reach::Model;
 use crate::extensions::additivity::{AdditivityDeclaration, FieldReference};
 use crate::extensions::{ExtensionCode, ExtensionDiagnostic, Extensions};
 use crate::names::Name;
-use crate::outline::{DatasetOutline, ModelOutline, outline};
+use crate::outline::outline;
 use crate::pointer::JsonPointer;
 use crate::references::References;
-use crate::structure::{CompiledVariant, ElementExpression, ElementKind, Structure};
-
-/// What the reachability check reads.
-struct Model<'model, 'document> {
-    /// The datasets of the model, by name.
-    datasets: HashMap<&'model Name, &'model DatasetOutline<'document>>,
-    /// The model metrics usable after E0.b, by JSON Pointer, with their compiled tree.
-    metrics: HashMap<&'model JsonPointer, Expression>,
-    /// The dataset metrics usable after E0.b, by JSON Pointer, with the name of their own
-    /// dataset (E0G-1.4).
-    dataset_metrics: HashMap<&'model JsonPointer, &'model Name>,
-    /// The elements E0.d made unusable.
-    unusable: HashSet<&'model JsonPointer>,
-    relationships: &'model Relationships,
-}
+use crate::structure::Structure;
 
 /// Checks the fields of every semi-additive declaration of `extensions`, in the semantic model
 /// that `structure` selected, with the elements `references` made unusable and the graph of
@@ -53,21 +37,7 @@ pub(crate) fn check_additivity_reachability(
         structure.semantic_model.node,
         &structure.semantic_model.pointer,
     );
-    let model = Model {
-        datasets: named_datasets(&outline),
-        metrics: structure
-            .expressions
-            .iter()
-            .filter_map(metric_tree)
-            .collect(),
-        dataset_metrics: dataset_metrics(structure, &outline),
-        unusable: references
-            .unusable
-            .iter()
-            .map(|element| &element.pointer)
-            .collect(),
-        relationships,
-    };
+    let model = Model::new(structure, &outline, references, relationships);
     let errors: Vec<ExtensionDiagnostic> = extensions
         .additivity
         .iter()
@@ -80,43 +50,6 @@ pub(crate) fn check_additivity_reachability(
     }
 }
 
-fn named_datasets<'model, 'document>(
-    outline: &'model ModelOutline<'document>,
-) -> HashMap<&'model Name, &'model DatasetOutline<'document>> {
-    outline
-        .datasets
-        .iter()
-        .filter_map(|dataset| Some((&dataset.name.as_ref()?.name, dataset)))
-        .collect()
-}
-
-/// Every dataset metric of `outline` that is usable after E0.b, with the name of its dataset.
-fn dataset_metrics<'model>(
-    structure: &Structure<'_>,
-    outline: &'model ModelOutline<'_>,
-) -> HashMap<&'model JsonPointer, &'model Name> {
-    let usable: HashSet<&JsonPointer> = structure
-        .expressions
-        .iter()
-        .filter(|expression| {
-            expression.kind == ElementKind::DatasetMetric && expression.is_usable()
-        })
-        .map(|expression| &expression.pointer)
-        .collect();
-    outline
-        .datasets
-        .iter()
-        .filter_map(|dataset| Some((&dataset.name.as_ref()?.name, dataset)))
-        .flat_map(|(name, dataset)| {
-            dataset
-                .metrics
-                .iter()
-                .map(move |metric| (&metric.pointer, name))
-        })
-        .filter(|(pointer, _)| usable.contains(pointer))
-        .collect()
-}
-
 /// The single home dataset of the metric at `metric`: the dataset of a dataset metric
 /// (E0G-1.4), or the one dataset the aggregate arguments of a model metric read (E0G-1.1).
 fn home_dataset(model: &Model<'_, '_>, metric: &JsonPointer) -> Option<Name> {
@@ -124,22 +57,6 @@ fn home_dataset(model: &Model<'_, '_>, metric: &JsonPointer) -> Option<Name> {
         return Some((*name).clone());
     }
     single(home_datasets(model.metrics.get(metric)?))
-}
-
-/// The tree of a usable model metric that parses. A metric made unusable in E0.b is left out
-/// (E0-4.1), and so is one that does not parse: it has no home dataset.
-fn metric_tree<'structure>(
-    expression: &'structure ElementExpression<'_>,
-) -> Option<(&'structure JsonPointer, Expression)> {
-    if expression.kind != ElementKind::Metric || !expression.is_usable() {
-        return None;
-    }
-    let (CompiledVariant::AnsiSql(text) | CompiledVariant::OssieSql2026(text)) = expression.variant
-    else {
-        return None;
-    };
-    let tree = parse_element_expression(text, ExpressionPlace::Metric).ok()?;
-    Some((&expression.pointer, tree))
 }
 
 /// The `E0C-16` diagnostic of `declaration`, if one of its fields does not exist or is not
@@ -157,7 +74,7 @@ fn unreachable_fields(
     if model.unusable.contains(&home_dataset.pointer) {
         return None;
     }
-    let reached = reached_from(model, &home);
+    let reached = model.reached_from(&home);
     let problems: Vec<String> = std::iter::once(&keys.over)
         .chain(&keys.entity)
         .filter_map(|field| field_problem(model, &home, &reached, field))
@@ -180,35 +97,6 @@ fn single(names: BTreeSet<Name>) -> Option<Name> {
         (Some(name), None) => Some(name),
         _ => None,
     }
-}
-
-/// The names of the datasets a path leads to from `home` (E0E-2.3, E0E-2.4).
-fn reached_from(model: &Model<'_, '_>, home: &Name) -> HashSet<Name> {
-    let graph = &model.relationships.graph;
-    let Some(source) = graph
-        .datasets
-        .iter()
-        .position(|dataset| dataset.name == *home)
-    else {
-        return HashSet::new();
-    };
-    model
-        .relationships
-        .reachable
-        .get(source)
-        .into_iter()
-        .flatten()
-        .filter_map(|reached| dataset_name(model, reached.dataset))
-        .collect()
-}
-
-fn dataset_name(model: &Model<'_, '_>, index: DatasetIndex) -> Option<Name> {
-    model
-        .relationships
-        .graph
-        .datasets
-        .get(index.0)
-        .map(|dataset| dataset.name.clone())
 }
 
 /// Why `field` is not a field of `home` or of a dataset reached from it.

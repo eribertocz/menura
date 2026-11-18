@@ -12,6 +12,7 @@ use crate::extensions::derived::fixture::{
 };
 use crate::extensions::{DEFAULT_NAMESPACE, ExtensionDiagnostic, validate_extensions};
 use crate::read::read_document;
+use crate::references::context::resolve_context_references;
 use crate::references::derived::resolve_derived_references;
 use crate::structure::validate_structure;
 use crate::typing::derived::type_derived_metrics;
@@ -32,8 +33,11 @@ fn type_in(
         .expect("the extensions are accepted");
     let derived =
         resolve_derived_references(&document, &structure, &extensions).expect("the inputs resolve");
+    let context =
+        resolve_context_references(&document, &structure, &extensions).expect("the bases resolve");
     let typing = type_expressions(&document, &structure, &catalog, &derived);
-    let derived_typing = type_derived_metrics(&document, &structure, &catalog, &typing, &derived);
+    let derived_typing =
+        type_derived_metrics(&document, &structure, &catalog, &typing, &derived, &context);
     (typing, derived_typing)
 }
 

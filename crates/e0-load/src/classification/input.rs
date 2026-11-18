@@ -6,6 +6,7 @@ use crate::expressions::{ExpressionPlace, parse_element_expression};
 use crate::extensions::{ExtensionCode, Extensions};
 use crate::pointer::JsonPointer;
 use crate::references::References;
+use crate::references::context::ContextMetrics;
 use crate::references::derived::DerivedMetrics;
 use crate::structure::{CompiledVariant, ElementExpression, Structure};
 use crate::typing::Typing;
@@ -21,10 +22,13 @@ pub struct ClassificationInput<'earlier> {
     /// The derived metrics E0.d found, with their inputs, and the metrics `E0C-37` makes
     /// unusable.
     pub derived: &'earlier DerivedMetrics,
+    /// The context metrics E0.d found, with their bases.
+    pub context: &'earlier ContextMetrics,
     /// The types E0.f found for the fields and the other metrics, and the elements it made
     /// unusable.
     pub typing: &'earlier Typing,
-    /// The types E0.f found for the derived metrics, and the ones it made unusable.
+    /// The types E0.f found for the derived and context metrics, and the derived metrics it
+    /// made unusable.
     pub derived_typing: &'earlier Typing,
 }
 

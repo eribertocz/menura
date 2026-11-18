@@ -14,6 +14,7 @@ use super::{Classification, ClassificationInput, ClassifiedMetric, MetricKind, c
 use crate::extensions::{DEFAULT_NAMESPACE, validate_extensions};
 use crate::names::Name;
 use crate::read::read_document;
+use crate::references::context::resolve_context_references;
 use crate::references::derived::resolve_derived_references;
 use crate::references::resolve_references;
 use crate::structure::validate_structure;
@@ -22,6 +23,7 @@ use crate::typing::type_expressions;
 
 mod additivity;
 mod classes;
+mod context;
 mod derived;
 mod development;
 mod rules;
@@ -45,13 +47,17 @@ fn classify_in_format(model: &str, catalog: &str, format: OssieFormat) -> Classi
         resolve_references(&document, &structure, &catalog).expect("the references are accepted");
     let derived = resolve_derived_references(&document, &structure, &extensions)
         .expect("the inputs of derived metrics resolve");
+    let context = resolve_context_references(&document, &structure, &extensions)
+        .expect("the bases of context metrics resolve");
     let typing = type_expressions(&document, &structure, &catalog, &derived);
-    let derived_typing = type_derived_metrics(&document, &structure, &catalog, &typing, &derived)
-        .expect("the derived formulas are accepted");
+    let derived_typing =
+        type_derived_metrics(&document, &structure, &catalog, &typing, &derived, &context)
+            .expect("the derived formulas are accepted");
     let input = ClassificationInput {
         extensions: &extensions,
         references: &references,
         derived: &derived,
+        context: &context,
         typing: &typing,
         derived_typing: &derived_typing,
     };

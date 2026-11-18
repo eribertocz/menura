@@ -1,4 +1,5 @@
-//! Reading a field reference `dataset.field` of an additivity declaration (ADD-5.1.3).
+//! Reading a field reference `dataset.field` of an additivity declaration (ADD-5.1.3), and of
+//! a context modifier, which reads its references the same way (CTX-5.1.2).
 
 use semantic_compiler_model::expression::{Expression, Reference};
 
@@ -11,7 +12,7 @@ use crate::names::Name;
 /// The text is read by the expression parser, the only reader of the identifier rules of
 /// E0F-9.3 (S10): each part is a regular or a quoted identifier, compared as E0D-1.1. A text
 /// that does not parse, or that parses as anything but a qualified reference, has another form.
-pub(super) fn field_reference(text: &str) -> Option<FieldReference> {
+pub(crate) fn field_reference(text: &str) -> Option<FieldReference> {
     let Ok(Expression::Reference(Reference {
         qualifier: Some(dataset),
         name,

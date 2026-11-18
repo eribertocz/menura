@@ -1,5 +1,4 @@
-//! The classification of derived metrics: DER-5.1.5, DER-5.1.6, E0G-5.2 to E0G-5.4, and
-//! context metrics left out of E0G-2 (CTX-5.1.7).
+//! The classification of derived metrics: DER-5.1.5, DER-5.1.6 and E0G-5.2 to E0G-5.4.
 
 use std::collections::BTreeSet;
 
@@ -159,22 +158,6 @@ fn der_5_1_5_an_input_unusable_after_e0f_gives_its_code() {
         Probe::UnusableInput(QueryError::Typing(TypingCode::IncompatibleTypes))
     );
     assert_eq!(probe(&classification, BILLED), Probe::NotClassified);
-}
-
-#[test]
-fn ctx_5_1_7_a_context_metric_is_not_classified() {
-    let model = with(
-        "expression: {dialects: [{dialect: ANSI_SQL, expression: 'COUNT(DISTINCT customers.customer_id)'}]}\n",
-        "expression: {dialects: [{dialect: ANSI_SQL, expression: 'COUNT(DISTINCT customers.customer_id)'}]}\n        \
-         custom_extensions:\n          - vendor_name: COMMON\n            data: '{\"namespace\": \"semantic_compiler\", \"version\": 1, \"context\": {}}'\n",
-    );
-    let classification = classify(&model);
-    assert_eq!(probe(&classification, CUSTOMER_COUNT), Probe::NotClassified);
-    assert_eq!(
-        probe(&classification, BILLED_PER_CUSTOMER),
-        Probe::NotClassified
-    );
-    assert!(classification.warnings.is_empty());
 }
 
 #[test]

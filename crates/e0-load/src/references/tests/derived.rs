@@ -174,14 +174,18 @@ fn der_2_2_e0c_37_warnings_are_reported_with_a_rejection() {
 
 #[test]
 fn der_2_2_a_context_metric_is_left_to_its_extension() {
-    let model = conformance_model("e0-derived-unusable").replacen(
-        "      - name: billed_twice\n        expression: {dialects: [{dialect: ANSI_SQL, expression: 'AGG(total_billed) * 2'}]}\n",
-        "      - name: billed_twice\n        expression: {dialects: [{dialect: ANSI_SQL, expression: 'AGG(total_billed) * 2'}]}\n        \
-         custom_extensions:\n          - vendor_name: COMMON\n            data: '{\"namespace\": \"semantic_compiler\", \"version\": 1, \"context\": {}}'\n",
-        1,
-    );
-    let derived = resolved(&model);
+    let model = crate::extensions::context::fixture::MODEL;
+    let derived = resolve_in(model, OssieFormat::Release).expect("the inputs resolve");
     assert!(derived.unusable.is_empty() && derived.warnings.is_empty());
+    let derived: Vec<&str> = derived
+        .metrics
+        .iter()
+        .map(|metric| metric.pointer.as_str())
+        .collect();
+    assert_eq!(
+        derived,
+        [crate::extensions::context::fixture::BILLED_CHANGE]
+    );
 }
 
 #[test]
