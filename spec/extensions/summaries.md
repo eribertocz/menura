@@ -53,5 +53,19 @@ compares row by row (E0H-4).
 | `E0C-52` | Invalid `base_aggregate` |
 | `E0C-53` | Time dimension without `grain`, or `grain` on a non-time field |
 | `E0C-54` | `coverage_field` is not a time dimension of the summary |
-| `E0C-55` | Summary declares `row_access` |
+| `E0C-55` | Summary declares `row_access`, or dataset metrics (development format) |
 | `E0C-56` | Summary `access` is not `internal` |
+| `E0C-57` | A summary field's logical kind differs from its base: the base field's for a dimension, the `base_aggregate` result type for a measure |
+
+### SUM-6.1 Validation details
+
+| ID | Rule |
+|---|---|
+| SUM-6.1.1 | **Shape, in E0.c.** `aggregate` is an object with exactly `of` (a string), `dimensions` (a non-empty list of objects with `field` and `base`, strings, and an optional `grain`), `measures` (a non-empty list of objects with exactly `field` and `base_aggregate`, strings) and `coverage_field` (a string). `grain` is `day`, `week`, `month`, `quarter` or `year`. A missing `of` is `E0C-50`. Any other missing key, wrong type or value is `E0C-03`, and an unknown key is `E0C-02`. A dataset is a summary when its entry of ours has the key `aggregate`, valid or not (E0E-3.6). |
+| SUM-6.1.2 | **Names, in E0.d.** `of` names a dataset, `field` and `coverage_field` name fields of the summary, and `base` names a field of the `of` dataset, all as declared names (E0D-1.4) compared under E0D-1.3. `of` with no such dataset, or naming a summary (itself included), is `E0C-50`. A `field` or `base` with no such field, a summary field named by no dimension and no measure or by more than one, and a field reference in `base_aggregate` that does not exist, are `E0C-51`. `coverage_field` must be the `field` of a dimension that has `grain` (`E0C-54`). |
+| SUM-6.1.3 | **`base_aggregate`, in E0.f (`E0C-52`).** It is parsed with the expression grammar (E0F-9) as a model metric expression whose references are `of.field`. It is exactly one call of `SUM`, `COUNT(x)`, `MIN` or `MAX`, with no `DISTINCT` and no `COUNT(*)`, and with an optional `FILTER (WHERE …)`. Its argument and filter are row-level expressions (a `CASE` is allowed) that read only the `of` dataset. Anything else is `E0C-52`. |
+| SUM-6.1.4 | **Time dimensions, in E0.f (`E0C-53`).** A dimension has `grain` exactly when its `base` field has kind `date` or `timestamp`. This is checked only when E0.f typed the `base` field. |
+| SUM-6.1.5 | **Kinds, in E0.f (`E0C-57`).** A dimension's summary field has the logical kind of its `base` field, and a measure's summary field has the kind of the `base_aggregate` result type (E0F-5), compared under E0F-4.1. This is checked only on typed fields. |
+| SUM-6.1.6 | **Access (`E0C-55`, `E0C-56`).** A summary without `access`, or with a mode other than `internal`, is `E0C-56`; it never gets `W0C-41`, and `grant_authenticated_to_all` does not apply to it. |
+| SUM-6.1.7 | **Visibility at load (SUM-4.1).** A summary is not a dataset that other model elements may name: a metric that refers to it is treated as referring to a missing dataset (`E0D-04`), an extension reference to it gets the extension's own code (E0D-3.2), and a relationship to or from it is `E0E-02` (E0E-3.6), not `E0D-05`. |
+| SUM-6.1.8 | **Catalog state (CAT-8.8).** The check that `aggregate_build` appears only on summaries, with periods of the grain of the summary's coverage dimension, needs the summaries of the loaded model. It is done by `load` and `with_state` with the internal model (E0H). |
