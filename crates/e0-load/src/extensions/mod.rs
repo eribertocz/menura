@@ -55,6 +55,48 @@ pub fn validate_extensions(
     model: &SelectedModel<'_>,
     namespace: &str,
 ) -> Result<Extensions, ExtensionsFailure> {
+    let EntriesOfOurs {
+        mut entries,
+        mut errors,
+        warnings,
+    } = entries_of_ours(model, namespace);
+    entries.sort_by_cached_key(|entry| position(document, &entry.data_pointer));
+    let populations = populations::validate_populations(&entries);
+    errors.extend(populations.errors);
+    let additivity = additivity::validate_additivity(&entries);
+    errors.extend(additivity.errors);
+    let derived = derived::validate_derived(&entries);
+    errors.extend(derived.errors);
+    let warnings = sorted(document, warnings);
+    if !errors.is_empty() {
+        return Err(ExtensionsFailure {
+            errors: sorted(document, errors),
+            warnings,
+        });
+    }
+    Ok(Extensions {
+        entries,
+        populations: populations.populations,
+        additivity: additivity.declarations,
+        derived: derived.declarations,
+        warnings,
+    })
+}
+
+/// The entries of ours of a model, before the validation of each extension, with the
+/// diagnostics of the common rules found while reading them.
+struct EntriesOfOurs {
+    /// The entries whose keys hold, in the order they were found.
+    entries: Vec<OwnEntry>,
+    /// The rejecting diagnostics of the common rules, `E0C-01` to `E0C-06`.
+    errors: Vec<ExtensionDiagnostic>,
+    /// The `W0C-01` warnings.
+    warnings: Vec<ExtensionDiagnostic>,
+}
+
+/// Reads the entries of ours of the selected semantic model `model`, with the load option
+/// `namespace` (MDL-2.3), and applies the common rules to them (E0C-1, E0C-2).
+fn entries_of_ours(model: &SelectedModel<'_>, namespace: &str) -> EntriesOfOurs {
     let mut entries = Vec::new();
     let mut errors = Vec::new();
     let mut warnings = Vec::new();
@@ -84,27 +126,11 @@ pub fn validate_extensions(
             Err(found) => errors.extend(found),
         }
     }
-    entries.sort_by_cached_key(|entry| position(document, &entry.data_pointer));
-    let populations = populations::validate_populations(&entries);
-    errors.extend(populations.errors);
-    let additivity = additivity::validate_additivity(&entries);
-    errors.extend(additivity.errors);
-    let derived = derived::validate_derived(&entries);
-    errors.extend(derived.errors);
-    let warnings = sorted(document, warnings);
-    if !errors.is_empty() {
-        return Err(ExtensionsFailure {
-            errors: sorted(document, errors),
-            warnings,
-        });
-    }
-    Ok(Extensions {
+    EntriesOfOurs {
         entries,
-        populations: populations.populations,
-        additivity: additivity.declarations,
-        derived: derived.declarations,
+        errors,
         warnings,
-    })
+    }
 }
 
 /// The `E0C-04` diagnostic of an entry of ours that follows another on the same object
