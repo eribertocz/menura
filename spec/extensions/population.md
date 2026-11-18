@@ -42,7 +42,14 @@ Fields are named without dataset prefix: they belong to the dataset that declare
 | `E0C-21` | Missing key for the declared `mode`, or a key of the other mode |
 | `E0C-22` | A referenced field does not exist in the dataset |
 | `E0C-23` | `required_when` is not a valid boolean expression over the dataset |
-| `E0C-24` | `valid_from` or `valid_to` is not of kind `date` or `timestamp` |
+| `E0C-24` | `valid_from`, `valid_to` or `period` is not of kind `date` or `timestamp` |
+
+- **POP-4.1** `populations` is a list of objects. Every item has `name`, `mode` and `entity`, and the keys of its `mode`; a missing one, or a key of the other mode, is `E0C-21`. A key that POP-2 does not define is `E0C-02` (E0C-2.4).
+- **POP-4.2** Values: `name` is a non-empty string; `mode` is `validity` or `periodic`; `entity` is a non-empty list of field names without repeats; `valid_from`, `valid_to` and `period` are field names; `partial_period` is `any_day`, `full_period` or `period_end`; `grain` is `day`, `week`, `month`, `quarter` or `year`; `required_when` is a string. Any other type or value is `E0C-03`.
+- **POP-4.3** A field name is read as a declared name (E0D-1.4) and names a field of the declaring dataset under E0D-1.3; a name with no such field, in any key or inside `required_when`, is `E0C-22`. Population names are compared the same way across the whole model, and a repeat is `E0C-20` at the later entry.
+- **POP-4.4** `required_when` is parsed with the expression grammar (E0F-9) as a row-level expression of the declaring dataset: a bare name is a field of that dataset (as in a dataset metric, E0D-3). A text that does not parse, a construct outside the subset, a qualified reference, an aggregate, or a type other than boolean is `E0C-23`.
+- **POP-4.5** `E0C-24` is checked only on fields that E0.f typed; a field without a type already has its own diagnostic.
+- **POP-4.6** Every diagnostic is located as E0C-2.6 states, and is reported in the substage the E0 code table assigns to its code.
 
 ## POP-5 Integrity checks
 
