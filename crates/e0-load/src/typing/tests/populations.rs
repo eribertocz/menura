@@ -125,6 +125,44 @@ fn pop_4_5_fields_without_a_type_are_not_checked() {
     assert!(problems(&untyped("active")).is_empty());
 }
 
+/// [`MODEL`] whose field `active` has no type and whose population condition is `condition`.
+fn untyped_active(condition: &str) -> Vec<(&'static str, String)> {
+    let text = serde_json::to_string(condition).expect("a JSON string");
+    let model = with_validity(&VALIDITY.replace(r#""active""#, &text)).replacen(
+        "expression: {dialects: [{dialect: ANSI_SQL, expression: active}]}",
+        "expression: {dialects: [{dialect: ANSI_SQL, expression: 'active + segment'}]}",
+        1,
+    );
+    problems(&model)
+}
+
+#[test]
+fn pop_4_5_e0c_23_structural_conditions_are_checked_whatever_the_field_types() {
+    assert_eq!(
+        problems(conformance_model(
+            "e0-populations-untyped-field-condition-001"
+        )),
+        customers("E0C-23")
+    );
+    for invalid in [
+        "active AND",
+        "active AND RANDOM() > 0.5",
+        "active AND customers.segment = 'RETAIL'",
+        "active AND COUNT(*) > 0",
+        "active AND AGG(customer_count) > 0",
+        "active AND USER_ATTRIBUTE('segment') = segment",
+    ] {
+        assert_eq!(untyped_active(invalid), customers("E0C-23"), "{invalid}");
+    }
+}
+
+#[test]
+fn pop_4_5_the_type_is_not_checked_when_a_field_read_has_no_type() {
+    for unchecked in ["active", "active + 1", "segment = 1 OR active"] {
+        assert!(untyped_active(unchecked).is_empty(), "{unchecked}");
+    }
+}
+
 #[test]
 fn pop_4_6_diagnostics_are_in_document_order_then_by_code() {
     let validity = VALIDITY

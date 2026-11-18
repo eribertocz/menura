@@ -2,7 +2,7 @@
 //! of populations in E0.c, E0.d and E0.f.
 
 /// The model document of every `e0-populations*` conformance model, by name.
-const MODELS: [(&str, &str); 8] = [
+const MODELS: [(&str, &str); 9] = [
     (
         "e0-populations",
         include_str!("../../../../../conformance/models/e0-populations/model.yaml"),
@@ -40,6 +40,12 @@ const MODELS: [(&str, &str); 8] = [
     (
         "e0-populations-period-kind-001",
         include_str!("../../../../../conformance/models/e0-populations-period-kind-001/model.yaml"),
+    ),
+    (
+        "e0-populations-untyped-field-condition-001",
+        include_str!(
+            "../../../../../conformance/models/e0-populations-untyped-field-condition-001/model.yaml"
+        ),
     ),
 ];
 

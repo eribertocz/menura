@@ -3,9 +3,13 @@
 //!
 //! `required_when` is a row-level expression of the declaring dataset: a bare name is a field
 //! of that dataset. A text that does not parse, a construct outside the subset, a qualified
-//! reference, an aggregate, `AGG(metric)`, `USER_ATTRIBUTE`, or a type other than boolean is
-//! `E0C-23`. A field without a type already has its own diagnostic, so neither code is reported
-//! for it (POP-4.5); a missing field is `E0C-22`, reported by E0.d.
+//! reference, an aggregate, `AGG(…)`, `USER_ATTRIBUTE(…)`, or a type other than boolean is
+//! `E0C-23`. The structural conditions are checked whatever the types of the fields read; the
+//! type is checked only when every field read has a type, and `E0C-24` only on typed fields: a
+//! field without a type already has its own diagnostic (POP-4.5). A missing field is `E0C-22`,
+//! reported by E0.d.
+
+mod structure;
 
 use std::collections::HashMap;
 
@@ -13,7 +17,7 @@ use semantic_compiler_contracts::types::common::LogicalType;
 use semantic_compiler_model::expression::Reference;
 
 use super::output::{ElementKind, Typing};
-use super::stop::{Outcome, Stop, not_allowed};
+use super::stop::{Outcome, Stop};
 use super::typer::{Aggregates, ExpressionTyper};
 use super::value_type::{Typed, describe};
 use crate::expressions::{ExpressionPlace, parse_element_expression};
@@ -22,6 +26,7 @@ use crate::names::Name;
 use crate::outline::{DatasetOutline, outline};
 use crate::pointer::JsonPointer;
 use crate::structure::Structure;
+use structure::{bare_references, structural_problem};
 
 /// The field types and datasets the checks of populations read.
 struct Fields<'model, 'document> {
@@ -107,32 +112,35 @@ fn condition_problem(fields: &Fields<'_, '_>, population: &Population) -> Option
         Ok(tree) => tree,
         Err(diagnostic) => return Some(described(diagnostic.error.to_string())),
     };
+    if let Some(problem) = structural_problem(&tree) {
+        return Some(described(problem));
+    }
+    let all_typed = bare_references(&tree).into_iter().all(|reference| {
+        fields
+            .type_of(&population.dataset, &Name::of(&reference.name))
+            .is_some()
+    });
+    if !all_typed {
+        return None;
+    }
     let resolve = |reference: &Reference| field_type(fields, population, reference);
-    let condition_typer = ExpressionTyper::new(&resolve, Aggregates::Condition);
+    let condition_typer = ExpressionTyper::new(&resolve, Aggregates::NotAllowed);
     let problem = match condition_typer.type_of(&tree) {
         Ok(found) if found.logical() == Some(&LogicalType::Boolean) => return None,
         Ok(found) => format!("it is {}, not boolean", describe(&found.value_type)),
-        Err(Stop::Problem { message, .. } | Stop::NotAllowed { message }) => message,
+        Err(Stop::Problem { message, .. }) => message,
         Err(Stop::ReportedElsewhere) => return None,
     };
     Some(described(problem))
 }
 
-/// The type of a reference of the condition of `population`: a bare name is a field of its
-/// dataset (POP-4.4). A missing field is `E0C-22`, and a field without a type has its own
-/// diagnostic.
+/// The type of a bare reference of the condition of `population`: a field of its dataset
+/// (POP-4.4). The structural check has already rejected qualified references.
 fn field_type(
     fields: &Fields<'_, '_>,
     population: &Population,
     reference: &Reference,
 ) -> Outcome<Typed> {
-    if let Some(qualifier) = &reference.qualifier {
-        return not_allowed(format!(
-            "the qualified reference `{}`.`{}`; a field of the dataset is read by its bare name",
-            qualifier.text(),
-            reference.name.text()
-        ));
-    }
     fields
         .type_of(&population.dataset, &Name::of(&reference.name))
         .cloned()

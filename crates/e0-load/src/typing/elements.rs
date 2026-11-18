@@ -91,8 +91,7 @@ pub(super) fn record<'model>(
         Err(Stop::Problem { code, message }) => {
             found.findings.push(finding(element, kind, code, message));
         }
-        // A field or metric typer never stops with `NotAllowed`: only a condition typer does.
-        Err(Stop::ReportedElsewhere | Stop::NotAllowed { .. }) => {}
+        Err(Stop::ReportedElsewhere) => {}
     }
 }
 
