@@ -64,3 +64,15 @@ Let `g` be the query grain of `time_dimension` and `t` a result row's time value
 | `E0C-63` | A `remove` field does not exist |
 | `E0C-64` | `base` is itself a modified metric (version 1 allows one level) |
 | `E4-02` | The query lacks the required time dimension, or its grain is coarser than `grain` |
+
+### CTX-5.1 Validation details
+
+| ID | Rule |
+|---|---|
+| CTX-5.1.1 | **Shape, in E0.c.** `context` is an object with exactly `base` (a string) and `modifier` (an object). `modifier.type` is one of the three types of CTX-2, and `modifier` has exactly the keys of its type. `grain` is `day`, `week`, `month`, `quarter` or `year`. `time_dimension` and each `remove` item are strings. `remove` is a non-empty list without repeats, or the string `all`. A missing key, a wrong type or a value outside its set is `E0C-03`. A key that the declared type does not list is `E0C-02`. A non-positive or non-integer `offset` is `E0C-62`. `context` is allowed on model metrics only; on a dataset metric of the development format it is `E0C-05`. A context metric with `additivity` is `E0C-36` (DER-4.4). |
+| CTX-5.1.2 | **Field references.** `time_dimension` and each `remove` item are written `dataset.field` and read as ADD-5.1.3 states; any other form is `E0C-03`. |
+| CTX-5.1.3 | **Base, in E0.d.** `base` names a model metric, compared under E0D-1.1 and E0D-1.3. The metric's expression is exactly one `AGG(…)` term that names that metric under the same comparison. Otherwise, and for a metric that has both `context` and `derived`, `E0C-60`. A base that is itself a context metric is `E0C-64`; a derived base is allowed (CTX-3.7). A `remove` field whose dataset or field does not exist is `E0C-63`. |
+| CTX-5.1.4 | **Time dimension (`E0C-61`).** In E0.e, the dataset and field of `time_dimension` must exist, and the dataset must be each home dataset of the base, or be reached from each by a path (E0E-2.3, E0E-2.4). In E0.f, the field must have kind `date` or `timestamp`; this is checked only when E0.f typed it. |
+| CTX-5.1.5 | **Graph.** Each context metric adds to the metric graph of DER-5.1.4 one edge to its base, so a cycle through derived and context metrics is `E0C-34`. |
+| CTX-5.1.6 | **Unusable base.** A context metric whose base is unusable is unusable too, with `W0G-01` at the metric; its query error code is that of the base. |
+| CTX-5.1.7 | **Type and classification.** The result type is the base's type, except for `share_of_total`, which is a 64-bit float (CTX-3a.3). The result is always nullable. A context metric is not a base metric, so E0G-2 does not apply. Its home datasets are those of its base, it is recomposable only if its base is (CTX-3.6), and its recorded additivity is non-additive. |

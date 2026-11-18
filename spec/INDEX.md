@@ -321,9 +321,18 @@ Find a rule ID or a section here, then open only that file at that line.
 | [extensions/additivity.md](extensions/additivity.md#L52) | 52 | rule | ADD-4.9 |
 | [extensions/additivity.md](extensions/additivity.md#L53) | 53 | rule | ADD-4.10 |
 | [extensions/additivity.md](extensions/additivity.md#L55) | 55 | section | ADD-5 Validation |
-| [extensions/additivity.md](extensions/additivity.md#L67) | 67 | section | ADD-6 Integrity checks |
-| [extensions/additivity.md](extensions/additivity.md#L73) | 73 | section | ADD-7 Runtime codes |
-| [extensions/additivity.md](extensions/additivity.md#L82) | 82 | section | ADD-8 Example |
+| [extensions/additivity.md](extensions/additivity.md#L67) | 67 | section | ADD-5.1 Validation details |
+| [extensions/additivity.md](extensions/additivity.md#L71) | 71 | rule | ADD-5.1.1 |
+| [extensions/additivity.md](extensions/additivity.md#L72) | 72 | rule | ADD-5.1.2 |
+| [extensions/additivity.md](extensions/additivity.md#L73) | 73 | rule | ADD-5.1.3 |
+| [extensions/additivity.md](extensions/additivity.md#L74) | 74 | rule | ADD-5.1.4 |
+| [extensions/additivity.md](extensions/additivity.md#L75) | 75 | rule | ADD-5.1.5 |
+| [extensions/additivity.md](extensions/additivity.md#L76) | 76 | rule | ADD-5.1.6 |
+| [extensions/additivity.md](extensions/additivity.md#L77) | 77 | rule | ADD-5.1.7 |
+| [extensions/additivity.md](extensions/additivity.md#L78) | 78 | rule | ADD-5.1.8 |
+| [extensions/additivity.md](extensions/additivity.md#L80) | 80 | section | ADD-6 Integrity checks |
+| [extensions/additivity.md](extensions/additivity.md#L86) | 86 | section | ADD-7 Runtime codes |
+| [extensions/additivity.md](extensions/additivity.md#L95) | 95 | section | ADD-8 Example |
 | [extensions/context.md](extensions/context.md#L1) | 1 | section | Extension: context modifiers |
 | [extensions/context.md](extensions/context.md#L5) | 5 | section | CTX-1 Purpose |
 | [extensions/context.md](extensions/context.md#L11) | 11 | section | CTX-2 Schema |
@@ -339,6 +348,14 @@ Find a rule ID or a section here, then open only that file at that line.
 | [extensions/context.md](extensions/context.md#L37) | 37 | section | CTX-3a Definitions |
 | [extensions/context.md](extensions/context.md#L49) | 49 | section | CTX-4 Examples |
 | [extensions/context.md](extensions/context.md#L57) | 57 | section | CTX-5 Validation |
+| [extensions/context.md](extensions/context.md#L68) | 68 | section | CTX-5.1 Validation details |
+| [extensions/context.md](extensions/context.md#L72) | 72 | rule | CTX-5.1.1 |
+| [extensions/context.md](extensions/context.md#L73) | 73 | rule | CTX-5.1.2 |
+| [extensions/context.md](extensions/context.md#L74) | 74 | rule | CTX-5.1.3 |
+| [extensions/context.md](extensions/context.md#L75) | 75 | rule | CTX-5.1.4 |
+| [extensions/context.md](extensions/context.md#L76) | 76 | rule | CTX-5.1.5 |
+| [extensions/context.md](extensions/context.md#L77) | 77 | rule | CTX-5.1.6 |
+| [extensions/context.md](extensions/context.md#L78) | 78 | rule | CTX-5.1.7 |
 | [extensions/derived.md](extensions/derived.md#L1) | 1 | section | Extension: derived metrics |
 | [extensions/derived.md](extensions/derived.md#L5) | 5 | section | DER-1 Purpose |
 | [extensions/derived.md](extensions/derived.md#L9) | 9 | section | DER-2 Formula |
@@ -353,6 +370,13 @@ Find a rule ID or a section here, then open only that file at that line.
 | [extensions/derived.md](extensions/derived.md#L40) | 40 | rule | DER-4.3 |
 | [extensions/derived.md](extensions/derived.md#L41) | 41 | rule | DER-4.4 |
 | [extensions/derived.md](extensions/derived.md#L43) | 43 | section | DER-5 Validation |
+| [extensions/derived.md](extensions/derived.md#L56) | 56 | section | DER-5.1 Validation details |
+| [extensions/derived.md](extensions/derived.md#L60) | 60 | rule | DER-5.1.1 |
+| [extensions/derived.md](extensions/derived.md#L61) | 61 | rule | DER-5.1.2 |
+| [extensions/derived.md](extensions/derived.md#L62) | 62 | rule | DER-5.1.3 |
+| [extensions/derived.md](extensions/derived.md#L63) | 63 | rule | DER-5.1.4 |
+| [extensions/derived.md](extensions/derived.md#L64) | 64 | rule | DER-5.1.5 |
+| [extensions/derived.md](extensions/derived.md#L65) | 65 | rule | DER-5.1.6 |
 | [extensions/population.md](extensions/population.md#L1) | 1 | section | Extension: population |
 | [extensions/population.md](extensions/population.md#L5) | 5 | section | POP-1 Purpose |
 | [extensions/population.md](extensions/population.md#L10) | 10 | section | POP-2 Schema |
@@ -384,6 +408,15 @@ Find a rule ID or a section here, then open only that file at that line.
 | [extensions/security.md](extensions/security.md#L57) | 57 | rule | SCY-4.3 |
 | [extensions/security.md](extensions/security.md#L59) | 59 | section | SCY-4a Confidentiality of the compiled plan |
 | [extensions/security.md](extensions/security.md#L63) | 63 | section | SCY-5 Validation |
+| [extensions/security.md](extensions/security.md#L79) | 79 | section | SCY-5.1 Validation details |
+| [extensions/security.md](extensions/security.md#L83) | 83 | rule | SCY-5.1.1 |
+| [extensions/security.md](extensions/security.md#L84) | 84 | rule | SCY-5.1.2 |
+| [extensions/security.md](extensions/security.md#L85) | 85 | rule | SCY-5.1.3 |
+| [extensions/security.md](extensions/security.md#L86) | 86 | rule | SCY-5.1.4 |
+| [extensions/security.md](extensions/security.md#L87) | 87 | rule | SCY-5.1.5 |
+| [extensions/security.md](extensions/security.md#L88) | 88 | rule | SCY-5.1.6 |
+| [extensions/security.md](extensions/security.md#L89) | 89 | rule | SCY-5.1.7 |
+| [extensions/security.md](extensions/security.md#L90) | 90 | rule | SCY-5.1.8 |
 | [extensions/summaries.md](extensions/summaries.md#L1) | 1 | section | Extension: summaries |
 | [extensions/summaries.md](extensions/summaries.md#L5) | 5 | section | SUM-1 Principle |
 | [extensions/summaries.md](extensions/summaries.md#L11) | 11 | section | SUM-2 Declaration |
