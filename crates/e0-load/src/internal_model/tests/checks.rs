@@ -4,9 +4,11 @@ use semantic_compiler_model::internal_model::{CheckKind, InternalModel};
 
 use super::hashes::widened;
 
+use semantic_compiler_contracts::types::audit_record::OssieFormat;
+
 use super::{
-    ADDITIVITY_CATALOG, ADDITIVITY_MODEL, CATALOG, MODEL, SUMMARIES_CATALOG, SUMMARIES_MODEL,
-    edited, fixture, load,
+    ADDITIVITY_CATALOG, ADDITIVITY_MODEL, CATALOG, DEVELOPMENT_CATALOG, DEVELOPMENT_MODEL, MODEL,
+    SUMMARIES_CATALOG, SUMMARIES_MODEL, edited, fixture, load, load_in_format,
 };
 
 fn identifiers(model: &InternalModel) -> Vec<String> {
@@ -47,7 +49,7 @@ fn e0h_4_3_populations_and_semi_additive_metrics_have_their_checks() {
         [
             "key_uniqueness:DEBT_CUSTOMERS",
             "orphan_keys:DEBT_CUSTOMERS",
-            "population:active_customers",
+            "population:ACTIVE_CUSTOMERS",
             "semi_additive:DEBT_BALANCE",
         ]
     );
@@ -123,4 +125,55 @@ fn chk_3_a_semi_additive_hash_follows_only_what_the_metric_reads() {
         definition_hash(&load(&kinds_differ, ADDITIVITY_CATALOG), check_id),
         definition_hash(&original, check_id)
     );
+}
+
+#[test]
+fn e0h_4_3_a_population_target_is_its_normalized_name() {
+    let quoted = ADDITIVITY_MODEL.replacen(
+        "\"name\": \"active_customers\"",
+        "\"name\": \"\\\"ACTIVE_CUSTOMERS\\\"\"",
+        1,
+    );
+    assert_ne!(quoted, ADDITIVITY_MODEL);
+    let check_id = "population:ACTIVE_CUSTOMERS";
+    let original = load(ADDITIVITY_MODEL, ADDITIVITY_CATALOG);
+    let model = load(&quoted, ADDITIVITY_CATALOG);
+    assert!(identifiers(&original).contains(&check_id.to_owned()));
+    assert_eq!(identifiers(&model), identifiers(&original));
+    assert_eq!(
+        definition_hash(&model, check_id),
+        definition_hash(&original, check_id)
+    );
+    let check = model
+        .parts()
+        .checks
+        .iter()
+        .find(|check| check.check_id == check_id)
+        .expect("the check is recorded");
+    assert_eq!(check.target, "ACTIVE_CUSTOMERS");
+}
+
+#[test]
+fn e0h_4_3_a_semi_additive_dataset_metric_is_qualified_by_its_dataset() {
+    let start = DEVELOPMENT_MODEL
+        .find("    metrics:\n      - name: customer_snapshot")
+        .expect("the customers metric");
+    let end = DEVELOPMENT_MODEL[start..]
+        .find("relationships:")
+        .map(|offset| start + offset)
+        .expect("the relationships");
+    let model_text = format!(
+        "{}{}",
+        &DEVELOPMENT_MODEL[..start],
+        &DEVELOPMENT_MODEL[end..]
+    );
+    let model = load_in_format(&model_text, DEVELOPMENT_CATALOG, OssieFormat::Development);
+    let check = model
+        .parts()
+        .checks
+        .iter()
+        .find(|check| check.kind == CheckKind::SemiAdditive)
+        .expect("the dataset metric has its check");
+    assert_eq!(check.check_id, "semi_additive:DEBT.DEBT_BALANCE");
+    assert_eq!(check.target, "DEBT.DEBT_BALANCE");
 }

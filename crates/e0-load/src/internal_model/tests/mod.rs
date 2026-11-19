@@ -36,6 +36,15 @@ const ADDITIVITY_MODEL: &str =
     include_str!("../../../../../conformance/models/e0-additivity/model.yaml");
 const ADDITIVITY_CATALOG: &str =
     include_str!("../../../../../conformance/models/e0-additivity/catalog-schema.json");
+/// The `e0-additivity-development-unreachable-001` model reads in the development format; its
+/// `customers` dataset metric is removed, so it loads with one semi-additive dataset metric,
+/// `debt.debt_balance`, in a dataset that reaches `over` and `entity`.
+const DEVELOPMENT_MODEL: &str = include_str!(
+    "../../../../../conformance/models/e0-additivity-development-unreachable-001/model.yaml"
+);
+const DEVELOPMENT_CATALOG: &str = include_str!(
+    "../../../../../conformance/models/e0-additivity-development-unreachable-001/catalog-schema.json"
+);
 const SUMMARIES_MODEL: &str =
     include_str!("../../../../../conformance/models/e0-summaries/model.yaml");
 const SUMMARIES_CATALOG: &str =
@@ -44,9 +53,14 @@ const SUMMARIES_CATALOG: &str =
 /// The internal model of `model`, read in the release format, against `catalog`, after every
 /// substage of E0.
 fn load(model: &str, catalog: &str) -> InternalModel {
+    load_in_format(model, catalog, OssieFormat::Release)
+}
+
+/// The internal model of `model`, read in `format`, against `catalog`, after every substage of
+/// E0.
+fn load_in_format(model: &str, catalog: &str, format: OssieFormat) -> InternalModel {
     let document = read_document(model.as_bytes()).expect("the document is read");
-    let structure =
-        validate_structure(&document, OssieFormat::Release, None).expect("the structure is valid");
+    let structure = validate_structure(&document, format, None).expect("the structure is valid");
     let catalog = admit_catalog_schema(catalog).expect("the catalog schema is admitted");
     let extensions = validate_extensions(&document, &structure.semantic_model, DEFAULT_NAMESPACE)
         .expect("the extensions are accepted");
