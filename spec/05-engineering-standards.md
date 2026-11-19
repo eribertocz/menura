@@ -26,7 +26,7 @@ contracts  ←  model  ←  expressions  ←  representations  ←  security  �
 | S6 | Dependencies point in one direction only; cycles are forbidden. | Workspace dependency graph test |
 | S7 | A stage depends only on the intermediate representation it consumes, never on another stage's internals. | Crate visibility (`pub(crate)`) and dependency allowlist |
 | S8 | Wrappers depend only on `core`. | Dependency allowlist |
-| S9 | Every representation passed between stages is a data type in a shared crate, never in a stage crate: the internal model (E0H) in `model`; the query tree (E1), the bound query (E2), the paths (E3) and the logical plan (E4, E5 and the integrity checks of E0H-4.2) in `representations`. These crates hold data and the constructors that keep it valid, never stage logic (S3). A stage crate exports only its stage function and its error type. | Workspace dependency graph test plus review |
+| S9 | Every representation passed between stages is a data type in a shared crate, never in a stage crate: the internal model (E0H) in `model`; the query tree (E1), the bound query (E2), the paths (E3) and the logical plan (E4, E5 and the integrity checks of CHK-4.2) in `representations`. These crates hold data and the constructors that keep it valid, never stage logic (S3). A stage crate exports only its stage function and its error type. | Workspace dependency graph test plus review |
 | S10 | Expression text (E0F-2) is parsed and normalized (E0H-1.3) in one place, the crate `expressions`, which produces the expression tree type of `model`. Every stage and `security` that reads expression text calls it; none has its own parser. | Workspace dependency graph test plus review |
 
 ## 5.3 Code quality

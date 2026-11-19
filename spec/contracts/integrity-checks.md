@@ -38,4 +38,11 @@ A change to any other element (another field of the same dataset, a description)
 
 - **CHK-3.1** A model change that affects a check changes its hash, so old evidence stops counting (CAT-7.3).
 
+## CHK-4 Use of evidence and generation
+
+Moved from E0H-4 at the 0.2.0 gate, because they are checked by the stages that use the checks (E4–E6, `integrity_checks`), not by E0.
+
+- **CHK-4.1** Without passing evidence for the current data versions, the compiler always takes the safe plan: left joins, deduplication by row identity, base relations. It never assumes referential integrity or cardinality.
+- **CHK-4.2** Checks are logical plans. The `core` crate passes them to the same generator as E6, so a check and a query never translate an expression differently, and E0 never depends on a generator (S7).
+
 Schema: [`schemas/integrity-checks.schema.json`](schemas/integrity-checks.schema.json) · Example: [`examples/integrity-checks.example.json`](examples/integrity-checks.example.json)
