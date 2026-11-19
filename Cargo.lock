@@ -983,6 +983,7 @@ name = "semantic-compiler-cli"
 version = "0.1.0"
 dependencies = [
  "semantic-compiler-core",
+ "serde_json",
 ]
 
 [[package]]
