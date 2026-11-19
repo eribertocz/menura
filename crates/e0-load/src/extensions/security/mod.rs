@@ -15,7 +15,7 @@ pub(crate) mod fixture;
 mod model;
 pub(crate) mod resolution;
 mod row_access;
-mod values;
+pub(in crate::extensions) mod values;
 
 pub(crate) use model::{DeclaredAccess, RowPolicy, Security, SecurityContextDeclaration};
 
