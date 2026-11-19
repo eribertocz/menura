@@ -30,6 +30,10 @@ Run in this order. A substage runs only if the substages it depends on succeeded
 | E0.g Classify metrics | E0.c, E0.f | [metrics.md](metrics.md) |
 | E0.h Build internal model | All above | [internal-model.md](internal-model.md) |
 
+- **E0-3.1** A substage **fails** when it reports a diagnostic whose disposition is *reject* (E0-4). Diagnostics with disposition *unusable* do not make it fail, so the substages that depend on it still run.
+- **E0-3.2** The catalog schema is admitted (CAT-9.1) before E0.a. Its errors (`ECAT-*`) come first in the report. E0.a–E0.c still run without it; E0.d and every substage after it need an admitted catalog schema.
+- **E0-3.3** The extension checks that the code table assigns to E0.d–E0.g run only if E0.c did not fail. The checks of the model's own elements in those substages run whatever E0.c reported.
+
 ## E0-4 Errors and unusable elements
 
 - **E0-4.1** Each E0 diagnostic has one **disposition**: *reject* (the model does not load), or *unusable* (the model loads, the element is marked unusable, and a load warning is reported). A query that names an unusable element fails with the element's **query error code**.

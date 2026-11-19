@@ -125,21 +125,22 @@ Find a rule ID or a section here, then open only that file at that line.
 | [08-conformance-suite.md](08-conformance-suite.md#L46) | 46 | rule | CS-2.5 |
 | [08-conformance-suite.md](08-conformance-suite.md#L47) | 47 | rule | CS-2.6 |
 | [08-conformance-suite.md](08-conformance-suite.md#L48) | 48 | rule | CS-2.7 |
-| [08-conformance-suite.md](08-conformance-suite.md#L50) | 50 | section | CS-3 Apache Ossie suites |
-| [08-conformance-suite.md](08-conformance-suite.md#L52) | 52 | rule | CS-3.1 |
-| [08-conformance-suite.md](08-conformance-suite.md#L53) | 53 | rule | CS-3.2 |
-| [08-conformance-suite.md](08-conformance-suite.md#L55) | 55 | section | CS-4 Running |
-| [08-conformance-suite.md](08-conformance-suite.md#L57) | 57 | rule | CS-4.1 |
-| [08-conformance-suite.md](08-conformance-suite.md#L58) | 58 | rule | CS-4.2 |
-| [08-conformance-suite.md](08-conformance-suite.md#L59) | 59 | rule | CS-4.3 |
-| [08-conformance-suite.md](08-conformance-suite.md#L60) | 60 | rule | CS-4.4 |
-| [08-conformance-suite.md](08-conformance-suite.md#L61) | 61 | rule | CS-4.5 |
-| [08-conformance-suite.md](08-conformance-suite.md#L62) | 62 | rule | CS-4.6 |
-| [08-conformance-suite.md](08-conformance-suite.md#L64) | 64 | section | CS-5 Producer suite |
-| [08-conformance-suite.md](08-conformance-suite.md#L69) | 69 | rule | CS-5.1 |
-| [08-conformance-suite.md](08-conformance-suite.md#L70) | 70 | rule | CS-5.2 |
-| [08-conformance-suite.md](08-conformance-suite.md#L71) | 71 | rule | CS-5.3 |
-| [08-conformance-suite.md](08-conformance-suite.md#L72) | 72 | rule | CS-5.4 |
+| [08-conformance-suite.md](08-conformance-suite.md#L49) | 49 | rule | CS-2.8 |
+| [08-conformance-suite.md](08-conformance-suite.md#L51) | 51 | section | CS-3 Apache Ossie suites |
+| [08-conformance-suite.md](08-conformance-suite.md#L53) | 53 | rule | CS-3.1 |
+| [08-conformance-suite.md](08-conformance-suite.md#L54) | 54 | rule | CS-3.2 |
+| [08-conformance-suite.md](08-conformance-suite.md#L56) | 56 | section | CS-4 Running |
+| [08-conformance-suite.md](08-conformance-suite.md#L58) | 58 | rule | CS-4.1 |
+| [08-conformance-suite.md](08-conformance-suite.md#L59) | 59 | rule | CS-4.2 |
+| [08-conformance-suite.md](08-conformance-suite.md#L60) | 60 | rule | CS-4.3 |
+| [08-conformance-suite.md](08-conformance-suite.md#L61) | 61 | rule | CS-4.4 |
+| [08-conformance-suite.md](08-conformance-suite.md#L62) | 62 | rule | CS-4.5 |
+| [08-conformance-suite.md](08-conformance-suite.md#L63) | 63 | rule | CS-4.6 |
+| [08-conformance-suite.md](08-conformance-suite.md#L65) | 65 | section | CS-5 Producer suite |
+| [08-conformance-suite.md](08-conformance-suite.md#L70) | 70 | rule | CS-5.1 |
+| [08-conformance-suite.md](08-conformance-suite.md#L71) | 71 | rule | CS-5.2 |
+| [08-conformance-suite.md](08-conformance-suite.md#L72) | 72 | rule | CS-5.3 |
+| [08-conformance-suite.md](08-conformance-suite.md#L73) | 73 | rule | CS-5.4 |
 | [09-continuous-integration.md](09-continuous-integration.md#L1) | 1 | section | 9. Continuous integration |
 | [09-continuous-integration.md](09-continuous-integration.md#L6) | 6 | section | CI-1 On every pull request and every push to `main` |
 | [09-continuous-integration.md](09-continuous-integration.md#L30) | 30 | section | CI-2 Scheduled |
@@ -450,11 +451,14 @@ Find a rule ID or a section here, then open only that file at that line.
 | [stages/E0/README.md](stages/E0/README.md#L8) | 8 | section | E0-2 Input and output |
 | [stages/E0/README.md](stages/E0/README.md#L16) | 16 | rule | E0-2.1 |
 | [stages/E0/README.md](stages/E0/README.md#L18) | 18 | section | E0-3 Substages |
-| [stages/E0/README.md](stages/E0/README.md#L33) | 33 | section | E0-4 Errors and unusable elements |
-| [stages/E0/README.md](stages/E0/README.md#L35) | 35 | rule | E0-4.1 |
-| [stages/E0/README.md](stages/E0/README.md#L36) | 36 | rule | E0-4.2 |
-| [stages/E0/README.md](stages/E0/README.md#L37) | 37 | rule | E0-4.3 |
-| [stages/E0/README.md](stages/E0/README.md#L54) | 54 | rule | E0-4.4 |
+| [stages/E0/README.md](stages/E0/README.md#L33) | 33 | rule | E0-3.1 |
+| [stages/E0/README.md](stages/E0/README.md#L34) | 34 | rule | E0-3.2 |
+| [stages/E0/README.md](stages/E0/README.md#L35) | 35 | rule | E0-3.3 |
+| [stages/E0/README.md](stages/E0/README.md#L37) | 37 | section | E0-4 Errors and unusable elements |
+| [stages/E0/README.md](stages/E0/README.md#L39) | 39 | rule | E0-4.1 |
+| [stages/E0/README.md](stages/E0/README.md#L40) | 40 | rule | E0-4.2 |
+| [stages/E0/README.md](stages/E0/README.md#L41) | 41 | rule | E0-4.3 |
+| [stages/E0/README.md](stages/E0/README.md#L58) | 58 | rule | E0-4.4 |
 | [stages/E0/expressions.md](stages/E0/expressions.md#L1) | 1 | section | E0.f Type expressions |
 | [stages/E0/expressions.md](stages/E0/expressions.md#L3) | 3 | section | E0F-1 Scope |
 | [stages/E0/expressions.md](stages/E0/expressions.md#L9) | 9 | section | E0F-2 Language |
@@ -513,13 +517,15 @@ Find a rule ID or a section here, then open only that file at that line.
 | [stages/E0/internal-model.md](stages/E0/internal-model.md#L10) | 10 | rule | E0H-1.4 |
 | [stages/E0/internal-model.md](stages/E0/internal-model.md#L11) | 11 | rule | E0H-1.5 |
 | [stages/E0/internal-model.md](stages/E0/internal-model.md#L13) | 13 | section | E0H-2 Content |
-| [stages/E0/internal-model.md](stages/E0/internal-model.md#L26) | 26 | section | E0H-3 Hashes |
-| [stages/E0/internal-model.md](stages/E0/internal-model.md#L28) | 28 | rule | E0H-3.1 |
-| [stages/E0/internal-model.md](stages/E0/internal-model.md#L29) | 29 | rule | E0H-3.2 |
-| [stages/E0/internal-model.md](stages/E0/internal-model.md#L30) | 30 | rule | E0H-3.3 |
-| [stages/E0/internal-model.md](stages/E0/internal-model.md#L32) | 32 | section | E0H-4 Integrity checks |
-| [stages/E0/internal-model.md](stages/E0/internal-model.md#L45) | 45 | rule | E0H-4.1 |
-| [stages/E0/internal-model.md](stages/E0/internal-model.md#L46) | 46 | rule | E0H-4.2 |
+| [stages/E0/internal-model.md](stages/E0/internal-model.md#L27) | 27 | section | E0H-3 Hashes |
+| [stages/E0/internal-model.md](stages/E0/internal-model.md#L29) | 29 | rule | E0H-3.1 |
+| [stages/E0/internal-model.md](stages/E0/internal-model.md#L30) | 30 | rule | E0H-3.2 |
+| [stages/E0/internal-model.md](stages/E0/internal-model.md#L31) | 31 | rule | E0H-3.3 |
+| [stages/E0/internal-model.md](stages/E0/internal-model.md#L32) | 32 | rule | E0H-3.4 |
+| [stages/E0/internal-model.md](stages/E0/internal-model.md#L34) | 34 | section | E0H-4 Integrity checks |
+| [stages/E0/internal-model.md](stages/E0/internal-model.md#L48) | 48 | rule | E0H-4.1 |
+| [stages/E0/internal-model.md](stages/E0/internal-model.md#L49) | 49 | rule | E0H-4.2 |
+| [stages/E0/internal-model.md](stages/E0/internal-model.md#L50) | 50 | rule | E0H-4.3 |
 | [stages/E0/metrics.md](stages/E0/metrics.md#L1) | 1 | section | E0.g Classify metrics |
 | [stages/E0/metrics.md](stages/E0/metrics.md#L3) | 3 | section | E0G-1 Components |
 | [stages/E0/metrics.md](stages/E0/metrics.md#L8) | 8 | rule | E0G-1.1 |
