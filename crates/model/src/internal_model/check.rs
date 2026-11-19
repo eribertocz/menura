@@ -31,7 +31,7 @@ impl CheckKind {
     }
 }
 
-/// One recorded integrity check; its SQL is generated later (E0H-4.2).
+/// One recorded integrity check; its SQL is generated later (CHK-4.2).
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct RecordedCheck {
     /// `<kind>:<target>` (CHK-2).
