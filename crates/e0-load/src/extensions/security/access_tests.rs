@@ -116,3 +116,14 @@ fn scy_5_1_3_e0c_03_repeats_in_access_lists() {
     let apart = r#"{"mode": "roles", "roles": ["admin"], "fields": [{"names": ["unit_cost"], "roles": ["admin"]}, {"names": ["unit_cost"], "roles": ["admin"]}]}"#;
     assert!(validate(&with_access(apart)).is_ok());
 }
+
+#[test]
+fn scy_5_1_3_e0c_03_empty_strings_in_access_lists() {
+    for access in [
+        r#"{"mode": "roles", "roles": ["analyst", ""]}"#,
+        r#"{"mode": "roles", "roles": ["admin"], "fields": [{"names": ["unit_cost", ""], "roles": ["admin"]}]}"#,
+        r#"{"mode": "roles", "roles": ["admin"], "fields": [{"names": ["unit_cost"], "roles": [""]}]}"#,
+    ] {
+        assert_eq!(access_codes(access), ["E0C-03"], "{access}");
+    }
+}

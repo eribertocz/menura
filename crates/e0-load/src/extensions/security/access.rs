@@ -87,7 +87,7 @@ fn read_mode(members: &Map<String, Json>, problems: &mut Problems) -> Option<Mod
 }
 
 /// `access.roles`: required with `mode: roles` and not empty (`E0C-42`), allowed only there
-/// (`E0C-43`), without repeats (`E0C-03`), and declared (`E0C-47`). Without a valid mode only
+/// (`E0C-43`), of non-empty strings without repeats (`E0C-03`), and declared (`E0C-47`). Without a valid mode only
 /// its value is read.
 fn read_mode_roles(
     members: &Map<String, Json>,
@@ -116,13 +116,34 @@ fn read_mode_roles(
         )),
         Some(Mode::Roles) | None => {}
     }
-    declared.check("`access.roles`", &found, problems);
+    check_roles("`access.roles`", value, &found, declared, problems);
     Some(found)
+}
+
+/// Records `E0C-03` when `roles`, the value `value` of `what`, holds an empty string, and
+/// `E0C-47` for each of its other roles the model does not declare: an empty string is a wrong
+/// value, not an undeclared role (SCY-5.1.3).
+fn check_roles(
+    what: &str,
+    value: &Json,
+    roles: &[Role],
+    declared: &DeclaredRoles,
+    problems: &mut Problems,
+) {
+    if roles.iter().any(|role| role.as_str().is_empty()) {
+        problems.push(wrong_value(what, value, "a list of non-empty strings"));
+    }
+    let named: Vec<Role> = roles
+        .iter()
+        .filter(|role| !role.as_str().is_empty())
+        .cloned()
+        .collect();
+    declared.check(what, &named, problems);
 }
 
 /// `access.fields`: allowed with `authenticated` and `roles` (`E0C-43`); a list of objects
 /// with exactly a non-empty `names` list and a non-empty `roles` list of declared roles, both
-/// without repeats.
+/// of non-empty strings without repeats.
 fn read_fields(
     value: &Json,
     mode: Option<Mode>,
@@ -147,26 +168,21 @@ fn read_fields(
         };
         let names = required(members, &what, NAMES, problems).and_then(|value| {
             let names = strings(value, &format!("the `names` of {what}"), problems)?;
-            if names.is_empty() || has_repeats(&names) {
+            if names.is_empty() || names.contains(&"") || has_repeats(&names) {
                 problems.push(wrong_value(
                     &format!("the `names` of {what}"),
                     value,
-                    "a non-empty list of strings without repeats",
+                    "a non-empty list of non-empty strings without repeats",
                 ));
             }
             Some(names)
         });
         let roles = required(members, &what, ROLES, problems).and_then(|value| {
-            roles(
-                value,
-                &format!("the `roles` of {what}"),
-                ListRule::NonEmptyWithoutRepeats,
-                problems,
-            )
+            let what = format!("the `roles` of {what}");
+            let found = roles(value, &what, ListRule::NonEmptyWithoutRepeats, problems)?;
+            check_roles(&what, value, &found, declared, problems);
+            Some(found)
         });
-        if let Some(roles) = &roles {
-            declared.check(&format!("the `roles` of {what}"), roles, problems);
-        }
         if let (Some(names), Some(roles)) = (names, roles) {
             restrictions.push(FieldRestriction {
                 names: names.into_iter().map(str::to_owned).collect(),

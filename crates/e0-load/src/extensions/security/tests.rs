@@ -233,6 +233,7 @@ fn scy_5_the_e0c_conformance_models_are_rejected_with_their_code() {
         ("e0-security-mode-001", "E0C-41", ORDERS_DATA),
         ("e0-security-empty-roles-001", "E0C-42", ORDERS_DATA),
         ("e0-security-repeated-role-001", "E0C-03", ORDERS_DATA),
+        ("e0-security-empty-role-001", "E0C-03", ORDERS_DATA),
         ("e0-security-mode-keys-001", "E0C-43", ORDERS_DATA),
         ("e0-security-internal-001", "E0C-44", NOTES_DATA),
         ("e0-security-duplicate-policy-001", "E0C-45", NOTES_DATA),

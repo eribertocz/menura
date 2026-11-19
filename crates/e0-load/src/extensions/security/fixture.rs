@@ -2,7 +2,7 @@
 //! of the security extension in E0.c, E0.d and E0.f.
 
 /// The model document of every `e0-security*` conformance model, by name.
-const MODELS: [(&str, &str); 19] = [
+const MODELS: [(&str, &str); 20] = [
     (
         "e0-security",
         include_str!("../../../../../conformance/models/e0-security/model.yaml"),
@@ -90,6 +90,10 @@ const MODELS: [(&str, &str); 19] = [
     (
         "e0-security-repeated-role-001",
         include_str!("../../../../../conformance/models/e0-security-repeated-role-001/model.yaml"),
+    ),
+    (
+        "e0-security-empty-role-001",
+        include_str!("../../../../../conformance/models/e0-security-empty-role-001/model.yaml"),
     ),
 ];
 
