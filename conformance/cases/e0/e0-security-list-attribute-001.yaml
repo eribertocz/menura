@@ -1,0 +1,6 @@
+id: e0-security-list-attribute-001
+rules: [SCY-4.1, SCY-5, SCY-5.1.6, E0C-48]
+model: e0-security-list-attribute-001
+expect:
+  outcome: load_error
+  error: E0C-48

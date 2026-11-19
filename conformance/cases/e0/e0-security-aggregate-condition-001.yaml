@@ -1,0 +1,6 @@
+id: e0-security-aggregate-condition-001
+rules: [SCY-4.2, SCY-5.1.6, E0C-46]
+model: e0-security-aggregate-condition-001
+expect:
+  outcome: load_error
+  error: E0C-46

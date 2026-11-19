@@ -1,0 +1,6 @@
+id: e0-security-unknown-key-001
+rules: [SCY-5.1.2, E0C-2.4, E0C-02]
+model: e0-security-unknown-key-001
+expect:
+  outcome: load_error
+  error: E0C-02

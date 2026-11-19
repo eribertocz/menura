@@ -1,0 +1,6 @@
+id: e0-security-empty-roles-001
+rules: [SCY-5, SCY-5.1.3, E0C-42]
+model: e0-security-empty-roles-001
+expect:
+  outcome: load_error
+  error: E0C-42

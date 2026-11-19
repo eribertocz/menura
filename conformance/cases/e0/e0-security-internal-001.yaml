@@ -1,0 +1,6 @@
+id: e0-security-internal-001
+rules: [SCY-3, SCY-5, E0C-44]
+model: e0-security-internal-001
+expect:
+  outcome: load_error
+  error: E0C-44

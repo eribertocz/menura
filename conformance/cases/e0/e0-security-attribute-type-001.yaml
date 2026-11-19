@@ -1,0 +1,6 @@
+id: e0-security-attribute-type-001
+rules: [SCY-2.2, SCY-5.1.2, E0C-03]
+model: e0-security-attribute-type-001
+expect:
+  outcome: load_error
+  error: E0C-03

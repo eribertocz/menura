@@ -1,0 +1,6 @@
+id: e0-security-duplicate-policy-001
+rules: [SCY-4, SCY-5, SCY-5.1.1, SCY-5.1.5, E0C-45]
+model: e0-security-duplicate-policy-001
+expect:
+  outcome: load_error
+  error: E0C-45
