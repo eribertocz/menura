@@ -16,6 +16,7 @@ use super::finding::Finding;
 use super::output::ElementKind;
 use super::scope::Scope;
 use super::walk::references;
+use crate::extensions::summaries::SummaryDatasets;
 use crate::names::Name;
 use crate::outline::ElementOutline;
 
@@ -49,13 +50,18 @@ pub(crate) fn column_findings(scope: &Scope<'_, '_>) -> Vec<Finding> {
 }
 
 /// Every `E0D-04` finding of the model metrics: one per metric that refers to a missing dataset
-/// or field.
-pub(crate) fn metric_findings(scope: &Scope<'_, '_>) -> Vec<Finding> {
+/// or field. A dataset of `summaries` is missing to a metric (SUM-6.1.7).
+pub(crate) fn metric_findings(scope: &Scope<'_, '_>, summaries: &SummaryDatasets) -> Vec<Finding> {
     let mut findings = Vec::new();
     for element in &scope.model.metrics {
         let missing = missing_names(scope, element, |reference| {
             reference.qualifier.as_ref().is_some_and(|qualifier| {
-                !exists(scope, &Name::of(qualifier), &Name::of(&reference.name))
+                !exists(
+                    scope,
+                    summaries,
+                    &Name::of(qualifier),
+                    &Name::of(&reference.name),
+                )
             })
         });
         if let Some(missing) = missing {
@@ -99,10 +105,12 @@ pub(crate) fn form_findings(scope: &Scope<'_, '_>) -> Vec<Finding> {
     field_findings.chain(metric_findings).collect()
 }
 
-/// Whether the model has a dataset `dataset` with a field `name`.
-fn exists(scope: &Scope<'_, '_>, dataset: &Name, name: &Name) -> bool {
+/// Whether the model has a dataset `dataset` that is not one of `summaries`, with a field
+/// `name`.
+fn exists(scope: &Scope<'_, '_>, summaries: &SummaryDatasets, dataset: &Name, name: &Name) -> bool {
     scope
         .dataset(dataset)
+        .filter(|dataset| !summaries.contains(&dataset.pointer))
         .is_some_and(|dataset| dataset.field(name).is_some())
 }
 

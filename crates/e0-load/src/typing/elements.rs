@@ -12,6 +12,7 @@ use super::scope::{Relation, Scope};
 use super::stop::{Outcome, Stop, problem};
 use super::typer::{Aggregates, ExpressionTyper};
 use super::value_type::{ExpressionType, Typed};
+use crate::extensions::summaries::SummaryDatasets;
 use crate::names::Name;
 use crate::outline::ElementOutline;
 use crate::pointer::JsonPointer;
@@ -51,14 +52,16 @@ pub(crate) fn type_fields<'model>(scope: &Scope<'model, '_>) -> ElementTypes<'mo
     found
 }
 
-/// Types every metric but the derived metrics of `derived`, reading the types of `fields`.
+/// Types every metric but the derived metrics of `derived`, reading the types of `fields`. A
+/// field of a dataset of `summaries` is missing to a metric (SUM-6.1.7).
 pub(crate) fn type_metrics<'model>(
     scope: &Scope<'model, '_>,
     fields: &HashMap<&JsonPointer, Typed>,
     derived: &DerivedMetrics,
+    summaries: &SummaryDatasets,
 ) -> ElementTypes<'model> {
     let mut found = ElementTypes::default();
-    let resolve = |reference: &Reference| field_type(scope, fields, reference);
+    let resolve = |reference: &Reference| field_type(scope, fields, summaries, reference);
     for metric in &scope.model.metrics {
         if derived.metric(&metric.pointer).is_some() {
             continue;
@@ -145,11 +148,13 @@ pub(super) fn column(relation: &Relation<'_>, name: &Identifier) -> Outcome<Type
     Ok(Typed::value(column.logical_type.clone(), column.nullable))
 }
 
-/// The type of a field read by a metric expression as `dataset.field`. A missing field is
-/// reported by E0.d, and a field without a type by its own check.
+/// The type of a field read by a metric expression as `dataset.field`. A missing field, and a
+/// field of one of `summaries`, are reported by E0.d, and a field without a type by its own
+/// check.
 fn field_type(
     scope: &Scope<'_, '_>,
     fields: &HashMap<&JsonPointer, Typed>,
+    summaries: &SummaryDatasets,
     reference: &Reference,
 ) -> Outcome<Typed> {
     let qualifier = reference
@@ -158,6 +163,7 @@ fn field_type(
         .ok_or(Stop::ReportedElsewhere)?;
     scope
         .dataset(&Name::of(qualifier))
+        .filter(|dataset| !summaries.contains(&dataset.pointer))
         .and_then(|dataset| dataset.field(&Name::of(&reference.name)))
         .and_then(|field| fields.get(&field.pointer))
         .cloned()

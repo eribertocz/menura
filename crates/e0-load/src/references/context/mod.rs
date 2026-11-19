@@ -5,7 +5,7 @@
 //! expression is exactly one `AGG(…)` term that names it. A base that names no model metric,
 //! an expression of another form, and a metric that is both context and derived are `E0C-60`;
 //! a base that is itself a context metric is `E0C-64`; a `remove` field whose dataset or field
-//! does not exist is `E0C-63`. Each rejects the model (E0-4 table), and is located at the
+//! does not exist, or whose dataset is a summary (SUM-6.1.7), is `E0C-63`. Each rejects the model (E0-4 table), and is located at the
 //! `data` member of the metric's entry of ours (E0C-2.6).
 
 mod output;
@@ -27,7 +27,8 @@ use crate::read::Node;
 use crate::structure::Structure;
 
 /// What resolving context metrics reads: the model metrics and datasets by name, and the tree
-/// of every model metric that parses.
+/// of every model metric that parses. Summaries are left out: no model element may name them
+/// (SUM-6.1.7).
 struct Model<'model, 'document> {
     metrics: HashMap<&'model Name, &'model ElementOutline<'document>>,
     datasets: HashMap<&'model Name, &'model DatasetOutline<'document>>,
@@ -51,14 +52,16 @@ pub fn resolve_context_references(
         &structure.semantic_model.pointer,
     );
     let trees = metric_trees(structure);
+    let mut datasets = first_by_name(
+        outline
+            .datasets
+            .iter()
+            .map(|dataset| (&dataset.name, dataset)),
+    );
+    datasets.retain(|_, dataset| !extensions.is_summary(&dataset.pointer));
     let model = Model {
         metrics: first_by_name(outline.metrics.iter().map(|metric| (&metric.name, metric))),
-        datasets: first_by_name(
-            outline
-                .datasets
-                .iter()
-                .map(|dataset| (&dataset.name, dataset)),
-        ),
+        datasets,
         trees,
     };
     let mut found = ContextMetrics::default();

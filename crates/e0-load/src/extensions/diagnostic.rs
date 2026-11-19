@@ -145,6 +145,10 @@ pub enum ExtensionCode {
 impl ExtensionCode {
     /// The code as the specification writes it, such as `E0C-04`.
     #[must_use]
+    #[expect(
+        clippy::too_many_lines,
+        reason = "a flat table with one arm per specification code; splitting it would need a fallback arm for codes that cannot occur"
+    )]
     pub fn as_str(self) -> &'static str {
         match self {
             Self::Version => "E0C-01",

@@ -150,7 +150,11 @@ pub(super) fn has_repeats(names: &[&str]) -> bool {
 }
 
 /// The `E0C-03` problem of `what`, whose value `value` is not `expected`.
-pub(in crate::extensions) fn wrong_value(what: &str, value: &Json, expected: &str) -> (ExtensionCode, String) {
+pub(in crate::extensions) fn wrong_value(
+    what: &str,
+    value: &Json,
+    expected: &str,
+) -> (ExtensionCode, String) {
     (
         ExtensionCode::WrongValue,
         format!("{what} is {value}, not {expected}"),

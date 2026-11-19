@@ -3,6 +3,10 @@
 
 use std::collections::BTreeSet;
 
+use super::AGGREGATE;
+use crate::extensions::entry::{EntryKind, classify};
+use crate::extensions::objects::extension_entries;
+use crate::extensions::output::ObjectKind;
 use crate::pointer::JsonPointer;
 use crate::structure::SelectedModel;
 
@@ -26,8 +30,19 @@ impl SummaryDatasets {
 }
 
 /// The summary datasets of the selected semantic model `model`, with the load option
-/// `namespace` (MDL-2.3).
+/// `namespace` (MDL-2.3). The entries are read as E0.c reads them (E0C-1), without applying
+/// any other rule of E0.c, so a summary is recognized even when E0.c rejects its entry.
 pub(crate) fn summary_datasets(model: &SelectedModel<'_>, namespace: &str) -> SummaryDatasets {
-    let _ = (model, namespace);
-    SummaryDatasets::default()
+    let datasets = extension_entries(model.node, &model.pointer)
+        .into_iter()
+        .filter(|entry| entry.object == ObjectKind::Dataset)
+        .filter(|entry| {
+            matches!(
+                classify(entry, namespace),
+                EntryKind::Ours(data) if data.members.contains_key(AGGREGATE)
+            )
+        })
+        .map(|entry| entry.object_pointer)
+        .collect();
+    SummaryDatasets { datasets }
 }

@@ -3,11 +3,13 @@
 
 use semantic_compiler_contracts::types::audit_record::OssieFormat;
 
+use super::datasets::summary_datasets;
 use super::fixture::{
     ACCESS, AGGREGATE, MODEL, SUMMARY, SUMMARY_DATA, conformance_model, with_aggregate,
     with_changed, with_members,
 };
-use super::{Grain, SummaryDimension, SummaryMeasure, summary_datasets};
+use super::model::Grain;
+use super::{SummaryDimension, SummaryMeasure};
 use crate::extensions::output::{Extensions, ExtensionsFailure};
 use crate::extensions::{DEFAULT_NAMESPACE, validate_extensions};
 use crate::pointer::JsonPointer;

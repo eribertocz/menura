@@ -19,7 +19,8 @@
 //! `E0C-35`, DER-5.1.3, DER-5.1.4, CTX-5.1.5, CTX-5.1.7), and the kind of the time dimension of
 //! context metrics by [`context::check_context_time_kinds`] (`E0C-61`, CTX-5.1.4). The
 //! conditions of row policies are parsed and typed by [`security::type_row_policies`]
-//! (`E0C-46`, `E0C-48`, SCY-5.1.6). `AGG(…)` in a field or a dataset metric is `E0F-02`
+//! (`E0C-46`, `E0C-48`, SCY-5.1.6), and the measures and dimensions of summaries by
+//! [`summaries::type_summaries`] (`E0C-52`, `E0C-53`, `E0C-57`, SUM-6.1.3 to SUM-6.1.5). `AGG(…)` in a field or a dataset metric is `E0F-02`
 //! (DER-5.1.2).
 
 pub(crate) mod additivity;
@@ -64,7 +65,9 @@ use scope::Scope;
 
 /// Types the expressions of the semantic model that `structure` selected in `document`,
 /// against `catalog`, the admitted catalog schema document. The formulas of the derived metrics
-/// E0.d found in `derived` are left to [`derived::type_derived_metrics`] (DER-5.1.3).
+/// E0.d found in `derived` are left to [`derived::type_derived_metrics`] (DER-5.1.3). A metric
+/// reference to a dataset of `summaries` is missing, as E0.d reports it (SUM-6.1.7): the
+/// metric gets no type and no typing diagnostic for it.
 ///
 /// Typed elements and unusable elements are in document order; diagnostics are in document
 /// order, then by code (E0-4.3).
@@ -75,7 +78,6 @@ pub fn type_expressions(
     derived: &DerivedMetrics,
     summaries: &SummaryDatasets,
 ) -> Typing {
-    let _ = summaries;
     let model = outline(
         structure.semantic_model.node,
         &structure.semantic_model.pointer,
@@ -83,7 +85,7 @@ pub fn type_expressions(
     let scope = Scope::new(&model, catalog, &structure.expressions);
     let fields = type_fields(&scope);
     let dataset_metrics = type_dataset_metrics(&scope, &fields.types);
-    let metrics = type_metrics(&scope, &fields.types, derived);
+    let metrics = type_metrics(&scope, &fields.types, derived, summaries);
     let mut findings = keys::key_findings(&scope, &fields.types);
     let mut elements = typed_elements(&fields, ElementKind::Field);
     elements.extend(typed_elements(&dataset_metrics, ElementKind::DatasetMetric));

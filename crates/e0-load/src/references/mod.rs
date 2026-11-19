@@ -15,7 +15,11 @@
 //! DER-5.1.2), and the base and removed fields of context metrics by
 //! [`context::resolve_context_references`] (`E0C-60`, `E0C-63`, `E0C-64`, CTX-5.1.3), and the
 //! fields and roles of `access.fields` by [`security::resolve_security_references`]
-//! (`E0C-49`, SCY-5.1.4).
+//! (`E0C-49`, SCY-5.1.4), and the names of summaries by
+//! [`summaries::resolve_summary_references`] (`E0C-50`, `E0C-51`, `E0C-54`, SUM-6.1.2).
+//!
+//! A summary is not a dataset other model elements may name (SUM-6.1.7): a metric that refers
+//! to it gets `E0D-04`, as if the dataset were missing.
 
 pub(crate) mod context;
 mod dataset_metric_references;
@@ -50,7 +54,8 @@ use finding::Finding;
 use scope::Scope;
 
 /// Resolves the references of the semantic model that `structure` selected in `document`,
-/// against `catalog`, the admitted catalog schema document.
+/// against `catalog`, the admitted catalog schema document. `summaries` are the summary
+/// datasets of the model, which a metric may not name (SUM-6.1.7).
 ///
 /// Diagnostics are sorted in document order, then by code (E0-4.3).
 ///
@@ -64,7 +69,6 @@ pub fn resolve_references(
     catalog: &CatalogSchemaDocument,
     summaries: &SummaryDatasets,
 ) -> Result<References, ReferenceRejection> {
-    let _ = summaries;
     let model = outline(
         structure.semantic_model.node,
         &structure.semantic_model.pointer,
@@ -75,7 +79,7 @@ pub fn resolve_references(
     findings.extend(sources::source_findings(&scope));
     findings.extend(query_sources::query_source_findings(&scope));
     findings.extend(expression_references::column_findings(&scope));
-    findings.extend(expression_references::metric_findings(&scope));
+    findings.extend(expression_references::metric_findings(&scope, summaries));
     findings.extend(expression_references::form_findings(&scope));
     findings.extend(dataset_metric_references::dataset_metric_findings(&scope));
     findings.extend(keys::dataset_key_findings(&scope));

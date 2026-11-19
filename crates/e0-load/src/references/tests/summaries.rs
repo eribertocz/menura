@@ -5,10 +5,10 @@ use semantic_compiler_contracts::admit_catalog_schema;
 use semantic_compiler_contracts::types::audit_record::OssieFormat;
 
 use super::{pair, summary, unusable};
+use crate::extensions::summaries::datasets::summary_datasets;
 use crate::extensions::summaries::fixture::{
     CATALOG, MODEL, SUMMARY_DATA, conformance_model, with_aggregate, with_changed, with_text,
 };
-use crate::extensions::summaries::summary_datasets;
 use crate::extensions::{DEFAULT_NAMESPACE, validate_extensions};
 use crate::read::read_document;
 use crate::references::context::resolve_context_references;

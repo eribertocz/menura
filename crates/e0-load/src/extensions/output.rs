@@ -110,8 +110,8 @@ impl Extensions {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ExtensionsFailure {
     /// The rejecting diagnostics, `E0C-01` to `E0C-06`, `E0C-10`, `E0C-11`, `E0C-13` to
-    /// `E0C-15`, `E0C-20`, `E0C-21`, `E0C-36`, `E0C-41` to `E0C-45`, `E0C-47` and `E0C-62`,
-    /// in document order then by code; never empty.
+    /// `E0C-15`, `E0C-20`, `E0C-21`, `E0C-36`, `E0C-41` to `E0C-45`, `E0C-47`, `E0C-50`,
+    /// `E0C-55`, `E0C-56` and `E0C-62`, in document order then by code; never empty.
     pub errors: Vec<ExtensionDiagnostic>,
     /// `W0C-01` warnings, in document order, reported with the errors (E0-2).
     pub warnings: Vec<ExtensionDiagnostic>,
