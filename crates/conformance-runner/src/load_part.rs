@@ -1,12 +1,15 @@
 //! The load part of a case (CS-2.8): the model of the case is loaded through `core`, and the
 //! result is compared with the expectation. A `load_error` case is checked fully; for the other
 //! outcomes, the model must load with the expected warnings, and the query part stays pending.
+//! The expected location of the first error is compared as CS-2.9 says.
 
 use std::path::Path;
 
-use semantic_compiler_core::{Diagnostic, LoadOptions, load};
+use semantic_compiler_core::{
+    CompileErrorDocument, Diagnostic, DiagnosticLocation, InputDocument, LoadOptions, load,
+};
 
-use crate::case::{Case, Outcome};
+use crate::case::{Case, Expectation, ExpectedLocation, Outcome};
 use crate::error::RunnerError;
 use crate::fixture::read_bytes;
 use crate::report::CaseStatus;
@@ -55,23 +58,7 @@ pub(crate) fn check_load(
     );
     let expect = &case.expect;
     match (loaded, expect.outcome) {
-        (Err(error), Outcome::LoadError) => {
-            let first = error
-                .errors
-                .first()
-                .map(|diagnostic| diagnostic.code.as_str());
-            if first != expect.error.as_deref() {
-                return CaseStatus::Failed(format!(
-                    "the first load error is {}, expected {}",
-                    describe(error.errors.first()),
-                    expect.error.as_deref().unwrap_or("none")
-                ));
-            }
-            match missing_warnings(&expect.warnings, error.warnings.iter()) {
-                Some(reason) => CaseStatus::Failed(reason),
-                None => CaseStatus::Passed,
-            }
-        }
+        (Err(error), Outcome::LoadError) => check_load_error(expect, &error),
         (Err(error), _) => CaseStatus::Failed(format!(
             "the model does not load: {}",
             describe(error.errors.first())
@@ -84,6 +71,31 @@ pub(crate) fn check_load(
             Some(reason) => CaseStatus::Failed(reason),
             None => CaseStatus::Pending(QUERY_PENDING_REASON.to_owned()),
         },
+    }
+}
+
+/// Compares a rejected load with the expectation of a `load_error` case: the first error code,
+/// its location when the case gives one (CS-2.9), and the expected warnings.
+fn check_load_error(expect: &Expectation, error: &CompileErrorDocument) -> CaseStatus {
+    let first = error.errors.first();
+    if first.map(|diagnostic| diagnostic.code.as_str()) != expect.error.as_deref() {
+        return CaseStatus::Failed(format!(
+            "the first load error is {}, expected {}",
+            describe(first),
+            expect.error.as_deref().unwrap_or("none")
+        ));
+    }
+    let reported_location = first.and_then(|diagnostic| diagnostic.location.as_ref());
+    if let Some(reason) = expect
+        .location
+        .as_ref()
+        .and_then(|expected| location_mismatch(expected, reported_location))
+    {
+        return CaseStatus::Failed(reason);
+    }
+    match missing_warnings(&expect.warnings, error.warnings.iter()) {
+        Some(reason) => CaseStatus::Failed(reason),
+        None => CaseStatus::Passed,
     }
 }
 
@@ -104,6 +116,58 @@ fn missing_warnings<'report>(
         remaining.remove(index);
     }
     None
+}
+
+/// Why the location of the first error differs from `expected`, or `None` when it matches:
+/// `document` and `pointer` exactly, and `line` and `column` when the case gives them (CS-2.9).
+fn location_mismatch(
+    expected: &ExpectedLocation,
+    reported: Option<&DiagnosticLocation>,
+) -> Option<String> {
+    let Some(reported) = reported else {
+        return Some("the first load error has no location, but the case expects one".to_owned());
+    };
+    let matches = expected.document == reported.document
+        && expected.pointer == reported.pointer
+        && expected.line.is_none_or(|line| reported.line == Some(line))
+        && expected
+            .column
+            .is_none_or(|column| reported.column == Some(column));
+    if matches {
+        None
+    } else {
+        Some(format!(
+            "the location of the first load error is {}, expected {}",
+            describe_location(
+                reported.document,
+                &reported.pointer,
+                reported.line,
+                reported.column
+            ),
+            describe_location(
+                expected.document,
+                &expected.pointer,
+                expected.line,
+                expected.column
+            )
+        ))
+    }
+}
+
+/// A location as `document pointer line:column`, for failure reasons.
+fn describe_location(
+    document: InputDocument,
+    pointer: &str,
+    line: Option<u64>,
+    column: Option<u64>,
+) -> String {
+    let position =
+        |value: Option<u64>| value.map_or_else(|| "-".to_owned(), |value| value.to_string());
+    format!(
+        "{document:?} `{pointer}` {}:{}",
+        position(line),
+        position(column)
+    )
 }
 
 /// A diagnostic as `CODE (message)`, for failure reasons.
@@ -215,5 +279,95 @@ expect: {outcome: plan, rows: sample-plan-001.csv}
         let expected = ["W0F-01".to_owned(), "W0F-01".to_owned()];
         assert!(missing_warnings(&expected, reported.iter()).is_some());
         assert!(missing_warnings(&expected[..1], reported.iter()).is_none());
+    }
+
+    const LOCATED_MISSING_SOURCE: &str = "
+id: sample-load-error-001
+rules: [CS-2.9]
+model: sample-missing-source
+expect:
+  outcome: load_error
+  error: E0D-02
+  location: {document: model, pointer: /semantic_model/0/datasets/0/source, line: 10, column: 17}
+";
+
+    #[test]
+    fn cs_2_9_a_load_error_case_passes_when_its_location_matches() {
+        assert_eq!(
+            status(LOCATED_MISSING_SOURCE, "sample-missing-source"),
+            CaseStatus::Passed
+        );
+    }
+
+    #[test]
+    fn cs_2_9_a_load_error_case_passes_without_line_and_column() {
+        let case = LOCATED_MISSING_SOURCE.replace(", line: 10, column: 17", "");
+        assert_eq!(status(&case, "sample-missing-source"), CaseStatus::Passed);
+    }
+
+    fn assert_location_fails(case: &str) {
+        let CaseStatus::Failed(reason) = status(case, "sample-missing-source") else {
+            panic!("the case fails");
+        };
+        assert!(reason.contains("location"), "{reason}");
+    }
+
+    #[test]
+    fn cs_2_9_a_different_document_fails() {
+        assert_location_fails(
+            &LOCATED_MISSING_SOURCE.replace("document: model", "document: catalog_schema"),
+        );
+    }
+
+    #[test]
+    fn cs_2_9_a_different_pointer_fails() {
+        assert_location_fails(&LOCATED_MISSING_SOURCE.replace("datasets/0/source", "datasets/0"));
+    }
+
+    #[test]
+    fn cs_2_9_a_different_line_fails() {
+        assert_location_fails(&LOCATED_MISSING_SOURCE.replace("line: 10", "line: 11"));
+    }
+
+    #[test]
+    fn cs_2_9_a_different_column_fails() {
+        assert_location_fails(&LOCATED_MISSING_SOURCE.replace("column: 17", "column: 1"));
+    }
+
+    fn expected_location(line: Option<u64>, column: Option<u64>) -> ExpectedLocation {
+        ExpectedLocation {
+            document: InputDocument::Model,
+            pointer: "/a".to_owned(),
+            line,
+            column,
+        }
+    }
+
+    fn diagnostic_location(line: Option<u64>, column: Option<u64>) -> DiagnosticLocation {
+        DiagnosticLocation {
+            document: InputDocument::Model,
+            pointer: "/a".to_owned(),
+            line,
+            column,
+        }
+    }
+
+    #[test]
+    fn cs_2_9_a_first_error_without_location_fails() {
+        assert!(location_mismatch(&expected_location(None, None), None).is_some());
+    }
+
+    #[test]
+    fn cs_2_9_an_expected_line_needs_a_reported_line() {
+        let reported = diagnostic_location(None, None);
+        assert!(location_mismatch(&expected_location(Some(1), None), Some(&reported)).is_some());
+        assert!(location_mismatch(&expected_location(None, Some(1)), Some(&reported)).is_some());
+    }
+
+    #[test]
+    fn cs_2_9_line_and_column_are_compared_only_when_the_case_gives_them() {
+        let reported = diagnostic_location(Some(3), Some(4));
+        assert!(location_mismatch(&expected_location(None, None), Some(&reported)).is_none());
+        assert!(location_mismatch(&expected_location(Some(3), Some(4)), Some(&reported)).is_none());
     }
 }

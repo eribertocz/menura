@@ -57,6 +57,7 @@ fn check_file_name(case: &Case, path: &Path) -> Result<(), RunnerErrorKind> {
 #[cfg(test)]
 mod tests {
     use semantic_compiler_contracts::types::audit_record::OssieFormat;
+    use semantic_compiler_contracts::types::compiled_plan::InputDocument;
 
     use super::*;
 
@@ -173,6 +174,69 @@ expect: {outcome: load_error, error: E0D-02}
         let text = PLAN_CASE.replace(
             "model: sample",
             "model: sample\nload_options: {ossie_format: nightly}",
+        );
+        assert!(matches!(
+            parse_case(&text),
+            Err(RunnerErrorKind::Malformed(_))
+        ));
+    }
+
+    const LOAD_ERROR_CASE: &str = "
+id: sample-load-error-001
+rules: [CS-2.9]
+model: sample
+expect: {outcome: load_error, error: E0D-02}
+";
+
+    #[test]
+    fn cs_2_9_reads_a_case_without_location() {
+        assert_eq!(parse_case(LOAD_ERROR_CASE).unwrap().expect.location, None);
+    }
+
+    #[test]
+    fn cs_2_9_reads_the_location_of_the_first_error() {
+        let text = LOAD_ERROR_CASE.replace(
+            "error: E0D-02}",
+            "error: E0D-02, location: {document: model, pointer: /semantic_model/0, line: 7, \
+             column: 9}}",
+        );
+        let location = parse_case(&text).unwrap().expect.location.unwrap();
+        assert_eq!(location.document, InputDocument::Model);
+        assert_eq!(location.pointer, "/semantic_model/0");
+        assert_eq!(location.line, Some(7));
+        assert_eq!(location.column, Some(9));
+    }
+
+    #[test]
+    fn cs_2_9_reads_a_location_without_line_and_column() {
+        let text = LOAD_ERROR_CASE.replace(
+            "error: E0D-02}",
+            "error: E0D-02, location: {document: catalog_schema, pointer: ''}}",
+        );
+        let location = parse_case(&text).unwrap().expect.location.unwrap();
+        assert_eq!(location.document, InputDocument::CatalogSchema);
+        assert_eq!(location.pointer, "");
+        assert_eq!(location.line, None);
+        assert_eq!(location.column, None);
+    }
+
+    #[test]
+    fn cs_2_9_rejects_a_location_without_pointer() {
+        let text = LOAD_ERROR_CASE.replace(
+            "error: E0D-02}",
+            "error: E0D-02, location: {document: model}}",
+        );
+        assert!(matches!(
+            parse_case(&text),
+            Err(RunnerErrorKind::Malformed(_))
+        ));
+    }
+
+    #[test]
+    fn cs_2_9_rejects_an_unknown_location_field() {
+        let text = LOAD_ERROR_CASE.replace(
+            "error: E0D-02}",
+            "error: E0D-02, location: {document: model, pointer: '', offset: 3}}",
         );
         assert!(matches!(
             parse_case(&text),
