@@ -135,7 +135,7 @@ and have no effect, because these aggregates ignore NULLs.
 | `TIMESTAMP`, `TIMESTAMP_NTZ` | timestamp without time zone, precision `us` |
 
 - **E0F-11.1** Any other type name, `DECIMAL` without precision, and parameters on any other type are `E0F-02`.
-- **E0F-11.2** Text converts only from the ISO forms of E0F-9.3. A conversion that fails, or a value that does not fit, is an execution error, never NULL. A conversion to fewer fractional digits rounds half away from zero, like `ROUND`.
+- **E0F-11.2** Text converts only from the ISO forms of E0F-9.3. For a number, that is a number literal form of E0F-9.3, optionally preceded by one `-` and with no spaces. A conversion that fails, or a value that does not fit, is an execution error, never NULL. A conversion to fewer fractional digits rounds half away from zero, like `ROUND`.
 
 ## E0F-3 Implicit conversions
 
