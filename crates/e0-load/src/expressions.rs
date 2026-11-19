@@ -2,14 +2,6 @@
 //! normalized tree through the crate `semantic-compiler-expressions`, the only expression
 //! parser (S10), and turns a failure into the element's E0 diagnostic (E0-4.1, E0F-8).
 
-#![cfg_attr(
-    not(test),
-    expect(
-        dead_code,
-        reason = "called by the E0 stage function, which issue #45 adds; until then only the tests call it"
-    )
-)]
-
 use semantic_compiler_expressions::{ExpressionCode, ExpressionError, ExpressionErrorKind, parse};
 use semantic_compiler_model::expression::Expression;
 

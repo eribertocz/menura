@@ -5,6 +5,13 @@
 use semantic_compiler_contracts::types::audit_record::OssieFormat;
 
 /// Where an embedded JSON Schema was copied from.
+#[cfg_attr(
+    not(test),
+    expect(
+        dead_code,
+        reason = "the record of where the embedded schema comes from is checked only by the structure tests"
+    )
+)]
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct SchemaSource {
     /// The repository.
@@ -18,6 +25,13 @@ pub struct SchemaSource {
 }
 
 /// The source of the official 0.1.1 schema (E0B-1.1, OSS table of section 4.1).
+#[cfg_attr(
+    not(test),
+    expect(
+        dead_code,
+        reason = "the record of where the embedded schema comes from is checked only by the structure tests"
+    )
+)]
 pub const OFFICIAL_SCHEMA_SOURCE: SchemaSource = SchemaSource {
     repository: "https://github.com/apache/ossie",
     tag: Some("osi-0.1.1-rc1"),
@@ -27,6 +41,13 @@ pub const OFFICIAL_SCHEMA_SOURCE: SchemaSource = SchemaSource {
 
 /// The source of the development-line schema, at the tracked commit of
 /// `conformance/ossie/upstream.json` (OSS-5.1).
+#[cfg_attr(
+    not(test),
+    expect(
+        dead_code,
+        reason = "the record of where the embedded schema comes from is checked only by the structure tests"
+    )
+)]
 pub const DEVELOPMENT_SCHEMA_SOURCE: SchemaSource = SchemaSource {
     repository: "https://github.com/apache/ossie",
     tag: None,
