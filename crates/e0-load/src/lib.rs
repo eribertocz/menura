@@ -37,6 +37,14 @@ mod extensions;
         reason = "called by the E0 stage function, which issue #45 adds; until then only the tests call it"
     )
 )]
+mod internal_model;
+#[cfg_attr(
+    not(test),
+    expect(
+        dead_code,
+        reason = "called by the E0 stage function, which issue #45 adds; until then only the tests call it"
+    )
+)]
 mod names;
 #[cfg_attr(
     not(test),

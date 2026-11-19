@@ -10,7 +10,7 @@ mod model;
 mod shape;
 
 pub(crate) use datasets::SummaryDatasets;
-pub(crate) use model::{SummaryDeclaration, SummaryDimension, SummaryMeasure};
+pub(crate) use model::{Grain, SummaryDeclaration, SummaryDimension, SummaryMeasure};
 
 use std::collections::HashSet;
 

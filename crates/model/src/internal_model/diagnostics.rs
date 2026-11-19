@@ -1,0 +1,56 @@
+//! The unusable elements and the load warnings of the model (E0H-2).
+
+use super::common::{DiagnosticCode, NormalizedName, SourceLocation};
+
+/// The kind of an element of the model, in the order unusable elements are listed (E0H-1.4).
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub enum ElementKind {
+    /// A dataset.
+    Dataset,
+    /// A field of a dataset.
+    Field,
+    /// A relationship.
+    Relationship,
+    /// A metric: of the model, or dataset-scoped.
+    Metric,
+}
+
+impl ElementKind {
+    /// The kind as a word.
+    #[must_use]
+    pub fn as_str(self) -> &'static str {
+        match self {
+            Self::Dataset => "dataset",
+            Self::Field => "field",
+            Self::Relationship => "relationship",
+            Self::Metric => "metric",
+        }
+    }
+}
+
+/// An unusable element (E0-4.1, E0-4.2a).
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct UnusableElement {
+    /// Its kind.
+    pub kind: ElementKind,
+    /// Its qualified name: the dataset of a field or dataset-scoped metric, then its name.
+    pub name: Vec<NormalizedName>,
+    /// The load warning of its own cause (E0-4 table); `None` when it is unusable only because
+    /// of other elements, which reports no new warning (E0-4.2a). Never part of a hash.
+    pub load_warning: Option<DiagnosticCode>,
+    /// Every query error code, its own and every propagated one, ordered by code (E0-4.2a).
+    pub query_errors: Vec<DiagnosticCode>,
+    /// Where it is written.
+    pub location: SourceLocation,
+}
+
+/// One load warning (E0-4.1). Never part of a hash (E0H-3.4).
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Warning {
+    /// The warning code, such as `W0D-01`.
+    pub code: DiagnosticCode,
+    /// The message.
+    pub message: String,
+    /// Where it is located.
+    pub location: SourceLocation,
+}
