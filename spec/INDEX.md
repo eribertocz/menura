@@ -160,16 +160,17 @@ Find a rule ID or a section here, then open only that file at that line.
 | [architecture/README.md](architecture/README.md#L91) | 91 | rule | ARC-5.2 |
 | [architecture/README.md](architecture/README.md#L93) | 93 | rule | ARC-5.3 |
 | [architecture/README.md](architecture/README.md#L94) | 94 | rule | ARC-5.4 |
-| [architecture/README.md](architecture/README.md#L96) | 96 | section | 3.6 Delivery forms |
-| [architecture/README.md](architecture/README.md#L109) | 109 | section | 3.7 Integration |
-| [architecture/README.md](architecture/README.md#L117) | 117 | section | 3.8 Boundary enforcement (from the first commit) |
-| [architecture/README.md](architecture/README.md#L124) | 124 | rule | A1 |
-| [architecture/README.md](architecture/README.md#L125) | 125 | rule | A2 |
-| [architecture/README.md](architecture/README.md#L126) | 126 | rule | A3 |
-| [architecture/README.md](architecture/README.md#L127) | 127 | rule | A4 |
-| [architecture/README.md](architecture/README.md#L128) | 128 | rule | A5 |
-| [architecture/README.md](architecture/README.md#L129) | 129 | rule | A6 |
-| [architecture/README.md](architecture/README.md#L134) | 134 | section | 3.9 Lineage and audit |
+| [architecture/README.md](architecture/README.md#L95) | 95 | rule | ARC-5.5 |
+| [architecture/README.md](architecture/README.md#L97) | 97 | section | 3.6 Delivery forms |
+| [architecture/README.md](architecture/README.md#L110) | 110 | section | 3.7 Integration |
+| [architecture/README.md](architecture/README.md#L118) | 118 | section | 3.8 Boundary enforcement (from the first commit) |
+| [architecture/README.md](architecture/README.md#L125) | 125 | rule | A1 |
+| [architecture/README.md](architecture/README.md#L126) | 126 | rule | A2 |
+| [architecture/README.md](architecture/README.md#L127) | 127 | rule | A3 |
+| [architecture/README.md](architecture/README.md#L128) | 128 | rule | A4 |
+| [architecture/README.md](architecture/README.md#L129) | 129 | rule | A5 |
+| [architecture/README.md](architecture/README.md#L130) | 130 | rule | A6 |
+| [architecture/README.md](architecture/README.md#L135) | 135 | section | 3.9 Lineage and audit |
 | [contracts/README.md](contracts/README.md#L1) | 1 | section | Contracts |
 | [contracts/README.md](contracts/README.md#L19) | 19 | section | Public contracts |
 | [contracts/README.md](contracts/README.md#L21) | 21 | rule | CON-0.1 |
