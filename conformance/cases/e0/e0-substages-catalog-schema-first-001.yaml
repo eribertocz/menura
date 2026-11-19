@@ -1,0 +1,8 @@
+id: e0-substages-catalog-schema-first-001
+rules: [E0-3.2, CAT-9.1, CAT-3.2, W0B-02]
+model: e0-substages-catalog-schema-first
+expect:
+  outcome: load_error
+  error: ECAT-02
+  warnings: [W0B-02]
+  location: {document: catalog_schema, pointer: /contract_version}

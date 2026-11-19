@@ -1,0 +1,7 @@
+id: e0-substages-extension-rejected-001
+rules: [E0-3.3, E0C-02, W0D-01]
+model: e0-substages-extension-rejected
+expect:
+  outcome: load_error
+  error: E0C-02
+  warnings: [W0D-01]

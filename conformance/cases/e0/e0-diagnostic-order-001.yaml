@@ -1,0 +1,7 @@
+id: e0-diagnostic-order-001
+rules: [E0-4.3, PLN-5.1, CS-2.9, E0C-02]
+model: e0-diagnostic-order
+expect:
+  outcome: load_error
+  error: E0C-02
+  location: {document: model, pointer: /semantic_model/0/metrics/0/custom_extensions/0/data}

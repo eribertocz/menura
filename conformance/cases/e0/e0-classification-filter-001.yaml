@@ -1,0 +1,16 @@
+id: e0-classification-filter-001
+rules: [E0G-3.2, E0G-4.1, E0G-01, W0G-01]
+model: e0-classification-filter
+security_context: analyst.json
+query:
+  contract: semantic_compiler.query
+  contract_version: "1.0.0"
+  reference_time: "2026-11-15T12:00:00-04:00"
+  time_zone: UTC
+  query:
+    metrics:
+      - {metric: average_positive_balance, alias: average_positive_balance}
+expect:
+  outcome: error
+  error: E0G-01
+  warnings: [W0G-01]

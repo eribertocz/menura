@@ -1,5 +1,5 @@
 id: e0-security-undeclared-attribute-001
-rules: [SCY-5, SCY-5.1.6, E0C-46]
+rules: [SCY-5, SCY-5.1.6, E0C-46, E0-2.1]
 model: e0-security-undeclared-attribute-001
 expect:
   outcome: load_error
