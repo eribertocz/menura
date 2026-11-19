@@ -980,7 +980,7 @@ checksum = "94143f37725109f92c262ed2cf5e59bce7498c01bcc1502d7b9afe439a4e9f49"
 
 [[package]]
 name = "semantic-compiler-cli"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "semantic-compiler-core",
  "serde_json",
@@ -988,7 +988,7 @@ dependencies = [
 
 [[package]]
 name = "semantic-compiler-conformance-runner"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "duckdb",
  "semantic-compiler-contracts",
@@ -1000,7 +1000,7 @@ dependencies = [
 
 [[package]]
 name = "semantic-compiler-contracts"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "serde",
  "serde_json",
@@ -1009,7 +1009,7 @@ dependencies = [
 
 [[package]]
 name = "semantic-compiler-core"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "semantic-compiler-contracts",
  "semantic-compiler-e0-load",
@@ -1025,7 +1025,7 @@ dependencies = [
 
 [[package]]
 name = "semantic-compiler-e0-load"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "granit-parser",
  "semantic-compiler-contracts",
@@ -1038,70 +1038,70 @@ dependencies = [
 
 [[package]]
 name = "semantic-compiler-e1-parse"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "semantic-compiler-security",
 ]
 
 [[package]]
 name = "semantic-compiler-e2-bind"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "semantic-compiler-security",
 ]
 
 [[package]]
 name = "semantic-compiler-e3-paths"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "semantic-compiler-security",
 ]
 
 [[package]]
 name = "semantic-compiler-e4-plan"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "semantic-compiler-security",
 ]
 
 [[package]]
 name = "semantic-compiler-e5-optimize"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "semantic-compiler-security",
 ]
 
 [[package]]
 name = "semantic-compiler-expressions"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "semantic-compiler-model",
 ]
 
 [[package]]
 name = "semantic-compiler-generator-duckdb"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "semantic-compiler-e5-optimize",
 ]
 
 [[package]]
 name = "semantic-compiler-model"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "semantic-compiler-contracts",
 ]
 
 [[package]]
 name = "semantic-compiler-representations"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "semantic-compiler-model",
 ]
 
 [[package]]
 name = "semantic-compiler-security"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "semantic-compiler-model",
  "semantic-compiler-representations",
