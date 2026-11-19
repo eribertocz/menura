@@ -28,9 +28,13 @@ after each load and report the results in the catalog state (`checks`, `aggregat
 For a `summary` check, `definition_hash` **is** the summary definition hash (E0H-3.3). This is
 how a pipeline learns that hash: it copies it, unchanged, into the catalog state (CAT-7.1.3).
 For every other kind, it is the SHA-256 (CON-2) of the canonical JSON of `{kind, target,
-definition}`, where `definition` is the normalized tree of every model element the check depends
-on: the relationship and the keys and fields of both datasets (`key_uniqueness`, `orphan_keys`);
-the population and metric extensions (`population`, `semi_additive`).
+definition}`, where `definition` is the normalized form of what the check reads, and nothing else:
+
+- `key_uniqueness`, `orphan_keys`: the relationship (`from`, `to` and the column pairs), the `source` of both datasets, and the normalized tree and logical type of every field named in the column pairs;
+- `population`: the normalized population extension, the `source` of its dataset, and the tree and logical type of every field it reads;
+- `semi_additive`: the normalized metric (tree and additivity extension), the `source` of its dataset, and the tree and logical type of every field it reads.
+
+A change to any other element (another field of the same dataset, a description) does not change the hash.
 
 - **CHK-3.1** A model change that affects a check changes its hash, so old evidence stops counting (CAT-7.3).
 
