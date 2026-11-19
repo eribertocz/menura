@@ -11,7 +11,7 @@
 mod declaration;
 mod model;
 
-pub(crate) use model::{ContextDeclaration, Modifier};
+pub(crate) use model::{ContextDeclaration, Modifier, Removed};
 
 use super::diagnostic::{ExtensionCode, ExtensionDiagnostic};
 use super::output::OwnEntry;

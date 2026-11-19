@@ -26,9 +26,11 @@ mod output;
 mod parts;
 mod rules;
 
-pub(crate) use diagnostic::ClassificationDiagnostic;
+pub(crate) use diagnostic::{ClassificationCode, ClassificationDiagnostic};
 pub(crate) use input::ClassificationInput;
-pub(crate) use output::{Classification, ClassifiedMetric, Component, MetricKind, UnusableMetric};
+pub(crate) use output::{
+    Classification, ClassifiedMetric, Component, DecomposabilityClass, MetricKind, UnusableMetric,
+};
 
 use std::collections::{BTreeSet, HashMap};
 
@@ -44,7 +46,7 @@ use crate::typing::{self, TypedElement};
 use additivity::additivity;
 use decomposability::is_recomposable;
 use derived::classify_derived;
-use output::Additivity;
+pub(crate) use output::Additivity;
 use parts::expression_parts;
 use rules::{MetricScope, Problem, components};
 

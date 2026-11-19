@@ -12,7 +12,8 @@ mod reference;
 mod values;
 
 pub(crate) use model::{
-    AdditivityDeclaration, DeclaredAdditivity, FieldReference, NullHandling, SemiAdditive,
+    AdditivityDeclaration, DeclaredAdditivity, FieldReference, MissingHandling, NullHandling,
+    Selection, SemiAdditive, SnapshotAggregation, StaleHandling, UnexpectedHandling,
 };
 pub(crate) use reference::field_reference;
 pub(crate) use values::GRAINS;

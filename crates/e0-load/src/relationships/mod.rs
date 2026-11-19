@@ -22,12 +22,12 @@ mod dominators;
 mod graph;
 mod home_datasets;
 mod output;
-mod paths;
+pub(crate) mod paths;
 mod reach;
 mod validation;
 
 pub(crate) use diagnostic::{RelationshipCode, RelationshipDiagnostic};
-pub(crate) use output::Relationships;
+pub(crate) use output::{PathCount, RelationshipGraph, Relationships};
 
 use std::collections::HashSet;
 

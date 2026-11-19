@@ -9,7 +9,7 @@ pub(crate) mod fixture;
 mod item;
 mod model;
 
-pub(crate) use model::{Population, PopulationMode};
+pub(crate) use model::{PartialPeriod, Population, PopulationMode};
 
 use serde_json::Value as Json;
 
