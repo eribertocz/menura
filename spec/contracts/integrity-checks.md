@@ -15,7 +15,7 @@ after each load and report the results in the catalog state (`checks`, `aggregat
 |---|---|
 | `check_id` | Stable identifier: `<kind>:<target>` |
 | `kind` | `key_uniqueness`, `orphan_keys`, `summary`, `population`, `semi_additive` |
-| `target` | Relationship, dataset, summary or metric name |
+| `target` | Normalized name of the relationship, summary, population or metric (E0H-4.3) |
 | `definition_hash` | See CHK-3 |
 | `sql`, `parameters` | Read-only query in the dialect; generated like any plan (E6) |
 | `sources` | Catalog relations it reads, whose versions the result must report in `verified` |
