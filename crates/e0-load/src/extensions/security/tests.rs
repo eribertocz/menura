@@ -6,56 +6,15 @@
 //! (see [`super::fixture`]), so the rules are checked against the files the conformance suite
 //! uses.
 
-use semantic_compiler_contracts::types::audit_record::OssieFormat;
 use semantic_compiler_security::{
     AccessMode, AttributeType, DatasetAccess, FieldRestriction, Role, ScalarType,
 };
 
 use super::fixture::{
-    ACCESS, MODEL, MODEL_DATA, NOTES, NOTES_DATA, ORDERS, ORDERS_DATA, ROW_ACCESS,
-    SECURITY_CONTEXT, SEMANTIC_MODEL, conformance_model, with_access, with_notes, with_row_access,
-    with_security_context,
+    ACCESS, MODEL, MODEL_DATA, NOTES_DATA, ORDERS, ORDERS_DATA, ROW_ACCESS, SECURITY_CONTEXT,
+    SEMANTIC_MODEL, conformance_model, with_notes, with_row_access, with_security_context,
 };
-use crate::extensions::output::{Extensions, ExtensionsFailure};
-use crate::extensions::{DEFAULT_NAMESPACE, validate_extensions};
-use crate::pointer::JsonPointer;
-use crate::read::read_document;
-use crate::structure::validate_structure;
-
-fn validate_in(model: &str, format: OssieFormat) -> Result<Extensions, ExtensionsFailure> {
-    let document = read_document(model.as_bytes()).expect("the document is read");
-    let structure = validate_structure(&document, format, None).expect("the structure is valid");
-    validate_extensions(&document, &structure.semantic_model, DEFAULT_NAMESPACE)
-}
-
-fn validate(model: &str) -> Result<Extensions, ExtensionsFailure> {
-    validate_in(model, OssieFormat::Release)
-}
-
-/// The code and JSON Pointer of every rejecting diagnostic of `model`.
-fn rejected(model: &str) -> Vec<(&'static str, String)> {
-    validate(model)
-        .expect_err("the extensions are rejected")
-        .errors
-        .iter()
-        .map(|diagnostic| (diagnostic.code.as_str(), diagnostic.pointer.to_string()))
-        .collect()
-}
-
-/// The codes that reject `model`, each at the `data` member `data`.
-fn codes_at(model: &str, data: &str) -> Vec<&'static str> {
-    rejected(model)
-        .into_iter()
-        .map(|(code, pointer)| {
-            assert_eq!(pointer, data);
-            code
-        })
-        .collect()
-}
-
-fn access_codes(access: &str) -> Vec<&'static str> {
-    codes_at(&with_access(access), ORDERS_DATA)
-}
+use super::support::{codes_at, rejected, validate};
 
 fn row_access_codes(row_access: &str) -> Vec<&'static str> {
     codes_at(&with_row_access(row_access), ORDERS_DATA)
@@ -193,103 +152,6 @@ fn scy_2_2_every_attribute_type_is_accepted() {
 }
 
 #[test]
-fn scy_5_1_3_e0c_41_a_missing_or_unknown_mode() {
-    assert_eq!(access_codes(r#"{"roles": ["analyst"]}"#), ["E0C-41"]);
-    assert_eq!(access_codes(r#"{"mode": "public"}"#), ["E0C-41"]);
-    assert_eq!(access_codes(r#"{"mode": 1}"#), ["E0C-41"]);
-    assert_eq!(
-        access_codes(r#"{"mode": "ROLES", "roles": ["analyst"]}"#),
-        ["E0C-41"]
-    );
-}
-
-#[test]
-fn scy_5_1_3_e0c_42_mode_roles_requires_a_non_empty_role_list() {
-    assert_eq!(access_codes(r#"{"mode": "roles"}"#), ["E0C-42"]);
-    assert_eq!(
-        access_codes(r#"{"mode": "roles", "roles": []}"#),
-        ["E0C-42"]
-    );
-}
-
-#[test]
-fn scy_5_1_3_e0c_43_roles_and_fields_outside_their_modes() {
-    assert_eq!(
-        access_codes(r#"{"mode": "authenticated", "roles": ["analyst"]}"#),
-        ["E0C-43"]
-    );
-    let fields = r#""fields": [{"names": ["unit_cost"], "roles": ["admin"]}]"#;
-    assert!(
-        validate(&with_access(&format!(
-            r#"{{"mode": "authenticated", {fields}}}"#
-        )))
-        .is_ok()
-    );
-    let summary = with_notes(&format!(
-        r#""access": {{"mode": "internal", "roles": ["admin"], {fields}}}, "aggregate": {{}}"#
-    ));
-    assert_eq!(codes_at(&summary, NOTES_DATA), ["E0C-43"]);
-}
-
-#[test]
-fn scy_5_e0c_44_internal_only_on_a_summary() {
-    let internal = with_notes(r#""access": {"mode": "internal"}"#);
-    assert_eq!(codes_at(&internal, NOTES_DATA), ["E0C-44"]);
-    let summary = with_notes(r#""access": {"mode": "internal"}, "aggregate": {}"#);
-    let security = validate(&summary)
-        .expect("the extensions are accepted")
-        .security;
-    let notes = JsonPointer::from_text(NOTES);
-    assert_eq!(
-        security
-            .access(&notes)
-            .map(|declared| &declared.access.mode),
-        Some(&AccessMode::Internal)
-    );
-}
-
-#[test]
-fn scy_5_1_3_e0c_02_e0c_03_the_shape_of_access() {
-    assert_eq!(access_codes(r#""roles""#), ["E0C-03"]);
-    assert_eq!(
-        access_codes(r#"{"mode": "authenticated", "owner": "sales"}"#),
-        ["E0C-02"]
-    );
-    assert_eq!(
-        access_codes(r#"{"mode": "roles", "roles": "analyst"}"#),
-        ["E0C-03"]
-    );
-    assert_eq!(
-        access_codes(r#"{"mode": "roles", "roles": [1]}"#),
-        ["E0C-03"]
-    );
-    for fields in [
-        r#"{"names": ["unit_cost"], "roles": ["admin"]}"#,
-        r#"[{"names": ["unit_cost"]}]"#,
-        r#"[{"roles": ["admin"]}]"#,
-        r#"[{"names": [], "roles": ["admin"]}]"#,
-        r#"[{"names": ["unit_cost"], "roles": []}]"#,
-        r#"[{"names": "unit_cost", "roles": ["admin"]}]"#,
-        r#"["unit_cost"]"#,
-    ] {
-        let access = format!(r#"{{"mode": "roles", "roles": ["admin"], "fields": {fields}}}"#);
-        assert_eq!(access_codes(&access), ["E0C-03"], "{fields}");
-    }
-    let unknown = r#"{"mode": "roles", "roles": ["admin"], "fields": [{"names": ["unit_cost"], "roles": ["admin"], "mask": true}]}"#;
-    assert_eq!(access_codes(unknown), ["E0C-02"]);
-}
-
-#[test]
-fn scy_5_1_1_scy_5_1_3_e0c_47_undeclared_roles_of_access() {
-    assert_eq!(
-        access_codes(r#"{"mode": "roles", "roles": ["Analyst"]}"#),
-        ["E0C-47"]
-    );
-    let fields = r#"{"mode": "roles", "roles": ["admin"], "fields": [{"names": ["unit_cost"], "roles": ["auditor"]}]}"#;
-    assert_eq!(access_codes(fields), ["E0C-47"]);
-}
-
-#[test]
 fn scy_2_1_e0c_47_without_security_context_no_role_is_declared() {
     let lines: Vec<&str> = MODEL.lines().collect();
     assert!(lines[4].ends_with("custom_extensions:") && lines[6].contains("security_context"));
@@ -393,17 +255,4 @@ fn scy_5_the_e0c_conformance_models_are_rejected_with_their_code() {
     ] {
         assert!(validate(conformance_model(name)).is_ok(), "{name}");
     }
-}
-
-#[test]
-fn scy_5_1_3_e0c_03_repeats_in_access_lists() {
-    for access in [
-        r#"{"mode": "roles", "roles": ["analyst", "analyst"]}"#,
-        r#"{"mode": "roles", "roles": ["admin"], "fields": [{"names": ["unit_cost", "unit_cost"], "roles": ["admin"]}]}"#,
-        r#"{"mode": "roles", "roles": ["admin"], "fields": [{"names": ["unit_cost"], "roles": ["admin", "admin"]}]}"#,
-    ] {
-        assert_eq!(access_codes(access), ["E0C-03"], "{access}");
-    }
-    let apart = r#"{"mode": "roles", "roles": ["admin"], "fields": [{"names": ["unit_cost"], "roles": ["admin"]}, {"names": ["unit_cost"], "roles": ["admin"]}]}"#;
-    assert!(validate(&with_access(apart)).is_ok());
 }

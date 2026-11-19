@@ -129,8 +129,12 @@ fn read_dataset_entry(
 }
 
 #[cfg(test)]
+mod access_tests;
+#[cfg(test)]
 mod development_tests;
 #[cfg(test)]
 mod resolution_tests;
+#[cfg(test)]
+mod support;
 #[cfg(test)]
 mod tests;
