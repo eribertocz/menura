@@ -6,17 +6,17 @@ use std::path::{Path, PathBuf};
 use semantic_compiler_conformance_runner::case::Outcome;
 use semantic_compiler_conformance_runner::case_file::read_case;
 use semantic_compiler_conformance_runner::runner::QUERY_PENDING_REASON;
-use semantic_compiler_conformance_runner::{CaseStatus, run};
+use semantic_compiler_conformance_runner::{CaseStatus, RunnerError, run};
 
 fn conformance_directory() -> PathBuf {
     Path::new(env!("CARGO_MANIFEST_DIR")).join("../../conformance")
 }
 
-fn outcome_of(case_id: &str) -> Outcome {
+fn outcome_of(case_id: &str) -> Result<Outcome, RunnerError> {
     let path = conformance_directory()
         .join("cases/e0")
         .join(format!("{case_id}.yaml"));
-    read_case(&path).unwrap().expect.outcome
+    Ok(read_case(&path)?.expect.outcome)
 }
 
 #[test]
@@ -32,7 +32,7 @@ fn cs_2_8_the_load_part_of_every_e0_case_passes() {
         .collect();
     assert!(failures.is_empty(), "{}", failures.join("\n"));
     for case in &report.cases {
-        let expected = if outcome_of(case.id.as_str()) == Outcome::LoadError {
+        let expected = if outcome_of(case.id.as_str()).unwrap() == Outcome::LoadError {
             CaseStatus::Passed
         } else {
             CaseStatus::Pending(QUERY_PENDING_REASON.to_owned())
