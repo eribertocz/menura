@@ -21,6 +21,7 @@ mod derived;
 mod development;
 mod populations;
 mod results;
+mod security;
 
 const MODEL: &str = include_str!("../../../../../conformance/models/e0-typing/model.yaml");
 

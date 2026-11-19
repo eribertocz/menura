@@ -267,7 +267,7 @@ fn e0c_2_7_e0c_06_repeated_member_inside_data() {
     let foreign = on_orders(r#"{"namespace": "acme", "version": 1, "version": 2}"#);
     assert!(accepted(foreign.as_bytes()).entries.is_empty());
     let same_names_apart = on_orders(
-        r#"{"namespace": "semantic_compiler", "version": 1, "access": {"version": 1, "fields": [{"names": []}, {"names": []}]}}"#,
+        r#"{"namespace": "semantic_compiler", "version": 1, "row_access": [{"name": "a", "condition": "TRUE"}, {"name": "b", "condition": "TRUE"}]}"#,
     );
     assert_eq!(accepted(same_names_apart.as_bytes()).entries.len(), 1);
 }
@@ -353,10 +353,12 @@ fn e0c_2_5_extension_keys_are_handed_over_uninterpreted() {
         additivity.extensions["additivity"],
         json!({"type": "semi_additive", "over": "balances.branch", "entity": ["balances.customer_id"], "aggregation": "max", "nulls": "error"})
     );
-    let unchecked = on_orders(r#"{"namespace": "semantic_compiler", "version": 1, "access": 5}"#);
+    let unchecked = on_orders(
+        r#"{"namespace": "semantic_compiler", "version": 1, "access": {"mode": "authenticated"}}"#,
+    );
     assert_eq!(
         accepted(unchecked.as_bytes()).entries[0].extensions["access"],
-        json!(5)
+        json!({"mode": "authenticated"})
     );
 }
 
@@ -370,7 +372,7 @@ fn mdl_2_3_the_namespace_is_configurable() {
             &format!("{MODEL}/datasets/0/custom_extensions/1/data")
         )]
     );
-    let acme = on_orders(r#"{"namespace": "acme", "version": 1, "row_access": {}}"#);
+    let acme = on_orders(r#"{"namespace": "acme", "version": 1, "row_access": []}"#);
     let extensions = validate(acme.as_bytes(), "acme").expect("accepted");
     assert_eq!(extensions.entries.len(), 1);
     assert!(accepted(acme.as_bytes()).entries.is_empty());

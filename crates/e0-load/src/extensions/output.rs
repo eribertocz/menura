@@ -7,6 +7,7 @@ use super::context::{CONTEXT, ContextDeclaration};
 use super::derived::DerivedDeclaration;
 use super::diagnostic::ExtensionDiagnostic;
 use super::populations::Population;
+use super::security::Security;
 use crate::pointer::JsonPointer;
 use crate::read::Location;
 
@@ -55,7 +56,10 @@ pub struct Extensions {
     pub derived: Vec<DerivedDeclaration>,
     /// Every context declaration of the model, in document order (CTX-2).
     pub context: Vec<ContextDeclaration>,
-    /// `W0C-01` warnings, in document order.
+    /// The declarations of the security extension (SCY-2 to SCY-4).
+    pub security: Security,
+    /// `W0C-01` warnings, in document order. `W0C-40` and `W0C-41` come from
+    /// [`super::security::resolution::resolve_access`], which needs a load option.
     pub warnings: Vec<ExtensionDiagnostic>,
 }
 
@@ -92,7 +96,8 @@ impl Extensions {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ExtensionsFailure {
     /// The rejecting diagnostics, `E0C-01` to `E0C-06`, `E0C-10`, `E0C-11`, `E0C-13` to
-    /// `E0C-15`, `E0C-20`, `E0C-21`, `E0C-36` and `E0C-62`, in document order then by code; never empty.
+    /// `E0C-15`, `E0C-20`, `E0C-21`, `E0C-36`, `E0C-41` to `E0C-45`, `E0C-47` and `E0C-62`,
+    /// in document order then by code; never empty.
     pub errors: Vec<ExtensionDiagnostic>,
     /// `W0C-01` warnings, in document order, reported with the errors (E0-2).
     pub warnings: Vec<ExtensionDiagnostic>,

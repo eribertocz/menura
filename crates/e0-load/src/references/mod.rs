@@ -13,7 +13,9 @@
 //! [`populations::resolve_population_references`] (`E0C-22`, POP-4.3), and the inputs of
 //! derived metrics by [`derived::resolve_derived_references`] (`E0C-32`, `E0C-33`, `E0C-37`,
 //! DER-5.1.2), and the base and removed fields of context metrics by
-//! [`context::resolve_context_references`] (`E0C-60`, `E0C-63`, `E0C-64`, CTX-5.1.3).
+//! [`context::resolve_context_references`] (`E0C-60`, `E0C-63`, `E0C-64`, CTX-5.1.3), and the
+//! fields and roles of `access.fields` by [`security::resolve_security_references`]
+//! (`E0C-49`, SCY-5.1.4).
 
 pub(crate) mod context;
 mod dataset_metric_references;
@@ -26,6 +28,7 @@ mod output;
 pub(crate) mod populations;
 mod query_sources;
 mod scope;
+pub(crate) mod security;
 mod sources;
 mod uniqueness;
 mod walk;

@@ -17,8 +17,10 @@
 //! derived metrics, the result types of context metrics and the graph of the metrics they read
 //! are checked and typed by [`derived::type_derived_metrics`] (`E0C-30`, `E0C-31`, `E0C-34`,
 //! `E0C-35`, DER-5.1.3, DER-5.1.4, CTX-5.1.5, CTX-5.1.7), and the kind of the time dimension of
-//! context metrics by [`context::check_context_time_kinds`] (`E0C-61`, CTX-5.1.4). `AGG(…)` in
-//! a field or a dataset metric is `E0F-02` (DER-5.1.2).
+//! context metrics by [`context::check_context_time_kinds`] (`E0C-61`, CTX-5.1.4). The
+//! conditions of row policies are parsed and typed by [`security::type_row_policies`]
+//! (`E0C-46`, `E0C-48`, SCY-5.1.6). `AGG(…)` in a field or a dataset metric is `E0F-02`
+//! (DER-5.1.2).
 
 pub(crate) mod additivity;
 mod aggregates;
@@ -37,6 +39,7 @@ mod operators;
 mod output;
 pub(crate) mod populations;
 mod scope;
+pub(crate) mod security;
 mod stop;
 mod typer;
 mod value_type;
