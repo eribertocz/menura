@@ -1,7 +1,7 @@
 //! Resolves the load options of a case (CS-2.7) to the options the load call receives, giving
 //! each omitted option its default from architecture section 3.5.
 
-use semantic_compiler_contracts::types::audit_record::{LoadOptions, OssieFormat};
+use semantic_compiler_core::LoadOptions;
 
 use crate::case::CaseLoadOptions;
 
@@ -14,7 +14,7 @@ pub(crate) const DEFAULT_NAMESPACE: &str = "semantic_compiler";
 ///
 /// ```
 /// use semantic_compiler_conformance_runner::load_options::resolve_load_options;
-/// use semantic_compiler_contracts::types::audit_record::OssieFormat;
+/// use semantic_compiler_core::OssieFormat;
 ///
 /// let options = resolve_load_options(None);
 /// assert_eq!(options.ossie_format, OssieFormat::Release);
@@ -22,21 +22,25 @@ pub(crate) const DEFAULT_NAMESPACE: &str = "semantic_compiler";
 /// ```
 #[must_use]
 pub fn resolve_load_options(case_options: Option<&CaseLoadOptions>) -> LoadOptions {
-    let defaults = CaseLoadOptions::default();
-    let case_options = case_options.unwrap_or(&defaults);
+    let defaults = LoadOptions::default();
+    let Some(case_options) = case_options else {
+        return defaults;
+    };
     LoadOptions {
-        grant_authenticated_to_all: case_options.grant_authenticated_to_all.unwrap_or(false),
-        ossie_format: case_options.ossie_format.unwrap_or(OssieFormat::Release),
-        namespace: case_options
-            .namespace
-            .clone()
-            .unwrap_or_else(|| DEFAULT_NAMESPACE.to_owned()),
+        grant_authenticated_to_all: case_options
+            .grant_authenticated_to_all
+            .unwrap_or(defaults.grant_authenticated_to_all),
+        ossie_format: case_options.ossie_format.unwrap_or(defaults.ossie_format),
+        namespace: case_options.namespace.clone().unwrap_or(defaults.namespace),
         model_name: case_options.model_name.clone(),
+        data_source: None,
     }
 }
 
 #[cfg(test)]
 mod tests {
+    use semantic_compiler_core::OssieFormat;
+
     use super::*;
 
     #[test]
@@ -49,6 +53,7 @@ mod tests {
                 ossie_format: OssieFormat::Release,
                 namespace: "semantic_compiler".to_owned(),
                 model_name: None,
+                data_source: None,
             }
         );
     }
@@ -82,6 +87,7 @@ mod tests {
                 ossie_format: OssieFormat::Development,
                 namespace: "acme".to_owned(),
                 model_name: Some("shop".to_owned()),
+                data_source: None,
             }
         );
     }

@@ -35,8 +35,9 @@ pub(crate) use diagnostic::{ExtensionCode, ExtensionDiagnostic};
 use entry::{EntryKind, classify};
 use envelope::extension_keys;
 use objects::{EntryNode, extension_entries};
+use output::ExtensionsFailure;
+pub(crate) use output::OwnEntry;
 pub(crate) use output::{Extensions, ObjectKind};
-use output::{ExtensionsFailure, OwnEntry};
 pub(crate) use populations::{Population, per_entry};
 pub(crate) use problems::{Problems, report_at};
 
@@ -46,6 +47,13 @@ use crate::structure::SelectedModel;
 
 /// The namespace of the compiler's own entries when the load option `namespace` is not given
 /// (MDL-2.3).
+#[cfg_attr(
+    not(test),
+    expect(
+        dead_code,
+        reason = "the stage function takes the namespace from the load options; only the substage tests use the default"
+    )
+)]
 pub(crate) const DEFAULT_NAMESPACE: &str = "semantic_compiler";
 
 /// Applies the common extension rules to the selected semantic model of `document`.

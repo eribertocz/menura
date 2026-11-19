@@ -35,7 +35,7 @@ semantic_model:
             expression: {dialects: [{dialect: ANSI_SQL, expression: 'order_count'}]}
         custom_extensions:
           - vendor_name: COMMON
-            data: '{"namespace": "semantic_compiler", "version": 1, "access": {"mode": "internal"}, "aggregate": {"of": "orders", "dimensions": [{"field": "order_date", "base": "order_date"}, {"field": "region", "base": "region"}], "measures": [{"field": "total_amount", "base_aggregate": "SUM(orders.amount)"}, {"field": "order_count", "base_aggregate": "COUNT(orders.order_id)"}], "coverage_field": "order_date"}}'
+            data: '{"namespace": "semantic_compiler", "version": 1, "access": {"mode": "internal"}, "aggregate": {"of": "orders", "dimensions": [{"field": "order_date", "base": "order_date", "grain": "day"}, {"field": "region", "base": "region", "grain": "day"}], "measures": [{"field": "total_amount", "base_aggregate": "SUM(orders.amount)"}, {"field": "order_count", "base_aggregate": "COUNT(orders.order_id)"}], "coverage_field": "order_date"}}'
     metrics:
       - name: total_amount
         expression: {dialects: [{dialect: ANSI_SQL, expression: 'SUM(orders.amount)'}]}

@@ -7,6 +7,8 @@ license.workspace = true
 publish.workspace = true
 
 [dependencies]
+semantic-compiler-contracts.workspace = true
+semantic-compiler-model.workspace = true
 semantic-compiler-e0-load.workspace = true
 semantic-compiler-e1-parse.workspace = true
 semantic-compiler-e2-bind.workspace = true
@@ -14,6 +16,7 @@ semantic-compiler-e3-paths.workspace = true
 semantic-compiler-e4-plan.workspace = true
 semantic-compiler-e5-optimize.workspace = true
 semantic-compiler-generator-duckdb.workspace = true
+serde_json = "1"
 
 [lints]
 workspace = true

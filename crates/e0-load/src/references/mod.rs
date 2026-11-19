@@ -38,7 +38,7 @@ pub(crate) mod summaries;
 mod uniqueness;
 mod walk;
 
-pub(crate) use diagnostic::ReferenceCode;
+pub(crate) use diagnostic::{ReferenceCode, ReferenceDiagnostic};
 pub(crate) use output::{ElementKind, ReferenceRejection, References, UnusableElement};
 
 use std::collections::HashMap;

@@ -90,6 +90,11 @@ pub(crate) fn read_text(path: &Path) -> Result<String, RunnerError> {
         .map_err(|error| RunnerError::new(RunnerErrorKind::Unreadable(error), path))
 }
 
+/// Reads the file at `path` as bytes.
+pub(crate) fn read_bytes(path: &Path) -> Result<Vec<u8>, RunnerError> {
+    fs::read(path).map_err(|error| RunnerError::new(RunnerErrorKind::Unreadable(error), path))
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

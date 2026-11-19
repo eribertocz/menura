@@ -98,6 +98,13 @@ impl Extensions {
     }
 
     /// The context declaration of the metric at `metric`, when it has one.
+    #[cfg_attr(
+        not(test),
+        expect(
+            dead_code,
+            reason = "E0.h finds context declarations through its own index; only the extension tests call it"
+        )
+    )]
     #[must_use]
     pub fn context_declaration(&self, metric: &JsonPointer) -> Option<&ContextDeclaration> {
         self.context

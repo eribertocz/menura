@@ -4,7 +4,7 @@
 use std::fs;
 use std::path::{Path, PathBuf};
 
-use semantic_compiler_contracts::types::audit_record::LoadOptions;
+use semantic_compiler_core::LoadOptions;
 
 use crate::case::Case;
 use crate::case_file::read_case;
@@ -12,11 +12,10 @@ use crate::database::prepare_database;
 use crate::error::{RunnerError, RunnerErrorKind};
 use crate::fixture::{ModelFixture, security_context_path};
 use crate::load_options::resolve_load_options;
+pub use crate::load_part::QUERY_PENDING_REASON;
+use crate::load_part::{ModelDocuments, check_load};
 use crate::ossie::{OSSIE_AREA, check_layout, run_suites};
 use crate::report::{CaseResult, CaseStatus, Report};
-
-/// Why every case is pending in this version: no compilation stage exists yet.
-pub const PENDING_REASON: &str = "the compiler stages are not implemented yet";
 
 /// Runs every case of `conformance_directory/cases/`, or only those of `area` (CS-4.1).
 ///
@@ -25,7 +24,9 @@ pub const PENDING_REASON: &str = "the compiler stages are not implemented yet";
 /// the Apache Ossie suites alone (OSS-2.3).
 ///
 /// A case whose fixtures cannot be read or whose database cannot be prepared is reported as
-/// failed; otherwise it is reported as pending, because no compilation stage exists yet.
+/// failed. Otherwise its load part runs through `core` (CS-2.8): a `load_error` case passes or
+/// fails; any other case fails its load part or is reported as pending, because its query
+/// part needs stages E1 to E6.
 ///
 /// # Errors
 ///
@@ -72,14 +73,18 @@ fn run_cases(
 }
 
 fn run_case(conformance_directory: &Path, case: &Case) -> CaseStatus {
-    match prepare_case(conformance_directory, case) {
-        Ok(_load_options) => CaseStatus::Pending(PENDING_REASON.to_owned()),
+    let model_folder = conformance_directory.join("models").join(&case.model);
+    let prepared = prepare_case(conformance_directory, case).and_then(|options| {
+        ModelDocuments::read(&model_folder).map(|documents| (options, documents))
+    });
+    match prepared {
+        Ok((options, documents)) => check_load(case, &documents, &options),
         Err(error) => CaseStatus::Failed(error.to_string()),
     }
 }
 
 /// Checks the fixtures of `case`, prepares its database and returns the load options its model
-/// is loaded with (CS-2.7). They are passed to `load` once that stage function exists.
+/// is loaded with (CS-2.7).
 fn prepare_case(conformance_directory: &Path, case: &Case) -> Result<LoadOptions, RunnerError> {
     let model_folder = conformance_directory.join("models").join(&case.model);
     let fixture = ModelFixture::read(&model_folder)?;
@@ -130,7 +135,7 @@ pub(crate) fn list_directory(directory: &Path) -> Result<Vec<PathBuf>, RunnerErr
 
 #[cfg(test)]
 mod tests {
-    use semantic_compiler_contracts::types::audit_record::OssieFormat;
+    use semantic_compiler_core::OssieFormat;
 
     use super::*;
     use crate::case_file::parse_case;
