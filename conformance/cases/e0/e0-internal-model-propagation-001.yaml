@@ -1,0 +1,17 @@
+id: e0-internal-model-propagation-001
+rules: [E0-4.2a]
+model: e0-internal-model
+security_context: analyst.json
+query:
+  contract: semantic_compiler.query
+  contract_version: "1.0.0"
+  reference_time: "2026-11-15T12:00:00-04:00"
+  time_zone: UTC
+  query:
+    dimensions: [customers.region]
+    metrics:
+      - {metric: total_discount, alias: total_discount}
+expect:
+  outcome: error
+  error: E0D-03
+  warnings: [W0D-01]
