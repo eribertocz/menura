@@ -1,0 +1,53 @@
+version: "0.1.1"
+semantic_model:
+  - name: e0_classification_mixed_components
+    description: A semi-additive declaration on a metric with a distributive and an algebraic component
+    custom_extensions:
+      - vendor_name: COMMON
+        data: '{"namespace": "semantic_compiler", "version": 1, "security_context": {"roles": ["analyst"], "attributes": []}}'
+    datasets:
+      - name: debt
+        source: shop.main.debt
+        primary_key: [customer_id, period]
+        fields:
+          - name: customer_id
+            expression: {dialects: [{dialect: ANSI_SQL, expression: customer_id}]}
+          - name: period
+            expression: {dialects: [{dialect: ANSI_SQL, expression: period}]}
+          - name: balance
+            expression: {dialects: [{dialect: ANSI_SQL, expression: balance}]}
+        custom_extensions:
+          - vendor_name: COMMON
+            data: '{"namespace": "semantic_compiler", "version": 1, "access": {"mode": "roles", "roles": ["analyst"]}}'
+      - name: customers
+        source: shop.main.customers
+        primary_key: [customer_id]
+        fields:
+          - name: customer_id
+            expression: {dialects: [{dialect: ANSI_SQL, expression: customer_id}]}
+          - name: category
+            expression: {dialects: [{dialect: ANSI_SQL, expression: category}]}
+          - name: valid_from
+            expression: {dialects: [{dialect: ANSI_SQL, expression: valid_from}]}
+          - name: valid_to
+            expression: {dialects: [{dialect: ANSI_SQL, expression: valid_to}]}
+        custom_extensions:
+          - vendor_name: COMMON
+            data: '{"namespace": "semantic_compiler", "version": 1, "access": {"mode": "roles", "roles": ["analyst"]}, "populations": [{"name": "active_customers", "mode": "validity", "entity": ["customer_id"], "valid_from": "valid_from", "valid_to": "valid_to", "partial_period": "any_day"}]}'
+    relationships:
+      - name: debt_customers
+        from: debt
+        to: customers
+        from_columns: [customer_id]
+        to_columns: [customer_id]
+    metrics:
+      - name: debt_balance
+        expression: {dialects: [{dialect: ANSI_SQL, expression: 'SUM(debt.balance)'}]}
+        custom_extensions:
+          - vendor_name: COMMON
+            data: '{"namespace": "semantic_compiler", "version": 1, "additivity": {"type": "semi_additive", "over": "debt.period", "entity": ["debt.customer_id"], "aggregation": "last", "selection": "global_period", "snapshot_grain": "month", "population": "active_customers", "missing": "carry_forward", "max_carry_forward": 2, "on_stale": "error", "unexpected": "exclude", "nulls": "as_missing"}}'
+      - name: balance_above_average
+        expression: {dialects: [{dialect: ANSI_SQL, expression: 'MAX(debt.balance) - AVG(debt.balance)'}]}
+        custom_extensions:
+          - vendor_name: COMMON
+            data: '{"namespace": "semantic_compiler", "version": 1, "additivity": {"type": "semi_additive", "over": "debt.period", "entity": ["debt.customer_id"], "aggregation": "last", "selection": "global_period", "snapshot_grain": "month", "population": "active_customers", "missing": "carry_forward", "max_carry_forward": 2, "on_stale": "error", "unexpected": "exclude", "nulls": "as_missing"}}'

@@ -1,5 +1,5 @@
 id: e0-populations-missing-field-001
-rules: [POP-4, POP-4.3, POP-4.6, E0C-22]
+rules: [POP-4, POP-4.3, POP-4.6, E0C-22, E0C-2.5, E0D-3.2]
 model: e0-populations-missing-field-001
 expect:
   outcome: load_error

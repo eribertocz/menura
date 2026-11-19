@@ -5,6 +5,7 @@
 use std::fmt;
 
 use semantic_compiler_contracts::types::audit_record::OssieFormat;
+use semantic_compiler_contracts::types::compiled_plan::InputDocument;
 use serde::Deserialize;
 
 /// A rule ID of the specification, such as `E3-3.2` or `CS-2.1`.
@@ -104,6 +105,8 @@ pub struct Expectation {
     /// Load warnings that must be reported, by code.
     #[serde(default)]
     pub warnings: Vec<String>,
+    /// The location of the first error, compared as CS-2.9 says.
+    pub location: Option<ExpectedLocation>,
     /// Golden SQL file next to the case, compared byte for byte (CS-2.3).
     pub sql: Option<String>,
     /// Expected rows file next to the case, compared as CS-2.4 says.
@@ -112,6 +115,20 @@ pub struct Expectation {
     pub row_order: Option<RowOrder>,
     /// Relative tolerance for float columns.
     pub tolerance: Option<f64>,
+}
+
+/// The expected location of the first error (CS-2 `expect.location`, CS-2.9).
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct ExpectedLocation {
+    /// The input document, compared exactly.
+    pub document: InputDocument,
+    /// The JSON Pointer inside the document, compared exactly.
+    pub pointer: String,
+    /// The line, from 1, compared only when the case gives it.
+    pub line: Option<u64>,
+    /// The column, from 1, compared only when the case gives it.
+    pub column: Option<u64>,
 }
 
 /// The kind of result a case expects (CS-2 `expect.outcome`).

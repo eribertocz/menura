@@ -1,0 +1,22 @@
+version: "0.1.1"
+semantic_model:
+  - name: e0_cast_text_rounding
+    description: Model with a field that casts text to a decimal with fewer fractional digits than the text has
+    custom_extensions:
+      - vendor_name: COMMON
+        data: '{"namespace": "semantic_compiler", "version": 1, "security_context": {"roles": ["analyst"], "attributes": []}}'
+    datasets:
+      - name: orders
+        source: shop.main.orders
+        primary_key: [order_id]
+        fields:
+          - name: order_id
+            expression: {dialects: [{dialect: ANSI_SQL, expression: order_id}]}
+          - name: rounded_amount
+            expression: {dialects: [{dialect: ANSI_SQL, expression: "CAST(amount_text AS DECIMAL(10, 1))"}]}
+        custom_extensions:
+          - vendor_name: COMMON
+            data: '{"namespace": "semantic_compiler", "version": 1, "access": {"mode": "roles", "roles": ["analyst"]}}'
+    metrics:
+      - name: order_count
+        expression: {dialects: [{dialect: ANSI_SQL, expression: COUNT(orders.order_id)}]}

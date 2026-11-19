@@ -1,5 +1,5 @@
 id: e0-extensions-unknown-key-001
-rules: [E0C-2.4, E0C-02]
+rules: [E0C-2.4, E0C-02, E0-4.1, E0-4.2]
 model: e0-extensions-unknown-key-001
 expect:
   outcome: load_error

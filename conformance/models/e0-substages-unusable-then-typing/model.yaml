@@ -1,0 +1,28 @@
+version: "0.1.1"
+semantic_model:
+  - name: e0_substages_unusable_then_typing
+    description: Model with a field whose source column is missing (E0.d) and a field whose expression does not type (E0.f)
+    custom_extensions:
+      - vendor_name: COMMON
+        data: '{"namespace": "semantic_compiler", "version": 1, "security_context": {"roles": ["analyst"], "attributes": []}}'
+    datasets:
+      - name: orders
+        source: shop.main.orders
+        primary_key: [order_id]
+        fields:
+          - name: order_id
+            expression: {dialects: [{dialect: ANSI_SQL, expression: order_id}]}
+          - name: status
+            expression: {dialects: [{dialect: ANSI_SQL, expression: status}]}
+          - name: discount
+            expression: {dialects: [{dialect: ANSI_SQL, expression: discount}]}
+          - name: status_plus_one
+            expression: {dialects: [{dialect: ANSI_SQL, expression: status + 1}]}
+          - name: amount
+            expression: {dialects: [{dialect: ANSI_SQL, expression: amount}]}
+        custom_extensions:
+          - vendor_name: COMMON
+            data: '{"namespace": "semantic_compiler", "version": 1, "access": {"mode": "roles", "roles": ["analyst"]}}'
+    metrics:
+      - name: total_amount
+        expression: {dialects: [{dialect: ANSI_SQL, expression: SUM(orders.amount)}]}

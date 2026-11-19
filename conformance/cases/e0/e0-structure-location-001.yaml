@@ -1,0 +1,7 @@
+id: e0-structure-location-001
+rules: [E0A-2.7, CS-2.9, E0B-03]
+model: e0-structure-wrong-type-001
+expect:
+  outcome: load_error
+  error: E0B-03
+  location: {document: model, pointer: /semantic_model/0/datasets/0/fields/1/label, line: 16, column: 20}
