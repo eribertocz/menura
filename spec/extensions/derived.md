@@ -22,7 +22,7 @@ metrics:
           expression: AGG(collected) / AGG(billed)
     custom_extensions:
       - vendor_name: COMMON
-        data: '{"namespace": "semantic_compiler", "version": 1, "derived": {"on_division_by_zero": "null"}}'
+        data: '{"namespace": "menura", "version": 1, "derived": {"on_division_by_zero": "null"}}'
 ```
 
 ## DER-3 Schema

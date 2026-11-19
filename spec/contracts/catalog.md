@@ -1,6 +1,6 @@
 # Contract: catalog
 
-**Contract version:** 1.0.0 · **Owner:** `semantic_compiler` · **Producer:** data pipelines · **Consumer:** compiler
+**Contract version:** 1.1.0 · **Owner:** `menura` · **Producer:** data pipelines · **Consumer:** compiler
 
 ## CAT-1 Purpose
 
@@ -11,8 +11,8 @@ queries the database (P2) and never assumes anything the catalog does not prove.
 
 | Document | `contract` | Contains | Changes when | Used by |
 |---|---|---|---|---|
-| Schema | `semantic_compiler.catalog_schema` | Relations, columns, types | The database structure changes | E0 |
-| State | `semantic_compiler.catalog_state` | Data versions per period, summary builds, integrity checks, row estimates | Data is loaded or corrected | E5 |
+| Schema | `menura.catalog_schema` | Relations, columns, types | The database structure changes | E0 |
+| State | `menura.catalog_state` | Data versions per period, summary builds, integrity checks, row estimates | Data is loaded or corrected | E5 |
 
 - **CAT-2.1** Each document has its own `document_id` and is versioned separately.
 - **CAT-2.2** The state document MUST name, in `schema_document_id`, the schema document it is consistent with. If it differs from the schema used to load the model, the state document is ignored (`WCAT-04`).
@@ -175,6 +175,7 @@ difference. Only then may E5 use it: skip deduplication (`key_uniqueness`) or us
 | `WCAT-02` | State document: `contract` or `contract_version` not supported | State ignored |
 | `WCAT-03` | State document violates a CAT-8 rule | State ignored |
 | `WCAT-04` | `schema_document_id` does not match the schema in use | State ignored |
+| `WCAT-05` | A catalog schema or state document uses the former contract name `semantic_compiler.*` (CON-0.5) | Document accepted |
 
 - **CAT-9.1** Order of checks for each document: the document is JSON (a document that is not valid UTF-8 JSON is `ECAT-01` / `WCAT-01`, located at the empty pointer), then `contract` and `contract_version` (`ECAT-02` / `WCAT-02`), then the JSON Schema (`ECAT-01` / `WCAT-01`), then, for the state document, `schema_document_id` (`WCAT-04`), then the CAT-8 rules (`ECAT-03` / `WCAT-03`). The CAT-8 rules of a state document are therefore always checked against the schema it refers to. The first failure is reported, as in E1-2.1.
 

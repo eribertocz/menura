@@ -95,7 +95,7 @@ rows of unexpected entities.
 ## ADD-8 Example
 
 ```json
-{"namespace": "semantic_compiler", "version": 1,
+{"namespace": "menura", "version": 1,
  "additivity": {
    "type": "semi_additive", "over": "debt.period", "entity": ["debt.customer_id"],
    "aggregation": "last", "selection": "global_period", "snapshot_grain": "month",

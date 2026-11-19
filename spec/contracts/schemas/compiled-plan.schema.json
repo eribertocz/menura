@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://semantic-compiler.invalid/spec/contracts/compiled-plan/1.0.0",
+  "$id": "https://menura.invalid/spec/contracts/compiled-plan/1.1.0",
   "title": "Compiled plan document",
   "type": "object",
   "required": [
@@ -21,10 +21,7 @@
   "additionalProperties": false,
   "properties": {
     "contract": {
-      "enum": [
-        "semantic_compiler.compiled_plan",
-        "semantic_compiler.explanation"
-      ]
+      "enum": ["menura.compiled_plan", "menura.explanation", "semantic_compiler.compiled_plan", "semantic_compiler.explanation"]
     },
     "contract_version": {
       "$ref": "#/$defs/semver"
@@ -502,7 +499,7 @@
       "if": {
         "properties": {
           "contract": {
-            "const": "semantic_compiler.compiled_plan"
+            "enum": ["menura.compiled_plan", "semantic_compiler.compiled_plan"]
           }
         }
       },

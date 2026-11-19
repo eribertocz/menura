@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://semantic-compiler.invalid/spec/contracts/query/1.0.0",
+  "$id": "https://menura.invalid/spec/contracts/query/1.1.0",
   "title": "Query document",
   "type": "object",
   "required": [
@@ -11,7 +11,7 @@
   "additionalProperties": false,
   "properties": {
     "contract": {
-      "const": "semantic_compiler.query"
+      "enum": ["menura.query", "semantic_compiler.query"]
     },
     "contract_version": {
       "$ref": "#/$defs/semver"
@@ -330,7 +330,7 @@
           "minimum": 1
         },
         "namespace": {
-          "const": "semantic_compiler"
+          "enum": ["menura", "semantic_compiler"]
         }
       }
     }

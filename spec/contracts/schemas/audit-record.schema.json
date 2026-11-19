@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://semantic-compiler.invalid/spec/contracts/audit-record/1.0.0",
+  "$id": "https://menura.invalid/spec/contracts/audit-record/1.1.0",
   "title": "Audit record",
   "type": "object",
   "additionalProperties": false,
@@ -19,7 +19,7 @@
   ],
   "properties": {
     "contract": {
-      "const": "semantic_compiler.audit_record"
+      "enum": ["menura.audit_record", "semantic_compiler.audit_record"]
     },
     "contract_version": {
       "type": "string",

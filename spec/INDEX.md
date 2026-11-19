@@ -148,7 +148,7 @@ Find a rule ID or a section here, then open only that file at that line.
 | [09-continuous-integration.md](09-continuous-integration.md#L37) | 37 | section | CI-3 Rules |
 | [09-continuous-integration.md](09-continuous-integration.md#L39) | 39 | rule | CI-3.1 |
 | [09-continuous-integration.md](09-continuous-integration.md#L40) | 40 | rule | CI-3.2 |
-| [README.md](README.md#L1) | 1 | section | semantic_compiler — Specification |
+| [README.md](README.md#L1) | 1 | section | Menura — Specification |
 | [README.md](README.md#L9) | 9 | section | Reading order |
 | [README.md](README.md#L28) | 28 | section | Conventions |
 | [architecture/README.md](architecture/README.md#L1) | 1 | section | 3. Architecture |
@@ -178,12 +178,13 @@ Find a rule ID or a section here, then open only that file at that line.
 | [contracts/README.md](contracts/README.md#L22) | 22 | rule | CON-0.2 |
 | [contracts/README.md](contracts/README.md#L23) | 23 | rule | CON-0.3 |
 | [contracts/README.md](contracts/README.md#L24) | 24 | rule | CON-0.4 |
-| [contracts/README.md](contracts/README.md#L26) | 26 | section | Shared rules |
-| [contracts/README.md](contracts/README.md#L28) | 28 | rule | CON-1 |
-| [contracts/README.md](contracts/README.md#L29) | 29 | rule | CON-2 |
-| [contracts/README.md](contracts/README.md#L30) | 30 | rule | CON-3 |
-| [contracts/README.md](contracts/README.md#L31) | 31 | rule | CON-4 |
-| [contracts/README.md](contracts/README.md#L32) | 32 | rule | CON-5 |
+| [contracts/README.md](contracts/README.md#L25) | 25 | rule | CON-0.5 |
+| [contracts/README.md](contracts/README.md#L27) | 27 | section | Shared rules |
+| [contracts/README.md](contracts/README.md#L29) | 29 | rule | CON-1 |
+| [contracts/README.md](contracts/README.md#L30) | 30 | rule | CON-2 |
+| [contracts/README.md](contracts/README.md#L31) | 31 | rule | CON-3 |
+| [contracts/README.md](contracts/README.md#L32) | 32 | rule | CON-4 |
+| [contracts/README.md](contracts/README.md#L33) | 33 | rule | CON-5 |
 | [contracts/catalog.md](contracts/catalog.md#L1) | 1 | section | Contract: catalog |
 | [contracts/catalog.md](contracts/catalog.md#L5) | 5 | section | CAT-1 Purpose |
 | [contracts/catalog.md](contracts/catalog.md#L10) | 10 | section | CAT-2 Two documents |
@@ -216,7 +217,7 @@ Find a rule ID or a section here, then open only that file at that line.
 | [contracts/catalog.md](contracts/catalog.md#L149) | 149 | section | CAT-7.4 Never |
 | [contracts/catalog.md](contracts/catalog.md#L155) | 155 | section | CAT-8 Semantic rules |
 | [contracts/catalog.md](contracts/catalog.md#L167) | 167 | section | CAT-9 Errors |
-| [contracts/catalog.md](contracts/catalog.md#L179) | 179 | rule | CAT-9.1 |
+| [contracts/catalog.md](contracts/catalog.md#L180) | 180 | rule | CAT-9.1 |
 | [contracts/compiled-plan.md](contracts/compiled-plan.md#L1) | 1 | section | Contract: compiled plan and compile error |
 | [contracts/compiled-plan.md](contracts/compiled-plan.md#L7) | 7 | section | PLN-1 Compiled plan |
 | [contracts/compiled-plan.md](contracts/compiled-plan.md#L25) | 25 | section | PLN-2 SQL rules |

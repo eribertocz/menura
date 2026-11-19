@@ -1,6 +1,6 @@
 # Contract: integrity checks
 
-**Contract version:** 1.0.0 · **Owner:** `semantic_compiler` · **Producer:** compiler (`integrity_checks`) · **Consumer:** data pipelines
+**Contract version:** 1.1.0 · **Owner:** `menura` · **Producer:** compiler (`integrity_checks`) · **Consumer:** data pipelines
 
 ## CHK-1 Purpose
 
@@ -9,7 +9,7 @@ after each load and report the results in the catalog state (`checks`, `aggregat
 
 ## CHK-2 Document
 
-`{contract: "semantic_compiler.integrity_checks", contract_version, model_hash, dialect, checks: [...]}`; each check:
+`{contract: "menura.integrity_checks", contract_version, model_hash, dialect, checks: [...]}`; each check:
 
 | Field | Meaning |
 |---|---|

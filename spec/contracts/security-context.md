@@ -1,6 +1,6 @@
 # Contract: security context
 
-**Contract version:** 1.0.0 · **Owner:** `semantic_compiler` · **Producer:** host authentication · **Consumer:** compiler
+**Contract version:** 1.1.0 · **Owner:** `menura` · **Producer:** host authentication · **Consumer:** compiler
 
 ## SEC-1 Purpose
 
@@ -12,7 +12,7 @@ identity and is responsible for the context it sends.
 
 | Field | Required | Rule |
 |---|---|---|
-| `contract` | Yes | `semantic_compiler.security_context` |
+| `contract` | Yes | `menura.security_context` |
 | `contract_version` | Yes | Semantic version, accepted as in CAT-3.2 |
 | `subject` | Yes | Opaque identifier of the user. Used only in the audit record, never in SQL or in authorization. |
 | `roles` | Yes (may be empty) | Roles granted to the user |

@@ -1,6 +1,6 @@
 # Contract: semantic model
 
-**Owner:** Apache Ossie (core) and `semantic_compiler` (extensions) · **Producer:** modeling · **Consumer:** compiler
+**Owner:** Apache Ossie (core) and `menura` (extensions) · **Producer:** modeling · **Consumer:** compiler
 
 ## MDL-1 Format
 
@@ -16,13 +16,13 @@ Every capability outside Apache Ossie is carried in the object's `custom_extensi
 custom_extensions:
   - vendor_name: COMMON
     data: >-
-      {"namespace": "semantic_compiler", "version": 1, "<extension key>": { ... }}
+      {"namespace": "menura", "version": 1, "<extension key>": { ... }}
 ```
 
-- **MDL-2.1** At most one `semantic_compiler` entry per object. Other vendors' entries are preserved and ignored.
+- **MDL-2.1** At most one `menura` entry per object; until 1.0.0 an entry under the former namespace `semantic_compiler` counts as a `menura` entry (CON-0.5). Other vendors' entries are preserved and ignored.
 - **MDL-2.2** `data` MUST be a JSON object with `namespace` and `version`. An unknown `version` is an error.
-- **MDL-2.3** The namespace value is configurable at build time and defaults to `semantic_compiler`; all rules refer to it by that default.
-- **MDL-2.4** In the Apache Ossie development line the same entry is called `nonportable_extensions` and `data` is an object. The reader accepts that form only with `ossie_format: development` (section 4.5), and `semantic-compiler migrate` converts between them.
+- **MDL-2.3** The namespace value is configurable at build time and defaults to `menura`; all rules refer to it by that default. Until 1.0.0, `semantic_compiler` is also accepted (CON-0.5).
+- **MDL-2.4** In the Apache Ossie development line the same entry is called `nonportable_extensions` and `data` is an object. The reader accepts that form only with `ossie_format: development` (section 4.5), and `menura migrate` converts between them.
 - **MDL-2.5** A `COMMON` entry whose `namespace` differs from the configured one is someone else's and is kept uninterpreted (E0C-1.1), in models and in queries alike.
 
 | Extension key | Object | Specified in |

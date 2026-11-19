@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://semantic-compiler.invalid/spec/contracts/catalog-state/1.0.0",
+  "$id": "https://menura.invalid/spec/contracts/catalog-state/1.1.0",
   "title": "Catalog state document",
   "type": "object",
   "required": [
@@ -13,7 +13,7 @@
   "additionalProperties": false,
   "properties": {
     "contract": {
-      "const": "semantic_compiler.catalog_state"
+      "enum": ["menura.catalog_state", "semantic_compiler.catalog_state"]
     },
     "contract_version": {
       "$ref": "#/$defs/semver"

@@ -1,6 +1,6 @@
 # Contract: query
 
-**Contract version:** 1.0.0 · **Owner:** `semantic_compiler` · **Producers:** hosts, gateways, translators · **Consumer:** compiler
+**Contract version:** 1.1.0 · **Owner:** `menura` · **Producers:** hosts, gateways, translators · **Consumer:** compiler
 
 ## QRY-1 Purpose and Apache Ossie status
 
@@ -18,7 +18,7 @@ A query asks for metrics, grouped by dimensions, under filters. It has two forms
 
 | Field | Required | Rule |
 |---|---|---|
-| `contract` | Yes | `semantic_compiler.query` |
+| `contract` | Yes | `menura.query` |
 | `contract_version` | Yes | Semantic version, accepted as in CAT-3.2 |
 | `time_zone` | Yes | IANA time zone name |
 | `reference_time` | If the query needs "now" | RFC 3339 instant with offset. The compiler never reads a clock (P2). |
@@ -37,7 +37,7 @@ The portable part is exactly the Apache Ossie Layer 3 JSON binding: `dimensions`
 ## QRY-4 Extensions
 
 Capabilities Layer 3 lists as future options go in `nonportable_extensions`, one entry with
-`vendor_name: COMMON` and `data` an object in the shape of MDL-2: `{"namespace": "semantic_compiler", "version": 1, …}`.
+`vendor_name: COMMON` and `data` an object in the shape of MDL-2: `{"namespace": "menura", "version": 1, …}`.
 Each is temporary (section 4.3). Another `namespace` is `E_INVALID_QUERY`; a deployment that configures another namespace (MDL-2.3) publishes its own schema with that value.
 
 | Key | Rule |
@@ -80,3 +80,4 @@ Out of version 1: predicates on metric values, subtotals, row listings, per-metr
 | `EQRY-11` | `date_range` with `from` after `to` |
 | `EQRY-12` | `paths` relationships that do not chain from `from` to `to`, or two entries for the same pair |
 | `EQRY-13` | SQL item that is not a plain field and has no alias |
+| `WQRY-01` | Warning: a query or security context uses the former contract name `semantic_compiler.*`, or a query extension uses the former namespace (CON-0.5); read as the new name until 1.0.0 |

@@ -1,6 +1,6 @@
 # Contract: model description
 
-**Contract version:** 1.0.0 · **Owner:** `semantic_compiler` · **Producer:** compiler (`describe`) · **Consumers:** hosts, translators, editors
+**Contract version:** 1.1.0 · **Owner:** `menura` · **Producer:** compiler (`describe`) · **Consumers:** hosts, translators, editors
 
 ## DSC-1 Purpose
 
