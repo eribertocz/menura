@@ -8,7 +8,10 @@ use crate::case::{CaseId, RuleId};
 /// The result of one case.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum CaseStatus {
-    /// The stage the case needs is not implemented yet; the case is neither passed nor failed.
+    /// Every part of the case ran and matched its expectation.
+    Passed,
+    /// A part of the case needs a stage that is not implemented yet, and every part that ran
+    /// matched; the case is neither passed nor failed (CS-2.8).
     Pending(String),
     /// The case failed, with the reason.
     Failed(String),
@@ -17,14 +20,16 @@ pub enum CaseStatus {
 impl CaseStatus {
     fn label(&self) -> &'static str {
         match self {
+            Self::Passed => "passed",
             Self::Pending(_) => "pending",
             Self::Failed(_) => "failed",
         }
     }
 
-    fn reason(&self) -> &str {
+    fn reason(&self) -> Option<&str> {
         match self {
-            Self::Pending(reason) | Self::Failed(reason) => reason,
+            Self::Passed => None,
+            Self::Pending(reason) | Self::Failed(reason) => Some(reason),
         }
     }
 }
@@ -76,25 +81,27 @@ impl Report {
         for (rule, cases) in self.by_rule() {
             let _ = writeln!(text, "{rule}");
             for case in cases {
-                let _ = writeln!(
-                    text,
-                    "  {} {}: {}",
-                    case.id,
-                    case.status.label(),
-                    case.status.reason()
-                );
+                let _ = match case.status.reason() {
+                    Some(reason) => {
+                        writeln!(text, "  {} {}: {reason}", case.id, case.status.label())
+                    }
+                    None => writeln!(text, "  {} {}", case.id, case.status.label()),
+                };
             }
         }
-        let failed = self
-            .cases
-            .iter()
-            .filter(|case| matches!(case.status, CaseStatus::Failed(_)))
-            .count();
+        let count = |label: &str| {
+            self.cases
+                .iter()
+                .filter(|case| case.status.label() == label)
+                .count()
+        };
         let _ = writeln!(
             text,
-            "{} cases: {} pending, {failed} failed",
+            "{} cases: {} passed, {} pending, {} failed",
             self.cases.len(),
-            self.cases.len() - failed
+            count("passed"),
+            count("pending"),
+            count("failed")
         );
         text
     }
@@ -126,14 +133,23 @@ mod tests {
             cases: vec![
                 case("b-001", &["X-2", "X-1"], CaseStatus::Pending("p".into())),
                 case("a-001", &["X-1"], CaseStatus::Failed("f".into())),
+                case("c-001", &["X-2"], CaseStatus::Passed),
             ],
         };
         assert_eq!(
             report.render(),
-            "X-1\n  b-001 pending: p\n  a-001 failed: f\nX-2\n  b-001 pending: p\n\
-             2 cases: 1 pending, 1 failed\n"
+            "X-1\n  b-001 pending: p\n  a-001 failed: f\nX-2\n  b-001 pending: p\n  c-001 passed\n\
+             3 cases: 1 passed, 1 pending, 1 failed\n"
         );
         assert!(report.has_failures());
+    }
+
+    #[test]
+    fn cs_2_8_passed_is_not_a_failure() {
+        let report = Report {
+            cases: vec![case("a-001", &["X-1"], CaseStatus::Passed)],
+        };
+        assert!(!report.has_failures());
     }
 
     #[test]

@@ -1,8 +1,8 @@
 //! Runs the conformance suite of `spec/08-conformance-suite.md` and reports results per rule ID.
 //!
 //! The runner reads the case format of CS-2, prepares a fresh `DuckDB` database for every case as
-//! CS-4.2 says, and reports each case under the rule IDs it covers (CS-4.3). No other crate may
-//! depend on this one.
+//! CS-4.2 says, runs the load part of every case through `core` (CS-2.8), and reports each case
+//! under the rule IDs it covers (CS-4.3). No other crate may depend on this one.
 //!
 //! # Example
 //!
@@ -27,6 +27,7 @@ pub mod database;
 pub mod error;
 pub mod fixture;
 pub mod load_options;
+mod load_part;
 pub mod ossie;
 pub mod report;
 pub mod runner;

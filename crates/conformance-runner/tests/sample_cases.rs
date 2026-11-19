@@ -11,7 +11,7 @@ use std::path::{Path, PathBuf};
 
 use semantic_compiler_conformance_runner::case::Outcome;
 use semantic_compiler_conformance_runner::case_file::read_case;
-use semantic_compiler_conformance_runner::runner::PENDING_REASON;
+use semantic_compiler_conformance_runner::runner::QUERY_PENDING_REASON;
 use semantic_compiler_conformance_runner::{CaseStatus, RunnerErrorKind, run};
 
 fn conformance_directory() -> PathBuf {
@@ -41,16 +41,16 @@ fn cs_2_sample_cases_cover_every_outcome_kind() {
 }
 
 #[test]
-fn cs_4_1_sample_cases_are_all_pending() {
+fn cs_2_8_the_load_error_sample_passes_and_the_other_samples_are_pending() {
     let report = run(&conformance_directory(), Some("sample")).unwrap();
     assert_eq!(report.cases.len(), 4);
     for case in &report.cases {
-        assert_eq!(
-            case.status,
-            CaseStatus::Pending(PENDING_REASON.to_owned()),
-            "{}",
-            case.id
-        );
+        let expected = if case.id.as_str() == "sample-load-error-001" {
+            CaseStatus::Passed
+        } else {
+            CaseStatus::Pending(QUERY_PENDING_REASON.to_owned())
+        };
+        assert_eq!(case.status, expected, "{}", case.id);
     }
     assert!(!report.has_failures());
 }
@@ -78,5 +78,8 @@ fn cs_4_3_report_lists_each_sample_case_under_its_rule() {
         .unwrap()
         .render();
     assert!(text.contains("CS-2.2\n  sample-plan-001 pending"), "{text}");
-    assert!(text.ends_with("4 cases: 4 pending, 0 failed\n"), "{text}");
+    assert!(
+        text.ends_with("4 cases: 1 passed, 3 pending, 0 failed\n"),
+        "{text}"
+    );
 }
