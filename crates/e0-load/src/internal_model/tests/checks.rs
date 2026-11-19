@@ -2,9 +2,11 @@
 
 use semantic_compiler_model::internal_model::{CheckKind, InternalModel};
 
+use super::hashes::widened;
+
 use super::{
-    ADDITIVITY_CATALOG, ADDITIVITY_MODEL, CATALOG, SUMMARIES_CATALOG, SUMMARIES_MODEL, edited,
-    fixture, load,
+    ADDITIVITY_CATALOG, ADDITIVITY_MODEL, CATALOG, MODEL, SUMMARIES_CATALOG, SUMMARIES_MODEL,
+    edited, fixture, load,
 };
 
 fn identifiers(model: &InternalModel) -> Vec<String> {
@@ -82,7 +84,7 @@ fn chk_3_a_summary_check_carries_the_summary_definition_hash() {
 fn chk_3_a_field_the_check_does_not_read_leaves_its_hash_unchanged() {
     let original = fixture();
     let unrelated = load(&edited("'region'", "'UPPER(region)'"), CATALOG);
-    let read = load(&edited("'customer_id'", "'customer_id + 0'"), CATALOG);
+    let read = load(MODEL, &widened(CATALOG, "shop.main.orders", "customer_id"));
     for check_id in [
         "key_uniqueness:ORDERS_CUSTOMER",
         "orphan_keys:ORDERS_CUSTOMER",

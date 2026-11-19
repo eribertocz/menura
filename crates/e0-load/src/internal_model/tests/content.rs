@@ -6,7 +6,7 @@ use semantic_compiler_model::internal_model::{
     RoleName, TypedValue, ValueType,
 };
 
-use super::{CATALOG, MODEL, edited, fixture, load, name};
+use super::{CATALOG, edited, fixture, load, name};
 
 #[test]
 fn e0h_1_1_the_same_input_builds_equal_models() {

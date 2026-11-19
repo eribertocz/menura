@@ -51,13 +51,8 @@ fn load(model: &str, catalog: &str) -> InternalModel {
     let extensions = validate_extensions(&document, &structure.semantic_model, DEFAULT_NAMESPACE)
         .expect("the extensions are accepted");
     let summaries = summary_datasets(&structure.semantic_model, DEFAULT_NAMESPACE);
-    let access = resolve_access(
-        &document,
-        &structure.semantic_model,
-        &extensions.security,
-        &summaries,
-        false,
-    );
+    let model = &structure.semantic_model;
+    let access = resolve_access(&document, model, &extensions.security, &summaries, false);
     let references = resolve_references(&document, &structure, &catalog, &summaries)
         .expect("the references are accepted");
     let derived = resolve_derived_references(&document, &structure, &extensions)
@@ -74,21 +69,17 @@ fn load(model: &str, catalog: &str) -> InternalModel {
     let derived_typing =
         type_derived_metrics(&document, &structure, &catalog, &typing, &derived, &context)
             .expect("the derived formulas are accepted");
-    let classification = classify_metrics(
-        &document,
-        &structure,
-        &ClassificationInput {
-            extensions: &extensions,
-            references: &references,
-            derived: &derived,
-            context: &context,
-            typing: &typing,
-            derived_typing: &derived_typing,
-        },
-    );
+    let earlier = ClassificationInput {
+        extensions: &extensions,
+        references: &references,
+        derived: &derived,
+        context: &context,
+        typing: &typing,
+        derived_typing: &derived_typing,
+    };
+    let classification = classify_metrics(&document, &structure, &earlier);
     let input = ModelInput {
         structure: &structure,
-        catalog: &catalog,
         extensions: &extensions,
         access: &access,
         references: &references,

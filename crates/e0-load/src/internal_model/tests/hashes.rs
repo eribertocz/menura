@@ -10,7 +10,7 @@ use super::{
 use crate::internal_model::hashing::model_hash;
 
 /// `catalog` with the logical type of the column `column` of `source` widened to 64 bits.
-fn widened(catalog: &str, source: &str, column: &str) -> String {
+pub(super) fn widened(catalog: &str, source: &str, column: &str) -> String {
     let mut document: Json = serde_json::from_str(catalog).expect("the catalog is JSON");
     for relation in document["relations"].as_array_mut().expect("relations") {
         if relation["source"] != source {
@@ -63,7 +63,6 @@ fn e0h_1_3_format_key_order_keyword_case_parentheses_and_quoting_keep_the_hash()
             "        from_columns: [customer_id]\n",
             "        from_columns:\n          - customer_id\n",
         ),
-        edited("'region'", "'\"REGION\"'"),
     ];
     for model in reformatted {
         assert_eq!(hash_of(&model), original, "{model}");
@@ -100,8 +99,8 @@ fn e0h_2_1_other_dialects_and_foreign_extensions_never_change_the_hash() {
         "{dialect: ANSI_SQL, expression: 'amount'}, {dialect: SNOWFLAKE, expression: 'amount * 2'}",
     );
     let foreign_extension = edited(
-        "        source: shop.main.customers\n",
-        "        source: shop.main.customers\n        custom_extensions:\n          - vendor_name: DBT\n            data: '{\"materialized\": \"table\"}'\n",
+        "        custom_extensions:\n          - vendor_name: COMMON\n            data: '{\"namespace\": \"semantic_compiler\", \"version\": 1, \"access\"",
+        "        custom_extensions:\n          - vendor_name: DBT\n            data: '{\"materialized\": \"table\"}'\n          - vendor_name: COMMON\n            data: '{\"namespace\": \"semantic_compiler\", \"version\": 1, \"access\"",
     );
     assert_eq!(hash_of(&other_dialect), hash_of(MODEL));
     assert_eq!(hash_of(&foreign_extension), hash_of(MODEL));

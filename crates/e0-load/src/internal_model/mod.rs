@@ -5,9 +5,8 @@
 //! to the elements that read it (E0-4.2a), removes the relationships made unusable after E0.e
 //! from the graph and recomputes reachability with the E0.e algorithm (E0H-2.3).
 
-use semantic_compiler_contracts::types::catalog::CatalogSchemaDocument;
 use semantic_compiler_model::internal_model::{
-    Descriptions, InternalModel, ModelParts, NormalizedName, RelationshipGraph,
+    Dataset, ElementKind, InternalModel, ModelParts, NormalizedName, Summary, UnusableElement,
 };
 
 use crate::classification::Classification;
@@ -21,15 +20,36 @@ use crate::relationships::Relationships;
 use crate::structure::Structure;
 use crate::typing::Typing;
 
+mod assembly;
+mod checks;
+mod datasets;
+mod declarations;
+mod documents;
+mod graph;
 pub(crate) mod hashing;
+mod index;
+mod located;
+mod metrics;
+mod reads;
+mod security;
+mod summaries;
+mod trees;
+mod usability;
+mod warnings;
+
+use crate::nodes::{member, text};
+use crate::outline::{ModelOutline, outline};
+use crate::pointer::JsonPointer;
+use assembly::Assembly;
+use checks::{CheckedModel, recorded_checks};
+use datasets::by_name;
+use located::{declared, descriptions, location_of};
 
 /// The outputs of E0.b to E0.g that E0.h reads; every substage succeeded (E0-3).
 #[derive(Debug, Clone, Copy)]
 pub(crate) struct ModelInput<'earlier, 'document> {
     /// E0.b: the selected semantic model and its compiled expressions.
     pub(crate) structure: &'earlier Structure<'document>,
-    /// The admitted catalog schema (E0-3.2).
-    pub(crate) catalog: &'earlier CatalogSchemaDocument,
     /// E0.c: the entries of ours and the declarations of each extension.
     pub(crate) extensions: &'earlier Extensions,
     /// E0.c: the access of every dataset, with `W0C-40` and `W0C-41`.
@@ -52,22 +72,128 @@ pub(crate) struct ModelInput<'earlier, 'document> {
 
 /// Builds the internal model of the semantic model `input.structure` selected in `document`.
 pub(crate) fn build_internal_model(document: &Node, input: &ModelInput<'_, '_>) -> InternalModel {
-    let _ = (document, input);
+    let selected = &input.structure.semantic_model;
+    let model = outline(selected.node, &selected.pointer);
+    let usability = usability::usability(input, &model);
+    let assembly = Assembly::new(document, input, &model, usability);
+    let datasets = by_name(
+        model
+            .datasets
+            .iter()
+            .map(|dataset| datasets::dataset(&assembly, dataset)),
+        |dataset| &dataset.name,
+    );
+    let relationships = by_name(
+        model
+            .relationships
+            .iter()
+            .map(|relationship| graph::relationship(&assembly, relationship)),
+        |relationship| &relationship.name,
+    );
+    let metrics = by_name(
+        model
+            .metrics
+            .iter()
+            .map(|metric| metrics::metric(&assembly, metric)),
+        |metric| &metric.name,
+    );
+    let summaries = summaries_of(&assembly, &model, &datasets);
+    let checked = CheckedModel {
+        datasets: &datasets,
+        relationships: &relationships,
+        metrics: &metrics,
+        summaries: &summaries,
+    };
+    let checks = recorded_checks(&checked);
     let parts = ModelParts {
-        name: NormalizedName::new(""),
-        descriptions: Descriptions::default(),
-        datasets: Vec::new(),
-        relationships: Vec::new(),
-        graph: RelationshipGraph::default(),
-        metrics: Vec::new(),
-        security_context: None,
-        summaries: Vec::new(),
-        checks: Vec::new(),
-        unusable: Vec::new(),
-        warnings: Vec::new(),
+        name: located::written(text(member(selected.node, "name")).unwrap_or("")),
+        descriptions: descriptions(document, &selected.pointer),
+        datasets,
+        relationships,
+        graph: graph::graph(&assembly),
+        metrics,
+        security_context: (input.extensions.security.context.as_ref())
+            .map(security::security_context),
+        summaries,
+        checks,
+        unusable: unusable_elements(&assembly, &model),
+        warnings: warnings::warnings(document, input),
     };
     let hash = hashing::model_hash(&parts);
     InternalModel::new(parts, hash)
+}
+
+/// The summaries, ordered by summary dataset name, with their definition hashes.
+fn summaries_of(
+    assembly: &Assembly<'_, '_>,
+    model: &ModelOutline<'_>,
+    datasets: &[Dataset],
+) -> Vec<Summary> {
+    let mut summaries: Vec<Summary> = assembly
+        .input
+        .extensions
+        .summaries
+        .iter()
+        .map(|declaration| {
+            let name = model
+                .datasets
+                .iter()
+                .find(|dataset| dataset.pointer == declaration.dataset)
+                .map_or_else(|| declared(None), |dataset| declared(dataset.name.as_ref()));
+            summaries::summary(declaration, name, datasets)
+        })
+        .collect();
+    summaries.sort_by(|left, right| left.dataset.cmp(&right.dataset));
+    summaries
+}
+
+/// Every unusable element, ordered by kind, then by qualified name (E0H-1.4).
+fn unusable_elements(
+    assembly: &Assembly<'_, '_>,
+    model: &ModelOutline<'_>,
+) -> Vec<UnusableElement> {
+    let mut found: Vec<(ElementKind, Vec<NormalizedName>, &JsonPointer)> = Vec::new();
+    for dataset in &model.datasets {
+        let dataset_name = declared(dataset.name.as_ref());
+        found.push((
+            ElementKind::Dataset,
+            vec![dataset_name.clone()],
+            &dataset.pointer,
+        ));
+        for field in &dataset.fields {
+            let name = vec![dataset_name.clone(), declared(field.name.as_ref())];
+            found.push((ElementKind::Field, name, &field.pointer));
+        }
+        for metric in &dataset.metrics {
+            let name = vec![dataset_name.clone(), declared(metric.name.as_ref())];
+            found.push((ElementKind::Metric, name, &metric.pointer));
+        }
+    }
+    for relationship in &model.relationships {
+        let name = vec![declared(relationship.name.as_ref())];
+        found.push((ElementKind::Relationship, name, &relationship.pointer));
+    }
+    for metric in &model.metrics {
+        found.push((
+            ElementKind::Metric,
+            vec![declared(metric.name.as_ref())],
+            &metric.pointer,
+        ));
+    }
+    let usability = &assembly.usability;
+    let mut unusable: Vec<UnusableElement> = found
+        .into_iter()
+        .filter(|(_, _, pointer)| !usability.is_usable(pointer))
+        .map(|(kind, name, pointer)| UnusableElement {
+            kind,
+            name,
+            load_warning: usability.load_warning(pointer),
+            query_errors: usability.codes(pointer),
+            location: location_of(assembly.document, pointer),
+        })
+        .collect();
+    unusable.sort_by(|left, right| (left.kind, &left.name).cmp(&(right.kind, &right.name)));
+    unusable
 }
 
 #[cfg(test)]
