@@ -52,25 +52,45 @@ pub(super) fn recorded_checks(model: &CheckedModel<'_>) -> Vec<RecordedCheck> {
     {
         for declared in &dataset.populations {
             let definition = population_check(dataset, declared);
-            checks.push(check(CheckKind::Population, &declared.name, &definition));
-        }
-    }
-    for metric in model
-        .metrics
-        .iter()
-        .filter(|metric| metric.query_errors.is_empty())
-    {
-        if let Some(DeclaredAdditivity::SemiAdditive(_)) = metric.declared_additivity {
-            let definition = semi_additive_check(model, metric);
             checks.push(check(
-                CheckKind::SemiAdditive,
-                metric.name.as_str(),
+                CheckKind::Population,
+                declared.name.as_str(),
                 &definition,
             ));
         }
     }
+    for metric in model.metrics {
+        checks.extend(semi_additive(model, None, metric));
+    }
+    for dataset in model.datasets {
+        for metric in &dataset.metrics {
+            checks.extend(semi_additive(model, Some(&dataset.name), metric));
+        }
+    }
     checks.sort_by(|left, right| left.check_id.cmp(&right.check_id));
     checks
+}
+
+/// The `semi_additive` check of `metric` when it is usable and semi-additive; a dataset metric
+/// of `dataset` has the target `<dataset>.<metric>` (E0H-4.3).
+fn semi_additive(
+    model: &CheckedModel<'_>,
+    dataset: Option<&NormalizedName>,
+    metric: &Metric,
+) -> Option<RecordedCheck> {
+    let semi_additive = matches!(
+        metric.declared_additivity,
+        Some(DeclaredAdditivity::SemiAdditive(_))
+    );
+    if !semi_additive || !metric.query_errors.is_empty() {
+        return None;
+    }
+    let target = match dataset {
+        Some(dataset) => format!("{}.{}", dataset.as_str(), metric.name.as_str()),
+        None => metric.name.as_str().to_owned(),
+    };
+    let definition = semi_additive_check(model, dataset, metric);
+    Some(check(CheckKind::SemiAdditive, &target, &definition))
 }
 
 /// A check whose definition hash is the CON-2 hash of `{kind, target, definition}` (CHK-3).
@@ -150,16 +170,23 @@ fn population_check(dataset: &Dataset, declared: &Population) -> Json {
 
 /// What `semi_additive` reads: the metric with its additivity extension, the `source` of its
 /// dataset and every field it reads (CHK-3).
-fn semi_additive_check(model: &CheckedModel<'_>, metric: &Metric) -> Json {
+///
+/// A model metric reads `dataset.field`; a dataset metric of `home` reads its own fields with
+/// bare names, and catalog columns as `source.column`, which are not fields.
+fn semi_additive_check(
+    model: &CheckedModel<'_>,
+    home: Option<&NormalizedName>,
+    metric: &Metric,
+) -> Json {
     let mut read: Vec<(NormalizedName, NormalizedName)> = Vec::new();
     if let Some(tree) = &metric.expression {
         for (qualifier, field) in ReadNames::of(&tree.json_form()).references {
-            if let Some(qualifier) = qualifier {
-                read.push((
-                    NormalizedName::new(qualifier.as_str()),
-                    NormalizedName::new(field.as_str()),
-                ));
-            }
+            let dataset = match (home, qualifier) {
+                (Some(home), None) => home.clone(),
+                (None, Some(qualifier)) => NormalizedName::new(qualifier.as_str()),
+                _ => continue,
+            };
+            read.push((dataset, NormalizedName::new(field.as_str())));
         }
     }
     if let Some(DeclaredAdditivity::SemiAdditive(keys)) = &metric.declared_additivity {

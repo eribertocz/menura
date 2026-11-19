@@ -38,7 +38,8 @@ pub struct RecordedCheck {
     pub check_id: String,
     /// The kind.
     pub kind: CheckKind,
-    /// The relationship, summary or metric name, normalized, or the population name.
+    /// The normalized name of the relationship, summary, population or metric; a
+    /// development-line dataset metric is qualified as `<dataset>.<metric>` (E0H-4.3).
     pub target: String,
     /// The definition hash (CHK-3).
     pub definition_hash: Sha256Hash,

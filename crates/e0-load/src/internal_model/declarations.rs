@@ -47,7 +47,7 @@ fn semi_additive(keys: &additivity::SemiAdditive) -> SemiAdditive {
             Nulls::Error => NullHandling::Error,
         },
         snapshot_grain: keys.snapshot_grain,
-        population: keys.population.clone(),
+        population: keys.population.as_deref().map(written),
         missing: keys.missing.map(missing),
         unexpected: keys.unexpected.map(|unexpected| match unexpected {
             Unexpected::Include => UnexpectedHandling::Include,
@@ -121,7 +121,7 @@ pub(super) fn context_modifier(modifier: &Modifier) -> ContextModifier {
 /// The model's form of a population, with its `required_when` parsed.
 pub(super) fn population(population: &crate::extensions::Population) -> Population {
     Population {
-        name: population.name.clone(),
+        name: written(&population.name),
         entity: population
             .entity
             .iter()

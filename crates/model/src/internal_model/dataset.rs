@@ -62,8 +62,8 @@ pub struct Field {
 /// One population of a dataset (POP-2).
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Population {
-    /// Its `name`, as written: unique in the model.
-    pub name: String,
+    /// Its name, normalized (E0D-1.4): unique in the model (POP-4.3).
+    pub name: NormalizedName,
     /// The fields that identify the entity, in the order written.
     pub entity: Vec<NormalizedName>,
     /// The mode and its fields.

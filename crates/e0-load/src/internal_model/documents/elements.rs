@@ -98,7 +98,7 @@ pub(in super::super) fn population(population: &Population) -> Json {
         ]),
     };
     object([
-        ("name", text(&population.name)),
+        ("name", name(&population.name)),
         ("entity", names(&population.entity)),
         ("mode", mode),
         ("required_when", tree(population.required_when.as_ref())),

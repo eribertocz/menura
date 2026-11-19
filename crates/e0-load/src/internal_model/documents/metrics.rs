@@ -143,7 +143,7 @@ fn semi_additive(keys: &SemiAdditive) -> Json {
         ),
         (
             "population",
-            keys.population.as_deref().map_or(Json::Null, text),
+            keys.population.as_ref().map_or(Json::Null, name),
         ),
         ("missing", keys.missing.map_or(Json::Null, missing)),
         (

@@ -108,8 +108,8 @@ pub struct SemiAdditive {
     pub nulls: NullHandling,
     /// The grain of the snapshots, when given.
     pub snapshot_grain: Option<Grain>,
-    /// The name of the expected population, as written, when given.
-    pub population: Option<String>,
+    /// The expected population, by normalized name, when given.
+    pub population: Option<NormalizedName>,
     /// What an expected entity without a row contributes, when given.
     pub missing: Option<MissingHandling>,
     /// What a row of an unexpected entity does, when given.
