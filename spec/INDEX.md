@@ -243,7 +243,7 @@ Find a rule ID or a section here, then open only that file at that line.
 | [contracts/integrity-checks.md](contracts/integrity-checks.md#L23) | 23 | rule | CHK-2.1 |
 | [contracts/integrity-checks.md](contracts/integrity-checks.md#L24) | 24 | rule | CHK-2.2 |
 | [contracts/integrity-checks.md](contracts/integrity-checks.md#L26) | 26 | section | CHK-3 Definition hash |
-| [contracts/integrity-checks.md](contracts/integrity-checks.md#L35) | 35 | rule | CHK-3.1 |
+| [contracts/integrity-checks.md](contracts/integrity-checks.md#L39) | 39 | rule | CHK-3.1 |
 | [contracts/model-description.md](contracts/model-description.md#L1) | 1 | section | Contract: model description |
 | [contracts/model-description.md](contracts/model-description.md#L5) | 5 | section | DSC-1 Purpose |
 | [contracts/model-description.md](contracts/model-description.md#L11) | 11 | section | DSC-2 Content |
@@ -457,8 +457,8 @@ Find a rule ID or a section here, then open only that file at that line.
 | [stages/E0/README.md](stages/E0/README.md#L37) | 37 | section | E0-4 Errors and unusable elements |
 | [stages/E0/README.md](stages/E0/README.md#L39) | 39 | rule | E0-4.1 |
 | [stages/E0/README.md](stages/E0/README.md#L40) | 40 | rule | E0-4.2 |
-| [stages/E0/README.md](stages/E0/README.md#L41) | 41 | rule | E0-4.3 |
-| [stages/E0/README.md](stages/E0/README.md#L58) | 58 | rule | E0-4.4 |
+| [stages/E0/README.md](stages/E0/README.md#L42) | 42 | rule | E0-4.3 |
+| [stages/E0/README.md](stages/E0/README.md#L59) | 59 | rule | E0-4.4 |
 | [stages/E0/expressions.md](stages/E0/expressions.md#L1) | 1 | section | E0.f Type expressions |
 | [stages/E0/expressions.md](stages/E0/expressions.md#L3) | 3 | section | E0F-1 Scope |
 | [stages/E0/expressions.md](stages/E0/expressions.md#L9) | 9 | section | E0F-2 Language |
@@ -517,15 +517,18 @@ Find a rule ID or a section here, then open only that file at that line.
 | [stages/E0/internal-model.md](stages/E0/internal-model.md#L10) | 10 | rule | E0H-1.4 |
 | [stages/E0/internal-model.md](stages/E0/internal-model.md#L11) | 11 | rule | E0H-1.5 |
 | [stages/E0/internal-model.md](stages/E0/internal-model.md#L13) | 13 | section | E0H-2 Content |
-| [stages/E0/internal-model.md](stages/E0/internal-model.md#L27) | 27 | section | E0H-3 Hashes |
-| [stages/E0/internal-model.md](stages/E0/internal-model.md#L29) | 29 | rule | E0H-3.1 |
-| [stages/E0/internal-model.md](stages/E0/internal-model.md#L30) | 30 | rule | E0H-3.2 |
-| [stages/E0/internal-model.md](stages/E0/internal-model.md#L31) | 31 | rule | E0H-3.3 |
-| [stages/E0/internal-model.md](stages/E0/internal-model.md#L32) | 32 | rule | E0H-3.4 |
-| [stages/E0/internal-model.md](stages/E0/internal-model.md#L34) | 34 | section | E0H-4 Integrity checks |
-| [stages/E0/internal-model.md](stages/E0/internal-model.md#L48) | 48 | rule | E0H-4.1 |
-| [stages/E0/internal-model.md](stages/E0/internal-model.md#L49) | 49 | rule | E0H-4.2 |
-| [stages/E0/internal-model.md](stages/E0/internal-model.md#L50) | 50 | rule | E0H-4.3 |
+| [stages/E0/internal-model.md](stages/E0/internal-model.md#L28) | 28 | rule | E0H-2.1 |
+| [stages/E0/internal-model.md](stages/E0/internal-model.md#L29) | 29 | rule | E0H-2.2 |
+| [stages/E0/internal-model.md](stages/E0/internal-model.md#L30) | 30 | rule | E0H-2.3 |
+| [stages/E0/internal-model.md](stages/E0/internal-model.md#L32) | 32 | section | E0H-3 Hashes |
+| [stages/E0/internal-model.md](stages/E0/internal-model.md#L34) | 34 | rule | E0H-3.1 |
+| [stages/E0/internal-model.md](stages/E0/internal-model.md#L35) | 35 | rule | E0H-3.2 |
+| [stages/E0/internal-model.md](stages/E0/internal-model.md#L36) | 36 | rule | E0H-3.3 |
+| [stages/E0/internal-model.md](stages/E0/internal-model.md#L37) | 37 | rule | E0H-3.4 |
+| [stages/E0/internal-model.md](stages/E0/internal-model.md#L39) | 39 | section | E0H-4 Integrity checks |
+| [stages/E0/internal-model.md](stages/E0/internal-model.md#L53) | 53 | rule | E0H-4.1 |
+| [stages/E0/internal-model.md](stages/E0/internal-model.md#L54) | 54 | rule | E0H-4.2 |
+| [stages/E0/internal-model.md](stages/E0/internal-model.md#L55) | 55 | rule | E0H-4.3 |
 | [stages/E0/metrics.md](stages/E0/metrics.md#L1) | 1 | section | E0.g Classify metrics |
 | [stages/E0/metrics.md](stages/E0/metrics.md#L3) | 3 | section | E0G-1 Components |
 | [stages/E0/metrics.md](stages/E0/metrics.md#L8) | 8 | rule | E0G-1.1 |

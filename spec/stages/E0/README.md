@@ -38,6 +38,7 @@ Run in this order. A substage runs only if the substages it depends on succeeded
 
 - **E0-4.1** Each E0 diagnostic has one **disposition**: *reject* (the model does not load), or *unusable* (the model loads, the element is marked unusable, and a load warning is reported). A query that names an unusable element fails with the element's **query error code**.
 - **E0-4.2** A problem with a construct of the compiler's own (extensions, catalog) or a declared deviation (section 4.6) rejects the model. A problem with a construct Apache Ossie accepts makes the element unusable. An unusable relationship is excluded from the graph; an unusable dataset makes its fields, metrics and relationships unusable.
+- **E0-4.2a** Unusability propagates, and E0.h computes it: a field or metric whose expression (or whose extension) reads an unusable field or metric is unusable, and so is a relationship whose `from_columns` or `to_columns` names an unusable field. Propagation is transitive. It reports no new warning, because the cause already has one. A propagated element records the query error codes of its causes, and an element can hold several codes: its own and every propagated one. E2 picks among them in the order of E2-5 row 12a.
 - **E0-4.3** Within E0, diagnostics are reported in substage order, then in document order (JSON Pointer order), then by code.
 
 | Cause | Disposition | Load warning | Query error |
