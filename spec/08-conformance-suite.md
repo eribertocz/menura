@@ -31,6 +31,7 @@ expect:
   outcome: error                # load_error | error | plan | runtime_error
   error: E_AMBIGUOUS_PATH       # the first error code (E2-5.2)
   warnings: [W0F-01]            # optional: load warnings that MUST be reported, by code
+  location: { document: model, pointer: /semantic_model/0/datasets/0, line: 7, column: 9 }  # optional: location of the first error
   sql: expected.sql             # optional golden file, next to the case
   rows: expected.csv            # optional result after executing on DuckDB
   row_order: any                # any | exact
@@ -46,6 +47,7 @@ expect:
 | CS-2.5 | Runtime-policy cases expect `outcome: runtime_error` with the runtime code (`RADD-01`, …). |
 | CS-2.6 | The **coverage scope** is the list of specification files in `spec/coverage-scope.txt`, one path per line; lines starting with `#` are comments. `rule-coverage` fails when a rule ID defined in a listed file is not covered (T1), and only reports the rule IDs of other files. The specification session adds the files of a version at its gate (7.1a); a file is never removed, so later work cannot lose coverage. |
 | CS-2.7 | `load_options` holds load options of architecture section 3.5 (`ossie_format`, `model_name`, `namespace`, `grant_authenticated_to_all`); an option it omits takes its default. It lets a case cover a rule that applies only with a load option. |
+| CS-2.9 | `location`, when present, is compared with the location of the first error: `document` and `pointer` exactly, and `line` and `column` when the case gives them (PLN-5). |
 | CS-2.8 | A case whose outcome needs stages not yet implemented is checked in parts. From 0.2.0, the runner checks its load: `load_error` cases fully, and for the other outcomes, that the model loads and reports the expected `warnings`. The query part (`error`, `plan`, `runtime_error`) is checked from the version that implements E1–E6 (0.3.0). Until then the runner reports that part as pending, never as passed, and a version gate counts only the parts that run. |
 
 ## CS-3 Apache Ossie suites
