@@ -9,6 +9,7 @@ use crate::extensions::context::fixture::{
     BILLED_CHANGE, BILLED_PRIOR_YEAR, BILLED_SHARE, BILLED_YTD, CATALOG, MODEL, conformance_model,
     data, with,
 };
+use crate::extensions::summaries::SummaryDatasets;
 use crate::extensions::{DEFAULT_NAMESPACE, ExtensionDiagnostic, validate_extensions};
 use crate::read::read_document;
 use crate::references::context::resolve_context_references;
@@ -37,7 +38,13 @@ fn type_in(
         resolve_derived_references(&document, &structure, &extensions).expect("the inputs resolve");
     let context =
         resolve_context_references(&document, &structure, &extensions).expect("the bases resolve");
-    let typing = type_expressions(&document, &structure, &catalog, &derived);
+    let typing = type_expressions(
+        &document,
+        &structure,
+        &catalog,
+        &derived,
+        &SummaryDatasets::default(),
+    );
     let dependents =
         type_derived_metrics(&document, &structure, &catalog, &typing, &derived, &context);
     let time_kinds = check_context_time_kinds(&structure, &typing, &context);

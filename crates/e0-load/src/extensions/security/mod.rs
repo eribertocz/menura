@@ -1,7 +1,8 @@
 //! The security extension, in E0.c: the shape and keys of `security_context` (SCY-5.1.2), of
 //! every `access` (SCY-5.1.3: `E0C-41` to `E0C-44`) and of every `row_access` (SCY-5.1.5:
-//! `E0C-45`), with their undeclared roles (`E0C-47`), and the access of every dataset with the
-//! warnings `W0C-40` and `W0C-41` (SCY-5.1.7).
+//! `E0C-45`), with their undeclared roles (`E0C-47`), the `access` of summaries (SUM-6.1.6:
+//! `E0C-56`), and the access of every dataset with the warnings `W0C-40` and `W0C-41`
+//! (SCY-5.1.7).
 //!
 //! The fields and roles of `access.fields` are resolved in E0.d (`E0C-49`, SCY-5.1.4), and the
 //! conditions of row policies are parsed and typed in E0.f (`E0C-46`, `E0C-48`, SCY-5.1.6),
@@ -15,15 +16,16 @@ pub(crate) mod fixture;
 mod model;
 pub(crate) mod resolution;
 mod row_access;
-mod values;
+pub(in crate::extensions) mod values;
 
 pub(crate) use model::{DeclaredAccess, RowPolicy, Security, SecurityContextDeclaration};
 
 use std::collections::BTreeSet;
 
-use super::diagnostic::ExtensionDiagnostic;
+use super::diagnostic::{ExtensionCode, ExtensionDiagnostic};
 use super::output::{ObjectKind, OwnEntry};
 use super::problems::{Problems, report};
+use super::summaries::AGGREGATE;
 use crate::names::Name;
 use crate::pointer::JsonPointer;
 use access::read_access;
@@ -39,10 +41,6 @@ const ACCESS: &str = "access";
 
 /// The extension key of row policies (MDL-2).
 const ROW_ACCESS: &str = "row_access";
-
-/// The extension key that makes a dataset a summary (SUM-2), the only kind of dataset
-/// `mode: internal` is valid on (`E0C-44`).
-const AGGREGATE: &str = "aggregate";
 
 /// The security declarations of a model and the E0.c diagnostics about them.
 #[derive(Debug, Default)]
@@ -101,16 +99,22 @@ fn read_dataset_entry(
     found: &mut SecurityValidation,
 ) {
     let mut problems = Problems::new();
-    if let Some(value) = entry.extensions.get(ACCESS) {
-        let summary = entry.extensions.contains_key(AGGREGATE);
-        if let Some(access) = read_access(value, declared, summary, &mut problems) {
-            found.security.accesses.push(DeclaredAccess {
-                dataset: entry.object_pointer.clone(),
-                data: entry.data_pointer.clone(),
-                location: entry.location,
-                access,
-            });
-        }
+    let summary = entry.extensions.contains_key(AGGREGATE);
+    if summary && !entry.extensions.contains_key(ACCESS) {
+        problems.push((
+            ExtensionCode::SummaryAccess,
+            "a summary requires `access` with `mode: internal`".to_owned(),
+        ));
+    }
+    if let Some(value) = entry.extensions.get(ACCESS)
+        && let Some(access) = read_access(value, declared, summary, &mut problems)
+    {
+        found.security.accesses.push(DeclaredAccess {
+            dataset: entry.object_pointer.clone(),
+            data: entry.data_pointer.clone(),
+            location: entry.location,
+            access,
+        });
     }
     if let Some(value) = entry.extensions.get(ROW_ACCESS) {
         for item in read_row_access(value, declared, policy_names, &mut problems) {

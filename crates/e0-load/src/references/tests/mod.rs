@@ -11,6 +11,7 @@ use semantic_compiler_contracts::types::audit_record::OssieFormat;
 
 use super::diagnostic::ReferenceDiagnostic;
 use super::{ElementKind, ReferenceRejection, References, resolve_references};
+use crate::extensions::summaries::SummaryDatasets;
 use crate::read::read_document;
 use crate::structure::validate_structure;
 
@@ -61,7 +62,7 @@ fn resolve_with(
     let structure =
         validate_structure(&document, format, model_name).expect("the structure is valid");
     let catalog = admit_catalog_schema(catalog).expect("the catalog schema is admitted");
-    resolve_references(&document, &structure, &catalog)
+    resolve_references(&document, &structure, &catalog, &SummaryDatasets::default())
 }
 
 fn loaded(files: (&str, &str)) -> References {
@@ -129,3 +130,4 @@ mod existence;
 mod names;
 mod populations;
 mod security;
+mod summaries;

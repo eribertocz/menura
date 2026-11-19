@@ -1,4 +1,5 @@
-//! Reading one `access` value (SCY-3, SCY-5.1.3, `E0C-44`).
+//! Reading one `access` value (SCY-3, SCY-5.1.3, `E0C-44`, and `E0C-56` for a summary,
+//! SUM-6.1.6).
 
 use semantic_compiler_security::{AccessMode, DatasetAccess, FieldRestriction, Role};
 use serde_json::{Map, Value as Json};
@@ -29,7 +30,8 @@ const MODES: [(&str, Mode); 3] = [
 ];
 
 /// Reads the `access` of a dataset, whose roles are checked against `declared`; `summary`
-/// says whether the dataset is a summary, the only kind `mode: internal` is valid on.
+/// says whether the dataset is a summary, the only kind `mode: internal` is valid on, and
+/// whose valid mode is `internal` only: a missing or invalid mode is only `E0C-41`.
 ///
 /// Returns the access when `problems` records nothing wrong with it.
 pub(super) fn read_access(
@@ -49,6 +51,12 @@ pub(super) fn read_access(
         problems.push((
             ExtensionCode::InternalAccess,
             "`mode: internal` is valid only on a summary".to_owned(),
+        ));
+    }
+    if matches!(mode, Some(Mode::Authenticated | Mode::Roles)) && summary {
+        problems.push((
+            ExtensionCode::SummaryAccess,
+            "the `access` of a summary has `mode: internal`".to_owned(),
         ));
     }
     let mode = match mode? {

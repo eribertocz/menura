@@ -6,6 +6,7 @@ use semantic_compiler_contracts::types::audit_record::OssieFormat;
 use crate::extensions::context::fixture::{
     BILLED_YTD, CATALOG, MODEL, conformance_model, data, with,
 };
+use crate::extensions::summaries::SummaryDatasets;
 use crate::extensions::{DEFAULT_NAMESPACE, validate_extensions};
 use crate::read::read_document;
 use crate::references::context::resolve_context_references;
@@ -23,7 +24,8 @@ fn problems_in(model: &str, format: OssieFormat) -> Vec<(&'static str, String)> 
         .expect("the extensions are accepted");
     let catalog = admit_catalog_schema(CATALOG).expect("the catalog schema is admitted");
     let references =
-        resolve_references(&document, &structure, &catalog).expect("the references resolve");
+        resolve_references(&document, &structure, &catalog, &SummaryDatasets::default())
+            .expect("the references resolve");
     let derived = resolve_derived_references(&document, &structure, &extensions)
         .expect("the inputs of derived metrics resolve");
     let context =

@@ -11,6 +11,7 @@ use semantic_compiler_contracts::types::audit_record::OssieFormat;
 use super::diagnostic::ClassificationCode;
 use super::output::{Additivity, DecomposabilityClass, QueryError};
 use super::{Classification, ClassificationInput, ClassifiedMetric, MetricKind, classify_metrics};
+use crate::extensions::summaries::SummaryDatasets;
 use crate::extensions::{DEFAULT_NAMESPACE, validate_extensions};
 use crate::names::Name;
 use crate::read::read_document;
@@ -44,12 +45,19 @@ fn classify_in_format(model: &str, catalog: &str, format: OssieFormat) -> Classi
     let extensions = validate_extensions(&document, &structure.semantic_model, DEFAULT_NAMESPACE)
         .expect("the extensions are accepted");
     let references =
-        resolve_references(&document, &structure, &catalog).expect("the references are accepted");
+        resolve_references(&document, &structure, &catalog, &SummaryDatasets::default())
+            .expect("the references are accepted");
     let derived = resolve_derived_references(&document, &structure, &extensions)
         .expect("the inputs of derived metrics resolve");
     let context = resolve_context_references(&document, &structure, &extensions)
         .expect("the bases of context metrics resolve");
-    let typing = type_expressions(&document, &structure, &catalog, &derived);
+    let typing = type_expressions(
+        &document,
+        &structure,
+        &catalog,
+        &derived,
+        &SummaryDatasets::default(),
+    );
     let derived_typing =
         type_derived_metrics(&document, &structure, &catalog, &typing, &derived, &context)
             .expect("the derived formulas are accepted");

@@ -1,0 +1,6 @@
+id: e0-summary-missing-of-001
+rules: [SUM-6, SUM-6.1.1, E0C-50]
+model: e0-summary-missing-of-001
+expect:
+  outcome: load_error
+  error: E0C-50

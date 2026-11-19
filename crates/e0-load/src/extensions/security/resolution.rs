@@ -5,6 +5,7 @@ use semantic_compiler_security::DatasetAccess;
 
 use super::model::Security;
 use crate::extensions::diagnostic::{ExtensionCode, ExtensionDiagnostic};
+use crate::extensions::summaries::SummaryDatasets;
 use crate::outline::outline;
 use crate::pointer::{JsonPointer, resolve};
 use crate::read::Node;
@@ -15,8 +16,8 @@ use crate::structure::SelectedModel;
 pub struct DatasetAccessOf {
     /// The JSON Pointer of the dataset.
     pub dataset: JsonPointer,
-    /// Its access; `None` when it is inaccessible: it has no `access`, and the load option
-    /// `grant_authenticated_to_all` is not set (SCY-3.0).
+    /// Its access; `None` when it is inaccessible: it has no `access`, and it is a summary or
+    /// the load option `grant_authenticated_to_all` is not set (SCY-3.0, SUM-6.1.6).
     pub access: Option<DatasetAccess>,
 }
 
@@ -25,19 +26,22 @@ pub struct DatasetAccessOf {
 pub struct ResolvedAccess {
     /// One item per dataset, in document order.
     pub datasets: Vec<DatasetAccessOf>,
-    /// `W0C-40` at the semantic model, then `W0C-41` at each dataset without `access`, in
-    /// document order.
+    /// `W0C-40` at the semantic model, then `W0C-41` at each dataset without `access` that is
+    /// not a summary, in document order.
     pub warnings: Vec<ExtensionDiagnostic>,
 }
 
 /// The access of every dataset of the semantic model `model` of `document`, with the
-/// `security` declarations E0.c read. With `grant_authenticated_to_all` (DEV-4), a dataset
-/// without `access` is read as `mode: authenticated` without `fields` and gets no `W0C-41`
-/// (SCY-5.1.7).
+/// `security` declarations E0.c read and the `summaries` of the model. With
+/// `grant_authenticated_to_all` (DEV-4), a dataset without `access` is read as
+/// `mode: authenticated` without `fields` and gets no `W0C-41` (SCY-5.1.7). A summary without
+/// `access` is inaccessible and never gets `W0C-41`, whatever `grant_authenticated_to_all`
+/// says (SUM-6.1.6): its missing `access` is `E0C-56`.
 pub(crate) fn resolve_access(
     document: &Node,
     model: &SelectedModel<'_>,
     security: &Security,
+    summaries: &SummaryDatasets,
     grant_authenticated_to_all: bool,
 ) -> ResolvedAccess {
     let mut warnings = Vec::new();
@@ -57,6 +61,7 @@ pub(crate) fn resolve_access(
             .map(|declared| declared.access.clone());
         let access = match declared {
             Some(access) => Some(access),
+            None if summaries.contains(&dataset.pointer) => None,
             None if grant_authenticated_to_all => Some(DatasetAccess::granted_to_authenticated()),
             None => {
                 let name = dataset.name.as_ref().map_or("", |name| name.written.text);

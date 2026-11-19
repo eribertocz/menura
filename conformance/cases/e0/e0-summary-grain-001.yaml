@@ -1,0 +1,6 @@
+id: e0-summary-grain-001
+rules: [SUM-6, SUM-6.1.4, E0C-53]
+model: e0-summary-grain-001
+expect:
+  outcome: load_error
+  error: E0C-53

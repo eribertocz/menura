@@ -1,5 +1,7 @@
 //! Reading the values the security extension shares: objects with known keys, lists of
-//! strings and role lists (SCY-5.1.2, SCY-5.1.3, SCY-5.1.5).
+//! strings and role lists (SCY-5.1.2, SCY-5.1.3, SCY-5.1.5). Objects with known keys,
+//! required keys, strings and the `E0C-03` problem are read the same way by the summary
+//! extension (SUM-6.1.1).
 
 use std::collections::BTreeSet;
 
@@ -42,7 +44,7 @@ impl DeclaredRoles {
 
 /// The members of `value`, recording `E0C-03` when it is not an object, and `E0C-02` for each
 /// key outside `keys` (E0C-2.4).
-pub(super) fn object<'json>(
+pub(in crate::extensions) fn object<'json>(
     value: &'json Json,
     what: &str,
     keys: &[&str],
@@ -62,7 +64,7 @@ pub(super) fn object<'json>(
 }
 
 /// The value of the required `key` of `members`, recording `E0C-03` when it is absent.
-pub(super) fn required<'json>(
+pub(in crate::extensions) fn required<'json>(
     members: &'json Map<String, Json>,
     what: &str,
     key: &str,
@@ -79,7 +81,7 @@ pub(super) fn required<'json>(
 }
 
 /// The text of `value`, recording `E0C-03` when it is not a string.
-pub(super) fn text<'json>(
+pub(in crate::extensions) fn text<'json>(
     value: &'json Json,
     what: &str,
     problems: &mut Problems,
@@ -148,7 +150,11 @@ pub(super) fn has_repeats(names: &[&str]) -> bool {
 }
 
 /// The `E0C-03` problem of `what`, whose value `value` is not `expected`.
-pub(super) fn wrong_value(what: &str, value: &Json, expected: &str) -> (ExtensionCode, String) {
+pub(in crate::extensions) fn wrong_value(
+    what: &str,
+    value: &Json,
+    expected: &str,
+) -> (ExtensionCode, String) {
     (
         ExtensionCode::WrongValue,
         format!("{what} is {value}, not {expected}"),

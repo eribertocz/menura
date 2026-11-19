@@ -99,6 +99,28 @@ pub enum ExtensionCode {
     /// `E0C-49`: `access.fields` names a missing field, or a role without access to the
     /// dataset (SCY-5.1.4).
     AccessFieldReference,
+    /// `E0C-50`: a summary without `of`, or whose `of` names no dataset or a summary
+    /// (SUM-6.1.1, SUM-6.1.2).
+    SummaryBase,
+    /// `E0C-51`: a summary `field` or `base` that does not exist, a summary field named by no
+    /// dimension and no measure or by more than one, or a missing field reference in a
+    /// `base_aggregate` (SUM-6.1.2).
+    SummaryField,
+    /// `E0C-52`: an invalid `base_aggregate` (SUM-2.1, SUM-6.1.3).
+    InvalidBaseAggregate,
+    /// `E0C-53`: a time dimension without `grain`, or a `grain` on a field that is not a time
+    /// field (SUM-6.1.4).
+    SummaryGrain,
+    /// `E0C-54`: a `coverage_field` that is not a time dimension of the summary (SUM-6.1.2).
+    CoverageField,
+    /// `E0C-55`: a summary that declares `row_access`, or dataset metrics in the development
+    /// format (SUM-6.1.6).
+    SummaryPolicies,
+    /// `E0C-56`: a summary without `access`, or with a valid mode other than `internal`
+    /// (SUM-6.1.6).
+    SummaryAccess,
+    /// `E0C-57`: a summary field whose logical kind differs from its base (SUM-6.1.5).
+    SummaryKind,
     /// `E0C-60`: a context `base` that names no model metric, an expression that is not
     /// `AGG(<base>)`, or a metric with both `context` and `derived` (CTX-5.1.3).
     ContextBase,
@@ -123,6 +145,10 @@ pub enum ExtensionCode {
 impl ExtensionCode {
     /// The code as the specification writes it, such as `E0C-04`.
     #[must_use]
+    #[expect(
+        clippy::too_many_lines,
+        reason = "a flat table with one arm per specification code; splitting it would need a fallback arm for codes that cannot occur"
+    )]
     pub fn as_str(self) -> &'static str {
         match self {
             Self::Version => "E0C-01",
@@ -161,6 +187,14 @@ impl ExtensionCode {
             Self::UndeclaredRole => "E0C-47",
             Self::MisplacedListAttribute => "E0C-48",
             Self::AccessFieldReference => "E0C-49",
+            Self::SummaryBase => "E0C-50",
+            Self::SummaryField => "E0C-51",
+            Self::InvalidBaseAggregate => "E0C-52",
+            Self::SummaryGrain => "E0C-53",
+            Self::CoverageField => "E0C-54",
+            Self::SummaryPolicies => "E0C-55",
+            Self::SummaryAccess => "E0C-56",
+            Self::SummaryKind => "E0C-57",
             Self::ContextBase => "E0C-60",
             Self::ContextTimeDimension => "E0C-61",
             Self::ContextOffset => "E0C-62",

@@ -7,6 +7,7 @@ use crate::extensions::additivity::fixture::{
     CATALOG, DEBT_BALANCE_DATA, MODEL, conformance_model, with_debt_balance_expression,
     with_example,
 };
+use crate::extensions::summaries::SummaryDatasets;
 use crate::extensions::{DEFAULT_NAMESPACE, validate_extensions};
 use crate::read::read_document;
 use crate::references::resolve_references;
@@ -27,7 +28,8 @@ fn problems_in(model: &str, format: OssieFormat) -> Vec<(&'static str, String)> 
         .expect("the extensions are accepted");
     let catalog = admit_catalog_schema(CATALOG).expect("the catalog schema is admitted");
     let references =
-        resolve_references(&document, &structure, &catalog).expect("the references resolve");
+        resolve_references(&document, &structure, &catalog, &SummaryDatasets::default())
+            .expect("the references resolve");
     let relationships = analyze_relationships(
         &document,
         &structure.semantic_model,

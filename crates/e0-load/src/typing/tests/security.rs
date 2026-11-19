@@ -7,6 +7,7 @@ use semantic_compiler_contracts::types::audit_record::OssieFormat;
 use crate::extensions::security::fixture::{
     CATALOG, MODEL, NOTES_DATA, ORDERS_DATA, conformance_model, with, with_notes, with_row_access,
 };
+use crate::extensions::summaries::SummaryDatasets;
 use crate::extensions::{DEFAULT_NAMESPACE, validate_extensions};
 use crate::read::read_document;
 use crate::references::derived::DerivedMetrics;
@@ -21,7 +22,13 @@ fn problems_in(model: &str, format: OssieFormat) -> Vec<(&'static str, String)> 
     let catalog = admit_catalog_schema(CATALOG).expect("the catalog schema is admitted");
     let extensions = validate_extensions(&document, &structure.semantic_model, DEFAULT_NAMESPACE)
         .expect("the extensions are accepted");
-    let typing = type_expressions(&document, &structure, &catalog, &DerivedMetrics::default());
+    let typing = type_expressions(
+        &document,
+        &structure,
+        &catalog,
+        &DerivedMetrics::default(),
+        &SummaryDatasets::default(),
+    );
     match type_row_policies(&structure, &typing, &extensions) {
         Ok(()) => Vec::new(),
         Err(errors) => errors

@@ -10,6 +10,7 @@ use semantic_compiler_contracts::types::audit_record::OssieFormat;
 use super::diagnostic::TypingDiagnostic;
 use super::value_type::Typed;
 use super::{ElementKind, Typing, type_expressions};
+use crate::extensions::summaries::SummaryDatasets;
 use crate::read::read_document;
 use crate::references::derived::DerivedMetrics;
 use crate::structure::validate_structure;
@@ -22,6 +23,7 @@ mod development;
 mod populations;
 mod results;
 mod security;
+mod summaries;
 
 const MODEL: &str = include_str!("../../../../../conformance/models/e0-typing/model.yaml");
 
@@ -44,7 +46,13 @@ fn type_in_format(model: &str, catalog: &str, format: OssieFormat) -> Typing {
     let document = read_document(model.as_bytes()).expect("the document is read");
     let structure = validate_structure(&document, format, None).expect("the structure is valid");
     let catalog = admit_catalog_schema(catalog).expect("the catalog schema is admitted");
-    type_expressions(&document, &structure, &catalog, &DerivedMetrics::default())
+    type_expressions(
+        &document,
+        &structure,
+        &catalog,
+        &DerivedMetrics::default(),
+        &SummaryDatasets::default(),
+    )
 }
 
 fn pair(code: &'static str, pointer: &str) -> (&'static str, String) {

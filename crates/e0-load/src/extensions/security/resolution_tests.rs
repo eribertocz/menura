@@ -5,7 +5,10 @@ use semantic_compiler_contracts::types::audit_record::OssieFormat;
 use semantic_compiler_security::{AccessMode, DatasetAccess, Role};
 
 use super::fixture::{MODEL, NOTES, ORDERS, SEMANTIC_MODEL, conformance_model};
+use super::model::Security;
 use super::resolution::{ResolvedAccess, resolve_access};
+use crate::extensions::summaries::datasets::summary_datasets;
+use crate::extensions::summaries::fixture::{self as summaries, SUMMARY};
 use crate::extensions::{DEFAULT_NAMESPACE, validate_extensions};
 use crate::read::read_document;
 use crate::structure::validate_structure;
@@ -24,10 +27,12 @@ fn resolved(
         validate_structure(&document, OssieFormat::Release, None).expect("the structure is valid");
     let extensions = validate_extensions(&document, &structure.semantic_model, DEFAULT_NAMESPACE)
         .expect("the extensions are accepted");
+    let summaries = summary_datasets(&structure.semantic_model, DEFAULT_NAMESPACE);
     let resolution = resolve_access(
         &document,
         &structure.semantic_model,
         &extensions.security,
+        &summaries,
         grant_authenticated_to_all,
     );
     let warnings = resolution
@@ -80,4 +85,42 @@ fn scy_2_1_scy_5_1_7_w0c_40_a_model_without_security_context() {
     );
     let (_, warnings) = resolved(model, true);
     assert_eq!(warnings, [("W0C-40", SEMANTIC_MODEL.to_owned())]);
+}
+
+#[test]
+fn sum_6_1_6_a_summary_never_gets_w0c_41_and_is_never_granted() {
+    let model = summaries::conformance_model("e0-summary-access-001");
+    let document = read_document(model.as_bytes()).expect("the document is read");
+    let structure =
+        validate_structure(&document, OssieFormat::Release, None).expect("the structure is valid");
+    let summary_datasets = summary_datasets(&structure.semantic_model, DEFAULT_NAMESPACE);
+    let security = Security {
+        model: structure.semantic_model.pointer.clone(),
+        ..Security::default()
+    };
+    for grant_authenticated_to_all in [false, true] {
+        let resolution = resolve_access(
+            &document,
+            &structure.semantic_model,
+            &security,
+            &summary_datasets,
+            grant_authenticated_to_all,
+        );
+        let warnings: Vec<(&str, String)> = resolution
+            .warnings
+            .iter()
+            .map(|warning| (warning.code.as_str(), warning.pointer.to_string()))
+            .collect();
+        let mut expected = vec![("W0C-40", SEMANTIC_MODEL.to_owned())];
+        if !grant_authenticated_to_all {
+            expected.push(("W0C-41", summaries::ORDERS.to_owned()));
+        }
+        assert_eq!(warnings, expected, "{grant_authenticated_to_all}");
+        assert_eq!(resolution.datasets[1].dataset.to_string(), SUMMARY);
+        assert_eq!(resolution.datasets[1].access, None);
+        assert_eq!(
+            resolution.datasets[0].access.is_some(),
+            grant_authenticated_to_all
+        );
+    }
 }
