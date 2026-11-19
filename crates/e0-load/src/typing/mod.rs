@@ -46,7 +46,7 @@ pub(crate) mod summaries;
 mod typer;
 mod value_type;
 
-pub(crate) use diagnostic::TypingCode;
+pub(crate) use diagnostic::{TypingCode, TypingDiagnostic};
 pub(crate) use output::{ElementKind, TypedElement, Typing, UnusableElement};
 
 use std::collections::HashMap;
