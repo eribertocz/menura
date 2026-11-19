@@ -6,3 +6,13 @@ spec/05-engineering-standards.md
 spec/06-development-workflow.md
 spec/08-conformance-suite.md
 spec/09-continuous-integration.md
+# 0.2.0 gate
+spec/stages/E0/README.md
+spec/stages/E0/expressions.md
+spec/stages/E0/extensions.md
+spec/stages/E0/internal-model.md
+spec/stages/E0/metrics.md
+spec/stages/E0/read.md
+spec/stages/E0/references.md
+spec/stages/E0/relationships.md
+spec/stages/E0/structure.md
