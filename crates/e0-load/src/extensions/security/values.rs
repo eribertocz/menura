@@ -118,7 +118,9 @@ pub(super) fn roles(
     let roles: Vec<Role> = names.iter().map(|name| Role::new(name)).collect();
     let expected = match rule {
         ListRule::Any => None,
-        ListRule::NonEmpty => roles.is_empty().then_some("a non-empty list of strings"),
+        ListRule::WithoutRepeats => {
+            has_repeats(&names).then_some("a list of strings without repeats")
+        }
         ListRule::NonEmptyWithoutRepeats => (roles.is_empty() || has_repeats(&names))
             .then_some("a non-empty list of strings without repeats"),
     };
@@ -133,8 +135,8 @@ pub(super) fn roles(
 pub(super) enum ListRule {
     /// Nothing more.
     Any,
-    /// Not empty.
-    NonEmpty,
+    /// No string repeated; it may be empty.
+    WithoutRepeats,
     /// Not empty, and no string repeated.
     NonEmptyWithoutRepeats,
 }

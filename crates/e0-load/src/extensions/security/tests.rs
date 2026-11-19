@@ -370,6 +370,7 @@ fn scy_5_the_e0c_conformance_models_are_rejected_with_their_code() {
         ("e0-security-attribute-type-001", "E0C-03", MODEL_DATA),
         ("e0-security-mode-001", "E0C-41", ORDERS_DATA),
         ("e0-security-empty-roles-001", "E0C-42", ORDERS_DATA),
+        ("e0-security-repeated-role-001", "E0C-03", ORDERS_DATA),
         ("e0-security-mode-keys-001", "E0C-43", ORDERS_DATA),
         ("e0-security-internal-001", "E0C-44", NOTES_DATA),
         ("e0-security-duplicate-policy-001", "E0C-45", NOTES_DATA),
@@ -392,4 +393,17 @@ fn scy_5_the_e0c_conformance_models_are_rejected_with_their_code() {
     ] {
         assert!(validate(conformance_model(name)).is_ok(), "{name}");
     }
+}
+
+#[test]
+fn scy_5_1_3_e0c_03_repeats_in_access_lists() {
+    for access in [
+        r#"{"mode": "roles", "roles": ["analyst", "analyst"]}"#,
+        r#"{"mode": "roles", "roles": ["admin"], "fields": [{"names": ["unit_cost", "unit_cost"], "roles": ["admin"]}]}"#,
+        r#"{"mode": "roles", "roles": ["admin"], "fields": [{"names": ["unit_cost"], "roles": ["admin", "admin"]}]}"#,
+    ] {
+        assert_eq!(access_codes(access), ["E0C-03"], "{access}");
+    }
+    let apart = r#"{"mode": "roles", "roles": ["admin"], "fields": [{"names": ["unit_cost"], "roles": ["admin"]}, {"names": ["unit_cost"], "roles": ["admin"]}]}"#;
+    assert!(validate(&with_access(apart)).is_ok());
 }

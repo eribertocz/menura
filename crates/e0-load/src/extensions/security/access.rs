@@ -3,7 +3,9 @@
 use semantic_compiler_security::{AccessMode, DatasetAccess, FieldRestriction, Role};
 use serde_json::{Map, Value as Json};
 
-use super::values::{DeclaredRoles, ListRule, object, required, roles, strings, wrong_value};
+use super::values::{
+    DeclaredRoles, ListRule, has_repeats, object, required, roles, strings, wrong_value,
+};
 use crate::extensions::diagnostic::ExtensionCode;
 use crate::extensions::problems::Problems;
 
@@ -85,7 +87,8 @@ fn read_mode(members: &Map<String, Json>, problems: &mut Problems) -> Option<Mod
 }
 
 /// `access.roles`: required with `mode: roles` and not empty (`E0C-42`), allowed only there
-/// (`E0C-43`), and declared (`E0C-47`). Without a valid mode only its value is read.
+/// (`E0C-43`), without repeats (`E0C-03`), and declared (`E0C-47`). Without a valid mode only
+/// its value is read.
 fn read_mode_roles(
     members: &Map<String, Json>,
     mode: Option<Mode>,
@@ -101,7 +104,7 @@ fn read_mode_roles(
         }
         return None;
     };
-    let found = roles(value, "`access.roles`", ListRule::Any, problems)?;
+    let found = roles(value, "`access.roles`", ListRule::WithoutRepeats, problems)?;
     match mode {
         Some(Mode::Roles) if found.is_empty() => problems.push((
             ExtensionCode::AccessRoles,
@@ -118,7 +121,8 @@ fn read_mode_roles(
 }
 
 /// `access.fields`: allowed with `authenticated` and `roles` (`E0C-43`); a list of objects
-/// with exactly a non-empty `names` list and a non-empty `roles` list of declared roles.
+/// with exactly a non-empty `names` list and a non-empty `roles` list of declared roles, both
+/// without repeats.
 fn read_fields(
     value: &Json,
     mode: Option<Mode>,
@@ -143,11 +147,11 @@ fn read_fields(
         };
         let names = required(members, &what, NAMES, problems).and_then(|value| {
             let names = strings(value, &format!("the `names` of {what}"), problems)?;
-            if names.is_empty() {
+            if names.is_empty() || has_repeats(&names) {
                 problems.push(wrong_value(
                     &format!("the `names` of {what}"),
                     value,
-                    "a non-empty list of strings",
+                    "a non-empty list of strings without repeats",
                 ));
             }
             Some(names)
@@ -156,7 +160,7 @@ fn read_fields(
             roles(
                 value,
                 &format!("the `roles` of {what}"),
-                ListRule::NonEmpty,
+                ListRule::NonEmptyWithoutRepeats,
                 problems,
             )
         });
