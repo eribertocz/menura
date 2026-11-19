@@ -1,0 +1,6 @@
+id: e0-summary-coverage-001
+rules: [SUM-6, SUM-6.1.2, E0C-54]
+model: e0-summary-coverage-001
+expect:
+  outcome: load_error
+  error: E0C-54

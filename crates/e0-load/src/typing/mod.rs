@@ -41,6 +41,7 @@ pub(crate) mod populations;
 mod scope;
 pub(crate) mod security;
 mod stop;
+pub(crate) mod summaries;
 mod typer;
 mod value_type;
 
@@ -51,6 +52,7 @@ use std::collections::HashMap;
 
 use semantic_compiler_contracts::types::catalog::CatalogSchemaDocument;
 
+use crate::extensions::summaries::SummaryDatasets;
 use crate::outline::outline;
 use crate::pointer::{JsonPointer, position};
 use crate::read::Node;
@@ -71,7 +73,9 @@ pub fn type_expressions(
     structure: &Structure<'_>,
     catalog: &CatalogSchemaDocument,
     derived: &DerivedMetrics,
+    summaries: &SummaryDatasets,
 ) -> Typing {
+    let _ = summaries;
     let model = outline(
         structure.semantic_model.node,
         &structure.semantic_model.pointer,

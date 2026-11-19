@@ -1,0 +1,40 @@
+version: "0.3.0.dev0"
+name: e0_summaries_development
+description: 'Development-line model with a valid summary'
+nonportable_extensions:
+  - vendor_name: COMMON
+    data: {namespace: semantic_compiler, version: 1, security_context: {roles: [analyst], attributes: []}}
+datasets:
+  - name: orders
+    source: shop.main.orders
+    primary_key: [order_id]
+    fields:
+      - name: order_id
+        expression: {sql: order_id}
+      - name: region
+        expression: {sql: region}
+      - name: order_date
+        expression: {sql: order_date}
+      - name: amount
+        expression: {sql: amount}
+    nonportable_extensions:
+      - vendor_name: COMMON
+        data: {namespace: semantic_compiler, version: 1, access: {mode: roles, roles: [analyst]}}
+  - name: orders_daily
+    source: shop.main.orders_daily
+    primary_key: [order_date, region]
+    fields:
+      - name: order_date
+        expression: {sql: order_date}
+      - name: region
+        expression: {sql: region}
+      - name: total_amount
+        expression: {sql: total_amount}
+      - name: order_count
+        expression: {sql: order_count}
+    nonportable_extensions:
+      - vendor_name: COMMON
+        data: {namespace: semantic_compiler, version: 1, access: {mode: internal}, aggregate: {of: orders, dimensions: [{field: order_date, base: order_date, grain: day}, {field: region, base: region}], measures: [{field: total_amount, base_aggregate: 'SUM(orders.amount)'}, {field: order_count, base_aggregate: 'COUNT(orders.order_id)'}], coverage_field: order_date}}
+metrics:
+  - name: total_amount
+    expression: {sql: SUM(orders.amount)}

@@ -1,0 +1,6 @@
+id: e0-summary-base-aggregate-001
+rules: [SUM-2.1, SUM-6, SUM-6.1.3, E0C-52]
+model: e0-summary-base-aggregate-001
+expect:
+  outcome: load_error
+  error: E0C-52

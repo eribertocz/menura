@@ -5,6 +5,7 @@ use semantic_compiler_security::AccessMode;
 
 use super::fixture::{NOTES, NOTES_DATA, with_access, with_notes};
 use super::support::{access_codes, codes_at, validate};
+use crate::extensions::summaries::fixture::AGGREGATE;
 use crate::pointer::JsonPointer;
 
 #[test]
@@ -41,7 +42,7 @@ fn scy_5_1_3_e0c_43_roles_and_fields_outside_their_modes() {
         .is_ok()
     );
     let summary = with_notes(&format!(
-        r#""access": {{"mode": "internal", "roles": ["admin"], {fields}}}, "aggregate": {{}}"#
+        r#""access": {{"mode": "internal", "roles": ["admin"], {fields}}}, "aggregate": {AGGREGATE}"#
     ));
     assert_eq!(codes_at(&summary, NOTES_DATA), ["E0C-43"]);
 }
@@ -50,7 +51,9 @@ fn scy_5_1_3_e0c_43_roles_and_fields_outside_their_modes() {
 fn scy_5_e0c_44_internal_only_on_a_summary() {
     let internal = with_notes(r#""access": {"mode": "internal"}"#);
     assert_eq!(codes_at(&internal, NOTES_DATA), ["E0C-44"]);
-    let summary = with_notes(r#""access": {"mode": "internal"}, "aggregate": {}"#);
+    let summary = with_notes(&format!(
+        r#""access": {{"mode": "internal"}}, "aggregate": {AGGREGATE}"#
+    ));
     let security = validate(&summary)
         .expect("the extensions are accepted")
         .security;

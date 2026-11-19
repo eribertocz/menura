@@ -1,0 +1,45 @@
+version: "0.1.1"
+semantic_model:
+  - name: e0_summaries
+    description: 'A model metric that refers to a summary'
+    custom_extensions:
+      - vendor_name: COMMON
+        data: '{"namespace": "semantic_compiler", "version": 1, "security_context": {"roles": ["analyst"], "attributes": []}}'
+    datasets:
+      - name: orders
+        source: shop.main.orders
+        primary_key: [order_id]
+        fields:
+          - name: order_id
+            expression: {dialects: [{dialect: ANSI_SQL, expression: 'order_id'}]}
+          - name: region
+            expression: {dialects: [{dialect: ANSI_SQL, expression: 'region'}]}
+          - name: order_date
+            expression: {dialects: [{dialect: ANSI_SQL, expression: 'order_date'}]}
+          - name: amount
+            expression: {dialects: [{dialect: ANSI_SQL, expression: 'amount'}]}
+        custom_extensions:
+          - vendor_name: COMMON
+            data: '{"namespace": "semantic_compiler", "version": 1, "access": {"mode": "roles", "roles": ["analyst"]}}'
+      - name: orders_daily
+        source: shop.main.orders_daily
+        primary_key: [order_date, region]
+        fields:
+          - name: order_date
+            expression: {dialects: [{dialect: ANSI_SQL, expression: 'order_date'}]}
+          - name: region
+            expression: {dialects: [{dialect: ANSI_SQL, expression: 'region'}]}
+          - name: total_amount
+            expression: {dialects: [{dialect: ANSI_SQL, expression: 'total_amount'}]}
+          - name: order_count
+            expression: {dialects: [{dialect: ANSI_SQL, expression: 'order_count'}]}
+        custom_extensions:
+          - vendor_name: COMMON
+            data: '{"namespace": "semantic_compiler", "version": 1, "access": {"mode": "internal"}, "aggregate": {"of": "orders", "dimensions": [{"field": "order_date", "base": "order_date", "grain": "day"}, {"field": "region", "base": "region"}], "measures": [{"field": "total_amount", "base_aggregate": "SUM(orders.amount)"}, {"field": "order_count", "base_aggregate": "COUNT(orders.order_id)"}], "coverage_field": "order_date"}}'
+    metrics:
+      - name: total_amount
+        expression: {dialects: [{dialect: ANSI_SQL, expression: 'SUM(orders.amount)'}]}
+      - name: order_count
+        expression: {dialects: [{dialect: ANSI_SQL, expression: 'COUNT(orders.order_id)'}]}
+      - name: daily_amount
+        expression: {dialects: [{dialect: ANSI_SQL, expression: 'SUM(orders_daily.total_amount)'}]}

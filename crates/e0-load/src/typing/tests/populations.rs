@@ -8,6 +8,7 @@ use crate::extensions::populations::fixture::{
     ACCOUNTS_DATA, CUSTOMERS_DATA, MODEL, PERIODIC, VALIDITY, conformance_model, with_populations,
     with_validity,
 };
+use crate::extensions::summaries::SummaryDatasets;
 use crate::extensions::{DEFAULT_NAMESPACE, validate_extensions};
 use crate::read::read_document;
 use crate::references::derived::DerivedMetrics;
@@ -30,7 +31,13 @@ fn problems(model: &str) -> Vec<(&'static str, String)> {
     let catalog = admit_catalog_schema(CATALOG).expect("the catalog schema is admitted");
     let extensions = validate_extensions(&document, &structure.semantic_model, DEFAULT_NAMESPACE)
         .expect("the extensions are accepted");
-    let typing = type_expressions(&document, &structure, &catalog, &DerivedMetrics::default());
+    let typing = type_expressions(
+        &document,
+        &structure,
+        &catalog,
+        &DerivedMetrics::default(),
+        &SummaryDatasets::default(),
+    );
     match type_populations(&structure, &typing, &extensions) {
         Ok(()) => Vec::new(),
         Err(errors) => errors

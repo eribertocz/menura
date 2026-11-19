@@ -5,6 +5,7 @@ use semantic_compiler_security::DatasetAccess;
 
 use super::model::Security;
 use crate::extensions::diagnostic::{ExtensionCode, ExtensionDiagnostic};
+use crate::extensions::summaries::SummaryDatasets;
 use crate::outline::outline;
 use crate::pointer::{JsonPointer, resolve};
 use crate::read::Node;
@@ -38,8 +39,10 @@ pub(crate) fn resolve_access(
     document: &Node,
     model: &SelectedModel<'_>,
     security: &Security,
+    summaries: &SummaryDatasets,
     grant_authenticated_to_all: bool,
 ) -> ResolvedAccess {
+    let _ = summaries;
     let mut warnings = Vec::new();
     if security.context.is_none() {
         warnings.push(warning(

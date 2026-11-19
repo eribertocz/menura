@@ -8,6 +8,7 @@ use super::derived::DerivedDeclaration;
 use super::diagnostic::ExtensionDiagnostic;
 use super::populations::Population;
 use super::security::Security;
+use super::summaries::{AGGREGATE, SummaryDeclaration};
 use crate::pointer::JsonPointer;
 use crate::read::Location;
 
@@ -58,6 +59,8 @@ pub struct Extensions {
     pub context: Vec<ContextDeclaration>,
     /// The declarations of the security extension (SCY-2 to SCY-4).
     pub security: Security,
+    /// Every summary declaration of the model, in document order (SUM-2).
+    pub summaries: Vec<SummaryDeclaration>,
     /// `W0C-01` warnings, in document order. `W0C-40` and `W0C-41` come from
     /// [`super::security::resolution::resolve_access`], which needs a load option.
     pub warnings: Vec<ExtensionDiagnostic>,
@@ -72,6 +75,17 @@ impl Extensions {
             entry.object == ObjectKind::Metric
                 && entry.object_pointer == *metric
                 && entry.extensions.contains_key(CONTEXT)
+        })
+    }
+
+    /// Whether the dataset at `dataset` is a summary: its entry of ours has the key
+    /// `aggregate` (SUM-6.1.1).
+    #[must_use]
+    pub fn is_summary(&self, dataset: &JsonPointer) -> bool {
+        self.entries.iter().any(|entry| {
+            entry.object == ObjectKind::Dataset
+                && entry.object_pointer == *dataset
+                && entry.extensions.contains_key(AGGREGATE)
         })
     }
 

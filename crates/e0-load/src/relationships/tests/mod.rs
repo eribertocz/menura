@@ -9,6 +9,7 @@ use semantic_compiler_contracts::admit_catalog_schema;
 use semantic_compiler_contracts::types::audit_record::OssieFormat;
 
 use super::{RelationshipDiagnostic, Relationships, analyze_relationships};
+use crate::extensions::summaries::SummaryDatasets;
 use crate::extensions::{DEFAULT_NAMESPACE, validate_extensions};
 use crate::pointer::{JsonPointer, resolve};
 use crate::read::{Location, Node, read_document};
@@ -52,7 +53,8 @@ fn analyze_with_document((model, catalog): (&str, &str)) -> (Node, Relationships
         .expect("the extensions are accepted");
     let catalog = admit_catalog_schema(catalog).expect("the catalog schema is admitted");
     let references =
-        resolve_references(&document, &structure, &catalog).expect("the references resolve");
+        resolve_references(&document, &structure, &catalog, &SummaryDatasets::default())
+            .expect("the references resolve");
     let relationships = analyze_relationships(
         &document,
         &structure.semantic_model,

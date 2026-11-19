@@ -27,6 +27,7 @@ mod output;
 pub(crate) mod populations;
 mod problems;
 pub(crate) mod security;
+pub(crate) mod summaries;
 
 pub(crate) use diagnostic::{ExtensionCode, ExtensionDiagnostic};
 use entry::{EntryKind, classify};
@@ -80,6 +81,8 @@ pub fn validate_extensions(
     errors.extend(context.errors);
     let security = security::validate_security(&model.pointer, &entries);
     errors.extend(security.errors);
+    let summaries = summaries::validate_summaries(model, &entries);
+    errors.extend(summaries.errors);
     let warnings = sorted(document, warnings);
     if !errors.is_empty() {
         return Err(ExtensionsFailure {
@@ -94,6 +97,7 @@ pub fn validate_extensions(
         derived: derived.declarations,
         context: context.declarations,
         security: security.security,
+        summaries: summaries.declarations,
         warnings,
     })
 }

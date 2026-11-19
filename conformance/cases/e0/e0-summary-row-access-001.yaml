@@ -1,0 +1,6 @@
+id: e0-summary-row-access-001
+rules: [SUM-3.6, SUM-6, SUM-6.1.6, E0C-55]
+model: e0-summary-row-access-001
+expect:
+  outcome: load_error
+  error: E0C-55

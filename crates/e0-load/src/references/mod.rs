@@ -30,6 +30,7 @@ mod query_sources;
 mod scope;
 pub(crate) mod security;
 mod sources;
+pub(crate) mod summaries;
 mod uniqueness;
 mod walk;
 
@@ -40,6 +41,7 @@ use std::collections::HashMap;
 
 use semantic_compiler_contracts::types::catalog::CatalogSchemaDocument;
 
+use crate::extensions::summaries::SummaryDatasets;
 use crate::outline::{self, outline};
 use crate::pointer::{JsonPointer, position};
 use crate::read::Node;
@@ -60,7 +62,9 @@ pub fn resolve_references(
     document: &Node,
     structure: &Structure<'_>,
     catalog: &CatalogSchemaDocument,
+    summaries: &SummaryDatasets,
 ) -> Result<References, ReferenceRejection> {
+    let _ = summaries;
     let model = outline(
         structure.semantic_model.node,
         &structure.semantic_model.pointer,

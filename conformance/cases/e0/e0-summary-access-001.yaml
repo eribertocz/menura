@@ -1,0 +1,6 @@
+id: e0-summary-access-001
+rules: [SUM-2, SUM-6, SUM-6.1.6, E0C-56]
+model: e0-summary-access-001
+expect:
+  outcome: load_error
+  error: E0C-56
