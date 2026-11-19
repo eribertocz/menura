@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://semantic-compiler.invalid/spec/contracts/compile-error/1.0.0",
+  "$id": "https://menura.invalid/spec/contracts/compile-error/1.1.0",
   "title": "Compile error document",
   "type": "object",
   "required": [
@@ -12,10 +12,7 @@
   "additionalProperties": false,
   "properties": {
     "contract": {
-      "enum": [
-        "semantic_compiler.compile_error",
-        "semantic_compiler.validation_report"
-      ]
+      "enum": ["menura.compile_error", "menura.validation_report", "semantic_compiler.compile_error", "semantic_compiler.validation_report"]
     },
     "contract_version": {
       "type": "string",
@@ -92,7 +89,7 @@
       "if": {
         "properties": {
           "contract": {
-            "const": "semantic_compiler.compile_error"
+            "enum": ["menura.compile_error", "semantic_compiler.compile_error"]
           }
         }
       },

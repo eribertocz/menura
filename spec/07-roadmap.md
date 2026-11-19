@@ -14,7 +14,7 @@ already run correctly on DuckDB.
 | Version | Content | Usable result |
 |---|---|---|
 | 0.1.0 | Contracts (schemas, examples), repository, CI with boundary rules A1–A6 and standards | Contracts can be validated |
-| 0.2.0 | E0: load and validate model, catalog and extensions | `semantic-compiler validate` |
+| 0.2.0 | E0: load and validate model, catalog and extensions | `menura validate` |
 | 0.3.0 | **Minimal vertical slice:** E1–E4 and E6 for a single-branch wide-table query (dimensions, base metrics, filters, access and row policies), no E5 rewrites | First correct, secure SQL executed on DuckDB |
 | 0.4.0 | E3 complete (paths, reachability, anchors) and E4 stitching of several branches, deduplication | Multi-dataset queries |
 | 0.5.0 | SQL form (Layer 2 single-relation subset), additivity and population | Both query forms; balances |
@@ -112,7 +112,7 @@ their own roadmaps in their own repositories.
 | F21 | Dataset-scoped metrics and `AGG(dataset.metric)` in derived metrics |
 | F22 | Project-specific `vendor_name` replacing `COMMON` + `namespace` |
 | F23 | Apache Ossie Layer 4 (ontology) |
-| F24 | Final project name, replacing `semantic_compiler` |
+| F24 | Done: the project is named Menura (`menura`); the former name is accepted until 1.0.0 (CON-0.5) |
 | F26 | Natural-language translator module (separate repository) |
 | F27 | Filling time gaps with an explicit time spine |
 | F28 | Layer 2 SQL growth, one construct per release with its suite cases: many-to-one `JOIN`, `HAVING`, CTEs and subqueries, other join types, set operators, until full Layer 2 conformance |

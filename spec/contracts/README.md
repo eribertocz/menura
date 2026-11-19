@@ -3,7 +3,7 @@
 Every document that crosses a module boundary. Each has a JSON Schema in `schemas/` and valid
 examples in `examples/`, all checked in CI.
 
-| Contract | `contract` value | Direction | Chapter |
+| Contract | `contract` value before the rename; from it, `menura.<name>` (CON-0.5) | Direction | Chapter |
 |---|---|---|---|
 | Semantic model | Apache Ossie document | In | [model.md](model.md) |
 | Catalog schema | `semantic_compiler.catalog_schema` | In | [catalog.md](catalog.md) |
@@ -20,8 +20,9 @@ examples in `examples/`, all checked in CI.
 
 - **CON-0.1** Every contract listed above is **public**: it is the only interface other modules may rely on. Anything not in a contract (internal types, plan nodes, crate APIs other than the public functions) is private and may change at any time.
 - **CON-0.2** A contract is published as its chapter, its JSON Schema and its examples, in this repository, under the Apache 2.0 license. Any module, in any language, can implement a producer or consumer from them alone, without depending on the compiler's code.
-- **CON-0.3** Each release attaches every JSON Schema as a release asset (the `release-assets` workflow, CI-2), and each schema keeps a stable `$id` per contract version. The `$id` base (`https://semantic-compiler.invalid/`) is a placeholder, replaced by the project's public URL before 1.0.0.
+- **CON-0.3** Each release attaches every JSON Schema as a release asset (the `release-assets` workflow, CI-2), and each schema keeps a stable `$id` per contract version. The `$id` base (`https://menura.invalid/`) is a placeholder, replaced by the project's public URL before 1.0.0.
 - **CON-0.4** Changing a public contract follows the evolution rules of architecture section 3.3.
+- **CON-0.5** Former name. The project is **Menura**; its former name was `semantic_compiler`. Until 1.0.0, an input document whose `contract` is `semantic_compiler.<name>` is read exactly as `menura.<name>`, with a deprecation warning: `WCAT-05` for catalog documents, `WQRY-01` for a query and for a security context. The extension namespace `semantic_compiler` is accepted beside the configured one, with `W0C-02` (E0C-1). The compiler always writes output documents with `menura.<name>`. Until 1.0.0 every schema also accepts the former name, so documents written before the rename (an audit record, for example) still validate. The command-line binary `semantic-compiler` remains an alias of `menura`, with the same arguments and results. Every alias is removed at 1.0.0, and the release notes announce the removal (architecture section 3.3, item 6).
 
 ## Shared rules
 

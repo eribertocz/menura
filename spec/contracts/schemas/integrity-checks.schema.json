@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://semantic-compiler.invalid/spec/contracts/integrity-checks/1.0.0",
+  "$id": "https://menura.invalid/spec/contracts/integrity-checks/1.1.0",
   "title": "Integrity checks document",
   "type": "object",
   "additionalProperties": false,
@@ -13,7 +13,7 @@
   ],
   "properties": {
     "contract": {
-      "const": "semantic_compiler.integrity_checks"
+      "enum": ["menura.integrity_checks", "semantic_compiler.integrity_checks"]
     },
     "contract_version": {
       "type": "string",

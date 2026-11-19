@@ -21,13 +21,13 @@
 
 ## 4.3 Extensions are temporary
 
-Every capability outside Apache Ossie is an extension under the `semantic_compiler` namespace.
+Every capability outside Apache Ossie is an extension under the `menura` namespace.
 
 | Step | Trigger | Action |
 |---|---|---|
 | Active | No equivalent in the normative release | Supported |
 | Deprecated | A new official release covers the capability | The native form is adopted; the extension emits a warning with a removal date |
-| Migrated | Same release | `semantic-compiler migrate` rewrites models to the native form |
+| Migrated | Same release | `menura migrate` rewrites models to the native form |
 | Removed | Next major version of the model contract | The extension is rejected with an error pointing to the native form |
 
 - **OSS-3.1** Extensions SHOULD use the form Apache Ossie is most likely to adopt, so that migration is mechanical.

@@ -1,8 +1,8 @@
-# semantic_compiler — Specification
+# Menura — Specification
 
 > Status: Draft 0.1.0 · License: Apache 2.0 · Project name is provisional.
 
-`semantic_compiler` turns a question asked in business terms (metrics, dimensions, filters) into
+Menura (`menura`, formerly `semantic_compiler`) turns a question asked in business terms (metrics, dimensions, filters) into
 correct, secure, deterministic SQL for a target database. It speaks standard SQL, reads standard
 storage, and uses **Apache Ossie** as its semantic model standard.
 

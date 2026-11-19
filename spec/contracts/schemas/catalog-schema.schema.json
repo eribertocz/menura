@@ -1,12 +1,12 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://semantic-compiler.invalid/spec/contracts/catalog-schema/1.0.0",
+  "$id": "https://menura.invalid/spec/contracts/catalog-schema/1.1.0",
   "title": "Catalog schema document",
   "type": "object",
   "required": ["contract", "contract_version", "document_id", "engine", "relations"],
   "additionalProperties": false,
   "properties": {
-    "contract": {"const": "semantic_compiler.catalog_schema"},
+    "contract": {"enum": ["menura.catalog_schema", "semantic_compiler.catalog_schema"]},
     "contract_version": {"$ref": "#/$defs/semver"},
     "document_id": {"$ref": "#/$defs/token"},
     "engine": {

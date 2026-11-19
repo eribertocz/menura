@@ -2,7 +2,7 @@
 
 ## 3.1 Independent modules
 
-`semantic_compiler` is one module of a larger system. Each module has its own repository and
+`menura` is one module of a larger system. Each module has its own repository and
 specification, and communicates with the others **only through public contracts**.
 
 | Module | Responsibility | Talks to the compiler through |
@@ -17,7 +17,7 @@ specification, and communicates with the others **only through public contracts*
 ```
 Pipelines ──► Catalog ─────┐
 Modeling  ──► Model ───────┤
-Host      ──► Query ───────┼──► semantic_compiler ──► Compiled plan ──► Host ──► Executor ──► Database
+Host      ──► Query ───────┼──► menura ──► Compiled plan ──► Host ──► Executor ──► Database
 Host      ──► Security ────┘
 ```
 
@@ -29,11 +29,11 @@ Every contract has exactly one owner, which is the only party allowed to change 
 
 | Contract | Owner |
 |---|---|
-| Semantic model | Apache Ossie (extensions: `semantic_compiler`) |
-| Catalog schema and state | `semantic_compiler` |
-| Query | `semantic_compiler` |
-| Security context | `semantic_compiler` |
-| Compiled plan, explanation, errors | `semantic_compiler` |
+| Semantic model | Apache Ossie (extensions: `menura`) |
+| Catalog schema and state | `menura` |
+| Query | `menura` |
+| Security context | `menura` |
+| Compiled plan, explanation, errors | `menura` |
 
 ## 3.3 Contract evolution
 
@@ -63,13 +63,13 @@ All functions are pure. Inputs and outputs are the contract documents of `spec/c
 
 | Function | Inputs | Output |
 |---|---|---|
-| `validate` | model, catalog schema, load options | Validation report: the same document as a compile error, with `errors` possibly empty (`semantic_compiler.validation_report`) |
+| `validate` | model, catalog schema, load options | Validation report: the same document as a compile error, with `errors` possibly empty (`menura.validation_report`) |
 | `load` | model, catalog schema, optional catalog state, load options | Handle, with warnings; or compile error |
 | `with_state` | handle, catalog state | New handle with the new state; the model is not reloaded |
 | `integrity_checks` | handle, dialect | Integrity-check document ([contract](../contracts/integrity-checks.md)) |
 | `compile` | handle, query, security context, compile options | Compiled plan, or compile error; with `audit: true`, also an audit record in both cases |
 | `migrate` | model document | Model document with deprecated extensions rewritten to their native form, and a report |
-| `explain` | handle, query, security context, compile options | The compiled plan with `sql` and `parameters` replaced by empty values (same schema, `contract` `semantic_compiler.explanation`) |
+| `explain` | handle, query, security context, compile options | The compiled plan with `sql` and `parameters` replaced by empty values (same schema, `contract` `menura.explanation`) |
 | `describe` | handle, security context | Model description |
 
 | Load option | Meaning | Default |
@@ -77,7 +77,7 @@ All functions are pure. Inputs and outputs are the contract documents of `spec/c
 | `model_name` | Which semantic model to load when the document has several (DEV-7) | — |
 | `ossie_format` | `release` or `development` (section 4.5) | `release` |
 | `grant_authenticated_to_all` | Treat datasets without `access` as `authenticated` (DEV-4); recorded in every plan | `false` |
-| `namespace` | Extension namespace (MDL-2.3) | `semantic_compiler` |
+| `namespace` | Extension namespace (MDL-2.3) | `menura` |
 | `data_source` | Logical source name written in every plan | Catalog schema `document_id.origin` |
 
 | Compile option | Meaning | Default |
@@ -92,7 +92,7 @@ All functions are pure. Inputs and outputs are the contract documents of `spec/c
 
 - **ARC-5.3** The conformance runner (chapter 8) is **test tooling, not part of the compiler**. It lives in its own crate, `conformance-runner`, which calls the public functions, reads case files and executes SQL on DuckDB. Like `cli`, it is exempt from A2 (I/O, clock, database). No other crate may depend on it, and it is never shipped as part of the compiler. `just conformance` runs it.
 - **ARC-5.4** Every CLI command (section 3.6) writes its output document as JSON on standard output. Its exit status is `0` when the document is neither a compile error nor a validation report with errors (warnings do not change it); `1` when the document is a compile error or a validation report with at least one error; `2` when the command cannot run (usage error, an input file that cannot be read, or a file the command itself parses, such as the load-options file, that is not UTF-8), with a message on standard error and nothing on standard output.
-- **ARC-5.5** `semantic-compiler validate --model <path> --catalog-schema <path> [--load-options <path>]`. The flags may come in any order, each at most once. `--load-options` names a JSON file holding an object with the load options of section 3.5; an option it omits takes its default. A missing required flag, an unknown or repeated flag, a positional argument, or a load-options file that is not such an object (an unknown option, or a value of the wrong type) is a usage error (exit `2`). The model and catalog schema files are read as bytes and passed to `validate` unchanged: their content problems are diagnostics in the report (exit `1`), never usage errors. `--help` writes the usage text to standard output and exits `0`, wherever it appears on the line. Only the form `--flag <value>` is accepted, so `--flag=value` is an unknown flag. A load option whose value is `null` has the wrong type.
+- **ARC-5.5** `menura validate --model <path> --catalog-schema <path> [--load-options <path>]`. The flags may come in any order, each at most once. `--load-options` names a JSON file holding an object with the load options of section 3.5; an option it omits takes its default. A missing required flag, an unknown or repeated flag, a positional argument, or a load-options file that is not such an object (an unknown option, or a value of the wrong type) is a usage error (exit `2`). The model and catalog schema files are read as bytes and passed to `validate` unchanged: their content problems are diagnostics in the report (exit `1`), never usage errors. `--help` writes the usage text to standard output and exits `0`, wherever it appears on the line. Only the form `--flag <value>` is accepted, so `--flag=value` is an unknown flag. A load option whose value is `null` has the wrong type.
 
 ## 3.6 Delivery forms
 
