@@ -230,7 +230,7 @@ fn e0c_2_8_integers_give_the_code_of_the_same_digits_in_the_release_format() {
     }
     for version in ["1", "0x1", "+1"] {
         let document = on_orders(&format!(
-            "{{namespace: semantic_compiler, version: {version}, access: {{}}}}"
+            "{{namespace: semantic_compiler, version: {version}, access: {{mode: authenticated}}}}"
         ));
         assert_eq!(
             development(document.as_bytes())

@@ -1,0 +1,7 @@
+id: e0-security-development-mode-001
+rules: [MDL-2.4, E0C-2.8, SCY-5.1.3, E0C-41]
+model: e0-security-development-mode-001
+load_options: {ossie_format: development}
+expect:
+  outcome: load_error
+  error: E0C-41

@@ -77,6 +77,28 @@ pub enum ExtensionCode {
     /// `E0C-37`: `AGG(…)` in a metric marked neither `derived` nor `context` (DER-5.1.2). The
     /// metric is unusable, reported as `W0G-01` (E0-4 table).
     AggregateOutsideDerived,
+    /// `E0C-41`: `access` without `mode`, or with a `mode` outside SCY-3 (SCY-5.1.3).
+    AccessMode,
+    /// `E0C-42`: `mode: roles` with a missing or empty role list (SCY-5.1.3).
+    AccessRoles,
+    /// `E0C-43`: `roles` with a mode other than `roles`, or `fields` with `mode: internal`
+    /// (SCY-5.1.3).
+    AccessKeys,
+    /// `E0C-44`: `mode: internal` on a dataset that is not a summary (SCY-5).
+    InternalAccess,
+    /// `E0C-45`: a row-policy name repeated in the model (SCY-5.1.5).
+    DuplicatePolicy,
+    /// `E0C-46`: a row-policy condition that is not a valid boolean expression over its
+    /// dataset, or that reads an undeclared attribute (SCY-5.1.6).
+    InvalidPolicyCondition,
+    /// `E0C-47`: an undeclared role in `roles`, `exempt_roles` or `fields` (SCY-5.1.3,
+    /// SCY-5.1.5).
+    UndeclaredRole,
+    /// `E0C-48`: a list attribute used outside `IN` / `NOT IN` (SCY-4.1, SCY-5.1.6).
+    MisplacedListAttribute,
+    /// `E0C-49`: `access.fields` names a missing field, or a role without access to the
+    /// dataset (SCY-5.1.4).
+    AccessFieldReference,
     /// `E0C-60`: a context `base` that names no model metric, an expression that is not
     /// `AGG(<base>)`, or a metric with both `context` and `derived` (CTX-5.1.3).
     ContextBase,
@@ -91,6 +113,11 @@ pub enum ExtensionCode {
     NestedContext,
     /// `W0C-01`: a `COMMON` entry whose `data` is not valid JSON; kept, not interpreted.
     NotJson,
+    /// `W0C-40`: the model has no `security_context`; it declares no roles or attributes
+    /// (SCY-2.1, SCY-5.1.7).
+    NoSecurityContext,
+    /// `W0C-41`: a dataset has no `access`; it is inaccessible (SCY-3.0, SCY-5.1.7).
+    NoAccess,
 }
 
 impl ExtensionCode {
@@ -125,23 +152,40 @@ impl ExtensionCode {
             Self::MissingDivisionRule => "E0C-35",
             Self::DerivedAdditivity => "E0C-36",
             Self::AggregateOutsideDerived => "E0C-37",
+            Self::AccessMode => "E0C-41",
+            Self::AccessRoles => "E0C-42",
+            Self::AccessKeys => "E0C-43",
+            Self::InternalAccess => "E0C-44",
+            Self::DuplicatePolicy => "E0C-45",
+            Self::InvalidPolicyCondition => "E0C-46",
+            Self::UndeclaredRole => "E0C-47",
+            Self::MisplacedListAttribute => "E0C-48",
+            Self::AccessFieldReference => "E0C-49",
             Self::ContextBase => "E0C-60",
             Self::ContextTimeDimension => "E0C-61",
             Self::ContextOffset => "E0C-62",
             Self::RemovedFieldMissing => "E0C-63",
             Self::NestedContext => "E0C-64",
             Self::NotJson => "W0C-01",
+            Self::NoSecurityContext => "W0C-40",
+            Self::NoAccess => "W0C-41",
         }
     }
 
     /// The load warning that `E0C-37` is reported as: the metric is unusable (E0-4 table).
     pub const UNUSABLE_WARNING: &'static str = "W0G-01";
 
-    /// Whether the code is a load warning: `W0C-01`, and `E0C-37`, which makes its metric
-    /// unusable. Every other code rejects the model (E0-4.1).
+    /// Whether the code is a load warning: `W0C-01`, `W0C-40`, `W0C-41`, and `E0C-37`, which
+    /// makes its metric unusable. Every other code rejects the model (E0-4.1).
     #[must_use]
     pub fn is_warning(self) -> bool {
-        matches!(self, Self::NotJson | Self::AggregateOutsideDerived)
+        matches!(
+            self,
+            Self::NotJson
+                | Self::NoSecurityContext
+                | Self::NoAccess
+                | Self::AggregateOutsideDerived
+        )
     }
 
     /// The code the load reports: [`Self::UNUSABLE_WARNING`] for `E0C-37`, whose own code is

@@ -1,0 +1,17 @@
+id: e0-security-grant-authenticated-001
+rules: [SCY-3.0, SCY-5.1.7, DEV-4]
+model: e0-security
+security_context: analyst.json
+query:
+  contract: semantic_compiler.query
+  contract_version: "1.0.0"
+  reference_time: "2026-11-15T12:00:00-04:00"
+  time_zone: UTC
+  query:
+    metrics:
+      - {metric: note_count, alias: note_count}
+load_options: {grant_authenticated_to_all: true}
+expect:
+  outcome: plan
+  rows: e0-security-grant-authenticated-001.csv
+  row_order: any

@@ -1,0 +1,6 @@
+id: e0-security-field-role-001
+rules: [SCY-3.1, SCY-5.1.4, E0C-49]
+model: e0-security-field-role-001
+expect:
+  outcome: load_error
+  error: E0C-49

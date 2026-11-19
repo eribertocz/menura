@@ -1,0 +1,36 @@
+version: "0.3.0.dev0"
+name: e0_security_development
+description: 'Development-line model with access and a row policy'
+nonportable_extensions:
+  - vendor_name: COMMON
+    data: {namespace: semantic_compiler, version: 1, security_context: {roles: [admin, analyst], attributes: [{name: regions, type: list<text>}]}}
+datasets:
+  - name: orders
+    source: shop.main.orders
+    primary_key: [order_id]
+    fields:
+      - name: order_id
+        expression: {sql: order_id}
+      - name: region
+        expression: {sql: region}
+      - name: amount
+        expression: {sql: amount}
+      - name: unit_cost
+        expression: {sql: unit_cost}
+    nonportable_extensions:
+      - vendor_name: COMMON
+        data: {namespace: semantic_compiler, version: 1, access: {mode: roles, roles: [analyst, admin], fields: [{names: [unit_cost], roles: [admin]}]}, row_access: [{name: region_scope, condition: "region IN (USER_ATTRIBUTE('regions'))", roles: [analyst]}]}
+  - name: notes
+    source: shop.main.notes
+    primary_key: [note_id]
+    fields:
+      - name: note_id
+        expression: {sql: note_id}
+      - name: body
+        expression: {sql: body}
+    nonportable_extensions:
+      - vendor_name: COMMON
+        data: {namespace: semantic_compiler, version: 1, access: {mode: authenticated}}
+metrics:
+  - name: total_amount
+    expression: {sql: SUM(orders.amount)}

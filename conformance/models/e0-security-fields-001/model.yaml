@@ -1,0 +1,40 @@
+version: "0.1.1"
+semantic_model:
+  - name: e0_security
+    description: 'access.fields names a field orders does not have'
+    custom_extensions:
+      - vendor_name: COMMON
+        data: '{"namespace": "semantic_compiler", "version": 1, "security_context": {"roles": ["admin", "analyst"], "attributes": [{"name": "regions", "type": "list<text>"}, {"name": "area_id", "type": "integer"}, {"name": "limit", "type": "decimal(18,2)"}]}}'
+    datasets:
+      - name: orders
+        source: shop.main.orders
+        primary_key: [order_id]
+        fields:
+          - name: order_id
+            expression: {dialects: [{dialect: ANSI_SQL, expression: 'order_id'}]}
+          - name: region
+            expression: {dialects: [{dialect: ANSI_SQL, expression: 'region'}]}
+          - name: amount
+            expression: {dialects: [{dialect: ANSI_SQL, expression: 'amount'}]}
+          - name: unit_cost
+            expression: {dialects: [{dialect: ANSI_SQL, expression: 'unit_cost'}]}
+          - name: cost_copy
+            expression: {dialects: [{dialect: ANSI_SQL, expression: 'unit_cost'}]}
+        custom_extensions:
+          - vendor_name: COMMON
+            data: '{"namespace": "semantic_compiler", "version": 1, "access": {"mode": "roles", "roles": ["analyst", "admin"], "fields": [{"names": ["margin"], "roles": ["admin"]}]}, "row_access": [{"name": "region_scope", "condition": "region IN (USER_ATTRIBUTE(''regions''))", "roles": ["analyst"]}, {"name": "open_scope", "condition": "TRUE", "roles": ["admin"]}]}'
+      - name: notes
+        source: shop.main.notes
+        primary_key: [note_id]
+        fields:
+          - name: note_id
+            expression: {dialects: [{dialect: ANSI_SQL, expression: 'note_id'}]}
+          - name: body
+            expression: {dialects: [{dialect: ANSI_SQL, expression: 'body'}]}
+    metrics:
+      - name: total_amount
+        expression: {dialects: [{dialect: ANSI_SQL, expression: 'SUM(orders.amount)'}]}
+      - name: total_cost
+        expression: {dialects: [{dialect: ANSI_SQL, expression: 'SUM(orders.cost_copy)'}]}
+      - name: note_count
+        expression: {dialects: [{dialect: ANSI_SQL, expression: 'COUNT(notes.note_id)'}]}

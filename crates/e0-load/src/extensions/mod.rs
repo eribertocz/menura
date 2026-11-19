@@ -5,8 +5,11 @@
 //! their version and the placement of their keys, and hands the extension keys of each object
 //! to the validation of each extension (E0C-2.5): the shape and keys of populations are checked
 //! here (POP-4.1 to POP-4.3), those of additivity declarations (ADD-5.1.1 to ADD-5.1.4) and
-//! those of derived-metric declarations (DER-5.1.1) and those of context declarations
-//! (CTX-5.1.1, CTX-5.1.2).
+//! those of derived-metric declarations (DER-5.1.1), those of context declarations
+//! (CTX-5.1.1, CTX-5.1.2) and those of the security extension (SCY-5.1.2, SCY-5.1.3,
+//! SCY-5.1.5). The access every dataset is read with, and the warnings `W0C-40` and `W0C-41`,
+//! come from [`security::resolution::resolve_access`] (SCY-5.1.7), which needs the load option
+//! `grant_authenticated_to_all`.
 //! Other vendors' entries, and `COMMON` entries
 //! of another namespace, are kept in the data tree and never interpreted (E0C-1.1, MDL-2.5).
 
@@ -23,6 +26,7 @@ mod objects;
 mod output;
 pub(crate) mod populations;
 mod problems;
+pub(crate) mod security;
 
 pub(crate) use diagnostic::{ExtensionCode, ExtensionDiagnostic};
 use entry::{EntryKind, classify};
@@ -53,7 +57,8 @@ pub(crate) const DEFAULT_NAMESPACE: &str = "semantic_compiler";
 /// the E0.c codes of populations (`E0C-02`, `E0C-03`, `E0C-20`, `E0C-21`) and of additivity
 /// (`E0C-02`, `E0C-03`, `E0C-10`, `E0C-11`, `E0C-13` to `E0C-15`), of derived metrics
 /// (`E0C-02`, `E0C-03`, `E0C-36`) and of context metrics (`E0C-02`, `E0C-03`, `E0C-36`,
-/// `E0C-62`), and the `W0C-01` warnings.
+/// `E0C-62`), of the security extension (`E0C-02`, `E0C-03`, `E0C-41` to `E0C-45`,
+/// `E0C-47`), and the `W0C-01` warnings.
 pub fn validate_extensions(
     document: &Node,
     model: &SelectedModel<'_>,
@@ -73,6 +78,8 @@ pub fn validate_extensions(
     errors.extend(derived.errors);
     let context = context::validate_context(&entries);
     errors.extend(context.errors);
+    let security = security::validate_security(&model.pointer, &entries);
+    errors.extend(security.errors);
     let warnings = sorted(document, warnings);
     if !errors.is_empty() {
         return Err(ExtensionsFailure {
@@ -86,6 +93,7 @@ pub fn validate_extensions(
         additivity: additivity.declarations,
         derived: derived.declarations,
         context: context.declarations,
+        security: security.security,
         warnings,
     })
 }

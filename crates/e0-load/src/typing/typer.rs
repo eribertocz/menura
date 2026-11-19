@@ -17,6 +17,9 @@ use super::value_type::{
 /// expression.
 pub(crate) type Resolver<'resolver> = dyn Fn(&Reference) -> Outcome<Typed> + 'resolver;
 
+/// Finds the type of `USER_ATTRIBUTE('name')` in a row-policy condition (SCY-5.1.6).
+pub(crate) type AttributeResolver<'resolver> = dyn Fn(&str) -> Outcome<Typed> + 'resolver;
+
 /// Whether an aggregate is allowed where the typer is (E0F-07).
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub(crate) enum Aggregates {
@@ -47,6 +50,7 @@ pub(crate) struct ExpressionTyper<'resolver> {
     resolve: &'resolver Resolver<'resolver>,
     pub(super) aggregates: Aggregates,
     metric_aggregates: MetricAggregates<'resolver>,
+    user_attributes: Option<&'resolver AttributeResolver<'resolver>>,
 }
 
 impl<'resolver> ExpressionTyper<'resolver> {
@@ -63,6 +67,7 @@ impl<'resolver> ExpressionTyper<'resolver> {
             resolve,
             aggregates,
             metric_aggregates,
+            user_attributes: None,
         }
     }
 
@@ -77,12 +82,25 @@ impl<'resolver> ExpressionTyper<'resolver> {
         }
     }
 
+    /// The same typer, where `USER_ATTRIBUTE('name')` has the type `user_attributes` finds,
+    /// as in a row-policy condition (SCY-5.1.6). Elsewhere it gets no type here.
+    pub(crate) fn with_user_attributes(
+        self,
+        user_attributes: &'resolver AttributeResolver<'resolver>,
+    ) -> Self {
+        Self {
+            user_attributes: Some(user_attributes),
+            ..self
+        }
+    }
+
     /// The typer of an aggregate's argument and `FILTER`, where no aggregate may appear.
     pub(super) fn nested(&self) -> Self {
         Self {
             resolve: self.resolve,
             aggregates: Aggregates::Nested,
             metric_aggregates: self.metric_aggregates,
+            user_attributes: self.user_attributes,
         }
     }
 
@@ -92,7 +110,10 @@ impl<'resolver> ExpressionTyper<'resolver> {
             Expression::Literal(literal) => Ok(literal_type(literal)),
             Expression::Reference(reference) => (self.resolve)(reference),
             Expression::MetricAggregate(metric) => self.metric_aggregate(metric),
-            Expression::UserAttribute(_) => Err(Stop::ReportedElsewhere),
+            Expression::UserAttribute(name) => match self.user_attributes {
+                Some(resolve) => resolve(name),
+                None => Err(Stop::ReportedElsewhere),
+            },
             Expression::CurrentDate => Ok(Typed::value(LogicalType::Date, false)),
             Expression::CurrentTime => Ok(Typed::value(LogicalType::Time, false)),
             Expression::CurrentTimestamp => Ok(Typed::value(timestamp(), false)),

@@ -1,0 +1,15 @@
+{
+  "contract": "semantic_compiler.security_context",
+  "contract_version": "1.0.0",
+  "subject": "security-admin",
+  "roles": [
+    "admin"
+  ],
+  "attributes": {
+    "regions": [
+      "NORTH",
+      "SOUTH"
+    ],
+    "area_id": 1
+  }
+}
