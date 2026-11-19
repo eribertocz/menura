@@ -1010,6 +1010,7 @@ dependencies = [
 name = "semantic-compiler-core"
 version = "0.1.0"
 dependencies = [
+ "semantic-compiler-contracts",
  "semantic-compiler-e0-load",
  "semantic-compiler-e1-parse",
  "semantic-compiler-e2-bind",
@@ -1017,6 +1018,8 @@ dependencies = [
  "semantic-compiler-e4-plan",
  "semantic-compiler-e5-optimize",
  "semantic-compiler-generator-duckdb",
+ "semantic-compiler-model",
+ "serde_json",
 ]
 
 [[package]]
