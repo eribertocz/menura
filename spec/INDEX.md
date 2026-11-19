@@ -513,13 +513,15 @@ Find a rule ID or a section here, then open only that file at that line.
 | [stages/E0/internal-model.md](stages/E0/internal-model.md#L10) | 10 | rule | E0H-1.4 |
 | [stages/E0/internal-model.md](stages/E0/internal-model.md#L11) | 11 | rule | E0H-1.5 |
 | [stages/E0/internal-model.md](stages/E0/internal-model.md#L13) | 13 | section | E0H-2 Content |
-| [stages/E0/internal-model.md](stages/E0/internal-model.md#L26) | 26 | section | E0H-3 Hashes |
-| [stages/E0/internal-model.md](stages/E0/internal-model.md#L28) | 28 | rule | E0H-3.1 |
-| [stages/E0/internal-model.md](stages/E0/internal-model.md#L29) | 29 | rule | E0H-3.2 |
-| [stages/E0/internal-model.md](stages/E0/internal-model.md#L30) | 30 | rule | E0H-3.3 |
-| [stages/E0/internal-model.md](stages/E0/internal-model.md#L32) | 32 | section | E0H-4 Integrity checks |
-| [stages/E0/internal-model.md](stages/E0/internal-model.md#L45) | 45 | rule | E0H-4.1 |
-| [stages/E0/internal-model.md](stages/E0/internal-model.md#L46) | 46 | rule | E0H-4.2 |
+| [stages/E0/internal-model.md](stages/E0/internal-model.md#L27) | 27 | section | E0H-3 Hashes |
+| [stages/E0/internal-model.md](stages/E0/internal-model.md#L29) | 29 | rule | E0H-3.1 |
+| [stages/E0/internal-model.md](stages/E0/internal-model.md#L30) | 30 | rule | E0H-3.2 |
+| [stages/E0/internal-model.md](stages/E0/internal-model.md#L31) | 31 | rule | E0H-3.3 |
+| [stages/E0/internal-model.md](stages/E0/internal-model.md#L32) | 32 | rule | E0H-3.4 |
+| [stages/E0/internal-model.md](stages/E0/internal-model.md#L34) | 34 | section | E0H-4 Integrity checks |
+| [stages/E0/internal-model.md](stages/E0/internal-model.md#L48) | 48 | rule | E0H-4.1 |
+| [stages/E0/internal-model.md](stages/E0/internal-model.md#L49) | 49 | rule | E0H-4.2 |
+| [stages/E0/internal-model.md](stages/E0/internal-model.md#L50) | 50 | rule | E0H-4.3 |
 | [stages/E0/metrics.md](stages/E0/metrics.md#L1) | 1 | section | E0.g Classify metrics |
 | [stages/E0/metrics.md](stages/E0/metrics.md#L3) | 3 | section | E0G-1 Components |
 | [stages/E0/metrics.md](stages/E0/metrics.md#L8) | 8 | rule | E0G-1.1 |
