@@ -1,0 +1,18 @@
+id: cat-schema-former-name-001
+rules: [CON-0.5, CAT-3.2, WCAT-05]
+model: cat-schema-former-name-001
+security_context: analyst.json
+query:
+  contract: menura.query
+  contract_version: "1.1.0"
+  reference_time: "2026-11-15T12:00:00-04:00"
+  time_zone: UTC
+  query:
+    dimensions: [orders.status]
+    metrics:
+      - {metric: total_amount, alias: total_amount}
+expect:
+  outcome: plan
+  warnings: [WCAT-05]
+  rows: cat-schema-former-name-001.csv
+  row_order: any
