@@ -111,10 +111,16 @@ Find a rule ID or a section here, then open only that file at that line.
 | [07-roadmap.md](07-roadmap.md#L1) | 1 | section | 7. Roadmap |
 | [07-roadmap.md](07-roadmap.md#L8) | 8 | section | 7.1 Path to the MVP |
 | [07-roadmap.md](07-roadmap.md#L27) | 27 | section | 7.1a Gates |
-| [07-roadmap.md](07-roadmap.md#L40) | 40 | section | 7.1b What 1.0.0 guarantees |
-| [07-roadmap.md](07-roadmap.md#L52) | 52 | section | 7.2 After the MVP |
-| [07-roadmap.md](07-roadmap.md#L66) | 66 | section | 7.3 Capability scope |
-| [07-roadmap.md](07-roadmap.md#L88) | 88 | section | 7.4 Backlog after the MVP |
+| [07-roadmap.md](07-roadmap.md#L40) | 40 | section | 7.1c Version slices before 1.0.0 |
+| [07-roadmap.md](07-roadmap.md#L47) | 47 | rule | VS-1 |
+| [07-roadmap.md](07-roadmap.md#L48) | 48 | rule | VS-2 |
+| [07-roadmap.md](07-roadmap.md#L49) | 49 | rule | VS-3 |
+| [07-roadmap.md](07-roadmap.md#L50) | 50 | rule | VS-4 |
+| [07-roadmap.md](07-roadmap.md#L51) | 51 | rule | VS-5 |
+| [07-roadmap.md](07-roadmap.md#L53) | 53 | section | 7.1b What 1.0.0 guarantees |
+| [07-roadmap.md](07-roadmap.md#L65) | 65 | section | 7.2 After the MVP |
+| [07-roadmap.md](07-roadmap.md#L79) | 79 | section | 7.3 Capability scope |
+| [07-roadmap.md](07-roadmap.md#L101) | 101 | section | 7.4 Backlog after the MVP |
 | [08-conformance-suite.md](08-conformance-suite.md#L1) | 1 | section | 8. Conformance suite |
 | [08-conformance-suite.md](08-conformance-suite.md#L5) | 5 | section | CS-1 Layout |
 | [08-conformance-suite.md](08-conformance-suite.md#L21) | 21 | section | CS-2 Case format |
@@ -662,9 +668,9 @@ Find a rule ID or a section here, then open only that file at that line.
 | [stages/E2-bind.md](stages/E2-bind.md#L40) | 40 | rule | E2-4.8 |
 | [stages/E2-bind.md](stages/E2-bind.md#L41) | 41 | rule | E2-4.9 |
 | [stages/E2-bind.md](stages/E2-bind.md#L43) | 43 | section | E2-5 Error precedence |
-| [stages/E2-bind.md](stages/E2-bind.md#L75) | 75 | rule | E2-5.1 |
-| [stages/E2-bind.md](stages/E2-bind.md#L76) | 76 | rule | E2-5.2 |
-| [stages/E2-bind.md](stages/E2-bind.md#L78) | 78 | section | E2-6 Diagnostics |
+| [stages/E2-bind.md](stages/E2-bind.md#L76) | 76 | rule | E2-5.1 |
+| [stages/E2-bind.md](stages/E2-bind.md#L77) | 77 | rule | E2-5.2 |
+| [stages/E2-bind.md](stages/E2-bind.md#L79) | 79 | section | E2-6 Diagnostics |
 | [stages/E3-paths.md](stages/E3-paths.md#L1) | 1 | section | E3 Resolve paths |
 | [stages/E3-paths.md](stages/E3-paths.md#L3) | 3 | section | E3-1 Purpose |
 | [stages/E3-paths.md](stages/E3-paths.md#L8) | 8 | section | E3-2 Input and output |

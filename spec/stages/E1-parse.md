@@ -60,3 +60,4 @@ covered by the Layer 2 suite cases that test it.
 | `E_INVALID_QUERY` | Not JSON, or fails the JSON Schema |
 | `E_EMPTY_AGGREGATION_QUERY` | No dimensions and no metrics |
 | `EQRY-01`, `EQRY-02`, `EQRY-05`, `EQRY-06`, `EQRY-08`, `EQRY-13` | As in QRY-7 |
+| `E_NOT_YET_SUPPORTED` | Before 0.5.0: the query uses the SQL form (VS-2) |
