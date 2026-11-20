@@ -1,5 +1,5 @@
 id: sec-former-name-001
-rules: [SEC-3.9]
+rules: [SEC-3.9, CS-2.4b]
 model: slice
 security_context: analyst-former.json
 query:
