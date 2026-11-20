@@ -27,7 +27,9 @@ fn pln_2_1_query_and_security_values_never_appear_in_the_sql() {
 
 #[test]
 fn pln_2_2_identifiers_are_quoted_as_the_catalog_spells_them() {
-    let generated = generate(&scan("ORDERS", &["REGION"]), &query(&["REGION"], &[])).expect("SQL");
+    let plan = scan("ORDERS", &["AMOUNT", "REGION"]);
+    let generated = generate(&plan, &query(&["AMOUNT", "REGION"], &[])).expect("SQL");
+    assert!(generated.sql.contains(r#""Amount" AS "AMOUNT""#));
     assert!(generated.sql.contains(r#""Sales Region" AS "REGION""#));
     assert!(generated.sql.contains(r#"FROM "main"."orders""#));
 }

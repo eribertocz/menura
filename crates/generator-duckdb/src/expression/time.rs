@@ -4,7 +4,7 @@ use menura_contracts::types::common::LogicalType;
 use menura_expressions::typing::{Aggregates, Outcome, Stop, Typed, TypingScope, type_expression};
 use menura_model::expression::{DateUnit, Expression, Literal, Reference};
 
-use super::{Columns, ExpressionWriter};
+use super::{Columns, ExpressionWriter, catalog_column};
 use crate::error::{GenerateError, InvariantViolation};
 use crate::parameters::SharedValue;
 use crate::types::attribute_logical_type;
@@ -52,8 +52,7 @@ impl ExpressionWriter<'_, '_> {
         self.type_of(&Expression::Literal(literal.clone()))
     }
 
-    /// The logical type of `expression`, or `None` when it cannot be typed here, such as an
-    /// expression over catalog columns.
+    /// The logical type of `expression`, or `None` when it cannot be typed.
     pub(super) fn known_type(&self, expression: &Expression) -> Option<LogicalType> {
         self.type_of(expression).ok()
     }
@@ -76,19 +75,21 @@ impl ExpressionWriter<'_, '_> {
             .ok_or_else(|| self.error(InvariantViolation::UntypedOperand))
     }
 
-    /// The type of an input column; catalog columns have no type here.
+    /// The type of an input column, or of a catalog column as the catalog declares it (CAT-4).
     fn column_type(&self, reference: &Reference) -> Outcome<Typed> {
-        let Columns::Input(schema) = self.columns else {
+        if reference.qualifier.is_some() {
             return Err(Stop::ReportedElsewhere);
+        }
+        let found = match self.columns {
+            Columns::Input(schema) => schema
+                .columns()
+                .iter()
+                .find(|column| column.name.as_str() == reference.name.text())
+                .map(|column| Typed::value(column.logical_type.clone(), column.nullable)),
+            Columns::Catalog(relation) => catalog_column(relation, &reference.name)
+                .map(|column| Typed::value(column.logical_type.clone(), column.nullable)),
         };
-        schema
-            .columns()
-            .iter()
-            .find(|column| {
-                reference.qualifier.is_none() && column.name.as_str() == reference.name.text()
-            })
-            .map(|column| Typed::value(column.logical_type.clone(), column.nullable))
-            .ok_or(Stop::ReportedElsewhere)
+        found.ok_or(Stop::ReportedElsewhere)
     }
 }
 

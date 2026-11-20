@@ -21,6 +21,7 @@ mod values;
 pub use error::{GenerateError, InvariantViolation};
 pub use output::GeneratedSql;
 
+use menura_contracts::types::catalog::CatalogSchemaDocument;
 use menura_model::internal_model::InternalModel;
 use menura_representations::bound_query::BoundQuery;
 use menura_representations::logical_plan::PlanNode;
@@ -30,8 +31,8 @@ use crate::body::{SelectBody, statement};
 use crate::expression::Environment;
 use crate::steps::{StepWriter, pass_through};
 
-/// Generates the `DuckDB` SQL of `plan`, the optimized plan of `query`, over `model`, for the
-/// user of `security`.
+/// Generates the `DuckDB` SQL of `plan`, the optimized plan of `query`, over `model` and its
+/// admitted `catalog` schema, for the user of `security`.
 ///
 /// The plan follows the 0.3.0 conventions: a `Scan` projects fields of its dataset by name,
 /// every other node reads the columns of its input by unqualified reference, the literals of a
@@ -40,14 +41,16 @@ use crate::steps::{StepWriter, pass_through};
 /// # Errors
 ///
 /// A [`GenerateError`] when the input breaks the contract of the stages before E6, such as a
-/// node outside the 0.3.0 slice (VS-1).
+/// node outside the 0.3.0 slice (VS-1) or a `source` without a catalog relation.
 pub fn generate_sql(
     plan: &PlanNode,
+    catalog: &CatalogSchemaDocument,
     model: &InternalModel,
     query: &BoundQuery,
     security: &AdmittedSecurityContext,
 ) -> Result<GeneratedSql, GenerateError> {
     let environment = Environment {
+        catalog,
         model,
         security,
         time_zone: &query.time().time_zone,

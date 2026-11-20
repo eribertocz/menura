@@ -9,8 +9,7 @@ use crate::error::GenerateError;
 
 impl ExpressionWriter<'_, '_> {
     /// `l op r`; when E0F-5a makes the result a 128-bit integer, both operands are cast to
-    /// `HUGEINT` first, so `DuckDB` computes it without overflowing a narrower type. Where the
-    /// operand types are unknown (catalog columns), the operator is written unchanged.
+    /// `HUGEINT` first, so `DuckDB` computes it without overflowing a narrower type.
     pub(super) fn arithmetic(
         &mut self,
         expression: &Expression,

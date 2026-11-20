@@ -1,7 +1,7 @@
 WITH
   "menura_1_scan" AS (
     SELECT
-      "amount" AS "AMOUNT",
+      "Amount" AS "AMOUNT",
       "status" = 'paid' AS "IS_PAID"
     FROM "main"."orders"
   ),

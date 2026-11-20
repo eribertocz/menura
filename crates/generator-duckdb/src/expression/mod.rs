@@ -7,7 +7,9 @@ mod comparisons;
 mod operators;
 mod time;
 
-use menura_model::expression::{Expression, Literal, Reference};
+use menura_contracts::normalize_unquoted_identifier;
+use menura_contracts::types::catalog::{CatalogSchemaDocument, Column, RelationSchema};
+use menura_model::expression::{Expression, Identifier, Literal, Reference};
 use menura_model::internal_model::InternalModel;
 use menura_representations::logical_plan::OutputSchema;
 use menura_representations::origin::Origin;
@@ -19,9 +21,11 @@ use crate::identifiers::quote;
 use crate::parameters::Parameters;
 use crate::values::{literal_sql, literal_value};
 
-/// What every expression of a statement may read: the model, the security context and the
-/// query time zone.
+/// What every expression of a statement may read: the catalog schema, the model, the security
+/// context and the query time zone.
 pub(crate) struct Environment<'input> {
+    /// The admitted catalog schema, for the columns of each dataset `source`.
+    pub(crate) catalog: &'input CatalogSchemaDocument,
     /// The internal model, for attribute declarations.
     pub(crate) model: &'input InternalModel,
     /// The admitted security context, for attribute values.
@@ -54,8 +58,8 @@ impl Literals {
 pub(crate) enum Columns<'input> {
     /// A column of the input node.
     Input(&'input OutputSchema),
-    /// A catalog column of the dataset `source`, in a field expression.
-    Catalog,
+    /// A column of the catalog relation of the dataset `source`, in a field expression.
+    Catalog(&'input RelationSchema),
 }
 
 /// Writes the expressions of one plan node.
@@ -150,25 +154,45 @@ impl<'input, 'statement> ExpressionWriter<'input, 'statement> {
         Ok(self.parameters.bind(logical_type, value))
     }
 
+    /// An input column by its name, or a catalog column as the catalog spells it (PLN-2.2).
     fn reference(&self, reference: &Reference) -> Result<String, GenerateError> {
         if reference.qualifier.is_some() {
             return Err(self.error(InvariantViolation::QualifiedReference));
         }
         let name = reference.name.text();
-        if let Columns::Input(schema) = self.columns {
-            let known = schema
+        let known = match self.columns {
+            Columns::Input(schema) => schema
                 .columns()
                 .iter()
-                .any(|column| column.name.as_str() == name);
-            if !known {
-                return Err(self.error(InvariantViolation::UnknownColumn));
+                .any(|column| column.name.as_str() == name)
+                .then(|| name.to_owned()),
+            Columns::Catalog(relation) => {
+                catalog_column(relation, &reference.name).map(|column| column.name.clone())
             }
-        }
-        Ok(quote(name))
+        };
+        known
+            .map(|name| quote(&name))
+            .ok_or_else(|| self.error(InvariantViolation::UnknownColumn))
     }
 
     /// The error `violation` in this node.
     fn error(&self, violation: InvariantViolation) -> GenerateError {
         GenerateError::new(violation, self.origin)
     }
+}
+
+/// The column of `relation` that `name` matches (E0D-1.5): a regular name matches the column
+/// whose name, normalized as E0D-1.1, equals its own; a delimited name matches exactly.
+pub(crate) fn catalog_column<'relation>(
+    relation: &'relation RelationSchema,
+    name: &Identifier,
+) -> Option<&'relation Column> {
+    relation.columns.iter().find(|column| {
+        if name.is_delimited() {
+            column.name == name.text()
+        } else {
+            normalize_unquoted_identifier(&column.name)
+                == normalize_unquoted_identifier(name.text())
+        }
+    })
 }

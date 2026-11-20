@@ -80,8 +80,9 @@ impl<'input> StepWriter<'input> {
         Ok(WrittenNode { name, ordering })
     }
 
-    /// Each schema column is the expression of the field of the same name, over the catalog
-    /// columns of the dataset `source` (E6-4.3).
+    /// Each schema column is the expression of the field of the same name, over the columns of
+    /// the catalog relation whose `source` is the dataset's, character for character (CAT-4),
+    /// a query `source` included (E6-4.3).
     fn scan(
         &mut self,
         node: &'input PlanNode,
@@ -93,6 +94,13 @@ impl<'input> StepWriter<'input> {
             .ok_or_else(|| error(InvariantViolation::UnknownDataset, node))?;
         let source: Source<'_> = classify_source(&dataset.source)
             .ok_or_else(|| error(InvariantViolation::MalformedSource, node))?;
+        let relation = self
+            .environment
+            .catalog
+            .relations
+            .iter()
+            .find(|relation| relation.source == dataset.source)
+            .ok_or_else(|| error(InvariantViolation::UnknownRelation, node))?;
         let mut items = Vec::new();
         for column in node.schema().columns() {
             let field = dataset
@@ -104,7 +112,7 @@ impl<'input> StepWriter<'input> {
                 .expression
                 .as_ref()
                 .ok_or_else(|| error(InvariantViolation::FieldWithoutExpression, node))?;
-            let value = self.expression(node, Columns::Catalog, expression)?;
+            let value = self.expression(node, Columns::Catalog(relation), expression)?;
             items.push(format!("{value} AS {}", quote(column.name.as_str())));
         }
         Ok(SelectBody {

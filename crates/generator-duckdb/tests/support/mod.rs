@@ -7,9 +7,13 @@
     reason = "each test file uses a different part of the shared support module"
 )]
 
+use menura_contracts::ContractKind;
 use menura_contracts::Sha256Hash;
+use menura_contracts::types::catalog::{
+    CatalogSchemaContract, CatalogSchemaDocument, Column, Engine, RelationSchema,
+};
+use menura_contracts::types::common::Token;
 use menura_contracts::types::common::{IntegerBits, LogicalType, TimestampPrecision};
-pub use menura_generator_duckdb::generate_sql;
 use menura_generator_duckdb::{GenerateError, GeneratedSql};
 
 mod plan;
@@ -60,8 +64,21 @@ pub fn instant() -> LogicalType {
 fn order_fields() -> Vec<(&'static str, &'static str, LogicalType)> {
     vec![
         ("AMOUNT", "amount", decimal(10, 2)),
+        (
+            "CREATED_MONTH",
+            "DATE_TRUNC('month', created_at)",
+            instant(),
+        ),
         ("CREATED_AT", "created_at", instant()),
         ("IS_PAID", "status = 'paid'", LogicalType::Boolean),
+        (
+            "LINE_SQUARE",
+            "quantity * quantity",
+            LogicalType::Integer {
+                bits: IntegerBits::OneHundredTwentyEight,
+                signed: true,
+            },
+        ),
         ("ORDERED_ON", "ordered_on", LogicalType::Date),
         ("QUANTITY", "quantity", big_integer()),
         ("REGION", "\"Sales Region\"", LogicalType::Text),
@@ -250,6 +267,68 @@ pub fn query_in(dimensions: &[&str], metrics: &[&str], time_zone: &str) -> Bound
 /// The bound query with `dimensions` then `metrics`, in `Europe/Madrid`.
 pub fn query(dimensions: &[&str], metrics: &[&str]) -> BoundQuery {
     query_in(dimensions, metrics, "Europe/Madrid")
+}
+
+/// The catalog columns of every relation: name as the catalog spells it, type.
+fn catalog_columns() -> Vec<Column> {
+    let integer = big_integer();
+    let timestamp = LogicalType::Timestamp {
+        precision: TimestampPrecision::Us,
+        with_time_zone: false,
+    };
+    [
+        ("Amount", decimal(10, 2)),
+        ("created_at", instant()),
+        ("ordered_on", LogicalType::Date),
+        ("quantity", integer),
+        ("Sales Region", LogicalType::Text),
+        ("shipped_at", timestamp),
+        ("status", LogicalType::Text),
+    ]
+    .into_iter()
+    .map(|(name, logical_type)| Column {
+        name: name.to_owned(),
+        logical_type,
+        physical_type: "unused".to_owned(),
+        nullable: true,
+    })
+    .collect()
+}
+
+/// The catalog schema with one relation, of the same columns, per dataset `source` of `model`.
+pub fn catalog_for(model: &InternalModel) -> CatalogSchemaDocument {
+    let relations = model
+        .parts()
+        .datasets
+        .iter()
+        .map(|dataset| RelationSchema {
+            source: dataset.source.clone(),
+            columns: catalog_columns(),
+        })
+        .collect();
+    CatalogSchemaDocument {
+        contract: CatalogSchemaContract::CatalogSchema,
+        contract_version: ContractKind::CatalogSchema.latest_version(),
+        document_id: Token {
+            origin: "tests".to_owned(),
+            snapshot: "1".to_owned(),
+        },
+        engine: Engine {
+            name: "duckdb".to_owned(),
+            version: "1.2.0".to_owned(),
+        },
+        relations,
+    }
+}
+
+/// The SQL of `plan` over `model` and its catalog (`catalog_for`).
+pub fn generate_sql(
+    plan: &PlanNode,
+    model: &InternalModel,
+    query: &BoundQuery,
+    security: &AdmittedSecurityContext,
+) -> Result<GeneratedSql, GenerateError> {
+    menura_generator_duckdb::generate_sql(plan, &catalog_for(model), model, query, security)
 }
 
 /// The SQL of `plan` for the dimension-only `query`, with every attribute set.

@@ -14,6 +14,8 @@ pub enum InvariantViolation {
     ExpressionOutsideSlice,
     /// A `Scan` of a dataset the model does not have.
     UnknownDataset,
+    /// A dataset `source` that names no relation of the catalog schema.
+    UnknownRelation,
     /// A dataset `source` that is neither a query nor a qualified name (E6-4.3).
     MalformedSource,
     /// A `Scan` column that names no field of its dataset.

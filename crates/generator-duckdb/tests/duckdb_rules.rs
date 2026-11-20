@@ -275,3 +275,38 @@ fn e6_4_5_every_aggregate_has_its_fixed_type() {
         );
     }
 }
+
+#[test]
+fn e6_4_3_a_source_without_a_catalog_relation_is_an_internal_error() {
+    let model = model();
+    let mut catalog = support::catalog_for(&model);
+    catalog.relations.clear();
+    let plan = scan("ORDERS", &["REGION"]);
+    let error = menura_generator_duckdb::generate_sql(
+        &plan,
+        &catalog,
+        &model,
+        &query(&["REGION"], &[]),
+        &support::security(),
+    )
+    .unwrap_err();
+    assert_eq!(error.violation, InvariantViolation::UnknownRelation);
+}
+
+#[test]
+fn e6_5_2_field_expressions_are_typed_from_the_catalog() {
+    let plan = filter(
+        scan("ORDERS", &["CREATED_MONTH", "LINE_SQUARE"]),
+        "LINE_SQUARE > 0",
+        from_model("/semantic_model/0/datasets/0/row_policies/0"),
+    );
+    let generated = generate(&plan, &query(&["CREATED_MONTH", "LINE_SQUARE"], &[])).expect("SQL");
+    assert!(generated.sql.contains(
+        r#"date_trunc('month', "created_at" AT TIME ZONE $1) AT TIME ZONE $1 AS "CREATED_MONTH""#
+    ));
+    assert!(
+        generated.sql.contains(
+            r#"CAST("quantity" AS HUGEINT) * CAST("quantity" AS HUGEINT) AS "LINE_SQUARE""#
+        )
+    );
+}
