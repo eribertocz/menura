@@ -1,0 +1,17 @@
+id: e4-current-date-row-policy-with-reference-time-001
+rules: [QRY-2, E4-6.9b]
+model: current-date
+security_context: analyst.json
+query:
+  contract: menura.query
+  contract_version: "1.1.0"
+  reference_time: "2026-11-15T12:00:00Z"
+  time_zone: UTC
+  query:
+    dimensions: [orders.status]
+    metrics:
+      - {metric: total_amount, alias: total_amount}
+expect:
+  outcome: plan
+  rows: e4-current-date-row-policy-with-reference-time-001.csv
+  row_order: any

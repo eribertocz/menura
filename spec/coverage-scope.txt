@@ -1,6 +1,7 @@
 # Coverage scope (spec/08-conformance-suite.md CS-2.6).
-# Every rule ID defined in a file listed here must be covered, or `rule-coverage` fails.
-# The specification session adds the files of a version at its gate (7.1a). Never remove a line.
+# An entry is a path (every rule ID of that file) or a path followed by rule IDs (only those).
+# Every rule ID in scope must be covered, or `rule-coverage` fails.
+# The specification session adds the entries of a version at its gate (7.1a). Never remove a line.
 # 0.1.0 gate
 spec/05-engineering-standards.md
 spec/06-development-workflow.md
