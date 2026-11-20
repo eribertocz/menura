@@ -300,25 +300,24 @@ fn e2_5_3_the_date_range_comes_before_paths_whatever_their_place_in_the_document
 }
 
 #[test]
-fn e2_5_3_shuffled_json_keys_give_the_same_first_error() {
-    let written_first = tree(
+fn e2_5_3_the_first_error_follows_query_order_not_the_order_of_pointers() {
+    // The filter's pointer sorts before the dimension's, but the dimension comes first in
+    // query order. Real JSON key order reaches E2 only through E1; the conformance cases of
+    // the `core` issue cover it.
+    let parts = QueryTreeParts {
+        filters: vec![filter(
+            "/query/a_filter",
+            equals_text(column("orders.size")),
+        )],
+        ..QueryTreeParts::default()
+    };
+    let query = tree(
         vec![dimension(0, "orders.colour")],
         vec![metric(0, "profit")],
-        filters(vec![equals_text(column("orders.size"))]),
-    );
-    let mut shuffled_parts = filters(vec![equals_text(column("orders.size"))]);
-    shuffled_parts.filters[0] = filter("/query/filter", equals_text(column("orders.size")));
-    let shuffled = tree(
-        vec![dimension(0, "orders.colour")],
-        vec![metric(0, "profit")],
-        shuffled_parts,
+        parts,
     );
     assert_eq!(
-        first_error(&written_first, ANALYST),
-        first_error(&shuffled, ANALYST)
-    );
-    assert_eq!(
-        first_error(&shuffled, ANALYST),
+        first_error(&query, ANALYST),
         error(BindCode::NameNotFound, "/query/dimensions/0")
     );
 }
