@@ -84,6 +84,13 @@ allow = [
     "cfg-if",
     "cpufeatures",
     "libc",
+    # E1 (#229), approved by the maintainer for menura-e1-parse only: the bundled IANA time-zone
+    # database of E1-2.3. `jiff` is banned below with `menura-e1-parse` among its wrappers, and is
+    # built without its `std` feature, so it has no clock API (A2); allowed here at its exact
+    # version only (cargo-deny rejects the same entry in both).
+    "jiff@=1.0.1",
+    "jiff-core",
+    "jiff-tzdb",
     # Conformance runner (#6, ARC-5.3), approved by the maintainer for that crate only: DuckDB
     # (bundled), the serde-saphyr YAML parser, and their dependencies. `duckdb`, `libduckdb-sys` and
     # `chrono` are banned below with the runner (and DuckDB's own crates) as their only wrappers;
@@ -283,7 +290,7 @@ deny = [
     { crate = "arrow-string", wrappers = ["arrow"], reason = "A2: reaches the clock (chrono); allowed only inside the DuckDB tree of the conformance runner (ARC-5.3)" },
     { crate = "chrono", wrappers = ["menura-cli", "menura-conformance-runner", "arrow-arith", "arrow-array", "arrow-cast"], reason = "A2: clock access is forbidden outside the command-line wrapper and the conformance runner" },
     { crate = "time", wrappers = ["menura-cli", "menura-conformance-runner"], reason = "A2: clock access is forbidden outside the command-line wrapper and the conformance runner" },
-    { crate = "jiff", wrappers = ["menura-cli", "menura-conformance-runner"], reason = "A2: clock access is forbidden outside the command-line wrapper and the conformance runner" },
+    { crate = "jiff", wrappers = ["menura-cli", "menura-conformance-runner", "menura-e1-parse"], reason = "A2: clock access is forbidden outside the command-line wrapper and the conformance runner; menura-e1-parse may use it only without the `std` feature, which has no clock API (#229)" },
     { crate = "humantime", wrappers = ["menura-cli", "menura-conformance-runner"], reason = "A2: clock access is forbidden outside the command-line wrapper and the conformance runner" },
     { crate = "coarsetime", wrappers = ["menura-cli", "menura-conformance-runner"], reason = "A2: clock access is forbidden outside the command-line wrapper and the conformance runner" },
     { crate = "quanta", wrappers = ["menura-cli", "menura-conformance-runner"], reason = "A2: clock access is forbidden outside the command-line wrapper and the conformance runner" },
