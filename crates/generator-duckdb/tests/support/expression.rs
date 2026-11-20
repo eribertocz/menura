@@ -40,6 +40,11 @@ pub fn expression_sql(
 /// The query of the single column `X`, in `America/New_York`, at the reference time
 /// `2026-11-15T23:30:00.25-04:00`, whose date in that zone is 2026-11-15.
 pub fn query_with_reference_time() -> BoundQuery {
+    reference_time_query(&["X"])
+}
+
+/// The query of the dimensions `names` at the reference time of `query_with_reference_time`.
+pub fn reference_time_query(names: &[&str]) -> BoundQuery {
     let local = TimestampValue {
         date: DateValue::new(2026, 11, 15).expect("a date"),
         time: TimeOfDay::new(23, 30, 0, "25").expect("a time of day"),
@@ -50,7 +55,7 @@ pub fn query_with_reference_time() -> BoundQuery {
         reference_date: Some(local.date),
         reference_time: Some(ReferenceTime { local, offset }),
     };
-    single_column_query(time)
+    dimensions_query(names, time)
 }
 
 /// The query of the single column `X`, in `Europe/Madrid`, without a reference time.
@@ -60,10 +65,11 @@ pub fn query_without_reference_time() -> BoundQuery {
         reference_date: None,
         reference_time: None,
     };
-    single_column_query(time)
+    dimensions_query(&["X"], time)
 }
 
-fn single_column_query(time: QueryTime) -> BoundQuery {
-    let columns = Columns::dimensions_then_metrics(vec![dimension("X")], Vec::new());
+fn dimensions_query(names: &[&str], time: QueryTime) -> BoundQuery {
+    let dimensions = names.iter().map(|name| dimension(name)).collect();
+    let columns = Columns::dimensions_then_metrics(dimensions, Vec::new());
     BoundQuery::new(columns, time, BoundQueryParts::default())
 }

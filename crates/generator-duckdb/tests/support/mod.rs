@@ -19,7 +19,9 @@ use menura_generator_duckdb::{GenerateError, GeneratedSql};
 mod expression;
 mod plan;
 
-pub use expression::{expression_sql, query_with_reference_time, query_without_reference_time};
+pub use expression::{
+    expression_sql, query_with_reference_time, query_without_reference_time, reference_time_query,
+};
 use menura_model::expression::Expression;
 use menura_model::internal_model::{
     AttributeType, Dataset, Descriptions, Field, FieldPath, InternalModel, ModelParts,

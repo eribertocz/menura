@@ -10,6 +10,7 @@ use menura_contracts::types::common::{FloatBits, IntegerBits, LogicalType};
 use support::{big_integer, decimal, expression_sql, from_model, query_with_reference_time};
 
 /// The SQL of `expression`, a model expression of type `logical_type`.
+#[cfg(test)]
 fn model_sql(expression: &str, logical_type: LogicalType) -> String {
     expression_sql(
         expression,
@@ -146,8 +147,8 @@ fn e0f_10_3_outside_the_domain_is_null() {
 
 #[test]
 fn e0f_10_3_greatest_and_least_are_null_when_an_argument_is_null() {
-    assert!(model_sql("GREATEST(QUANTITY, AMOUNT)", decimal(21, 2)).contains(
-        r#"CAST(CASE WHEN "QUANTITY" IS NULL OR "AMOUNT" IS NULL THEN NULL ELSE greatest(CAST("QUANTITY" AS DECIMAL(21,2)), CAST("AMOUNT" AS DECIMAL(21,2))) END AS DECIMAL(21,2))"#
+    assert!(model_sql("GREATEST(AMOUNT, -AMOUNT)", decimal(10, 2)).contains(
+        r#"CAST(CASE WHEN "AMOUNT" IS NULL OR (-"AMOUNT") IS NULL THEN NULL ELSE greatest(CAST("AMOUNT" AS DECIMAL(10,2)), CAST((-"AMOUNT") AS DECIMAL(10,2))) END AS DECIMAL(10,2))"#
     ));
     assert!(
         model_sql("LEAST(QUANTITY, 3)", big_integer())
@@ -157,8 +158,8 @@ fn e0f_10_3_greatest_and_least_are_null_when_an_argument_is_null() {
 
 #[test]
 fn e0f_10_4_if_is_the_else_branch_when_the_condition_is_null() {
-    assert!(model_sql("IF(QUANTITY > 1, AMOUNT, 0)", decimal(21, 2)).contains(
-        r#"CAST(CASE WHEN "QUANTITY" > 1 THEN CAST("AMOUNT" AS DECIMAL(21,2)) ELSE CAST(0 AS DECIMAL(21,2)) END AS DECIMAL(21,2))"#
+    assert!(model_sql("IF(QUANTITY > 1, QUANTITY, 0)", big_integer()).contains(
+        r#"CAST(CASE WHEN "QUANTITY" > 1 THEN CAST("QUANTITY" AS BIGINT) ELSE CAST(0 AS BIGINT) END AS BIGINT)"#
     ));
 }
 

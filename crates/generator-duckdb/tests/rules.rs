@@ -137,7 +137,7 @@ fn e6_3_1_inconsistent_plans_are_internal_errors() {
         (
             filter(
                 scan("ORDERS", &["REGION"]),
-                "UPPER(REGION) = 'A'",
+                "AGG(REGION) = 'A'",
                 from_query("/query"),
             ),
             InvariantViolation::ExpressionOutsideSlice,

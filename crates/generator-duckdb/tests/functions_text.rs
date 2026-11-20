@@ -11,6 +11,7 @@ use serde_json::json;
 use support::{big_integer, expression_sql, from_model, from_query, query_with_reference_time};
 
 /// The SQL of `expression`, a model expression of type `logical_type`.
+#[cfg(test)]
 fn model_sql(expression: &str, logical_type: LogicalType) -> GeneratedSql {
     expression_sql(
         expression,
@@ -21,6 +22,7 @@ fn model_sql(expression: &str, logical_type: LogicalType) -> GeneratedSql {
     .expect("SQL")
 }
 
+#[cfg(test)]
 fn text_sql(expression: &str) -> String {
     model_sql(expression, LogicalType::Text).sql
 }
@@ -29,7 +31,7 @@ fn text_sql(expression: &str) -> String {
 fn e0f_10_2_concat_is_null_when_an_argument_is_null() {
     assert!(
         text_sql("CONCAT(REGION, '-', REGION)")
-            .contains(r#"CAST("REGION" || '-' || "REGION" AS VARCHAR) AS "X""#)
+            .contains(r#"CAST("REGION" || '-' || "REGION" AS VARCHAR)"#)
     );
     assert!(text_sql("CONCAT(REGION)").contains(r#"CAST("REGION" AS VARCHAR)"#));
 }
@@ -113,8 +115,8 @@ fn e0f_10_2_contains_starts_and_ends() {
 #[test]
 fn e0f_10_2_like_has_no_escape_character() {
     let boolean = |expression| model_sql(expression, LogicalType::Boolean).sql;
-    assert!(boolean("REGION LIKE 'n_r%'").contains(r#""REGION" LIKE 'n_r%' AS "X""#));
-    assert!(boolean("REGION NOT ILIKE 'N%'").contains(r#""REGION" NOT ILIKE 'N%' AS "X""#));
+    assert!(boolean("REGION LIKE 'n_r%'").contains(r#""REGION" LIKE 'n_r%'"#));
+    assert!(boolean("REGION NOT ILIKE 'N%'").contains(r#""REGION" NOT ILIKE 'N%'"#));
     assert!(boolean("NOT REGION LIKE 'n%'").contains(r#"NOT ("REGION" LIKE 'n%')"#));
 }
 

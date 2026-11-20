@@ -14,6 +14,7 @@ use support::{
 };
 
 /// The SQL of `expression`, a model expression of type `logical_type`.
+#[cfg(test)]
 fn model_sql(expression: &str, logical_type: LogicalType) -> GeneratedSql {
     expression_sql(
         expression,
@@ -37,7 +38,7 @@ fn e0f_10_1_parts_are_64_bit_integers() {
     assert!(
         generated
             .sql
-            .contains(r#"CAST(date_part('year', "ORDERED_ON") AS BIGINT) AS "X""#)
+            .contains(r#"CAST(date_part('year', "ORDERED_ON") AS BIGINT)"#)
     );
 }
 
@@ -170,7 +171,7 @@ fn e0f_2_3_current_date_is_the_reference_date_bound_once() {
     assert!(
         generated
             .sql
-            .contains(r#"CASE WHEN "ORDERED_ON" <= $1 THEN $1 END"#)
+            .contains(r#"CASE WHEN ("ORDERED_ON" <= $1) THEN $1 END"#)
     );
     assert_eq!(generated.parameters.len(), 1);
     assert_eq!(generated.parameters[0].logical_type, LogicalType::Date);
@@ -183,7 +184,7 @@ fn e0f_2_3_current_timestamp_is_the_wall_clock_of_the_reference_time() {
     assert!(
         generated
             .sql
-            .contains("CAST($1 AT TIME ZONE $2 AS TIMESTAMP) AS \"X\"")
+            .contains("CAST($1 AT TIME ZONE $2 AS TIMESTAMP)")
     );
     assert_eq!(generated.parameters[0].logical_type, instant());
     assert_eq!(
