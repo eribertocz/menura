@@ -24,6 +24,7 @@
 pub mod case;
 pub mod case_file;
 pub mod database;
+mod diagnostic_check;
 pub mod error;
 pub mod fixture;
 pub mod load_options;
