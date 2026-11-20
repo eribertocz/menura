@@ -1,6 +1,7 @@
 //! The query part of a case (CS-2.8): the query is compiled through `core` for the case's
 //! security context, and the result is compared with the expectation. A compilation that returns
-//! `E_NOT_YET_SUPPORTED` leaves the part pending (VS-4).
+//! `E_NOT_YET_SUPPORTED` leaves the part pending (VS-4), unless the case itself expects that
+//! error, which is then compared like any other.
 
 use std::path::Path;
 
@@ -46,7 +47,10 @@ pub(crate) fn check_query(case: &Case, handle: &Handle, inputs: &QueryInputs<'_>
         return CaseStatus::Failed(reason);
     }
     match (case.expect.outcome, result) {
-        (_, CompileResult::Error(error)) if first_code(&error) == Some(NOT_YET_SUPPORTED) => {
+        (_, CompileResult::Error(error))
+            if first_code(&error) == Some(NOT_YET_SUPPORTED)
+                && !expects_not_yet_supported(&case.expect) =>
+        {
             CaseStatus::Pending(format!(
                 "the query part needs a capability outside this version's slice (VS-4): {}",
                 describe(error.errors.first())
@@ -71,6 +75,12 @@ pub(crate) fn check_query(case: &Case, handle: &Handle, inputs: &QueryInputs<'_>
             check_runtime_error(&case.expect, &plan, inputs.connection)
         }
     }
+}
+
+/// Whether the case itself expects `E_NOT_YET_SUPPORTED`, so that the error is compared, not
+/// left pending (VS-4).
+fn expects_not_yet_supported(expect: &Expectation) -> bool {
+    expect.outcome == Outcome::Error && expect.error.as_deref() == Some(NOT_YET_SUPPORTED)
 }
 
 fn compile_query(handle: &Handle, query: &[u8], security_context: &[u8]) -> CompileResult {
@@ -269,6 +279,25 @@ mod tests {
             panic!("the case is pending: {status:?}");
         };
         assert!(reason.contains(NOT_YET_SUPPORTED), "{reason}");
+    }
+
+    #[test]
+    fn vs_4_a_case_that_expects_not_yet_supported_compares_it() {
+        let query = "{metrics: [total_amount, total_target]}";
+        let expect = |pointer: &str| {
+            format!(
+                "{{outcome: error, error: E_NOT_YET_SUPPORTED, location: {{document: query, \
+                 pointer: {pointer}}}}}"
+            )
+        };
+        assert_eq!(
+            status(&case_text(query, &expect("/query/metrics/1"))),
+            CaseStatus::Passed
+        );
+        assert_fails(
+            status(&case_text(query, &expect("/query/metrics/0"))),
+            "location",
+        );
     }
 
     #[test]
