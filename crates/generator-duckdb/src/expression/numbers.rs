@@ -110,9 +110,9 @@ impl ExpressionWriter<'_, '_> {
         }
     }
 
-    /// An integer to `digits ≤ 0` digits: rounded as a `DECIMAL(38,0)`, whose `round` rounds
-    /// half away from zero, or truncated by subtracting its remainder, which has the sign of
-    /// the integer.
+    /// An integer to `digits ≤ 0` digits, in 128-bit integer arithmetic, which holds every
+    /// integer: truncated by subtracting its remainder, which has the sign of the integer, and
+    /// rounded by adding one unit away from zero when the remainder is at least half a unit.
     fn rounded_integer(
         &mut self,
         rounding: Rounding,
@@ -126,21 +126,25 @@ impl ExpressionWriter<'_, '_> {
         if dropped > u64::from(HUGE_INTEGER_DIGITS) {
             return Ok(format!("{} * 0", self.widened(value)?));
         }
+        let widened = self.widened(value)?;
+        let unit = format!(
+            "CAST('1{}' AS HUGEINT)",
+            "0".repeat(usize::try_from(dropped).unwrap_or(0))
+        );
+        let remainder = format!("{widened} % {unit}");
+        let truncated = format!("{widened} - {remainder}");
         match rounding {
+            Rounding::Truncate => Ok(truncated),
             Rounding::Round => Ok(format!(
-                "round(CAST({} AS DECIMAL(38,0)), {digits})",
-                self.write(value)?
+                "{truncated} + CASE WHEN abs({remainder}) >= {unit} - abs({remainder}) \
+                 THEN sign({widened}) * {unit} ELSE 0 END"
             )),
-            Rounding::Truncate => {
-                let widened = self.widened(value)?;
-                let unit = format!("1{}", "0".repeat(usize::try_from(dropped).unwrap_or(0)));
-                Ok(format!("{widened} - {widened} % CAST('{unit}' AS HUGEINT)"))
-            }
         }
     }
 
-    /// A `decimal(p,s)` to `0 ≤ digits ≤ s` digits. Truncation multiplies by `10^digits`,
-    /// truncates to an integer and multiplies back, all in exact decimals.
+    /// A `decimal(p,s)` to `0 ≤ digits ≤ s` digits. Truncation to `digits < s` moves `x` half
+    /// a unit toward zero and rounds half away from zero, which is exact because `x` has more
+    /// digits than the result, and never scales `x` up, so it cannot overflow.
     fn rounded_decimal(
         &mut self,
         rounding: Rounding,
@@ -154,17 +158,15 @@ impl ExpressionWriter<'_, '_> {
             .ok_or_else(|| self.error(InvariantViolation::MalformedFunctionCall))?;
         match rounding {
             Rounding::Round => Ok(format!("round({}, {digits})", self.write(value)?)),
-            Rounding::Truncate if digits == 0 => Ok(format!("trunc({})", self.write(value)?)),
             Rounding::Truncate if digits == scale => self.write(value),
             Rounding::Truncate => {
                 let value = self.operand(value)?;
-                let count = usize::from(digits);
-                let up = format!("CAST('1{}' AS DECIMAL({},0))", "0".repeat(count), count + 1);
-                let down = format!(
-                    "CAST('0.{}1' AS DECIMAL({digits},{digits}))",
-                    "0".repeat(count - 1)
+                let half = format!(
+                    "CAST('0.{}5' AS DECIMAL({width},{width}))",
+                    "0".repeat(usize::from(digits)),
+                    width = digits + 1
                 );
-                Ok(format!("trunc({value} * {up}) * {down}"))
+                Ok(format!("round({value} - sign({value}) * {half}, {digits})"))
             }
         }
     }

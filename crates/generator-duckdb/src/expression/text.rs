@@ -96,7 +96,8 @@ impl ExpressionWriter<'_, '_> {
     }
 
     /// `left(s, n)` or `right(s, n)`, NULL for `n < 0`, where `DuckDB` drops characters
-    /// instead.
+    /// instead. `n` is clamped to the length of `s` before its cast to `BIGINT`, so a 128-bit
+    /// count cannot overflow.
     fn end_characters(
         &mut self,
         name: &str,
@@ -106,31 +107,38 @@ impl ExpressionWriter<'_, '_> {
         let text = self.write(text)?;
         let count = self.operand(count)?;
         Ok(format!(
-            "{name}({text}, CASE WHEN {count} < 0 THEN NULL ELSE {count} END)"
+            "{name}({text}, CASE WHEN {count} >= 0 THEN \
+             CAST(least({count}, length({text})) AS BIGINT) END)"
         ))
     }
 
     /// The characters at positions `start` to `start + length − 1` that exist (ISO 9075):
-    /// `DuckDB` counts a start before 1 from the end of the text instead.
+    /// `DuckDB` counts a start before 1 from the end of the text instead. A NULL argument gives
+    /// NULL, which `greatest` and `least` would skip; positions are clamped to the text before
+    /// their cast to `BIGINT`.
     fn substring(&mut self, arguments: &[Expression]) -> Result<String, GenerateError> {
         let (text, start, length) = match arguments {
             [text, start] => (text, start, None),
             [text, start, length] => (text, start, Some(length)),
             _ => return Err(self.error(InvariantViolation::MalformedFunctionCall)),
         };
-        let text = self.write(text)?;
+        let text = self.operand(text)?;
         let start = self.operand(start)?;
-        let first = format!("greatest({start}, 1)");
+        let first = format!("CAST(least(greatest({start}, 1), length({text}) + 1) AS BIGINT)");
         let Some(length) = length else {
-            return Ok(format!("substring({text}, {first})"));
+            return Ok(format!(
+                "CASE WHEN {text} IS NULL OR {start} IS NULL THEN NULL \
+                 ELSE substring({text}, {first}) END"
+            ));
         };
         let length = self.operand(length)?;
         let count = format!(
-            "CAST(least(greatest(CAST({start} AS HUGEINT) + {length} - {first}, 0), \
+            "CAST(least(greatest(CAST({start} AS HUGEINT) + {length} - greatest({start}, 1), 0), \
              length({text})) AS BIGINT)"
         );
         Ok(format!(
-            "substring({text}, {first}, CASE WHEN {length} < 0 THEN NULL ELSE {count} END)"
+            "CASE WHEN {text} IS NULL OR {start} IS NULL OR {length} IS NULL OR {length} < 0 \
+             THEN NULL ELSE substring({text}, {first}, {count}) END"
         ))
     }
 

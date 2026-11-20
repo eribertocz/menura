@@ -80,7 +80,7 @@ fn e0f_10_3_round_a_decimal_to_its_literal_scale() {
 fn e0f_10_3_round_an_integer_to_tens() {
     assert!(
         model_sql("ROUND(QUANTITY, -1)", huge_integer())
-            .contains(r#"CAST(round(CAST("QUANTITY" AS DECIMAL(38,0)), -1) AS HUGEINT)"#)
+            .contains(r#"CAST(CAST("QUANTITY" AS HUGEINT) - CAST("QUANTITY" AS HUGEINT) % CAST('10' AS HUGEINT) + CASE WHEN abs(CAST("QUANTITY" AS HUGEINT) % CAST('10' AS HUGEINT)) >= CAST('10' AS HUGEINT) - abs(CAST("QUANTITY" AS HUGEINT) % CAST('10' AS HUGEINT)) THEN sign(CAST("QUANTITY" AS HUGEINT)) * CAST('10' AS HUGEINT) ELSE 0 END AS HUGEINT)"#)
     );
     assert!(
         model_sql("ROUND(QUANTITY)", huge_integer()).contains(r#"CAST("QUANTITY" AS HUGEINT)"#)
@@ -100,11 +100,11 @@ fn e0f_10_3_truncate_toward_zero() {
         r#"CAST(CAST("QUANTITY" AS HUGEINT) - CAST("QUANTITY" AS HUGEINT) % CAST('100' AS HUGEINT) AS HUGEINT)"#
     ));
     assert!(model_sql("TRUNCATE(AMOUNT, 1)", decimal(10, 1)).contains(
-        r#"CAST(trunc("AMOUNT" * CAST('10' AS DECIMAL(2,0))) * CAST('0.1' AS DECIMAL(1,1)) AS DECIMAL(10,1))"#
+        r#"CAST(round("AMOUNT" - sign("AMOUNT") * CAST('0.05' AS DECIMAL(2,2)), 1) AS DECIMAL(10,1))"#
     ));
     assert!(
         model_sql("TRUNC(AMOUNT)", decimal(10, 0))
-            .contains(r#"CAST(trunc("AMOUNT") AS DECIMAL(10,0))"#)
+            .contains(r#"CAST(round("AMOUNT" - sign("AMOUNT") * CAST('0.5' AS DECIMAL(1,1)), 0) AS DECIMAL(10,0))"#)
     );
     assert!(
         model_sql("TRUNC(CAST(AMOUNT AS DOUBLE), 2)", double())

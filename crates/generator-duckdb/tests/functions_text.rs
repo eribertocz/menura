@@ -65,11 +65,11 @@ fn e0f_10_2_trim_removes_spaces_only() {
 fn e0f_10_2_left_and_right_of_a_negative_count_are_null() {
     assert!(
         text_sql("LEFT(REGION, QUANTITY)")
-            .contains(r#"left("REGION", CASE WHEN "QUANTITY" < 0 THEN NULL ELSE "QUANTITY" END)"#)
+            .contains(r#"left("REGION", CASE WHEN "QUANTITY" >= 0 THEN CAST(least("QUANTITY", length("REGION")) AS BIGINT) END)"#)
     );
     assert!(
         text_sql("RIGHT(REGION, QUANTITY)")
-            .contains(r#"right("REGION", CASE WHEN "QUANTITY" < 0 THEN NULL ELSE "QUANTITY" END)"#)
+            .contains(r#"right("REGION", CASE WHEN "QUANTITY" >= 0 THEN CAST(least("QUANTITY", length("REGION")) AS BIGINT) END)"#)
     );
 }
 
@@ -77,10 +77,17 @@ fn e0f_10_2_left_and_right_of_a_negative_count_are_null() {
 fn e0f_10_2_substring_keeps_the_positions_that_exist() {
     assert!(
         text_sql("SUBSTRING(REGION, QUANTITY)")
-            .contains(r#"substring("REGION", greatest("QUANTITY", 1))"#)
+            .contains(r#"CASE WHEN "REGION" IS NULL OR "QUANTITY" IS NULL THEN NULL ELSE substring("REGION", CAST(least(greatest("QUANTITY", 1), length("REGION") + 1) AS BIGINT)) END"#)
     );
     assert!(text_sql("SUBSTRING(REGION, QUANTITY, 3)").contains(
-        r#"substring("REGION", greatest("QUANTITY", 1), CASE WHEN 3 < 0 THEN NULL ELSE CAST(least(greatest(CAST("QUANTITY" AS HUGEINT) + 3 - greatest("QUANTITY", 1), 0), length("REGION")) AS BIGINT) END)"#
+        r#"CASE WHEN "REGION" IS NULL OR "QUANTITY" IS NULL OR 3 IS NULL OR 3 < 0 THEN NULL ELSE substring("REGION", CAST(least(greatest("QUANTITY", 1), length("REGION") + 1) AS BIGINT), CAST(least(greatest(CAST("QUANTITY" AS HUGEINT) + 3 - greatest("QUANTITY", 1), 0), length("REGION")) AS BIGINT)) END"#
+    ));
+}
+
+#[test]
+fn e0f_10_2_a_wide_integer_count_is_clamped_then_cast_to_bigint() {
+    assert!(text_sql("LEFT(REGION, QUANTITY * QUANTITY)").contains(
+        r#"CAST(least((CAST("QUANTITY" AS HUGEINT) * CAST("QUANTITY" AS HUGEINT)), length("REGION")) AS BIGINT)"#
     ));
 }
 
@@ -150,11 +157,9 @@ fn e6_4_2_query_arguments_are_bound_parameters() {
         &query_with_reference_time(),
     )
     .expect("SQL");
-    assert!(
-        generated
-            .sql
-            .contains(r#"left("REGION", CASE WHEN $1 < 0 THEN NULL ELSE $1 END)"#)
-    );
+    assert!(generated.sql.contains(
+        r#"left("REGION", CASE WHEN $1 >= 0 THEN CAST(least($1, length("REGION")) AS BIGINT) END)"#
+    ));
     assert_eq!(generated.parameters.len(), 1);
     assert_eq!(generated.parameters[0].value, json!(2));
 }
