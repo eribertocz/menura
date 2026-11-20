@@ -893,6 +893,9 @@ dependencies = [
 name = "menura-e3-paths"
 version = "0.2.0"
 dependencies = [
+ "menura-contracts",
+ "menura-model",
+ "menura-representations",
  "menura-security",
 ]
 
