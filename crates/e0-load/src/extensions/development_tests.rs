@@ -266,3 +266,17 @@ fn e0c_2_8_a_yaml_null_is_the_json_null() {
         1
     );
 }
+
+#[test]
+fn con_0_5_w0c_02_a_development_entry_under_the_former_namespace_is_ours() {
+    let former =
+        on_orders("{namespace: semantic_compiler, version: 1, access: {mode: authenticated}}");
+    let extensions = development(former.as_bytes()).expect("accepted");
+    assert_eq!(extensions.entries.len(), 1);
+    let warnings: Vec<_> = extensions
+        .warnings
+        .iter()
+        .map(|diagnostic| (diagnostic.code.as_str(), diagnostic.pointer.to_string()))
+        .collect();
+    assert_eq!(warnings, [pair("W0C-02", ORDERS_DATA)]);
+}

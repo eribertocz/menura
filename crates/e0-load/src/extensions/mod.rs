@@ -41,6 +41,8 @@ pub(crate) use output::{Extensions, ObjectKind};
 pub(crate) use populations::{Population, per_entry};
 pub(crate) use problems::{Problems, report_at};
 
+use menura_contracts::{FORMER_NAMESPACE, NAMESPACE};
+
 use crate::pointer::{JsonPointer, position};
 use crate::read::Node;
 use crate::structure::SelectedModel;
@@ -70,7 +72,7 @@ pub(crate) const DEFAULT_NAMESPACE: &str = "menura";
 /// (`E0C-02`, `E0C-03`, `E0C-36`) and of context metrics (`E0C-02`, `E0C-03`, `E0C-36`,
 /// `E0C-62`), of the security extension (`E0C-02`, `E0C-03`, `E0C-41` to `E0C-45`,
 /// `E0C-47`), of summaries (`E0C-02`, `E0C-03`, `E0C-50`, `E0C-55`, `E0C-56`), and the
-/// `W0C-01` warnings.
+/// `W0C-01` and `W0C-02` warnings.
 pub fn validate_extensions(
     document: &Node,
     model: &SelectedModel<'_>,
@@ -120,7 +122,7 @@ struct EntriesOfOurs {
     entries: Vec<OwnEntry>,
     /// The rejecting diagnostics of the common rules, `E0C-01` to `E0C-06`.
     errors: Vec<ExtensionDiagnostic>,
-    /// The `W0C-01` warnings.
+    /// The `W0C-01` and `W0C-02` warnings.
     warnings: Vec<ExtensionDiagnostic>,
 }
 
@@ -140,6 +142,9 @@ fn entries_of_ours(model: &SelectedModel<'_>, namespace: &str) -> EntriesOfOurs 
             }
             EntryKind::Ours(data) => data,
         };
+        if data.former_namespace {
+            warnings.push(former_namespace(&data));
+        }
         if previous_owner.as_ref() == Some(&entry.object_pointer) {
             errors.push(several_entries(&entry));
         }
@@ -160,6 +165,20 @@ fn entries_of_ours(model: &SelectedModel<'_>, namespace: &str) -> EntriesOfOurs 
         entries,
         errors,
         warnings,
+    }
+}
+
+/// The `W0C-02` warning of an entry of ours through the former namespace, located at its
+/// `data` member like every E0.c diagnostic about an entry (E0C-2.6, CON-0.5).
+fn former_namespace(data: &entry::OwnData<'_>) -> ExtensionDiagnostic {
+    ExtensionDiagnostic {
+        code: ExtensionCode::FormerNamespace,
+        pointer: data.pointer.clone(),
+        location: data.node.location,
+        message: format!(
+            "the entry uses the former namespace `{FORMER_NAMESPACE}`; it is read as ours until \
+             1.0.0, so write `\"namespace\": \"{NAMESPACE}\"` instead"
+        ),
     }
 }
 
