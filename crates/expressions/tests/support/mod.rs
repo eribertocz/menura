@@ -7,8 +7,8 @@
 
 pub mod generator;
 
-use semantic_compiler_expressions::{ExpressionCode, parse};
-use semantic_compiler_model::expression::{
+use menura_expressions::{ExpressionCode, parse};
+use menura_model::expression::{
     BinaryOperator, DecimalLiteral, Expression, Identifier, IntegerLiteral, Literal, Reference,
     ScalarFunction,
 };

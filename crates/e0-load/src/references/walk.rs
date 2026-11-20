@@ -1,6 +1,6 @@
 //! The column and field references, and the `AGG(…)` terms, of a normalized expression tree.
 
-use semantic_compiler_model::expression::{AggregateCall, Expression, Reference};
+use menura_model::expression::{AggregateCall, Expression, Reference};
 
 /// Every column or field reference of `expression`, in the order they are written.
 ///
@@ -107,7 +107,7 @@ fn aggregate_children(call: &AggregateCall) -> Vec<&Expression> {
 
 #[cfg(test)]
 mod tests {
-    use semantic_compiler_expressions::parse;
+    use menura_expressions::parse;
 
     use super::{metric_aggregates, references};
 

@@ -4,7 +4,7 @@ semantic_model:
     description: 'A measure field whose kind differs from its base_aggregate'
     custom_extensions:
       - vendor_name: COMMON
-        data: '{"namespace": "semantic_compiler", "version": 1, "security_context": {"roles": ["analyst"], "attributes": []}}'
+        data: '{"namespace": "menura", "version": 1, "security_context": {"roles": ["analyst"], "attributes": []}}'
     datasets:
       - name: orders
         source: shop.main.orders
@@ -20,7 +20,7 @@ semantic_model:
             expression: {dialects: [{dialect: ANSI_SQL, expression: 'amount'}]}
         custom_extensions:
           - vendor_name: COMMON
-            data: '{"namespace": "semantic_compiler", "version": 1, "access": {"mode": "roles", "roles": ["analyst"]}}'
+            data: '{"namespace": "menura", "version": 1, "access": {"mode": "roles", "roles": ["analyst"]}}'
       - name: orders_daily
         source: shop.main.orders_daily
         primary_key: [order_date, region]
@@ -35,7 +35,7 @@ semantic_model:
             expression: {dialects: [{dialect: ANSI_SQL, expression: 'order_count'}]}
         custom_extensions:
           - vendor_name: COMMON
-            data: '{"namespace": "semantic_compiler", "version": 1, "access": {"mode": "internal"}, "aggregate": {"of": "orders", "dimensions": [{"field": "order_date", "base": "order_date", "grain": "day"}, {"field": "region", "base": "region"}], "measures": [{"field": "total_amount", "base_aggregate": "SUM(orders.amount)"}, {"field": "order_count", "base_aggregate": "COUNT(orders.order_id)"}], "coverage_field": "order_date"}}'
+            data: '{"namespace": "menura", "version": 1, "access": {"mode": "internal"}, "aggregate": {"of": "orders", "dimensions": [{"field": "order_date", "base": "order_date", "grain": "day"}, {"field": "region", "base": "region"}], "measures": [{"field": "total_amount", "base_aggregate": "SUM(orders.amount)"}, {"field": "order_count", "base_aggregate": "COUNT(orders.order_id)"}], "coverage_field": "order_date"}}'
     metrics:
       - name: total_amount
         expression: {dialects: [{dialect: ANSI_SQL, expression: 'SUM(orders.amount)'}]}

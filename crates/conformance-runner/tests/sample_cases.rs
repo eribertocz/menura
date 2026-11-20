@@ -9,10 +9,10 @@ use std::collections::BTreeSet;
 use std::fs;
 use std::path::{Path, PathBuf};
 
-use semantic_compiler_conformance_runner::case::Outcome;
-use semantic_compiler_conformance_runner::case_file::read_case;
-use semantic_compiler_conformance_runner::runner::QUERY_PENDING_REASON;
-use semantic_compiler_conformance_runner::{CaseStatus, RunnerErrorKind, run};
+use menura_conformance_runner::case::Outcome;
+use menura_conformance_runner::case_file::read_case;
+use menura_conformance_runner::runner::QUERY_PENDING_REASON;
+use menura_conformance_runner::{CaseStatus, RunnerErrorKind, run};
 
 fn conformance_directory() -> PathBuf {
     Path::new(env!("CARGO_MANIFEST_DIR")).join("../../conformance")

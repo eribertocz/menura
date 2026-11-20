@@ -1,7 +1,7 @@
 //! Types aggregates (E0F-5, E0F-10.5) and checks where they appear (E0F-07).
 
-use semantic_compiler_contracts::types::common::LogicalType;
-use semantic_compiler_model::expression::{
+use menura_contracts::types::common::LogicalType;
+use menura_model::expression::{
     AggregateCall, DistinctAggregate, Expression, Literal, SimpleAggregate,
 };
 

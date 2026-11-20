@@ -1,6 +1,6 @@
 //! The fields of populations in E0.d: POP-4.3, POP-4.6 and `E0C-22`.
 
-use semantic_compiler_contracts::types::audit_record::OssieFormat;
+use menura_contracts::types::audit_record::OssieFormat;
 
 use crate::extensions::populations::fixture::{
     ACCOUNTS_DATA, CUSTOMERS_DATA, MODEL, PERIODIC, VALIDITY, conformance_model, with_populations,

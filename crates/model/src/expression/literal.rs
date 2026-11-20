@@ -47,7 +47,7 @@ impl IntegerLiteral {
     /// ASCII digits, or has more than 38 digits.
     ///
     /// ```
-    /// use semantic_compiler_model::expression::IntegerLiteral;
+    /// use menura_model::expression::IntegerLiteral;
     /// assert!(IntegerLiteral::new("007").is_some());
     /// assert!(IntegerLiteral::new(&"9".repeat(39)).is_none());
     /// ```
@@ -81,7 +81,7 @@ impl DecimalLiteral {
     /// when both parts are empty, or when they have more than 38 digits together.
     ///
     /// ```
-    /// use semantic_compiler_model::expression::DecimalLiteral;
+    /// use menura_model::expression::DecimalLiteral;
     /// let number = DecimalLiteral::new("", "5").unwrap();
     /// assert_eq!((number.precision(), number.scale()), (1, 1));
     /// ```
@@ -177,7 +177,7 @@ impl DateValue {
     /// Builds a date. Returns `None` when the year is outside 1–9999 or the day does not exist.
     ///
     /// ```
-    /// use semantic_compiler_model::expression::DateValue;
+    /// use menura_model::expression::DateValue;
     /// assert!(DateValue::new(2024, 2, 29).is_some());
     /// assert!(DateValue::new(2026, 2, 29).is_none());
     /// ```

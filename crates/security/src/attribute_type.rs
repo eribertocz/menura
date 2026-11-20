@@ -40,7 +40,7 @@ impl AttributeType {
     /// `date`, `boolean`, or `list<…>` of one of them; `None` for any other text (SCY-5.1.2).
     ///
     /// ```
-    /// use semantic_compiler_security::{AttributeType, ScalarType};
+    /// use menura_security::{AttributeType, ScalarType};
     ///
     /// assert_eq!(AttributeType::parse("list<text>"), Some(AttributeType::List(ScalarType::Text)));
     /// assert_eq!(

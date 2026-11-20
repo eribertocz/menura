@@ -1,5 +1,5 @@
 [package]
-name = "semantic-compiler-model"
+name = "menura-model"
 description = "Semantic model representation consumed by every compilation stage."
 version.workspace = true
 edition.workspace = true
@@ -7,7 +7,7 @@ license.workspace = true
 publish.workspace = true
 
 [dependencies]
-semantic-compiler-contracts.workspace = true
+menura-contracts.workspace = true
 
 [lints]
 workspace = true

@@ -5,7 +5,7 @@
 
 use std::path::Path;
 
-use semantic_compiler_core::{
+use menura_core::{
     CompileErrorDocument, Diagnostic, DiagnosticLocation, InputDocument, LoadOptions, load,
 };
 

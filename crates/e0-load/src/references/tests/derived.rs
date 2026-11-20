@@ -1,7 +1,7 @@
 //! The inputs of derived metrics in E0.d: DER-2.1, DER-2.2, DER-5.1.2, `E0C-32`, `E0C-33` and
 //! `E0C-37`.
 
-use semantic_compiler_contracts::types::audit_record::OssieFormat;
+use menura_contracts::types::audit_record::OssieFormat;
 
 use crate::extensions::derived::DivisionByZero;
 use crate::extensions::derived::fixture::{

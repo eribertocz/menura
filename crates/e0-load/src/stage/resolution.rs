@@ -1,7 +1,7 @@
 //! Substage E0.d of the stage function: the references of the model's own elements, and,
 //! only when E0.c succeeded, the references inside extensions (E0-3.3).
 
-use semantic_compiler_contracts::types::catalog::CatalogSchemaDocument;
+use menura_contracts::types::catalog::CatalogSchemaDocument;
 
 use super::findings::{self, Substage};
 use super::report::Report;

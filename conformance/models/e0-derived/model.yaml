@@ -41,16 +41,16 @@ semantic_model:
               expression: AGG(collected) / AGG(billed)
         custom_extensions:
           - vendor_name: COMMON
-            data: '{"namespace": "semantic_compiler", "version": 1, "derived": {"on_division_by_zero": "null"}}'
+            data: '{"namespace": "menura", "version": 1, "derived": {"on_division_by_zero": "null"}}'
       - name: uncollected_rate
         expression: {dialects: [{dialect: ANSI_SQL, expression: '1 - AGG(collection_rate)'}]}
         custom_extensions:
           - vendor_name: COMMON
-            data: '{"namespace": "semantic_compiler", "version": 1, "derived": {}}'
+            data: '{"namespace": "menura", "version": 1, "derived": {}}'
       - name: customer_count
         expression: {dialects: [{dialect: ANSI_SQL, expression: 'COUNT(DISTINCT customers.customer_id)'}]}
       - name: billed_per_customer
         expression: {dialects: [{dialect: ANSI_SQL, expression: 'AGG(billed) / AGG(customer_count)'}]}
         custom_extensions:
           - vendor_name: COMMON
-            data: '{"namespace": "semantic_compiler", "version": 1, "derived": {"on_division_by_zero": "error"}}'
+            data: '{"namespace": "menura", "version": 1, "derived": {"on_division_by_zero": "error"}}'

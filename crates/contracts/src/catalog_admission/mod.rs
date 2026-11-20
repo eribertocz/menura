@@ -10,7 +10,9 @@ use std::collections::HashSet;
 use std::hash::Hash;
 
 use crate::admission::{AdmissionCode, AdmissionError, IncomingContract, decode};
-use crate::types::catalog::{CatalogSchemaDocument, CatalogStateDocument};
+use crate::types::catalog::{
+    CatalogSchemaContract, CatalogSchemaDocument, CatalogStateContract, CatalogStateDocument,
+};
 
 /// Admits a catalog schema document (CAT-3, CAT-8, CAT-9).
 ///
@@ -24,7 +26,7 @@ use crate::types::catalog::{CatalogSchemaDocument, CatalogStateDocument};
 /// # Example
 ///
 /// ```
-/// use semantic_compiler_contracts::{AdmissionCode, admit_catalog_schema};
+/// use menura_contracts::{AdmissionCode, admit_catalog_schema};
 ///
 /// let error = admit_catalog_schema("{}").unwrap_err();
 /// assert_eq!(error.code, AdmissionCode::Ecat02);
@@ -80,6 +82,49 @@ pub fn admit_catalog_state(
     state_rules::check(&state, schema)
         .map_err(|violation| violation.into_error(contract, AdmissionCode::Wcat03))?;
     Ok(state)
+}
+
+/// The `WCAT-05` warning of an admitted catalog schema that uses the former contract name
+/// `semantic_compiler.catalog_schema`, located at `/contract` (CON-0.5); `None` for the name
+/// `menura.catalog_schema`. The schema stays admitted.
+///
+/// # Example
+///
+/// ```
+/// use menura_contracts::{admit_catalog_schema, schema_former_name_warning};
+///
+/// let text = r#"{"contract": "semantic_compiler.catalog_schema", "contract_version": "1.0.0",
+///     "document_id": {"origin": "o", "snapshot": "1"},
+///     "engine": {"name": "duckdb", "version": "1"}, "relations": []}"#;
+/// let schema = admit_catalog_schema(text).unwrap();
+/// assert_eq!(schema_former_name_warning(&schema).unwrap().code.as_str(), "WCAT-05");
+/// ```
+#[must_use]
+pub fn schema_former_name_warning(schema: &CatalogSchemaDocument) -> Option<AdmissionError> {
+    (schema.contract == CatalogSchemaContract::FormerCatalogSchema)
+        .then(|| former_name_warning(IncomingContract::CatalogSchema))
+}
+
+/// The `WCAT-05` warning of an admitted catalog state that uses the former contract name
+/// `semantic_compiler.catalog_state`, located at `/contract` (CON-0.5); `None` for the name
+/// `menura.catalog_state`. The state stays admitted.
+#[must_use]
+pub fn state_former_name_warning(state: &CatalogStateDocument) -> Option<AdmissionError> {
+    (state.contract == CatalogStateContract::FormerCatalogState)
+        .then(|| former_name_warning(IncomingContract::CatalogState))
+}
+
+fn former_name_warning(contract: IncomingContract) -> AdmissionError {
+    let kind = contract.kind();
+    contract.error(
+        AdmissionCode::Wcat05,
+        "/contract",
+        format!(
+            "`{}` is the former contract name; it is read as `{kind}` until 1.0.0, so write \
+             `{kind}` instead",
+            kind.former_contract_name()
+        ),
+    )
 }
 
 /// The first violation of a CAT-8 rule.

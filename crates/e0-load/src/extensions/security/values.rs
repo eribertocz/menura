@@ -5,7 +5,7 @@
 
 use std::collections::BTreeSet;
 
-use semantic_compiler_security::Role;
+use menura_security::Role;
 use serde_json::{Map, Value as Json};
 
 use crate::extensions::diagnostic::ExtensionCode;

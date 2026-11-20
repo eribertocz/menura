@@ -18,7 +18,7 @@ impl Expression {
     /// The JSON form of the tree (E0H-3.4).
     ///
     /// ```
-    /// use semantic_compiler_model::expression::{Expression, Identifier, Reference};
+    /// use menura_model::expression::{Expression, Identifier, Reference};
     ///
     /// let regular = Expression::Reference(Reference {
     ///     qualifier: None,
@@ -296,7 +296,7 @@ impl Identifier {
     /// case, a delimited one exactly as written without its quotes.
     ///
     /// ```
-    /// use semantic_compiler_model::expression::Identifier;
+    /// use menura_model::expression::Identifier;
     /// assert_eq!(Identifier::regular("amount").unwrap().normalized(), "AMOUNT");
     /// assert_eq!(Identifier::delimited("amount").unwrap().normalized(), "amount");
     /// ```
@@ -305,7 +305,7 @@ impl Identifier {
         if self.is_delimited() {
             self.text().to_owned()
         } else {
-            semantic_compiler_contracts::normalize_unquoted_identifier(self.text())
+            menura_contracts::normalize_unquoted_identifier(self.text())
         }
     }
 }

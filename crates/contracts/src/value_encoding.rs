@@ -13,7 +13,7 @@ pub const MAX_SAFE_INTEGER: i128 = 9_007_199_254_740_991;
 /// Encodes an integer: a JSON number within ±(2^53 − 1), otherwise its decimal string.
 ///
 /// ```
-/// use semantic_compiler_contracts::encode_integer;
+/// use menura_contracts::encode_integer;
 ///
 /// assert_eq!(encode_integer(42), serde_json::json!(42));
 /// assert_eq!(encode_integer(9_007_199_254_740_993), serde_json::json!("9007199254740993"));

@@ -1,6 +1,6 @@
 //! The derived metrics of a model and their inputs, as E0.d resolves them, as data types only.
 
-use semantic_compiler_model::expression::Reference;
+use menura_model::expression::Reference;
 
 use crate::extensions::ExtensionDiagnostic;
 use crate::extensions::derived::DivisionByZero;

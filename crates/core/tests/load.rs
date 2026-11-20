@@ -1,7 +1,7 @@
 //! `validate`, `load` and `with_state`: PLN-5.3, ARC-5.1, ARC-5.2, CAT-8.8, CAT-9.1 and
 //! SUM-6.1.8.
 
-use semantic_compiler_core::{
+use menura_core::{
     CompileErrorContract, CompileErrorDocument, Handle, InputDocument, LoadOptions, load, validate,
     with_state,
 };
@@ -36,7 +36,7 @@ fn summaries_state(source: &str, periods: &[&str]) -> String {
     let hash = "0".repeat(64);
     format!(
         r#"{{
-  "contract": "semantic_compiler.catalog_state",
+  "contract": "menura.catalog_state",
   "contract_version": "1.0.0",
   "document_id": {{"origin": "conformance:e0-summaries", "snapshot": "state-1"}},
   "schema_document_id": {{"origin": "conformance:e0-summaries", "snapshot": "e0-summaries"}},
@@ -84,7 +84,7 @@ fn pln_5_3_validate_returns_a_validation_report_with_empty_errors() {
         &LoadOptions::default(),
     );
     assert_eq!(report.contract, CompileErrorContract::ValidationReport);
-    assert_eq!(report.contract_version.to_string(), "1.0.0");
+    assert_eq!(report.contract_version.to_string(), "1.1.0");
     assert!(report.errors.is_empty());
     let codes: Vec<&str> = report.warnings.iter().map(|w| w.code.as_str()).collect();
     assert_eq!(codes, ["W0D-01"]);

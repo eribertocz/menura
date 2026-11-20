@@ -4,7 +4,7 @@
 use std::collections::HashMap;
 use std::mem::discriminant;
 
-use semantic_compiler_contracts::types::common::LogicalType;
+use menura_contracts::types::common::LogicalType;
 
 use super::diagnostic::{TypingCode, TypingDiagnostic};
 use super::elements::Finding;

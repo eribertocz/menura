@@ -1,8 +1,8 @@
 //! Validation against the schema of the model format (E0B-1, OSS-5.1), with each schema
 //! violation turned into its E0B-4 diagnostic.
 
-use semantic_compiler_contracts::types::audit_record::OssieFormat;
-use semantic_compiler_contracts::{SchemaViolation, SchemaViolationKind, schema_violations};
+use menura_contracts::types::audit_record::OssieFormat;
+use menura_contracts::{SchemaViolation, SchemaViolationKind, schema_violations};
 
 use super::diagnostic::{StructureCode, StructureDiagnostic};
 use super::json::to_json;

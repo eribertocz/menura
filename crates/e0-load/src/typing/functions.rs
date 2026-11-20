@@ -1,8 +1,8 @@
 //! Types the scalar functions of E0F-10.2 (text) and E0F-10.4 (conditionals), and dispatches
 //! the others.
 
-use semantic_compiler_contracts::types::common::LogicalType;
-use semantic_compiler_model::expression::{Expression, Literal, ScalarFunction};
+use menura_contracts::types::common::LogicalType;
+use menura_model::expression::{Expression, Literal, ScalarFunction};
 
 use super::numbers::number_function;
 use super::operators::case_rule;

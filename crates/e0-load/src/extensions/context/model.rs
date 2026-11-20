@@ -2,7 +2,7 @@
 
 use std::num::NonZeroU64;
 
-use semantic_compiler_contracts::types::common::Grain;
+use menura_contracts::types::common::Grain;
 
 use crate::extensions::additivity::FieldReference;
 use crate::pointer::JsonPointer;

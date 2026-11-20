@@ -1,4 +1,5 @@
-//! The public contracts (CON-0.1) and their supported versions (CAT-3.2).
+//! The public contracts (CON-0.1), their names (CON-0.5) and their supported versions
+//! (CAT-3.2).
 
 use std::fmt;
 
@@ -7,29 +8,37 @@ use serde_json::Value;
 
 use crate::schema::strings::is_semantic_version;
 
+/// The namespace of every contract name and of the compiler's extension entries (CON-0.5,
+/// MDL-2.3).
+pub const NAMESPACE: &str = "menura";
+
+/// The former namespace, still read until 1.0.0 (CON-0.5): in the `contract` member of an
+/// input document, and as an extension namespace (E0C-1, condition 3).
+pub const FORMER_NAMESPACE: &str = "semantic_compiler";
+
 /// Every public contract document with a JSON Schema in this repository (CON-0.1).
 ///
 /// The Apache Ossie semantic model is also public but follows the Apache Ossie schema, so it is
 /// not listed here.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum ContractKind {
-    /// `semantic_compiler.catalog_schema` (in).
+    /// `menura.catalog_schema` (in).
     CatalogSchema,
-    /// `semantic_compiler.catalog_state` (in).
+    /// `menura.catalog_state` (in).
     CatalogState,
-    /// `semantic_compiler.query` (in).
+    /// `menura.query` (in).
     Query,
-    /// `semantic_compiler.security_context` (in).
+    /// `menura.security_context` (in).
     SecurityContext,
-    /// `semantic_compiler.compiled_plan` (out).
+    /// `menura.compiled_plan` (out).
     CompiledPlan,
-    /// `semantic_compiler.compile_error` (out).
+    /// `menura.compile_error` (out).
     CompileError,
-    /// `semantic_compiler.audit_record` (out).
+    /// `menura.audit_record` (out).
     AuditRecord,
-    /// `semantic_compiler.model_description` (out).
+    /// `menura.model_description` (out).
     ModelDescription,
-    /// `semantic_compiler.integrity_checks` (out).
+    /// `menura.integrity_checks` (out).
     IntegrityChecks,
 }
 
@@ -47,9 +56,42 @@ impl ContractKind {
         Self::IntegrityChecks,
     ];
 
-    /// The value of the document's `contract` member.
+    /// The part of the contract name after the namespace, such as `catalog_schema`.
+    #[must_use]
+    pub fn local_name(self) -> &'static str {
+        match self {
+            Self::CatalogSchema => "catalog_schema",
+            Self::CatalogState => "catalog_state",
+            Self::Query => "query",
+            Self::SecurityContext => "security_context",
+            Self::CompiledPlan => "compiled_plan",
+            Self::CompileError => "compile_error",
+            Self::AuditRecord => "audit_record",
+            Self::ModelDescription => "model_description",
+            Self::IntegrityChecks => "integrity_checks",
+        }
+    }
+
+    /// The value of the `contract` member the compiler writes: `menura.<name>` (CON-0.5).
     #[must_use]
     pub fn contract_name(self) -> &'static str {
+        match self {
+            Self::CatalogSchema => "menura.catalog_schema",
+            Self::CatalogState => "menura.catalog_state",
+            Self::Query => "menura.query",
+            Self::SecurityContext => "menura.security_context",
+            Self::CompiledPlan => "menura.compiled_plan",
+            Self::CompileError => "menura.compile_error",
+            Self::AuditRecord => "menura.audit_record",
+            Self::ModelDescription => "menura.model_description",
+            Self::IntegrityChecks => "menura.integrity_checks",
+        }
+    }
+
+    /// The former value of the `contract` member, `semantic_compiler.<name>`, read exactly as
+    /// [`Self::contract_name`] until 1.0.0 (CON-0.5).
+    #[must_use]
+    pub fn former_contract_name(self) -> &'static str {
         match self {
             Self::CatalogSchema => "semantic_compiler.catalog_schema",
             Self::CatalogState => "semantic_compiler.catalog_state",
@@ -63,12 +105,28 @@ impl ContractKind {
         }
     }
 
+    /// Whether `document` names this contract, with its name or its former name (CON-0.5).
+    /// A missing or non-string member names no contract.
+    #[must_use]
+    pub fn is_named_by(self, document: &Value) -> bool {
+        document
+            .get("contract")
+            .and_then(Value::as_str)
+            .is_some_and(|name| name == self.contract_name() || name == self.former_contract_name())
+    }
+
+    /// Whether `document` names this contract with its former name (CON-0.5).
+    #[must_use]
+    pub fn is_named_by_former_name(self, document: &Value) -> bool {
+        document.get("contract").and_then(Value::as_str) == Some(self.former_contract_name())
+    }
+
     /// The latest contract version this crate implements.
     #[must_use]
     pub fn latest_version(self) -> ContractVersion {
         ContractVersion {
             major: 1,
-            minor: 0,
+            minor: 1,
             patch: 0,
         }
     }
@@ -81,12 +139,11 @@ impl ContractKind {
         version.major == latest.major && version.minor <= latest.minor
     }
 
-    /// Whether `document` names this contract and an accepted `contract_version`.
-    /// A missing or non-string member is unsupported.
+    /// Whether `document` names this contract, with its name or its former name (CON-0.5),
+    /// and an accepted `contract_version`. A missing or non-string member is unsupported.
     #[must_use]
     pub fn supports(self, document: &Value) -> bool {
-        let names_contract =
-            document.get("contract").and_then(Value::as_str) == Some(self.contract_name());
+        let names_contract = self.is_named_by(document);
         let version = document
             .get("contract_version")
             .and_then(Value::as_str)
@@ -117,7 +174,7 @@ impl ContractVersion {
     /// Parses `MAJOR.MINOR.PATCH` with no leading zeros. Returns `None` for any other text.
     ///
     /// ```
-    /// use semantic_compiler_contracts::ContractVersion;
+    /// use menura_contracts::ContractVersion;
     ///
     /// assert_eq!(ContractVersion::parse("1.2.3").map(|version| version.minor), Some(2));
     /// assert_eq!(ContractVersion::parse("1.02.3"), None);

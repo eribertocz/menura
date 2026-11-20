@@ -1,7 +1,7 @@
 //! E0H-1.1, E0H-1.2, E0H-1.5, E0H-2 and E0H-2.3: what the internal model holds.
 
-use semantic_compiler_contracts::types::common::{IntegerBits, LogicalType};
-use semantic_compiler_model::internal_model::{
+use menura_contracts::types::common::{IntegerBits, LogicalType};
+use menura_model::internal_model::{
     AccessMode, Additivity, DatasetPair, DiagnosticCode, GraphEdge, PathCount, ReachedDataset,
     RoleName, TypedValue, ValueType,
 };

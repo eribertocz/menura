@@ -1,9 +1,7 @@
 //! The normalized trees of the model (E0H-1.3): every identifier is stored as the delimited
 //! identifier of its normalized text, so `amount`, `AMOUNT` and `"AMOUNT"` give one tree.
 
-use semantic_compiler_model::expression::{
-    AggregateCall, CaseBranch, Expression, Identifier, Reference,
-};
+use menura_model::expression::{AggregateCall, CaseBranch, Expression, Identifier, Reference};
 
 use crate::expressions::{ExpressionDiagnosticCode, ExpressionPlace, parse_element_expression};
 use crate::structure::CompiledVariant;

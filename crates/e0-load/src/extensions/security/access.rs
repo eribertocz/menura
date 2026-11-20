@@ -1,7 +1,7 @@
 //! Reading one `access` value (SCY-3, SCY-5.1.3, `E0C-44`, and `E0C-56` for a summary,
 //! SUM-6.1.6).
 
-use semantic_compiler_security::{AccessMode, DatasetAccess, FieldRestriction, Role};
+use menura_security::{AccessMode, DatasetAccess, FieldRestriction, Role};
 use serde_json::{Map, Value as Json};
 
 use super::values::{

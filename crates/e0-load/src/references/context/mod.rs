@@ -14,7 +14,7 @@ pub(crate) use output::{ContextMetric, ContextMetrics};
 
 use std::collections::HashMap;
 
-use semantic_compiler_model::expression::{Expression, Reference};
+use menura_model::expression::{Expression, Reference};
 
 use super::derived::metric_trees;
 use crate::expressions::{ExpressionPlace, parse_element_expression};

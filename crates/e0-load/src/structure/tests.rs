@@ -4,7 +4,7 @@
 //! The model documents of the `e0-structure-*` conformance cases are read here at compile time,
 //! so structure validation is checked against the same files the conformance suite uses.
 
-use semantic_compiler_contracts::types::audit_record::OssieFormat;
+use menura_contracts::types::audit_record::OssieFormat;
 
 use super::diagnostic::{StructureCode, StructureDiagnostic};
 use super::output::{CompiledVariant, ElementKind, Structure};

@@ -3,7 +3,7 @@ name: e0_extensions_development_unsupported_version_001
 description: Development-line model whose additivity entry declares an unsupported version
 nonportable_extensions:
   - vendor_name: COMMON
-    data: {namespace: semantic_compiler, version: 1, security_context: {roles: [analyst], attributes: []}}
+    data: {namespace: menura, version: 1, security_context: {roles: [analyst], attributes: []}}
 datasets:
   - name: orders
     source: shop.main.orders
@@ -17,7 +17,7 @@ datasets:
         expression: {sql: amount}
     nonportable_extensions:
       - vendor_name: COMMON
-        data: {namespace: semantic_compiler, version: 1, access: {mode: roles, roles: [analyst]}}
+        data: {namespace: menura, version: 1, access: {mode: roles, roles: [analyst]}}
   - name: balances
     source: shop.main.balances
     primary_key: [branch, customer_id]
@@ -30,7 +30,7 @@ datasets:
         expression: {sql: balance}
     nonportable_extensions:
       - vendor_name: COMMON
-        data: {namespace: semantic_compiler, version: 1, access: {mode: roles, roles: [analyst]}}
+        data: {namespace: menura, version: 1, access: {mode: roles, roles: [analyst]}}
 metrics:
   - name: total_amount
     expression: {sql: SUM(orders.amount)}
@@ -38,4 +38,4 @@ metrics:
     expression: {sql: SUM(balances.balance)}
     nonportable_extensions:
       - vendor_name: COMMON
-        data: {namespace: semantic_compiler, version: 2, additivity: {type: semi_additive, over: balances.branch, entity: [balances.customer_id], aggregation: max, nulls: error}}
+        data: {namespace: menura, version: 2, additivity: {type: semi_additive, over: balances.branch, entity: [balances.customer_id], aggregation: max, nulls: error}}

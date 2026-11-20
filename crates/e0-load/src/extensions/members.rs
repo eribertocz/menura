@@ -190,12 +190,9 @@ mod tests {
 
     #[test]
     fn e0c_1_3_every_top_level_namespace_value_is_kept() {
-        let text = r#"{"namespace": "acme", "x": {"namespace": "inner"}, "namespace" : "semantic_compiler" }"#;
+        let text = r#"{"namespace": "acme", "x": {"namespace": "inner"}, "namespace" : "menura" }"#;
         let members = read_members(text).expect("valid JSON");
         assert_eq!(members.repeated.as_deref(), Some("namespace"));
-        assert_eq!(
-            members.namespaces,
-            [json!("acme"), json!("semantic_compiler")]
-        );
+        assert_eq!(members.namespaces, [json!("acme"), json!("menura")]);
     }
 }

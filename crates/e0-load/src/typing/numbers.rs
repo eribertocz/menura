@@ -1,7 +1,7 @@
 //! Types the number functions of E0F-10.3, with the result types of E0F-5a.
 
-use semantic_compiler_contracts::types::common::LogicalType;
-use semantic_compiler_model::expression::{Expression, Literal, ScalarFunction, UnaryOperator};
+use menura_contracts::types::common::LogicalType;
+use menura_model::expression::{Expression, Literal, ScalarFunction, UnaryOperator};
 
 use super::arithmetic::{Arithmetic, floor, widened};
 use super::operators::arithmetic_type;

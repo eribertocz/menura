@@ -1,5 +1,6 @@
 //! Which extension entries are ours (E0C-1, MDL-2.4, MDL-2.5).
 
+use menura_contracts::FORMER_NAMESPACE;
 use serde_json::{Map, Value as Json};
 
 use super::diagnostic::{ExtensionCode, ExtensionDiagnostic};
@@ -38,12 +39,39 @@ pub(crate) struct OwnData<'document> {
     /// Why the object `data` of a development-line entry has no JSON form (E0C-2.8); the
     /// members are then empty.
     pub(crate) without_json_form: Option<String>,
+    /// Whether the entry is ours only through the former namespace, which reports `W0C-02`
+    /// (CON-0.5).
+    pub(crate) former_namespace: bool,
+}
+
+/// How the `namespace` values of an entry make it ours (E0C-1, condition 3).
+#[derive(Clone, Copy)]
+enum NamespaceMatch {
+    /// A value equals the configured namespace.
+    Configured,
+    /// No value equals the configured namespace, but one equals the former namespace
+    /// `semantic_compiler`, accepted until 1.0.0 (CON-0.5).
+    Former,
+}
+
+/// How `values` make an entry ours for the configured `namespace`, or `None` when they do not.
+/// When `namespace` is the former namespace itself, the entry matches it as configured.
+fn namespace_match(values: &[Option<&str>], namespace: &str) -> Option<NamespaceMatch> {
+    let any_equals = |wanted: &str| values.contains(&Some(wanted));
+    if any_equals(namespace) {
+        Some(NamespaceMatch::Configured)
+    } else if any_equals(FORMER_NAMESPACE) {
+        Some(NamespaceMatch::Former)
+    } else {
+        None
+    }
 }
 
 /// What `entry` is, for the configured `namespace` (E0C-1, MDL-2.3).
 ///
 /// An entry is ours only when its vendor is `COMMON`, its `data` is a JSON object and
-/// `data.namespace` equals `namespace`. A JSON `data` that is not an object has no namespace,
+/// `data.namespace` equals `namespace` or, until 1.0.0, the former namespace `semantic_compiler`
+/// (CON-0.5). A JSON `data` that is not an object has no namespace,
 /// so it is someone else's. When `namespace` is repeated in `data`, the entry is ours if any of
 /// its values equals `namespace` (E0C-1.3): it then has a reading as ours, and the repeated
 /// member rejects it (E0C-2.7).
@@ -89,19 +117,17 @@ fn classify_text<'document>(
     let Json::Object(members) = parsed.value else {
         return EntryKind::Foreign;
     };
-    if !parsed
-        .namespaces
-        .iter()
-        .any(|value| value.as_str() == Some(namespace))
-    {
+    let values: Vec<Option<&str>> = parsed.namespaces.iter().map(Json::as_str).collect();
+    let Some(matched) = namespace_match(&values, namespace) else {
         return EntryKind::Foreign;
-    }
+    };
     EntryKind::Ours(OwnData {
         pointer,
         node,
         members,
         repeated_member: parsed.repeated,
         without_json_form: None,
+        former_namespace: matches!(matched, NamespaceMatch::Former),
     })
 }
 
@@ -113,9 +139,13 @@ fn classify_object<'document>(
     pointer: JsonPointer,
     namespace: &str,
 ) -> EntryKind<'document> {
-    if !is_text(member(node, NAMESPACE), namespace) {
+    let value = member(node, NAMESPACE).and_then(|node| match &node.value {
+        Value::String(text) => Some(text.as_str()),
+        _ => None,
+    });
+    let Some(matched) = namespace_match(&[value], namespace) else {
         return EntryKind::Foreign;
-    }
+    };
     let (members, without_json_form) = match json_value(node) {
         Ok(Json::Object(members)) => (members, None),
         Ok(_) => return EntryKind::Foreign,
@@ -127,6 +157,7 @@ fn classify_object<'document>(
         members,
         repeated_member: None,
         without_json_form,
+        former_namespace: matches!(matched, NamespaceMatch::Former),
     })
 }
 

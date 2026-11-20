@@ -1,7 +1,7 @@
 //! Types operators, `CASE` and the comparisons of E0F-2.2.
 
-use semantic_compiler_contracts::types::common::LogicalType;
-use semantic_compiler_model::expression::{BinaryOperator, CaseBranch, Expression, UnaryOperator};
+use menura_contracts::types::common::LogicalType;
+use menura_model::expression::{BinaryOperator, CaseBranch, Expression, UnaryOperator};
 
 use super::arithmetic::{Arithmetic, arithmetic, widened};
 use super::conversion::common_type;

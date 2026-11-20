@@ -1,6 +1,6 @@
 {
-  "contract": "semantic_compiler.catalog_state",
-  "contract_version": "1.0.0",
+  "contract": "menura.catalog_state",
+  "contract_version": "1.1.0",
   "document_id": {
     "origin": "conformance:catalog",
     "snapshot": "state-1"

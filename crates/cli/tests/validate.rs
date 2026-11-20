@@ -1,4 +1,4 @@
-//! `semantic-compiler validate`: ARC-5.4 and ARC-5.5.
+//! `menura validate` and its alias `semantic-compiler`: ARC-5.4, ARC-5.5 and CON-0.5.
 
 #![expect(
     clippy::disallowed_methods,
@@ -32,6 +32,13 @@ fn scratch_file(test: &str, name: &str, content: &[u8]) -> io::Result<String> {
 }
 
 fn run(arguments: &[&str]) -> io::Result<Output> {
+    Command::new(env!("CARGO_BIN_EXE_menura"))
+        .args(arguments)
+        .output()
+}
+
+/// Runs the former binary name, an alias of `menura` until 1.0.0 (CON-0.5).
+fn run_alias(arguments: &[&str]) -> io::Result<Output> {
     Command::new(env!("CARGO_BIN_EXE_semantic-compiler"))
         .args(arguments)
         .output()
@@ -53,7 +60,7 @@ fn arc_5_4_a_valid_model_writes_a_report_without_errors_and_exits_0() {
     let output = run(&["validate", "--model", &model, "--catalog-schema", &catalog]).unwrap();
     assert_eq!(output.status.code(), Some(0));
     let report = report(&output).unwrap();
-    assert_eq!(report["contract"], "semantic_compiler.validation_report");
+    assert_eq!(report["contract"], "menura.validation_report");
     assert_eq!(report["errors"], serde_json::json!([]));
 }
 
@@ -92,7 +99,7 @@ fn arc_5_4_a_model_with_errors_writes_the_report_and_exits_1() {
     .unwrap();
     assert_eq!(output.status.code(), Some(1));
     let report = report(&output).unwrap();
-    assert_eq!(report["contract"], "semantic_compiler.validation_report");
+    assert_eq!(report["contract"], "menura.validation_report");
     assert_eq!(report["errors"][0]["code"], "E0D-02");
 }
 
@@ -186,6 +193,24 @@ fn arc_5_5_help_writes_the_usage_to_standard_output_and_exits_0() {
         let output = run(arguments).unwrap();
         assert_eq!(output.status.code(), Some(0));
         let text = String::from_utf8(output.stdout).unwrap();
-        assert!(text.contains("semantic-compiler validate --model <path> --catalog-schema <path>"));
+        assert!(text.contains("menura validate --model <path> --catalog-schema <path>"));
+    }
+}
+
+#[test]
+fn con_0_5_the_former_binary_name_gives_the_same_results() {
+    let (model, catalog) = (sample("model.yaml"), sample("catalog-schema.json"));
+    let not_json = scratch_file("con_0_5_alias", "catalog.json", b"[").unwrap();
+    let command_lines: [&[&str]; 4] = [
+        &["validate", "--model", &model, "--catalog-schema", &catalog],
+        &["validate", "--model", &model, "--catalog-schema", &not_json],
+        &["validate", "--model", &model],
+        &["--help"],
+    ];
+    for arguments in command_lines {
+        let (menura, alias) = (run(arguments).unwrap(), run_alias(arguments).unwrap());
+        assert_eq!(menura.status.code(), alias.status.code(), "{arguments:?}");
+        assert_eq!(menura.stdout, alias.stdout, "{arguments:?}");
+        assert_eq!(menura.stderr, alias.stderr, "{arguments:?}");
     }
 }

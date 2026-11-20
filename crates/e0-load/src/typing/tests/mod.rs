@@ -4,8 +4,8 @@
 //! The model document and catalog schema of the `e0-typing` conformance model are read here at
 //! compile time, so typing is checked against the files the conformance suite uses.
 
-use semantic_compiler_contracts::admit_catalog_schema;
-use semantic_compiler_contracts::types::audit_record::OssieFormat;
+use menura_contracts::admit_catalog_schema;
+use menura_contracts::types::audit_record::OssieFormat;
 
 use super::diagnostic::TypingDiagnostic;
 use super::value_type::Typed;

@@ -1,6 +1,6 @@
 //! Shared fixtures: the published examples of `spec/contracts/examples/`.
 
-use semantic_compiler_contracts::{ContractKind, validate_structure};
+use menura_contracts::{ContractKind, validate_structure};
 use serde_json::Value;
 
 /// One published example and the contract it follows.

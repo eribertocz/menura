@@ -11,7 +11,7 @@ pub mod suite;
 use std::collections::BTreeSet;
 use std::path::Path;
 
-use semantic_compiler_contracts::IncomingContract;
+use menura_contracts::IncomingContract;
 use serde_json::Value;
 
 use crate::case::CaseId;
@@ -105,7 +105,7 @@ fn case_status(prepared: Result<(), RunnerError>, entry: Option<&ExpectedFailure
 /// Reads `runner-context.json` and admits it as a security context (CS-4.5).
 fn read_runner_context(path: &Path) -> Result<Value, RunnerError> {
     let contract = IncomingContract::SecurityContext;
-    let invalid = |error: semantic_compiler_contracts::AdmissionError| {
+    let invalid = |error: menura_contracts::AdmissionError| {
         RunnerError::new(
             RunnerErrorKind::InvalidRunnerContext(error.to_string()),
             path,

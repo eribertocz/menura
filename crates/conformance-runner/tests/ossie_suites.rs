@@ -9,9 +9,9 @@ use std::fs;
 use std::path::{Path, PathBuf};
 use std::sync::OnceLock;
 
-use semantic_compiler_conformance_runner::case::RuleId;
-use semantic_compiler_conformance_runner::ossie::check_layout;
-use semantic_compiler_conformance_runner::{CaseStatus, Report, run};
+use menura_conformance_runner::case::RuleId;
+use menura_conformance_runner::ossie::check_layout;
+use menura_conformance_runner::{CaseStatus, Report, run};
 
 fn conformance_directory() -> PathBuf {
     Path::new(env!("CARGO_MANIFEST_DIR")).join("../../conformance")
@@ -109,8 +109,8 @@ fn cs_4_5_the_runner_context_is_the_one_of_the_specification() {
         fs::read_to_string(conformance_directory().join("ossie/runner-context.json")).unwrap();
     let context: serde_json::Value = serde_json::from_str(&text).unwrap();
     let expected = serde_json::json!({
-        "contract": "semantic_compiler.security_context",
-        "contract_version": "1.0.0",
+        "contract": "menura.security_context",
+        "contract_version": "1.1.0",
         "subject": "conformance-runner",
         "roles": [],
         "attributes": {}

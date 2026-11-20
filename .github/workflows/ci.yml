@@ -132,9 +132,9 @@ jobs:
           rustup toolchain install "$RUST_TOOLCHAIN" --profile minimal
           rustup default "$RUST_TOOLCHAIN"
       - name: Test the runner (CS-2.1, CS-2.2, CS-4.2, CS-4.3)
-        run: cargo test --locked -p semantic-compiler-conformance-runner
+        run: cargo test --locked -p menura-conformance-runner
       - name: Run every case with non-default DuckDB settings and report per rule ID (CS-4.1, CS-4.2, CS-4.3)
-        run: cargo run --locked --quiet -p semantic-compiler-conformance-runner -- conformance
+        run: cargo run --locked --quiet -p menura-conformance-runner -- conformance
 
   ossie-suites:
     name: ossie-suites
@@ -149,7 +149,7 @@ jobs:
           rustup toolchain install "$RUST_TOOLCHAIN" --profile minimal
           rustup default "$RUST_TOOLCHAIN"
       - name: Run the Apache Ossie suites at the tracked commit against expected-failures.yaml (OSS-2.3, OSS-2.4)
-        run: cargo run --locked --quiet -p semantic-compiler-conformance-runner -- conformance ossie
+        run: cargo run --locked --quiet -p menura-conformance-runner -- conformance ossie
 
   rule-coverage:
     name: rule-coverage

@@ -1,11 +1,11 @@
 //! The common extension rules: E0C-1.1 to E0C-1.3, E0C-2.1 to E0C-2.7, E0C-01, E0C-02, E0C-04 to
-//! E0C-06, W0C-01,
-//! MDL-2.1 to MDL-2.3 and MDL-2.5.
+//! E0C-06, W0C-01, W0C-02,
+//! MDL-2.1 to MDL-2.3, MDL-2.5 and CON-0.5.
 //!
 //! The model documents of the `e0-extensions-*` conformance cases are read here at compile
 //! time, so the rules are checked against the same files the conformance suite uses.
 
-use semantic_compiler_contracts::types::audit_record::OssieFormat;
+use menura_contracts::types::audit_record::OssieFormat;
 use serde_json::json;
 
 use super::output::{Extensions, ExtensionsFailure, ObjectKind};
@@ -160,9 +160,9 @@ fn e0c_2_1_mdl_2_2_e0c_01_version_missing_or_not_supported() {
         )]
     );
     for data in [
-        r#"{"namespace": "semantic_compiler", "access": {}}"#,
-        r#"{"namespace": "semantic_compiler", "version": 0, "owner": 1}"#,
-        r#"{"namespace": "semantic_compiler", "version": -1}"#,
+        r#"{"namespace": "menura", "access": {}}"#,
+        r#"{"namespace": "menura", "version": 0, "owner": 1}"#,
+        r#"{"namespace": "menura", "version": -1}"#,
     ] {
         let document = on_orders(data);
         assert_eq!(
@@ -188,7 +188,7 @@ fn e0c_2_1_e0c_01_version_of_another_json_type() {
     );
     for version in ["1.0", "1e0", "null", "true", "[1]", "{}"] {
         let document = on_orders(&format!(
-            r#"{{"namespace": "semantic_compiler", "version": {version}}}"#
+            r#"{{"namespace": "menura", "version": {version}}}"#
         ));
         assert_eq!(
             errors(document.as_bytes(), DEFAULT_NAMESPACE),
@@ -212,9 +212,9 @@ fn e0c_1_3_a_repeated_namespace_is_ours_when_any_value_matches() {
         )]
     );
     for data in [
-        r#"{"namespace": "acme", "namespace": "semantic_compiler", "version": 1}"#,
-        r#"{"namespace": "semantic_compiler", "namespace": "acme", "version": 1}"#,
-        r#"{"namespace": "semantic_compiler", "namespace": "semantic_compiler", "version": 1}"#,
+        r#"{"namespace": "acme", "namespace": "menura", "version": 1}"#,
+        r#"{"namespace": "menura", "namespace": "acme", "version": 1}"#,
+        r#"{"namespace": "menura", "namespace": "menura", "version": 1}"#,
     ] {
         let document = on_orders(data);
         assert_eq!(
@@ -241,8 +241,8 @@ fn e0c_2_7_e0c_06_repeated_member_inside_data() {
         )]
     );
     for data in [
-        r#"{"namespace": "semantic_compiler", "version": 2, "version": 1}"#,
-        r#"{"namespace": "semantic_compiler", "version": 1, "row_access": [{"a": 1, "b": {"c": 1, "c": 2}}]}"#,
+        r#"{"namespace": "menura", "version": 2, "version": 1}"#,
+        r#"{"namespace": "menura", "version": 1, "row_access": [{"a": 1, "b": {"c": 1, "c": 2}}]}"#,
     ] {
         let document = on_orders(data);
         assert_eq!(
@@ -252,10 +252,8 @@ fn e0c_2_7_e0c_06_repeated_member_inside_data() {
         );
     }
     let failure = validate(
-        on_orders(
-            r#"{"namespace": "semantic_compiler", "version": 1, "x": {"k": 1, "k": 2}, "k": 0}"#,
-        )
-        .as_bytes(),
+        on_orders(r#"{"namespace": "menura", "version": 1, "x": {"k": 1, "k": 2}, "k": 0}"#)
+            .as_bytes(),
         DEFAULT_NAMESPACE,
     )
     .expect_err("rejected");
@@ -267,7 +265,7 @@ fn e0c_2_7_e0c_06_repeated_member_inside_data() {
     let foreign = on_orders(r#"{"namespace": "acme", "version": 1, "version": 2}"#);
     assert!(accepted(foreign.as_bytes()).entries.is_empty());
     let same_names_apart = on_orders(
-        r#"{"namespace": "semantic_compiler", "version": 1, "row_access": [{"name": "a", "condition": "TRUE"}, {"name": "b", "condition": "TRUE"}]}"#,
+        r#"{"namespace": "menura", "version": 1, "row_access": [{"name": "a", "condition": "TRUE"}, {"name": "b", "condition": "TRUE"}]}"#,
     );
     assert_eq!(accepted(same_names_apart.as_bytes()).entries.len(), 1);
 }
@@ -286,9 +284,9 @@ fn e0c_2_2_mdl_2_1_e0c_04_more_than_one_entry_of_ours() {
         )]
     );
     let foreign_between = on_orders_entries(concat!(
-        "          - vendor_name: COMMON\n            data: '{\"namespace\": \"semantic_compiler\", \"version\": 1}'\n",
+        "          - vendor_name: COMMON\n            data: '{\"namespace\": \"menura\", \"version\": 1}'\n",
         "          - vendor_name: COMMON\n            data: '{\"namespace\": \"acme\", \"version\": 1}'\n",
-        "          - vendor_name: SNOWFLAKE\n            data: '{\"namespace\": \"semantic_compiler\", \"version\": 1}'\n",
+        "          - vendor_name: SNOWFLAKE\n            data: '{\"namespace\": \"menura\", \"version\": 1}'\n",
     ));
     assert_eq!(accepted(foreign_between.as_bytes()).entries.len(), 1);
 }
@@ -306,8 +304,7 @@ fn e0c_2_3_e0c_05_extension_key_on_the_wrong_object_type() {
             &format!("{MODEL}/datasets/0/fields/2/custom_extensions/0/data")
         )]
     );
-    let model_key =
-        on_orders(r#"{"namespace": "semantic_compiler", "version": 1, "security_context": {}}"#);
+    let model_key = on_orders(r#"{"namespace": "menura", "version": 1, "security_context": {}}"#);
     assert_eq!(
         errors(model_key.as_bytes(), DEFAULT_NAMESPACE),
         [pair("E0C-05", ORDERS_DATA)]
@@ -328,7 +325,7 @@ fn e0c_2_4_e0c_02_unknown_key_in_an_entry_of_ours() {
         )]
     );
     let both = on_orders(
-        r#"{"namespace": "semantic_compiler", "version": 1, "owner": 1, "additivity": {}, "team": 2}"#,
+        r#"{"namespace": "menura", "version": 1, "owner": 1, "additivity": {}, "team": 2}"#,
     );
     let failure = validate(both.as_bytes(), DEFAULT_NAMESPACE).expect_err("rejected");
     let codes: Vec<_> = failure
@@ -353,9 +350,8 @@ fn e0c_2_5_extension_keys_are_handed_over_uninterpreted() {
         additivity.extensions["additivity"],
         json!({"type": "semi_additive", "over": "balances.branch", "entity": ["balances.customer_id"], "aggregation": "max", "nulls": "error"})
     );
-    let unchecked = on_orders(
-        r#"{"namespace": "semantic_compiler", "version": 1, "access": {"mode": "authenticated"}}"#,
-    );
+    let unchecked =
+        on_orders(r#"{"namespace": "menura", "version": 1, "access": {"mode": "authenticated"}}"#);
     assert_eq!(
         accepted(unchecked.as_bytes()).entries[0].extensions["access"],
         json!({"mode": "authenticated"})
@@ -388,11 +384,11 @@ fn e0c_2_6_e0_4_3_diagnostics_are_located_and_follow_document_order() {
         "      - name: orders\n",
         "        source: shop.main.orders\n",
         "        custom_extensions:\n",
-        "          - {vendor_name: COMMON, data: '{\"namespace\": \"semantic_compiler\", \"version\": 1, \"owner\": 1}'}\n",
-        "          - {vendor_name: COMMON, data: '{\"namespace\": \"semantic_compiler\", \"version\": 2}'}\n",
+        "          - {vendor_name: COMMON, data: '{\"namespace\": \"menura\", \"version\": 1, \"owner\": 1}'}\n",
+        "          - {vendor_name: COMMON, data: '{\"namespace\": \"menura\", \"version\": 2}'}\n",
         "          - {vendor_name: COMMON, data: 'broken'}\n",
         "    custom_extensions:\n",
-        "      - {vendor_name: COMMON, data: '{\"namespace\": \"semantic_compiler\"}'}\n",
+        "      - {vendor_name: COMMON, data: '{\"namespace\": \"menura\"}'}\n",
     );
     let failure = validate(document.as_bytes(), DEFAULT_NAMESPACE).expect_err("rejected");
     let found: Vec<_> = failure
@@ -415,4 +411,99 @@ fn e0c_2_6_e0_4_3_diagnostics_are_located_and_follow_document_order() {
         failure.warnings[0].pointer.to_string(),
         format!("{orders}/2/data")
     );
+}
+
+/// The code and JSON Pointer of every warning of accepted extensions.
+fn warnings(extensions: &Extensions) -> Vec<(&'static str, String)> {
+    extensions
+        .warnings
+        .iter()
+        .map(|diagnostic| (diagnostic.code.as_str(), diagnostic.pointer.to_string()))
+        .collect()
+}
+
+#[test]
+fn con_0_5_e0c_1_w0c_02_an_entry_under_the_former_namespace_is_ours() {
+    let former = on_orders(
+        r#"{"namespace": "semantic_compiler", "version": 1, "access": {"mode": "authenticated"}}"#,
+    );
+    let extensions = accepted(former.as_bytes());
+    assert_eq!(extensions.entries.len(), 1);
+    assert_eq!(warnings(&extensions), [pair("W0C-02", ORDERS_DATA)]);
+    assert!(extensions.warnings[0].code.is_warning());
+    let model = conformance_model!("e0-extensions-former-namespace-001");
+    assert_eq!(
+        warnings(&accepted(model)),
+        [pair(
+            "W0C-02",
+            &format!("{MODEL}/datasets/0/custom_extensions/0/data")
+        )]
+    );
+}
+
+#[test]
+fn con_0_5_w0c_02_is_reported_whatever_else_the_entry_reports() {
+    let former = on_orders(r#"{"namespace": "semantic_compiler", "version": 2}"#);
+    let failure = validate(former.as_bytes(), DEFAULT_NAMESPACE).expect_err("rejected");
+    let warnings: Vec<_> = failure
+        .warnings
+        .iter()
+        .map(|diagnostic| (diagnostic.code.as_str(), diagnostic.pointer.to_string()))
+        .collect();
+    assert_eq!(warnings, [pair("W0C-02", ORDERS_DATA)]);
+    assert_eq!(
+        errors(former.as_bytes(), DEFAULT_NAMESPACE),
+        [pair("E0C-01", ORDERS_DATA)]
+    );
+}
+
+#[test]
+fn con_0_5_mdl_2_1_e0c_04_entries_under_both_namespaces_are_two_entries_of_ours() {
+    let model = conformance_model!("e0-extensions-two-namespaces-001");
+    let failure = validate(model, DEFAULT_NAMESPACE).expect_err("rejected");
+    let warnings: Vec<_> = failure
+        .warnings
+        .iter()
+        .map(|diagnostic| (diagnostic.code.as_str(), diagnostic.pointer.to_string()))
+        .collect();
+    assert_eq!(
+        warnings,
+        [pair(
+            "W0C-02",
+            &format!("{MODEL}/datasets/0/custom_extensions/1/data")
+        )]
+    );
+    assert_eq!(
+        errors(model, DEFAULT_NAMESPACE),
+        [pair(
+            "E0C-04",
+            &format!("{MODEL}/datasets/0/custom_extensions/1")
+        )]
+    );
+}
+
+#[test]
+fn con_0_5_no_w0c_02_when_the_former_namespace_is_the_configured_one() {
+    let former = on_orders(
+        r#"{"namespace": "semantic_compiler", "version": 1, "access": {"mode": "authenticated"}}"#,
+    );
+    let extensions = validate(former.as_bytes(), "semantic_compiler").expect("accepted");
+    assert_eq!(extensions.entries.len(), 1);
+    assert!(extensions.warnings.is_empty());
+    let acme = validate(former.as_bytes(), "acme").expect("accepted");
+    assert_eq!(acme.entries.len(), 1);
+    assert_eq!(warnings(&acme), [pair("W0C-02", ORDERS_DATA)]);
+}
+
+#[test]
+fn con_0_5_e0c_1_3_no_w0c_02_when_a_repeated_namespace_matches_the_configured_one() {
+    let repeated =
+        on_orders(r#"{"namespace": "semantic_compiler", "namespace": "menura", "version": 1}"#);
+    let failure = validate(repeated.as_bytes(), DEFAULT_NAMESPACE).expect_err("rejected");
+    assert!(failure.warnings.is_empty());
+    let former_only =
+        on_orders(r#"{"namespace": "acme", "namespace": "semantic_compiler", "version": 1}"#);
+    let failure = validate(former_only.as_bytes(), DEFAULT_NAMESPACE).expect_err("rejected");
+    assert_eq!(failure.warnings.len(), 1);
+    assert_eq!(failure.warnings[0].code.as_str(), "W0C-02");
 }

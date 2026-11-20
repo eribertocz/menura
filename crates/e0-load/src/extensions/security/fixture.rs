@@ -180,7 +180,7 @@ pub(crate) fn with_notes(members: &str) -> String {
     with(
         "            expression: {dialects: [{dialect: ANSI_SQL, expression: 'body'}]}\n",
         &format!(
-            "            expression: {{dialects: [{{dialect: ANSI_SQL, expression: 'body'}}]}}\n        custom_extensions:\n          - vendor_name: COMMON\n            data: '{{\"namespace\": \"semantic_compiler\", \"version\": 1, {members}}}'\n"
+            "            expression: {{dialects: [{{dialect: ANSI_SQL, expression: 'body'}}]}}\n        custom_extensions:\n          - vendor_name: COMMON\n            data: '{{\"namespace\": \"menura\", \"version\": 1, {members}}}'\n"
         ),
     )
 }

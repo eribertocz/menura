@@ -1,9 +1,9 @@
 //! The context metrics in E0.f: CTX-3a.3, CTX-5.1.4 (`E0C-61`, time kind), CTX-5.1.5
 //! (`E0C-34`) and the result types of CTX-5.1.7.
 
-use semantic_compiler_contracts::admit_catalog_schema;
-use semantic_compiler_contracts::types::audit_record::OssieFormat;
-use semantic_compiler_contracts::types::common::LogicalType;
+use menura_contracts::admit_catalog_schema;
+use menura_contracts::types::audit_record::OssieFormat;
+use menura_contracts::types::common::LogicalType;
 
 use crate::extensions::context::fixture::{
     BILLED_CHANGE, BILLED_PRIOR_YEAR, BILLED_SHARE, BILLED_YTD, CATALOG, MODEL, conformance_model,

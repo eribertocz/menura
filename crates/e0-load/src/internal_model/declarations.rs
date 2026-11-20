@@ -1,7 +1,7 @@
 //! The interpreted extension declarations of E0.c, in the form of the internal model
 //! (E0H-1.2): additivity, derived and context metrics, and populations.
 
-use semantic_compiler_model::internal_model::{
+use menura_model::internal_model::{
     ContextModifier, DeclaredAdditivity, DivisionByZero, FieldPath, MissingHandling, NullHandling,
     PartialPeriod, Population, PopulationMode, RemovedDimensions, Selection, SemiAdditive,
     SnapshotAggregation, StaleHandling, UnexpectedHandling,

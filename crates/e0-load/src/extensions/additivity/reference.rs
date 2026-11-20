@@ -1,7 +1,7 @@
 //! Reading a field reference `dataset.field` of an additivity declaration (ADD-5.1.3), and of
 //! a context modifier, which reads its references the same way (CTX-5.1.2).
 
-use semantic_compiler_model::expression::{Expression, Reference};
+use menura_model::expression::{Expression, Reference};
 
 use super::model::FieldReference;
 use crate::expressions::{ExpressionPlace, parse_element_expression};

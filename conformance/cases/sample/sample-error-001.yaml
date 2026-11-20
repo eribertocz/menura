@@ -3,8 +3,8 @@ rules: [CS-2]
 model: sample
 security_context: analyst.json
 query:
-  contract: semantic_compiler.query
-  contract_version: "1.0.0"
+  contract: menura.query
+  contract_version: "1.1.0"
   reference_time: "2026-11-15T12:00:00-04:00"
   time_zone: UTC
   query:
@@ -14,7 +14,7 @@ query:
     nonportable_extensions:
       - vendor_name: COMMON
         data:
-          namespace: semantic_compiler
+          namespace: menura
           version: 1
           time_grains:
             - {dimension: orders.status, grain: month}

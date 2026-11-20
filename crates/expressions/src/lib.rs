@@ -5,7 +5,7 @@
 //! canonical text that parses to the same tree.
 //!
 //! ```
-//! use semantic_compiler_expressions::{parse, print};
+//! use menura_expressions::{parse, print};
 //! let tree = parse("sum ( (orders.amount) )").unwrap();
 //! assert_eq!(tree, parse("SUM(orders.amount)").unwrap());
 //! assert_eq!(print(&tree), "SUM(orders.amount)");

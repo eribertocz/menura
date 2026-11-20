@@ -4,7 +4,7 @@ semantic_model:
     description: Model with a dataset whose source is a read-only query over another dataset's relation
     custom_extensions:
       - vendor_name: COMMON
-        data: '{"namespace": "semantic_compiler", "version": 1, "security_context": {"roles": ["analyst"], "attributes": []}}'
+        data: '{"namespace": "menura", "version": 1, "security_context": {"roles": ["analyst"], "attributes": []}}'
     datasets:
       - name: orders
         source: shop.main.orders
@@ -18,7 +18,7 @@ semantic_model:
             expression: {dialects: [{dialect: ANSI_SQL, expression: amount}]}
         custom_extensions:
           - vendor_name: COMMON
-            data: '{"namespace": "semantic_compiler", "version": 1, "access": {"mode": "roles", "roles": ["analyst"]}}'
+            data: '{"namespace": "menura", "version": 1, "access": {"mode": "roles", "roles": ["analyst"]}}'
       - name: open_orders
         source: "SELECT order_id, status, amount FROM shop.main.orders WHERE status <> 'DROP'"
         primary_key: [order_id]
@@ -31,7 +31,7 @@ semantic_model:
             expression: {dialects: [{dialect: ANSI_SQL, expression: amount}]}
         custom_extensions:
           - vendor_name: COMMON
-            data: '{"namespace": "semantic_compiler", "version": 1, "access": {"mode": "roles", "roles": ["analyst"]}}'
+            data: '{"namespace": "menura", "version": 1, "access": {"mode": "roles", "roles": ["analyst"]}}'
     metrics:
       - name: total_amount
         expression: {dialects: [{dialect: ANSI_SQL, expression: SUM(open_orders.amount)}]}

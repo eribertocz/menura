@@ -4,7 +4,7 @@ semantic_model:
     description: Model with two datasets whose names differ only in case
     custom_extensions:
       - vendor_name: COMMON
-        data: '{"namespace": "semantic_compiler", "version": 1, "security_context": {"roles": ["analyst"], "attributes": []}}'
+        data: '{"namespace": "menura", "version": 1, "security_context": {"roles": ["analyst"], "attributes": []}}'
     datasets:
       - name: orders
         source: shop.main.orders
@@ -20,7 +20,7 @@ semantic_model:
             expression: {dialects: [{dialect: ANSI_SQL, expression: amount}]}
         custom_extensions:
           - vendor_name: COMMON
-            data: '{"namespace": "semantic_compiler", "version": 1, "access": {"mode": "roles", "roles": ["analyst"]}}'
+            data: '{"namespace": "menura", "version": 1, "access": {"mode": "roles", "roles": ["analyst"]}}'
       - name: Orders
         source: shop.main.orders
         primary_key: [order_id]
@@ -35,4 +35,4 @@ semantic_model:
             expression: {dialects: [{dialect: ANSI_SQL, expression: amount}]}
         custom_extensions:
           - vendor_name: COMMON
-            data: '{"namespace": "semantic_compiler", "version": 1, "access": {"mode": "roles", "roles": ["analyst"]}}'
+            data: '{"namespace": "menura", "version": 1, "access": {"mode": "roles", "roles": ["analyst"]}}'

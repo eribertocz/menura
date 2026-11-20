@@ -1,6 +1,6 @@
 //! The fields and roles of `access.fields` in E0.d: SCY-3.1, SCY-5.1.4 and `E0C-49`.
 
-use semantic_compiler_contracts::types::audit_record::OssieFormat;
+use menura_contracts::types::audit_record::OssieFormat;
 
 use crate::extensions::security::fixture::{
     MODEL, NOTES_DATA, ORDERS_DATA, conformance_model, with_access, with_notes,

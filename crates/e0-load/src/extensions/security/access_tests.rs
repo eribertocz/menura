@@ -1,7 +1,7 @@
 //! The `access` of a dataset in E0.c: SCY-3, SCY-5, SCY-5.1.1, SCY-5.1.3, `E0C-02`, `E0C-03`,
 //! `E0C-41` to `E0C-44` and `E0C-47`.
 
-use semantic_compiler_security::AccessMode;
+use menura_security::AccessMode;
 
 use super::fixture::{NOTES, NOTES_DATA, with_access, with_notes};
 use super::support::{access_codes, codes_at, validate};

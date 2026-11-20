@@ -56,8 +56,8 @@ fn check_file_name(case: &Case, path: &Path) -> Result<(), RunnerErrorKind> {
 
 #[cfg(test)]
 mod tests {
-    use semantic_compiler_contracts::types::audit_record::OssieFormat;
-    use semantic_compiler_contracts::types::compiled_plan::InputDocument;
+    use menura_contracts::types::audit_record::OssieFormat;
+    use menura_contracts::types::compiled_plan::InputDocument;
 
     use super::*;
 
@@ -66,7 +66,7 @@ id: sample-plan-001
 rules: [CS-2.2]
 model: sample
 security_context: analyst.json
-query: {contract: semantic_compiler.query}
+query: {contract: menura.query}
 expect:
   outcome: plan
   rows: expected.csv

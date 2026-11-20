@@ -768,6 +768,135 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "cf8baf1c55e62ffcace7a9f06f4bd9cd3f0c4beb022d3b367256b91b87513d98"
 
 [[package]]
+name = "menura-cli"
+version = "0.2.0"
+dependencies = [
+ "menura-core",
+ "serde_json",
+]
+
+[[package]]
+name = "menura-conformance-runner"
+version = "0.2.0"
+dependencies = [
+ "duckdb",
+ "menura-contracts",
+ "menura-core",
+ "serde",
+ "serde-saphyr",
+ "serde_json",
+]
+
+[[package]]
+name = "menura-contracts"
+version = "0.2.0"
+dependencies = [
+ "serde",
+ "serde_json",
+ "sha2",
+]
+
+[[package]]
+name = "menura-core"
+version = "0.2.0"
+dependencies = [
+ "menura-contracts",
+ "menura-e0-load",
+ "menura-e1-parse",
+ "menura-e2-bind",
+ "menura-e3-paths",
+ "menura-e4-plan",
+ "menura-e5-optimize",
+ "menura-generator-duckdb",
+ "menura-model",
+ "serde_json",
+]
+
+[[package]]
+name = "menura-e0-load"
+version = "0.2.0"
+dependencies = [
+ "granit-parser",
+ "menura-contracts",
+ "menura-expressions",
+ "menura-model",
+ "menura-security",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "menura-e1-parse"
+version = "0.2.0"
+dependencies = [
+ "menura-security",
+]
+
+[[package]]
+name = "menura-e2-bind"
+version = "0.2.0"
+dependencies = [
+ "menura-security",
+]
+
+[[package]]
+name = "menura-e3-paths"
+version = "0.2.0"
+dependencies = [
+ "menura-security",
+]
+
+[[package]]
+name = "menura-e4-plan"
+version = "0.2.0"
+dependencies = [
+ "menura-security",
+]
+
+[[package]]
+name = "menura-e5-optimize"
+version = "0.2.0"
+dependencies = [
+ "menura-security",
+]
+
+[[package]]
+name = "menura-expressions"
+version = "0.2.0"
+dependencies = [
+ "menura-model",
+]
+
+[[package]]
+name = "menura-generator-duckdb"
+version = "0.2.0"
+dependencies = [
+ "menura-e5-optimize",
+]
+
+[[package]]
+name = "menura-model"
+version = "0.2.0"
+dependencies = [
+ "menura-contracts",
+]
+
+[[package]]
+name = "menura-representations"
+version = "0.2.0"
+dependencies = [
+ "menura-model",
+]
+
+[[package]]
+name = "menura-security"
+version = "0.2.0"
+dependencies = [
+ "menura-model",
+ "menura-representations",
+]
+
+[[package]]
 name = "miniz_oxide"
 version = "0.9.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -977,135 +1106,6 @@ name = "scopeguard"
 version = "1.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "94143f37725109f92c262ed2cf5e59bce7498c01bcc1502d7b9afe439a4e9f49"
-
-[[package]]
-name = "semantic-compiler-cli"
-version = "0.2.0"
-dependencies = [
- "semantic-compiler-core",
- "serde_json",
-]
-
-[[package]]
-name = "semantic-compiler-conformance-runner"
-version = "0.2.0"
-dependencies = [
- "duckdb",
- "semantic-compiler-contracts",
- "semantic-compiler-core",
- "serde",
- "serde-saphyr",
- "serde_json",
-]
-
-[[package]]
-name = "semantic-compiler-contracts"
-version = "0.2.0"
-dependencies = [
- "serde",
- "serde_json",
- "sha2",
-]
-
-[[package]]
-name = "semantic-compiler-core"
-version = "0.2.0"
-dependencies = [
- "semantic-compiler-contracts",
- "semantic-compiler-e0-load",
- "semantic-compiler-e1-parse",
- "semantic-compiler-e2-bind",
- "semantic-compiler-e3-paths",
- "semantic-compiler-e4-plan",
- "semantic-compiler-e5-optimize",
- "semantic-compiler-generator-duckdb",
- "semantic-compiler-model",
- "serde_json",
-]
-
-[[package]]
-name = "semantic-compiler-e0-load"
-version = "0.2.0"
-dependencies = [
- "granit-parser",
- "semantic-compiler-contracts",
- "semantic-compiler-expressions",
- "semantic-compiler-model",
- "semantic-compiler-security",
- "serde",
- "serde_json",
-]
-
-[[package]]
-name = "semantic-compiler-e1-parse"
-version = "0.2.0"
-dependencies = [
- "semantic-compiler-security",
-]
-
-[[package]]
-name = "semantic-compiler-e2-bind"
-version = "0.2.0"
-dependencies = [
- "semantic-compiler-security",
-]
-
-[[package]]
-name = "semantic-compiler-e3-paths"
-version = "0.2.0"
-dependencies = [
- "semantic-compiler-security",
-]
-
-[[package]]
-name = "semantic-compiler-e4-plan"
-version = "0.2.0"
-dependencies = [
- "semantic-compiler-security",
-]
-
-[[package]]
-name = "semantic-compiler-e5-optimize"
-version = "0.2.0"
-dependencies = [
- "semantic-compiler-security",
-]
-
-[[package]]
-name = "semantic-compiler-expressions"
-version = "0.2.0"
-dependencies = [
- "semantic-compiler-model",
-]
-
-[[package]]
-name = "semantic-compiler-generator-duckdb"
-version = "0.2.0"
-dependencies = [
- "semantic-compiler-e5-optimize",
-]
-
-[[package]]
-name = "semantic-compiler-model"
-version = "0.2.0"
-dependencies = [
- "semantic-compiler-contracts",
-]
-
-[[package]]
-name = "semantic-compiler-representations"
-version = "0.2.0"
-dependencies = [
- "semantic-compiler-model",
-]
-
-[[package]]
-name = "semantic-compiler-security"
-version = "0.2.0"
-dependencies = [
- "semantic-compiler-model",
- "semantic-compiler-representations",
-]
 
 [[package]]
 name = "serde"

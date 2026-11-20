@@ -1,10 +1,10 @@
 //! E0H-4.3 and CHK-3: the recorded integrity checks and their definition hashes.
 
-use semantic_compiler_model::internal_model::{CheckKind, InternalModel};
+use menura_model::internal_model::{CheckKind, InternalModel};
 
 use super::hashes::widened;
 
-use semantic_compiler_contracts::types::audit_record::OssieFormat;
+use menura_contracts::types::audit_record::OssieFormat;
 
 use super::{
     ADDITIVITY_CATALOG, ADDITIVITY_MODEL, CATALOG, DEVELOPMENT_CATALOG, DEVELOPMENT_MODEL, MODEL,

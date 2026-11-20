@@ -8,7 +8,7 @@ mod constants;
 
 use std::fmt::{self, Display, Formatter};
 
-use semantic_compiler_model::expression::{
+use menura_model::expression::{
     AggregateCall, BinaryOperator, CaseBranch, DistinctAggregate, Expression, LikeCase,
     PercentileFunction, ScalarFunction, SortDirection, UnaryOperator,
 };
@@ -23,7 +23,7 @@ use constants::{Quoted, write_cast_target, write_literal, write_reference};
 /// For every tree that [`crate::parse`] returns, parsing the printed text returns the same tree.
 ///
 /// ```
-/// use semantic_compiler_expressions::{parse, print};
+/// use menura_expressions::{parse, print};
 /// let tree = parse("not (a)is null").unwrap();
 /// assert_eq!(print(&tree), "NOT (a IS NULL)");
 /// ```

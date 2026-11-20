@@ -2,7 +2,7 @@
 //! they come from: the official Apache Ossie 0.1.1 schema (E0B-1.1) and the development-line
 //! schema at the tracked commit (OSS-5.1).
 
-use semantic_compiler_contracts::types::audit_record::OssieFormat;
+use menura_contracts::types::audit_record::OssieFormat;
 
 /// Where an embedded JSON Schema was copied from.
 #[cfg_attr(

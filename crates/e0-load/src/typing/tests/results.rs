@@ -1,7 +1,7 @@
 //! Result types and nullability: E0F-3, E0F-3.1, E0F-3.2, E0F-5, E0F-5a, E0F-6.1, E0F-7.1 and
 //! E0F-10.
 
-use semantic_compiler_contracts::types::common::{FloatBits, LogicalType};
+use menura_contracts::types::common::{FloatBits, LogicalType};
 
 use super::*;
 use crate::typing::value_type::{big_integer, decimal, double, huge_integer, integer, timestamp};

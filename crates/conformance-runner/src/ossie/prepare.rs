@@ -4,7 +4,7 @@
 
 use std::path::Path;
 
-use semantic_compiler_contracts::types::audit_record::{LoadOptions, OssieFormat};
+use menura_contracts::types::audit_record::{LoadOptions, OssieFormat};
 use serde_json::{Value, json};
 
 use crate::database::prepare_database;
@@ -144,7 +144,7 @@ fn load_options() -> LoadOptions {
 /// compiler must reject reaches it as the suite wrote it.
 fn query_envelope(form: &str, question: Value) -> Value {
     let mut envelope = json!({
-        "contract": "semantic_compiler.query",
+        "contract": "menura.query",
         "contract_version": "1.0.0",
         "time_zone": "UTC",
     });
@@ -186,7 +186,7 @@ mod tests {
         assert_eq!(
             query_envelope("query", question.clone()),
             json!({
-                "contract": "semantic_compiler.query",
+                "contract": "menura.query",
                 "contract_version": "1.0.0",
                 "time_zone": "UTC",
                 "query": question,

@@ -2,7 +2,7 @@
 //! references of their arguments and of their `FILTER`, and the references outside every
 //! aggregate (E0G-1.1, E0G-2.1).
 
-use semantic_compiler_model::expression::{AggregateCall, Expression, Reference};
+use menura_model::expression::{AggregateCall, Expression, Reference};
 
 /// The aggregates and unaggregated references of one metric expression.
 #[derive(Debug, Default)]

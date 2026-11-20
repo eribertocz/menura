@@ -1,10 +1,8 @@
 //! Types one expression tree (E0F-3 to E0F-7): finds its result type and nullability, or the
 //! first typing problem in written order.
 
-use semantic_compiler_contracts::types::common::LogicalType;
-use semantic_compiler_model::expression::{
-    CastTarget, Expression, IntegerLiteral, Literal, Reference,
-};
+use menura_contracts::types::common::LogicalType;
+use menura_model::expression::{CastTarget, Expression, IntegerLiteral, Literal, Reference};
 
 use super::diagnostic::TypingCode;
 use super::stop::{Outcome, Stop, incompatible, problem};

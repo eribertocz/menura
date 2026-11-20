@@ -1,6 +1,6 @@
 //! The metrics of the internal model (E0H-2 "Metrics").
 
-use semantic_compiler_model::internal_model::{
+use menura_model::internal_model::{
     Additivity, Component, ContextMetric, DecomposabilityClass, DerivedMetric, Metric,
     MetricClassification,
 };
@@ -69,7 +69,7 @@ fn derived(assembly: &Assembly<'_, '_>, pointer: &JsonPointer) -> Option<Derived
 fn metric_name(
     assembly: &Assembly<'_, '_>,
     pointer: &JsonPointer,
-) -> semantic_compiler_model::internal_model::NormalizedName {
+) -> menura_model::internal_model::NormalizedName {
     assembly
         .index
         .name_at(pointer)

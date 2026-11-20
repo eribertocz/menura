@@ -1,5 +1,5 @@
 [package]
-name = "semantic-compiler-contracts"
+name = "menura-contracts"
 description = "Contract documents exchanged between modules and the types that represent them."
 version.workspace = true
 edition.workspace = true

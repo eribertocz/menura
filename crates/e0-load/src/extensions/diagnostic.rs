@@ -135,6 +135,9 @@ pub enum ExtensionCode {
     NestedContext,
     /// `W0C-01`: a `COMMON` entry whose `data` is not valid JSON; kept, not interpreted.
     NotJson,
+    /// `W0C-02`: an entry under the former namespace `semantic_compiler`, read as ours until
+    /// 1.0.0 (CON-0.5).
+    FormerNamespace,
     /// `W0C-40`: the model has no `security_context`; it declares no roles or attributes
     /// (SCY-2.1, SCY-5.1.7).
     NoSecurityContext,
@@ -201,6 +204,7 @@ impl ExtensionCode {
             Self::RemovedFieldMissing => "E0C-63",
             Self::NestedContext => "E0C-64",
             Self::NotJson => "W0C-01",
+            Self::FormerNamespace => "W0C-02",
             Self::NoSecurityContext => "W0C-40",
             Self::NoAccess => "W0C-41",
         }
@@ -209,13 +213,14 @@ impl ExtensionCode {
     /// The load warning that `E0C-37` is reported as: the metric is unusable (E0-4 table).
     pub const UNUSABLE_WARNING: &'static str = "W0G-01";
 
-    /// Whether the code is a load warning: `W0C-01`, `W0C-40`, `W0C-41`, and `E0C-37`, which
+    /// Whether the code is a load warning: `W0C-01`, `W0C-02`, `W0C-40`, `W0C-41`, and `E0C-37`, which
     /// makes its metric unusable. Every other code rejects the model (E0-4.1).
     #[must_use]
     pub fn is_warning(self) -> bool {
         matches!(
             self,
             Self::NotJson
+                | Self::FormerNamespace
                 | Self::NoSecurityContext
                 | Self::NoAccess
                 | Self::AggregateOutsideDerived

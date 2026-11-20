@@ -1,8 +1,8 @@
 //! The integrity checks the model needs, recorded as data (E0H-4.3), with the definition hash
 //! of each (CHK-3). Their SQL is generated later (CHK-4.2).
 
-use semantic_compiler_contracts::{Sha256Hash, hash_value};
-use semantic_compiler_model::internal_model::{
+use menura_contracts::{Sha256Hash, hash_value};
+use menura_model::internal_model::{
     CheckKind, Dataset, DeclaredAdditivity, Field, Metric, NormalizedName, Population,
     RecordedCheck, Relationship, Summary,
 };

@@ -1,5 +1,5 @@
 [package]
-name = "semantic-compiler-e3-paths"
+name = "menura-e3-paths"
 description = "Stage E3: resolves join paths between datasets."
 version.workspace = true
 edition.workspace = true
@@ -7,7 +7,7 @@ license.workspace = true
 publish.workspace = true
 
 [dependencies]
-semantic-compiler-security.workspace = true
+menura-security.workspace = true
 
 [lints]
 workspace = true

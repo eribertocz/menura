@@ -3,8 +3,8 @@ rules: [MDL-2.4, SCY-4.1, SCY-5.1.3, SCY-5.1.5, SCY-5.1.6]
 model: e0-security-development
 security_context: analyst.json
 query:
-  contract: semantic_compiler.query
-  contract_version: "1.0.0"
+  contract: menura.query
+  contract_version: "1.1.0"
   reference_time: "2026-11-15T12:00:00-04:00"
   time_zone: UTC
   query:

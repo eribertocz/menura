@@ -1,7 +1,7 @@
 //! Aggregate calls of E0F-10.5, with their `FILTER (WHERE …)`, and the call forms E0F-9.4
 //! allows on them.
 
-use semantic_compiler_model::expression::{
+use menura_model::expression::{
     AggregateCall, DistinctAggregate, Expression, PercentileFunction, SimpleAggregate,
     SortDirection,
 };

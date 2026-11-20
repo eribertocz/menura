@@ -1,8 +1,8 @@
 //! The conditions of row policies in E0.f: SCY-4.1, SCY-4.2, SCY-5.1.6, `E0C-46` and
 //! `E0C-48`.
 
-use semantic_compiler_contracts::admit_catalog_schema;
-use semantic_compiler_contracts::types::audit_record::OssieFormat;
+use menura_contracts::admit_catalog_schema;
+use menura_contracts::types::audit_record::OssieFormat;
 
 use crate::extensions::security::fixture::{
     CATALOG, MODEL, NOTES_DATA, ORDERS_DATA, conformance_model, with, with_notes, with_row_access,

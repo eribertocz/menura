@@ -1,7 +1,7 @@
 //! The decomposability class of an aggregate (E0G-3), whether it can be recomposed from partial
 //! results (E0G-3.1), and the additivity deduced from the classes (E0G-4).
 
-use semantic_compiler_model::expression::{AggregateCall, SimpleAggregate};
+use menura_model::expression::{AggregateCall, SimpleAggregate};
 
 use super::output::{Additivity, Component, DecomposabilityClass};
 

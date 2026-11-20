@@ -9,7 +9,7 @@
 //! The dataset-scoped metrics of the development format have their own forms, checked in
 //! `dataset_metric_references`.
 
-use semantic_compiler_model::expression::Reference;
+use menura_model::expression::Reference;
 
 use super::diagnostic::ReferenceCode;
 use super::finding::Finding;

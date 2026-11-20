@@ -3,7 +3,7 @@
 
 use std::collections::BTreeSet;
 
-use semantic_compiler_model::expression::{AggregateCall, Expression, Reference};
+use menura_model::expression::{AggregateCall, Expression, Reference};
 
 use crate::names::Name;
 

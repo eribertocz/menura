@@ -1,9 +1,9 @@
 //! The derived metrics in E0.f: DER-2.3, DER-2.4, DER-5.1.2 (`E0F-02`), DER-5.1.3, DER-5.1.4,
 //! E0G-5.1, `E0C-30`, `E0C-31`, `E0C-34` and `E0C-35`.
 
-use semantic_compiler_contracts::admit_catalog_schema;
-use semantic_compiler_contracts::types::audit_record::OssieFormat;
-use semantic_compiler_contracts::types::common::LogicalType;
+use menura_contracts::admit_catalog_schema;
+use menura_contracts::types::audit_record::OssieFormat;
+use menura_contracts::types::common::LogicalType;
 
 use super::summary;
 use crate::extensions::derived::fixture::{
@@ -96,7 +96,7 @@ fn der_5_1_3_agg_has_the_type_of_its_metric() {
     assert_eq!(
         type_of(&derived, UNCOLLECTED_RATE),
         Some(LogicalType::Integer {
-            bits: semantic_compiler_contracts::types::common::IntegerBits::OneHundredTwentyEight,
+            bits: menura_contracts::types::common::IntegerBits::OneHundredTwentyEight,
             signed: true
         })
     );

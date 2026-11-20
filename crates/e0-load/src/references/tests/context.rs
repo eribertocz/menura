@@ -1,7 +1,7 @@
 //! The base and the removed fields of context metrics in E0.d: CTX-2.1, CTX-5.1.3, `E0C-60`,
 //! `E0C-63` and `E0C-64`.
 
-use semantic_compiler_contracts::types::audit_record::OssieFormat;
+use menura_contracts::types::audit_record::OssieFormat;
 
 use crate::extensions::context::fixture::{
     BILLED, BILLED_PRIOR_YEAR, BILLED_SHARE, BILLED_YTD, MODEL, conformance_model, data, with,
@@ -82,7 +82,7 @@ fn ctx_5_1_3_e0c_60_a_metric_with_both_context_and_derived() {
 
 #[test]
 fn ctx_5_1_3_e0c_60_an_expression_that_is_not_agg_of_the_base() {
-    let ytd = "expression: 'AGG(billed)'}]}\n        custom_extensions:\n          - vendor_name: COMMON\n            data: '{\"namespace\": \"semantic_compiler\", \"version\": 1, \"context\": {\"base\": \"billed\", \"modifier\": {\"type\": \"period_to_date\"";
+    let ytd = "expression: 'AGG(billed)'}]}\n        custom_extensions:\n          - vendor_name: COMMON\n            data: '{\"namespace\": \"menura\", \"version\": 1, \"context\": {\"base\": \"billed\", \"modifier\": {\"type\": \"period_to_date\"";
     for expression in [
         "AGG(billed) * 2",
         "AGG(customer_count)",

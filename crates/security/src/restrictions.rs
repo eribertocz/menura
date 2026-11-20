@@ -48,7 +48,7 @@ pub struct Restrictions<Field, Metric> {
 ///
 /// ```
 /// use std::collections::{BTreeMap, BTreeSet};
-/// use semantic_compiler_security::{RestrictionInput, Role, restrictions};
+/// use menura_security::{RestrictionInput, Role, restrictions};
 ///
 /// let admin = BTreeSet::from([Role::new("admin")]);
 /// let input = RestrictionInput {

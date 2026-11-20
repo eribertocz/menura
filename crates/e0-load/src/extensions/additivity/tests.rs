@@ -7,8 +7,8 @@
 
 use std::num::NonZeroU64;
 
-use semantic_compiler_contracts::types::audit_record::OssieFormat;
-use semantic_compiler_contracts::types::common::Grain;
+use menura_contracts::types::audit_record::OssieFormat;
+use menura_contracts::types::common::Grain;
 
 use super::fixture::{
     DEBT_BALANCE, DEBT_BALANCE_DATA, MODEL, STRICT_BALANCE, conformance_model, with_additivity,

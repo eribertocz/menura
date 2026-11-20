@@ -1,8 +1,8 @@
 //! The conditions and time fields of populations in E0.f: POP-4.4, POP-4.5, POP-4.6, `E0C-23`
 //! and `E0C-24`.
 
-use semantic_compiler_contracts::admit_catalog_schema;
-use semantic_compiler_contracts::types::audit_record::OssieFormat;
+use menura_contracts::admit_catalog_schema;
+use menura_contracts::types::audit_record::OssieFormat;
 
 use crate::extensions::populations::fixture::{
     ACCOUNTS_DATA, CUSTOMERS_DATA, MODEL, PERIODIC, VALIDITY, conformance_model, with_populations,

@@ -1,8 +1,8 @@
 //! The summary extension in E0.f: SUM-2.1, SUM-6.1.3 to SUM-6.1.5, SUM-6.1.7, `E0C-52`,
 //! `E0C-53` and `E0C-57`.
 
-use semantic_compiler_contracts::admit_catalog_schema;
-use semantic_compiler_contracts::types::audit_record::OssieFormat;
+use menura_contracts::admit_catalog_schema;
+use menura_contracts::types::audit_record::OssieFormat;
 
 use super::{ElementKind, Typing};
 use crate::extensions::summaries::datasets::summary_datasets;

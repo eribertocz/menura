@@ -4,9 +4,9 @@
 //! The model document and catalog schema of the `sample` conformance model are read at compile
 //! time; each test edits the model text to introduce the problems it needs.
 
-use semantic_compiler_contracts::types::audit_record::{LoadOptions, OssieFormat};
-use semantic_compiler_contracts::types::compiled_plan::{Diagnostic, InputDocument};
-use semantic_compiler_model::internal_model::InternalModel;
+use menura_contracts::types::audit_record::{LoadOptions, OssieFormat};
+use menura_contracts::types::compiled_plan::{Diagnostic, InputDocument};
+use menura_model::internal_model::InternalModel;
 
 use super::{LoadRejection, load_model};
 
@@ -69,13 +69,13 @@ fn options() -> LoadOptions {
     LoadOptions {
         grant_authenticated_to_all: false,
         ossie_format: OssieFormat::Release,
-        namespace: "semantic_compiler".to_owned(),
+        namespace: "menura".to_owned(),
         model_name: None,
     }
 }
 
 fn load(model: &str) -> Result<InternalModel, LoadRejection> {
-    load_model(model.as_bytes(), CATALOG.as_bytes(), &options()).map(|(model, _)| model)
+    load_model(model.as_bytes(), CATALOG.as_bytes(), &options()).map(|loaded| loaded.model)
 }
 
 fn loaded(model: &str) -> InternalModel {
@@ -117,8 +117,11 @@ fn e0_2_1_a_valid_model_loads_without_security_context_or_catalog_state() {
 
 #[test]
 fn e0_2_1_the_admitted_catalog_schema_is_returned_with_the_model() {
-    let (_, catalog) = load_model(MODEL.as_bytes(), CATALOG.as_bytes(), &options()).unwrap();
-    assert_eq!(catalog.document_id.origin, "conformance:sample");
+    let loaded = load_model(MODEL.as_bytes(), CATALOG.as_bytes(), &options()).unwrap();
+    assert_eq!(
+        loaded.catalog_schema.document_id.origin,
+        "conformance:sample"
+    );
 }
 
 #[test]

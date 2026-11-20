@@ -3,7 +3,7 @@ name: e0_context_development_dataset_metric_001
 description: Development-line model whose dataset metric total_billed is marked context
 nonportable_extensions:
   - vendor_name: COMMON
-    data: {namespace: semantic_compiler, version: 1, security_context: {roles: [analyst], attributes: []}}
+    data: {namespace: menura, version: 1, security_context: {roles: [analyst], attributes: []}}
 datasets:
   - name: invoices
     source: shop.main.invoices
@@ -22,10 +22,10 @@ datasets:
         expression: {sql: SUM(billed)}
         nonportable_extensions:
           - vendor_name: COMMON
-            data: {namespace: semantic_compiler, version: 1, context: {base: billed, modifier: {type: share_of_total, remove: all}}}
+            data: {namespace: menura, version: 1, context: {base: billed, modifier: {type: share_of_total, remove: all}}}
     nonportable_extensions:
       - vendor_name: COMMON
-        data: {namespace: semantic_compiler, version: 1, access: {mode: roles, roles: [analyst]}}
+        data: {namespace: menura, version: 1, access: {mode: roles, roles: [analyst]}}
   - name: customers
     source: shop.main.customers
     primary_key: [customer_id]
@@ -47,9 +47,9 @@ metrics:
     expression: {sql: AGG(billed)}
     nonportable_extensions:
       - vendor_name: COMMON
-        data: {namespace: semantic_compiler, version: 1, context: {base: billed, modifier: {type: period_to_date, time_dimension: invoices.invoice_date, grain: year}}}
+        data: {namespace: menura, version: 1, context: {base: billed, modifier: {type: period_to_date, time_dimension: invoices.invoice_date, grain: year}}}
   - name: billed_share
     expression: {sql: AGG(billed)}
     nonportable_extensions:
       - vendor_name: COMMON
-        data: {namespace: semantic_compiler, version: 1, context: {base: billed, modifier: {type: share_of_total, remove: all}}}
+        data: {namespace: menura, version: 1, context: {base: billed, modifier: {type: share_of_total, remove: all}}}

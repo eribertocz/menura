@@ -19,7 +19,7 @@ semantic_model:
             expression: {dialects: [{dialect: ANSI_SQL, expression: 'unit_cost'}]}
         custom_extensions:
           - vendor_name: COMMON
-            data: '{"namespace": "semantic_compiler", "version": 1, "access": {"mode": "authenticated"}}'
+            data: '{"namespace": "menura", "version": 1, "access": {"mode": "authenticated"}}'
       - name: notes
         source: shop.main.notes
         primary_key: [note_id]
@@ -30,7 +30,7 @@ semantic_model:
             expression: {dialects: [{dialect: ANSI_SQL, expression: 'body'}]}
         custom_extensions:
           - vendor_name: COMMON
-            data: '{"namespace": "semantic_compiler", "version": 1, "access": {"mode": "authenticated"}}'
+            data: '{"namespace": "menura", "version": 1, "access": {"mode": "authenticated"}}'
     metrics:
       - name: total_amount
         expression: {dialects: [{dialect: ANSI_SQL, expression: 'SUM(orders.amount)'}]}

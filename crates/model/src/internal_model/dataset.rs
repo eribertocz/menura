@@ -1,6 +1,6 @@
 //! Datasets, their fields and populations (E0H-2 "Datasets").
 
-use semantic_compiler_contracts::types::common::Grain;
+use menura_contracts::types::common::Grain;
 
 use super::common::{Descriptions, DiagnosticCode, NormalizedName, SourceLocation, TypedValue};
 use super::metric::Metric;

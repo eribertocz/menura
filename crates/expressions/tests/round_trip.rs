@@ -4,7 +4,7 @@
 #[cfg(test)]
 mod support;
 
-use semantic_compiler_expressions::{parse, print};
+use menura_expressions::{parse, print};
 use support::generator::{Generator, expression};
 
 #[test]

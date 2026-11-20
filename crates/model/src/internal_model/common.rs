@@ -1,7 +1,7 @@
 //! The values every part of the internal model shares: normalized names, source locations,
 //! descriptions, types and codes.
 
-use semantic_compiler_contracts::types::common::LogicalType;
+use menura_contracts::types::common::LogicalType;
 
 use crate::json::JsonForm;
 

@@ -1,6 +1,6 @@
 //! Reading one item of a `populations` list: its keys (POP-4.1) and their values (POP-4.2).
 
-use semantic_compiler_contracts::types::common::Grain;
+use menura_contracts::types::common::Grain;
 use serde_json::{Map, Value as Json};
 
 use super::model::{PartialPeriod, PopulationMode};

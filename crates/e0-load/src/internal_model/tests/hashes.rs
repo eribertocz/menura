@@ -1,7 +1,7 @@
 //! E0H-1.3, E0H-2, E0H-2.1, E0H-2.2, E0H-3.1 to E0H-3.4 and MDL-3.1: what the model hash and
 //! the summary definition hashes cover.
 
-use semantic_compiler_model::internal_model::{DiagnosticCode, InternalModel, SourceLocation};
+use menura_model::internal_model::{DiagnosticCode, InternalModel, SourceLocation};
 use serde_json::Value as Json;
 
 use super::{
@@ -99,8 +99,8 @@ fn e0h_2_1_other_dialects_and_foreign_extensions_never_change_the_hash() {
         "{dialect: ANSI_SQL, expression: 'amount'}, {dialect: SNOWFLAKE, expression: 'amount * 2'}",
     );
     let foreign_extension = edited(
-        "        custom_extensions:\n          - vendor_name: COMMON\n            data: '{\"namespace\": \"semantic_compiler\", \"version\": 1, \"access\"",
-        "        custom_extensions:\n          - vendor_name: DBT\n            data: '{\"materialized\": \"table\"}'\n          - vendor_name: COMMON\n            data: '{\"namespace\": \"semantic_compiler\", \"version\": 1, \"access\"",
+        "        custom_extensions:\n          - vendor_name: COMMON\n            data: '{\"namespace\": \"menura\", \"version\": 1, \"access\"",
+        "        custom_extensions:\n          - vendor_name: DBT\n            data: '{\"materialized\": \"table\"}'\n          - vendor_name: COMMON\n            data: '{\"namespace\": \"menura\", \"version\": 1, \"access\"",
     );
     assert_eq!(hash_of(&other_dialect), hash_of(MODEL));
     assert_eq!(hash_of(&foreign_extension), hash_of(MODEL));

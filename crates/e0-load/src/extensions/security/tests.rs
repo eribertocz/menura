@@ -6,7 +6,7 @@
 //! (see [`super::fixture`]), so the rules are checked against the files the conformance suite
 //! uses.
 
-use semantic_compiler_security::{
+use menura_security::{
     AccessMode, AttributeType, DatasetAccess, FieldRestriction, Role, ScalarType,
 };
 

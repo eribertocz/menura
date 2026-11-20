@@ -1,6 +1,6 @@
 //! The datasets and fields of the internal model (E0H-2 "Datasets").
 
-use semantic_compiler_model::internal_model::{
+use menura_model::internal_model::{
     Dataset, DatasetAccess, Field, NormalizedName, Population, RowPolicy,
 };
 

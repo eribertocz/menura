@@ -19,8 +19,8 @@ pub(crate) use output::{
 
 use std::collections::HashMap;
 
-use semantic_compiler_contracts::types::audit_record::OssieFormat;
-use semantic_compiler_model::expression::{Expression, Reference};
+use menura_contracts::types::audit_record::OssieFormat;
+use menura_model::expression::{Expression, Reference};
 
 use super::walk::metric_aggregates;
 use crate::expressions::{ExpressionPlace, parse_element_expression};

@@ -2,7 +2,7 @@
 //! condition may not contain, found by walking the whole tree, whatever the types of the
 //! fields it reads.
 
-use semantic_compiler_model::expression::{AggregateCall, Expression, Reference};
+use menura_model::expression::{AggregateCall, Expression, Reference};
 
 /// The first construct of `condition`, in written order, that a row-level condition does not
 /// allow: a qualified reference, an aggregate, `AGG(…)` or `USER_ATTRIBUTE(…)`; described for

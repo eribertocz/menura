@@ -34,7 +34,7 @@ pub(crate) use output::{
 
 use std::collections::{BTreeSet, HashMap};
 
-use semantic_compiler_model::expression::Expression;
+use menura_model::expression::Expression;
 
 use crate::expressions::{ExpressionPlace, parse_element_expression};
 use crate::extensions::additivity::DeclaredAdditivity;

@@ -48,7 +48,7 @@ impl DatasetAccess {
     /// `authenticated` (SCY-5.1.4). No role has access to an internal dataset.
     ///
     /// ```
-    /// use semantic_compiler_security::{AccessMode, DatasetAccess, Role};
+    /// use menura_security::{AccessMode, DatasetAccess, Role};
     ///
     /// let access = DatasetAccess { mode: AccessMode::Roles(vec![Role::new("analyst")]), fields: Vec::new() };
     /// assert!(access.grants(&Role::new("analyst")));

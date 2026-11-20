@@ -1,7 +1,7 @@
 //! The access every dataset is read with, and the warnings of a missing `security_context` or
 //! `access` (SCY-3.0, SCY-5.1.7, DEV-4).
 
-use semantic_compiler_security::DatasetAccess;
+use menura_security::DatasetAccess;
 
 use super::model::Security;
 use crate::extensions::diagnostic::{ExtensionCode, ExtensionDiagnostic};

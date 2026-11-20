@@ -4,8 +4,8 @@
 #[cfg(test)]
 mod support;
 
-use semantic_compiler_expressions::ExpressionCode;
-use semantic_compiler_model::expression::{
+use menura_expressions::ExpressionCode;
+use menura_model::expression::{
     BinaryOperator, DateValue, Expression, FloatLiteral, IntegerLiteral, Literal, TimeOfDay,
     TimestampValue, UnaryOperator,
 };

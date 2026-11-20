@@ -2,11 +2,11 @@
 
 use std::cmp::Ordering;
 
-use semantic_compiler_contracts::value_encoding::{
+use menura_contracts::value_encoding::{
     is_canonical_date, is_canonical_decimal, is_canonical_integer_string, is_canonical_time,
     is_canonical_timestamp, is_canonical_uuid,
 };
-use semantic_compiler_contracts::{canonical_json, compare_names, encode_integer, hash_value};
+use menura_contracts::{canonical_json, compare_names, encode_integer, hash_value};
 use serde_json::{Value, json};
 
 /// The canonical form of `text`, or `None` when it is not JSON.

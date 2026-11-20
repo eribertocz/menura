@@ -1,8 +1,8 @@
 //! The development format (section 4.5, OSS-5.1): the `sql` expressions and the dataset-scoped
 //! metrics are typed, reading the references of a dataset metric as E0.d resolves them.
 
-use semantic_compiler_contracts::types::audit_record::OssieFormat;
-use semantic_compiler_contracts::types::common::LogicalType;
+use menura_contracts::types::audit_record::OssieFormat;
+use menura_contracts::types::common::LogicalType;
 
 use super::*;
 use crate::typing::value_type::{decimal, huge_integer};

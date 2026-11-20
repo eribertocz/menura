@@ -4,7 +4,7 @@ semantic_model:
     description: Model whose expressions and relationship keys are typed against the catalog schema, with one unusable element per E0F typing code
     custom_extensions:
       - vendor_name: COMMON
-        data: '{"namespace": "semantic_compiler", "version": 1, "security_context": {"roles": ["analyst"], "attributes": []}}'
+        data: '{"namespace": "menura", "version": 1, "security_context": {"roles": ["analyst"], "attributes": []}}'
     datasets:
       - name: orders
         source: shop.main.orders
@@ -38,7 +38,7 @@ semantic_model:
             expression: {dialects: [{dialect: ANSI_SQL, expression: "CASE quantity WHEN 2.0 THEN 'pair' ELSE 'other' END"}]}
         custom_extensions:
           - vendor_name: COMMON
-            data: '{"namespace": "semantic_compiler", "version": 1, "access": {"mode": "roles", "roles": ["analyst"]}}'
+            data: '{"namespace": "menura", "version": 1, "access": {"mode": "roles", "roles": ["analyst"]}}'
       - name: customers
         source: shop.main.customers
         primary_key: [customer_id]
@@ -52,7 +52,7 @@ semantic_model:
             expression: {dialects: [{dialect: ANSI_SQL, expression: name}]}
         custom_extensions:
           - vendor_name: COMMON
-            data: '{"namespace": "semantic_compiler", "version": 1, "access": {"mode": "roles", "roles": ["analyst"]}}'
+            data: '{"namespace": "menura", "version": 1, "access": {"mode": "roles", "roles": ["analyst"]}}'
     relationships:
       - name: orders_customers
         from: orders

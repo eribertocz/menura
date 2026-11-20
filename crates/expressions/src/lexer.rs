@@ -4,7 +4,7 @@
 //! no trace. A lexical error ends the token list with an [`TokenKind::Invalid`] token, so the
 //! parser reports errors strictly from left to right.
 
-use semantic_compiler_model::expression::{
+use menura_model::expression::{
     DecimalLiteral, FloatLiteral, IntegerLiteral, Literal, MAXIMUM_EXACT_DIGITS,
 };
 

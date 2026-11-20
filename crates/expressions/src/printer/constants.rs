@@ -2,7 +2,7 @@
 
 use std::fmt::{self, Display, Formatter};
 
-use semantic_compiler_model::expression::{
+use menura_model::expression::{
     CastTarget, DateValue, DecimalLiteral, FloatLiteral, Identifier, Literal, Reference, TimeOfDay,
     TimestampValue,
 };

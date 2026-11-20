@@ -43,7 +43,7 @@ pub(crate) use output::{ElementKind, ReferenceRejection, References, UnusableEle
 
 use std::collections::HashMap;
 
-use semantic_compiler_contracts::types::catalog::CatalogSchemaDocument;
+use menura_contracts::types::catalog::CatalogSchemaDocument;
 
 use crate::extensions::summaries::SummaryDatasets;
 use crate::outline::{self, outline};

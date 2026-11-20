@@ -4,7 +4,7 @@ semantic_model:
     description: Model whose dataset name starts with a double quote but has no character between its quotes
     custom_extensions:
       - vendor_name: COMMON
-        data: '{"namespace": "semantic_compiler", "version": 1, "security_context": {"roles": ["analyst"], "attributes": []}}'
+        data: '{"namespace": "menura", "version": 1, "security_context": {"roles": ["analyst"], "attributes": []}}'
     datasets:
       - name: '""'
         source: shop.main.orders
@@ -18,4 +18,4 @@ semantic_model:
             expression: {dialects: [{dialect: ANSI_SQL, expression: amount}]}
         custom_extensions:
           - vendor_name: COMMON
-            data: '{"namespace": "semantic_compiler", "version": 1, "access": {"mode": "roles", "roles": ["analyst"]}}'
+            data: '{"namespace": "menura", "version": 1, "access": {"mode": "roles", "roles": ["analyst"]}}'

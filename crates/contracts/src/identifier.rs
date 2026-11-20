@@ -7,7 +7,7 @@
 /// characters never changes (CON-5).
 ///
 /// ```
-/// use semantic_compiler_contracts::normalize_unquoted_identifier;
+/// use menura_contracts::normalize_unquoted_identifier;
 ///
 /// assert_eq!(normalize_unquoted_identifier("amount"), "AMOUNT");
 /// assert_eq!(normalize_unquoted_identifier("stra\u{df}e"), "STRA\u{df}E");

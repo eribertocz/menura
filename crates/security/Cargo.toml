@@ -1,5 +1,5 @@
 [package]
-name = "semantic-compiler-security"
+name = "menura-security"
 description = "Access and row-policy logic, the single home of security rules (S5)."
 version.workspace = true
 edition.workspace = true
@@ -7,8 +7,8 @@ license.workspace = true
 publish.workspace = true
 
 [dependencies]
-semantic-compiler-model.workspace = true
-semantic-compiler-representations.workspace = true
+menura-model.workspace = true
+menura-representations.workspace = true
 
 [lints]
 workspace = true

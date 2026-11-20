@@ -1,6 +1,6 @@
 //! Where a list attribute may appear in a row-policy condition (SCY-4.1).
 
-use semantic_compiler_model::expression::Expression;
+use menura_model::expression::Expression;
 
 use crate::walk::children;
 
@@ -11,8 +11,8 @@ use crate::walk::children;
 /// attribute is never a list here.
 ///
 /// ```
-/// use semantic_compiler_model::expression::{Expression, Identifier, Reference};
-/// use semantic_compiler_security::misplaced_list_attributes;
+/// use menura_model::expression::{Expression, Identifier, Reference};
+/// use menura_security::misplaced_list_attributes;
 ///
 /// let regions = || Expression::UserAttribute("regions".to_owned());
 /// let region = || {
@@ -65,7 +65,7 @@ fn visit<'condition>(
 
 #[cfg(test)]
 mod tests {
-    use semantic_compiler_model::expression::{BinaryOperator, Expression, Identifier, Reference};
+    use menura_model::expression::{BinaryOperator, Expression, Identifier, Reference};
 
     use super::misplaced_list_attributes;
 

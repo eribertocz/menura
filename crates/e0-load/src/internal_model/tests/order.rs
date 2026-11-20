@@ -1,7 +1,7 @@
 //! E0H-1.4: collections are ordered by normalized name, positional lists keep their order, and
 //! unusable elements are ordered by kind, then by qualified name.
 
-use semantic_compiler_model::internal_model::{ElementKind, NormalizedName};
+use menura_model::internal_model::{ElementKind, NormalizedName};
 
 use super::{fixture, name};
 

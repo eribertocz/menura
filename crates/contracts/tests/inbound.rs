@@ -4,12 +4,10 @@
 #[cfg(test)]
 mod support;
 
-use semantic_compiler_contracts::types::catalog::{CatalogSchemaDocument, CatalogStateDocument};
-use semantic_compiler_contracts::types::query::QueryDocument;
-use semantic_compiler_contracts::types::security_context::SecurityContextDocument;
-use semantic_compiler_contracts::{
-    AdmissionCode, ContractKind, IncomingContract, check_query_form, decode,
-};
+use menura_contracts::types::catalog::{CatalogSchemaDocument, CatalogStateDocument};
+use menura_contracts::types::query::QueryDocument;
+use menura_contracts::types::security_context::SecurityContextDocument;
+use menura_contracts::{AdmissionCode, ContractKind, IncomingContract, check_query_form, decode};
 use serde_json::{Value, json};
 use support::{adding, assert_invalid_at, assert_valid, example, examples, with, without};
 
@@ -95,7 +93,7 @@ fn cat_3_catalog_schema_errors() {
         ),
         Ok(())
     );
-    for version in ["2.0.0", "1.1.0", "0.9.0", "1.0"] {
+    for version in ["2.0.0", "1.2.0", "0.9.0", "1.0"] {
         let unsupported = with(document.clone(), "/contract_version", json!(version));
         assert_eq!(
             admit(contract, &unsupported),
@@ -103,11 +101,7 @@ fn cat_3_catalog_schema_errors() {
             "{version}"
         );
     }
-    let wrong_contract = with(
-        document.clone(),
-        "/contract",
-        json!("semantic_compiler.catalog_state"),
-    );
+    let wrong_contract = with(document.clone(), "/contract", json!("menura.catalog_state"));
     assert_eq!(admit(contract, &wrong_contract), Err(AdmissionCode::Ecat02));
     assert_eq!(
         admit(contract, &without(document.clone(), "/relations")),
@@ -156,11 +150,7 @@ fn qry_2_envelope_and_schema_errors() {
     let contract = IncomingContract::Query;
     let document = example("query.json-form.example.json");
     assert_eq!(admit(contract, &document), Ok(()));
-    let wrong = with(
-        document.clone(),
-        "/contract",
-        json!("semantic_compiler.query_v2"),
-    );
+    let wrong = with(document.clone(), "/contract", json!("menura.query_v2"));
     let error = contract.check_contract(&wrong).expect_err("unsupported");
     assert_eq!(
         (error.code, error.pointer.as_str()),
@@ -232,7 +222,7 @@ fn sec_2_security_context_errors() {
     let contract = IncomingContract::SecurityContext;
     let document = example("security-context.example.json");
     assert_eq!(admit(contract, &document), Ok(()));
-    let unsupported = with(document.clone(), "/contract_version", json!("1.1.0"));
+    let unsupported = with(document.clone(), "/contract_version", json!("1.2.0"));
     assert_eq!(admit(contract, &unsupported), Err(AdmissionCode::Esec03));
     assert_eq!(
         admit(contract, &without(document.clone(), "/roles")),

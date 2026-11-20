@@ -1,7 +1,7 @@
 //! The summary extension in E0.c: SUM-2, SUM-6, SUM-6.1.1, SUM-6.1.6, `E0C-02`, `E0C-03`,
 //! `E0C-50` (a missing `of`), `E0C-55` and `E0C-56`, and which datasets are summaries.
 
-use semantic_compiler_contracts::types::audit_record::OssieFormat;
+use menura_contracts::types::audit_record::OssieFormat;
 
 use super::datasets::summary_datasets;
 use super::fixture::{
@@ -317,7 +317,7 @@ fn sum_6_1_1_sum_6_1_7_a_summary_whatever_e0c_reports() {
 #[test]
 fn sum_6_1_1_an_aggregate_key_of_someone_else_is_not_a_summary() {
     let foreign = MODEL.replacen(
-        r#""namespace": "semantic_compiler", "version": 1, "access": {"mode": "internal"}"#,
+        r#""namespace": "menura", "version": 1, "access": {"mode": "internal"}"#,
         r#""namespace": "other", "version": 1, "access": {"mode": "internal"}"#,
         1,
     );

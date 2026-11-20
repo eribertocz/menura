@@ -25,19 +25,19 @@ license = "Apache-2.0"
 publish = false
 
 [workspace.dependencies]
-semantic-compiler-contracts = { path = "crates/contracts" }
-semantic-compiler-model = { path = "crates/model" }
-semantic-compiler-expressions = { path = "crates/expressions" }
-semantic-compiler-representations = { path = "crates/representations" }
-semantic-compiler-security = { path = "crates/security" }
-semantic-compiler-e0-load = { path = "crates/e0-load" }
-semantic-compiler-e1-parse = { path = "crates/e1-parse" }
-semantic-compiler-e2-bind = { path = "crates/e2-bind" }
-semantic-compiler-e3-paths = { path = "crates/e3-paths" }
-semantic-compiler-e4-plan = { path = "crates/e4-plan" }
-semantic-compiler-e5-optimize = { path = "crates/e5-optimize" }
-semantic-compiler-generator-duckdb = { path = "crates/generator-duckdb" }
-semantic-compiler-core = { path = "crates/core" }
+menura-contracts = { path = "crates/contracts" }
+menura-model = { path = "crates/model" }
+menura-expressions = { path = "crates/expressions" }
+menura-representations = { path = "crates/representations" }
+menura-security = { path = "crates/security" }
+menura-e0-load = { path = "crates/e0-load" }
+menura-e1-parse = { path = "crates/e1-parse" }
+menura-e2-bind = { path = "crates/e2-bind" }
+menura-e3-paths = { path = "crates/e3-paths" }
+menura-e4-plan = { path = "crates/e4-plan" }
+menura-e5-optimize = { path = "crates/e5-optimize" }
+menura-generator-duckdb = { path = "crates/generator-duckdb" }
+menura-core = { path = "crates/core" }
 
 [workspace.lints.rust]
 unsafe_code = "forbid"

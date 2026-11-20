@@ -11,18 +11,18 @@ use serde_json::{Map, Number, Value};
 use crate::contract::ContractKind;
 use crate::schema::validate_structure;
 use crate::types::ContractDocument;
-use crate::types::compiled_plan::InputDocument;
+use crate::types::compiled_plan::{Diagnostic, DiagnosticLocation, InputDocument};
 
 /// An incoming contract document.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum IncomingContract {
-    /// `semantic_compiler.catalog_schema`.
+    /// `menura.catalog_schema`.
     CatalogSchema,
-    /// `semantic_compiler.catalog_state`.
+    /// `menura.catalog_state`.
     CatalogState,
-    /// `semantic_compiler.query`.
+    /// `menura.query`.
     Query,
-    /// `semantic_compiler.security_context`.
+    /// `menura.security_context`.
     SecurityContext,
 }
 
@@ -43,6 +43,9 @@ pub enum AdmissionCode {
     Wcat03,
     /// `WCAT-04`: the catalog state's `schema_document_id` does not match the schema in use.
     Wcat04,
+    /// `WCAT-05`: a catalog document uses the former contract name `semantic_compiler.*`; it is
+    /// admitted (CON-0.5).
+    Wcat05,
     /// `E_INVALID_QUERY`: the query is not JSON or fails its JSON Schema.
     InvalidQuery,
     /// `EQRY-01`: both or neither of `query` and `sql`.
@@ -67,6 +70,7 @@ impl AdmissionCode {
             Self::Wcat02 => "WCAT-02",
             Self::Wcat03 => "WCAT-03",
             Self::Wcat04 => "WCAT-04",
+            Self::Wcat05 => "WCAT-05",
             Self::InvalidQuery => "E_INVALID_QUERY",
             Self::Eqry01 => "EQRY-01",
             Self::Eqry08 => "EQRY-08",
@@ -75,13 +79,14 @@ impl AdmissionCode {
         }
     }
 
-    /// Whether the code is a warning: the document is ignored and compilation goes on (CAT-9).
-    /// Every other code makes the operation fail.
+    /// Whether the code is a warning: compilation goes on (CAT-9). The state document is then
+    /// ignored, except for `WCAT-05`, whose document is admitted (CON-0.5). Every other code
+    /// makes the operation fail.
     #[must_use]
     pub fn is_warning(self) -> bool {
         matches!(
             self,
-            Self::Wcat01 | Self::Wcat02 | Self::Wcat03 | Self::Wcat04
+            Self::Wcat01 | Self::Wcat02 | Self::Wcat03 | Self::Wcat04 | Self::Wcat05
         )
     }
 }
@@ -118,6 +123,27 @@ impl fmt::Display for AdmissionError {
 }
 
 impl std::error::Error for AdmissionError {}
+
+impl AdmissionError {
+    /// The diagnostic of the compile error document (PLN-5) for this code, located in the
+    /// document that was not admitted, or that was admitted with a warning.
+    #[must_use]
+    pub fn diagnostic(&self) -> Diagnostic {
+        let (line, column) = self
+            .line_column
+            .map_or((None, None), |(line, column)| (Some(line), Some(column)));
+        Diagnostic {
+            code: self.code.as_str().to_owned(),
+            message: self.message.clone(),
+            location: Some(DiagnosticLocation {
+                document: self.document,
+                pointer: self.pointer.clone(),
+                line,
+                column,
+            }),
+        }
+    }
+}
 
 impl IncomingContract {
     /// The contract this document follows.
@@ -179,7 +205,8 @@ impl IncomingContract {
         })
     }
 
-    /// Checks that `contract` names this contract and `contract_version` is accepted (CAT-3.2).
+    /// Checks that `contract` names this contract, with its name or its former name (CON-0.5),
+    /// and `contract_version` is accepted (CAT-3.2).
     ///
     /// # Errors
     ///
@@ -189,9 +216,7 @@ impl IncomingContract {
         if kind.supports(document) {
             return Ok(());
         }
-        let names_contract =
-            document.get("contract").and_then(Value::as_str) == Some(kind.contract_name());
-        let (pointer, message) = if names_contract {
+        let (pointer, message) = if kind.is_named_by(document) {
             let latest = kind.latest_version();
             (
                 "/contract_version",

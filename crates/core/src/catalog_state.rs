@@ -1,24 +1,51 @@
 //! Admission of a catalog state against a loaded model (CAT-9.1, ARC-5.2), including the
 //! summary builds of CAT-8.8, which need the model's summaries (SUM-6.1.8).
 
-use semantic_compiler_contracts::admit_catalog_state;
-use semantic_compiler_contracts::types::catalog::{
+use menura_contracts::types::catalog::{
     AggregateBuild, CatalogSchemaDocument, CatalogStateDocument, RelationData,
 };
-use semantic_compiler_contracts::types::common::Grain;
-use semantic_compiler_contracts::types::compiled_plan::{
-    Diagnostic, DiagnosticLocation, InputDocument,
-};
-use semantic_compiler_model::internal_model::{InternalModel, Summary};
+use menura_contracts::types::common::Grain;
+use menura_contracts::types::compiled_plan::{Diagnostic, DiagnosticLocation, InputDocument};
+use menura_contracts::{admit_catalog_state, state_former_name_warning};
+use menura_model::internal_model::{InternalModel, Summary};
 
 /// The code of a state that is not valid UTF-8 JSON (CAT-9.1).
 const NOT_JSON: &str = "WCAT-01";
 /// The code of a state that breaks a CAT-8 rule.
 const RULE_VIOLATION: &str = "WCAT-03";
 
-/// Admits the catalog state `bytes` against the loaded `model` and its `schema`, or returns
-/// the warning of the first failure, in the order of CAT-9.1, with CAT-8.8 last.
+/// What admitting a catalog state gave: the state, or none when it is ignored, and its warning
+/// (ARC-5.2, CON-0.5).
+pub(crate) struct StateAdmission {
+    /// The admitted state, or `None` when it is ignored.
+    pub(crate) state: Option<CatalogStateDocument>,
+    /// The warning of an ignored state (`WCAT-01` to `WCAT-04`), or the `WCAT-05` of an
+    /// admitted state with the former contract name.
+    pub(crate) warning: Option<Diagnostic>,
+}
+
+/// Admits the catalog state `bytes` against the loaded `model` and its `schema`. A state that
+/// is not admitted is ignored with the warning of its first failure, in the order of CAT-9.1,
+/// with CAT-8.8 last. An admitted state with the former contract name keeps `WCAT-05`.
 pub(crate) fn admit(
+    bytes: &[u8],
+    schema: &CatalogSchemaDocument,
+    model: &InternalModel,
+) -> StateAdmission {
+    match admitted_state(bytes, schema, model) {
+        Ok(state) => StateAdmission {
+            warning: state_former_name_warning(&state).map(|warning| warning.diagnostic()),
+            state: Some(state),
+        },
+        Err(warning) => StateAdmission {
+            state: None,
+            warning: Some(warning),
+        },
+    }
+}
+
+/// The admitted state, or the warning of its first failure.
+fn admitted_state(
     bytes: &[u8],
     schema: &CatalogSchemaDocument,
     model: &InternalModel,
@@ -30,21 +57,7 @@ pub(crate) fn admit(
             "the catalog state is not valid UTF-8, so it is not JSON; it is ignored".to_owned(),
         ));
     };
-    let state = admit_catalog_state(text, schema).map_err(|error| {
-        let (line, column) = error
-            .line_column
-            .map_or((None, None), |(line, column)| (Some(line), Some(column)));
-        Diagnostic {
-            code: error.code.as_str().to_owned(),
-            message: error.message,
-            location: Some(DiagnosticLocation {
-                document: error.document,
-                pointer: error.pointer,
-                line,
-                column,
-            }),
-        }
-    })?;
+    let state = admit_catalog_state(text, schema).map_err(|error| error.diagnostic())?;
     check_summary_builds(&state, model)?;
     Ok(state)
 }

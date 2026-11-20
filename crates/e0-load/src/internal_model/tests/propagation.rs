@@ -1,7 +1,7 @@
 //! E0-4.2a: unusability propagates, transitively, with every query error code, and no new
 //! warning.
 
-use semantic_compiler_model::internal_model::{DiagnosticCode, ElementKind, InternalModel};
+use menura_model::internal_model::{DiagnosticCode, ElementKind, InternalModel};
 
 use super::{CATALOG, edited, fixture, load, name};
 

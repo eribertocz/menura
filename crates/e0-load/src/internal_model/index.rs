@@ -2,7 +2,7 @@
 
 use std::collections::HashMap;
 
-use semantic_compiler_model::json::JsonForm;
+use menura_model::json::JsonForm;
 
 use crate::names::Name;
 use crate::outline::{DatasetOutline, ElementOutline, ModelOutline};

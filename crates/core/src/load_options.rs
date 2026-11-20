@@ -2,23 +2,23 @@
 
 use std::fmt;
 
-use semantic_compiler_contracts::types::audit_record::{self, OssieFormat};
+use menura_contracts::types::audit_record::{self, OssieFormat};
 use serde_json::Value;
 
 /// The default extension namespace (MDL-2.3).
-const DEFAULT_NAMESPACE: &str = "semantic_compiler";
+const DEFAULT_NAMESPACE: &str = "menura";
 
 /// The options `load` and `validate` read (architecture section 3.5).
 ///
 /// # Example
 ///
 /// ```
-/// use semantic_compiler_core::{LoadOptions, OssieFormat};
+/// use menura_core::{LoadOptions, OssieFormat};
 ///
 /// let options = LoadOptions::from_json(br#"{"ossie_format": "development"}"#)?;
 /// assert_eq!(options.ossie_format, OssieFormat::Development);
-/// assert_eq!(options.namespace, "semantic_compiler");
-/// # Ok::<(), semantic_compiler_core::LoadOptionsError>(())
+/// assert_eq!(options.namespace, "menura");
+/// # Ok::<(), menura_core::LoadOptionsError>(())
 /// ```
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct LoadOptions {
@@ -28,7 +28,7 @@ pub struct LoadOptions {
     pub ossie_format: OssieFormat,
     /// Treat datasets without `access` as `authenticated` (DEV-4); `false` by default.
     pub grant_authenticated_to_all: bool,
-    /// The extension namespace (MDL-2.3); `semantic_compiler` by default.
+    /// The extension namespace (MDL-2.3); `menura` by default.
     pub namespace: String,
     /// The logical source name written in every plan; the catalog schema
     /// `document_id.origin` when `None`.

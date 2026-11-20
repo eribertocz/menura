@@ -4,7 +4,7 @@ semantic_model:
     description: Model with a qualified reference in a field expression and an unqualified one in a metric expression
     custom_extensions:
       - vendor_name: COMMON
-        data: '{"namespace": "semantic_compiler", "version": 1, "security_context": {"roles": ["analyst"], "attributes": []}}'
+        data: '{"namespace": "menura", "version": 1, "security_context": {"roles": ["analyst"], "attributes": []}}'
     datasets:
       - name: orders
         source: shop.main.orders
@@ -20,7 +20,7 @@ semantic_model:
             expression: {dialects: [{dialect: ANSI_SQL, expression: orders.amount}]}
         custom_extensions:
           - vendor_name: COMMON
-            data: '{"namespace": "semantic_compiler", "version": 1, "access": {"mode": "roles", "roles": ["analyst"]}}'
+            data: '{"namespace": "menura", "version": 1, "access": {"mode": "roles", "roles": ["analyst"]}}'
     metrics:
       - name: total_amount
         expression: {dialects: [{dialect: ANSI_SQL, expression: SUM(orders.amount)}]}

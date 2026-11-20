@@ -6,19 +6,22 @@ use super::common::{CheckStatus, Grain, LogicalType, Token};
 use crate::contract::ContractVersion;
 use crate::hash::Sha256Hash;
 
-/// The `contract` value `semantic_compiler.catalog_schema`.
+/// The `contract` value `menura.catalog_schema`, or its former name (CON-0.5).
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 pub enum CatalogSchemaContract {
-    /// The only value.
-    #[serde(rename = "semantic_compiler.catalog_schema")]
+    /// The name the compiler writes (CON-0.5).
+    #[serde(rename = "menura.catalog_schema")]
     CatalogSchema,
+    /// The former name, read until 1.0.0 and never written (CON-0.5).
+    #[serde(rename = "semantic_compiler.catalog_schema")]
+    FormerCatalogSchema,
 }
 
 /// The catalog schema document: relations, columns and types (CAT-4).
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct CatalogSchemaDocument {
-    /// Always `semantic_compiler.catalog_schema`.
+    /// `menura.catalog_schema`, or its former name.
     pub contract: CatalogSchemaContract,
     /// Contract version.
     pub contract_version: ContractVersion,
@@ -64,19 +67,22 @@ pub struct Column {
     pub nullable: bool,
 }
 
-/// The `contract` value `semantic_compiler.catalog_state`.
+/// The `contract` value `menura.catalog_state`, or its former name (CON-0.5).
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 pub enum CatalogStateContract {
-    /// The only value.
-    #[serde(rename = "semantic_compiler.catalog_state")]
+    /// The name the compiler writes (CON-0.5).
+    #[serde(rename = "menura.catalog_state")]
     CatalogState,
+    /// The former name, read until 1.0.0 and never written (CON-0.5).
+    #[serde(rename = "semantic_compiler.catalog_state")]
+    FormerCatalogState,
 }
 
 /// The catalog state document: data versions, summary builds and check results (CAT-5).
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct CatalogStateDocument {
-    /// Always `semantic_compiler.catalog_state`.
+    /// `menura.catalog_state`, or its former name.
     pub contract: CatalogStateContract,
     /// Contract version.
     pub contract_version: ContractVersion,

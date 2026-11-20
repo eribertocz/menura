@@ -4,8 +4,8 @@
 #[cfg(test)]
 mod support;
 
-use semantic_compiler_expressions::{ExpressionCode, ExpressionErrorKind, parse};
-use semantic_compiler_model::expression::{
+use menura_expressions::{ExpressionCode, ExpressionErrorKind, parse};
+use menura_model::expression::{
     CastTarget, DateUnit, DecimalTarget, Expression, ExtractPart, ScalarFunction,
 };
 use support::{assert_code, assert_parses, call, column, integer, text, tree};

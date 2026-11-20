@@ -19,7 +19,7 @@ semantic_model:
             expression: {dialects: [{dialect: ANSI_SQL, expression: valid_to}]}
         custom_extensions:
           - vendor_name: COMMON
-            data: '{"namespace": "semantic_compiler", "version": 1, "populations": [{"name": "active_customers", "mode": "validity", "entity": ["customer_id"], "valid_from": "valid_from", "valid_to": "valid_to", "partial_period": "any_day", "required_when": "segment"}]}'
+            data: '{"namespace": "menura", "version": 1, "populations": [{"name": "active_customers", "mode": "validity", "entity": ["customer_id"], "valid_from": "valid_from", "valid_to": "valid_to", "partial_period": "any_day", "required_when": "segment"}]}'
       - name: account_months
         source: shop.main.account_months
         primary_key: [account_id, period_start]
@@ -32,7 +32,7 @@ semantic_model:
             expression: {dialects: [{dialect: ANSI_SQL, expression: balance}]}
         custom_extensions:
           - vendor_name: COMMON
-            data: '{"namespace": "semantic_compiler", "version": 1, "populations": [{"name": "monthly_accounts", "mode": "periodic", "entity": ["account_id"], "period": "period_start", "grain": "month"}]}'
+            data: '{"namespace": "menura", "version": 1, "populations": [{"name": "monthly_accounts", "mode": "periodic", "entity": ["account_id"], "period": "period_start", "grain": "month"}]}'
     metrics:
       - name: customer_count
         expression: {dialects: [{dialect: ANSI_SQL, expression: COUNT(customers.customer_id)}]}

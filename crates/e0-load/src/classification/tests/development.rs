@@ -1,7 +1,7 @@
 //! The dataset metrics of the development format (section 4.5): the home dataset of each
 //! component is the metric's own dataset (E0G-1.4).
 
-use semantic_compiler_contracts::types::audit_record::OssieFormat;
+use menura_contracts::types::audit_record::OssieFormat;
 
 use super::*;
 

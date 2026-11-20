@@ -2,7 +2,7 @@
 
 use std::fmt;
 
-use semantic_compiler_contracts::types::compiled_plan::CompileErrorDocument;
+use menura_contracts::types::compiled_plan::CompileErrorDocument;
 
 /// An output document could not be written as JSON.
 #[derive(Debug)]
@@ -29,11 +29,11 @@ impl std::error::Error for OutputError {}
 /// # Example
 ///
 /// ```
-/// use semantic_compiler_core::{LoadOptions, document_json, validate};
+/// use menura_core::{LoadOptions, document_json, validate};
 ///
 /// let report = validate(b"", b"{}", &LoadOptions::default());
-/// assert!(document_json(&report)?.contains("semantic_compiler.validation_report"));
-/// # Ok::<(), semantic_compiler_core::OutputError>(())
+/// assert!(document_json(&report)?.contains("menura.validation_report"));
+/// # Ok::<(), menura_core::OutputError>(())
 /// ```
 pub fn document_json(document: &CompileErrorDocument) -> Result<String, OutputError> {
     serde_json::to_string_pretty(document).map_err(OutputError)

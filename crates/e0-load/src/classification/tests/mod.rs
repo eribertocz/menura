@@ -5,8 +5,8 @@
 //! conformance models are read here at compile time, so classification is checked against the
 //! files the conformance suite uses.
 
-use semantic_compiler_contracts::admit_catalog_schema;
-use semantic_compiler_contracts::types::audit_record::OssieFormat;
+use menura_contracts::admit_catalog_schema;
+use menura_contracts::types::audit_record::OssieFormat;
 
 use super::diagnostic::ClassificationCode;
 use super::output::{Additivity, DecomposabilityClass, QueryError};

@@ -3,7 +3,7 @@ name: e0_development_format
 description: Development-line model with sql and dialects expressions, datatypes, a dataset-scoped metric and nonportable extensions with object data
 nonportable_extensions:
   - vendor_name: COMMON
-    data: {namespace: semantic_compiler, version: 1, security_context: {roles: [analyst], attributes: []}}
+    data: {namespace: menura, version: 1, security_context: {roles: [analyst], attributes: []}}
 datasets:
   - name: orders
     source: shop.main.orders
@@ -27,7 +27,7 @@ datasets:
         datatype: Integer
     nonportable_extensions:
       - vendor_name: COMMON
-        data: {namespace: semantic_compiler, version: 1, access: {mode: roles, roles: [analyst]}}
+        data: {namespace: menura, version: 1, access: {mode: roles, roles: [analyst]}}
   - name: balances
     source: shop.main.balances
     primary_key: [branch, customer_id]
@@ -42,7 +42,7 @@ datasets:
         datatype: Decimal
     nonportable_extensions:
       - vendor_name: COMMON
-        data: {namespace: semantic_compiler, version: 1, access: {mode: roles, roles: [analyst]}}
+        data: {namespace: menura, version: 1, access: {mode: roles, roles: [analyst]}}
 metrics:
   - name: total_amount
     expression: {sql: SUM(orders.amount)}

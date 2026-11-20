@@ -36,21 +36,21 @@ semantic_model:
         expression: {dialects: [{dialect: ANSI_SQL, expression: 'AGG(billed)'}]}
         custom_extensions:
           - vendor_name: COMMON
-            data: '{"namespace": "semantic_compiler", "version": 1, "context": {"base": "billed", "modifier": {"type": "period_to_date", "time_dimension": "invoices.invoice_date", "grain": "year"}}}'
+            data: '{"namespace": "menura", "version": 1, "context": {"base": "billed", "modifier": {"type": "period_to_date", "time_dimension": "invoices.invoice_date", "grain": "year"}}}'
       - name: billed_prior_year
         expression: {dialects: [{dialect: ANSI_SQL, expression: 'AGG(billed)'}]}
         custom_extensions:
           - vendor_name: COMMON
-            data: '{"namespace": "semantic_compiler", "version": 1, "context": {"base": "invoiced", "modifier": {"type": "prior_period", "time_dimension": "invoices.invoice_date", "grain": "year", "offset": 1}}}'
+            data: '{"namespace": "menura", "version": 1, "context": {"base": "invoiced", "modifier": {"type": "prior_period", "time_dimension": "invoices.invoice_date", "grain": "year", "offset": 1}}}'
       - name: billed_share
         expression: {dialects: [{dialect: ANSI_SQL, expression: 'AGG(billed)'}]}
         custom_extensions:
           - vendor_name: COMMON
-            data: '{"namespace": "semantic_compiler", "version": 1, "context": {"base": "billed", "modifier": {"type": "share_of_total", "remove": ["customers.region"]}}}'
+            data: '{"namespace": "menura", "version": 1, "context": {"base": "billed", "modifier": {"type": "share_of_total", "remove": ["customers.region"]}}}'
       - name: billed_change
         expression: {dialects: [{dialect: ANSI_SQL, expression: 'AGG(billed) - AGG(billed_prior_year)'}]}
         custom_extensions:
           - vendor_name: COMMON
-            data: '{"namespace": "semantic_compiler", "version": 1, "derived": {}}'
+            data: '{"namespace": "menura", "version": 1, "derived": {}}'
       - name: customer_count
         expression: {dialects: [{dialect: ANSI_SQL, expression: 'COUNT(DISTINCT customers.customer_id)'}]}

@@ -13,8 +13,8 @@ pub(super) mod structure;
 
 use std::collections::HashMap;
 
-use semantic_compiler_contracts::types::common::LogicalType;
-use semantic_compiler_model::expression::Reference;
+use menura_contracts::types::common::LogicalType;
+use menura_model::expression::Reference;
 
 use super::output::{ElementKind, Typing};
 use super::stop::{Outcome, Stop};

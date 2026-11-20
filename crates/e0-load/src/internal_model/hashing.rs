@@ -1,8 +1,8 @@
 //! The model hash (E0H-3.2): the CON-2 hash of the whole internal model except source
 //! locations and warnings, with each unusable element and its query error codes.
 
-use semantic_compiler_contracts::{Sha256Hash, hash_value};
-use semantic_compiler_model::internal_model::{
+use menura_contracts::{Sha256Hash, hash_value};
+use menura_model::internal_model::{
     DatasetPair, ModelParts, PathCount, RecordedCheck, RelationshipGraph, Summary, UnusableElement,
 };
 use serde_json::Value as Json;

@@ -120,10 +120,10 @@ pub(crate) fn schema_text(kind: ContractKind) -> &'static str {
 /// # Example
 ///
 /// ```
-/// use semantic_compiler_contracts::{ContractKind, validate_structure};
+/// use menura_contracts::{ContractKind, validate_structure};
 ///
 /// let context = serde_json::json!({
-///     "contract": "semantic_compiler.security_context",
+///     "contract": "menura.security_context",
 ///     "contract_version": "1.0.0",
 ///     "subject": "user-1",
 ///     "roles": [],
@@ -157,7 +157,7 @@ pub fn validate_structure(kind: ContractKind, document: &Value) -> Result<(), Sc
 /// # Example
 ///
 /// ```
-/// use semantic_compiler_contracts::validate_against_schema;
+/// use menura_contracts::validate_against_schema;
 ///
 /// let schema = serde_json::json!({"type": "object", "required": ["name"]});
 /// let violation = validate_against_schema(&schema, &serde_json::json!({})).unwrap_err();
@@ -177,7 +177,7 @@ pub fn validate_against_schema(schema: &Value, instance: &Value) -> Result<(), S
 /// # Example
 ///
 /// ```
-/// use semantic_compiler_contracts::{SchemaViolationKind, schema_violations};
+/// use menura_contracts::{SchemaViolationKind, schema_violations};
 ///
 /// let schema = serde_json::json!({
 ///     "required": ["name"],

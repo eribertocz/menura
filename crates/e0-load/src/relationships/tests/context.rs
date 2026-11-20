@@ -1,7 +1,7 @@
 //! The time dimension of context metrics in E0.e: CTX-5.1.4 and `E0C-61` (reachability).
 
-use semantic_compiler_contracts::admit_catalog_schema;
-use semantic_compiler_contracts::types::audit_record::OssieFormat;
+use menura_contracts::admit_catalog_schema;
+use menura_contracts::types::audit_record::OssieFormat;
 
 use crate::extensions::context::fixture::{
     BILLED_YTD, CATALOG, MODEL, conformance_model, data, with,
@@ -106,12 +106,12 @@ fn ctx_5_1_4_a_field_of_a_reached_dataset_is_reachable() {
 
 #[test]
 fn ctx_5_1_4_the_homes_of_a_derived_base_are_those_of_its_inputs() {
-    let ytd = "'AGG(billed)'}]}\n        custom_extensions:\n          - vendor_name: COMMON\n            data: '{\"namespace\": \"semantic_compiler\", \"version\": 1, \"context\": {\"base\": \"billed\", \"modifier\": {\"type\": \"period_to_date\"";
+    let ytd = "'AGG(billed)'}]}\n        custom_extensions:\n          - vendor_name: COMMON\n            data: '{\"namespace\": \"menura\", \"version\": 1, \"context\": {\"base\": \"billed\", \"modifier\": {\"type\": \"period_to_date\"";
     let per_customer = with(
         "      - name: customer_count\n        expression: {dialects: [{dialect: ANSI_SQL, expression: 'COUNT(DISTINCT customers.customer_id)'}]}\n",
         "      - name: customer_count\n        expression: {dialects: [{dialect: ANSI_SQL, expression: 'COUNT(DISTINCT customers.customer_id)'}]}\n      \
          - name: billed_per_customer\n        expression: {dialects: [{dialect: ANSI_SQL, expression: 'AGG(billed) / AGG(customer_count)'}]}\n        \
-         custom_extensions:\n          - vendor_name: COMMON\n            data: '{\"namespace\": \"semantic_compiler\", \"version\": 1, \"derived\": {\"on_division_by_zero\": \"null\"}}'\n",
+         custom_extensions:\n          - vendor_name: COMMON\n            data: '{\"namespace\": \"menura\", \"version\": 1, \"derived\": {\"on_division_by_zero\": \"null\"}}'\n",
     );
     let model = per_customer.replacen(
         ytd,

@@ -2,7 +2,7 @@
 //!
 //! A failure always reproduces from its seed, and no property-testing dependency is needed.
 
-use semantic_compiler_model::expression::{
+use menura_model::expression::{
     AggregateCall, BinaryOperator, CaseBranch, CastTarget, DateUnit, DateValue, DecimalLiteral,
     DecimalTarget, DistinctAggregate, Expression, ExtractPart, FloatLiteral, Identifier,
     IntegerLiteral, LikeCase, Literal, PercentileFunction, Reference, ScalarFunction,

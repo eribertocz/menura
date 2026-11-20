@@ -9,19 +9,27 @@ use crate::hash::Sha256Hash;
 /// The `contract` value of a compiled plan.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 pub enum CompiledPlanContract {
-    /// `semantic_compiler.compiled_plan`: an executable plan.
-    #[serde(rename = "semantic_compiler.compiled_plan")]
+    /// `menura.compiled_plan`: an executable plan.
+    #[serde(rename = "menura.compiled_plan")]
     CompiledPlan,
-    /// `semantic_compiler.explanation`: the same document without SQL or parameters.
-    #[serde(rename = "semantic_compiler.explanation")]
+    /// `menura.explanation`: the same document without SQL or parameters.
+    #[serde(rename = "menura.explanation")]
     Explanation,
+    /// `semantic_compiler.compiled_plan`: the former name, read until 1.0.0 and never written
+    /// (CON-0.5).
+    #[serde(rename = "semantic_compiler.compiled_plan")]
+    FormerCompiledPlan,
+    /// `semantic_compiler.explanation`: the former name, read until 1.0.0 and never written
+    /// (CON-0.5).
+    #[serde(rename = "semantic_compiler.explanation")]
+    FormerExplanation,
 }
 
 /// A compiled plan (PLN-1).
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct CompiledPlanDocument {
-    /// `semantic_compiler.compiled_plan` or `semantic_compiler.explanation`.
+    /// `menura.compiled_plan` or `menura.explanation`, or a former name (CON-0.5).
     pub contract: CompiledPlanContract,
     /// Contract version.
     pub contract_version: ContractVersion,
@@ -140,19 +148,27 @@ pub struct PhysicalInput {
 /// The `contract` value of a compile error.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 pub enum CompileErrorContract {
-    /// `semantic_compiler.compile_error`: at least one error.
-    #[serde(rename = "semantic_compiler.compile_error")]
+    /// `menura.compile_error`: at least one error.
+    #[serde(rename = "menura.compile_error")]
     CompileError,
-    /// `semantic_compiler.validation_report`: the diagnostics of a validation, possibly none.
-    #[serde(rename = "semantic_compiler.validation_report")]
+    /// `menura.validation_report`: the diagnostics of a validation, possibly none.
+    #[serde(rename = "menura.validation_report")]
     ValidationReport,
+    /// `semantic_compiler.compile_error`: the former name, read until 1.0.0 and never written
+    /// (CON-0.5).
+    #[serde(rename = "semantic_compiler.compile_error")]
+    FormerCompileError,
+    /// `semantic_compiler.validation_report`: the former name, read until 1.0.0 and never
+    /// written (CON-0.5).
+    #[serde(rename = "semantic_compiler.validation_report")]
+    FormerValidationReport,
 }
 
 /// A compile error (PLN-5).
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct CompileErrorDocument {
-    /// `semantic_compiler.compile_error` or `semantic_compiler.validation_report`.
+    /// `menura.compile_error` or `menura.validation_report`, or a former name (CON-0.5).
     pub contract: CompileErrorContract,
     /// Contract version.
     pub contract_version: ContractVersion,

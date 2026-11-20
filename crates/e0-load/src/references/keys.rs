@@ -1,7 +1,7 @@
 //! `E0D-05` to `E0D-07`: relationships name datasets of the model, and every key or
 //! relationship column resolves (E0D-3, E0D-3.1).
 
-use semantic_compiler_model::expression::Expression;
+use menura_model::expression::Expression;
 
 use super::diagnostic::ReferenceCode;
 use super::finding::Finding;

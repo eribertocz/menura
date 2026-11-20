@@ -1,6 +1,6 @@
 //! The declarations of the security extension (SCY-2 to SCY-4), as data types only.
 
-use semantic_compiler_security::{AttributeType, DatasetAccess, Role};
+use menura_security::{AttributeType, DatasetAccess, Role};
 
 use crate::pointer::JsonPointer;
 use crate::read::Location;

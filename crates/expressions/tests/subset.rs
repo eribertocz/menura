@@ -4,8 +4,8 @@
 #[cfg(test)]
 mod support;
 
-use semantic_compiler_expressions::{ExpressionCode, ExpressionErrorKind, Span, parse};
-use semantic_compiler_model::expression::{
+use menura_expressions::{ExpressionCode, ExpressionErrorKind, Span, parse};
+use menura_model::expression::{
     AggregateCall, BinaryOperator, CaseBranch, DistinctAggregate, Expression, Identifier, LikeCase,
     PercentileFunction, Reference, ScalarFunction, SimpleAggregate, SortDirection, UnaryOperator,
 };

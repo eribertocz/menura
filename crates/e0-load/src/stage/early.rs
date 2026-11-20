@@ -3,7 +3,7 @@
 
 use serde_json::{Map, Value as Json};
 
-use semantic_compiler_contracts::types::audit_record::LoadOptions;
+use menura_contracts::types::audit_record::LoadOptions;
 
 use super::findings::{self, Substage};
 use super::report::Report;

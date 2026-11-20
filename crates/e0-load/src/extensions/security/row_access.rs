@@ -1,6 +1,6 @@
 //! Reading one `row_access` value (SCY-4, SCY-5.1.5).
 
-use semantic_compiler_security::Role;
+use menura_security::Role;
 use serde_json::{Map, Value as Json};
 
 use super::values::{DeclaredRoles, ListRule, object, required, roles, text, wrong_value};

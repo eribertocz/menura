@@ -10,8 +10,8 @@ use std::collections::BTreeSet;
 use std::fs;
 use std::path::{Path, PathBuf};
 
-use semantic_compiler_contracts::types::catalog::{CatalogStateDocument, RelationData};
-use semantic_compiler_contracts::{AdmissionError, admit_catalog_schema, admit_catalog_state};
+use menura_contracts::types::catalog::{CatalogStateDocument, RelationData};
+use menura_contracts::{AdmissionError, admit_catalog_schema, admit_catalog_state};
 use serde::Deserialize;
 
 // `cfg(test)` marks the helpers as test code, where `unwrap` and `panic!` are allowed

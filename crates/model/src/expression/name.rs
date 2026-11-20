@@ -16,7 +16,7 @@ impl Identifier {
     /// Returns `None` when `text` does not have that form.
     ///
     /// ```
-    /// use semantic_compiler_model::expression::Identifier;
+    /// use menura_model::expression::Identifier;
     /// assert!(Identifier::regular("amount_2").is_some());
     /// assert!(Identifier::regular("2amount").is_none());
     /// ```

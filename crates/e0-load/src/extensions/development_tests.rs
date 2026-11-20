@@ -4,7 +4,7 @@
 //! Each `*-development-*` conformance model is the release model of the same name written in
 //! the development format, so both must give the same codes, at the matching members.
 
-use semantic_compiler_contracts::types::audit_record::OssieFormat;
+use menura_contracts::types::audit_record::OssieFormat;
 
 use super::output::{Extensions, ExtensionsFailure, ObjectKind};
 use super::{DEFAULT_NAMESPACE, validate_extensions};
@@ -163,15 +163,14 @@ fn e0c_2_3_additivity_is_valid_on_a_dataset_metric_and_context_is_not() {
             "version: 0.3.0.dev0\nname: shop\ndatasets:\n  - name: orders\n    source: shop.main.orders\n    fields:\n      - {{name: amount, expression: {{sql: amount}}}}\n    metrics:\n      - name: total\n        expression: {{sql: SUM(amount)}}\n        nonportable_extensions:\n          - vendor_name: COMMON\n            data: {data}\n"
         )
     };
-    let additive =
-        model("{namespace: semantic_compiler, version: 1, additivity: {type: non_additive}}");
+    let additive = model("{namespace: menura, version: 1, additivity: {type: non_additive}}");
     let extensions = development(additive.as_bytes()).expect("accepted");
     assert_eq!(extensions.entries[0].object, ObjectKind::DatasetMetric);
     assert_eq!(
         extensions.additivity[0].metric.to_string(),
         "/datasets/0/metrics/0"
     );
-    let context = model("{namespace: semantic_compiler, version: 1, context: {}}");
+    let context = model("{namespace: menura, version: 1, context: {}}");
     assert_eq!(
         errors(development(context.as_bytes())),
         [pair(
@@ -193,11 +192,11 @@ fn e0c_2_8_e0c_03_data_without_a_json_form() {
         assert!(found[0].1.ends_with("/nonportable_extensions/0/data"));
     }
     for data in [
-        "{namespace: semantic_compiler, version: 1, ~: x}",
-        "{namespace: semantic_compiler, version: 1, access: {true: x}}",
-        "{namespace: semantic_compiler, version: 1, access: [.nan]}",
-        "{namespace: semantic_compiler, version: 1, access: -.inf}",
-        "{namespace: semantic_compiler, version: .inf}",
+        "{namespace: menura, version: 1, ~: x}",
+        "{namespace: menura, version: 1, access: {true: x}}",
+        "{namespace: menura, version: 1, access: [.nan]}",
+        "{namespace: menura, version: 1, access: -.inf}",
+        "{namespace: menura, version: .inf}",
     ] {
         let document = on_orders(data);
         assert_eq!(
@@ -219,9 +218,7 @@ fn e0c_2_8_an_entry_of_another_namespace_is_kept_whatever_its_values() {
 #[test]
 fn e0c_2_8_integers_give_the_code_of_the_same_digits_in_the_release_format() {
     for version in ["0", "2", "-1", "123456789012345678901234567890"] {
-        let document = on_orders(&format!(
-            "{{namespace: semantic_compiler, version: {version}}}"
-        ));
+        let document = on_orders(&format!("{{namespace: menura, version: {version}}}"));
         assert_eq!(
             errors(development(document.as_bytes())),
             [pair("E0C-01", ORDERS_DATA)],
@@ -230,7 +227,7 @@ fn e0c_2_8_integers_give_the_code_of_the_same_digits_in_the_release_format() {
     }
     for version in ["1", "0x1", "+1"] {
         let document = on_orders(&format!(
-            "{{namespace: semantic_compiler, version: {version}, access: {{mode: authenticated}}}}"
+            "{{namespace: menura, version: {version}, access: {{mode: authenticated}}}}"
         ));
         assert_eq!(
             development(document.as_bytes())
@@ -241,7 +238,7 @@ fn e0c_2_8_integers_give_the_code_of_the_same_digits_in_the_release_format() {
             "{version}"
         );
     }
-    let text = on_orders("{namespace: semantic_compiler, version: '1'}");
+    let text = on_orders("{namespace: menura, version: '1'}");
     assert_eq!(
         errors(development(text.as_bytes())),
         [pair("E0C-01", ORDERS_DATA)]
@@ -252,7 +249,7 @@ fn e0c_2_8_integers_give_the_code_of_the_same_digits_in_the_release_format() {
 fn e0c_2_8_a_yaml_null_is_the_json_null() {
     let metric = |division: &str| {
         format!(
-            "version: 0.3.0.dev0\nname: shop\ndatasets:\n  - name: orders\n    source: shop.main.orders\nmetrics:\n  - name: rate\n    expression: {{sql: AGG(a) / AGG(b)}}\n    nonportable_extensions:\n      - vendor_name: COMMON\n        data: {{namespace: semantic_compiler, version: 1, derived: {{on_division_by_zero: {division}}}}}\n"
+            "version: 0.3.0.dev0\nname: shop\ndatasets:\n  - name: orders\n    source: shop.main.orders\nmetrics:\n  - name: rate\n    expression: {{sql: AGG(a) / AGG(b)}}\n    nonportable_extensions:\n      - vendor_name: COMMON\n        data: {{namespace: menura, version: 1, derived: {{on_division_by_zero: {division}}}}}\n"
         )
     };
     let unquoted = metric("null");
@@ -268,4 +265,18 @@ fn e0c_2_8_a_yaml_null_is_the_json_null() {
             .len(),
         1
     );
+}
+
+#[test]
+fn con_0_5_w0c_02_a_development_entry_under_the_former_namespace_is_ours() {
+    let former =
+        on_orders("{namespace: semantic_compiler, version: 1, access: {mode: authenticated}}");
+    let extensions = development(former.as_bytes()).expect("accepted");
+    assert_eq!(extensions.entries.len(), 1);
+    let warnings: Vec<_> = extensions
+        .warnings
+        .iter()
+        .map(|diagnostic| (diagnostic.code.as_str(), diagnostic.pointer.to_string()))
+        .collect();
+    assert_eq!(warnings, [pair("W0C-02", ORDERS_DATA)]);
 }

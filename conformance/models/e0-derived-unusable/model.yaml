@@ -24,4 +24,4 @@ semantic_model:
         expression: {dialects: [{dialect: ANSI_SQL, expression: 'AGG(billed_twice) / AGG(total_billed)'}]}
         custom_extensions:
           - vendor_name: COMMON
-            data: '{"namespace": "semantic_compiler", "version": 1, "derived": {"on_division_by_zero": "null"}}'
+            data: '{"namespace": "menura", "version": 1, "derived": {"on_division_by_zero": "null"}}'
