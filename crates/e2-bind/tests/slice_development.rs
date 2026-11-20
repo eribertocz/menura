@@ -147,3 +147,13 @@ fn vs_1_a_context_metric_whose_base_reaches_a_row_policy_names_propagation() {
     let diagnostic = bind_diagnostic(&query, &model, ADMIN);
     assert_not_yet_supported(&diagnostic, "0.4.0", "propagated");
 }
+
+#[test]
+fn e2_5_4_metrics_that_read_each_other_are_visited_once_and_reported() {
+    let model = model_with(|parts| {
+        read_through_agg(semantic_metric(parts, "COST"), "revenue");
+        read_through_agg(semantic_metric(parts, "REVENUE"), "cost");
+    });
+    let diagnostic = bind_diagnostic(&cost_by_region(), &model, ADMIN);
+    assert_not_yet_supported(&diagnostic, "0.4.0", "derived");
+}
