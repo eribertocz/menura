@@ -1,6 +1,7 @@
 id: e0-context-unusable-base-001
 rules: [CTX-5.1.6, W0G-01]
 model: e0-context-unusable
+load_options: {grant_authenticated_to_all: true}
 security_context: analyst.json
 query:
   contract: menura.query

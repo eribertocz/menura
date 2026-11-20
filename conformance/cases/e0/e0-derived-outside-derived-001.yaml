@@ -1,6 +1,7 @@
 id: e0-derived-outside-derived-001
 rules: [DER-2.2, DER-5, DER-5.1.2, E0C-37, W0G-01]
 model: e0-derived-unusable
+load_options: {grant_authenticated_to_all: true}
 security_context: analyst.json
 query:
   contract: menura.query

@@ -1,6 +1,7 @@
 id: e0-derived-unusable-input-001
 rules: [DER-5.1.5, W0G-01]
 model: e0-derived-unusable
+load_options: {grant_authenticated_to_all: true}
 security_context: analyst.json
 query:
   contract: menura.query
