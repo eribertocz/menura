@@ -4,7 +4,7 @@
 use menura_contracts::types::common::LogicalType;
 use menura_model::expression::{CastTarget, Expression, IntegerLiteral, Literal, Reference};
 
-use super::diagnostic::TypingCode;
+use super::code::TypingCode;
 use super::stop::{Outcome, Stop, incompatible, problem};
 use super::value_type::{
     ExpressionType, Numeric, Typed, big_integer, decimal, describe, double, integer, numeric,
@@ -13,14 +13,14 @@ use super::value_type::{
 
 /// Finds the type of a reference: a catalog column in a field expression, a field in a metric
 /// expression.
-pub(crate) type Resolver<'resolver> = dyn Fn(&Reference) -> Outcome<Typed> + 'resolver;
+pub type Resolver<'resolver> = dyn Fn(&Reference) -> Outcome<Typed> + 'resolver;
 
 /// Finds the type of `USER_ATTRIBUTE('name')` in a row-policy condition (SCY-5.1.6).
-pub(crate) type AttributeResolver<'resolver> = dyn Fn(&str) -> Outcome<Typed> + 'resolver;
+pub type AttributeResolver<'resolver> = dyn Fn(&str) -> Outcome<Typed> + 'resolver;
 
 /// Whether an aggregate is allowed where the typer is (E0F-07).
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub(crate) enum Aggregates {
+pub enum Aggregates {
     /// At the top of a metric expression: outside any aggregate.
     Allowed,
     /// In a field expression.
@@ -31,7 +31,7 @@ pub(crate) enum Aggregates {
 
 /// What `AGG(metric)` is where the typer is (DER-5.1.2).
 #[derive(Clone, Copy)]
-pub(crate) enum MetricAggregates<'resolver> {
+pub enum MetricAggregates<'resolver> {
     /// In a model metric: whether it may read a metric is checked by the derived-metric
     /// extension (`E0C-37`), and a derived formula is typed by its own typer. The expression
     /// gets no type here.
@@ -44,19 +44,20 @@ pub(crate) enum MetricAggregates<'resolver> {
 }
 
 /// Types the expressions of one element.
-pub(crate) struct ExpressionTyper<'resolver> {
+pub struct TypingScope<'resolver> {
     resolve: &'resolver Resolver<'resolver>,
     pub(super) aggregates: Aggregates,
     metric_aggregates: MetricAggregates<'resolver>,
     user_attributes: Option<&'resolver AttributeResolver<'resolver>>,
 }
 
-impl<'resolver> ExpressionTyper<'resolver> {
+impl<'resolver> TypingScope<'resolver> {
     /// A typer that resolves references with `resolve`, where `aggregates` says whether an
     /// aggregate may appear. Where no aggregate is allowed, `AGG(…)` is `E0F-02`; elsewhere it
     /// is reported by the derived-metric checks, unless [`Self::with_metric_aggregates`] says
     /// otherwise.
-    pub(crate) fn new(resolve: &'resolver Resolver<'resolver>, aggregates: Aggregates) -> Self {
+    #[must_use]
+    pub fn new(resolve: &'resolver Resolver<'resolver>, aggregates: Aggregates) -> Self {
         let metric_aggregates = match aggregates {
             Aggregates::NotAllowed => MetricAggregates::OutsideSubset,
             Aggregates::Allowed | Aggregates::Nested => MetricAggregates::ReportedElsewhere,
@@ -70,10 +71,8 @@ impl<'resolver> ExpressionTyper<'resolver> {
     }
 
     /// The same typer, where `AGG(…)` is `metric_aggregates`.
-    pub(crate) fn with_metric_aggregates(
-        self,
-        metric_aggregates: MetricAggregates<'resolver>,
-    ) -> Self {
+    #[must_use]
+    pub fn with_metric_aggregates(self, metric_aggregates: MetricAggregates<'resolver>) -> Self {
         Self {
             metric_aggregates,
             ..self
@@ -82,7 +81,8 @@ impl<'resolver> ExpressionTyper<'resolver> {
 
     /// The same typer, where `USER_ATTRIBUTE('name')` has the type `user_attributes` finds,
     /// as in a row-policy condition (SCY-5.1.6). Elsewhere it gets no type here.
-    pub(crate) fn with_user_attributes(
+    #[must_use]
+    pub fn with_user_attributes(
         self,
         user_attributes: &'resolver AttributeResolver<'resolver>,
     ) -> Self {

@@ -8,12 +8,12 @@ use menura_contracts::admit_catalog_schema;
 use menura_contracts::types::audit_record::OssieFormat;
 
 use super::diagnostic::TypingDiagnostic;
-use super::value_type::Typed;
 use super::{ElementKind, Typing, type_expressions};
 use crate::extensions::summaries::SummaryDatasets;
 use crate::read::read_document;
 use crate::references::derived::DerivedMetrics;
 use crate::structure::validate_structure;
+use menura_expressions::typing::Typed;
 
 mod additivity;
 mod codes;

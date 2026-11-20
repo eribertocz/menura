@@ -8,9 +8,9 @@ use crate::expressions::{ExpressionPlace, parse_element_expression};
 use crate::extensions::summaries::SummaryMeasure;
 use crate::names::Name;
 use crate::outline::DatasetOutline;
-use crate::typing::stop::{Outcome, Stop};
-use crate::typing::typer::{Aggregates, ExpressionTyper};
-use crate::typing::value_type::Typed;
+use menura_expressions::typing::Typed;
+use menura_expressions::typing::{Aggregates, TypingScope, type_expression};
+use menura_expressions::typing::{Outcome, Stop};
 
 /// What typing a `base_aggregate` found.
 pub(super) enum MeasureType {
@@ -44,8 +44,8 @@ pub(super) fn measure_type(
         return MeasureType::Unchecked;
     }
     let resolve = |reference: &Reference| field_type(fields, base, reference);
-    let aggregate_typer = ExpressionTyper::new(&resolve, Aggregates::Allowed);
-    match aggregate_typer.type_of(&tree) {
+    let aggregate_typer = TypingScope::new(&resolve, Aggregates::Allowed);
+    match type_expression(&tree, &aggregate_typer) {
         Ok(typed) if typed.logical().is_some() => MeasureType::Typed(typed),
         Ok(_) => MeasureType::Invalid("it has no type".to_owned()),
         Err(Stop::Problem { message, .. }) => MeasureType::Invalid(message),

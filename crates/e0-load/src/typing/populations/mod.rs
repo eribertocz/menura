@@ -17,15 +17,15 @@ use menura_contracts::types::common::LogicalType;
 use menura_model::expression::Reference;
 
 use super::output::{ElementKind, Typing};
-use super::stop::{Outcome, Stop};
-use super::typer::{Aggregates, ExpressionTyper};
-use super::value_type::{Typed, describe};
 use crate::expressions::{ExpressionPlace, parse_element_expression};
 use crate::extensions::{ExtensionCode, ExtensionDiagnostic, Extensions, Population, per_entry};
 use crate::names::Name;
 use crate::outline::{DatasetOutline, outline};
 use crate::pointer::JsonPointer;
 use crate::structure::Structure;
+use menura_expressions::typing::{Aggregates, TypingScope, type_expression};
+use menura_expressions::typing::{Outcome, Stop};
+use menura_expressions::typing::{Typed, describe};
 use structure::{bare_references, structural_problem};
 
 /// The field types and datasets the checks of populations read.
@@ -124,8 +124,8 @@ fn condition_problem(fields: &Fields<'_, '_>, population: &Population) -> Option
         return None;
     }
     let resolve = |reference: &Reference| field_type(fields, population, reference);
-    let condition_typer = ExpressionTyper::new(&resolve, Aggregates::NotAllowed);
-    let problem = match condition_typer.type_of(&tree) {
+    let condition_typer = TypingScope::new(&resolve, Aggregates::NotAllowed);
+    let problem = match type_expression(&tree, &condition_typer) {
         Ok(found) if found.logical() == Some(&LogicalType::Boolean) => return None,
         Ok(found) => format!("it is {}, not boolean", describe(&found.value_type)),
         Err(Stop::Problem { message, .. }) => message,

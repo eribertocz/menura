@@ -24,29 +24,19 @@
 //! (DER-5.1.2).
 
 pub(crate) mod additivity;
-mod aggregates;
-mod arithmetic;
 pub(crate) mod context;
-mod conversion;
 mod dataset_metrics;
-mod dates;
 pub(crate) mod derived;
 mod diagnostic;
 mod elements;
-mod functions;
 mod keys;
-mod numbers;
-mod operators;
 mod output;
 pub(crate) mod populations;
 mod scope;
 pub(crate) mod security;
-mod stop;
 pub(crate) mod summaries;
-mod typer;
-mod value_type;
 
-pub(crate) use diagnostic::{TypingCode, TypingDiagnostic};
+pub(crate) use diagnostic::{TYPING_WARNING, TypingDiagnostic};
 pub(crate) use output::{ElementKind, TypedElement, Typing, UnusableElement};
 
 use std::collections::HashMap;

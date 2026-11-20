@@ -8,7 +8,7 @@ use super::located::located;
 use crate::classification::ClassificationCode;
 use crate::pointer::{JsonPointer, position};
 use crate::read::{Location, Node};
-use crate::typing::TypingCode;
+use crate::typing::TYPING_WARNING;
 
 /// One warning before it is ordered.
 struct Found<'input> {
@@ -59,7 +59,7 @@ pub(super) fn warnings(document: &Node, input: &ModelInput<'_, '_>) -> Vec<Warni
             .code
             .load_code())
         .collect(),
-        found!(typing_warnings, |warning| TypingCode::WARNING).collect(),
+        found!(typing_warnings, |warning| TYPING_WARNING).collect(),
         found!(input.classification.warnings.iter(), |warning| {
             ClassificationCode::WARNING
         })

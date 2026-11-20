@@ -19,7 +19,7 @@ use crate::outline::ModelOutline;
 use crate::pointer::JsonPointer;
 use crate::relationships::RelationshipCode;
 use crate::structure::{CompiledVariant, ElementExpression, ElementKind as ExpressionKind};
-use crate::typing::TypingCode;
+use crate::typing::TYPING_WARNING;
 
 /// The query error codes of every unusable element, by JSON Pointer.
 #[derive(Debug, Default)]
@@ -97,7 +97,7 @@ fn own_causes(input: &ModelInput<'_, '_>) -> Usability {
         usability.record(
             &element.pointer,
             element.query_error.as_str(),
-            TypingCode::WARNING,
+            TYPING_WARNING,
         );
     }
     for metric in &input.classification.unusable {

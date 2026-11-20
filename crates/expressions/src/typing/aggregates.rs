@@ -5,12 +5,12 @@ use menura_model::expression::{
     AggregateCall, DistinctAggregate, Expression, Literal, SimpleAggregate,
 };
 
-use super::diagnostic::TypingCode;
+use super::code::TypingCode;
 use super::stop::{Outcome, incompatible, problem, untyped_null};
-use super::typer::{Aggregates, ExpressionTyper, expect_numeric};
+use super::typer::{Aggregates, TypingScope, expect_numeric};
 use super::value_type::{Numeric, Typed, big_integer, decimal, double, huge_integer};
 
-impl ExpressionTyper<'_> {
+impl TypingScope<'_> {
     /// The type of an aggregate call with its optional `FILTER (WHERE …)`.
     pub(super) fn aggregate(
         &self,

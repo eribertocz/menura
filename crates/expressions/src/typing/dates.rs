@@ -4,10 +4,10 @@ use menura_contracts::types::common::LogicalType;
 use menura_model::expression::{DateUnit, Expression, ExtractPart};
 
 use super::stop::{Outcome, Stop, incompatible, untyped_null};
-use super::typer::{ExpressionTyper, expect_type};
+use super::typer::{TypingScope, expect_type};
 use super::value_type::{Typed, big_integer, describe, is_integer};
 
-impl ExpressionTyper<'_> {
+impl TypingScope<'_> {
     /// The type of `EXTRACT`, `DATE_PART`, `DATE_TRUNC`, `DATEADD` or `DATEDIFF`.
     pub(super) fn date_function(&self, expression: &Expression) -> Outcome<Typed> {
         match expression {

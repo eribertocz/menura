@@ -21,9 +21,6 @@ use menura_model::expression::Reference;
 use super::elements::{ElementTypes, record};
 use super::output::{ElementKind, TypedElement, Typing, UnusableElement};
 use super::scope::Scope;
-use super::stop::{Outcome, Stop};
-use super::typer::{Aggregates, ExpressionTyper, MetricAggregates};
-use super::value_type::{Typed, double};
 use crate::extensions::context::Modifier;
 use crate::extensions::{ExtensionCode, ExtensionDiagnostic};
 use crate::names::Name;
@@ -35,6 +32,9 @@ use crate::references::derived::{DerivedMetric, DerivedMetrics};
 use crate::structure::Structure;
 use formula::formula_problems;
 use graph::{Dependent, search};
+use menura_expressions::typing::{Aggregates, MetricAggregates, TypingScope};
+use menura_expressions::typing::{Outcome, Stop};
+use menura_expressions::typing::{Typed, double};
 
 /// Checks and types the formula of every derived metric of `derived`, and types every context
 /// metric of `context`, in the semantic model that `structure` selected in `document`, reading
@@ -175,7 +175,7 @@ fn type_formula<'model>(
 ) -> ElementTypes<'model> {
     let fields = |_: &Reference| -> Outcome<Typed> { Err(Stop::ReportedElsewhere) };
     let metrics = |reference: &Reference| input_type(known, metric, reference);
-    let formula_typer = ExpressionTyper::new(&fields, Aggregates::Allowed)
+    let formula_typer = TypingScope::new(&fields, Aggregates::Allowed)
         .with_metric_aggregates(MetricAggregates::Typed(&metrics));
     let mut found = ElementTypes::default();
     record(

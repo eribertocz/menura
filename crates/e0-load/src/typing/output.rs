@@ -1,8 +1,9 @@
 //! The result of typing, as data types only.
 
-use super::diagnostic::{TypingCode, TypingDiagnostic};
-use super::value_type::Typed;
+use super::diagnostic::TypingDiagnostic;
 use crate::pointer::JsonPointer;
+use menura_expressions::typing::Typed;
+use menura_expressions::typing::TypingCode;
 
 /// The types of a model's fields and metrics, the elements a typing problem makes unusable,
 /// and their warnings. Typing never rejects the model: every `E0F` problem makes its element
@@ -15,7 +16,7 @@ pub struct Typing {
     /// One entry per element a typing problem makes unusable, in document order.
     pub unusable: Vec<UnusableElement>,
     /// One diagnostic per typing problem, in document order then by code (E0-4.3). Each is
-    /// reported as [`TypingCode::WARNING`].
+    /// reported as `W0F-01`.
     pub warnings: Vec<TypingDiagnostic>,
 }
 

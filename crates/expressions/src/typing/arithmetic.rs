@@ -2,7 +2,7 @@
 
 use menura_contracts::types::common::LogicalType;
 
-use super::diagnostic::TypingCode;
+use super::code::TypingCode;
 use super::stop::{Outcome, problem};
 use super::value_type::{Numeric, decimal, double, huge_integer};
 

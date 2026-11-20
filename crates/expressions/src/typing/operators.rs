@@ -6,10 +6,10 @@ use menura_model::expression::{BinaryOperator, CaseBranch, Expression, UnaryOper
 use super::arithmetic::{Arithmetic, arithmetic, widened};
 use super::conversion::common_type;
 use super::stop::{Outcome, Stop, incompatible, untyped_null};
-use super::typer::{ExpressionTyper, any_nullable, expect_numeric, expect_text};
+use super::typer::{TypingScope, any_nullable, expect_numeric, expect_text};
 use super::value_type::{ExpressionType, Typed, describe};
 
-impl ExpressionTyper<'_> {
+impl TypingScope<'_> {
     /// The type of an operator expression or a `CASE`.
     pub(super) fn operator(&self, expression: &Expression) -> Outcome<Typed> {
         match expression {

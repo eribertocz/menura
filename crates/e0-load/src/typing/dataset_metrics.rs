@@ -10,12 +10,12 @@ use menura_model::expression::Reference;
 use super::elements::{ElementTypes, column, record};
 use super::output::ElementKind;
 use super::scope::{Relation, Scope};
-use super::stop::{Outcome, Stop};
-use super::typer::{Aggregates, ExpressionTyper, MetricAggregates};
-use super::value_type::Typed;
 use crate::names::Name;
 use crate::outline::DatasetOutline;
 use crate::pointer::JsonPointer;
+use menura_expressions::typing::Typed;
+use menura_expressions::typing::{Aggregates, MetricAggregates, TypingScope};
+use menura_expressions::typing::{Outcome, Stop};
 
 /// The qualifier of a source column reference, compared as a regular identifier.
 const SOURCE_QUALIFIER: &str = "source";
@@ -33,7 +33,7 @@ pub(crate) fn type_dataset_metrics<'model>(
         };
         let resolve = |reference: &Reference| reference_type(dataset, relation, fields, reference);
         for metric in &dataset.metrics {
-            let typer = ExpressionTyper::new(&resolve, Aggregates::Allowed)
+            let typer = TypingScope::new(&resolve, Aggregates::Allowed)
                 .with_metric_aggregates(MetricAggregates::OutsideSubset);
             record(
                 scope,

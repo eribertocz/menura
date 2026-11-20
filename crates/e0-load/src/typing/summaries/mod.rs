@@ -19,7 +19,6 @@ use menura_contracts::types::common::LogicalType;
 
 use super::keys::same_kind;
 use super::output::{ElementKind, Typing};
-use super::value_type::{Typed, describe};
 use crate::extensions::summaries::{SummaryDeclaration, SummaryDimension};
 use crate::extensions::{ExtensionCode, ExtensionDiagnostic, Extensions, Problems, report_at};
 use crate::names::Name;
@@ -27,6 +26,7 @@ use crate::outline::{DatasetOutline, outline};
 use crate::pointer::JsonPointer;
 use crate::structure::Structure;
 use base_aggregate::{MeasureType, measure_type};
+use menura_expressions::typing::{Typed, describe};
 
 /// The datasets and field types the checks of summaries read.
 pub(super) struct Fields<'model, 'document> {
