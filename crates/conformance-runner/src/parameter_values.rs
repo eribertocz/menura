@@ -62,6 +62,10 @@ fn bound_value(logical_type: &LogicalType, value: &Json) -> Result<Value, String
         } => parse_timestamp(value.as_str().ok_or_else(invalid)?, false)
             .map(|micros| Value::Timestamp(TimeUnit::Microsecond, micros))
             .ok_or_else(invalid),
+        LogicalType::Timestamp {
+            with_time_zone: true,
+            ..
+        } => instant_value(value.as_str().ok_or_else(invalid)?).ok_or_else(invalid),
         LogicalType::List { element } => value
             .as_array()
             .ok_or_else(invalid)?
@@ -69,14 +73,23 @@ fn bound_value(logical_type: &LogicalType, value: &Json) -> Result<Value, String
             .map(|item| bound_value(element, item))
             .collect::<Result<_, _>>()
             .map(Value::List),
-        LogicalType::Timestamp { .. }
-        | LogicalType::Interval
+        LogicalType::Interval
         | LogicalType::Binary
         | LogicalType::Uuid
         | LogicalType::Unsupported => Err(format!(
             "the runner cannot bind a parameter of type {logical_type:?}"
         )),
     }
+}
+
+/// A timestamp with time zone (CON-4: in UTC, with a final `Z`). The bindings have no value
+/// of that type, and a `TIMESTAMP` value would be converted in the session `TimeZone`, so it is
+/// bound as its text with the explicit offset `+00:00`, which `DuckDB` converts to the same
+/// instant whatever the session settings (CS-4.2).
+fn instant_value(text: &str) -> Option<Value> {
+    parse_timestamp(text, true)?;
+    let utc = text.strip_suffix('Z')?;
+    Some(Value::Text(format!("{utc}+00:00")))
 }
 
 /// An integer written as a JSON number or, outside ±(2^53 − 1), as a string (CON-4).
@@ -219,6 +232,42 @@ mod tests {
             bound_value(&timestamp, &Json::from("1970-01-01T00:00:01")).unwrap(),
             Value::Timestamp(TimeUnit::Microsecond, 1_000_000)
         );
+    }
+
+    #[test]
+    fn con_4_an_instant_is_bound_as_utc_text_with_an_explicit_offset() {
+        let instant = LogicalType::Timestamp {
+            precision: menura_contracts::types::common::TimestampPrecision::Us,
+            with_time_zone: true,
+        };
+        assert_eq!(
+            bound_value(&instant, &Json::from("2026-01-31T15:00:00.5Z")).unwrap(),
+            Value::Text("2026-01-31T15:00:00.5+00:00".to_owned())
+        );
+        assert!(bound_value(&instant, &Json::from("2026-01-31T15:00:00")).is_err());
+    }
+
+    #[test]
+    fn e6_4_10_an_instant_parameter_is_the_same_instant_in_any_session_time_zone() {
+        let fixture = crate::fixture::ModelFixture {
+            sources: Vec::new(),
+            data_script: String::new(),
+        };
+        let connection = crate::database::prepare_database(&fixture).unwrap();
+        let instant = LogicalType::Timestamp {
+            precision: menura_contracts::types::common::TimestampPrecision::Us,
+            with_time_zone: true,
+        };
+        let value = bound_value(&instant, &Json::from("2026-01-31T15:00:00Z")).unwrap();
+        for sql in [
+            "SELECT CAST($1 AS TIMESTAMP WITH TIME ZONE) = TIMESTAMPTZ '2026-01-31 15:00:00+00'",
+            "SELECT TIMESTAMPTZ '2026-01-31 15:00:00+00' = $1",
+        ] {
+            let equal: bool = connection
+                .query_row(sql, [&value], |row| row.get(0))
+                .unwrap();
+            assert!(equal, "{sql}");
+        }
     }
 
     #[test]
