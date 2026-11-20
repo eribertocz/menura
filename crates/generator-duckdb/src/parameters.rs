@@ -5,11 +5,16 @@ use std::collections::BTreeMap;
 use menura_contracts::types::common::{LogicalType, Parameter};
 use serde_json::Value;
 
-/// A value bound once and referenced wherever it appears: the query time zone or an attribute.
+/// A value bound once and referenced wherever it appears: the query time zone, the reference
+/// date and time, or an attribute.
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
 pub(crate) enum SharedValue {
     /// The query `time_zone` (E6-5.2).
     TimeZone,
+    /// The reference date, the value of `CURRENT_DATE` (E0F-2.3).
+    ReferenceDate,
+    /// The reference time as an instant, read by `CURRENT_TIME` and `CURRENT_TIMESTAMP`.
+    ReferenceInstant,
     /// `USER_ATTRIBUTE('name')`.
     Attribute(String),
 }

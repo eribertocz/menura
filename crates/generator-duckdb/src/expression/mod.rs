@@ -4,7 +4,13 @@ mod aggregate;
 mod arithmetic;
 mod attributes;
 mod comparisons;
+mod conditionals;
+mod current;
+mod dates;
+mod functions;
+mod numbers;
 mod operators;
+mod text;
 mod time;
 
 use menura_contracts::normalize_unquoted_identifier;
@@ -13,7 +19,7 @@ use menura_model::expression::{Expression, Identifier, Literal, Reference};
 use menura_model::internal_model::InternalModel;
 use menura_representations::logical_plan::OutputSchema;
 use menura_representations::origin::Origin;
-use menura_representations::time::TimeZoneName;
+use menura_representations::time::QueryTime;
 use menura_security::AdmittedSecurityContext;
 
 use crate::error::{GenerateError, InvariantViolation};
@@ -22,7 +28,7 @@ use crate::parameters::Parameters;
 use crate::values::{literal_sql, literal_value};
 
 /// What every expression of a statement may read: the catalog schema, the model, the security
-/// context and the query time zone.
+/// context and the time settings of the query.
 pub(crate) struct Environment<'input> {
     /// The admitted catalog schema, for the columns of each dataset `source`.
     pub(crate) catalog: &'input CatalogSchemaDocument,
@@ -30,8 +36,8 @@ pub(crate) struct Environment<'input> {
     pub(crate) model: &'input InternalModel,
     /// The admitted security context, for attribute values.
     pub(crate) security: &'input AdmittedSecurityContext,
-    /// The query `time_zone` (E6-5.2).
-    pub(crate) time_zone: &'input TimeZoneName,
+    /// The query `time_zone` (E6-5.2) and its reference time (E0F-2.3).
+    pub(crate) time: &'input QueryTime,
 }
 
 /// Whether the literals of a node are query values or model constants (E6-4.2, E6-4.11).
@@ -122,9 +128,40 @@ impl<'input, 'statement> ExpressionWriter<'input, 'statement> {
                 branches,
                 otherwise,
             } => self.case(operand.as_deref(), branches, otherwise.as_deref()),
+            _ => self.write_call(expression),
+        }
+    }
+
+    /// The SQL of a conversion, a function call or a value of the reference time.
+    fn write_call(&mut self, expression: &Expression) -> Result<String, GenerateError> {
+        match expression {
             Expression::Cast { operand, target } => self.cast(operand, *target),
             Expression::DateTrunc { unit, operand } => self.date_trunc(*unit, operand),
+            Expression::Like {
+                operand,
+                pattern,
+                case,
+                negated,
+            } => self.like(operand, pattern, *case, *negated),
+            Expression::Extract { part, operand } => self.extract(expression, *part, operand),
+            Expression::DateAdd {
+                unit,
+                amount,
+                operand,
+            } => self.date_add(expression, *unit, amount, operand),
+            Expression::DateDiff { unit, start, end } => {
+                self.date_diff(expression, *unit, start, end)
+            }
+            Expression::Function {
+                function,
+                arguments,
+            } => self.function(expression, *function, arguments),
+            Expression::CurrentDate => self.current_date(),
+            Expression::CurrentTime | Expression::CurrentTimestamp => {
+                self.current_instant(expression)
+            }
             Expression::Aggregate { call, filter } => self.aggregate(call, filter.as_deref()),
+            // `MetricAggregate` is outside the 0.3.0 slice (VS-1).
             _ => Err(self.error(InvariantViolation::ExpressionOutsideSlice)),
         }
     }
@@ -140,6 +177,7 @@ impl<'input, 'statement> ExpressionWriter<'input, 'statement> {
                 | Expression::IsDistinctFrom { .. }
                 | Expression::InList { .. }
                 | Expression::Between { .. }
+                | Expression::Like { .. }
         );
         Ok(if compound { format!("({text})") } else { text })
     }

@@ -39,7 +39,7 @@ impl ExpressionWriter<'_, '_> {
 
     /// The placeholder of the query time zone, a `text` parameter.
     pub(super) fn time_zone(&mut self) -> String {
-        let name = self.environment.time_zone.as_str().to_owned();
+        let name = self.environment.time.time_zone.as_str().to_owned();
         self.parameters.bind_shared(
             SharedValue::TimeZone,
             LogicalType::Text,
@@ -59,7 +59,7 @@ impl ExpressionWriter<'_, '_> {
 
     /// The logical type of `expression`, typed in the scope of the input columns and the
     /// declared attributes.
-    fn type_of(&self, expression: &Expression) -> Result<LogicalType, GenerateError> {
+    pub(super) fn type_of(&self, expression: &Expression) -> Result<LogicalType, GenerateError> {
         let resolve = |reference: &Reference| self.column_type(reference);
         let attributes = |name: &str| -> Outcome<Typed> {
             let declared = self
