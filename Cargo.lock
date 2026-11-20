@@ -665,7 +665,6 @@ dependencies = [
  "jiff-core",
  "jiff-static",
  "jiff-tzdb",
- "log",
  "portable-atomic",
  "portable-atomic-util",
  "serde_core",
