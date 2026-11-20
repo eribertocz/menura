@@ -1,18 +1,21 @@
 //! One common table expression per plan node, in plan order (E6-4.4).
 
+use menura_contracts::types::catalog::RelationSchema;
 use menura_contracts::types::query::{Direction, NullsOrder};
 use menura_model::expression::Expression;
-use menura_model::internal_model::NormalizedName;
+use menura_model::internal_model::{Dataset, NormalizedName};
 use menura_representations::logical_plan::{
     AggregateComponent, NamedExpression, Operation, OutputSchema, PlanNode, SortItem,
 };
 
 use crate::body::SelectBody;
 use crate::error::{GenerateError, InvariantViolation};
-use crate::expression::{Columns, Environment, ExpressionWriter, catalog_column_named};
+use crate::expression::{Columns, Environment, ExpressionWriter};
 use crate::identifiers::{Source, classify_source, quote, source_sql};
 use crate::parameters::Parameters;
-use crate::source_columns::{empty_scan_item, source_column_name, source_prefix};
+use crate::source_columns::{
+    empty_scan_item, source_column_item, source_column_name, source_prefix,
+};
 use crate::types::physical_type;
 
 /// A node already written: the name of its step and the `ORDER BY` its rows keep.
@@ -107,27 +110,13 @@ impl<'input> StepWriter<'input> {
         let prefix = source_prefix(dataset);
         let mut items = Vec::new();
         for column in node.schema().columns() {
-            if let Some(name) = source_column_name(&prefix, column.name.as_str()) {
-                let catalog_column = catalog_column_named(relation, name)
-                    .ok_or_else(|| error(InvariantViolation::UnknownColumn, node))?;
-                items.push(format!(
-                    "{} AS {}",
-                    quote(&catalog_column.name),
-                    quote(column.name.as_str())
-                ));
-                continue;
-            }
-            let field = dataset
-                .fields
-                .iter()
-                .find(|field| field.name.as_str() == column.name.as_str())
-                .ok_or_else(|| error(InvariantViolation::UnknownField, node))?;
-            let expression = field
-                .expression
-                .as_ref()
-                .ok_or_else(|| error(InvariantViolation::FieldWithoutExpression, node))?;
-            let value = self.expression(node, Columns::Catalog(relation), expression)?;
-            items.push(format!("{value} AS {}", quote(column.name.as_str())));
+            let name = column.name.as_str();
+            let item = match source_column_name(&prefix, name) {
+                Some(catalog_name) => source_column_item(relation, catalog_name, name)
+                    .ok_or_else(|| error(InvariantViolation::UnknownColumn, node))?,
+                None => self.field_item(node, dataset, relation, name)?,
+            };
+            items.push(item);
         }
         if items.is_empty() {
             items.push(empty_scan_item(&prefix));
@@ -137,6 +126,28 @@ impl<'input> StepWriter<'input> {
             from: source_sql(&source),
             clauses: Vec::new(),
         })
+    }
+
+    /// The select item of the `Scan` column `name` of `dataset`: the expression of the field of
+    /// that name over the columns of `relation`.
+    fn field_item(
+        &mut self,
+        node: &'input PlanNode,
+        dataset: &Dataset,
+        relation: &'input RelationSchema,
+        name: &str,
+    ) -> Result<String, GenerateError> {
+        let field = dataset
+            .fields
+            .iter()
+            .find(|field| field.name.as_str() == name)
+            .ok_or_else(|| error(InvariantViolation::UnknownField, node))?;
+        let expression = field
+            .expression
+            .as_ref()
+            .ok_or_else(|| error(InvariantViolation::FieldWithoutExpression, node))?;
+        let value = self.expression(node, Columns::Catalog(relation), expression)?;
+        Ok(format!("{value} AS {}", quote(name)))
     }
 
     fn filter(
