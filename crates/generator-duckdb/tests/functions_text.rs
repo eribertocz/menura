@@ -47,9 +47,11 @@ fn e0f_10_2_length_counts_characters() {
 }
 
 #[test]
-fn e0f_10_2_case_mapping() {
+fn e0f_10_2_case_mapping_is_the_simple_unicode_mapping() {
     assert!(text_sql("LOWER(REGION)").contains(r#"CAST(lower("REGION") AS VARCHAR)"#));
     assert!(text_sql("UPPER(REGION)").contains(r#"CAST(upper("REGION") AS VARCHAR)"#));
+    // The simple case mapping: `DuckDB`'s `upper` keeps `ß`, where the full mapping gives `SS`.
+    assert!(text_sql("UPPER('ß')").contains("CAST(upper('ß') AS VARCHAR)"));
 }
 
 #[test]
@@ -90,8 +92,27 @@ fn e0f_10_2_replace_of_empty_text_leaves_the_text_unchanged() {
 }
 
 #[test]
-fn e0f_10_2_split_part() {
-    assert!(text_sql("SPLIT_PART(REGION, '-', 2)").contains(r#"split_part("REGION", '-', 2)"#));
+fn e0f_10_2_split_part_of_an_empty_delimiter_is_the_whole_text() {
+    assert!(text_sql("SPLIT_PART(REGION, '-', 1)").contains(
+        r#"CASE WHEN "REGION" IS NULL OR '-' IS NULL THEN NULL WHEN '-' = '' THEN "REGION" ELSE split_part("REGION", '-', 1) END"#
+    ));
+    assert!(text_sql("SPLIT_PART(REGION, '-', 2)").contains(
+        r#"CASE WHEN "REGION" IS NULL OR '-' IS NULL THEN NULL WHEN '-' = '' THEN '' ELSE split_part("REGION", '-', 2) END"#
+    ));
+}
+
+#[test]
+fn e6_4_11_the_split_part_number_is_written_in_a_query_node() {
+    let generated = expression_sql(
+        "SPLIT_PART(REGION, '-', 2)",
+        LogicalType::Text,
+        from_query("/query/filters/0"),
+        &query_with_reference_time(),
+    )
+    .expect("SQL");
+    assert!(generated.sql.contains(r#"split_part("REGION", $1, 2)"#));
+    assert_eq!(generated.parameters.len(), 1);
+    assert_eq!(generated.parameters[0].value, json!("-"));
 }
 
 #[test]

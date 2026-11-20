@@ -25,7 +25,7 @@ impl ExpressionWriter<'_, '_> {
             ScalarFunction::Right => self.end_characters("right", arguments),
             ScalarFunction::Substring => self.substring(arguments),
             ScalarFunction::Replace => self.replace(arguments),
-            ScalarFunction::SplitPart => self.call("split_part", arguments),
+            ScalarFunction::SplitPart => self.split_part(arguments),
             ScalarFunction::Position => self.position(arguments),
             ScalarFunction::Contains => self.call("contains", arguments),
             ScalarFunction::StartsWith => self.call("prefix", arguments),
@@ -143,6 +143,20 @@ impl ExpressionWriter<'_, '_> {
         Ok(format!(
             "CASE WHEN {text} IS NULL OR {from} IS NULL OR {to} IS NULL THEN NULL \
              WHEN {from} = '' THEN {text} ELSE replace({text}, {from}, {to}) END"
+        ))
+    }
+
+    /// `split_part(s, delimiter, n)`, the literal `n` written in the SQL (E6-4.11). An empty
+    /// delimiter leaves `s` as its only part: `s` for `n = 1`, empty text otherwise.
+    fn split_part(&mut self, arguments: &[Expression]) -> Result<String, GenerateError> {
+        let [text, delimiter, number] = self.exactly(arguments)?;
+        let number = self.literal_integer(number)?;
+        let text = self.operand(text)?;
+        let delimiter = self.operand(delimiter)?;
+        let only_part = if number == 1 { text.as_str() } else { "''" };
+        Ok(format!(
+            "CASE WHEN {text} IS NULL OR {delimiter} IS NULL THEN NULL \
+             WHEN {delimiter} = '' THEN {only_part} ELSE split_part({text}, {delimiter}, {number}) END"
         ))
     }
 
