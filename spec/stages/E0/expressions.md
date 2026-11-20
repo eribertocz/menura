@@ -89,7 +89,7 @@ otherwise, a NULL argument gives NULL.
 | `SPLIT_PART(s, delimiter, n)` | text, text, integer literal `n ≥ 1` | text | The `n`-th part; empty text when there are fewer parts. An empty `delimiter` leaves `s` as its only part |
 | `POSITION(a IN s)`, `CHARINDEX(a, s)` | text, text | 64-bit integer | 1-based position of the first occurrence; 0 when absent; 1 when `a` is empty |
 | `CONTAINS(s, a)`, `STARTSWITH(s, a)`, `ENDSWITH(s, a)` | text, text | boolean | |
-| `LIKE`, `ILIKE` (operators) | text, text | boolean | `%` and `_` wildcards, no escape character; `ILIKE` compares with Unicode simple case folding |
+| `LIKE`, `ILIKE` (operators) | text, text | boolean | `%` and `_` wildcards, no escape character; `ILIKE` compares both sides after the simple lowercase mapping of `LOWER` |
 
 ### E0F-10.3 Numbers
 
