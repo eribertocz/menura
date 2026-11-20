@@ -31,7 +31,7 @@ Schema: [`schemas/security-context.schema.json`](schemas/security-context.schema
   |---|---|
   | `text` | A JSON string |
   | `integer` | A signed 64-bit integer: a JSON number within ±(2^53 − 1); outside that range, a string of an optional `-` and digits without leading zeros |
-  | `decimal(p,s)` | A string in the CON-4 decimal form, with exactly `s` fraction digits and at most `p − s` integer digits |
+  | `decimal(p,s)` | A string in the CON-4 decimal form, with exactly `s` fraction digits and at most `p − s` integer digits; the single `0` before the point of a value below one is not an integer digit, so `decimal(2,2)` accepts `"0.50"` |
   | `date` | A string `YYYY-MM-DD` that names a valid date of the proleptic Gregorian calendar |
   | `boolean` | A JSON boolean |
   | `list<T>` | A JSON array, possibly empty, whose every item is accepted for `T` |
