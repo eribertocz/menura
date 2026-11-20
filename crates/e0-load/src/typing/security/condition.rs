@@ -10,9 +10,9 @@ use crate::expressions::{ExpressionPlace, parse_element_expression};
 use crate::extensions::security::{RowPolicy, SecurityContextDeclaration};
 use crate::extensions::{ExtensionCode, Problems};
 use crate::names::Name;
-use crate::typing::stop::{Outcome, Stop};
-use crate::typing::typer::{Aggregates, ExpressionTyper};
-use crate::typing::value_type::{Typed, big_integer, decimal, describe};
+use menura_expressions::typing::{Aggregates, TypingScope, type_expression};
+use menura_expressions::typing::{Outcome, Stop};
+use menura_expressions::typing::{Typed, big_integer, decimal, describe};
 
 /// The `E0C-46` and `E0C-48` problems of the condition of `policy`, whose attributes are
 /// declared by `context`.
@@ -114,9 +114,9 @@ fn type_problem(
             .map(|declared| Typed::value(logical_type(declared.item()), false))
             .ok_or(Stop::ReportedElsewhere)
     };
-    let typer = ExpressionTyper::new(&resolve_field, Aggregates::NotAllowed)
+    let typer = TypingScope::new(&resolve_field, Aggregates::NotAllowed)
         .with_user_attributes(&resolve_attribute);
-    match typer.type_of(tree) {
+    match type_expression(tree, &typer) {
         Ok(found) if found.logical() == Some(&LogicalType::Boolean) => None,
         Ok(found) => Some(format!(
             "it is {}, not boolean",

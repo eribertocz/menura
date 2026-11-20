@@ -31,7 +31,7 @@ for the target dialect. Priorities, in order: correct, then fast, then readable.
 | E6-4.8 | `ORDER BY` always writes `NULLS FIRST` or `NULLS LAST` explicitly. |
 | E6-4.9 | Formatting is fixed: keywords upper case, one clause per line, two-space indentation, no trailing spaces. Identical plans give byte-identical SQL (P3). |
 | E6-4.10 | The SQL MUST NOT depend on session settings. Division is generated with explicit operand casts to the result type of E0F-5a; time-zone conversions use `AT TIME ZONE` with the query time zone as a bound parameter; no implicit cast between `timestamp with time zone` and `timestamp` or `date` is ever left to the engine. |
-| E6-4.11 | Literals are generated only for values from closed sets or already validated: grain names, `LIMIT` integers, and constants written in the model. Every other value is a bound parameter. |
+| E6-4.11 | Literals are generated only for values from closed sets or already validated: grain names, `LIMIT` integers, constants written in the model, and the boolean constants `TRUE` and `FALSE` that E4 introduces for row policies (E4-6.2, E4-6.4). Every other value is a bound parameter. |
 
 ## E6-5 DuckDB
 
@@ -42,6 +42,8 @@ for the target dialect. Priorities, in order: correct, then fast, then readable.
 | E6-5.3 | List parameters are bound as DuckDB lists and tested with `x IN (SELECT unnest($n))` and `x NOT IN (SELECT unnest($n))`, which keep standard NULL semantics (`2 NOT IN (1, NULL)` is NULL). |
 | E6-5.4 | The generated SQL is verified in CI by execution on the DuckDB version pinned by the project, with non-default session settings (`TimeZone` not UTC, `integer_division = true`) to prove E6-4.10. |
 | E6-5.5 | The compiled plan's `producer` declares the IANA time-zone database version the compiler used to resolve relative ranges; executors SHOULD use the same version. |
+| E6-5.6 | `result_schema.physical_type` is the DuckDB name of the column's logical type in the CAT-4.4 table: the first name of its row (`BIGINT`, `VARCHAR`, `TIMESTAMP`, …), `DECIMAL(p,s)` with its numbers, `TIMESTAMP WITH TIME ZONE`, and `<element>[]` for a list (`VARCHAR[]`). |
+| E6-5.7 | A parameter bound from a security attribute has the `logical_type` of its declaration (SCY-2.2): `text` → `text`; `integer` → `integer` of 64 bits, signed; `decimal(p,s)` → `decimal` with `precision` p and `scale` s; `date` → `date`; `boolean` → `boolean`; `list<T>` → `list` whose `element` is the mapping of `T`. Its `value` is encoded as CON-4 requires. |
 
 ## E6-6 Other outputs
 

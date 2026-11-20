@@ -40,6 +40,7 @@ const TOOLS: &[&str] = &["conformance-runner"];
 /// The exact set of dependency edges between workspace crates, as `(dependent, dependency)`.
 const EXPECTED_EDGES: &[(&str, &str)] = &[
     ("model", "contracts"),
+    ("expressions", "contracts"),
     ("expressions", "model"),
     ("representations", "contracts"),
     ("representations", "model"),
@@ -59,6 +60,9 @@ const EXPECTED_EDGES: &[(&str, &str)] = &[
     ("e2-bind", "model"),
     ("e2-bind", "representations"),
     ("e2-bind", "security"),
+    ("e3-paths", "contracts"),
+    ("e3-paths", "model"),
+    ("e3-paths", "representations"),
     ("e3-paths", "security"),
     ("e4-plan", "security"),
     ("e5-optimize", "security"),

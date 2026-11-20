@@ -17,8 +17,8 @@ use crate::references::context::resolve_context_references;
 use crate::references::derived::resolve_derived_references;
 use crate::structure::validate_structure;
 use crate::typing::derived::type_derived_metrics;
-use crate::typing::value_type::double;
 use crate::typing::{Typing, type_expressions};
+use menura_expressions::typing::double;
 
 /// What E0.f finds in `model`, read in `format`: the typing of the other elements, and the
 /// typing of the derived metrics or the diagnostics that reject the model.

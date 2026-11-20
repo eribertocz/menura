@@ -14,8 +14,8 @@ use crate::extensions::derived::fixture::{
 };
 use crate::names::Name;
 use crate::pointer::JsonPointer;
-use crate::typing::TypingCode;
 use menura_contracts::types::common::{FloatBits, LogicalType};
+use menura_expressions::typing::TypingCode;
 
 fn classify(model: &str) -> Classification {
     classify_in_format(model, CATALOG, OssieFormat::Release)

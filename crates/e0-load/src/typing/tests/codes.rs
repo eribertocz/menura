@@ -1,7 +1,7 @@
 //! The typing codes `E0F-03` to `E0F-08`, `W0F-01`, CAT-4.3, E0F-4.1 and E0E-3.7.
 
 use super::*;
-use crate::typing::diagnostic::TypingCode;
+use crate::typing::TYPING_WARNING;
 
 #[test]
 fn w0f_01_every_typing_problem_makes_its_element_unusable() {
@@ -23,7 +23,7 @@ fn w0f_01_every_typing_problem_makes_its_element_unusable() {
             pair("E0F-03", "/semantic_model/0/metrics/14/expression"),
         ]
     );
-    assert_eq!(TypingCode::WARNING, "W0F-01");
+    assert_eq!(TYPING_WARNING, "W0F-01");
     assert!(
         typing.warnings[0]
             .to_string()

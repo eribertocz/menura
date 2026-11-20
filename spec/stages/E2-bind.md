@@ -21,7 +21,7 @@ uses against the security context.
 | E2-3.3 | A dimension MUST name a field (`E_METRIC_IN_DIMENSIONS`), except an expression dimension of the SQL form, which MUST read fields of one dataset and no metric; a metric MUST name a metric (`E_FIELD_IN_METRICS`). E4 groups by the dimension's expression. |
 | E2-3.4 | A time grain or date range MUST apply to a field with `is_time: true` and logical kind `date` or `timestamp` (`E2-01`). |
 | E2-3.5 | Every relationship named in `paths` MUST exist (`E_NAME_NOT_FOUND`). |
-| E2-3.6 | The type of every filter is checked as in E0.f; a non-boolean filter is `E0F-06`. |
+| E2-3.6 | The type of every filter is checked as in E0.f, with the same rules and codes: a type error inside a filter (`E0F-03`–`E0F-08`) is reported with its E0.f code, and a filter whose type is not boolean is `E0F-06`. Each is located at the filter. |
 
 ## E2-4 Authorization
 
@@ -63,7 +63,7 @@ their check runs.
 | 11 | `E_DEFERRED_WINDOWED_METRIC` | E2 |
 | 12 | `E_AMBIGUOUS_MEASURE_GRAIN` | E2 |
 | 12a | Any element marked unusable in E0 (E0-4 table): its query error code, in this order: `E0B-08`, `E0B-09`, `E0D-03`–`E0D-07`, `E0F-*`, `E0G-01`, `E0G-02`, `E0C-37` | E2 |
-| 12b | `E0F-06` (non-boolean filter), `E2-01`, `EQRY-09`, `EQRY-10`, `EQRY-11`, `EQRY-12`, `EQRY-03`, `EQRY-04`, in that order | E2 |
+| 12b | Filter typing (`E0F-03`–`E0F-08`, E2-3.6), `E2-01`, `EQRY-09`, `EQRY-10`, `EQRY-11`, `EQRY-12`, `EQRY-03`, then `E_INVALID_QUERY` for a relative range outside the years 0001–9999, then `EQRY-04`, in that order | E2 |
 | 12c | `E_NOT_YET_SUPPORTED`, before 1.0.0 only (VS-2; the SQL form is detected at row 1) | E2 |
 | 13 | `E_NO_PATH` | E3 |
 | 14 | `E_PARTIAL_DIMENSION_REACHABILITY` | E3 |
@@ -77,6 +77,7 @@ their check runs.
 - **E2-5.2** Only the first error is guaranteed; later errors of the same stage MAY follow it in the document, in query order. Conformance cases compare the first code.
 - **E2-5.3** **Query order** is fixed by the query tree, never by the key order of the JSON document. Wide-table form: the dimensions, the metrics, `filter`, the `filters` items, the `time_grains` items, `date_range`, the `order_by` items, the `paths` entries and `limit`, each list in index order. Within an element, its references are taken in the order they appear: in the text of an expression, or in the members of an extension entry (`from`, `to`, then `relationships` in order). SQL form: the relation of `FROM`, then the clauses in the order of the E1-4 table. Each row of the table above is checked over every element before the next row, and within a row the first element in query order that fails is reported, located at that element.
 - **E2-5.4** Row 12c reports the first element in query order that needs a capability outside the version's slice (VS-1), located at that element. When that element needs several such capabilities, the message names the one whose version comes first in table 7.1, and that version.
+- **E2-5.4a** Two capabilities of VS-1 belong to the whole query. **Several datasets:** the home dataset is the dataset of the first element in query order that reads one, and the error is located at the first element that reads another dataset; a metric whose own components span several datasets is located at that metric. **Propagation:** located at the first element that reads the home dataset. When one element needs several capabilities of the same version, the message names the first in this order: several datasets, `paths`, derived metric, row-policy propagation (0.4.0); additivity, population (0.5.0); context metric (0.8.0).
 - **E2-5.5** Output names are compared after the upper-case mapping of E0D-1.1, whether they come from an alias, a regular part or a delimited part, because DuckDB compares column names without regard to case. `Region` and `region` collide (`E_NAME_COLLISION`), and an `order_by` `output` matches an output name the same way (`EQRY-10` when none matches). The result keeps each name as written (E1-5.1).
 
 ## E2-6 Diagnostics

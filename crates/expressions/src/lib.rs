@@ -2,7 +2,8 @@
 //!
 //! [`parse`] reads `ANSI_SQL` expression text (E0F-2.1), accepts exactly the subset of
 //! E0F-2.2 and returns the normalized tree of E0H-1.3; [`print`] writes a tree back as
-//! canonical text that parses to the same tree.
+//! canonical text that parses to the same tree. [`typing::type_expression`] types a tree
+//! (E0.f).
 //!
 //! ```
 //! use menura_expressions::{parse, print};
@@ -17,6 +18,7 @@ mod error;
 mod lexer;
 mod parser;
 mod printer;
+pub mod typing;
 mod vocabulary;
 
 pub use error::{ExpressionCode, ExpressionError, ExpressionErrorKind, Span};

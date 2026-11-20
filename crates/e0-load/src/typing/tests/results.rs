@@ -4,7 +4,7 @@
 use menura_contracts::types::common::{FloatBits, LogicalType};
 
 use super::*;
-use crate::typing::value_type::{big_integer, decimal, double, huge_integer, integer, timestamp};
+use menura_expressions::typing::{big_integer, decimal, double, huge_integer, integer, timestamp};
 
 fn typed(value_type: LogicalType, nullable: bool) -> Probe {
     Probe::Typed(Typed::value(value_type, nullable))

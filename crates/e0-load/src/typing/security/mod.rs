@@ -14,7 +14,6 @@ mod condition;
 use std::collections::HashMap;
 
 use super::output::{ElementKind, Typing};
-use super::value_type::Typed;
 use crate::extensions::security::RowPolicy;
 use crate::extensions::{ExtensionDiagnostic, Extensions, report_at};
 use crate::names::Name;
@@ -22,6 +21,7 @@ use crate::outline::{DatasetOutline, outline};
 use crate::pointer::JsonPointer;
 use crate::structure::Structure;
 use condition::condition_problems;
+use menura_expressions::typing::Typed;
 
 /// The datasets and field types the conditions of row policies read.
 pub(super) struct Fields<'model, 'document> {
