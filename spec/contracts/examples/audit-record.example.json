@@ -1,6 +1,6 @@
 {
-  "contract": "semantic_compiler.audit_record",
-  "contract_version": "1.0.0",
+  "contract": "menura.audit_record",
+  "contract_version": "1.1.0",
   "subject": "user-7f3a",
   "inputs": {
     "model": "1111111111111111111111111111111111111111111111111111111111111111",
@@ -63,7 +63,7 @@
   "load_options": {
     "grant_authenticated_to_all": false,
     "ossie_format": "release",
-    "namespace": "semantic_compiler"
+    "namespace": "menura"
   },
   "contract_versions": {
     "model": "0.1.1",

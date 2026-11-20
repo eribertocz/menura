@@ -3,18 +3,18 @@
 Every document that crosses a module boundary. Each has a JSON Schema in `schemas/` and valid
 examples in `examples/`, all checked in CI.
 
-| Contract | `contract` value before the rename; from it, `menura.<name>` (CON-0.5) | Direction | Chapter |
+| Contract | `contract` value | Direction | Chapter |
 |---|---|---|---|
 | Semantic model | Apache Ossie document | In | [model.md](model.md) |
-| Catalog schema | `semantic_compiler.catalog_schema` | In | [catalog.md](catalog.md) |
-| Catalog state | `semantic_compiler.catalog_state` | In | [catalog.md](catalog.md) |
-| Query | `semantic_compiler.query` | In | [query.md](query.md) |
-| Security context | `semantic_compiler.security_context` | In | [security-context.md](security-context.md) |
-| Compiled plan | `semantic_compiler.compiled_plan` | Out | [compiled-plan.md](compiled-plan.md) |
-| Compile error | `semantic_compiler.compile_error` | Out | [compiled-plan.md](compiled-plan.md) |
-| Audit record | `semantic_compiler.audit_record` | Out | [compiled-plan.md](compiled-plan.md) |
-| Model description | `semantic_compiler.model_description` | Out | [model-description.md](model-description.md) |
-| Integrity checks | `semantic_compiler.integrity_checks` | Out | [integrity-checks.md](integrity-checks.md) |
+| Catalog schema | `menura.catalog_schema` | In | [catalog.md](catalog.md) |
+| Catalog state | `menura.catalog_state` | In | [catalog.md](catalog.md) |
+| Query | `menura.query` | In | [query.md](query.md) |
+| Security context | `menura.security_context` | In | [security-context.md](security-context.md) |
+| Compiled plan | `menura.compiled_plan` | Out | [compiled-plan.md](compiled-plan.md) |
+| Compile error | `menura.compile_error` | Out | [compiled-plan.md](compiled-plan.md) |
+| Audit record | `menura.audit_record` | Out | [compiled-plan.md](compiled-plan.md) |
+| Model description | `menura.model_description` | Out | [model-description.md](model-description.md) |
+| Integrity checks | `menura.integrity_checks` | Out | [integrity-checks.md](integrity-checks.md) |
 
 ## Public contracts
 
