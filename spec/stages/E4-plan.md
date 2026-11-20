@@ -35,7 +35,7 @@ For each branch, in order:
 1. `Scan` the home dataset.
 2. Apply the row policies of the home dataset (`Filter`) and of every dataset it reaches (`SemiJoin`, E4-6.5).
 3. `Join` the join tree with `left` joins, in path order.
-4. `Filter` with the query filters, as one conjunction. FALSE and NULL remove the row.
+4. `Filter` with the query filters, as one conjunction, followed by the `date_range` predicate of QRY-4.2 when the query has one. FALSE and NULL remove the row.
 5. If any join step of the branch could match more than one row per home row, insert `Deduplicate(group, identity)` before aggregation: a home row counts once in **each** group it matches, as Apache Ossie Layer 3 section 4 requires. `identity` is a row identity **synthesized** for the home scan (a row number assigned in the home relation's scan, Apache Ossie Layer 2 section 3.2), so no declared key has to be trusted; results do not depend on the numbering. E4 always inserts the node for such a step; only E5 may remove it, with evidence (E5-3.2).
 6. `Aggregate` by the dimension keys with the branch's components.
 
@@ -65,7 +65,8 @@ With two or more branches, the plan MUST equal Apache Ossie Layer 3 section 5.5:
 | E4-6.6 | **Several relationships to X.** The policy propagates through every relationship that reaches X; the row must be visible through each. |
 | E4-6.7 | **Dimension listing.** Dimension-only queries are governed by the dimension datasets' own access and policies. Policies of metric home datasets do not restrict them. |
 | E4-6.8 | **Context modifiers never remove policies.** A modifier that removes a dimension or filter from a metric's context (E4-8) applies only to query filters and dimensions, never to row policies. |
-| E4-6.9 | Attribute values are bound parameters (SEC-3.5). A policy needing an absent attribute fails compilation (`ESEC-02`). |
+| E4-6.9 | Attribute values are bound parameters (SEC-3.5). A policy needing an absent attribute fails compilation (`ESEC-02`) only when it is **applicable**: it remains after exemption (E4-6.2 step 1) and either has no `roles` or lists one of the user's roles. A policy the user is exempt from, or one that grants none of the user's roles, never fails. `ESEC-02` is located at `/attributes` of the security context, and its message names only the missing attribute, never the policy, its dataset or its condition (PLN-5.2, SCY-4a.1). Datasets are visited in branch order (E3-4.3), home dataset first, their policies in declaration order, and each condition's attributes in order of appearance; the first missing attribute is reported. |
+| E4-6.9a | **Empty list attribute.** `x IN (USER_ATTRIBUTE('a'))` is FALSE and `x NOT IN (USER_ATTRIBUTE('a'))` is TRUE when `a` is an empty list, whatever `x` is, NULL included, as SQL `= ANY` over an empty set. |
 | E4-6.10 | Joins added only for propagation never add output columns, and the explanation names the policies without showing any value. |
 
 ## E4-7 Additivity

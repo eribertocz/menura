@@ -734,13 +734,13 @@ Find a rule ID or a section here, then open only that file at that line.
 | [stages/E4-plan.md](stages/E4-plan.md#L66) | 66 | rule | E4-6.7 |
 | [stages/E4-plan.md](stages/E4-plan.md#L67) | 67 | rule | E4-6.8 |
 | [stages/E4-plan.md](stages/E4-plan.md#L68) | 68 | rule | E4-6.9 |
-| [stages/E4-plan.md](stages/E4-plan.md#L69) | 69 | rule | E4-6.10 |
-| [stages/E4-plan.md](stages/E4-plan.md#L71) | 71 | section | E4-7 Additivity |
-| [stages/E4-plan.md](stages/E4-plan.md#L77) | 77 | section | E4-8 Context modifiers |
-| [stages/E4-plan.md](stages/E4-plan.md#L83) | 83 | section | E4-9 Order and limit |
-| [stages/E4-plan.md](stages/E4-plan.md#L85) | 85 | rule | E4-9.1 |
-| [stages/E4-plan.md](stages/E4-plan.md#L86) | 86 | rule | E4-9.2 |
-| [stages/E4-plan.md](stages/E4-plan.md#L88) | 88 | section | E4-10 Diagnostics |
+| [stages/E4-plan.md](stages/E4-plan.md#L70) | 70 | rule | E4-6.10 |
+| [stages/E4-plan.md](stages/E4-plan.md#L72) | 72 | section | E4-7 Additivity |
+| [stages/E4-plan.md](stages/E4-plan.md#L78) | 78 | section | E4-8 Context modifiers |
+| [stages/E4-plan.md](stages/E4-plan.md#L84) | 84 | section | E4-9 Order and limit |
+| [stages/E4-plan.md](stages/E4-plan.md#L86) | 86 | rule | E4-9.1 |
+| [stages/E4-plan.md](stages/E4-plan.md#L87) | 87 | rule | E4-9.2 |
+| [stages/E4-plan.md](stages/E4-plan.md#L89) | 89 | section | E4-10 Diagnostics |
 | [stages/E5-optimize.md](stages/E5-optimize.md#L1) | 1 | section | E5 Optimize |
 | [stages/E5-optimize.md](stages/E5-optimize.md#L3) | 3 | section | E5-1 Purpose |
 | [stages/E5-optimize.md](stages/E5-optimize.md#L9) | 9 | section | E5-2 Input and output |
