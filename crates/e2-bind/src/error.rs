@@ -3,13 +3,14 @@
 use std::fmt;
 
 use menura_contracts::types::compiled_plan::{Diagnostic, DiagnosticLocation, InputDocument};
+use menura_model::internal_model::DiagnosticCode;
 use menura_representations::origin::QueryLocation;
 
-/// The codes rows 3 to 9 of E2-5 report.
+/// The codes rows 3 to 12c of E2-5 report.
 ///
 /// Row 7, `E_WINDOW_IN_WHERE`, has no code here: the expression language rejects a window
 /// function as `E0F-02` (E0F-2.4), which E1 reports at row 1, so no query tree holds one.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum BindCode {
     /// `E_NAME_NOT_FOUND`: an unknown or unauthorized name (row 3).
     NameNotFound,
@@ -23,6 +24,36 @@ pub enum BindCode {
     CrossDatasetFilter,
     /// `E_NAME_COLLISION`: a repeated output name (row 9).
     NameCollision,
+    /// `E_UNAGGREGATED_FINER_GRAIN_REFERENCE`: a metric made unusable by that rule (row 10).
+    UnaggregatedFinerGrainReference,
+    /// `E_DEFERRED_WINDOWED_METRIC`: a metric made unusable by a window function (row 11).
+    DeferredWindowedMetric,
+    /// `E_AMBIGUOUS_MEASURE_GRAIN`: a metric made unusable by that rule (row 12).
+    AmbiguousMeasureGrain,
+    /// The query error code of an element marked unusable in E0, such as `E0D-03` (row 12a,
+    /// E0-4).
+    Unusable(DiagnosticCode),
+    /// `E0F-06`: a filter that is not boolean (row 12b, E2-3.6).
+    NonBooleanFilter,
+    /// `E2-01`: a time grain or a date range on a field that is not a time field (E2-3.4).
+    NotTimeField,
+    /// `EQRY-09`: a time grain on a field that is not a dimension, or a second grain for one
+    /// dimension (QRY-4.1).
+    TimeGrainNotDimension,
+    /// `EQRY-10`: an `order_by` output that names no output (QRY-4.5).
+    UnknownOrderOutput,
+    /// `EQRY-11`: a date range whose `from` is after its `to` (QRY-4.2).
+    ReversedDateRange,
+    /// `EQRY-12`: a path whose relationships do not chain, or a second path for one pair
+    /// (QRY-4.3).
+    InvalidPath,
+    /// `EQRY-03`: the query needs `reference_time` and has none (QRY-2).
+    MissingReferenceTime,
+    /// `EQRY-04`: a `limit` without an `order_by` over every dimension (QRY-4.6).
+    LimitWithoutTotalOrder,
+    /// `E_NOT_YET_SUPPORTED`: the query needs a capability outside the version's slice
+    /// (row 12c, VS-1, VS-2).
+    NotYetSupported,
 }
 
 impl BindCode {
@@ -33,7 +64,7 @@ impl BindCode {
     /// assert_eq!(BindCode::NameNotFound.as_str(), "E_NAME_NOT_FOUND");
     /// ```
     #[must_use]
-    pub fn as_str(self) -> &'static str {
+    pub fn as_str(&self) -> &str {
         match self {
             Self::NameNotFound => "E_NAME_NOT_FOUND",
             Self::MetricInDimensions => "E_METRIC_IN_DIMENSIONS",
@@ -41,6 +72,19 @@ impl BindCode {
             Self::AggregateInWhere => "E_AGGREGATE_IN_WHERE",
             Self::CrossDatasetFilter => "E_CROSS_DATASET_FILTER",
             Self::NameCollision => "E_NAME_COLLISION",
+            Self::UnaggregatedFinerGrainReference => "E_UNAGGREGATED_FINER_GRAIN_REFERENCE",
+            Self::DeferredWindowedMetric => "E_DEFERRED_WINDOWED_METRIC",
+            Self::AmbiguousMeasureGrain => "E_AMBIGUOUS_MEASURE_GRAIN",
+            Self::Unusable(code) => code.as_str(),
+            Self::NonBooleanFilter => "E0F-06",
+            Self::NotTimeField => "E2-01",
+            Self::TimeGrainNotDimension => "EQRY-09",
+            Self::UnknownOrderOutput => "EQRY-10",
+            Self::ReversedDateRange => "EQRY-11",
+            Self::InvalidPath => "EQRY-12",
+            Self::MissingReferenceTime => "EQRY-03",
+            Self::LimitWithoutTotalOrder => "EQRY-04",
+            Self::NotYetSupported => "E_NOT_YET_SUPPORTED",
         }
     }
 }
@@ -114,6 +158,9 @@ pub enum InvariantViolation {
     SqlFormElement,
     /// A path without relationships (QRY-4.3).
     PathWithoutRelationship,
+    /// A date range whose bounds cannot be resolved to dates: a bound that is not a date,
+    /// or a target that rows 3 to 12b left without a time field or a reference time.
+    UnresolvableDateRange,
 }
 
 impl BindError {

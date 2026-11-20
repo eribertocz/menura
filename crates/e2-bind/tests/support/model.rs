@@ -1,11 +1,13 @@
 //! The internal model the tests of E2 bind against.
 
 use menura_contracts::Sha256Hash;
+use menura_contracts::types::common::{LogicalType, TimestampPrecision};
 use menura_model::expression::{AggregateCall, Expression, Identifier, Reference, SimpleAggregate};
 use menura_model::internal_model::{
-    AccessMode, Dataset, DatasetAccess, Descriptions, Field, FieldRestriction, InternalModel,
-    Metric, ModelParts, NormalizedName, Relationship, RelationshipGraph, RoleName, SecurityContext,
-    SourceLocation,
+    AccessMode, Additivity, Dataset, DatasetAccess, Descriptions, DiagnosticCode, Field,
+    FieldRestriction, InternalModel, Metric, MetricClassification, ModelParts, NormalizedName,
+    Relationship, RelationshipGraph, RoleName, SecurityContext, SourceLocation, TypedValue,
+    ValueType,
 };
 
 /// A normalized name.
@@ -54,12 +56,23 @@ fn sum(qualifier: Option<&str>, field: &str) -> Expression {
     }
 }
 
-fn metric(metric_name: &str, expression: Expression) -> Metric {
+/// The classification of a metric whose components are all on `home`.
+pub fn classification(home: &[&str]) -> MetricClassification {
+    MetricClassification {
+        components: Vec::new(),
+        inputs: Vec::new(),
+        home_datasets: home.iter().map(|dataset| name(dataset)).collect(),
+        additivity: Additivity::Additive,
+        recomposable: true,
+    }
+}
+
+fn metric(metric_name: &str, expression: Expression, home: &str) -> Metric {
     Metric {
         name: name(metric_name),
         expression: Some(expression),
         typed: None,
-        classification: None,
+        classification: Some(classification(&[home])),
         declared_additivity: None,
         derived: None,
         context: None,
@@ -127,12 +140,26 @@ fn orders() -> Dataset {
         access,
         &["AMOUNT", "CUSTOMER_ID", "ORDERED_AT", "REGION"],
     );
+    if let Some(ordered_at) = orders
+        .fields
+        .iter_mut()
+        .find(|field| field.name == name("ORDERED_AT"))
+    {
+        ordered_at.is_time = Some(true);
+        ordered_at.typed = Some(TypedValue {
+            value_type: ValueType::Logical(LogicalType::Timestamp {
+                precision: TimestampPrecision::Us,
+                with_time_zone: true,
+            }),
+            nullable: true,
+        });
+    }
     let mut unit_cost = field("UNIT_COST");
     unit_cost.expression = Some(column("cost"));
     orders.fields.push(unit_cost);
     orders.metrics = vec![
-        metric("ORDER_TOTAL", sum(None, "amount")),
-        metric("TOTAL_COST", sum(None, "unit_cost")),
+        metric("ORDER_TOTAL", sum(None, "amount"), "ORDERS"),
+        metric("TOTAL_COST", sum(None, "unit_cost"), "ORDERS"),
     ];
     orders
 }
@@ -166,8 +193,16 @@ pub fn declarations() -> SecurityContext {
     }
 }
 
+/// The model of [`model`] after `edit`.
+pub fn model_with(edit: impl FnOnce(&mut ModelParts)) -> InternalModel {
+    let mut parts = model().parts().clone();
+    edit(&mut parts);
+    InternalModel::new(parts, Sha256Hash::try_from("0".repeat(64)).expect("a hash"))
+}
+
 /// `CUSTOMERS` (authenticated: `Segment`, `CUSTOMER_ID`, `REGION`), `ORDERS` (admin and
-/// analyst: `AMOUNT`, `CUSTOMER_ID`, `ORDERED_AT`, `REGION`, and `UNIT_COST`, which reads the
+/// analyst: `AMOUNT`, `CUSTOMER_ID`, `ORDERED_AT` (a time field, a timestamp with time zone),
+/// `REGION`, and `UNIT_COST`, which reads the
 /// source column `cost` and is restricted to admin; dataset metrics `ORDER_TOTAL` and `TOTAL_COST`), `ORDERS_SUMMARY` (internal summary),
 /// `SECRETS` (admin: `CUSTOMER_ID`, `VALUE`); metrics `COST`, `REVENUE` and `SECRET_TOTAL`;
 /// relationships `ORDERS_BY_COST` (keyed by the source column `COST`), `ORDERS_BY_UNIT_COST`
@@ -185,9 +220,9 @@ pub fn model() -> InternalModel {
         ],
         graph: RelationshipGraph::default(),
         metrics: vec![
-            metric("COST", sum(Some("orders"), "unit_cost")),
-            metric("REVENUE", sum(Some("orders"), "amount")),
-            metric("SECRET_TOTAL", sum(Some("secrets"), "value")),
+            metric("COST", sum(Some("orders"), "unit_cost"), "ORDERS"),
+            metric("REVENUE", sum(Some("orders"), "amount"), "ORDERS"),
+            metric("SECRET_TOTAL", sum(Some("secrets"), "value"), "SECRETS"),
         ],
         security_context: Some(declarations()),
         summaries: Vec::new(),
@@ -196,4 +231,61 @@ pub fn model() -> InternalModel {
         warnings: Vec::new(),
     };
     InternalModel::new(parts, Sha256Hash::try_from("0".repeat(64)).expect("a hash"))
+}
+
+/// Marks the field `dataset.field` of `parts` unusable with `codes`.
+pub fn mark_field(parts: &mut ModelParts, dataset: &str, field: &str, codes: &[&str]) {
+    let found = parts
+        .datasets
+        .iter_mut()
+        .find(|candidate| candidate.name == name(dataset))
+        .and_then(|found| {
+            found
+                .fields
+                .iter_mut()
+                .find(|candidate| candidate.name == name(field))
+        })
+        .expect("a field of the model");
+    found.query_errors = codes.iter().map(|code| DiagnosticCode::new(code)).collect();
+}
+
+/// The metric of the semantic model named `metric`.
+pub fn semantic_metric<'parts>(parts: &'parts mut ModelParts, metric: &str) -> &'parts mut Metric {
+    parts
+        .metrics
+        .iter_mut()
+        .find(|candidate| candidate.name == name(metric))
+        .expect("a metric of the model")
+}
+
+/// Marks the metric `metric` of the semantic model unusable with `codes`.
+pub fn mark_metric(parts: &mut ModelParts, metric: &str, codes: &[&str]) {
+    semantic_metric(parts, metric).query_errors =
+        codes.iter().map(|code| DiagnosticCode::new(code)).collect();
+}
+
+/// `parts` with the edge `ORDERS` → `CUSTOMERS` and a row policy on `CUSTOMERS` for `admin`.
+pub fn customers_with_a_row_policy(parts: &mut ModelParts) {
+    parts.graph.edges = vec![menura_model::internal_model::GraphEdge {
+        relationship: name("ORDERS_TO_CUSTOMERS"),
+        from: name("ORDERS"),
+        to: name("CUSTOMERS"),
+        one_to_one: false,
+    }];
+    let customers = parts
+        .datasets
+        .iter_mut()
+        .find(|dataset| dataset.name == name("CUSTOMERS"))
+        .expect("CUSTOMERS");
+    customers.row_policies = vec![menura_model::internal_model::RowPolicy {
+        name: "admins_only".to_owned(),
+        condition: None,
+        roles: Some(vec![RoleName::new("admin")]),
+        exempt_roles: None,
+        location: SourceLocation {
+            pointer: String::new(),
+            line: 1,
+            column: 1,
+        },
+    }];
 }

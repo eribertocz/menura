@@ -1,15 +1,16 @@
 //! Query trees, as E1 would build them, and the admitted security contexts of the tests.
 
 use menura_contracts::types::common::Grain;
-use menura_contracts::types::query::DateBounds;
+use menura_contracts::types::query::{DateBounds, Direction, NullsOrder, RelativeRange};
 use menura_model::expression::{
     AggregateCall, BinaryOperator, Expression, Identifier, Literal, Reference,
 };
 use menura_representations::names::OutputName;
 use menura_representations::origin::QueryLocation;
 use menura_representations::query_tree::{
-    QueryDateRange, QueryDimension, QueryDimensionKind, QueryFilter, QueryMetric, QueryMetricKind,
-    QueryPath, QueryReference, QueryTree, QueryTreeParts, ReferencePart, TimeGrainChoice,
+    QueryDateRange, QueryDimension, QueryDimensionKind, QueryFilter, QueryLimit, QueryMetric,
+    QueryMetricKind, QueryOrderItem, QueryPath, QueryReference, QueryTree, QueryTreeParts,
+    ReferencePart, TimeGrainChoice,
 };
 use menura_representations::time::{QueryTime, TimeZoneName};
 use menura_security::{AdmittedSecurityContext, admit_security_context};
@@ -158,4 +159,70 @@ pub fn user(held: &[&str]) -> AdmittedSecurityContext {
         roles.join(", ")
     );
     admit_security_context(&text, Some(&declarations())).expect("an admitted context")
+}
+
+/// The `order_by` item on `output` at `/query/nonportable_extensions/0/data/order_by/<index>`.
+pub fn order_item(index: usize, output: &str) -> QueryOrderItem {
+    QueryOrderItem {
+        output: OutputName::new(output),
+        direction: Direction::Asc,
+        nulls: NullsOrder::Last,
+        origin: at(&format!(
+            "/query/nonportable_extensions/0/data/order_by/{index}"
+        )),
+    }
+}
+
+/// The limit of `rows` rows.
+pub fn limit(rows: u64) -> QueryLimit {
+    QueryLimit {
+        rows,
+        origin: at("/query/nonportable_extensions/0/data/limit"),
+    }
+}
+
+/// The relative date range on `text` at `pointer`.
+pub fn relative_range(
+    pointer: &str,
+    text: &str,
+    unit: Grain,
+    count: u64,
+    include_current: Option<bool>,
+) -> QueryDateRange {
+    QueryDateRange {
+        dimension: reference(text),
+        bounds: DateBounds::Relative(RelativeRange {
+            unit,
+            count,
+            include_current,
+        }),
+        origin: at(pointer),
+    }
+}
+
+/// The absolute date range on `text` from `from` to `to`, at `pointer`.
+pub fn absolute_range(pointer: &str, text: &str, from: &str, to: &str) -> QueryDateRange {
+    QueryDateRange {
+        dimension: reference(text),
+        bounds: DateBounds::Absolute {
+            from: from.to_owned(),
+            to: to.to_owned(),
+        },
+        origin: at(pointer),
+    }
+}
+
+/// The wide-table tree of `dimensions`, `metrics` and `parts`, with `time`.
+pub fn tree_at(
+    dimensions: Vec<QueryDimension>,
+    metrics: Vec<QueryMetric>,
+    time: QueryTime,
+    parts: QueryTreeParts,
+) -> QueryTree {
+    QueryTree::wide_table(dimensions, metrics, time, parts)
+}
+
+/// The date `year-month-day`.
+pub fn date(year: u16, month: u8, day: u8) -> menura_model::expression::DateValue {
+    menura_model::expression::DateValue::new(year, month, day).expect("a date")
 }
