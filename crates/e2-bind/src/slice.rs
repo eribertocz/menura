@@ -62,10 +62,11 @@ pub(crate) fn check_slice(
 ) -> Result<(), BindDiagnostic> {
     let mut home: Option<&NormalizedName> = None;
     for element in named {
-        let datasets = element_datasets(model, &element.target);
-        let mut needed: BTreeSet<Capability> = element_capabilities(model, &element.target)
-            .into_iter()
-            .collect();
+        let ElementNeeds {
+            datasets,
+            capabilities,
+        } = element_needs(model, &element.target);
+        let mut needed: BTreeSet<Capability> = capabilities.into_iter().collect();
         match (home, datasets.first()) {
             (None, Some(first)) => {
                 home = Some(first);
@@ -85,55 +86,63 @@ pub(crate) fn check_slice(
     Ok(())
 }
 
-/// The datasets `target` reads, ordered by name: a field's dataset; for a metric, the home
-/// datasets of the metric and of every metric it reads (E2-5.4).
-fn element_datasets<'model>(
+/// What one element reads and needs.
+struct ElementNeeds<'model> {
+    /// The datasets it reads, ordered by name.
+    datasets: Vec<&'model NormalizedName>,
+    /// The capabilities it needs by itself.
+    capabilities: Vec<Capability>,
+}
+
+/// What `target` reads and needs: a field reads its dataset; a metric reads the home datasets
+/// of the metric and of every metric it reads, and needs the capabilities of each of them
+/// (E2-5.4); `paths` entries need paths.
+fn element_needs<'model>(
     model: &'model InternalModel,
     target: &'model NamedTarget,
-) -> Vec<&'model NormalizedName> {
+) -> ElementNeeds<'model> {
     match target {
-        NamedTarget::Member(ResolvedName::Field(path)) => vec![&path.dataset],
-        NamedTarget::Member(ResolvedName::Metric(path)) => metric(model, path)
-            .map(|found| metric_datasets(model, found).into_iter().collect())
-            .unwrap_or_default(),
-        NamedTarget::Dataset(_) | NamedTarget::Relationship(_) => Vec::new(),
+        NamedTarget::Member(ResolvedName::Field(path)) => ElementNeeds {
+            datasets: vec![&path.dataset],
+            capabilities: Vec::new(),
+        },
+        NamedTarget::Member(ResolvedName::Metric(path)) => match metric(model, path) {
+            Some(found) => metric_needs(model, found),
+            None => ElementNeeds {
+                datasets: Vec::new(),
+                capabilities: Vec::new(),
+            },
+        },
+        NamedTarget::Dataset(_) | NamedTarget::Relationship(_) => ElementNeeds {
+            datasets: Vec::new(),
+            capabilities: vec![Capability::Paths],
+        },
     }
 }
 
-/// The home datasets of `root` and of every metric it reads.
-fn metric_datasets<'model>(
+/// What `root` needs, over it and every metric it reads: their home datasets, several datasets
+/// when those are more than one, and the capabilities of their extensions.
+fn metric_needs<'model>(
     model: &'model InternalModel,
     root: &'model Metric,
-) -> BTreeSet<&'model NormalizedName> {
-    metric_closure(model, root)
-        .into_iter()
+) -> ElementNeeds<'model> {
+    let closure = metric_closure(model, root);
+    let datasets: BTreeSet<&NormalizedName> = closure
+        .iter()
         .filter_map(|read| read.classification.as_ref())
         .flat_map(|classification| &classification.home_datasets)
-        .collect()
-}
-
-/// The capabilities `target` needs; a metric needs those of every metric it reads (E2-5.4).
-fn element_capabilities(model: &InternalModel, target: &NamedTarget) -> Vec<Capability> {
-    match target {
-        NamedTarget::Member(ResolvedName::Field(_)) => Vec::new(),
-        NamedTarget::Member(ResolvedName::Metric(path)) => metric(model, path)
-            .map(|found| metric_capabilities(model, found))
-            .unwrap_or_default(),
-        NamedTarget::Dataset(_) | NamedTarget::Relationship(_) => vec![Capability::Paths],
-    }
-}
-
-/// The capabilities `root` needs: several home datasets across it and the metrics it reads,
-/// and the extensions of each of them.
-fn metric_capabilities(model: &InternalModel, root: &Metric) -> Vec<Capability> {
-    let mut needed: Vec<Capability> = metric_closure(model, root)
+        .collect();
+    let mut capabilities: Vec<Capability> = closure
         .into_iter()
         .flat_map(extension_capabilities)
         .collect();
-    if metric_datasets(model, root).len() > 1 {
-        needed.push(Capability::SeveralDatasets);
+    if datasets.len() > 1 {
+        capabilities.push(Capability::SeveralDatasets);
     }
-    needed
+    ElementNeeds {
+        datasets: datasets.into_iter().collect(),
+        capabilities,
+    }
 }
 
 /// The capabilities the extensions of one metric need.
