@@ -50,7 +50,9 @@ use crate::typing::typed_column;
 /// # Errors
 ///
 /// [`PlanError::MissingAttribute`] (`ESEC-02`, E2-5 row 18) when an applicable row policy
-/// needs an attribute `security` does not provide; [`PlanError::Invariant`] for an input
+/// needs an attribute `security` does not provide; then [`PlanError::MissingReferenceTime`]
+/// (`EQRY-03`, E4-6.9b) when an applicable row policy reads the current date or time and the
+/// query has no `reference_time`; [`PlanError::Invariant`] for an input
 /// outside the 0.3.0 slice, which the stages before E4 never produce.
 pub fn build_plan(
     branches: &Branches,
@@ -66,7 +68,8 @@ pub fn build_plan(
     let components = metrics::branch_components(branch, &metrics, home)?;
     let outputs = metrics::metric_outputs(branch, &metrics)?;
     let query_predicate = query_filter::query_predicate(query, home)?;
-    let policy_predicate = policy::policy_predicate(home, security)?;
+    let has_reference_time = query.time().reference_time.is_some();
+    let policy_predicate = policy::policy_predicate(home, security, has_reference_time)?;
 
     let read = fields_read(
         &keys,

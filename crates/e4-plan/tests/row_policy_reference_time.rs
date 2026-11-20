@@ -87,10 +87,7 @@ fn e4_6_9b_a_granting_policy_reading_now_is_eqry_03() {
         false,
     )
     .expect_err("EQRY-03");
-    assert_eq!(
-        error.to_diagnostic().expect("a diagnostic").code,
-        "EQRY-03"
-    );
+    assert_eq!(error.to_diagnostic().expect("a diagnostic").code, "EQRY-03");
 }
 
 #[test]
@@ -118,10 +115,7 @@ fn e4_6_9b_every_esec_02_check_comes_before_eqry_03() {
         false,
     )
     .expect_err("ESEC-02");
-    assert_eq!(
-        error.to_diagnostic().expect("a diagnostic").code,
-        "ESEC-02"
-    );
+    assert_eq!(error.to_diagnostic().expect("a diagnostic").code, "ESEC-02");
 }
 
 #[test]
