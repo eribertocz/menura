@@ -6,9 +6,11 @@ case cites in its `rules`, and every process rule ID that no CI workflow and no 
 rule `X`. Rule IDs whose prefix is in neither list are reported as unclassified.
 
 The check fails only for uncovered rule IDs defined in a file of the coverage scope,
-`spec/coverage-scope.txt` (CS-2.6); every other finding is reported only. Scope entries are paths
-from the repository root (`spec/08-conformance-suite.md`); an entry that names no file of
-`spec/INDEX.md` fails the check, so a mistyped entry can never hide a rule.
+`spec/coverage-scope.txt` (CS-2.6); every other finding is reported only. A scope entry is a path
+from the repository root (`spec/08-conformance-suite.md`), which puts every rule ID of that file in
+scope, or a path followed by rule IDs separated by whitespace, which puts only those rules in scope.
+An entry that names no file of `spec/INDEX.md`, or a rule ID that the index does not define in that
+file, fails the check, so a mistyped entry can never hide a rule.
 
 Usage: python3 scripts/ci/check_rule_coverage.py [repository-root]
 Requires PyYAML.
@@ -50,19 +52,41 @@ def index_rules(index_text):
 
 
 def scope_files(scope_text):
-    """The paths listed in `spec/coverage-scope.txt`: one per line, `#` lines and blanks ignored."""
-    paths = []
+    """The entries of `spec/coverage-scope.txt` as `(path, rule_ids)` pairs, in file order.
+
+    One entry per line; `#` lines and blanks are ignored. `rule_ids` is `None` for a whole-file
+    entry, and the tuple of listed rule IDs for a rule-level entry.
+    """
+    entries = []
     for line in scope_text.splitlines():
-        entry = line.strip()
-        if entry and not entry.startswith("#"):
-            paths.append(entry)
-    return paths
+        fields = line.split()
+        if fields and not fields[0].startswith("#"):
+            entries.append((fields[0], tuple(fields[1:]) or None))
+    return entries
 
 
 def unknown_scope_files(scope, rules):
-    """Scope entries that name no file of the index, in scope order."""
+    """Paths of scope entries that name no file of the index, in scope order."""
     indexed = {file for file, _ in rules}
-    return [path for path in scope if path not in indexed]
+    return [path for path, _ in scope if path not in indexed]
+
+
+def unknown_scope_rules(scope, rules):
+    """`(path, rule)` pairs of rule-level entries whose rule the index does not define in `path`."""
+    defined = set(rules)
+    return [
+        (path, rule)
+        for path, rule_ids in scope
+        for rule in rule_ids or ()
+        if (path, rule) not in defined
+    ]
+
+
+def scope_rules(scope, rules):
+    """The rule IDs in the coverage scope: every rule of whole-file entries, and listed rules."""
+    whole_files = {path for path, rule_ids in scope if rule_ids is None}
+    listed = {(path, rule) for path, rule_ids in scope for rule in rule_ids or ()}
+    return {rule for file, rule in rules if file in whole_files or (file, rule) in listed}
 
 
 def classify(rule):
@@ -114,10 +138,9 @@ def uncovered(rules, case_citations, process_citations):
 
 
 def in_scope(findings, rules, scope):
-    """The findings whose rule is defined in a file of the coverage scope."""
-    files = dict((rule, file) for file, rule in rules)
-    listed = set(scope)
-    return [(kind, rule) for kind, rule in findings if files.get(rule) in listed]
+    """The findings whose rule is in the coverage scope."""
+    selected = scope_rules(scope, rules)
+    return [(kind, rule) for kind, rule in findings if rule in selected]
 
 
 def read_texts(paths):
@@ -154,15 +177,22 @@ def main():
     findings = uncovered(rules, *citations(root))
     blocking = in_scope(findings, rules, scope)
     report(findings, set(blocking))
-    unknown = unknown_scope_files(scope, rules)
-    for path in unknown:
+    unknown_files = unknown_scope_files(scope, rules)
+    for path in unknown_files:
         print(f"::error title=rule-coverage::CS-2.6: scope entry `{path}` names no file of spec/INDEX.md")
+    unknown_rules = unknown_scope_rules(scope, rules)
+    for path, rule in unknown_rules:
+        print(
+            f"::error title=rule-coverage::CS-2.6: scope entry `{path}` lists `{rule}`, "
+            "which spec/INDEX.md does not define in that file"
+        )
     level = "error" if blocking else "notice"
     print(
         f"::{level} title=rule-coverage::{len(findings)} of {len(rules)} rule IDs uncovered; "
-        f"{len(blocking)} in the coverage scope ({len(scope)} files)"
+        f"{len(blocking)} in the coverage scope ({len(scope)} entries, "
+        f"{len(scope_rules(scope, rules))} rule IDs)"
     )
-    sys.exit(1 if blocking or unknown else 0)
+    sys.exit(1 if blocking or unknown_files or unknown_rules else 0)
 
 
 if __name__ == "__main__":
