@@ -178,23 +178,26 @@ fn former_name_handle() -> menura_core::Handle {
     with_state(&loaded, state.as_bytes())
 }
 
-fn warning_locations(warnings: &[menura_core::Diagnostic]) -> Vec<(String, InputDocument)> {
+fn warning_locations(warnings: &[menura_core::Diagnostic]) -> Vec<(String, Option<InputDocument>)> {
     warnings
         .iter()
         .map(|warning| {
-            let location = warning.location.as_ref().unwrap();
-            (warning.code.clone(), location.document)
+            let document = warning.location.as_ref().map(|location| location.document);
+            (warning.code.clone(), document)
         })
         .collect()
 }
 
-fn former_name_warnings() -> Vec<(String, InputDocument)> {
-    vec![
-        ("WCAT-05".to_owned(), InputDocument::CatalogSchema),
-        ("WCAT-05".to_owned(), InputDocument::CatalogState),
-        ("WQRY-01".to_owned(), InputDocument::SecurityContext),
-        ("WQRY-01".to_owned(), InputDocument::Query),
+fn former_name_warnings() -> Vec<(String, Option<InputDocument>)> {
+    [
+        ("WCAT-05", InputDocument::CatalogSchema),
+        ("WCAT-05", InputDocument::CatalogState),
+        ("WQRY-01", InputDocument::SecurityContext),
+        ("WQRY-01", InputDocument::Query),
     ]
+    .into_iter()
+    .map(|(code, document)| (code.to_owned(), Some(document)))
+    .collect()
 }
 
 #[test]

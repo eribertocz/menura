@@ -1,5 +1,6 @@
 //! The `shop` model of the compile tests, its documents and helpers that read a compile result.
 
+#![cfg(test)]
 #![allow(
     dead_code,
     reason = "each test file uses a different part of the shared support module"

@@ -1,8 +1,9 @@
 //! Pure, deterministic orchestration of the compilation stages.
 //!
 //! The public functions are those of architecture section 3.5 that exist in this version:
-//! [`validate`], [`load`], [`with_state`] and [`compile`]. Their inputs are the contract documents as bytes;
-//! their outputs are contract documents and the immutable [`Handle`] (ARC-5.1).
+//! [`validate`], [`load`], [`with_state`] and [`compile`]. Their inputs are the contract
+//! documents as bytes; their outputs are contract documents and the immutable [`Handle`]
+//! (ARC-5.1).
 //!
 //! # Example
 //!
@@ -15,6 +16,7 @@
 
 #![forbid(unsafe_code)]
 
+mod cache_key;
 mod catalog_state;
 mod compile;
 mod compile_options;
@@ -22,7 +24,9 @@ mod handle;
 mod json;
 mod load;
 mod load_options;
+mod plan_document;
 mod producer;
+mod stop;
 
 pub use compile::{CompileResult, InternalError, compile};
 pub use compile_options::CompileOptions;

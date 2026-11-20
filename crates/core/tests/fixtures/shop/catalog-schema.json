@@ -14,7 +14,7 @@
       "source": "shop.main.customers",
       "columns": [
         {
-          "name": "customer_id",
+          "name": "CUSTOMER_ID",
           "logical_type": {
             "kind": "integer",
             "bits": 32,
@@ -24,7 +24,7 @@
           "nullable": false
         },
         {
-          "name": "segment",
+          "name": "SEGMENT",
           "logical_type": {
             "kind": "text"
           },
@@ -37,7 +37,7 @@
       "source": "shop.main.orders",
       "columns": [
         {
-          "name": "order_id",
+          "name": "ORDER_ID",
           "logical_type": {
             "kind": "integer",
             "bits": 32,
@@ -47,7 +47,7 @@
           "nullable": false
         },
         {
-          "name": "order_date",
+          "name": "ORDER_DATE",
           "logical_type": {
             "kind": "date"
           },
@@ -55,7 +55,7 @@
           "nullable": false
         },
         {
-          "name": "region",
+          "name": "REGION",
           "logical_type": {
             "kind": "text"
           },
@@ -63,7 +63,7 @@
           "nullable": false
         },
         {
-          "name": "amount",
+          "name": "AMOUNT",
           "logical_type": {
             "kind": "integer",
             "bits": 32,

@@ -23,7 +23,7 @@ fn state(relations: &str) -> String {
 
 /// `orders` partitioned by month, with the periods `2026-09` and `2026-10`.
 const PARTITIONED_ORDERS: &str = r#"{"source": "shop.main.orders", "row_count_estimate": 3,
-    "partitions": {"column": "order_date", "grain": "month", "versions": [
+    "partitions": {"column": "ORDER_DATE", "grain": "month", "versions": [
         {"period": "2026-09", "version": {"origin": "warehouse:shop", "snapshot": "orders-9"}},
         {"period": "2026-10", "version": {"origin": "warehouse:shop", "snapshot": "orders-10"}}]}}"#;
 
@@ -45,7 +45,7 @@ fn compiled_with_state(relations: &str) -> CompiledPlanDocument {
 }
 
 fn data_versions(plan: &CompiledPlanDocument) -> serde_json::Value {
-    serde_json::to_value(&plan.cache_key.data_versions).unwrap()
+    json!(plan.cache_key.data_versions)
 }
 
 #[test]
@@ -93,7 +93,7 @@ fn pln_3_2_contexts_that_differ_only_in_subject_share_the_cache_key() {
     let second = compiled_for(&context(
         "user-2",
         &["analyst"],
-        r#"{"regions": ["SOUTH", "NORTH"]}"#,
+        r#"{"regions": ["NORTH", "SOUTH"]}"#,
     ));
     assert_eq!(first.cache_key, second.cache_key);
 }

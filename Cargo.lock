@@ -850,6 +850,8 @@ dependencies = [
  "menura-e5-optimize",
  "menura-generator-duckdb",
  "menura-model",
+ "menura-representations",
+ "menura-security",
  "serde_json",
 ]
 
