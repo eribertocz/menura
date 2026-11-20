@@ -81,12 +81,12 @@ otherwise, a NULL argument gives NULL.
 |---|---|---|---|
 | `CONCAT(a, …)` | one or more text | text | NULL if any argument is NULL, like `||` |
 | `LENGTH(s)` | text | 64-bit integer | Characters (Unicode code points) |
-| `LOWER(s)`, `UPPER(s)` | text | text | Unicode default case mapping |
+| `LOWER(s)`, `UPPER(s)` | text | text | Unicode simple case mapping: each character maps to one character, so `UPPER('ß')` is `ß` |
 | `TRIM(s)`, `LTRIM(s)`, `RTRIM(s)` | text | text | Remove spaces (U+0020) only |
 | `LEFT(s, n)`, `RIGHT(s, n)` | text, integer | text | The first or last `n` characters; `n < 0` gives NULL |
 | `SUBSTRING(s, start[, length])` | text, integer, integer | text | The characters at positions `start` to `start + length − 1` that exist (ISO 9075); `length < 0` gives NULL |
 | `REPLACE(s, from, to)` | text, text, text | text | Every occurrence of `from`, left to right, without overlap; an empty `from` leaves `s` unchanged |
-| `SPLIT_PART(s, delimiter, n)` | text, text, integer literal `n ≥ 1` | text | The `n`-th part; empty text when there are fewer parts |
+| `SPLIT_PART(s, delimiter, n)` | text, text, integer literal `n ≥ 1` | text | The `n`-th part; empty text when there are fewer parts. An empty `delimiter` leaves `s` as its only part |
 | `POSITION(a IN s)`, `CHARINDEX(a, s)` | text, text | 64-bit integer | 1-based position of the first occurrence; 0 when absent; 1 when `a` is empty |
 | `CONTAINS(s, a)`, `STARTSWITH(s, a)`, `ENDSWITH(s, a)` | text, text | boolean | |
 | `LIKE`, `ILIKE` (operators) | text, text | boolean | `%` and `_` wildcards, no escape character; `ILIKE` compares with Unicode simple case folding |
