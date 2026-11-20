@@ -269,12 +269,86 @@ fn vs_5_audit_is_not_yet_supported() {
 }
 
 #[test]
-fn vs_2_audit_names_the_audit_record_and_its_version() {
+fn vs_5_audit_is_checked_before_the_inputs() {
     let options = CompileOptions {
         audit: true,
         ..CompileOptions::default()
     };
-    let result = compile(&handle(), b"{", b"{", &options);
-    let document = error(result);
+    let document = error(compile(&handle(), b"{", b"{", &options));
+    assert_eq!(document.errors.len(), 1);
     assert_eq!(document.errors[0].code, "E_NOT_YET_SUPPORTED");
+    assert!(document.errors[0].message.contains("audit record"));
+    assert!(document.errors[0].message.contains("0.7.0"));
+    assert_eq!(document.errors[0].location, None);
+}
+
+/// The warnings of the compile error of the former-name `query` text, and its first code.
+fn former_query_error(query_text: &str) -> (String, Vec<(String, Option<InputDocument>)>) {
+    let former_query = query_text.replace("\"menura.query\"", "\"semantic_compiler.query\"");
+    let document = error(compile_default(&handle(), &former_query, &analyst()));
+    (
+        document.errors[0].code.clone(),
+        warning_locations(&document.warnings),
+    )
+}
+
+fn former_query_warning() -> Vec<(String, Option<InputDocument>)> {
+    vec![("WQRY-01".to_owned(), Some(InputDocument::Query))]
+}
+
+#[test]
+fn pln_5_an_empty_query_keeps_the_former_name_warning() {
+    let empty = query(r#"{"dimensions": [], "metrics": []}"#);
+    assert_eq!(
+        former_query_error(&empty),
+        (
+            "E_EMPTY_AGGREGATION_QUERY".to_owned(),
+            former_query_warning()
+        )
+    );
+}
+
+#[test]
+fn pln_5_a_filter_text_error_keeps_the_former_name_warning() {
+    let bad_filter = query(r#"{"dimensions": ["orders.region"], "filter": "region = "}"#);
+    assert_eq!(
+        former_query_error(&bad_filter),
+        ("E0F-01".to_owned(), former_query_warning())
+    );
+}
+
+#[test]
+fn pln_5_the_sql_form_keeps_the_former_name_warning() {
+    let sql_form = r#"{"contract": "menura.query", "contract_version": "1.1.0", "time_zone": "UTC",
+        "sql": "SELECT region FROM orders"}"#;
+    assert_eq!(
+        former_query_error(sql_form),
+        ("E_NOT_YET_SUPPORTED".to_owned(), former_query_warning())
+    );
+}
+
+#[test]
+fn pln_5_a_query_that_fails_the_json_schema_has_no_query_warning() {
+    let invalid = query(r#"{"dimensions": ["orders.region"], "unknown": true}"#);
+    let (code, warnings) = former_query_error(&invalid);
+    assert_eq!(code, "E_INVALID_QUERY");
+    assert!(warnings.is_empty());
+}
+
+#[test]
+fn pln_5_an_error_document_with_warnings_validates_against_its_schema() {
+    let former_context = analyst_without_regions().replace(
+        "menura.security_context",
+        "semantic_compiler.security_context",
+    );
+    let document = error(compile_default(
+        &former_name_handle(),
+        &amount_by_region(),
+        &former_context,
+    ));
+    assert!(!document.warnings.is_empty());
+    let json: serde_json::Value =
+        serde_json::from_str(&menura_core::document_json(&document).unwrap()).unwrap();
+    menura_contracts::validate_structure(menura_contracts::ContractKind::CompileError, &json)
+        .unwrap();
 }

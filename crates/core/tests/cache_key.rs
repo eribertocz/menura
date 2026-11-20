@@ -187,3 +187,22 @@ fn pln_3_3_a_dimension_only_query_reads_its_dataset() {
         json!("shop.main.orders")
     );
 }
+
+#[test]
+fn pln_1_a_plan_with_data_versions_and_warnings_validates_against_its_schema() {
+    let catalog_schema = support::CATALOG_SCHEMA
+        .replace("menura.catalog_schema", "semantic_compiler.catalog_schema");
+    let loaded = support::handle_with(
+        support::MODEL,
+        &catalog_schema,
+        Some(&state(PARTITIONED_ORDERS)),
+        &menura_core::LoadOptions::default(),
+    );
+    let compiled = plan(compile_default(&loaded, &amount_by_region(), &analyst()));
+    assert!(compiled.cache_key.data_versions.is_some());
+    assert!(!compiled.warnings.is_empty());
+    let json: serde_json::Value =
+        serde_json::from_str(&menura_core::plan_json(&compiled).unwrap()).unwrap();
+    menura_contracts::validate_structure(menura_contracts::ContractKind::CompiledPlan, &json)
+        .unwrap();
+}

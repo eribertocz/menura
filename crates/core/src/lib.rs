@@ -28,7 +28,7 @@ mod plan_document;
 mod producer;
 mod stop;
 
-pub use compile::{CompileResult, InternalError, compile};
+pub use compile::{CompileResult, compile};
 pub use compile_options::CompileOptions;
 pub use handle::Handle;
 pub use json::{OutputError, document_json, plan_json};

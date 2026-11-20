@@ -83,7 +83,7 @@ pub fn compile_default(handle: &Handle, query: &str, context: &str) -> CompileRe
 pub fn plan(result: CompileResult) -> CompiledPlanDocument {
     match result {
         CompileResult::Plan(plan) => *plan,
-        other => panic!("expected a compiled plan, got {other:?}"),
+        other @ CompileResult::Error(_) => panic!("expected a compiled plan, got {other:?}"),
     }
 }
 
@@ -91,7 +91,7 @@ pub fn plan(result: CompileResult) -> CompiledPlanDocument {
 pub fn error(result: CompileResult) -> CompileErrorDocument {
     match result {
         CompileResult::Error(error) => error,
-        other => panic!("expected a compile error, got {other:?}"),
+        other @ CompileResult::Plan(_) => panic!("expected a compile error, got {other:?}"),
     }
 }
 

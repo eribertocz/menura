@@ -1,8 +1,6 @@
 //! The public function `compile` (architecture section 3.5): the stages in the order of E2-5,
 //! and the compiled plan or compile error it returns (PLN-1, PLN-5).
 
-use std::fmt;
-
 use menura_contracts::ContractKind;
 use menura_contracts::types::compiled_plan::{
     CompileErrorContract, CompileErrorDocument, CompiledPlanDocument, Diagnostic,
@@ -21,26 +19,23 @@ use crate::stop::{
     Stop, audit_not_yet_supported, bind_stop, context_not_utf8, plan_stop, query_not_utf8,
 };
 
-/// What `compile` returns: a compiled plan or a compile error (PLN-1, PLN-5), or an internal
-/// error of the compiler.
+/// What `compile` returns: a compiled plan or a compile error (PLN-1, PLN-5).
 #[derive(Debug, Clone, PartialEq)]
 pub enum CompileResult {
     /// The compiled plan (PLN-1).
     Plan(Box<CompiledPlanDocument>),
     /// The compile error (PLN-5).
     Error(CompileErrorDocument),
-    /// A stage received an input that the stage before it never produces: a defect of the
-    /// compiler, not a query error, so it has no specification code.
-    Internal(InternalError),
 }
 
-/// A defect of the compiler: the stage that found it and what it found.
+/// A defect of the compiler: the stage that found it and what it found. `compile` reports it
+/// as `E_INTERNAL` (PLN-5.1a).
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub struct InternalError {
+pub(crate) struct InternalError {
     /// The stage that found the defect, such as `E3`.
-    pub stage: &'static str,
+    pub(crate) stage: &'static str,
     /// What the stage found.
-    pub message: String,
+    pub(crate) message: String,
 }
 
 impl InternalError {
@@ -52,18 +47,6 @@ impl InternalError {
         }
     }
 }
-
-impl fmt::Display for InternalError {
-    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(
-            formatter,
-            "internal error in {}: {}",
-            self.stage, self.message
-        )
-    }
-}
-
-impl std::error::Error for InternalError {}
 
 /// Compiles the query document `query` for the user of the security context document
 /// `security_context`, over the model of `handle`, with `options` (architecture section 3.5).
@@ -80,7 +63,8 @@ impl std::error::Error for InternalError {}
 /// [`CompileResult::Error`], the compile error document (PLN-5) with the first error and the
 /// warnings gathered before it: `E_NOT_YET_SUPPORTED` for `audit: true` (VS-5); `ESEC-01` or
 /// `ESEC-03` for the security context (SEC-3.8, SEC-3.1); then the errors of E1, E2 and E4, in
-/// the order of E2-5. [`CompileResult::Internal`] for a defect of the compiler.
+/// the order of E2-5; `E_INTERNAL`, without location, for a defect of the compiler
+/// (PLN-5.1a).
 ///
 /// # Example
 ///
@@ -110,13 +94,12 @@ pub fn compile(
     let mut warnings: Vec<Diagnostic> = handle.warnings().cloned().collect();
     match compile_stages(handle, query, security_context, options, &mut warnings) {
         Ok(plan) => CompileResult::Plan(Box::new(plan)),
-        Err(Stop::Error(error)) => CompileResult::Error(CompileErrorDocument {
+        Err(stop) => CompileResult::Error(CompileErrorDocument {
             contract: CompileErrorContract::CompileError,
             contract_version: ContractKind::CompileError.latest_version(),
-            errors: vec![error],
+            errors: vec![stop.into_diagnostic()],
             warnings,
         }),
-        Err(Stop::Internal(error)) => CompileResult::Internal(error),
     }
 }
 
@@ -133,8 +116,13 @@ fn compile_stages(
     }
     let context = admit_context(handle, security_context)?;
     warnings.extend(context.former_name_warning());
-    let parsed =
-        parse_query(utf8(query).ok_or_else(query_not_utf8)?).map_err(|error| error.diagnostic())?;
+    let parsed = match parse_query(utf8(query).ok_or_else(query_not_utf8)?) {
+        Ok(parsed) => parsed,
+        Err(error) => {
+            warnings.extend(error.warnings.iter().map(ParseWarning::diagnostic));
+            return Err(error.diagnostic().into());
+        }
+    };
     warnings.extend(parsed.warnings.iter().map(ParseWarning::diagnostic));
     let model = handle.model();
     let bound = bind(&parsed.tree, model, &context).map_err(bind_stop)?;

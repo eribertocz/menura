@@ -14,6 +14,25 @@ pub(crate) enum Stop {
     Internal(InternalError),
 }
 
+impl Stop {
+    /// The error of the compile error document: the first error, or `E_INTERNAL` without
+    /// location, naming the stage, for a defect of the compiler (PLN-5.1a).
+    pub(crate) fn into_diagnostic(self) -> Diagnostic {
+        match self {
+            Self::Error(diagnostic) => diagnostic,
+            Self::Internal(error) => Diagnostic {
+                code: "E_INTERNAL".to_owned(),
+                message: format!(
+                    "internal error of the compiler in stage {}: {}; report it with the inputs \
+                     that produced it",
+                    error.stage, error.message
+                ),
+                location: None,
+            },
+        }
+    }
+}
+
 impl From<Diagnostic> for Stop {
     fn from(diagnostic: Diagnostic) -> Self {
         Self::Error(diagnostic)
@@ -83,4 +102,20 @@ fn not_utf8(code: &str, document: InputDocument, name: &str) -> Stop {
         }),
     }
     .into()
+}
+
+#[cfg(test)]
+mod tests {
+    use super::Stop;
+    use crate::compile::InternalError;
+
+    #[test]
+    fn pln_5_1a_a_defect_of_the_compiler_is_e_internal_without_location() {
+        let diagnostic =
+            Stop::Internal(InternalError::new("E6", "unknown column")).into_diagnostic();
+        assert_eq!(diagnostic.code, "E_INTERNAL");
+        assert_eq!(diagnostic.location, None);
+        assert!(diagnostic.message.contains("stage E6"));
+        assert!(diagnostic.message.contains("unknown column"));
+    }
 }
