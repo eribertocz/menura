@@ -21,7 +21,7 @@ A query asks for metrics, grouped by dimensions, under filters. It has two forms
 | `contract` | Yes | `menura.query` |
 | `contract_version` | Yes | Semantic version, accepted as in CAT-3.2 |
 | `time_zone` | Yes | IANA time zone name |
-| `reference_time` | If the query needs "now" | RFC 3339 instant with offset. The compiler never reads a clock (P2). |
+| `reference_time` | If the query needs "now" | RFC 3339 instant with offset. The compiler never reads a clock (P2). It keeps microseconds: further fraction digits are truncated toward the earlier instant, and a leap second (`:60`) reads as `:59.999999` of the same minute, so neither moves the instant across a unit of QRY-4.2. A year outside 0001–9999, as written or after conversion to UTC, is `E_INVALID_QUERY` at `/reference_time`, checked with the JSON Schema. |
 | `query` or `sql` | Exactly one | The question |
 
 Envelope checks run before schema validation, in the order of E1-2.1.
