@@ -318,6 +318,11 @@ Find a rule ID or a section here, then open only that file at that line.
 | [decisions/0001-security-context-admission.md](decisions/0001-security-context-admission.md#L10) | 10 | section | Decision |
 | [decisions/0001-security-context-admission.md](decisions/0001-security-context-admission.md#L20) | 20 | section | Consequences |
 | [decisions/0001-security-context-admission.md](decisions/0001-security-context-admission.md#L26) | 26 | section | Rules changed |
+| [decisions/0002-e1-envelope-and-references.md](decisions/0002-e1-envelope-and-references.md#L1) | 1 | section | 0002 E1 envelope, time zone names, references and the 0.3.0 SQL-form check |
+| [decisions/0002-e1-envelope-and-references.md](decisions/0002-e1-envelope-and-references.md#L3) | 3 | section | Context |
+| [decisions/0002-e1-envelope-and-references.md](decisions/0002-e1-envelope-and-references.md#L9) | 9 | section | Decision |
+| [decisions/0002-e1-envelope-and-references.md](decisions/0002-e1-envelope-and-references.md#L28) | 28 | section | Consequences |
+| [decisions/0002-e1-envelope-and-references.md](decisions/0002-e1-envelope-and-references.md#L34) | 34 | section | Rules changed |
 | [decisions/README.md](decisions/README.md#L1) | 1 | section | Decision records |
 | [extensions/README.md](extensions/README.md#L1) | 1 | section | Extensions |
 | [extensions/README.md](extensions/README.md#L18) | 18 | section | EXT-1 Runtime failure policies |
@@ -642,18 +647,21 @@ Find a rule ID or a section here, then open only that file at that line.
 | [stages/E1-parse.md](stages/E1-parse.md#L3) | 3 | section | E1-1 Purpose |
 | [stages/E1-parse.md](stages/E1-parse.md#L9) | 9 | section | E1-2 Envelope |
 | [stages/E1-parse.md](stages/E1-parse.md#L11) | 11 | rule | E1-2.1 |
-| [stages/E1-parse.md](stages/E1-parse.md#L13) | 13 | section | E1-3 Wide-table form |
-| [stages/E1-parse.md](stages/E1-parse.md#L15) | 15 | rule | E1-3.1 |
-| [stages/E1-parse.md](stages/E1-parse.md#L16) | 16 | rule | E1-3.2 |
-| [stages/E1-parse.md](stages/E1-parse.md#L17) | 17 | rule | E1-3.3 |
-| [stages/E1-parse.md](stages/E1-parse.md#L19) | 19 | section | E1-4 SQL form |
-| [stages/E1-parse.md](stages/E1-parse.md#L36) | 36 | rule | E1-4.1 |
-| [stages/E1-parse.md](stages/E1-parse.md#L37) | 37 | rule | E1-4.2 |
-| [stages/E1-parse.md](stages/E1-parse.md#L38) | 38 | rule | E1-4.3 |
-| [stages/E1-parse.md](stages/E1-parse.md#L39) | 39 | rule | E1-4.4 |
-| [stages/E1-parse.md](stages/E1-parse.md#L41) | 41 | section | E1-5 Query tree |
-| [stages/E1-parse.md](stages/E1-parse.md#L54) | 54 | rule | E1-5.1 |
-| [stages/E1-parse.md](stages/E1-parse.md#L56) | 56 | section | E1-6 Diagnostics |
+| [stages/E1-parse.md](stages/E1-parse.md#L12) | 12 | rule | E1-2.2 |
+| [stages/E1-parse.md](stages/E1-parse.md#L13) | 13 | rule | E1-2.3 |
+| [stages/E1-parse.md](stages/E1-parse.md#L14) | 14 | rule | E1-2.4 |
+| [stages/E1-parse.md](stages/E1-parse.md#L16) | 16 | section | E1-3 Wide-table form |
+| [stages/E1-parse.md](stages/E1-parse.md#L18) | 18 | rule | E1-3.1 |
+| [stages/E1-parse.md](stages/E1-parse.md#L19) | 19 | rule | E1-3.2 |
+| [stages/E1-parse.md](stages/E1-parse.md#L20) | 20 | rule | E1-3.3 |
+| [stages/E1-parse.md](stages/E1-parse.md#L22) | 22 | section | E1-4 SQL form |
+| [stages/E1-parse.md](stages/E1-parse.md#L39) | 39 | rule | E1-4.1 |
+| [stages/E1-parse.md](stages/E1-parse.md#L40) | 40 | rule | E1-4.2 |
+| [stages/E1-parse.md](stages/E1-parse.md#L41) | 41 | rule | E1-4.3 |
+| [stages/E1-parse.md](stages/E1-parse.md#L42) | 42 | rule | E1-4.4 |
+| [stages/E1-parse.md](stages/E1-parse.md#L44) | 44 | section | E1-5 Query tree |
+| [stages/E1-parse.md](stages/E1-parse.md#L58) | 58 | rule | E1-5.1 |
+| [stages/E1-parse.md](stages/E1-parse.md#L60) | 60 | section | E1-6 Diagnostics |
 | [stages/E2-bind.md](stages/E2-bind.md#L1) | 1 | section | E2 Bind and authorize |
 | [stages/E2-bind.md](stages/E2-bind.md#L3) | 3 | section | E2-1 Purpose |
 | [stages/E2-bind.md](stages/E2-bind.md#L8) | 8 | section | E2-2 Input and output |

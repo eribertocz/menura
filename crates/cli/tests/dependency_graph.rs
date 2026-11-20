@@ -41,6 +41,7 @@ const TOOLS: &[&str] = &["conformance-runner"];
 const EXPECTED_EDGES: &[(&str, &str)] = &[
     ("model", "contracts"),
     ("expressions", "model"),
+    ("representations", "contracts"),
     ("representations", "model"),
     ("security", "contracts"),
     ("security", "model"),

@@ -9,11 +9,14 @@ that error precedence is the same for both forms (E2-5).
 ## E1-2 Envelope
 
 - **E1-2.1** The envelope is checked before JSON Schema validation, in this order: the document is JSON (`E_INVALID_QUERY`); `contract` and `contract_version` are supported (`EQRY-08`); exactly one of `query` and `sql` is present (`EQRY-01`); `time_zone` is a known IANA name (`EQRY-02`); every extension `version` is supported (`EQRY-06`). Then the document is validated against the query JSON Schema; any failure is `E_INVALID_QUERY`, located by JSON Pointer.
+- **E1-2.2** Locations and members that cannot be read, as in CAT-9.1 and SEC-3.8. A document that is not valid UTF-8 JSON is `E_INVALID_QUERY` at the empty pointer, with line and column. A missing, non-string or unsupported `contract` or `contract_version` is `EQRY-08`, at `/contract` or `/contract_version`. `EQRY-01` is located at the empty pointer. `EQRY-02` applies only to a `time_zone` that is a string, located at `/time_zone`; a missing or non-string `time_zone` is left to the JSON Schema. `EQRY-06` applies only to an extension whose `data.version` is an integer other than 1, located at that `version`; an entry whose `version` cannot be read is left to the JSON Schema.
+- **E1-2.3** A known IANA name is the exact spelling, compared as a sequence of code points, of a zone or a link of the IANA time-zone database the compiler bundles. That database's version is the one `producer` declares (E6-5.5). `europe/madrid` is therefore `EQRY-02`, and `US/Eastern` is accepted.
+- **E1-2.4** A query read through the former contract name reports `WQRY-01` at `/contract`; an extension read through the former namespace reports it at that extension's `data/namespace`. They are reported only for a query that passes every check of this section and its JSON Schema, in that order, after the security context's warning (SEC-3.9).
 
 ## E1-3 Wide-table form
 
-- **E1-3.1** Each dimension and metric string is parsed as a reference: `dataset.field`, `dataset.metric` (development-line models) or `metric` (QRY-3.2).
-- **E1-3.2** Each filter is parsed as an expression of the E0F-2 language. Whether it is boolean, reads one dataset, and contains no aggregate, metric reference or window function is checked in E2.
+- **E1-3.1** Each dimension and metric string is parsed as a reference: `dataset.field`, `dataset.metric` (development-line models) or `metric` (QRY-3.2). A reference is split into parts at each `.` outside a delimited identifier. Each part is a delimited identifier when it starts and ends with `"`, read as in E0D-1.4, and a regular identifier otherwise. E1 never rejects a reference. A reference that names nothing is `E_NAME_NOT_FOUND` in E2 (E2-3.2), located at the reference. This includes one with an empty part, a malformed delimited part or more than two parts.
+- **E1-3.2** Each filter is parsed as an expression of the E0F-2 language. Whether it is boolean, reads one dataset, and contains no aggregate, metric reference or window function is checked in E2. A filter text the grammar rejects is `E0F-01`, and one with a construct outside the subset is `E0F-02` (E0F-9.1), located at the filter. These are checked right after the JSON Schema (E2-5 row 1): `filter` first, then each `filters` item in index order, and the first failure is reported.
 - **E1-3.3** Extensions are parsed as defined in QRY-4.
 
 ## E1-4 SQL form
@@ -46,12 +49,13 @@ covered by the Layer 2 suite cases that test it.
 | Metrics | Reference or inline expression over metrics, output name |
 | Filters | Parsed expressions (E2 assigns each to its dataset) |
 | Date range | Absolute bounds as written, or the relative range as written (resolved in E2, which raises `EQRY-03` without `reference_time`) |
+| Time zone, reference time | `time_zone` (a known name, E1-2.3) and `reference_time` when present (an RFC 3339 instant); E2 uses them to resolve relative ranges (QRY-4.2), and E4 and E6 to truncate time grains (E6-5.2) |
 | Paths | Relationships chosen by the query |
 | Order, limit | If present |
 | Column order | Wide-table form: dimensions, then metrics (Layer 3 section 3.6). SQL form: `SELECT` order. |
 | Origin | Location of each element in the input |
 
-- **E1-5.1** Output names are the alias, or the last part of the reference (checked for collisions in E2).
+- **E1-5.1** Output names are the alias as written, or else the last part of the reference as written: never normalized, and without the quotes of a delimited part (`orders."Net Amount"` gives `Net Amount`). Collisions are checked in E2.
 
 ## E1-6 Diagnostics
 
@@ -60,4 +64,5 @@ covered by the Layer 2 suite cases that test it.
 | `E_INVALID_QUERY` | Not JSON, or fails the JSON Schema |
 | `E_EMPTY_AGGREGATION_QUERY` | No dimensions and no metrics |
 | `EQRY-01`, `EQRY-02`, `EQRY-05`, `EQRY-06`, `EQRY-08`, `EQRY-13` | As in QRY-7 |
+| `E0F-01`, `E0F-02` | A filter text does not parse, or uses a construct outside the subset (E1-3.2) |
 | `E_NOT_YET_SUPPORTED` | Before 0.5.0: the query uses the SQL form (VS-2) |
