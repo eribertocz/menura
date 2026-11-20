@@ -6,7 +6,8 @@
 //! restricted to (SCY-3.1, SCY-3.1a, SCY-5.1.8).
 //!
 //! The compiler admits the security context with [`admit_security_context`]: the order of
-//! checks of SEC-3.8, the declared types of SEC-3.3, and the fingerprint of SEC-3.6.
+//! checks of SEC-3.8, the declared types of SEC-3.3, and the fingerprint of SEC-3.6. E4
+//! builds the row filter of a dataset with [`row_filter`] (E4-6.2 to E4-6.4, E4-6.9).
 
 #![forbid(unsafe_code)]
 
@@ -17,6 +18,7 @@ mod context;
 mod list_attributes;
 mod restrictions;
 mod role;
+mod row_filter;
 mod walk;
 
 pub use access::{AccessMode, DatasetAccess, FieldRestriction};
@@ -29,3 +31,4 @@ pub use context::{
 pub use list_attributes::misplaced_list_attributes;
 pub use restrictions::{RestrictionInput, Restrictions, restrictions};
 pub use role::Role;
+pub use row_filter::{RowFilterError, row_filter};
