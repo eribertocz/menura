@@ -326,8 +326,8 @@ Find a rule ID or a section here, then open only that file at that line.
 | [decisions/0003-e2-query-order.md](decisions/0003-e2-query-order.md#L1) | 1 | section | 0003 E2 query order and the choice of E_NOT_YET_SUPPORTED |
 | [decisions/0003-e2-query-order.md](decisions/0003-e2-query-order.md#L3) | 3 | section | Context |
 | [decisions/0003-e2-query-order.md](decisions/0003-e2-query-order.md#L10) | 10 | section | Decision |
-| [decisions/0003-e2-query-order.md](decisions/0003-e2-query-order.md#L20) | 20 | section | Consequences |
-| [decisions/0003-e2-query-order.md](decisions/0003-e2-query-order.md#L25) | 25 | section | Rules changed |
+| [decisions/0003-e2-query-order.md](decisions/0003-e2-query-order.md#L22) | 22 | section | Consequences |
+| [decisions/0003-e2-query-order.md](decisions/0003-e2-query-order.md#L27) | 27 | section | Rules changed |
 | [decisions/README.md](decisions/README.md#L1) | 1 | section | Decision records |
 | [extensions/README.md](extensions/README.md#L1) | 1 | section | Extensions |
 | [extensions/README.md](extensions/README.md#L18) | 18 | section | EXT-1 Runtime failure policies |
@@ -691,8 +691,9 @@ Find a rule ID or a section here, then open only that file at that line.
 | [stages/E2-bind.md](stages/E2-bind.md#L76) | 76 | rule | E2-5.1 |
 | [stages/E2-bind.md](stages/E2-bind.md#L77) | 77 | rule | E2-5.2 |
 | [stages/E2-bind.md](stages/E2-bind.md#L78) | 78 | rule | E2-5.3 |
-| [stages/E2-bind.md](stages/E2-bind.md#L79) | 79 | rule | E2-5.4 |
-| [stages/E2-bind.md](stages/E2-bind.md#L81) | 81 | section | E2-6 Diagnostics |
+| [stages/E2-bind.md](stages/E2-bind.md#L79) | 79 | rule | E2-5.5 |
+| [stages/E2-bind.md](stages/E2-bind.md#L80) | 80 | rule | E2-5.4 |
+| [stages/E2-bind.md](stages/E2-bind.md#L82) | 82 | section | E2-6 Diagnostics |
 | [stages/E3-paths.md](stages/E3-paths.md#L1) | 1 | section | E3 Resolve paths |
 | [stages/E3-paths.md](stages/E3-paths.md#L3) | 3 | section | E3-1 Purpose |
 | [stages/E3-paths.md](stages/E3-paths.md#L8) | 8 | section | E3-2 Input and output |

@@ -14,6 +14,8 @@ where it is located, and VS-1 did not tie "reaches a dataset with row policies" 
   next (E2-5.3).
 - `E_NOT_YET_SUPPORTED` is located at the first element in query order outside the slice, and
   names the capability whose version comes first in table 7.1 (E2-5.4).
+- Output names are compared case-insensitively (E0D-1.1 upper-case mapping) for
+  `E_NAME_COLLISION` and `order_by`, because DuckDB column names are (E2-5.5).
 - The propagation test of VS-1 uses many-to-one reachability (E4-6.5) of any dataset that
   declares `row_access`, independent of the user's roles.
 
@@ -24,4 +26,4 @@ is in the slice never reveals a policy the user does not hold.
 
 ## Rules changed
 
-E2-5.3, E2-5.4 (new), VS-1, VS-2.
+E2-5.3, E2-5.4, E2-5.5 (new), VS-1, VS-2.
