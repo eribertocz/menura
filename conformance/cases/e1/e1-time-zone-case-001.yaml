@@ -1,0 +1,18 @@
+id: e1-time-zone-case-001
+rules: [E1-2.1, E1-2.2, E1-2.3]
+model: slice
+security_context: auditor.json
+query:
+  contract: "menura.query"
+  contract_version: "1.1.0"
+  time_zone: "europe/madrid"
+  query:
+    dimensions: ["sales.region"]
+    metrics:
+      - {"metric": "sale_count", "alias": "sale_count"}
+expect:
+  outcome: "error"
+  error: "EQRY-02"
+  location:
+    document: "query"
+    pointer: "/time_zone"

@@ -1,0 +1,18 @@
+id: e4-missing-attribute-001
+rules: [E4-6.9]
+model: slice
+security_context: analyst-missing.json
+query:
+  contract: "menura.query"
+  contract_version: "1.1.0"
+  time_zone: "UTC"
+  query:
+    dimensions: ["sales.region"]
+    metrics:
+      - {"metric": "sale_count", "alias": "sale_count"}
+expect:
+  outcome: "error"
+  error: "ESEC-02"
+  location:
+    document: "security_context"
+    pointer: "/attributes"

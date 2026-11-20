@@ -1,0 +1,91 @@
+version: "0.1.1"
+semantic_model:
+  - name: slice
+    description: 'The 0.3.0 slice: one dataset with access, a restricted field, row policies and attributes'
+    custom_extensions:
+      - vendor_name: COMMON
+        data: '{"namespace": "menura", "version": 1, "security_context": {"roles": ["analyst", "auditor", "guest", "manager", "viewer"], "attributes": [{"name": "regions", "type": "list<text>"}, {"name": "blocked_channels", "type": "list<text>"}, {"name": "team_id", "type": "integer"}]}}'
+    datasets:
+      - name: sales
+        source: shop.main.sales
+        primary_key: [sale_id]
+        fields:
+          - name: sale_id
+            expression: {dialects: [{dialect: ANSI_SQL, expression: 'sale_id'}]}
+          - name: region
+            expression: {dialects: [{dialect: ANSI_SQL, expression: 'region'}]}
+          - name: channel
+            expression: {dialects: [{dialect: ANSI_SQL, expression: 'channel'}]}
+          - name: team_id
+            expression: {dialects: [{dialect: ANSI_SQL, expression: 'team_id'}]}
+          - name: quantity
+            expression: {dialects: [{dialect: ANSI_SQL, expression: 'quantity'}]}
+          - name: amount
+            expression: {dialects: [{dialect: ANSI_SQL, expression: 'amount'}]}
+          - name: whole_amount
+            expression: {dialects: [{dialect: ANSI_SQL, expression: 'CAST(amount AS DECIMAL(10, 0))'}]}
+          - name: cost
+            expression: {dialects: [{dialect: ANSI_SQL, expression: 'cost'}]}
+          - name: voided
+            expression: {dialects: [{dialect: ANSI_SQL, expression: 'voided'}]}
+          - name: sale_date
+            expression: {dialects: [{dialect: ANSI_SQL, expression: 'sale_date'}]}
+            dimension: {is_time: true}
+          - name: sold_at
+            expression: {dialects: [{dialect: ANSI_SQL, expression: 'sold_at'}]}
+            dimension: {is_time: true}
+        custom_extensions:
+          - vendor_name: COMMON
+            data: '{"namespace": "menura", "version": 1, "access": {"mode": "roles", "roles": ["analyst", "auditor", "guest", "manager", "viewer"], "fields": [{"names": ["cost"], "roles": ["manager"]}]}, "row_access": [{"name": "channel_scope", "condition": "channel NOT IN (USER_ATTRIBUTE(''blocked_channels''))", "roles": ["manager"], "exempt_roles": ["auditor"]}, {"name": "not_voided", "condition": "voided = FALSE", "exempt_roles": ["auditor"]}, {"name": "region_scope", "condition": "region IN (USER_ATTRIBUTE(''regions''))", "roles": ["analyst"], "exempt_roles": ["auditor"]}, {"name": "team_scope", "condition": "team_id = USER_ATTRIBUTE(''team_id'')", "roles": ["viewer"], "exempt_roles": ["auditor"]}]}'
+      - name: targets
+        source: shop.main.targets
+        primary_key: [region]
+        fields:
+          - name: region
+            expression: {dialects: [{dialect: ANSI_SQL, expression: 'region'}]}
+          - name: target
+            expression: {dialects: [{dialect: ANSI_SQL, expression: 'target'}]}
+        custom_extensions:
+          - vendor_name: COMMON
+            data: '{"namespace": "menura", "version": 1, "access": {"mode": "roles", "roles": ["manager"]}}'
+      - name: returns
+        source: shop.main.returns
+        primary_key: [return_id]
+        fields:
+          - name: return_id
+            expression: {dialects: [{dialect: ANSI_SQL, expression: 'return_id'}]}
+          - name: sale_id
+            expression: {dialects: [{dialect: ANSI_SQL, expression: 'sale_id'}]}
+          - name: refund
+            expression: {dialects: [{dialect: ANSI_SQL, expression: 'refund'}]}
+        custom_extensions:
+          - vendor_name: COMMON
+            data: '{"namespace": "menura", "version": 1, "access": {"mode": "roles", "roles": ["analyst", "auditor", "manager"]}}'
+    relationships:
+      - name: returns_sales
+        from: returns
+        to: sales
+        from_columns: [sale_id]
+        to_columns: [sale_id]
+      - name: sales_targets
+        from: sales
+        to: targets
+        from_columns: [region]
+        to_columns: [region]
+    metrics:
+      - name: total_amount
+        expression: {dialects: [{dialect: ANSI_SQL, expression: 'SUM(sales.amount)'}]}
+      - name: total_quantity
+        expression: {dialects: [{dialect: ANSI_SQL, expression: 'SUM(sales.quantity)'}]}
+      - name: sale_count
+        expression: {dialects: [{dialect: ANSI_SQL, expression: 'COUNT(sales.sale_id)'}]}
+      - name: team_per_quantity
+        expression: {dialects: [{dialect: ANSI_SQL, expression: 'SUM(sales.team_id) / SUM(sales.quantity)'}]}
+      - name: total_whole_amount
+        expression: {dialects: [{dialect: ANSI_SQL, expression: 'SUM(sales.whole_amount)'}]}
+      - name: total_cost
+        expression: {dialects: [{dialect: ANSI_SQL, expression: 'SUM(sales.cost)'}]}
+      - name: total_target
+        expression: {dialects: [{dialect: ANSI_SQL, expression: 'SUM(targets.target)'}]}
+      - name: total_refund
+        expression: {dialects: [{dialect: ANSI_SQL, expression: 'SUM(returns.refund)'}]}

@@ -1,0 +1,19 @@
+id: e2-restricted-field-001
+rules: [E2-4.2, E2-4.4]
+model: slice
+security_context: analyst-north.json
+query:
+  contract: "menura.query"
+  contract_version: "1.1.0"
+  time_zone: "UTC"
+  query:
+    dimensions: ["sales.region"]
+    metrics:
+      - {"metric": "sale_count", "alias": "sale_count"}
+    filter: "sales.cost > 1"
+expect:
+  outcome: "error"
+  error: "E_NAME_NOT_FOUND"
+  location:
+    document: "query"
+    pointer: "/query/filter"

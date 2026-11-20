@@ -1,0 +1,20 @@
+id: qry-grain-not-in-dimensions-001
+rules: [QRY-4.1]
+model: slice
+security_context: auditor.json
+query:
+  contract: "menura.query"
+  contract_version: "1.1.0"
+  time_zone: "UTC"
+  query:
+    dimensions: ["sales.region"]
+    metrics:
+      - {"metric": "sale_count", "alias": "sale_count"}
+    nonportable_extensions:
+      - {"vendor_name": "COMMON", "data": {"namespace": "menura", "version": 1, "time_grains": [{"dimension": "sales.sale_date", "grain": "month"}]}}
+expect:
+  outcome: "error"
+  error: "EQRY-09"
+  location:
+    document: "query"
+    pointer: "/query/nonportable_extensions/0/data/time_grains/0"

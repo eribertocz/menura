@@ -1,0 +1,20 @@
+id: cs-golden-sql-001
+rules: [CS-2.3, E6-4.2, E6-4.8]
+model: slice
+security_context: manager.json
+query:
+  contract: "menura.query"
+  contract_version: "1.1.0"
+  time_zone: "UTC"
+  query:
+    dimensions: ["sales.channel"]
+    metrics:
+      - {"metric": "sale_count", "alias": "sale_count"}
+    filter: "sales.quantity >= 1"
+    nonportable_extensions:
+      - {"vendor_name": "COMMON", "data": {"namespace": "menura", "version": 1, "order_by": [{"output": "channel", "direction": "desc", "nulls": "last"}]}}
+expect:
+  outcome: "plan"
+  sql: "cs-golden-sql-001.sql"
+  row_order: "exact"
+  rows: "cs-golden-sql-001.csv"

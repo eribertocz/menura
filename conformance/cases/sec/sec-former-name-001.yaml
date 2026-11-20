@@ -1,0 +1,17 @@
+id: sec-former-name-001
+rules: [SEC-3.9]
+model: slice
+security_context: analyst-former.json
+query:
+  contract: "semantic_compiler.query"
+  contract_version: "1.1.0"
+  time_zone: "UTC"
+  query:
+    dimensions: ["sales.region"]
+    metrics:
+      - {"metric": "sale_count", "alias": "sale_count"}
+expect:
+  outcome: "plan"
+  warnings: ["WQRY-01", "WQRY-01"]
+  rows: "sec-former-name-001.csv"
+  row_order: "any"

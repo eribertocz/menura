@@ -1,0 +1,18 @@
+id: e6-instant-grain-001
+rules: [E6-5.2, E6-4.10, QRY-4.1]
+model: slice
+security_context: auditor.json
+query:
+  contract: "menura.query"
+  contract_version: "1.1.0"
+  time_zone: "Asia/Tokyo"
+  query:
+    dimensions: ["sales.sold_at"]
+    metrics:
+      - {"metric": "sale_count", "alias": "sale_count"}
+    nonportable_extensions:
+      - {"vendor_name": "COMMON", "data": {"namespace": "menura", "version": 1, "time_grains": [{"dimension": "sales.sold_at", "grain": "month"}]}}
+expect:
+  outcome: "plan"
+  rows: "e6-instant-grain-001.csv"
+  row_order: "any"
