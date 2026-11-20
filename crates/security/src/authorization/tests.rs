@@ -181,3 +181,31 @@ fn e2_4_8_the_subgraph_holds_admitted_datasets_and_relationships_between_them() 
         &[name("ORDERS_TO_CUSTOMERS"), name("ORDERS_TO_SECRETS")]
     );
 }
+
+#[test]
+fn e2_4_3_a_source_column_read_is_protected_by_the_restrictions_of_that_column() {
+    let model = model();
+    let analyst = user(&["analyst"]);
+    let admin = user(&["admin"]);
+    let scoped = |metric: &str| MetricPath::Dataset {
+        dataset: name("ORDERS"),
+        metric: name(metric),
+    };
+    let raw_cost = scoped("RAW_COST");
+    assert_eq!(
+        Authorization::new(&model, &analyst)
+            .metric(&raw_cost)
+            .access,
+        Access::Denied
+    );
+    assert_eq!(
+        Authorization::new(&model, &admin).metric(&raw_cost).access,
+        Access::Granted
+    );
+    assert_eq!(
+        Authorization::new(&model, &analyst)
+            .metric(&scoped("RAW_AMOUNT"))
+            .access,
+        Access::Granted
+    );
+}

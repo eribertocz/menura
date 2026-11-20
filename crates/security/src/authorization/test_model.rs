@@ -123,7 +123,11 @@ fn orders() -> Dataset {
             field("UNIT_COST", "cost"),
         ],
     );
-    orders.metrics = vec![metric("TOTAL_COST", sum(None, "cost_copy"))];
+    orders.metrics = vec![
+        metric("RAW_AMOUNT", sum(Some("source"), "amount")),
+        metric("RAW_COST", sum(Some("source"), "COST")),
+        metric("TOTAL_COST", sum(None, "cost_copy")),
+    ];
     orders
 }
 
@@ -164,7 +168,8 @@ fn metrics() -> Vec<Metric> {
 }
 
 /// `ORDERS` (roles analyst and admin; `UNIT_COST` restricted to admin, and `COST_COPY` reads
-/// its column; dataset metric `TOTAL_COST` sums `COST_COPY`), `CUSTOMERS` (authenticated),
+/// its column; dataset metrics `RAW_AMOUNT` and `RAW_COST` sum the source columns `amount`
+/// and `COST`, and `TOTAL_COST` sums `COST_COPY`), `CUSTOMERS` (authenticated),
 /// `SECRETS` (admin), `CLOSED` (no `access`), `SUMMARY` (internal); metrics `REVENUE`, `COST`,
 /// `SECRET_TOTAL` and the derived `MARGIN`.
 pub(super) fn model() -> InternalModel {

@@ -18,10 +18,21 @@ use crate::walk::children;
 /// of E0D-1.1, which identifies one column of the catalog relation (E0D-1.5).
 pub(crate) type ColumnKey = (NormalizedName, String);
 
+/// What a restriction can protect: a field, or a source column a dataset metric reads directly
+/// as `source.column`. A column is protected by every restriction that protects it (SCY-3.1a),
+/// so it takes part in the restrictions as an item that reads that column only.
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
+pub(crate) enum ReadItem {
+    /// A field.
+    Field(FieldPath),
+    /// A source column read directly.
+    Column(ColumnKey),
+}
+
 /// What the fields and metrics of a model read.
 pub(crate) struct ModelReads {
     /// The input of [`crate::restrictions::restrictions`].
-    pub(crate) restriction_input: RestrictionInput<FieldPath, ColumnKey, MetricPath>,
+    pub(crate) restriction_input: RestrictionInput<ReadItem, ColumnKey, MetricPath>,
     /// The datasets each metric reads itself, without those of its input metrics.
     pub(crate) metric_datasets: BTreeMap<MetricPath, BTreeSet<NormalizedName>>,
 }
@@ -65,7 +76,7 @@ pub(crate) fn normalized(identifier: &Identifier) -> NormalizedName {
 }
 
 /// Every field named in an `access.fields` item, with the roles of the item (SCY-3.1).
-fn declared_restrictions(model: &InternalModel) -> Vec<(FieldPath, BTreeSet<Role>)> {
+fn declared_restrictions(model: &InternalModel) -> Vec<(ReadItem, BTreeSet<Role>)> {
     let mut declared = Vec::new();
     for dataset in &model.parts().datasets {
         let items = dataset.access.iter().flat_map(|access| &access.fields);
@@ -80,7 +91,7 @@ fn declared_restrictions(model: &InternalModel) -> Vec<(FieldPath, BTreeSet<Role
                     dataset: dataset.name.clone(),
                     field: field.clone(),
                 };
-                declared.push((path, roles.clone()));
+                declared.push((ReadItem::Field(path), roles.clone()));
             }
         }
     }
@@ -101,7 +112,10 @@ fn add_field_columns(reads: &mut ModelReads, dataset: &Dataset) {
             dataset: dataset.name.clone(),
             field: field.name.clone(),
         };
-        reads.restriction_input.field_columns.insert(path, columns);
+        reads
+            .restriction_input
+            .field_columns
+            .insert(ReadItem::Field(path), columns);
     }
 }
 
@@ -112,7 +126,15 @@ fn column_text(identifier: &Identifier) -> String {
     normalize_unquoted_identifier(identifier.text())
 }
 
-/// What `metric` reads: its fields, its datasets and its input metrics.
+/// What one metric reads directly, before its input metrics.
+#[derive(Default)]
+struct MetricReads {
+    fields: BTreeSet<FieldPath>,
+    columns: BTreeSet<ColumnKey>,
+    inputs: BTreeSet<MetricPath>,
+}
+
+/// What `metric` reads: its fields, its source columns, its datasets and its input metrics.
 fn add_metric(
     reads: &mut ModelReads,
     model: &InternalModel,
@@ -120,49 +142,60 @@ fn add_metric(
     metric: &Metric,
     scope: Option<&Dataset>,
 ) {
-    let mut fields = BTreeSet::new();
-    let mut datasets = BTreeSet::new();
-    let mut inputs = BTreeSet::new();
+    let read = metric_reads(metric, scope);
+    let mut datasets: BTreeSet<NormalizedName> = metric
+        .classification
+        .iter()
+        .flat_map(|classification| classification.home_datasets.iter().cloned())
+        .collect();
+    datasets.extend(read.fields.iter().map(|field| field.dataset.clone()));
+    datasets.extend(read.columns.iter().map(|(dataset, _)| dataset.clone()));
+    datasets.extend(population_dataset(model, metric));
+    let mut items: BTreeSet<ReadItem> = read.fields.into_iter().map(ReadItem::Field).collect();
+    for column in read.columns {
+        let item = ReadItem::Column(column.clone());
+        let input = &mut reads.restriction_input;
+        input
+            .field_columns
+            .insert(item.clone(), BTreeSet::from([column]));
+        items.insert(item);
+    }
+    let input = &mut reads.restriction_input;
+    input.metric_fields.insert(path.clone(), items);
+    input.metric_inputs.insert(path.clone(), read.inputs);
+    reads.metric_datasets.insert(path, datasets);
+}
+
+/// The fields, source columns and input metrics `metric` reads itself.
+fn metric_reads(metric: &Metric, scope: Option<&Dataset>) -> MetricReads {
+    let mut read = MetricReads::default();
     for node in metric.expression.iter().flat_map(nodes) {
         match node {
             Expression::Reference(reference) => {
-                read_reference(reference, scope, &mut fields, &mut datasets);
+                read_reference(reference, scope, &mut read.fields, &mut read.columns);
             }
             Expression::MetricAggregate(reference) => {
-                inputs.insert(input_path(reference));
+                read.inputs.insert(input_path(reference));
             }
             _ => {}
         }
     }
-    add_declared_reads(metric, scope, &mut fields, &mut inputs);
-    if let Some(classification) = &metric.classification {
-        datasets.extend(classification.home_datasets.iter().cloned());
-    }
-    datasets.extend(fields.iter().map(|field| field.dataset.clone()));
-    datasets.extend(population_dataset(model, metric));
-    reads
-        .restriction_input
-        .metric_fields
-        .insert(path.clone(), fields);
-    reads
-        .restriction_input
-        .metric_inputs
-        .insert(path.clone(), inputs);
-    reads.metric_datasets.insert(path, datasets);
+    add_declared_reads(metric, scope, &mut read.fields, &mut read.inputs);
+    read
 }
 
-/// A field reference of a metric expression: `dataset.field`, a bare field of the dataset of a
-/// dataset metric, or `source.column` of that dataset (E0D-3), which reads the dataset only.
+/// A reference of a metric expression: `dataset.field`, a bare field of the dataset of a
+/// dataset metric, or `source.column`, a source column of that dataset (E0D-3).
 fn read_reference(
     reference: &Reference,
     scope: Option<&Dataset>,
     fields: &mut BTreeSet<FieldPath>,
-    datasets: &mut BTreeSet<NormalizedName>,
+    columns: &mut BTreeSet<ColumnKey>,
 ) {
     let name = normalized(&reference.name);
     match (&reference.qualifier, scope) {
         (Some(qualifier), Some(dataset)) if normalized(qualifier).as_str() == "SOURCE" => {
-            datasets.insert(dataset.name.clone());
+            columns.insert((dataset.name.clone(), column_text(&reference.name)));
         }
         (Some(qualifier), _) => {
             fields.insert(FieldPath {

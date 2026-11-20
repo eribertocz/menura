@@ -19,7 +19,7 @@ use menura_representations::bound_query::{
 use crate::context::AdmittedSecurityContext;
 use crate::restrictions::{Restrictions, restrictions};
 use crate::role::Role;
-use reads::{ModelReads, model_reads};
+use reads::{ModelReads, ReadItem, model_reads};
 
 /// The authorization of one user against one model: it decides on each dataset, field and
 /// metric, and computes the authorized subgraph.
@@ -30,7 +30,7 @@ use reads::{ModelReads, model_reads};
 pub struct Authorization<'model> {
     model: &'model InternalModel,
     roles: BTreeSet<Role>,
-    restrictions: Restrictions<FieldPath, MetricPath>,
+    restrictions: Restrictions<ReadItem, MetricPath>,
     metric_datasets: BTreeMap<MetricPath, BTreeSet<NormalizedName>>,
     metric_inputs: BTreeMap<MetricPath, BTreeSet<MetricPath>>,
 }
@@ -77,7 +77,7 @@ impl<'model> Authorization<'model> {
     #[must_use]
     pub fn field(&self, path: &FieldPath) -> AuthorizationDecision {
         let object = AuthorizedObject::Field(path.clone());
-        match self.restrictions.fields.get(path) {
+        match self.restrictions.fields.get(&ReadItem::Field(path.clone())) {
             Some(roles) => decision(
                 object,
                 self.holds_any(roles),
