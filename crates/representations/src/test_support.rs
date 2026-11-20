@@ -3,7 +3,11 @@
 use menura_model::expression::{Expression, Identifier, Literal, Reference};
 use menura_model::internal_model::{NormalizedName, SourceLocation};
 
+use menura_model::expression::{DateValue, TimeOfDay, TimestampValue};
+
 use crate::origin::{Origin, QueryLocation, TextPosition};
+use crate::query_tree::{QueryReference, ReferencePart};
+use crate::time::{QueryTime, ReferenceTime, TimeZoneName, UtcOffset};
 
 /// A normalized name.
 pub(crate) fn name(text: &str) -> NormalizedName {
@@ -40,4 +44,28 @@ pub(crate) fn reference(qualifier: &str, field: &str) -> Reference {
 /// The literal `TRUE`.
 pub(crate) fn true_literal() -> Expression {
     Expression::Literal(Literal::Boolean(true))
+}
+
+/// The query reference whose parts are the regular identifiers `parts`, as written.
+pub(crate) fn query_reference(parts: &[&str]) -> QueryReference {
+    QueryReference::new(
+        parts
+            .iter()
+            .map(|part| ReferencePart::Regular((*part).to_owned()))
+            .collect(),
+    )
+    .expect("at least one part")
+}
+
+/// The time zone `Europe/Madrid` and the reference time 2026-03-31T10:00:00+02:00.
+pub(crate) fn madrid_time() -> QueryTime {
+    let local = TimestampValue {
+        date: DateValue::new(2026, 3, 31).expect("a date"),
+        time: TimeOfDay::new(10, 0, 0, "").expect("a time of day"),
+    };
+    let offset = UtcOffset::from_minutes(120).expect("an offset");
+    QueryTime {
+        time_zone: TimeZoneName::new("Europe/Madrid"),
+        reference_time: Some(ReferenceTime { local, offset }),
+    }
 }

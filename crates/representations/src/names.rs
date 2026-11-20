@@ -1,6 +1,6 @@
 //! The names of output columns and of plan columns.
 
-use menura_model::expression::Reference;
+use crate::query_tree::QueryReference;
 
 /// The name of a column of the query result, as written (E1-5.1).
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
@@ -13,21 +13,22 @@ impl OutputName {
         Self(text.to_owned())
     }
 
-    /// The output name of an element without an alias: the last part of its reference
-    /// (E1-5.1).
+    /// The output name of an element without an alias: the last part of its reference as
+    /// written, never normalized, without the quotes of a delimited part (E1-5.1).
     ///
     /// ```
-    /// use menura_model::expression::{Identifier, Reference};
     /// use menura_representations::names::OutputName;
-    /// let reference = Reference {
-    ///     qualifier: Identifier::regular("orders"),
-    ///     name: Identifier::regular("region").expect("a regular identifier"),
-    /// };
-    /// assert_eq!(OutputName::from_reference(&reference).as_str(), "region");
+    /// use menura_representations::query_tree::{QueryReference, ReferencePart};
+    /// let reference = QueryReference::new(vec![
+    ///     ReferencePart::Regular("orders".to_owned()),
+    ///     ReferencePart::Delimited("Net Amount".to_owned()),
+    /// ])
+    /// .expect("two parts");
+    /// assert_eq!(OutputName::from_reference(&reference).as_str(), "Net Amount");
     /// ```
     #[must_use]
-    pub fn from_reference(reference: &Reference) -> Self {
-        Self::new(reference.name.text())
+    pub fn from_reference(reference: &QueryReference) -> Self {
+        Self::new(reference.last_part().map_or("", |part| part.text()))
     }
 
     /// The name as text.

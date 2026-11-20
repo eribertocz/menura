@@ -2,8 +2,9 @@
 
 use menura_contracts::types::common::Grain;
 use menura_contracts::types::query::{DateBounds, Direction, NullsOrder};
-use menura_model::expression::{Expression, Identifier, Reference};
+use menura_model::expression::Expression;
 
+use super::reference::QueryReference;
 use crate::names::OutputName;
 use crate::origin::QueryLocation;
 
@@ -24,7 +25,7 @@ pub enum QueryDimensionKind {
     /// A field reference, with an optional time grain.
     Field {
         /// The field, as written.
-        reference: Reference,
+        reference: QueryReference,
         /// The time grain applied to it, when written.
         time_grain: Option<TimeGrainChoice>,
     },
@@ -56,7 +57,7 @@ pub struct QueryMetric {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum QueryMetricKind {
     /// A reference to a metric of the model, as written.
-    Reference(Reference),
+    Reference(QueryReference),
     /// An inline expression over metrics.
     Inline(Expression),
 }
@@ -74,7 +75,7 @@ pub struct QueryFilter {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct QueryDateRange {
     /// The dimension, as written.
-    pub dimension: Reference,
+    pub dimension: QueryReference,
     /// The absolute bounds or the relative range, as written.
     pub bounds: DateBounds,
     /// Where it is written.
@@ -84,9 +85,9 @@ pub struct QueryDateRange {
 /// A relationship path chosen by the query (QRY-4.3), as written.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct QueryPath {
-    from: Identifier,
-    to: Identifier,
-    relationships: Vec<Identifier>,
+    from: QueryReference,
+    to: QueryReference,
+    relationships: Vec<QueryReference>,
     origin: QueryLocation,
 }
 
@@ -95,9 +96,9 @@ impl QueryPath {
     /// `relationships` is empty: a path names at least one relationship (QRY-4.3).
     #[must_use]
     pub fn new(
-        from: Identifier,
-        to: Identifier,
-        relationships: Vec<Identifier>,
+        from: QueryReference,
+        to: QueryReference,
+        relationships: Vec<QueryReference>,
         origin: QueryLocation,
     ) -> Option<Self> {
         (!relationships.is_empty()).then_some(Self {
@@ -110,19 +111,19 @@ impl QueryPath {
 
     /// The starting dataset, as written.
     #[must_use]
-    pub fn from(&self) -> &Identifier {
+    pub fn from(&self) -> &QueryReference {
         &self.from
     }
 
     /// The ending dataset, as written.
     #[must_use]
-    pub fn to(&self) -> &Identifier {
+    pub fn to(&self) -> &QueryReference {
         &self.to
     }
 
     /// The relationships, in order: at least one.
     #[must_use]
-    pub fn relationships(&self) -> &[Identifier] {
+    pub fn relationships(&self) -> &[QueryReference] {
         &self.relationships
     }
 

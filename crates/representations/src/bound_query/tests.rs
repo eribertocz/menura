@@ -12,7 +12,7 @@ use super::{
 };
 use crate::columns::{Columns, OutputColumn};
 use crate::names::OutputName;
-use crate::test_support::{at, name, true_literal};
+use crate::test_support::{at, madrid_time, name, true_literal};
 
 fn field(dataset: &str, field: &str) -> FieldPath {
     FieldPath {
@@ -72,7 +72,7 @@ fn e2_2_every_reference_points_to_a_model_element() {
         ],
         ..BoundQueryParts::default()
     };
-    let query = BoundQuery::new(bound_columns(), parts);
+    let query = BoundQuery::new(bound_columns(), madrid_time(), parts);
 
     let dimension = query.columns().dimensions().next().expect("one dimension");
     assert_eq!(
@@ -112,7 +112,7 @@ fn e2_2_keeps_every_authorization_decision_in_order() {
         ],
         ..BoundQueryParts::default()
     };
-    let query = BoundQuery::new(bound_columns(), parts);
+    let query = BoundQuery::new(bound_columns(), madrid_time(), parts);
 
     let objects: Vec<&AuthorizedObject> = query
         .authorization()
@@ -142,7 +142,7 @@ fn e2_2_the_authorized_subgraph_is_ordered_and_answers_membership() {
         subgraph,
         ..BoundQueryParts::default()
     };
-    let query = BoundQuery::new(bound_columns(), parts);
+    let query = BoundQuery::new(bound_columns(), madrid_time(), parts);
 
     assert_eq!(
         query.subgraph().datasets(),
@@ -160,4 +160,11 @@ fn e2_2_the_authorized_subgraph_is_ordered_and_answers_membership() {
             .subgraph()
             .contains_relationship(&name("ORDERS_TO_REGIONS"))
     );
+}
+
+#[test]
+fn e2_2_carries_the_time_zone_and_the_reference_time() {
+    let query = BoundQuery::new(bound_columns(), madrid_time(), BoundQueryParts::default());
+
+    assert_eq!(query.time(), &madrid_time());
 }

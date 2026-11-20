@@ -9,6 +9,7 @@ pub mod names;
 pub mod origin;
 pub mod paths;
 pub mod query_tree;
+pub mod time;
 
 #[cfg(test)]
 mod test_support;

@@ -16,6 +16,7 @@ pub use elements::{
 
 use crate::columns::Columns;
 use crate::query_tree::QueryLimit;
+use crate::time::QueryTime;
 
 /// The elements of a bound query other than its output columns.
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
@@ -40,14 +41,31 @@ pub struct BoundQueryParts {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct BoundQuery {
     columns: Columns<BoundDimension, BoundMetric>,
+    time: QueryTime,
     parts: BoundQueryParts,
 }
 
 impl BoundQuery {
-    /// The bound query with output `columns`, in the order of the query tree, and `parts`.
+    /// The bound query with output `columns`, in the order of the query tree, the time zone
+    /// and reference time of the query tree, and `parts`.
     #[must_use]
-    pub fn new(columns: Columns<BoundDimension, BoundMetric>, parts: BoundQueryParts) -> Self {
-        Self { columns, parts }
+    pub fn new(
+        columns: Columns<BoundDimension, BoundMetric>,
+        time: QueryTime,
+        parts: BoundQueryParts,
+    ) -> Self {
+        Self {
+            columns,
+            time,
+            parts,
+        }
+    }
+
+    /// The time zone and the reference time, which resolve relative ranges (QRY-4.2) and
+    /// truncate time grains (E6-5.2).
+    #[must_use]
+    pub fn time(&self) -> &QueryTime {
+        &self.time
     }
 
     /// The output columns, in output order.
