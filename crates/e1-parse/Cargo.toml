@@ -7,7 +7,13 @@ license.workspace = true
 publish.workspace = true
 
 [dependencies]
+menura-contracts.workspace = true
+menura-model.workspace = true
+menura-expressions.workspace = true
+menura-representations.workspace = true
 menura-security.workspace = true
+jiff.workspace = true
+serde_json = "1"
 
 [lints]
 workspace = true

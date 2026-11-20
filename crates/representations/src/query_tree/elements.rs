@@ -22,20 +22,21 @@ pub struct QueryDimension {
 /// What a dimension reads.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum QueryDimensionKind {
-    /// A field reference, with an optional time grain.
+    /// A field reference. Its time grain, when written, is in the tree's time grains: E2 matches
+    /// grains to dimensions (QRY-4.1).
     Field {
         /// The field, as written.
         reference: QueryReference,
-        /// The time grain applied to it, when written.
-        time_grain: Option<TimeGrainChoice>,
     },
     /// SQL form: a scalar expression over fields of one dataset.
     Expression(Expression),
 }
 
-/// A time grain applied to a dimension (QRY-4.1).
+/// A `time_grains` entry, as written (QRY-4.1).
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct TimeGrainChoice {
+    /// The dimension it applies to, as written.
+    pub dimension: QueryReference,
     /// The grain.
     pub grain: Grain,
     /// Where it is written.
