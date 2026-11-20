@@ -38,6 +38,7 @@ menura-e4-plan = { path = "crates/e4-plan" }
 menura-e5-optimize = { path = "crates/e5-optimize" }
 menura-generator-duckdb = { path = "crates/generator-duckdb" }
 menura-core = { path = "crates/core" }
+jiff = { version = "1.0.1", default-features = false, features = ["std", "tzdb-bundle-always"] }
 
 [workspace.lints.rust]
 unsafe_code = "forbid"
