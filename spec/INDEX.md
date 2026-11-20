@@ -241,11 +241,11 @@ Find a rule ID or a section here, then open only that file at that line.
 | [contracts/compiled-plan.md](contracts/compiled-plan.md#L53) | 53 | rule | PLN-4.2 |
 | [contracts/compiled-plan.md](contracts/compiled-plan.md#L55) | 55 | section | PLN-5 Compile error |
 | [contracts/compiled-plan.md](contracts/compiled-plan.md#L66) | 66 | rule | PLN-5.1 |
-| [contracts/compiled-plan.md](contracts/compiled-plan.md#L67) | 67 | rule | PLN-5.2 |
-| [contracts/compiled-plan.md](contracts/compiled-plan.md#L68) | 68 | rule | PLN-5.3 |
-| [contracts/compiled-plan.md](contracts/compiled-plan.md#L72) | 72 | section | PLN-6 Audit record |
-| [contracts/compiled-plan.md](contracts/compiled-plan.md#L84) | 84 | rule | PLN-6.1 |
-| [contracts/compiled-plan.md](contracts/compiled-plan.md#L85) | 85 | rule | PLN-6.2 |
+| [contracts/compiled-plan.md](contracts/compiled-plan.md#L68) | 68 | rule | PLN-5.2 |
+| [contracts/compiled-plan.md](contracts/compiled-plan.md#L69) | 69 | rule | PLN-5.3 |
+| [contracts/compiled-plan.md](contracts/compiled-plan.md#L73) | 73 | section | PLN-6 Audit record |
+| [contracts/compiled-plan.md](contracts/compiled-plan.md#L85) | 85 | rule | PLN-6.1 |
+| [contracts/compiled-plan.md](contracts/compiled-plan.md#L86) | 86 | rule | PLN-6.2 |
 | [contracts/integrity-checks.md](contracts/integrity-checks.md#L1) | 1 | section | Contract: integrity checks |
 | [contracts/integrity-checks.md](contracts/integrity-checks.md#L5) | 5 | section | CHK-1 Purpose |
 | [contracts/integrity-checks.md](contracts/integrity-checks.md#L10) | 10 | section | CHK-2 Document |
