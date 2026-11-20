@@ -65,6 +65,14 @@ fn order_fields() -> Vec<(&'static str, &'static str, LogicalType)> {
         ("ORDERED_ON", "ordered_on", LogicalType::Date),
         ("QUANTITY", "quantity", big_integer()),
         ("REGION", "\"Sales Region\"", LogicalType::Text),
+        (
+            "SHIPPED_AT",
+            "shipped_at",
+            LogicalType::Timestamp {
+                precision: TimestampPrecision::Us,
+                with_time_zone: false,
+            },
+        ),
     ]
 }
 

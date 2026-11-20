@@ -8,9 +8,13 @@ use crate::error::GenerateError;
 impl ExpressionWriter<'_, '_> {
     pub(super) fn unary(
         &mut self,
+        expression: &Expression,
         operator: UnaryOperator,
         operand: &Expression,
     ) -> Result<String, GenerateError> {
+        if operator == UnaryOperator::Minus {
+            return self.negation(expression, operand);
+        }
         let operand = self.operand(operand)?;
         Ok(match operator {
             UnaryOperator::Plus => format!("+{operand}"),
@@ -21,16 +25,29 @@ impl ExpressionWriter<'_, '_> {
 
     pub(super) fn binary(
         &mut self,
+        expression: &Expression,
         operator: BinaryOperator,
         left: &Expression,
         right: &Expression,
     ) -> Result<String, GenerateError> {
-        if operator == BinaryOperator::Divide {
-            return self.division(left, right);
+        match operator {
+            BinaryOperator::Divide => self.division(left, right),
+            BinaryOperator::Add
+            | BinaryOperator::Subtract
+            | BinaryOperator::Multiply
+            | BinaryOperator::Modulo => self.arithmetic(expression, operator, left, right),
+            BinaryOperator::Equal
+            | BinaryOperator::NotEqual
+            | BinaryOperator::Less
+            | BinaryOperator::LessOrEqual
+            | BinaryOperator::Greater
+            | BinaryOperator::GreaterOrEqual => self.comparison(operator, left, right),
+            BinaryOperator::Concatenate | BinaryOperator::And | BinaryOperator::Or => {
+                let left = self.operand(left)?;
+                let right = self.operand(right)?;
+                Ok(format!("{left} {} {right}", operator_sql(operator)))
+            }
         }
-        let left = self.operand(left)?;
-        let right = self.operand(right)?;
-        Ok(format!("{left} {} {right}", operator_sql(operator)))
     }
 
     /// `n / d` as `CASE WHEN d = 0 THEN NULL ELSE n / d END`, both operands cast to the
@@ -99,9 +116,10 @@ impl ExpressionWriter<'_, '_> {
         high: &Expression,
         negated: bool,
     ) -> Result<String, GenerateError> {
+        let operand_type = self.known_type(operand);
         let operand = self.operand(operand)?;
-        let low = self.operand(low)?;
-        let high = self.operand(high)?;
+        let low = self.comparand(low, operand_type.as_ref())?;
+        let high = self.comparand(high, operand_type.as_ref())?;
         let keyword = if negated { "NOT BETWEEN" } else { "BETWEEN" };
         Ok(format!("{operand} {keyword} {low} AND {high}"))
     }
@@ -142,7 +160,7 @@ impl ExpressionWriter<'_, '_> {
     }
 }
 
-fn operator_sql(operator: BinaryOperator) -> &'static str {
+pub(super) fn operator_sql(operator: BinaryOperator) -> &'static str {
     match operator {
         BinaryOperator::Add => "+",
         BinaryOperator::Subtract => "-",

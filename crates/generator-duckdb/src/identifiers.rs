@@ -25,10 +25,11 @@ pub(crate) fn classify_source(source: &str) -> Option<Source<'_>> {
     relation_parts(source.trim()).map(Source::Relation)
 }
 
-/// `FROM` text of `source`: the subquery of a query, or the quoted parts of a relation.
+/// `FROM` text of `source`: the subquery of a query, its closing parenthesis on its own line so
+/// that a trailing `-- comment` cannot hide it, or the quoted parts of a relation.
 pub(crate) fn source_sql(source: &Source<'_>) -> String {
     match source {
-        Source::Query(text) => format!("({text})"),
+        Source::Query(text) => format!("({text}\n)"),
         Source::Relation(parts) => parts
             .iter()
             .map(|part| quote(part))
@@ -58,35 +59,41 @@ fn continues_identifier(character: char) -> bool {
     character.is_alphanumeric() || character == '_' || character == '$'
 }
 
-/// The parts of the qualified name `text`: separated by `.`, each unquoted or between double
-/// quotes (where `""` is one quote and a dot is part of the name).
+/// The parts of the qualified name `text`: separated by `.`, each unquoted (without the spaces
+/// around it) or between double quotes (where `""` is one quote and a dot is part of the name).
 fn relation_parts(text: &str) -> Option<Vec<String>> {
     let mut parts = Vec::new();
     let mut characters = text.chars().peekable();
     loop {
+        skip_spaces(&mut characters);
         let part = if characters.peek() == Some(&'"') {
             characters.next();
             quoted_part(&mut characters)?
         } else {
-            let part: String = characters
-                .clone()
-                .take_while(|character| *character != '.')
-                .collect();
-            for _ in part.chars() {
-                characters.next();
+            let mut part = String::new();
+            while let Some(character) = characters.next_if(|character| *character != '.') {
+                part.push(character);
             }
-            part
+            part.trim_end().to_owned()
         };
         if part.is_empty() {
             return None;
         }
         parts.push(part);
+        skip_spaces(&mut characters);
         match characters.next() {
             None => return Some(parts),
             Some('.') => {}
             Some(_) => return None,
         }
     }
+}
+
+fn skip_spaces(characters: &mut std::iter::Peekable<std::str::Chars<'_>>) {
+    while characters
+        .next_if(|character| character.is_whitespace())
+        .is_some()
+    {}
 }
 
 /// The content of a quoted part, after its opening quote, up to and without its closing quote.
@@ -106,7 +113,7 @@ fn quoted_part(characters: &mut std::iter::Peekable<std::str::Chars<'_>>) -> Opt
 
 #[cfg(test)]
 mod tests {
-    use super::{Source, classify_source, quote};
+    use super::{Source, classify_source, quote, source_sql};
 
     fn relation(parts: &[&str]) -> Source<'static> {
         Source::Relation(parts.iter().map(|part| (*part).to_owned()).collect())
@@ -136,7 +143,15 @@ mod tests {
             classify_source("  SELECT 1 "),
             Some(Source::Query("SELECT 1"))
         );
+        assert_eq!(
+            source_sql(&Source::Query("SELECT 1 -- note")),
+            "(SELECT 1 -- note\n)"
+        );
         assert_eq!(classify_source("with"), Some(Source::Query("with")));
+        assert_eq!(
+            classify_source(" main . \"Order Lines\" "),
+            Some(relation(&["main", "Order Lines"]))
+        );
         assert_eq!(classify_source("a..b"), None);
         assert_eq!(classify_source("\"open"), None);
         assert_eq!(classify_source("\"a\"b"), None);

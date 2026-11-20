@@ -24,7 +24,13 @@ impl SelectBody {
             let separator = if index == last { "" } else { "," };
             lines.push(format!("{indent}{INDENT}{item}{separator}"));
         }
-        lines.push(format!("{indent}FROM {}", self.from));
+        match self.from.rsplit_once('\n') {
+            Some((text, closing)) => {
+                lines.push(format!("{indent}FROM {text}"));
+                lines.push(format!("{indent}{closing}"));
+            }
+            None => lines.push(format!("{indent}FROM {}", self.from)),
+        }
         for clause in &self.clauses {
             lines.push(format!("{indent}{clause}"));
         }

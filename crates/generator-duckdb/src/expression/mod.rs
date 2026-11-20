@@ -1,7 +1,9 @@
 //! Writes one expression of a plan node as `DuckDB` SQL.
 
 mod aggregate;
+mod arithmetic;
 mod attributes;
+mod comparisons;
 mod operators;
 mod time;
 
@@ -88,12 +90,12 @@ impl<'input, 'statement> ExpressionWriter<'input, 'statement> {
             Expression::Literal(literal) => self.literal(literal),
             Expression::Reference(reference) => self.reference(reference),
             Expression::UserAttribute(name) => self.scalar_attribute(name),
-            Expression::Unary { operator, operand } => self.unary(*operator, operand),
+            Expression::Unary { operator, operand } => self.unary(expression, *operator, operand),
             Expression::Binary {
                 operator,
                 left,
                 right,
-            } => self.binary(*operator, left, right),
+            } => self.binary(expression, *operator, left, right),
             Expression::IsNull { operand, negated } => self.is_null(operand, *negated),
             Expression::IsDistinctFrom {
                 left,

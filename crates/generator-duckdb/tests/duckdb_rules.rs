@@ -1,5 +1,5 @@
 //! Unit tests of the `DuckDB` rules (E6-5), of the fixed result types of aggregates (E6-4.5) and
-//! of the encoding of query values (E6-4.2).
+//! of the type and encoding of query values (E6-4.2a).
 
 // `cfg(test)` marks the helpers as test code, where `expect` and `panic!` are allowed
 // (clippy.toml).
@@ -186,7 +186,7 @@ fn e6_5_7_a_missing_attribute_is_an_internal_error() {
 }
 
 #[test]
-fn e6_4_2_query_values_are_encoded_as_con_4_requires() {
+fn e6_4_2a_query_values_have_their_literal_type_and_con_4_value() {
     let plan = filter(
         scan(
             "ORDERS",

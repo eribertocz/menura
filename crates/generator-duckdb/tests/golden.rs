@@ -118,7 +118,7 @@ fn e6_4_3_a_keyword_followed_by_a_separator_is_a_query() {
         let generated = generate_sql(&plan, &model, &query(&["REGION"], &[]), &security())
             .expect("generated SQL");
         assert!(
-            generated.sql.contains(&format!("FROM ({source})")),
+            generated.sql.contains(&format!("FROM ({source}\n    )")),
             "{source}: {}",
             generated.sql
         );
@@ -321,5 +321,62 @@ fn shape_decimal_metric_cast() {
     assert_golden(
         &generated.sql,
         include_str!("golden/shape_decimal_metric.sql"),
+    );
+}
+
+#[test]
+fn e6_4_2b_date_bounds_of_timestamps_start_their_day() {
+    let plan = filter(
+        scan("ORDERS", &["CREATED_AT", "ORDERED_ON", "SHIPPED_AT"]),
+        "CREATED_AT >= DATE '2026-01-01' AND DATE '2026-02-01' > CREATED_AT \
+         AND SHIPPED_AT BETWEEN DATE '2026-01-01' AND DATE '2026-01-31' \
+         AND ORDERED_ON < DATE '2026-02-01'",
+        from_query("/query/date_range"),
+    );
+    let columns = query(&["CREATED_AT", "ORDERED_ON", "SHIPPED_AT"], &[]);
+    let generated = generate(&plan, &columns).expect("generated SQL");
+    assert_golden(
+        &generated.sql,
+        include_str!("golden/e6_4_2b_date_bounds.sql"),
+    );
+    let types: Vec<_> = generated
+        .parameters
+        .iter()
+        .map(|parameter| parameter.logical_type.clone())
+        .collect();
+    let date = LogicalType::Date;
+    let text = LogicalType::Text;
+    assert_eq!(
+        types,
+        vec![
+            date.clone(),
+            text,
+            date.clone(),
+            date.clone(),
+            date.clone(),
+            date
+        ]
+    );
+}
+
+#[test]
+fn e0f_5a_integer_arithmetic_is_widened_to_hugeint() {
+    let plan = aggregate(
+        scan("ORDERS", &["QUANTITY"]),
+        vec![named("NEGATED", "-QUANTITY")],
+        vec![component(
+            "SQUARES",
+            "SUM(QUANTITY * QUANTITY + QUANTITY)",
+            None,
+        )],
+        vec![
+            column("NEGATED", huge_integer(), true),
+            column("SQUARES", huge_integer(), true),
+        ],
+    );
+    let generated = generate(&plan, &query(&["NEGATED"], &["SQUARES"])).expect("generated SQL");
+    assert_golden(
+        &generated.sql,
+        include_str!("golden/e0f_5a_integer_arithmetic.sql"),
     );
 }

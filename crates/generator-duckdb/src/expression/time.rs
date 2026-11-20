@@ -38,7 +38,7 @@ impl ExpressionWriter<'_, '_> {
     }
 
     /// The placeholder of the query time zone, a `text` parameter.
-    fn time_zone(&mut self) -> String {
+    pub(super) fn time_zone(&mut self) -> String {
         let name = self.environment.time_zone.as_str().to_owned();
         self.parameters.bind_shared(
             SharedValue::TimeZone,
@@ -50,6 +50,12 @@ impl ExpressionWriter<'_, '_> {
     /// The logical type of a literal, as E0.f types it (E0F-9.3).
     pub(super) fn literal_type(&self, literal: &Literal) -> Result<LogicalType, GenerateError> {
         self.type_of(&Expression::Literal(literal.clone()))
+    }
+
+    /// The logical type of `expression`, or `None` when it cannot be typed here, such as an
+    /// expression over catalog columns.
+    pub(super) fn known_type(&self, expression: &Expression) -> Option<LogicalType> {
+        self.type_of(expression).ok()
     }
 
     /// The logical type of `expression`, typed in the scope of the input columns and the
