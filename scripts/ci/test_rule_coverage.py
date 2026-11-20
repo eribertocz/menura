@@ -109,6 +109,7 @@ class RuleCoverageTest(unittest.TestCase):
         scope = [("spec/a.md", None), ("a.md", None), ("spec/x.md", ("T1",))]
         unknown = check_rule_coverage.unknown_scope_files(scope, rules)
         self.assertEqual(unknown, ["a.md", "spec/x.md"])
+        self.assertEqual(check_rule_coverage.unknown_scope_rules(scope, rules), [])
 
     def test_cs_2_6_rule_level_entry_with_unknown_rule_id_is_reported(self):
         rules = check_rule_coverage.index_rules(INDEX)

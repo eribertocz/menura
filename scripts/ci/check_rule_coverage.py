@@ -72,11 +72,17 @@ def unknown_scope_files(scope, rules):
 
 
 def unknown_scope_rules(scope, rules):
-    """`(path, rule)` pairs of rule-level entries whose rule the index does not define in `path`."""
+    """`(path, rule)` pairs of rule-level entries whose rule the index does not define in `path`.
+
+    Only entries whose path is a file of the index are checked; an unknown path is reported by
+    `unknown_scope_files` alone.
+    """
     defined = set(rules)
+    indexed = {file for file, _ in rules}
     return [
         (path, rule)
         for path, rule_ids in scope
+        if path in indexed
         for rule in rule_ids or ()
         if (path, rule) not in defined
     ]
