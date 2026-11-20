@@ -274,18 +274,31 @@ pub fn mark_metric(parts: &mut ModelParts, metric: &str, codes: &[&str]) {
 
 /// `parts` with the edge `ORDERS` → `CUSTOMERS` and a row policy on `CUSTOMERS` for `admin`.
 pub fn customers_with_a_row_policy(parts: &mut ModelParts) {
-    parts.graph.edges = vec![menura_model::internal_model::GraphEdge {
-        relationship: name("ORDERS_TO_CUSTOMERS"),
-        from: name("ORDERS"),
-        to: name("CUSTOMERS"),
-        one_to_one: false,
-    }];
-    let customers = parts
+    set_edges(parts, &[("ORDERS", "CUSTOMERS")]);
+    add_row_policy(parts, "CUSTOMERS");
+}
+
+/// Sets the many-to-one edges of the graph of `parts` to `edges`, each `(from, to)`.
+pub fn set_edges(parts: &mut ModelParts, edges: &[(&str, &str)]) {
+    parts.graph.edges = edges
+        .iter()
+        .map(|(from, to)| menura_model::internal_model::GraphEdge {
+            relationship: name(&format!("{from}_TO_{to}")),
+            from: name(from),
+            to: name(to),
+            one_to_one: false,
+        })
+        .collect();
+}
+
+/// Adds a row policy for `admin` to `dataset`.
+pub fn add_row_policy(parts: &mut ModelParts, dataset: &str) {
+    let found = parts
         .datasets
         .iter_mut()
-        .find(|dataset| dataset.name == name("CUSTOMERS"))
-        .expect("CUSTOMERS");
-    customers.row_policies = vec![menura_model::internal_model::RowPolicy {
+        .find(|candidate| candidate.name == name(dataset))
+        .expect("a dataset of the model");
+    found.row_policies = vec![menura_model::internal_model::RowPolicy {
         name: "admins_only".to_owned(),
         condition: None,
         roles: Some(vec![RoleName::new("admin")]),

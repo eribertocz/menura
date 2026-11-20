@@ -13,9 +13,7 @@ use menura_model::internal_model::{
 };
 use menura_representations::query_tree::{QueryTree, QueryTreeParts};
 
-use support::model::{
-    classification, customers_with_a_row_policy, model, model_with, name, semantic_metric,
-};
+use support::model::{classification, model, model_with, name, semantic_metric};
 use support::query::{
     absolute_range, column, dimension, equals_text, filter, metric, path, time_grain, tree,
 };
@@ -314,24 +312,55 @@ fn e2_5_4_the_first_element_in_query_order_outside_the_slice_is_reported() {
 }
 
 #[test]
-fn vs_1_a_reachable_row_policy_on_a_role_the_user_lacks_is_still_0_4_0() {
-    let model = model_with(customers_with_a_row_policy);
+fn e2_5_4a_a_semi_additive_metric_with_a_population_names_additivity() {
+    let model = model_with(|parts| {
+        semantic_metric(parts, "REVENUE").declared_additivity =
+            Some(DeclaredAdditivity::SemiAdditive(SemiAdditive {
+                over: field("ORDERS", "ORDERED_AT"),
+                entity: vec![field("ORDERS", "CUSTOMER_ID")],
+                aggregation: SnapshotAggregation::Minimum,
+                nulls: NullHandling::Keep,
+                snapshot_grain: None,
+                population: Some(name("ACTIVE_CUSTOMERS")),
+                missing: None,
+                unexpected: None,
+            }));
+    });
     let diagnostic = bind_diagnostic(&revenue_by("orders.region"), &model, ANALYST);
-    assert_not_yet_supported(&diagnostic, "/query/dimensions/0", "0.4.0");
+    assert_not_yet_supported(&diagnostic, "/query/metrics/0", "0.5.0");
     assert!(
-        diagnostic.message.contains("row policies"),
+        diagnostic.message.contains("additivity"),
         "{}",
         diagnostic.message
     );
 }
 
 #[test]
-fn vs_1_the_home_dataset_s_own_row_policies_are_in_the_slice() {
-    let model = model_with(customers_with_a_row_policy);
+fn e2_5_4_a_derived_metric_before_paths_is_reported_at_the_metric() {
+    let model = model_with(|parts| {
+        semantic_metric(parts, "REVENUE").derived = Some(DerivedMetric {
+            inputs: Vec::new(),
+            on_division_by_zero: None,
+        });
+    });
     let query = tree(
-        vec![dimension(0, "customers.region")],
-        vec![],
-        QueryTreeParts::default(),
+        vec![dimension(0, "orders.region")],
+        vec![metric(0, "revenue")],
+        QueryTreeParts {
+            paths: vec![path(
+                "/query/nonportable_extensions/0/data/paths/0",
+                "orders",
+                "customers",
+                &["orders_to_customers"],
+            )],
+            ..QueryTreeParts::default()
+        },
     );
-    assert!(bind_query(&query, &model, ANALYST).is_ok());
+    let diagnostic = bind_diagnostic(&query, &model, ADMIN);
+    assert_not_yet_supported(&diagnostic, "/query/metrics/0", "0.4.0");
+    assert!(
+        diagnostic.message.contains("derived"),
+        "{}",
+        diagnostic.message
+    );
 }
