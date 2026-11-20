@@ -128,7 +128,8 @@ fn compile_stages(
     let bound = bind(&parsed.tree, model, &context).map_err(bind_stop)?;
     let branches = resolve_paths(&bound, model)
         .map_err(|violation| InternalError::new("E3", violation.to_string()))?;
-    let plan = build_plan(&branches, &bound, &context, model).map_err(|error| plan_stop(&error))?;
+    let plan = build_plan(&branches, &bound, &context, model, handle.catalog_schema())
+        .map_err(|error| plan_stop(&error))?;
     let generated = generate_sql(&plan, handle.catalog_schema(), model, &bound, &context)
         .map_err(|error| InternalError::new("E6", format!("{error:?}")))?;
     Ok(plan_document(
