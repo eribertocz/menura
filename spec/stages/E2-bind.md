@@ -50,7 +50,7 @@ their check runs.
 |---|---|---|
 | 0a | Security context: `ESEC-03` (unsupported contract or version), then `ESEC-01` (schema or encoding) | `compile` entry, before E1 |
 | 0b | Envelope, in the order of E1-2.1: not JSON (`E_INVALID_QUERY`), `EQRY-08`, `EQRY-01`, `EQRY-02`, `EQRY-06` | E1 |
-| 1 | `E_INVALID_QUERY` (JSON Schema), then `EQRY-05` and `EQRY-13` (SQL form) | E1 |
+| 1 | `E_INVALID_QUERY` (JSON Schema), then `E0F-01` and `E0F-02` (filter text, E1-3.2), then `EQRY-05` and `EQRY-13` (SQL form) | E1 |
 | 2 | `E_EMPTY_AGGREGATION_QUERY` | E1 |
 | 3 | `E_NAME_NOT_FOUND` (unknown or unauthorized) | E2 |
 | 4 | `E_METRIC_IN_DIMENSIONS` | E2 |

@@ -314,8 +314,8 @@ Find a rule ID or a section here, then open only that file at that line.
 | [decisions/0002-e1-envelope-and-references.md](decisions/0002-e1-envelope-and-references.md#L1) | 1 | section | 0002 E1 envelope, time zone names, references and the 0.3.0 SQL-form check |
 | [decisions/0002-e1-envelope-and-references.md](decisions/0002-e1-envelope-and-references.md#L3) | 3 | section | Context |
 | [decisions/0002-e1-envelope-and-references.md](decisions/0002-e1-envelope-and-references.md#L9) | 9 | section | Decision |
-| [decisions/0002-e1-envelope-and-references.md](decisions/0002-e1-envelope-and-references.md#L24) | 24 | section | Consequences |
-| [decisions/0002-e1-envelope-and-references.md](decisions/0002-e1-envelope-and-references.md#L30) | 30 | section | Rules changed |
+| [decisions/0002-e1-envelope-and-references.md](decisions/0002-e1-envelope-and-references.md#L26) | 26 | section | Consequences |
+| [decisions/0002-e1-envelope-and-references.md](decisions/0002-e1-envelope-and-references.md#L32) | 32 | section | Rules changed |
 | [decisions/README.md](decisions/README.md#L1) | 1 | section | Decision records |
 | [extensions/README.md](extensions/README.md#L1) | 1 | section | Extensions |
 | [extensions/README.md](extensions/README.md#L18) | 18 | section | EXT-1 Runtime failure policies |

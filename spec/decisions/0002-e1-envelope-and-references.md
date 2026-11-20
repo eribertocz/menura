@@ -15,6 +15,8 @@ of `WQRY-01`. VS-2 also required the whole SQL-subset parser in 0.3.0, only to r
   The approved database is `jiff-tzdb`, used through `jiff` without system time-zone access.
 - References are split at `.` outside delimited identifiers; E1 never rejects a reference, and
   E2 reports what names nothing as `E_NAME_NOT_FOUND` (E1-3.1).
+- A query filter that does not parse is `E0F-01`, and one outside the subset `E0F-02`, both in E1
+  right after the JSON Schema, `filter` before `filters` (E1-3.2, E2-5 row 1).
 - Output names are taken as written, without the quotes of a delimited part (E1-5.1).
 - `WQRY-01` is located at `/contract` or at the extension's namespace, after the security
   context's warning (E1-2.4).
@@ -29,4 +31,4 @@ spelling of a name the user cannot see (PLN-5.2). Before 0.5.0, an SQL query tha
 
 ## Rules changed
 
-E1-2.2, E1-2.3, E1-2.4 (new), E1-3.1, E1-5.1, VS-2.
+E1-2.2, E1-2.3, E1-2.4 (new), E1-3.1, E1-3.2, E1-5.1, E1-6, E2-5 row 1, VS-2.

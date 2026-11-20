@@ -16,7 +16,7 @@ that error precedence is the same for both forms (E2-5).
 ## E1-3 Wide-table form
 
 - **E1-3.1** Each dimension and metric string is parsed as a reference: `dataset.field`, `dataset.metric` (development-line models) or `metric` (QRY-3.2). A reference is split into parts at each `.` outside a delimited identifier. Each part is a delimited identifier when it starts and ends with `"`, read as in E0D-1.4, and a regular identifier otherwise. E1 never rejects a reference. A reference that names nothing is `E_NAME_NOT_FOUND` in E2 (E2-3.2), located at the reference. This includes one with an empty part, a malformed delimited part or more than two parts.
-- **E1-3.2** Each filter is parsed as an expression of the E0F-2 language. Whether it is boolean, reads one dataset, and contains no aggregate, metric reference or window function is checked in E2.
+- **E1-3.2** Each filter is parsed as an expression of the E0F-2 language. Whether it is boolean, reads one dataset, and contains no aggregate, metric reference or window function is checked in E2. A filter text the grammar rejects is `E0F-01`, and one with a construct outside the subset is `E0F-02` (E0F-9.1), located at the filter. These are checked right after the JSON Schema (E2-5 row 1): `filter` first, then each `filters` item in index order, and the first failure is reported.
 - **E1-3.3** Extensions are parsed as defined in QRY-4.
 
 ## E1-4 SQL form
@@ -63,4 +63,5 @@ covered by the Layer 2 suite cases that test it.
 | `E_INVALID_QUERY` | Not JSON, or fails the JSON Schema |
 | `E_EMPTY_AGGREGATION_QUERY` | No dimensions and no metrics |
 | `EQRY-01`, `EQRY-02`, `EQRY-05`, `EQRY-06`, `EQRY-08`, `EQRY-13` | As in QRY-7 |
+| `E0F-01`, `E0F-02` | A filter text does not parse, or uses a construct outside the subset (E1-3.2) |
 | `E_NOT_YET_SUPPORTED` | Before 0.5.0: the query uses the SQL form (VS-2) |
