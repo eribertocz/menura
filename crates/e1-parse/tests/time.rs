@@ -119,3 +119,17 @@ fn qry_2_reference_time_range_is_checked_with_the_json_schema() {
     sql["sql"] = json!("SELECT 1");
     assert_rejected(&sql, ParseErrorCode::InvalidQuery, "/reference_time");
 }
+
+#[test]
+fn qry_4_2_the_reference_date_is_the_date_of_the_reference_time_in_the_time_zone() {
+    // 23:30 UTC on 2026-03-31 is already 2026-04-01 in Madrid (UTC+2).
+    let tree = accepted(&with_reference_time("2026-03-31T23:30:00Z")).tree;
+    let date = tree.time().reference_date.expect("a reference date");
+    assert_eq!((date.year(), date.month(), date.day()), (2026, 4, 1));
+}
+
+#[test]
+fn qry_4_2_there_is_no_reference_date_without_a_reference_time() {
+    let tree = accepted(&wide_table_query()).tree;
+    assert_eq!(tree.time().reference_date, None);
+}

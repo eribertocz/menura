@@ -2,21 +2,30 @@
 //!
 //! [`resolve_and_authorize`] runs rows 3 to 9 of the error precedence of E2-5 on a query tree:
 //! every name resolves against the internal model (E2-3) and is authorized against the
-//! admitted security context as soon as it resolves (E2-4). Rows 10 to 12c follow it.
+//! admitted security context as soon as it resolves (E2-4). [`bind`] runs it, then rows 10 to
+//! 12c, and builds the bound query (E2-2).
 
 #![forbid(unsafe_code)]
 
 mod authorized_query;
+mod bind;
+mod calendar;
 mod elements;
 mod error;
+mod model_elements;
+mod named;
 mod names;
 mod resolver;
+mod row_12b;
 mod rows;
+mod slice;
+mod unusable;
 mod walk;
 
 pub use authorized_query::{
     AuthorizedDateRange, AuthorizedQuery, AuthorizedTimeGrain, ResolvedName,
 };
+pub use bind::bind;
 pub use error::{BindCode, BindDiagnostic, BindError, InvariantViolation};
 
 use menura_model::internal_model::InternalModel;
@@ -28,6 +37,7 @@ use menura_representations::query_tree::QueryTree;
 use menura_security::AdmittedSecurityContext;
 
 use elements::{ColumnRole, ResolvedColumn, ResolvedElements, resolve_elements};
+use named::{NamedElement, named_elements};
 use resolver::Resolver;
 use rows::{check_rows_4_to_9, filter_datasets};
 
@@ -49,13 +59,15 @@ pub fn resolve_and_authorize(
     let mut resolver = Resolver::new(model, context);
     let elements = resolve_elements(tree, &mut resolver)?;
     check_rows_4_to_9(&elements)?;
+    let named = named_elements(tree, &elements);
     let (authorization, subgraph) = resolver.finish();
-    Ok(assemble(elements, authorization, subgraph))
+    Ok(assemble(elements, named, authorization, subgraph))
 }
 
 /// The authorized query of `elements`, which passed rows 3 to 9.
 fn assemble(
     elements: ResolvedElements<'_>,
+    named: Vec<NamedElement>,
     authorization: Vec<menura_representations::bound_query::AuthorizationDecision>,
     subgraph: menura_representations::bound_query::AuthorizedSubgraph,
 ) -> AuthorizedQuery {
@@ -78,6 +90,7 @@ fn assemble(
         paths: elements.paths,
         authorization,
         subgraph,
+        named,
     }
 }
 

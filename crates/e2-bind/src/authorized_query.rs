@@ -10,6 +10,8 @@ use menura_representations::bound_query::{
 use menura_representations::columns::Columns;
 use menura_representations::origin::QueryLocation;
 
+use crate::named::NamedElement;
+
 /// The model element a reference names.
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum ResolvedName {
@@ -58,6 +60,7 @@ pub struct AuthorizedQuery {
     pub(crate) paths: Vec<BoundPath>,
     pub(crate) authorization: Vec<AuthorizationDecision>,
     pub(crate) subgraph: AuthorizedSubgraph,
+    pub(crate) named: Vec<NamedElement>,
 }
 
 impl AuthorizedQuery {

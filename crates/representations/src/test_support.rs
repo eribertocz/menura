@@ -66,6 +66,7 @@ pub(crate) fn madrid_time() -> QueryTime {
     let offset = UtcOffset::from_minutes(120).expect("an offset");
     QueryTime {
         time_zone: TimeZoneName::new("Europe/Madrid"),
+        reference_date: Some(local.date),
         reference_time: Some(ReferenceTime { local, offset }),
     }
 }

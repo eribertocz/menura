@@ -30,3 +30,34 @@ pub fn diagnostic(tree: &QueryTree, roles: &[&str]) -> menura_e2_bind::BindDiagn
         other => panic!("expected a diagnostic, got {other:?}"),
     }
 }
+
+/// Runs E2 end to end on `tree` against `model` for a user holding `roles`.
+pub fn bind_query(
+    tree: &QueryTree,
+    model: &menura_model::internal_model::InternalModel,
+    roles: &[&str],
+) -> Result<menura_representations::bound_query::BoundQuery, BindError> {
+    menura_e2_bind::bind(tree, model, &query::user(roles))
+}
+
+/// The diagnostic of `bind` on `tree` against `model` for a user holding `roles`.
+pub fn bind_diagnostic(
+    tree: &QueryTree,
+    model: &menura_model::internal_model::InternalModel,
+    roles: &[&str],
+) -> menura_e2_bind::BindDiagnostic {
+    match bind_query(tree, model, roles) {
+        Err(BindError::Diagnostic(diagnostic)) => diagnostic,
+        other => panic!("expected a diagnostic, got {other:?}"),
+    }
+}
+
+/// The code and pointer of the first error of `bind`.
+pub fn bind_error(
+    tree: &QueryTree,
+    model: &menura_model::internal_model::InternalModel,
+    roles: &[&str],
+) -> (BindCode, String) {
+    let diagnostic = bind_diagnostic(tree, model, roles);
+    (diagnostic.code, diagnostic.location.pointer().to_owned())
+}

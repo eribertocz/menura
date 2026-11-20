@@ -152,7 +152,7 @@ fn resolve_filter<'tree>(
 }
 
 /// The reference a node names: a field or metric reference, or the metric of `AGG(…)`.
-fn reference_of(node: &Expression) -> Option<&Reference> {
+pub(crate) fn reference_of(node: &Expression) -> Option<&Reference> {
     match node {
         Expression::Reference(reference) | Expression::MetricAggregate(reference) => {
             Some(reference)
