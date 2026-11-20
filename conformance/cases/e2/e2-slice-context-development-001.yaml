@@ -1,0 +1,18 @@
+id: e2-slice-context-development-001
+rules: [VS-1, E2-5.4, E2-5.4a, CTX-2.1]
+model: e0-context-development
+security_context: analyst.json
+query:
+  contract: menura.query
+  contract_version: "1.1.0"
+  reference_time: "2026-11-15T12:00:00-04:00"
+  time_zone: UTC
+  query:
+    dimensions: [invoices.customer_id]
+    metrics:
+      - {metric: billed_share, alias: billed_share}
+load_options: {ossie_format: development}
+expect:
+  outcome: error
+  error: E_NOT_YET_SUPPORTED
+  location: {document: query, pointer: /query/metrics/0}
