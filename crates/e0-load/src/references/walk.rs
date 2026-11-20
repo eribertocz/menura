@@ -1,108 +1,32 @@
 //! The column and field references, and the `AGG(…)` terms, of a normalized expression tree.
 
-use menura_model::expression::{AggregateCall, Expression, Reference};
+use menura_model::expression::{Expression, Reference};
+
+use crate::expression_tree::nodes;
 
 /// Every column or field reference of `expression`, in the order they are written.
 ///
 /// `AGG(metric)` refers to a metric, not to a column or field, and is not included.
 pub(crate) fn references(expression: &Expression) -> Vec<&Reference> {
-    let mut found = Vec::new();
-    collect(expression, &mut found);
-    found
+    nodes(expression)
+        .into_iter()
+        .filter_map(|node| match node {
+            Expression::Reference(reference) => Some(reference),
+            _ => None,
+        })
+        .collect()
 }
 
 /// The metric every `AGG(…)` term of `expression` names, in the order they are written
 /// (DER-2.1).
 pub(crate) fn metric_aggregates(expression: &Expression) -> Vec<&Reference> {
-    let mut found = Vec::new();
-    collect_metric_aggregates(expression, &mut found);
-    found
-}
-
-fn collect_metric_aggregates<'tree>(
-    expression: &'tree Expression,
-    found: &mut Vec<&'tree Reference>,
-) {
-    if let Expression::MetricAggregate(metric) = expression {
-        found.push(metric);
-    }
-    for child in children(expression) {
-        collect_metric_aggregates(child, found);
-    }
-}
-
-fn collect<'tree>(expression: &'tree Expression, found: &mut Vec<&'tree Reference>) {
-    for child in children(expression) {
-        collect(child, found);
-    }
-    if let Expression::Reference(reference) = expression {
-        found.push(reference);
-    }
-}
-
-/// The direct subexpressions of `expression`, in the order they are written.
-fn children(expression: &Expression) -> Vec<&Expression> {
-    match expression {
-        Expression::Literal(_)
-        | Expression::Reference(_)
-        | Expression::MetricAggregate(_)
-        | Expression::UserAttribute(_)
-        | Expression::CurrentDate
-        | Expression::CurrentTime
-        | Expression::CurrentTimestamp => Vec::new(),
-        Expression::Unary { operand, .. }
-        | Expression::IsNull { operand, .. }
-        | Expression::Cast { operand, .. }
-        | Expression::Extract { operand, .. }
-        | Expression::DateTrunc { operand, .. } => vec![operand],
-        Expression::Binary { left, right, .. } | Expression::IsDistinctFrom { left, right, .. } => {
-            vec![left, right]
-        }
-        Expression::InList { operand, list, .. } => {
-            std::iter::once(operand.as_ref()).chain(list).collect()
-        }
-        Expression::Between {
-            operand, low, high, ..
-        } => vec![operand, low, high],
-        Expression::Like {
-            operand, pattern, ..
-        } => vec![operand, pattern],
-        Expression::Case {
-            operand,
-            branches,
-            otherwise,
-        } => operand
-            .as_deref()
-            .into_iter()
-            .chain(
-                branches
-                    .iter()
-                    .flat_map(|branch| [&branch.condition, &branch.result]),
-            )
-            .chain(otherwise.as_deref())
-            .collect(),
-        Expression::DateAdd {
-            amount, operand, ..
-        } => vec![amount, operand],
-        Expression::DateDiff { start, end, .. } => vec![start, end],
-        Expression::Function { arguments, .. } => arguments.iter().collect(),
-        Expression::Aggregate { call, filter } => aggregate_children(call)
-            .into_iter()
-            .chain(filter.as_deref())
-            .collect(),
-    }
-}
-
-fn aggregate_children(call: &AggregateCall) -> Vec<&Expression> {
-    match call {
-        AggregateCall::CountRows => Vec::new(),
-        AggregateCall::Simple { argument, .. } | AggregateCall::Distinct { argument, .. } => {
-            vec![argument]
-        }
-        AggregateCall::Percentile {
-            fraction, ordering, ..
-        } => vec![fraction, ordering],
-    }
+    nodes(expression)
+        .into_iter()
+        .filter_map(|node| match node {
+            Expression::MetricAggregate(metric) => Some(metric),
+            _ => None,
+        })
+        .collect()
 }
 
 #[cfg(test)]

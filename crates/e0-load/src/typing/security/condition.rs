@@ -5,11 +5,11 @@ use menura_model::expression::{Expression, Reference};
 use menura_security::{AttributeType, ScalarType, misplaced_list_attributes};
 
 use super::{FieldLookup, Fields};
+use crate::expression_tree::nodes;
 use crate::expressions::{ExpressionPlace, parse_element_expression};
 use crate::extensions::security::{RowPolicy, SecurityContextDeclaration};
 use crate::extensions::{ExtensionCode, Problems};
 use crate::names::Name;
-use crate::typing::populations::structure::nodes;
 use crate::typing::stop::{Outcome, Stop};
 use crate::typing::typer::{Aggregates, ExpressionTyper};
 use crate::typing::value_type::{Typed, big_integer, decimal, describe};

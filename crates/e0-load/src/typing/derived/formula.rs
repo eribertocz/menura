@@ -2,7 +2,7 @@
 
 use menura_model::expression::{BinaryOperator, Expression, Reference};
 
-use super::super::populations::structure::nodes;
+use crate::expression_tree::nodes;
 use crate::extensions::ExtensionCode;
 use crate::references::derived::{DerivedMetric, DerivedOrigin};
 
