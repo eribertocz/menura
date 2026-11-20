@@ -2,7 +2,10 @@
 //! current date or time, directly or through the fields and metrics it reads (QRY-2,
 //! E0F-2.3).
 
-#[cfg(test)]
+// `cfg(test)` marks the helpers as test code, where `expect` and `panic!` are allowed
+// (clippy.toml).
+#![cfg(test)]
+
 mod support;
 
 use menura_e2_bind::BindCode;
