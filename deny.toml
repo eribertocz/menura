@@ -91,6 +91,10 @@ allow = [
     "jiff@=1.0.1",
     "jiff-core",
     "jiff-tzdb",
+    # `jiff` dependencies only on targets without pointer-sized atomics, never built on ours;
+    # cargo-deny sees them because it checks every target (#229).
+    "portable-atomic",
+    "portable-atomic-util",
     # Conformance runner (#6, ARC-5.3), approved by the maintainer for that crate only: DuckDB
     # (bundled), the serde-saphyr YAML parser, and their dependencies. `duckdb`, `libduckdb-sys` and
     # `chrono` are banned below with the runner (and DuckDB's own crates) as their only wrappers;
