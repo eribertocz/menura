@@ -1,0 +1,70 @@
+//! The logical plan: the output of E4 and E5 (E4-3), a tree of typed nodes, each with its
+//! output schema and origin.
+
+mod items;
+mod operation;
+mod schema;
+#[cfg(test)]
+mod tests;
+
+pub use items::{AggregateComponent, JoinKind, NamedExpression, SortItem};
+pub use operation::Operation;
+pub use schema::{OutputSchema, SchemaColumn};
+
+use crate::origin::Origin;
+
+/// One node of a logical plan (E4-3).
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct PlanNode {
+    operation: Operation,
+    schema: OutputSchema,
+    origin: Origin,
+}
+
+impl PlanNode {
+    /// The node that performs `operation`, produces `schema` and comes from `origin`.
+    #[must_use]
+    pub fn new(operation: Operation, schema: OutputSchema, origin: Origin) -> Self {
+        Self {
+            operation,
+            schema,
+            origin,
+        }
+    }
+
+    /// What the node does, with its inputs.
+    #[must_use]
+    pub fn operation(&self) -> &Operation {
+        &self.operation
+    }
+
+    /// The columns the node produces.
+    #[must_use]
+    pub fn schema(&self) -> &OutputSchema {
+        &self.schema
+    }
+
+    /// The input element the node comes from.
+    #[must_use]
+    pub fn origin(&self) -> &Origin {
+        &self.origin
+    }
+
+    /// The input nodes, in order: none for `Scan`, `left` then `right` for `Join`, the
+    /// branches for `Stitch`, and the one input otherwise.
+    #[must_use]
+    pub fn inputs(&self) -> Vec<&PlanNode> {
+        match &self.operation {
+            Operation::Scan { .. } => Vec::new(),
+            Operation::Join { left, right, .. } => vec![left, right],
+            Operation::Stitch { branches, .. } => branches.iter().collect(),
+            Operation::Filter { input, .. }
+            | Operation::SemiJoin { input, .. }
+            | Operation::Deduplicate { input, .. }
+            | Operation::Aggregate { input, .. }
+            | Operation::Project { input, .. }
+            | Operation::Sort { input, .. }
+            | Operation::Limit { input, .. } => vec![input],
+        }
+    }
+}
