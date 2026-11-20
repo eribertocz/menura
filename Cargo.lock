@@ -836,6 +836,9 @@ dependencies = [
 name = "menura-e2-bind"
 version = "0.2.0"
 dependencies = [
+ "menura-contracts",
+ "menura-model",
+ "menura-representations",
  "menura-security",
 ]
 
