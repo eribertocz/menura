@@ -7,15 +7,15 @@
 mod support;
 
 use menura_contracts::types::compiled_plan::InputDocument;
-use menura_e4_plan::{PlanError, build_plan};
+use menura_e4_plan::PlanError;
 use menura_representations::bound_query::{BoundQuery, BoundQueryParts};
 use menura_representations::logical_plan::PlanNode;
 use menura_representations::origin::Origin;
 use menura_security::AdmittedSecurityContext;
 use support::plan::{column_names, kinds, node, nodes, predicate};
 use support::{
-    POLICY_POINTER, branches, dimension, filter, located, metric_reference, model, policy, query,
-    tree, user,
+    POLICY_POINTER, branches, build_plan, dimension, filter, located, metric_reference, model,
+    policy, query, tree, user,
 };
 
 fn region_query() -> BoundQuery {

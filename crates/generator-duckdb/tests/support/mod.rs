@@ -36,7 +36,7 @@ use menura_representations::time::{QueryTime, TimeZoneName};
 use menura_security::{AdmittedSecurityContext, admit_security_context};
 pub use plan::{
     aggregate, column, component, component_of, filter, limit, named, project, region_count, scan,
-    sort,
+    scan_of, sort,
 };
 
 /// The 64-bit signed integer.
@@ -64,6 +64,9 @@ pub fn instant() -> LogicalType {
 fn order_fields() -> Vec<(&'static str, &'static str, LogicalType)> {
     vec![
         ("AMOUNT", "amount", decimal(10, 2)),
+        // A field whose name starts with `menura.source.`: the source columns of `ORDERS` take
+        // the prefix `menura.source..` (issue #264).
+        ("menura.source.AMOUNT", "amount", decimal(10, 2)),
         (
             "CREATED_MONTH",
             "DATE_TRUNC('month', created_at)",
@@ -82,6 +85,8 @@ fn order_fields() -> Vec<(&'static str, &'static str, LogicalType)> {
         ("ORDERED_ON", "ordered_on", LogicalType::Date),
         ("QUANTITY", "quantity", big_integer()),
         ("REGION", "\"Sales Region\"", LogicalType::Text),
+        // `units: quantity`, as E0 stores it: the delimited identifier of the normalized name.
+        ("UNITS", "\"QUANTITY\"", big_integer()),
         (
             "SHIPPED_AT",
             "shipped_at",

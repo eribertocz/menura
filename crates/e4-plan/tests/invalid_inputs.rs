@@ -7,15 +7,15 @@
 mod support;
 
 use menura_contracts::types::query::{Direction, NullsOrder};
-use menura_e4_plan::{InvariantViolation, PlanError, build_plan};
+use menura_e4_plan::{InvariantViolation, PlanError};
 use menura_model::internal_model::{InternalModel, Metric, RowPolicy};
 use menura_representations::bound_query::{BoundQuery, BoundQueryParts};
 use menura_representations::logical_plan::PlanNode;
 use menura_representations::origin::Origin;
 use menura_representations::paths::Branches;
 use support::{
-    POLICY_POINTER, anyone, branches, date, date_range, dimension, located, metric_reference,
-    metrics, model, model_with, orders, policy, query,
+    POLICY_POINTER, anyone, branches, build_plan, date, date_range, dimension, located,
+    metric_reference, metrics, model, model_with, orders, policy, query,
 };
 
 fn violation(result: Result<PlanNode, PlanError>) -> InvariantViolation {

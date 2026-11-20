@@ -37,6 +37,11 @@ pub fn scan(dataset: &str, fields: &[&str]) -> PlanNode {
         .iter()
         .map(|name| column(name, field_type(name), true))
         .collect();
+    scan_of(dataset, columns)
+}
+
+/// The `Scan` of `dataset` whose schema is `columns`.
+pub fn scan_of(dataset: &str, columns: Vec<SchemaColumn>) -> PlanNode {
     PlanNode::new(
         Operation::Scan {
             dataset: NormalizedName::new(dataset),
