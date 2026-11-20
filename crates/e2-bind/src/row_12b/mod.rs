@@ -4,6 +4,7 @@
 
 mod date_range;
 mod filter_types;
+mod model_now;
 mod order;
 mod paths;
 mod time_fields;
@@ -40,11 +41,7 @@ pub(crate) fn check_row_12b(
     let order = order::bind_order(&query.columns, tree.order())?;
     date_range::check_order_of_bounds(query.date_range.as_ref())?;
     paths::check_paths(model, &query.paths)?;
-    date_range::check_reference_time(
-        &query.filters,
-        query.date_range.as_ref(),
-        tree.time().reference_time.is_some(),
-    )?;
+    date_range::check_reference_time(model, query, tree.time().reference_time.is_some())?;
     date_range::check_range_years(query.date_range.as_ref(), reference_date)?;
     order::check_limit(&query.columns, &order, tree.limit())?;
     Ok(Row12bBindings { grains, order })

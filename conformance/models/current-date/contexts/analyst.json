@@ -1,0 +1,14 @@
+{
+  "contract": "menura.security_context",
+  "contract_version": "1.1.0",
+  "subject": "current-date-analyst",
+  "roles": [
+    "analyst"
+  ],
+  "attributes": {
+    "statuses": [
+      "OPEN",
+      "CLOSED"
+    ]
+  }
+}
