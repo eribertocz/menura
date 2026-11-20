@@ -8,6 +8,7 @@
 
 mod classification;
 mod columns;
+mod expression_tree;
 mod expressions;
 mod extensions;
 mod internal_model;
