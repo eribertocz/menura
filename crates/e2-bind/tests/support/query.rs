@@ -44,24 +44,18 @@ pub fn dimension(index: usize, text: &str) -> QueryDimension {
 pub fn dimension_reference(index: usize, reference: QueryReference) -> QueryDimension {
     QueryDimension {
         output_name: OutputName::from_reference(&reference),
-        kind: QueryDimensionKind::Field {
-            reference,
-            time_grain: None,
-        },
+        kind: QueryDimensionKind::Field { reference },
         origin: at(&format!("/query/dimensions/{index}")),
     }
 }
 
-/// The dimension `text` with a time grain.
-pub fn dimension_with_grain(index: usize, text: &str, grain: Grain) -> QueryDimension {
-    let mut dimension = dimension(index, text);
-    if let QueryDimensionKind::Field { time_grain, .. } = &mut dimension.kind {
-        *time_grain = Some(TimeGrainChoice {
-            grain,
-            origin: at("/query/nonportable_extensions/0/data/time_grains/0"),
-        });
+/// The `time_grains` entry `grain` on `text`, at `pointer`.
+pub fn time_grain(pointer: &str, text: &str, grain: Grain) -> TimeGrainChoice {
+    TimeGrainChoice {
+        dimension: reference(text),
+        grain,
+        origin: at(pointer),
     }
-    dimension
 }
 
 /// The metric `text` at `/query/metrics/<index>`.

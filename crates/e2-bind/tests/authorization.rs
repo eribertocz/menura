@@ -13,7 +13,7 @@ use menura_representations::bound_query::{AuthorizedObject, MetricPath};
 use menura_representations::query_tree::QueryTreeParts;
 
 use support::model::name;
-use support::query::{column, dimension, equals_text, filter, metric, path, tree};
+use support::query::{column, dimension, equals_text, filter, metric, path, time_grain, tree};
 use support::{diagnostic, first_error, run};
 
 const ANALYST: &[&str] = &["analyst"];
@@ -313,4 +313,24 @@ fn e2_4_7_a_metric_records_the_datasets_it_reads_before_itself() {
         AuthorizedObject::Metric(MetricPath::SemanticModel(name("REVENUE"))),
     ];
     assert_eq!(objects, expected.iter().collect::<Vec<_>>());
+}
+
+#[test]
+fn e2_4_1_a_time_grain_field_is_authorized() {
+    let parts = QueryTreeParts {
+        time_grains: vec![time_grain(
+            "/query/nonportable_extensions/0/data/time_grains/0",
+            "orders.unit_cost",
+            menura_contracts::types::common::Grain::Month,
+        )],
+        ..QueryTreeParts::default()
+    };
+    let query = tree(vec![dimension(0, "orders.region")], vec![], parts);
+    assert_eq!(
+        first_error(&query, ANALYST),
+        (
+            BindCode::NameNotFound,
+            "/query/nonportable_extensions/0/data/time_grains/0".to_owned()
+        )
+    );
 }

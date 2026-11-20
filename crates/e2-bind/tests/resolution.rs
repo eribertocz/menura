@@ -14,8 +14,8 @@ use menura_representations::query_tree::{QueryTreeParts, ReferencePart};
 
 use support::model::name;
 use support::query::{
-    column, date_range, dimension, dimension_reference, dimension_with_grain, equals_text, filter,
-    metric, parts, path, tree,
+    column, date_range, dimension, dimension_reference, equals_text, filter, metric, parts, path,
+    time_grain, tree,
 };
 use support::{first_error, run};
 
@@ -41,7 +41,7 @@ fn e2_1_every_name_resolves_against_the_model() {
 fn four_columns() -> menura_representations::query_tree::QueryTree {
     tree(
         vec![
-            dimension_with_grain(0, "orders.ordered_at", Grain::Month),
+            dimension(0, "orders.ordered_at"),
             dimension(1, "customers.region"),
         ],
         vec![metric(0, "revenue"), metric(1, "orders.order_total")],
@@ -62,11 +62,11 @@ fn e2_2_every_column_points_to_its_model_element_in_order() {
     else {
         panic!("two dimensions, then two metrics: {columns:?}");
     };
-    let grained = BoundDimensionKind::Field {
+    let ungrained = BoundDimensionKind::Field {
         field: field("ORDERS", "ORDERED_AT"),
-        time_grain: Some(Grain::Month),
+        time_grain: None,
     };
-    assert_eq!(ordered_at.kind, grained);
+    assert_eq!(ordered_at.kind, ungrained);
     let plain = BoundDimensionKind::Field {
         field: field("CUSTOMERS", "REGION"),
         time_grain: None,
@@ -351,4 +351,50 @@ fn e2_3_5_the_datasets_of_a_path_exist() {
     };
     let query = tree(vec![dimension(0, "customers.region")], vec![], parts);
     assert_eq!(first_error(&query, ANALYST).0, BindCode::NameNotFound);
+}
+
+#[test]
+fn e2_2_every_time_grain_points_to_its_model_element() {
+    let parts = QueryTreeParts {
+        time_grains: vec![time_grain(
+            "/query/nonportable_extensions/0/data/time_grains/0",
+            "orders.ordered_at",
+            Grain::Month,
+        )],
+        ..QueryTreeParts::default()
+    };
+    let query = tree(vec![dimension(0, "orders.ordered_at")], vec![], parts);
+    let authorized = run(&query, ANALYST).expect("authorized");
+    let [grain] = authorized.time_grains() else {
+        panic!("one time grain");
+    };
+    assert_eq!(
+        grain.target,
+        ResolvedName::Field(field("ORDERS", "ORDERED_AT"))
+    );
+    assert_eq!(grain.grain, Grain::Month);
+    assert_eq!(
+        grain.origin.pointer(),
+        "/query/nonportable_extensions/0/data/time_grains/0"
+    );
+}
+
+#[test]
+fn e2_3_2_the_time_grain_reference_resolves() {
+    let parts = QueryTreeParts {
+        time_grains: vec![time_grain(
+            "/query/nonportable_extensions/0/data/time_grains/1",
+            "orders.shipped_at",
+            Grain::Day,
+        )],
+        ..QueryTreeParts::default()
+    };
+    let query = tree(vec![dimension(0, "orders.ordered_at")], vec![], parts);
+    assert_eq!(
+        first_error(&query, ANALYST),
+        (
+            BindCode::NameNotFound,
+            "/query/nonportable_extensions/0/data/time_grains/1".to_owned()
+        )
+    );
 }

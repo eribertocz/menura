@@ -14,7 +14,9 @@ mod resolver;
 mod rows;
 mod walk;
 
-pub use authorized_query::{AuthorizedDateRange, AuthorizedQuery, ResolvedName};
+pub use authorized_query::{
+    AuthorizedDateRange, AuthorizedQuery, AuthorizedTimeGrain, ResolvedName,
+};
 pub use error::{BindCode, BindDiagnostic, BindError, InvariantViolation};
 
 use menura_model::internal_model::InternalModel;
@@ -71,6 +73,7 @@ fn assemble(
             elements.columns.iter().filter_map(bound_column).collect(),
         ),
         filters,
+        time_grains: elements.time_grains,
         date_range: elements.date_range,
         paths: elements.paths,
         authorization,
@@ -86,7 +89,7 @@ fn bound_column(column: &ResolvedColumn<'_>) -> Option<OutputColumn<BoundDimensi
             Some(OutputColumn::Dimension(BoundDimension {
                 kind: BoundDimensionKind::Field {
                     field: field.clone(),
-                    time_grain: column.time_grain,
+                    time_grain: None,
                 },
                 output_name: column.output_name.clone(),
                 origin: column.origin.clone(),

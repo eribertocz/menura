@@ -13,7 +13,7 @@ use menura_representations::query_tree::{QueryTreeParts, ReferencePart};
 
 use support::query::{
     column, count_rows_filter, date_range, dimension, dimension_reference, equals_text, filter,
-    metric, parts, path, tree,
+    metric, parts, path, time_grain, tree,
 };
 use support::{first_error, run};
 
@@ -319,5 +319,42 @@ fn e2_5_3_the_first_error_follows_query_order_not_the_order_of_pointers() {
     assert_eq!(
         first_error(&query, ANALYST),
         error(BindCode::NameNotFound, "/query/dimensions/0")
+    );
+}
+
+#[test]
+fn e2_5_3_time_grains_come_after_filters_and_before_the_date_range() {
+    let grain = time_grain(
+        "/query/nonportable_extensions/0/data/time_grains/0",
+        "orders.shipped_at",
+        menura_contracts::types::common::Grain::Day,
+    );
+    let range = date_range(
+        "/query/nonportable_extensions/0/data/date_range",
+        "orders.delivered_at",
+    );
+    let with_filter = QueryTreeParts {
+        filters: vec![filter("/query/filter", equals_text(column("orders.size")))],
+        time_grains: vec![grain.clone()],
+        date_range: Some(range.clone()),
+        ..QueryTreeParts::default()
+    };
+    let query = tree(vec![dimension(0, "orders.region")], vec![], with_filter);
+    assert_eq!(
+        first_error(&query, ANALYST),
+        error(BindCode::NameNotFound, "/query/filter")
+    );
+    let without_filter = QueryTreeParts {
+        time_grains: vec![grain],
+        date_range: Some(range),
+        ..QueryTreeParts::default()
+    };
+    let query = tree(vec![dimension(0, "orders.region")], vec![], without_filter);
+    assert_eq!(
+        first_error(&query, ANALYST),
+        error(
+            BindCode::NameNotFound,
+            "/query/nonportable_extensions/0/data/time_grains/0"
+        )
     );
 }

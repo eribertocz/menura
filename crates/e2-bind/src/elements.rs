@@ -1,7 +1,6 @@
 //! Row 3 of E2-5 over every element of the query, in query order (E2-5.3): the dimensions and
-//! metrics, the filters, the date range, then the paths.
+//! metrics, the filters, the time grains, the date range, then the paths.
 
-use menura_contracts::types::common::Grain;
 use menura_model::expression::{Expression, Reference};
 use menura_representations::bound_query::BoundPath;
 use menura_representations::columns::OutputColumn;
@@ -9,10 +8,10 @@ use menura_representations::names::OutputName;
 use menura_representations::origin::QueryLocation;
 use menura_representations::query_tree::{
     QueryDateRange, QueryDimension, QueryDimensionKind, QueryFilter, QueryMetric, QueryMetricKind,
-    QueryPath, QueryReference, QueryTree,
+    QueryPath, QueryReference, QueryTree, TimeGrainChoice,
 };
 
-use crate::authorized_query::{AuthorizedDateRange, ResolvedName};
+use crate::authorized_query::{AuthorizedDateRange, AuthorizedTimeGrain, ResolvedName};
 use crate::error::{BindCode, BindDiagnostic, BindError, InvariantViolation};
 use crate::names::{written_expression_reference, written_reference};
 use crate::resolver::Resolver;
@@ -33,7 +32,6 @@ pub(crate) struct ResolvedColumn<'tree> {
     pub(crate) role: ColumnRole,
     pub(crate) reference: &'tree QueryReference,
     pub(crate) target: ResolvedName,
-    pub(crate) time_grain: Option<Grain>,
     pub(crate) output_name: &'tree OutputName,
     pub(crate) origin: &'tree QueryLocation,
 }
@@ -50,6 +48,7 @@ pub(crate) struct ResolvedFilter<'tree> {
 pub(crate) struct ResolvedElements<'tree> {
     pub(crate) columns: Vec<ResolvedColumn<'tree>>,
     pub(crate) filters: Vec<ResolvedFilter<'tree>>,
+    pub(crate) time_grains: Vec<AuthorizedTimeGrain>,
     pub(crate) date_range: Option<AuthorizedDateRange>,
     pub(crate) paths: Vec<BoundPath>,
 }
@@ -71,6 +70,10 @@ pub(crate) fn resolve_elements<'tree>(
     for filter in tree.filters() {
         filters.push(resolve_filter(filter, resolver)?);
     }
+    let mut time_grains = Vec::new();
+    for grain in tree.time_grains() {
+        time_grains.push(resolve_time_grain(grain, resolver)?);
+    }
     let date_range = match tree.date_range() {
         Some(range) => Some(resolve_date_range(range, resolver)?),
         None => None,
@@ -82,6 +85,7 @@ pub(crate) fn resolve_elements<'tree>(
     Ok(ResolvedElements {
         columns,
         filters,
+        time_grains,
         date_range,
         paths,
     })
@@ -91,11 +95,7 @@ fn resolve_dimension<'tree>(
     dimension: &'tree QueryDimension,
     resolver: &mut Resolver<'_>,
 ) -> Result<ResolvedColumn<'tree>, BindError> {
-    let QueryDimensionKind::Field {
-        reference,
-        time_grain,
-    } = &dimension.kind
-    else {
+    let QueryDimensionKind::Field { reference } = &dimension.kind else {
         return Err(BindError::invariant(
             InvariantViolation::SqlFormElement,
             &dimension.origin,
@@ -105,7 +105,6 @@ fn resolve_dimension<'tree>(
         role: ColumnRole::Dimension,
         reference,
         target: resolve(reference, &dimension.origin, resolver)?,
-        time_grain: time_grain.as_ref().map(|choice| choice.grain),
         output_name: &dimension.output_name,
         origin: &dimension.origin,
     })
@@ -125,7 +124,6 @@ fn resolve_metric<'tree>(
         role: ColumnRole::Metric,
         reference,
         target: resolve(reference, &metric.origin, resolver)?,
-        time_grain: None,
         output_name: &metric.output_name,
         origin: &metric.origin,
     })
@@ -161,6 +159,17 @@ fn reference_of(node: &Expression) -> Option<&Reference> {
         }
         _ => None,
     }
+}
+
+fn resolve_time_grain(
+    grain: &TimeGrainChoice,
+    resolver: &mut Resolver<'_>,
+) -> Result<AuthorizedTimeGrain, BindError> {
+    Ok(AuthorizedTimeGrain {
+        target: resolve(&grain.dimension, &grain.origin, resolver)?,
+        grain: grain.grain,
+        origin: grain.origin.clone(),
+    })
 }
 
 fn resolve_date_range(
