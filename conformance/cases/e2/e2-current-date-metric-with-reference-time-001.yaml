@@ -1,0 +1,17 @@
+id: e2-current-date-metric-with-reference-time-001
+rules: [QRY-2, E2-5.6, E0F-2.3]
+model: current-date
+security_context: admin.json
+query:
+  contract: menura.query
+  contract_version: "1.1.0"
+  reference_time: "2026-11-15T12:00:00Z"
+  time_zone: UTC
+  query:
+    dimensions: [orders.status]
+    metrics:
+      - {metric: amount_to_date, alias: amount_to_date}
+expect:
+  outcome: plan
+  rows: e2-current-date-metric-with-reference-time-001.csv
+  row_order: any

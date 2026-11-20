@@ -1,0 +1,16 @@
+id: e2-current-date-dimension-field-001
+rules: [QRY-2, E2-5.6, E0F-2.3]
+model: current-date
+security_context: admin.json
+query:
+  contract: menura.query
+  contract_version: "1.1.0"
+  time_zone: UTC
+  query:
+    dimensions: [orders.is_past]
+    metrics:
+      - {metric: total_amount, alias: total_amount}
+expect:
+  outcome: error
+  error: EQRY-03
+  location: {document: query, pointer: /query/dimensions/0}

@@ -33,7 +33,7 @@ for the target dialect. Priorities, in order: correct, then fast, then readable.
 | E6-4.8 | `ORDER BY` always writes `NULLS FIRST` or `NULLS LAST` explicitly. |
 | E6-4.9 | Formatting is fixed: keywords upper case, one clause per line, two-space indentation, no trailing spaces. Identical plans give byte-identical SQL (P3). |
 | E6-4.10 | The SQL MUST NOT depend on session settings. Division is generated with explicit operand casts to the result type of E0F-5a; time-zone conversions use `AT TIME ZONE` with the query time zone as a bound parameter; no implicit cast between `timestamp with time zone` and `timestamp` or `date` is ever left to the engine. |
-| E6-4.11 | Literals are generated only for values from closed sets or already validated: grain names, `LIMIT` integers, constants written in the model, the boolean constants `TRUE` and `FALSE` that E4 introduces for row policies (E4-6.2, E4-6.4), and `NULL`, which carries no value. Every other value is a bound parameter. |
+| E6-4.11 | Literals are generated only for values from closed sets or already validated: grain names, `LIMIT` integers, constants written in the model, the integer arguments that E0.f requires to be literals and that fix a result type or a part (`ROUND` and `TRUNC` precision, `SPLIT_PART` part number, `PERCENTILE_*` fraction), wherever they are written, the boolean constants `TRUE` and `FALSE` that E4 introduces for row policies (E4-6.2, E4-6.4), and `NULL`, which carries no value. Every other value is a bound parameter. |
 
 ## E6-5 DuckDB
 

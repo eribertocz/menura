@@ -1,10 +1,14 @@
-//! The errors of E4: `ESEC-02`, and the internal errors of an input outside the 0.3.0 slice.
+//! The errors of E4: `ESEC-02`, `EQRY-03`, and the internal errors of an input outside the 0.3.0 slice.
 
 use std::fmt;
 
-use menura_contracts::types::compiled_plan::Diagnostic;
+use menura_contracts::types::compiled_plan::{Diagnostic, DiagnosticLocation, InputDocument};
 use menura_representations::origin::Origin;
 use menura_security::RowFilterError;
+
+/// The message of `EQRY-03` in E4: it names neither the policy nor its dataset (SCY-4a.1).
+const MISSING_REFERENCE_TIME: &str =
+    "the query needs `reference_time` to apply the security rules; add it to the query";
 
 /// Why E4 stopped.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -12,6 +16,10 @@ pub enum PlanError {
     /// `ESEC-02`: an applicable row policy needs an attribute the security context does not
     /// provide (E4-6.9, E2-5 row 18).
     MissingAttribute(RowFilterError),
+    /// `EQRY-03`: an applicable row policy reads the current date or time and the query has no
+    /// `reference_time` (E4-6.9b, QRY-2). It carries nothing about the policy, so that no
+    /// message can name it (SCY-4a.1).
+    MissingReferenceTime,
     /// The input breaks the contract of the stages before E4. This is a defect of the
     /// compiler, not a query error, so it has no specification code.
     Invariant {
@@ -24,11 +32,21 @@ pub enum PlanError {
 
 impl PlanError {
     /// The diagnostic of the compile error document (PLN-5): `ESEC-02` at `/attributes` of
-    /// the security context; `None` for an internal error.
+    /// the security context, `EQRY-03` at `/query` of the query; `None` for an internal error.
     #[must_use]
     pub fn to_diagnostic(&self) -> Option<Diagnostic> {
         match self {
             Self::MissingAttribute(error) => error.to_diagnostic(),
+            Self::MissingReferenceTime => Some(Diagnostic {
+                code: "EQRY-03".to_owned(),
+                message: MISSING_REFERENCE_TIME.to_owned(),
+                location: Some(DiagnosticLocation {
+                    document: InputDocument::Query,
+                    pointer: "/query".to_owned(),
+                    line: None,
+                    column: None,
+                }),
+            }),
             Self::Invariant { .. } => None,
         }
     }
@@ -99,6 +117,7 @@ impl fmt::Display for PlanError {
     fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             Self::MissingAttribute(error) => error.fmt(formatter),
+            Self::MissingReferenceTime => write!(formatter, "EQRY-03: {MISSING_REFERENCE_TIME}"),
             Self::Invariant { violation, origin } => {
                 let pointer = match origin {
                     Origin::Query(location) => location.pointer(),
