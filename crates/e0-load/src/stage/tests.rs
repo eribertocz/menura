@@ -75,7 +75,7 @@ fn options() -> LoadOptions {
 }
 
 fn load(model: &str) -> Result<InternalModel, LoadRejection> {
-    load_model(model.as_bytes(), CATALOG.as_bytes(), &options()).map(|(model, _)| model)
+    load_model(model.as_bytes(), CATALOG.as_bytes(), &options()).map(|loaded| loaded.model)
 }
 
 fn loaded(model: &str) -> InternalModel {
@@ -117,8 +117,11 @@ fn e0_2_1_a_valid_model_loads_without_security_context_or_catalog_state() {
 
 #[test]
 fn e0_2_1_the_admitted_catalog_schema_is_returned_with_the_model() {
-    let (_, catalog) = load_model(MODEL.as_bytes(), CATALOG.as_bytes(), &options()).unwrap();
-    assert_eq!(catalog.document_id.origin, "conformance:sample");
+    let loaded = load_model(MODEL.as_bytes(), CATALOG.as_bytes(), &options()).unwrap();
+    assert_eq!(
+        loaded.catalog_schema.document_id.origin,
+        "conformance:sample"
+    );
 }
 
 #[test]

@@ -3,10 +3,9 @@
 
 use menura_contracts::ContractKind;
 use menura_contracts::types::compiled_plan::{
-    CompileErrorContract, CompileErrorDocument, Diagnostic, DiagnosticLocation, InputDocument,
+    CompileErrorContract, CompileErrorDocument, Diagnostic,
 };
-use menura_e0_load::{LoadRejection, load_model};
-use menura_model::internal_model::Warning;
+use menura_e0_load::{LoadRejection, LoadedModel, load_model};
 
 use crate::catalog_state;
 use crate::handle::Handle;
@@ -33,7 +32,7 @@ pub fn validate(
     options: &LoadOptions,
 ) -> CompileErrorDocument {
     let (errors, warnings) = match load_model(model, catalog_schema, &options.stage_options()) {
-        Ok((model, _)) => (Vec::new(), diagnostics(&model.parts().warnings)),
+        Ok(loaded) => (Vec::new(), loaded.warnings),
         Err(LoadRejection { errors, warnings }) => (errors, warnings),
     };
     document(CompileErrorContract::ValidationReport, errors, warnings)
@@ -42,8 +41,10 @@ pub fn validate(
 /// Loads the model document `model` against the catalog schema document `catalog_schema`,
 /// with the catalog state document `catalog_state` when given (ARC-5.1).
 ///
-/// The handle carries the load warnings. A catalog state that is not admitted is ignored with
-/// its warning (`WCAT-01` to `WCAT-04`, ARC-5.2): the handle then has no state.
+/// The handle carries the load warnings, a catalog schema's `WCAT-05` first (CON-0.5). A
+/// catalog state that is not admitted is ignored with its warning (`WCAT-01` to `WCAT-04`,
+/// ARC-5.2): the handle then has no state. An admitted state with the former contract name
+/// adds `WCAT-05` after the load warnings.
 ///
 /// # Errors
 ///
@@ -55,13 +56,16 @@ pub fn load(
     catalog_state: Option<&[u8]>,
     options: &LoadOptions,
 ) -> Result<Handle, CompileErrorDocument> {
-    let (model, schema) = load_model(model, catalog_schema, &options.stage_options()).map_err(
+    let LoadedModel {
+        model,
+        catalog_schema,
+        warnings,
+    } = load_model(model, catalog_schema, &options.stage_options()).map_err(
         |LoadRejection { errors, warnings }| {
             document(CompileErrorContract::CompileError, errors, warnings)
         },
     )?;
-    let warnings = diagnostics(&model.parts().warnings);
-    let handle = Handle::new(model, schema, options.clone(), warnings);
+    let handle = Handle::new(model, catalog_schema, options.clone(), warnings);
     Ok(match catalog_state {
         Some(state) => with_state(&handle, state),
         None => handle,
@@ -71,7 +75,8 @@ pub fn load(
 /// A new handle with the same loaded model and the catalog state document `catalog_state`,
 /// admitted against the handle's catalog schema and model (CAT-9.1, CAT-8.8); the model is not
 /// reloaded (ARC-5.1). A state that is not admitted is ignored with its warning (ARC-5.2), and
-/// the new handle has no state.
+/// the new handle has no state. An admitted state with the former contract name keeps its
+/// `WCAT-05` warning (CON-0.5).
 #[must_use]
 pub fn with_state(handle: &Handle, catalog_state: &[u8]) -> Handle {
     let state = catalog_state::admit(catalog_state, handle.catalog_schema(), handle.model());
@@ -90,21 +95,4 @@ fn document(
         errors,
         warnings,
     }
-}
-
-/// The load warnings of the internal model as diagnostics of the model document.
-fn diagnostics(warnings: &[Warning]) -> Vec<Diagnostic> {
-    warnings
-        .iter()
-        .map(|warning| Diagnostic {
-            code: warning.code.as_str().to_owned(),
-            message: warning.message.clone(),
-            location: Some(DiagnosticLocation {
-                document: InputDocument::Model,
-                pointer: warning.location.pointer.clone(),
-                line: u64::try_from(warning.location.line).ok(),
-                column: u64::try_from(warning.location.column).ok(),
-            }),
-        })
-        .collect()
 }

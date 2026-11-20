@@ -1,9 +1,13 @@
 //! Admission of the catalog schema and catalog state documents: CAT-2, CAT-3, CAT-4.2, CAT-6.1,
-//! CAT-8 and CAT-9.
+//! CAT-8, CAT-9 and the former contract name (CON-0.5, WCAT-05).
 
 use menura_contracts::types::catalog::{CatalogSchemaDocument, RelationData};
 use menura_contracts::types::common::{LogicalType, Token};
-use menura_contracts::{AdmissionCode, AdmissionError, admit_catalog_schema, admit_catalog_state};
+use menura_contracts::types::compiled_plan::InputDocument;
+use menura_contracts::{
+    AdmissionCode, AdmissionError, admit_catalog_schema, admit_catalog_state,
+    schema_former_name_warning, state_former_name_warning,
+};
 use serde_json::{Value, json};
 
 // `cfg(test)` marks the helpers as test code, where `expect` is allowed (clippy.toml).
@@ -708,5 +712,61 @@ fn cat_9_state_codes_are_warnings_and_schema_codes_are_errors() {
         [
             "WCAT-01", "WCAT-02", "WCAT-03", "WCAT-04", "ECAT-01", "ECAT-02", "ECAT-03"
         ]
+    );
+}
+
+#[test]
+fn con_0_5_wcat_05_a_catalog_schema_with_the_former_name_is_admitted_with_a_warning() {
+    let former = with(
+        schema_example(),
+        "/contract",
+        json!("semantic_compiler.catalog_schema"),
+    );
+    let schema = admit_schema(&former).expect("the former name is admitted");
+    let warning = schema_former_name_warning(&schema).expect("WCAT-05");
+    assert_eq!(warning.code, AdmissionCode::Wcat05);
+    assert!(warning.code.is_warning());
+    assert_eq!(warning.document, InputDocument::CatalogSchema);
+    assert_eq!(warning.pointer, "/contract");
+    assert_eq!(warning.line_column, None);
+    let menura = with(
+        schema_example(),
+        "/contract",
+        json!("menura.catalog_schema"),
+    );
+    let menura = with(menura, "/contract_version", json!("1.1.0"));
+    let schema = admit_schema(&menura).expect("the name is admitted");
+    assert_eq!(schema_former_name_warning(&schema), None);
+}
+
+#[test]
+fn con_0_5_wcat_05_a_catalog_state_with_the_former_name_is_admitted_with_a_warning() {
+    let schema = admitted_schema();
+    let former = with(
+        state_example(),
+        "/contract",
+        json!("semantic_compiler.catalog_state"),
+    );
+    let state = admit_catalog_state(&former.to_string(), &schema).expect("admitted");
+    let warning = state_former_name_warning(&state).expect("WCAT-05");
+    assert_eq!(warning.code, AdmissionCode::Wcat05);
+    assert_eq!(warning.document, InputDocument::CatalogState);
+    assert_eq!(warning.pointer, "/contract");
+    let menura = with(state_example(), "/contract", json!("menura.catalog_state"));
+    let state = admit_catalog_state(&menura.to_string(), &schema).expect("admitted");
+    assert_eq!(state_former_name_warning(&state), None);
+}
+
+#[test]
+fn con_0_5_a_former_name_does_not_hide_a_later_failure() {
+    let former = with(
+        schema_example(),
+        "/contract",
+        json!("semantic_compiler.catalog_schema"),
+    );
+    let broken = with(former, "/engine/name", json!(42));
+    assert_eq!(
+        schema_failure(&broken),
+        (AdmissionCode::Ecat01, pointer("/engine/name"))
     );
 }

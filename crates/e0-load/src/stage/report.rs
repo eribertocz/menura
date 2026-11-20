@@ -28,19 +28,15 @@ impl Report {
 
     /// Adds the error of a catalog schema that is not admitted (CAT-9.1).
     pub(super) fn add_catalog_error(&mut self, error: &AdmissionError) {
-        let (line, column) = error
-            .line_column
-            .map_or((None, None), |(line, column)| (Some(line), Some(column)));
-        self.add_error(Diagnostic {
-            code: error.code.as_str().to_owned(),
-            message: error.message.clone(),
-            location: Some(DiagnosticLocation {
-                document: error.document,
-                pointer: error.pointer.clone(),
-                line,
-                column,
-            }),
-        });
+        self.add_error(error.diagnostic());
+    }
+
+    /// Adds the `WCAT-05` warning of an admitted catalog schema with the former contract name
+    /// (CON-0.5). The schema is admitted before E0.a, so the warning comes before the E0
+    /// warnings (E0-3.2). It is not a warning of the model document, so the internal model does
+    /// not keep it (E0H-2).
+    pub(super) fn add_catalog_warning(&mut self, warning: &AdmissionError) {
+        self.warnings.push(warning.diagnostic());
     }
 
     /// Adds an error that is already a diagnostic of the compile error document.
@@ -105,13 +101,14 @@ impl Report {
         });
     }
 
-    /// The internal model with every load warning of the report (E0H-2). The warnings are not
-    /// part of any hash (E0H-3.4), so the model hash is kept.
-    pub(super) fn seal(self, model: &InternalModel) -> InternalModel {
+    /// The internal model with every load warning of the model document (E0H-2), and every
+    /// load warning as the report gives it. The warnings are not part of any hash (E0H-3.4),
+    /// so the model hash is kept.
+    pub(super) fn seal(self, model: &InternalModel) -> (InternalModel, Vec<Diagnostic>) {
         let hash = model.hash().clone();
         let mut parts = model.parts().clone();
         parts.warnings = self.model_warnings;
-        InternalModel::new(parts, hash)
+        (InternalModel::new(parts, hash), self.warnings)
     }
 
     /// The rejection: every error and every warning reported.

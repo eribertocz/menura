@@ -53,12 +53,26 @@ impl fmt::Display for LoadRejection {
 
 impl std::error::Error for LoadRejection {}
 
+/// The model loads: the immutable internal model, the admitted catalog schema, and every load
+/// warning (E0-2, PLN-5).
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct LoadedModel {
+    /// The internal model, whose warnings are the load warnings of the model document (E0H-2).
+    pub model: InternalModel,
+    /// The admitted catalog schema.
+    pub catalog_schema: CatalogSchemaDocument,
+    /// Every load warning: the catalog schema's `WCAT-05` first (E0-3.2, CON-0.5), then the
+    /// warnings of the model document in the order of E0-4.3.
+    pub warnings: Vec<Diagnostic>,
+}
+
 /// Stage E0: loads and validates the model document `model` against the catalog schema
 /// document `catalog_schema`, with the load options `options` (E0-2). Both documents are the
 /// bytes as received; E0 needs no security context and no catalog state (E0-2.1).
 ///
-/// Returns the immutable internal model, whose warnings are every load warning in the order of
-/// E0-4.3, with the admitted catalog schema.
+/// Returns the [`LoadedModel`]: the immutable internal model, whose warnings are the load
+/// warnings of the model document in the order of E0-4.3, the admitted catalog schema, and
+/// every load warning, including a catalog schema's `WCAT-05` (CON-0.5).
 ///
 /// # Errors
 ///
@@ -85,7 +99,7 @@ pub fn load_model(
     model: &[u8],
     catalog_schema: &[u8],
     options: &LoadOptions,
-) -> Result<(InternalModel, CatalogSchemaDocument), LoadRejection> {
+) -> Result<LoadedModel, LoadRejection> {
     let mut report = Report::default();
     let catalog = catalog::admit(catalog_schema, &mut report);
     let document = match read_document(model) {
@@ -97,7 +111,14 @@ pub fn load_model(
     };
     let built = substages(&document, catalog.as_ref(), options, &mut report);
     match (built, catalog) {
-        (Some(model), Some(catalog)) if !report.has_errors() => Ok((report.seal(&model), catalog)),
+        (Some(model), Some(catalog_schema)) if !report.has_errors() => {
+            let (model, warnings) = report.seal(&model);
+            Ok(LoadedModel {
+                model,
+                catalog_schema,
+                warnings,
+            })
+        }
         _ => Err(report.into_rejection()),
     }
 }

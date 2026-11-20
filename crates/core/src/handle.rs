@@ -6,6 +6,7 @@ use menura_contracts::types::catalog::{CatalogSchemaDocument, CatalogStateDocume
 use menura_contracts::types::compiled_plan::Diagnostic;
 use menura_model::internal_model::InternalModel;
 
+use crate::catalog_state::StateAdmission;
 use crate::load_options::LoadOptions;
 
 /// A loaded model: immutable (ARC-5.1). A new model means `load`; a new catalog state means
@@ -46,20 +47,13 @@ impl Handle {
         }
     }
 
-    /// The same loaded model with `catalog_state`, or without state and with the warning of
-    /// the state that was ignored (ARC-5.2).
-    pub(crate) fn with_catalog_state(
-        &self,
-        catalog_state: Result<CatalogStateDocument, Diagnostic>,
-    ) -> Self {
-        let (catalog_state, state_warning) = match catalog_state {
-            Ok(state) => (Some(state), None),
-            Err(warning) => (None, Some(warning)),
-        };
+    /// The same loaded model with the admitted catalog state, or without state when it was
+    /// ignored (ARC-5.2), and with the state's warning.
+    pub(crate) fn with_catalog_state(&self, admission: StateAdmission) -> Self {
         Self {
             loaded: Arc::clone(&self.loaded),
-            catalog_state,
-            state_warning,
+            catalog_state: admission.state,
+            state_warning: admission.warning,
         }
     }
 
@@ -87,8 +81,9 @@ impl Handle {
         &self.loaded.options
     }
 
-    /// The load warnings in the order of E0-4.3, then the warning of an ignored catalog state
-    /// (`WCAT-01` to `WCAT-04`).
+    /// The load warnings (a catalog schema's `WCAT-05` first, then those of E0-4.3), then the
+    /// warning of the catalog state: `WCAT-01` to `WCAT-04` for an ignored state, or `WCAT-05`
+    /// for an admitted state with the former contract name (CON-0.5).
     pub fn warnings(&self) -> impl Iterator<Item = &Diagnostic> {
         self.loaded.warnings.iter().chain(&self.state_warning)
     }
