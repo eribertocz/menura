@@ -36,7 +36,7 @@ use menura_representations::time::{QueryTime, TimeZoneName};
 use menura_security::{AdmittedSecurityContext, admit_security_context};
 pub use plan::{
     aggregate, column, component, component_of, filter, limit, named, project, region_count, scan,
-    sort,
+    scan_of, sort,
 };
 
 /// The 64-bit signed integer.
