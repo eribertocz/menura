@@ -181,18 +181,26 @@ impl<'input, 'statement> ExpressionWriter<'input, 'statement> {
     }
 }
 
-/// The column of `relation` that `name` matches (E0D-1.5): a regular name matches the column
-/// whose name, normalized as E0D-1.1, equals its own; a delimited name matches exactly.
+/// The column of `relation` that `name` matches: the column whose name, normalized as E0D-1.1,
+/// equals the normalized text of `name`. E0 has already resolved the reference (E0D-1.5) and
+/// stores it as the delimited identifier of its normalized text, and CAT-8.2 makes the
+/// normalized match unique.
 pub(crate) fn catalog_column<'relation>(
     relation: &'relation RelationSchema,
     name: &Identifier,
 ) -> Option<&'relation Column> {
-    relation.columns.iter().find(|column| {
-        if name.is_delimited() {
-            column.name == name.text()
-        } else {
-            normalize_unquoted_identifier(&column.name)
-                == normalize_unquoted_identifier(name.text())
-        }
-    })
+    catalog_column_named(relation, name.text())
+}
+
+/// The column of `relation` whose name, normalized as E0D-1.1, equals `name` normalized the
+/// same way (CAT-8.2 makes it unique).
+pub(crate) fn catalog_column_named<'relation>(
+    relation: &'relation RelationSchema,
+    name: &str,
+) -> Option<&'relation Column> {
+    let wanted = normalize_unquoted_identifier(name);
+    relation
+        .columns
+        .iter()
+        .find(|column| normalize_unquoted_identifier(&column.name) == wanted)
 }

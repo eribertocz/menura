@@ -82,6 +82,8 @@ fn order_fields() -> Vec<(&'static str, &'static str, LogicalType)> {
         ("ORDERED_ON", "ordered_on", LogicalType::Date),
         ("QUANTITY", "quantity", big_integer()),
         ("REGION", "\"Sales Region\"", LogicalType::Text),
+        // `units: quantity`, as E0 stores it: the delimited identifier of the normalized name.
+        ("UNITS", "\"QUANTITY\"", big_integer()),
         (
             "SHIPPED_AT",
             "shipped_at",

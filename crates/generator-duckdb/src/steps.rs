@@ -9,10 +9,10 @@ use menura_representations::logical_plan::{
 
 use crate::body::SelectBody;
 use crate::error::{GenerateError, InvariantViolation};
-use crate::expression::{Columns, Environment, ExpressionWriter};
+use crate::expression::{Columns, Environment, ExpressionWriter, catalog_column_named};
 use crate::identifiers::{Source, classify_source, quote, source_sql};
 use crate::parameters::Parameters;
-use crate::source_columns::{empty_scan_item, source_catalog_column, source_column_name};
+use crate::source_columns::{empty_scan_item, source_column_name};
 use crate::types::physical_type;
 
 /// A node already written: the name of its step and the `ORDER BY` its rows keep.
@@ -107,7 +107,7 @@ impl<'input> StepWriter<'input> {
         let mut items = Vec::new();
         for column in node.schema().columns() {
             if let Some(name) = source_column_name(column.name.as_str()) {
-                let catalog_column = source_catalog_column(relation, name)
+                let catalog_column = catalog_column_named(relation, name)
                     .ok_or_else(|| error(InvariantViolation::UnknownColumn, node))?;
                 items.push(format!(
                     "{} AS {}",

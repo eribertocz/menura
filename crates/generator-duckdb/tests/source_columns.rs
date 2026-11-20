@@ -1,5 +1,6 @@
 //! A `Scan` column that names a catalog column, read by a development-line dataset metric
-//! (E0D-3), and a `Scan` with no columns (E6-4.3, E6-4.4, PLN-2.2, issue #264).
+//! (E0D-3), a field that reads a lower-case catalog column, and a `Scan` with no columns
+//! (E6-4.3, E6-4.4, PLN-2.2, issue #264).
 
 // `cfg(test)` marks the helpers as test code, where `expect` and `panic!` are allowed
 // (clippy.toml).
@@ -85,4 +86,15 @@ fn e6_4_4_an_empty_scan_still_counts_rows() {
     );
     let generated = generate(&plan, &query(&[], &["ORDER_COUNT"])).expect("generated SQL");
     assert_golden(&generated.sql, include_str!("golden/e6_4_4_empty_scan.sql"));
+}
+
+#[test]
+fn pln_2_2_a_field_reads_a_lower_case_catalog_column_in_its_spelling() {
+    let plan = scan_of("ORDERS", vec![column("UNITS", big_integer(), true)]);
+    let generated = generate(&plan, &query(&["UNITS"], &[])).expect("generated SQL");
+    assert!(
+        generated.sql.contains(r#""quantity" AS "UNITS""#),
+        "{}",
+        generated.sql
+    );
 }
