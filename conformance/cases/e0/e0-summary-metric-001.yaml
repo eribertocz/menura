@@ -1,5 +1,5 @@
 id: e0-summary-metric-001
-rules: [SUM-4.1, SUM-6.1.7, E0D-04, W0D-01]
+rules: [SUM-4.1, SUM-6.1.7, E0D-04, W0D-01, E2-4.3, E2-4.4]
 model: e0-summary-metric-001
 security_context: analyst.json
 query:
@@ -12,5 +12,6 @@ query:
       - {metric: daily_amount, alias: daily_amount}
 expect:
   outcome: error
-  error: E0D-04
+  error: E_NAME_NOT_FOUND
+  location: {document: query, pointer: /query/metrics/0}
   warnings: [W0D-01]
