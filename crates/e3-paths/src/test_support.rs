@@ -162,6 +162,7 @@ pub(crate) fn query(
     let time = QueryTime {
         time_zone: TimeZoneName::new("UTC"),
         reference_time: None,
+        reference_date: None,
     };
     BoundQuery::new(
         Columns::dimensions_then_metrics(dimensions, metrics),
