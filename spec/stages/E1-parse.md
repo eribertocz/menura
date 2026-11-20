@@ -49,6 +49,7 @@ covered by the Layer 2 suite cases that test it.
 | Metrics | Reference or inline expression over metrics, output name |
 | Filters | Parsed expressions (E2 assigns each to its dataset) |
 | Date range | Absolute bounds as written, or the relative range as written (resolved in E2, which raises `EQRY-03` without `reference_time`) |
+| Time zone, reference time | `time_zone` (a known name, E1-2.3) and `reference_time` when present, as instants; E2 uses them to resolve relative ranges (QRY-4.2), and E4 and E6 to truncate time grains (E6-5.2) |
 | Paths | Relationships chosen by the query |
 | Order, limit | If present |
 | Column order | Wide-table form: dimensions, then metrics (Layer 3 section 3.6). SQL form: `SELECT` order. |

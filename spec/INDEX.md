@@ -321,8 +321,8 @@ Find a rule ID or a section here, then open only that file at that line.
 | [decisions/0002-e1-envelope-and-references.md](decisions/0002-e1-envelope-and-references.md#L1) | 1 | section | 0002 E1 envelope, time zone names, references and the 0.3.0 SQL-form check |
 | [decisions/0002-e1-envelope-and-references.md](decisions/0002-e1-envelope-and-references.md#L3) | 3 | section | Context |
 | [decisions/0002-e1-envelope-and-references.md](decisions/0002-e1-envelope-and-references.md#L9) | 9 | section | Decision |
-| [decisions/0002-e1-envelope-and-references.md](decisions/0002-e1-envelope-and-references.md#L26) | 26 | section | Consequences |
-| [decisions/0002-e1-envelope-and-references.md](decisions/0002-e1-envelope-and-references.md#L32) | 32 | section | Rules changed |
+| [decisions/0002-e1-envelope-and-references.md](decisions/0002-e1-envelope-and-references.md#L28) | 28 | section | Consequences |
+| [decisions/0002-e1-envelope-and-references.md](decisions/0002-e1-envelope-and-references.md#L34) | 34 | section | Rules changed |
 | [decisions/README.md](decisions/README.md#L1) | 1 | section | Decision records |
 | [extensions/README.md](extensions/README.md#L1) | 1 | section | Extensions |
 | [extensions/README.md](extensions/README.md#L18) | 18 | section | EXT-1 Runtime failure policies |
@@ -660,8 +660,8 @@ Find a rule ID or a section here, then open only that file at that line.
 | [stages/E1-parse.md](stages/E1-parse.md#L41) | 41 | rule | E1-4.3 |
 | [stages/E1-parse.md](stages/E1-parse.md#L42) | 42 | rule | E1-4.4 |
 | [stages/E1-parse.md](stages/E1-parse.md#L44) | 44 | section | E1-5 Query tree |
-| [stages/E1-parse.md](stages/E1-parse.md#L57) | 57 | rule | E1-5.1 |
-| [stages/E1-parse.md](stages/E1-parse.md#L59) | 59 | section | E1-6 Diagnostics |
+| [stages/E1-parse.md](stages/E1-parse.md#L58) | 58 | rule | E1-5.1 |
+| [stages/E1-parse.md](stages/E1-parse.md#L60) | 60 | section | E1-6 Diagnostics |
 | [stages/E2-bind.md](stages/E2-bind.md#L1) | 1 | section | E2 Bind and authorize |
 | [stages/E2-bind.md](stages/E2-bind.md#L3) | 3 | section | E2-1 Purpose |
 | [stages/E2-bind.md](stages/E2-bind.md#L8) | 8 | section | E2-2 Input and output |
