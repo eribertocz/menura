@@ -1,21 +1,27 @@
 //! The load part of a case (CS-2.8): the model of the case is loaded through `core`, and the
 //! result is compared with the expectation. A `load_error` case is checked fully; for the other
-//! outcomes, the model must load with the expected warnings, and the query part stays pending.
-//! The expected location of the first error is compared as CS-2.9 says.
+//! outcomes, the model must load, and the loaded model goes on to the query part, which also
+//! checks the expected warnings. The expected location of the first error is compared as CS-2.9
+//! says.
 
 use std::path::Path;
 
-use menura_core::{CompileErrorDocument, LoadOptions, load};
+use menura_core::{CompileErrorDocument, Handle, LoadOptions, load};
 
 use crate::case::{Case, Expectation, Outcome};
-use crate::diagnostic_check::{describe, location_mismatch, missing_warnings};
+use crate::diagnostic_check::{Part, describe, location_mismatch, missing_warnings};
 use crate::error::RunnerError;
 use crate::fixture::read_bytes;
 use crate::report::CaseStatus;
 
-/// Why the query part of a case is pending: stages E1 to E6 come in 0.3.0 (CS-2.8).
-pub const QUERY_PENDING_REASON: &str =
-    "the load part passed; the query part needs stages E1 to E6, implemented from 0.3.0";
+/// The result of the load part of a case.
+#[derive(Debug, Clone)]
+pub(crate) enum LoadOutcome {
+    /// The case is decided by its load part: a `load_error` case, or a model that does not load.
+    Checked(CaseStatus),
+    /// The model loads, and the query part of the case decides it.
+    Loaded(Box<Handle>),
+}
 
 /// The documents `load` reads for the model of a case.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -48,7 +54,7 @@ pub(crate) fn check_load(
     case: &Case,
     documents: &ModelDocuments,
     options: &LoadOptions,
-) -> CaseStatus {
+) -> LoadOutcome {
     let loaded = load(
         &documents.model,
         &documents.catalog_schema,
@@ -56,7 +62,7 @@ pub(crate) fn check_load(
         options,
     );
     let expect = &case.expect;
-    match (loaded, expect.outcome) {
+    let status = match (loaded, expect.outcome) {
         (Err(error), Outcome::LoadError) => check_load_error(expect, &error),
         (Err(error), _) => CaseStatus::Failed(format!(
             "the model does not load: {}",
@@ -66,11 +72,9 @@ pub(crate) fn check_load(
             "the model loads, but the case expects the load error {}",
             expect.error.as_deref().unwrap_or("none")
         )),
-        (Ok(handle), _) => match missing_warnings(&expect.warnings, handle.warnings()) {
-            Some(reason) => CaseStatus::Failed(reason),
-            None => CaseStatus::Pending(QUERY_PENDING_REASON.to_owned()),
-        },
-    }
+        (Ok(handle), _) => return LoadOutcome::Loaded(Box::new(handle)),
+    };
+    LoadOutcome::Checked(status)
 }
 
 /// Compares a rejected load with the expectation of a `load_error` case: the first error code,
@@ -88,11 +92,11 @@ fn check_load_error(expect: &Expectation, error: &CompileErrorDocument) -> CaseS
     if let Some(reason) = expect
         .location
         .as_ref()
-        .and_then(|expected| location_mismatch(expected, reported_location))
+        .and_then(|expected| location_mismatch(expected, reported_location, Part::Load))
     {
         return CaseStatus::Failed(reason);
     }
-    match missing_warnings(&expect.warnings, error.warnings.iter()) {
+    match missing_warnings(&expect.warnings, error.warnings.iter(), Part::Load) {
         Some(reason) => CaseStatus::Failed(reason),
         None => CaseStatus::Passed,
     }
@@ -106,13 +110,20 @@ mod tests {
     use crate::case_file::parse_case;
     use crate::load_options::resolve_load_options;
 
-    fn status(case_text: &str, model: &str) -> CaseStatus {
+    fn outcome(case_text: &str, model: &str) -> LoadOutcome {
         let folder = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
             .join("../../conformance/models")
             .join(model);
         let case = parse_case(case_text).unwrap();
         let documents = ModelDocuments::read(&folder).unwrap();
         check_load(&case, &documents, &resolve_load_options(None))
+    }
+
+    fn status(case_text: &str, model: &str) -> CaseStatus {
+        match outcome(case_text, model) {
+            LoadOutcome::Checked(status) => status,
+            LoadOutcome::Loaded(_) => panic!("the load part decides this case"),
+        }
     }
 
     const MISSING_SOURCE: &str = "
@@ -157,7 +168,7 @@ expect: {outcome: load_error, error: E0D-02}
     }
 
     #[test]
-    fn cs_2_8_the_query_part_of_a_case_whose_model_loads_is_pending() {
+    fn cs_2_8_a_case_whose_model_loads_goes_on_to_its_query_part() {
         let case = "
 id: sample-plan-001
 rules: [CS-2]
@@ -166,10 +177,7 @@ security_context: analyst.json
 query: {}
 expect: {outcome: plan, rows: sample-plan-001.csv}
 ";
-        assert_eq!(
-            status(case, "sample"),
-            CaseStatus::Pending(QUERY_PENDING_REASON.to_owned())
-        );
+        assert!(matches!(outcome(case, "sample"), LoadOutcome::Loaded(_)));
     }
 
     #[test]
