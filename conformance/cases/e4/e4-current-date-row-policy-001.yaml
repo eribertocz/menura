@@ -1,0 +1,16 @@
+id: e4-current-date-row-policy-001
+rules: [QRY-2, E4-6.9b]
+model: current-date
+security_context: analyst.json
+query:
+  contract: menura.query
+  contract_version: "1.1.0"
+  time_zone: UTC
+  query:
+    dimensions: [orders.status]
+    metrics:
+      - {metric: total_amount, alias: total_amount}
+expect:
+  outcome: error
+  error: EQRY-03
+  location: {document: query, pointer: /query}

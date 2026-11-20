@@ -1,0 +1,30 @@
+version: "0.1.1"
+semantic_model:
+  - name: current_date
+    description: 'A field, a metric and a row policy that read CURRENT_DATE (QRY-2, E2-5.6, E4-6.9b); admin is exempt from every policy, auditor lacks the attribute of status_scope'
+    custom_extensions:
+      - vendor_name: COMMON
+        data: '{"namespace": "menura", "version": 1, "security_context": {"roles": ["admin", "analyst", "auditor"], "attributes": [{"name": "statuses", "type": "list<text>"}]}}'
+    datasets:
+      - name: orders
+        source: shop.main.orders
+        primary_key: [order_id]
+        fields:
+          - name: order_id
+            expression: {dialects: [{dialect: ANSI_SQL, expression: order_id}]}
+          - name: status
+            expression: {dialects: [{dialect: ANSI_SQL, expression: status}]}
+          - name: amount
+            expression: {dialects: [{dialect: ANSI_SQL, expression: amount}]}
+          - name: ordered_on
+            expression: {dialects: [{dialect: ANSI_SQL, expression: ordered_on}]}
+          - name: is_past
+            expression: {dialects: [{dialect: ANSI_SQL, expression: ordered_on <= CURRENT_DATE}]}
+        custom_extensions:
+          - vendor_name: COMMON
+            data: '{"namespace": "menura", "version": 1, "access": {"mode": "roles", "roles": ["admin", "analyst", "auditor"]}, "row_access": [{"name": "past_only", "condition": "ordered_on <= CURRENT_DATE", "exempt_roles": ["admin"]}, {"name": "status_scope", "condition": "status IN (USER_ATTRIBUTE(''statuses''))", "exempt_roles": ["admin", "analyst"]}]}'
+    metrics:
+      - name: total_amount
+        expression: {dialects: [{dialect: ANSI_SQL, expression: SUM(orders.amount)}]}
+      - name: amount_to_date
+        expression: {dialects: [{dialect: ANSI_SQL, expression: SUM(orders.amount) FILTER (WHERE orders.ordered_on <= CURRENT_DATE)}]}
