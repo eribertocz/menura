@@ -47,8 +47,12 @@ pub enum BindCode {
     /// `EQRY-12`: a path whose relationships do not chain, or a second path for one pair
     /// (QRY-4.3).
     InvalidPath,
-    /// `EQRY-03`: the query needs `reference_time` and has none (QRY-2).
+    /// `EQRY-03`: the query needs `reference_time` and has none: a relative date range, or a
+    /// filter that reads the current date or time (QRY-2).
     MissingReferenceTime,
+    /// `E_INVALID_QUERY`: a relative date range whose whole units leave the years 0001–9999
+    /// (QRY-4.2).
+    InvalidQuery,
     /// `EQRY-04`: a `limit` without an `order_by` over every dimension (QRY-4.6).
     LimitWithoutTotalOrder,
     /// `E_NOT_YET_SUPPORTED`: the query needs a capability outside the version's slice
@@ -83,6 +87,7 @@ impl BindCode {
             Self::ReversedDateRange => "EQRY-11",
             Self::InvalidPath => "EQRY-12",
             Self::MissingReferenceTime => "EQRY-03",
+            Self::InvalidQuery => "E_INVALID_QUERY",
             Self::LimitWithoutTotalOrder => "EQRY-04",
             Self::NotYetSupported => "E_NOT_YET_SUPPORTED",
         }

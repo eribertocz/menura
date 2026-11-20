@@ -28,7 +28,7 @@ use crate::unusable::check_rows_10_to_12a;
 /// within a row the first element in query order (E2-5.3): the errors of
 /// [`resolve_and_authorize`]; then the query error code of a named element marked unusable in
 /// E0 (rows 10 to 12a); then `E0F-06`, `E2-01`, `EQRY-09`, `EQRY-10`, `EQRY-11`, `EQRY-12`,
-/// `EQRY-03` and `EQRY-04` (row 12b); then `E_NOT_YET_SUPPORTED` for the first element outside
+/// `EQRY-03`, `E_INVALID_QUERY` and `EQRY-04` (row 12b); then `E_NOT_YET_SUPPORTED` for the first element outside
 /// the 0.3.0 slice (row 12c, VS-1). [`BindError::Invariant`] when the tree breaks the contract
 /// of E1.
 pub fn bind(
@@ -37,10 +37,10 @@ pub fn bind(
     context: &AdmittedSecurityContext,
 ) -> Result<BoundQuery, BindError> {
     let query = resolve_and_authorize(tree, model, context)?;
-    check_rows_10_to_12a(model, &query.named)?;
-    let bindings = check_row_12b(model, tree, &query)?;
-    check_slice(model, &query.named)?;
     let reference_date = reference_date(tree);
+    check_rows_10_to_12a(model, &query.named)?;
+    let bindings = check_row_12b(model, tree, &query, reference_date)?;
+    check_slice(model, &query.named)?;
     assemble(tree, query, bindings, reference_date)
 }
 

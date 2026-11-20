@@ -517,3 +517,51 @@ fn e2_2_the_bound_query_keeps_the_time_of_the_tree() {
     let bound = bind_query(&query, &model(), ANALYST).expect("a bound query");
     assert_eq!(bound.time(), &time);
 }
+
+/// `orders.ordered_at >= CURRENT_DATE`.
+fn since_today() -> menura_model::expression::Expression {
+    menura_model::expression::Expression::Binary {
+        operator: menura_model::expression::BinaryOperator::GreaterOrEqual,
+        left: Box::new(support::query::column("orders.ordered_at")),
+        right: Box::new(menura_model::expression::Expression::CurrentDate),
+    }
+}
+
+#[test]
+fn qry_2_a_filter_reading_the_current_date_without_reference_time_is_eqry_03() {
+    let query = tree(
+        vec![dimension(0, "orders.region")],
+        vec![],
+        QueryTreeParts {
+            filters: vec![support::query::filter("/query/filter", since_today())],
+            ..QueryTreeParts::default()
+        },
+    );
+    assert_eq!(
+        bind_error(&query, &model(), ANALYST),
+        error(BindCode::MissingReferenceTime, "/query/filter")
+    );
+}
+
+#[test]
+fn qry_2_eqry_03_reports_the_filter_before_the_date_range_in_query_order() {
+    let query = tree(
+        vec![dimension(0, "orders.region")],
+        vec![],
+        QueryTreeParts {
+            filters: vec![support::query::filter("/query/filter", since_today())],
+            date_range: Some(relative_range(
+                RANGE,
+                "orders.ordered_at",
+                Grain::Day,
+                7,
+                None,
+            )),
+            ..QueryTreeParts::default()
+        },
+    );
+    assert_eq!(
+        bind_error(&query, &model(), ANALYST),
+        error(BindCode::MissingReferenceTime, "/query/filter")
+    );
+}
