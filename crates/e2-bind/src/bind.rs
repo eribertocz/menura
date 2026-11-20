@@ -27,7 +27,8 @@ use crate::unusable::check_rows_10_to_12a;
 /// [`BindError::Diagnostic`] with the first error in the order of E2-5 rows 3 to 12c, and
 /// within a row the first element in query order (E2-5.3): the errors of
 /// [`resolve_and_authorize`]; then the query error code of a named element marked unusable in
-/// E0 (rows 10 to 12a); then `E0F-06`, `E2-01`, `EQRY-09`, `EQRY-10`, `EQRY-11`, `EQRY-12`,
+/// E0 (rows 10 to 12a); then the E0.f code of a filter that does not type or is not boolean
+/// (`E0F-03` to `E0F-08`), `E2-01`, `EQRY-09`, `EQRY-10`, `EQRY-11`, `EQRY-12`,
 /// `EQRY-03`, `E_INVALID_QUERY` and `EQRY-04` (row 12b); then `E_NOT_YET_SUPPORTED` for the first element outside
 /// the 0.3.0 slice (row 12c, VS-1). [`BindError::Invariant`] when the tree breaks the contract
 /// of E1.

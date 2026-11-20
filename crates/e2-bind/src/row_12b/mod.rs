@@ -1,8 +1,9 @@
-//! Row 12b of E2-5, in its order: `E0F-06`, `E2-01`, `EQRY-09`, `EQRY-10`, `EQRY-11`,
+//! Row 12b of E2-5, in its order: the type of each filter (`E0F-03` to `E0F-08`, E2-3.6), `E2-01`, `EQRY-09`, `EQRY-10`, `EQRY-11`,
 //! `EQRY-12`, `EQRY-03`, `E_INVALID_QUERY` (a relative range outside the years 0001–9999),
 //! `EQRY-04`. Each check runs over every element before the next one.
 
 mod date_range;
+mod filter_types;
 mod order;
 mod paths;
 mod time_fields;
@@ -33,6 +34,7 @@ pub(crate) fn check_row_12b(
     query: &AuthorizedQuery,
     reference_date: Option<DateValue>,
 ) -> Result<Row12bBindings, BindError> {
+    filter_types::check_filter_types(model, &query.filters)?;
     time_fields::check_time_fields(model, query)?;
     let grains = time_fields::assign_time_grains(query)?;
     let order = order::bind_order(&query.columns, tree.order())?;

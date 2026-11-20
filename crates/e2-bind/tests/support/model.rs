@@ -154,6 +154,14 @@ fn orders() -> Dataset {
             nullable: true,
         });
     }
+    for field in &mut orders.fields {
+        if field.name == name("REGION") {
+            field.typed = Some(TypedValue {
+                value_type: ValueType::Logical(LogicalType::Text),
+                nullable: true,
+            });
+        }
+    }
     let mut unit_cost = field("UNIT_COST");
     unit_cost.expression = Some(column("cost"));
     orders.fields.push(unit_cost);
@@ -202,7 +210,7 @@ pub fn model_with(edit: impl FnOnce(&mut ModelParts)) -> InternalModel {
 
 /// `CUSTOMERS` (authenticated: `Segment`, `CUSTOMER_ID`, `REGION`), `ORDERS` (admin and
 /// analyst: `AMOUNT`, `CUSTOMER_ID`, `ORDERED_AT` (a time field, a timestamp with time zone),
-/// `REGION`, and `UNIT_COST`, which reads the
+/// `REGION` (text), and `UNIT_COST`, which reads the
 /// source column `cost` and is restricted to admin; dataset metrics `ORDER_TOTAL` and `TOTAL_COST`), `ORDERS_SUMMARY` (internal summary),
 /// `SECRETS` (admin: `CUSTOMER_ID`, `VALUE`); metrics `COST`, `REVENUE` and `SECRET_TOTAL`;
 /// relationships `ORDERS_BY_COST` (keyed by the source column `COST`), `ORDERS_BY_UNIT_COST`

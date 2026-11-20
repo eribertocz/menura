@@ -3,6 +3,7 @@
 use std::fmt;
 
 use menura_contracts::types::compiled_plan::{Diagnostic, DiagnosticLocation, InputDocument};
+use menura_expressions::typing::TypingCode;
 use menura_model::internal_model::DiagnosticCode;
 use menura_representations::origin::QueryLocation;
 
@@ -33,8 +34,9 @@ pub enum BindCode {
     /// The query error code of an element marked unusable in E0, such as `E0D-03` (row 12a,
     /// E0-4).
     Unusable(DiagnosticCode),
-    /// `E0F-06`: a filter that is not boolean (row 12b, E2-3.6).
-    NonBooleanFilter,
+    /// The E0.f code of a typing problem in a filter, `E0F-03` to `E0F-08`; `E0F-06` for a
+    /// filter that is not boolean (row 12b, E2-3.6).
+    FilterType(TypingCode),
     /// `E2-01`: a time grain or a date range on a field that is not a time field (E2-3.4).
     NotTimeField,
     /// `EQRY-09`: a time grain on a field that is not a dimension, or a second grain for one
@@ -80,7 +82,7 @@ impl BindCode {
             Self::DeferredWindowedMetric => "E_DEFERRED_WINDOWED_METRIC",
             Self::AmbiguousMeasureGrain => "E_AMBIGUOUS_MEASURE_GRAIN",
             Self::Unusable(code) => code.as_str(),
-            Self::NonBooleanFilter => "E0F-06",
+            Self::FilterType(code) => code.as_str(),
             Self::NotTimeField => "E2-01",
             Self::TimeGrainNotDimension => "EQRY-09",
             Self::UnknownOrderOutput => "EQRY-10",
