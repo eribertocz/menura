@@ -12,6 +12,7 @@
 
 mod access;
 mod attribute_type;
+mod authorization;
 mod context;
 mod list_attributes;
 mod restrictions;
@@ -20,6 +21,7 @@ mod walk;
 
 pub use access::{AccessMode, DatasetAccess, FieldRestriction};
 pub use attribute_type::{AttributeType, ScalarType};
+pub use authorization::Authorization;
 pub use context::{
     AdmittedScalar, AdmittedSecurityContext, AdmittedValue, DateValue, DecimalValue,
     admit_security_context,
