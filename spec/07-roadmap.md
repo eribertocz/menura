@@ -48,6 +48,7 @@ rejected, never answered partially or without a rule it needs (above all a row p
 | VS-2 | Outside the slice, `compile` returns `E_NOT_YET_SUPPORTED`, naming the capability and the version that adds it (table of 7.1). The SQL form is detected in E1, after the checks of E2-5 row 1. Every other capability is detected after every check of E2 has passed (after E2-5 row 12b), so a query reports the same errors as it will in the version that supports it, up to that point. |
 | VS-3 | Each later version widens the slice to the content of its row in 7.1. `E_NOT_YET_SUPPORTED` disappears at 1.0.0; what 1.0.0 does not support is rejected with the codes of 7.1b's table. |
 | VS-4 | The conformance runner reports the query part of a case whose compilation returns `E_NOT_YET_SUPPORTED` as pending, never as passed or failed (CS-2.8). |
+| VS-5 | **Outputs before 0.7.0.** A compiled plan carries `producer`, `dialect`, `data_source`, `sql`, `parameters`, `result_schema`, `limits`, `warnings` and `cache_key` as PLN-1–PLN-3 state (`data_versions` is `null` without a catalog state). `lineage` and `explanation` are empty lists. `compile` with `audit: true` returns `E_NOT_YET_SUPPORTED`. `describe`, `explain` and `integrity_checks` are added in 0.7.0. |
 
 ## 7.1b What 1.0.0 guarantees
 

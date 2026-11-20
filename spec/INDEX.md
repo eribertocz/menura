@@ -116,10 +116,11 @@ Find a rule ID or a section here, then open only that file at that line.
 | [07-roadmap.md](07-roadmap.md#L48) | 48 | rule | VS-2 |
 | [07-roadmap.md](07-roadmap.md#L49) | 49 | rule | VS-3 |
 | [07-roadmap.md](07-roadmap.md#L50) | 50 | rule | VS-4 |
-| [07-roadmap.md](07-roadmap.md#L52) | 52 | section | 7.1b What 1.0.0 guarantees |
-| [07-roadmap.md](07-roadmap.md#L64) | 64 | section | 7.2 After the MVP |
-| [07-roadmap.md](07-roadmap.md#L78) | 78 | section | 7.3 Capability scope |
-| [07-roadmap.md](07-roadmap.md#L100) | 100 | section | 7.4 Backlog after the MVP |
+| [07-roadmap.md](07-roadmap.md#L51) | 51 | rule | VS-5 |
+| [07-roadmap.md](07-roadmap.md#L53) | 53 | section | 7.1b What 1.0.0 guarantees |
+| [07-roadmap.md](07-roadmap.md#L65) | 65 | section | 7.2 After the MVP |
+| [07-roadmap.md](07-roadmap.md#L79) | 79 | section | 7.3 Capability scope |
+| [07-roadmap.md](07-roadmap.md#L101) | 101 | section | 7.4 Backlog after the MVP |
 | [08-conformance-suite.md](08-conformance-suite.md#L1) | 1 | section | 8. Conformance suite |
 | [08-conformance-suite.md](08-conformance-suite.md#L5) | 5 | section | CS-1 Layout |
 | [08-conformance-suite.md](08-conformance-suite.md#L21) | 21 | section | CS-2 Case format |
