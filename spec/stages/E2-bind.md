@@ -75,6 +75,8 @@ their check runs.
 
 - **E2-5.1** E1 parses only; every check that needs names (rows 3–12b) runs in E2, so the order above holds whatever the form.
 - **E2-5.2** Only the first error is guaranteed; later errors of the same stage MAY follow it in the document, in query order. Conformance cases compare the first code.
+- **E2-5.3** **Query order** is fixed by the query tree, never by the key order of the JSON document. Wide-table form: the dimensions, the metrics, `filter`, the `filters` items, the `time_grains` items, `date_range`, the `order_by` items, the `paths` entries and `limit`, each list in index order. Within an element, its references are taken in the order they appear: in the text of an expression, or in the members of an extension entry (`from`, `to`, then `relationships` in order). SQL form: the relation of `FROM`, then the clauses in the order of the E1-4 table. Each row of the table above is checked over every element before the next row, and within a row the first element in query order that fails is reported, located at that element.
+- **E2-5.4** Row 12c reports the first element in query order that needs a capability outside the version's slice (VS-1), located at that element. When that element needs several such capabilities, the message names the one whose version comes first in table 7.1, and that version.
 
 ## E2-6 Diagnostics
 
