@@ -32,7 +32,7 @@ unauthorized user learns nothing from later diagnostics.
 |---|---|
 | E2-4.1 | A query **uses** a dataset when it takes from it a dimension, a metric component, a filter, a field named in any query extension (`time_grains`, `date_range`, `order_by`), a population or carry-forward read of a metric, or when it is reached by a path the query names. Every used dataset MUST be authorized by its `access` rule. Datasets on paths that E3 chooses are authorized by construction (E2-4.8). |
 | E2-4.2 | Every field the query names anywhere, and every field a join path reads, MUST be authorized by its dataset's field restrictions (SCY-3.1, SCY-3.1a). |
-| E2-4.3 | Every metric MUST be authorized: all datasets and fields its components read are authorized. |
+| E2-4.3 | Every metric MUST be authorized: every dataset it reads is authorized, and, when the metric is restricted (SCY-5.1.8), the user holds one of the roles of that restriction. Because SCY-5.1.8 takes the intersection of the restrictions of the fields the metric reads, this can deny a metric even when each of those fields is authorized on its own (deny by default, P9). |
 | E2-4.4 | An unauthorized dataset, field or metric is reported exactly as a nonexistent one: `E_NAME_NOT_FOUND`, with the same message (PLN-5.2). |
 | E2-4.5 | Datasets that E4 joins only to apply a row policy are not "used" and need no authorization; their columns never appear in the output. |
 | E2-4.6 | Summary datasets (`access: internal`) can never be named in a query. |

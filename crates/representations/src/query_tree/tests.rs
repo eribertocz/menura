@@ -18,7 +18,6 @@ fn dimension(field: &str, pointer: &str) -> QueryDimension {
         output_name: OutputName::from_reference(&field_reference),
         kind: QueryDimensionKind::Field {
             reference: field_reference,
-            time_grain: None,
         },
         origin: at(pointer),
     }
@@ -39,6 +38,7 @@ fn every_element() -> QueryTreeParts {
             expression: true_literal(),
             origin: at("/query/filter"),
         }],
+        time_grains: Vec::new(),
         date_range: Some(QueryDateRange {
             dimension: query_reference(&["orders", "ordered_at"]),
             bounds: DateBounds::Relative(RelativeRange {
@@ -125,14 +125,13 @@ fn e1_5_sql_form_keeps_select_order() {
 
 #[test]
 fn e1_5_keeps_every_element_with_its_origin() {
-    let mut grained = dimension("ordered_at", "/query/dimensions/0");
-    grained.kind = QueryDimensionKind::Field {
-        reference: query_reference(&["orders", "ordered_at"]),
-        time_grain: Some(TimeGrainChoice {
-            grain: Grain::Month,
-            origin: at("/query/nonportable_extensions/0/data/time_grains/0"),
-        }),
-    };
+    let grained = dimension("ordered_at", "/query/dimensions/0");
+    let mut parts = every_element();
+    parts.time_grains = vec![TimeGrainChoice {
+        dimension: query_reference(&["orders", "ordered_at"]),
+        grain: Grain::Month,
+        origin: at("/query/nonportable_extensions/0/data/time_grains/0"),
+    }];
     let inline = QueryMetric {
         output_name: OutputName::new("double_revenue"),
         kind: QueryMetricKind::Inline(true_literal()),
@@ -142,10 +141,13 @@ fn e1_5_keeps_every_element_with_its_origin() {
         vec![grained],
         vec![metric("revenue", "/query/metrics/0"), inline],
         madrid_time(),
-        every_element(),
+        parts,
     );
 
     assert_eq!(tree.columns().metrics().count(), 2);
+    let grain = tree.time_grains().first().expect("one time grain");
+    assert_eq!(grain.dimension, query_reference(&["orders", "ordered_at"]));
+    assert_eq!(grain.grain, Grain::Month);
     assert_eq!(tree.filters().len(), 1);
     assert_eq!(
         tree.date_range().map(|range| range.origin.pointer()),
