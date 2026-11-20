@@ -42,6 +42,7 @@ const EXPECTED_EDGES: &[(&str, &str)] = &[
     ("model", "contracts"),
     ("expressions", "model"),
     ("representations", "model"),
+    ("security", "contracts"),
     ("security", "model"),
     ("security", "representations"),
     ("e0-load", "contracts"),

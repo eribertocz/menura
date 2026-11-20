@@ -195,6 +195,7 @@ fn sec_3_3_decimal() {
         rejected_at(money, value, "/attributes/a");
     }
     rejected_at(scalar(decimal(3, 0)), r#""1.0""#, "/attributes/a");
+    rejected_at(scalar(decimal(2, 2)), r#""1.00""#, "/attributes/a");
 }
 
 #[test]
