@@ -1,0 +1,110 @@
+//! The errors of E4: `ESEC-02`, and the internal errors of an input outside the 0.3.0 slice.
+
+use std::fmt;
+
+use menura_contracts::types::compiled_plan::Diagnostic;
+use menura_representations::origin::Origin;
+use menura_security::RowFilterError;
+
+/// Why E4 stopped.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum PlanError {
+    /// `ESEC-02`: an applicable row policy needs an attribute the security context does not
+    /// provide (E4-6.9, E2-5 row 18).
+    MissingAttribute(RowFilterError),
+    /// The input breaks the contract of the stages before E4. This is a defect of the
+    /// compiler, not a query error, so it has no specification code.
+    Invariant {
+        /// What the input breaks.
+        violation: InvariantViolation,
+        /// The input element it is found at.
+        origin: Origin,
+    },
+}
+
+impl PlanError {
+    /// The diagnostic of the compile error document (PLN-5): `ESEC-02` at `/attributes` of
+    /// the security context; `None` for an internal error.
+    #[must_use]
+    pub fn to_diagnostic(&self) -> Option<Diagnostic> {
+        match self {
+            Self::MissingAttribute(error) => error.to_diagnostic(),
+            Self::Invariant { .. } => None,
+        }
+    }
+
+    /// The internal error `violation` at `origin`.
+    pub(crate) fn invariant(violation: InvariantViolation, origin: &Origin) -> Self {
+        Self::Invariant {
+            violation,
+            origin: origin.clone(),
+        }
+    }
+}
+
+/// An input that the stages before E4 never produce in the 0.3.0 slice (VS-1, E2-5 row 12c).
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum InvariantViolation {
+    /// The query has no branch.
+    NoBranch,
+    /// The query has more than one branch: stitching comes in 0.4.0 (E4-5).
+    SeveralBranches,
+    /// The branch has a join step (E4-4 step 3).
+    JoinStep,
+    /// The home dataset reaches another dataset with row policies, which needs propagation
+    /// (E4-6.5).
+    Propagation,
+    /// The home dataset is not in the model.
+    UnknownDataset,
+    /// A field that is not in the model, or of another dataset than the home dataset.
+    ForeignField,
+    /// A field without a type, or whose type is the type of `NULL`.
+    UntypedField,
+    /// An expression the plan cannot type, which E0.f typed.
+    UntypedExpression,
+    /// A dimension of the SQL form (E2-3.3).
+    ExpressionDimension,
+    /// An inline metric of the SQL form.
+    InlineMetric,
+    /// A metric the model does not have, or that E0.g did not classify.
+    UnknownMetric,
+    /// A component key that names no component of its metric.
+    UnknownComponent,
+    /// A metric whose aggregates do not match its components (E0G-1.1).
+    ComponentMismatch,
+    /// A derived metric (DER).
+    DerivedMetric,
+    /// A metric with an additivity declaration (ADD).
+    AdditivityMetric,
+    /// A semi-additive metric with an expected population (POP).
+    PopulationMetric,
+    /// A context metric (CTX).
+    ContextMetric,
+    /// A dataset metric that reads a source column that is not a field (E0D-3).
+    SourceColumn,
+    /// A row policy whose condition E0 did not parse.
+    UnparsedCondition,
+    /// A date range on a field that is neither a date nor a timestamp.
+    UnplannableDateRange,
+    /// An ordering term on a column the query does not output.
+    UnknownOrderColumn,
+    /// A column name that is empty.
+    EmptyName,
+}
+
+impl fmt::Display for PlanError {
+    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Self::MissingAttribute(error) => error.fmt(formatter),
+            Self::Invariant { violation, origin } => {
+                let pointer = match origin {
+                    Origin::Query(location) => location.pointer(),
+                    Origin::Model(location) => location.pointer.as_str(),
+                };
+                write!(formatter, "internal error {violation:?} at {pointer}")
+            }
+        }
+    }
+}
+
+impl std::error::Error for PlanError {}
