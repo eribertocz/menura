@@ -2,7 +2,7 @@
 
 use std::fmt;
 
-use menura_contracts::types::compiled_plan::CompileErrorDocument;
+use menura_contracts::types::compiled_plan::{CompileErrorDocument, CompiledPlanDocument};
 
 /// An output document could not be written as JSON.
 #[derive(Debug)]
@@ -37,4 +37,14 @@ impl std::error::Error for OutputError {}
 /// ```
 pub fn document_json(document: &CompileErrorDocument) -> Result<String, OutputError> {
     serde_json::to_string_pretty(document).map_err(OutputError)
+}
+
+/// The JSON text of a compiled plan, indented with two spaces. Identical plans give identical
+/// text, byte for byte (PLN-2.4).
+///
+/// # Errors
+///
+/// An [`OutputError`] when the plan cannot be serialized.
+pub fn plan_json(plan: &CompiledPlanDocument) -> Result<String, OutputError> {
+    serde_json::to_string_pretty(plan).map_err(OutputError)
 }

@@ -79,6 +79,8 @@ const EXPECTED_EDGES: &[(&str, &str)] = &[
     ("generator-duckdb", "e5-optimize"),
     ("core", "contracts"),
     ("core", "model"),
+    ("core", "representations"),
+    ("core", "security"),
     ("core", "e0-load"),
     ("core", "e1-parse"),
     ("core", "e2-bind"),

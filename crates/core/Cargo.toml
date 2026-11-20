@@ -9,6 +9,8 @@ publish.workspace = true
 [dependencies]
 menura-contracts.workspace = true
 menura-model.workspace = true
+menura-representations.workspace = true
+menura-security.workspace = true
 menura-e0-load.workspace = true
 menura-e1-parse.workspace = true
 menura-e2-bind.workspace = true

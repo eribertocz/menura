@@ -68,17 +68,26 @@ pub struct ParseError {
     pub line_column: Option<(u64, u64)>,
     /// English description naming the offending item.
     pub message: String,
+    /// The `WQRY-01` warnings of a query that passed the envelope and the JSON Schema before
+    /// this error (E1-2.4), in document order; empty for an earlier error.
+    pub warnings: Vec<ParseWarning>,
 }
 
 impl ParseError {
-    /// An error of `code` at `pointer`, without a line and column.
+    /// An error of `code` at `pointer`, without a line and column or warnings.
     pub(crate) fn new(code: ParseErrorCode, pointer: &str, message: String) -> Self {
         Self {
             code,
             pointer: pointer.to_owned(),
             line_column: None,
             message,
+            warnings: Vec::new(),
         }
+    }
+
+    /// The same error with the `WQRY-01` `warnings` gathered before it.
+    pub(crate) fn with_warnings(self, warnings: Vec<ParseWarning>) -> Self {
+        Self { warnings, ..self }
     }
 
     /// The diagnostic of the compile error document (PLN-5), located in the query.
@@ -127,6 +136,7 @@ impl From<AdmissionError> for ParseError {
             pointer: error.pointer,
             line_column: error.line_column,
             message: error.message,
+            warnings: Vec::new(),
         }
     }
 }
