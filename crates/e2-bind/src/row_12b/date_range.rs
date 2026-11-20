@@ -2,14 +2,15 @@
 //! dates.
 
 use menura_contracts::types::query::DateBounds;
-use menura_model::expression::{DateValue, Expression};
-use menura_representations::bound_query::{BoundDateRange, BoundFilter};
+use menura_model::expression::DateValue;
+use menura_model::internal_model::InternalModel;
+use menura_representations::bound_query::BoundDateRange;
 use menura_representations::origin::QueryLocation;
 
-use crate::authorized_query::{AuthorizedDateRange, ResolvedName};
+use super::model_now::{first_column_reading_now, holds_now};
+use crate::authorized_query::{AuthorizedDateRange, AuthorizedQuery, ResolvedName};
 use crate::calendar::{parse_date, whole_units};
 use crate::error::{BindCode, BindDiagnostic, BindError, InvariantViolation};
-use crate::walk::nodes;
 
 /// `EQRY-11`: an absolute range whose `from` is after its `to`.
 pub(crate) fn check_order_of_bounds(range: Option<&AuthorizedDateRange>) -> Result<(), BindError> {
@@ -30,38 +31,39 @@ pub(crate) fn check_order_of_bounds(range: Option<&AuthorizedDateRange>) -> Resu
     Ok(())
 }
 
-/// `EQRY-03`: a filter that reads the current date or time, then a relative range, needs
-/// `reference_time` (QRY-2); the first in query order is reported.
+/// `EQRY-03`: a dimension or metric whose model expression reads the current date or time, a
+/// filter that reads it, then a relative range, needs `reference_time` (QRY-2, E2-5.6); the
+/// first in query order is reported.
 pub(crate) fn check_reference_time(
-    filters: &[BoundFilter],
-    range: Option<&AuthorizedDateRange>,
+    model: &InternalModel,
+    query: &AuthorizedQuery,
     has_reference_time: bool,
 ) -> Result<(), BindDiagnostic> {
     if has_reference_time {
         return Ok(());
     }
-    if let Some(filter) = filters.iter().find(|filter| reads_now(&filter.expression)) {
+    if let Some(origin) = first_column_reading_now(model, &query.columns) {
+        return Err(missing_reference_time(
+            "this element reads the current date or time in the model",
+            origin,
+        ));
+    }
+    if let Some(filter) = query
+        .filters
+        .iter()
+        .find(|filter| holds_now(&filter.expression))
+    {
         return Err(missing_reference_time(
             "this filter reads the current date or time",
             &filter.origin,
         ));
     }
-    match range {
+    match query.date_range.as_ref() {
         Some(range) if matches!(range.bounds, DateBounds::Relative(_)) => Err(
             missing_reference_time("a relative date range", &range.origin),
         ),
         _ => Ok(()),
     }
-}
-
-/// Whether `expression` holds `CURRENT_DATE`, `CURRENT_TIME` or `CURRENT_TIMESTAMP`.
-fn reads_now(expression: &Expression) -> bool {
-    nodes(expression).into_iter().any(|node| {
-        matches!(
-            node,
-            Expression::CurrentDate | Expression::CurrentTime | Expression::CurrentTimestamp
-        )
-    })
 }
 
 fn missing_reference_time(what: &str, origin: &QueryLocation) -> BindDiagnostic {
