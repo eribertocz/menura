@@ -1,6 +1,6 @@
 {
-  "contract": "semantic_compiler.compile_error",
-  "contract_version": "1.0.0",
+  "contract": "menura.compile_error",
+  "contract_version": "1.1.0",
   "errors": [
     {
       "code": "E_NAME_NOT_FOUND",

@@ -4,7 +4,7 @@ semantic_model:
     description: Invoices by customer, with a monthly summary
     custom_extensions:
       - vendor_name: COMMON
-        data: '{"namespace": "semantic_compiler", "version": 1, "security_context": {"roles": ["admin", "analyst"], "attributes": [{"name": "regions", "type": "list<text>"}]}}'
+        data: '{"namespace": "menura", "version": 1, "security_context": {"roles": ["admin", "analyst"], "attributes": [{"name": "regions", "type": "list<text>"}]}}'
     datasets:
       - name: invoices
         source: sales.public.fact_invoice
@@ -27,7 +27,7 @@ semantic_model:
             expression: {dialects: [{dialect: ANSI_SQL, expression: status}]}
         custom_extensions:
           - vendor_name: COMMON
-            data: '{"namespace": "semantic_compiler", "version": 1, "access": {"mode": "roles", "roles": ["admin", "analyst"]}}'
+            data: '{"namespace": "menura", "version": 1, "access": {"mode": "roles", "roles": ["admin", "analyst"]}}'
       - name: customers
         source: sales.public.dim_customer
         primary_key: [customer_id]
@@ -40,7 +40,7 @@ semantic_model:
             expression: {dialects: [{dialect: ANSI_SQL, expression: segment}]}
         custom_extensions:
           - vendor_name: COMMON
-            data: '{"namespace": "semantic_compiler", "version": 1, "access": {"mode": "roles", "roles": ["admin", "analyst"]}, "row_access": [{"name": "region_scope", "condition": "region IN (USER_ATTRIBUTE(''regions''))", "roles": ["analyst"]}, {"name": "all_regions", "condition": "TRUE", "roles": ["admin"]}]}'
+            data: '{"namespace": "menura", "version": 1, "access": {"mode": "roles", "roles": ["admin", "analyst"]}, "row_access": [{"name": "region_scope", "condition": "region IN (USER_ATTRIBUTE(''regions''))", "roles": ["analyst"]}, {"name": "all_regions", "condition": "TRUE", "roles": ["admin"]}]}'
       - name: invoices_by_month
         source: sales.public.agg_invoice_month
         fields:
@@ -55,7 +55,7 @@ semantic_model:
             expression: {dialects: [{dialect: ANSI_SQL, expression: amount_count}]}
         custom_extensions:
           - vendor_name: COMMON
-            data: '{"namespace": "semantic_compiler", "version": 1, "access": {"mode": "internal"}, "aggregate": {"of": "invoices", "dimensions": [{"field": "month", "base": "invoices.invoice_date", "grain": "month"}, {"field": "customer_id", "base": "invoices.customer_id"}], "measures": [{"field": "amount_sum", "base_aggregate": "SUM(invoices.amount)"}, {"field": "amount_count", "base_aggregate": "COUNT(invoices.amount)"}], "coverage_field": "month"}}'
+            data: '{"namespace": "menura", "version": 1, "access": {"mode": "internal"}, "aggregate": {"of": "invoices", "dimensions": [{"field": "month", "base": "invoice_date", "grain": "month"}, {"field": "customer_id", "base": "customer_id"}], "measures": [{"field": "amount_sum", "base_aggregate": "SUM(invoices.amount)"}, {"field": "amount_count", "base_aggregate": "COUNT(invoices.amount)"}], "coverage_field": "month"}}'
     relationships:
       - name: invoices_customer
         from: invoices
@@ -71,9 +71,9 @@ semantic_model:
         expression: {dialects: [{dialect: ANSI_SQL, expression: AGG(billed)}]}
         custom_extensions:
           - vendor_name: COMMON
-            data: '{"namespace": "semantic_compiler", "version": 1, "context": {"base": "billed", "modifier": {"type": "period_to_date", "time_dimension": "invoices.invoice_date", "grain": "year"}}}'
+            data: '{"namespace": "menura", "version": 1, "context": {"base": "billed", "modifier": {"type": "period_to_date", "time_dimension": "invoices.invoice_date", "grain": "year"}}}'
       - name: average_invoice
         expression: {dialects: [{dialect: ANSI_SQL, expression: AGG(billed) / AGG(invoice_count)}]}
         custom_extensions:
           - vendor_name: COMMON
-            data: '{"namespace": "semantic_compiler", "version": 1, "derived": {"on_division_by_zero": "null"}}'
+            data: '{"namespace": "menura", "version": 1, "derived": {"on_division_by_zero": "null"}}'

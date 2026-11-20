@@ -1,6 +1,6 @@
 {
-  "contract": "semantic_compiler.validation_report",
-  "contract_version": "1.0.0",
+  "contract": "menura.validation_report",
+  "contract_version": "1.1.0",
   "errors": [],
   "warnings": [
     {
