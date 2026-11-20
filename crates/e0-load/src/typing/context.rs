@@ -7,13 +7,13 @@ use std::collections::HashMap;
 use menura_contracts::types::common::LogicalType;
 
 use super::output::{ElementKind, Typing};
-use super::value_type::{Typed, describe};
 use crate::extensions::{ExtensionCode, ExtensionDiagnostic};
 use crate::names::Name;
 use crate::outline::{DatasetOutline, outline};
 use crate::pointer::JsonPointer;
 use crate::references::context::{ContextMetric, ContextMetrics};
 use crate::structure::Structure;
+use menura_expressions::typing::{Typed, describe};
 
 /// Checks the kind of the time dimension of every context metric of `context`, in the
 /// semantic model that `structure` selected, with the field types of `typing`.

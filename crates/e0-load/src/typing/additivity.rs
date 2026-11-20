@@ -12,7 +12,6 @@ use menura_contracts::types::common::LogicalType;
 
 use super::keys::same_kind;
 use super::output::{ElementKind, Typing};
-use super::value_type::{Typed, describe};
 use crate::extensions::additivity::{
     AdditivityDeclaration, FieldReference, NullHandling, SemiAdditive,
 };
@@ -22,6 +21,7 @@ use crate::names::Name;
 use crate::outline::{DatasetOutline, ModelOutline, outline};
 use crate::pointer::JsonPointer;
 use crate::structure::Structure;
+use menura_expressions::typing::{Typed, describe};
 
 /// The datasets and field types the checks of additivity read.
 struct Fields<'model, 'document> {

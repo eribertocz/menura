@@ -12,7 +12,7 @@ use crate::extensions::additivity::DeclaredAdditivity;
 use crate::names::Name;
 use crate::pointer::JsonPointer;
 use crate::references::ReferenceCode;
-use crate::typing::TypingCode;
+use menura_expressions::typing::TypingCode;
 
 /// The classification of a model's metrics: each usable base metric split into its components,
 /// each usable derived metric with its inputs, the metrics an E0G-2 rule, an additivity

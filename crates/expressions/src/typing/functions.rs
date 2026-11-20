@@ -7,10 +7,10 @@ use menura_model::expression::{Expression, Literal, ScalarFunction};
 use super::numbers::number_function;
 use super::operators::case_rule;
 use super::stop::{Outcome, Stop, incompatible};
-use super::typer::{ExpressionTyper, any_nullable, expect_text, expect_type};
+use super::typer::{TypingScope, any_nullable, expect_text, expect_type};
 use super::value_type::{ExpressionType, Typed, big_integer, is_integer, timestamp};
 
-impl ExpressionTyper<'_> {
+impl TypingScope<'_> {
     /// The type of a scalar function call.
     pub(super) fn function(
         &self,

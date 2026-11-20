@@ -6,17 +6,18 @@ use std::collections::HashMap;
 use menura_contracts::types::common::LogicalType;
 use menura_model::expression::{Identifier, Reference};
 
-use super::diagnostic::{TypingCode, TypingDiagnostic};
+use super::diagnostic::TypingDiagnostic;
 use super::output::ElementKind;
 use super::scope::{Relation, Scope};
-use super::stop::{Outcome, Stop, problem};
-use super::typer::{Aggregates, ExpressionTyper};
-use super::value_type::{ExpressionType, Typed};
 use crate::extensions::summaries::SummaryDatasets;
 use crate::names::Name;
 use crate::outline::ElementOutline;
 use crate::pointer::JsonPointer;
 use crate::references::derived::DerivedMetrics;
+use menura_expressions::typing::TypingCode;
+use menura_expressions::typing::{Aggregates, TypingScope, type_expression};
+use menura_expressions::typing::{ExpressionType, Typed};
+use menura_expressions::typing::{Outcome, Stop, problem};
 
 /// One typing problem and the element it makes unusable.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -45,7 +46,7 @@ pub(crate) fn type_fields<'model>(scope: &Scope<'model, '_>) -> ElementTypes<'mo
         };
         let resolve = |reference: &Reference| column_type(relation, reference);
         for field in &dataset.fields {
-            let typer = ExpressionTyper::new(&resolve, Aggregates::NotAllowed);
+            let typer = TypingScope::new(&resolve, Aggregates::NotAllowed);
             record(scope, &typer, field, ElementKind::Field, &mut found);
         }
     }
@@ -66,7 +67,7 @@ pub(crate) fn type_metrics<'model>(
         if derived.metric(&metric.pointer).is_some() {
             continue;
         }
-        let typer = ExpressionTyper::new(&resolve, Aggregates::Allowed);
+        let typer = TypingScope::new(&resolve, Aggregates::Allowed);
         record(scope, &typer, metric, ElementKind::Metric, &mut found);
     }
     found
@@ -75,7 +76,7 @@ pub(crate) fn type_metrics<'model>(
 /// Types the expression of `element`, if it parses, and records its type or its problem.
 pub(super) fn record<'model>(
     scope: &Scope<'model, '_>,
-    expression_typer: &ExpressionTyper<'_>,
+    typing_scope: &TypingScope<'_>,
     element: &'model ElementOutline<'_>,
     kind: ElementKind,
     found: &mut ElementTypes<'model>,
@@ -83,7 +84,7 @@ pub(super) fn record<'model>(
     let Some(tree) = scope.tree(&element.pointer) else {
         return;
     };
-    match expression_typer.type_of(tree) {
+    match type_expression(tree, typing_scope) {
         Ok(typed) if typed.value_type == ExpressionType::Null => {
             // An expression that is only the literal `NULL` has no type (E0F-3.2).
             found.findings.push(finding(

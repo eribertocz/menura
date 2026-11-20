@@ -917,6 +917,7 @@ dependencies = [
 name = "menura-expressions"
 version = "0.2.0"
 dependencies = [
+ "menura-contracts",
  "menura-model",
 ]
 

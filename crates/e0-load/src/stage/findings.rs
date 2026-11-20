@@ -8,7 +8,7 @@ use crate::read::{Location, Node};
 use crate::references::ReferenceDiagnostic;
 use crate::relationships::RelationshipDiagnostic;
 use crate::structure::StructureDiagnostic;
-use crate::typing::{TypingCode, TypingDiagnostic};
+use crate::typing::{TYPING_WARNING, TypingDiagnostic};
 
 /// One diagnostic of a substage, as the load reports it.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -101,7 +101,7 @@ pub(super) fn relationship(diagnostic: &RelationshipDiagnostic) -> Finding {
 /// A typing diagnostic (E0.f): never rejects; reported as `W0F-01`.
 pub(super) fn typing(diagnostic: &TypingDiagnostic) -> Finding {
     Finding {
-        code: TypingCode::WARNING,
+        code: TYPING_WARNING,
         rejects: false,
         pointer: diagnostic.pointer.clone(),
         location: diagnostic.location,

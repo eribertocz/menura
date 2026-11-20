@@ -1,12 +1,13 @@
 [package]
 name = "menura-expressions"
-description = "Turns expression text into the normalized expression tree of the model (S10)."
+description = "Turns expression text into the normalized expression tree of the model, and types that tree (S10)."
 version.workspace = true
 edition.workspace = true
 license.workspace = true
 publish.workspace = true
 
 [dependencies]
+menura-contracts.workspace = true
 menura-model.workspace = true
 
 [lints]

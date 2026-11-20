@@ -5,7 +5,7 @@ use menura_contracts::types::audit_record::OssieFormat;
 use menura_contracts::types::common::LogicalType;
 
 use super::*;
-use crate::typing::value_type::{decimal, huge_integer};
+use menura_expressions::typing::{decimal, huge_integer};
 
 const MODEL: &str =
     include_str!("../../../../../conformance/models/e0-typing-development/model.yaml");

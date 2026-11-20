@@ -6,13 +6,14 @@ use std::mem::discriminant;
 
 use menura_contracts::types::common::LogicalType;
 
-use super::diagnostic::{TypingCode, TypingDiagnostic};
+use super::diagnostic::TypingDiagnostic;
 use super::elements::Finding;
 use super::output::ElementKind;
 use super::scope::Scope;
-use super::value_type::{ExpressionType, Typed, describe};
 use crate::outline::{DatasetOutline, DeclaredName, RelationshipOutline};
 use crate::pointer::JsonPointer;
+use menura_expressions::typing::TypingCode;
+use menura_expressions::typing::{ExpressionType, Typed, describe};
 
 /// One finding per relationship key pair whose types are incompatible, reading the types of
 /// `fields`. A pair with a side that does not resolve, or that resolves to a field without a

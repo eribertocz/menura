@@ -23,7 +23,8 @@ pub struct Typed {
 
 impl Typed {
     /// An expression of the logical type `value_type`.
-    pub(crate) fn value(value_type: LogicalType, nullable: bool) -> Self {
+    #[must_use]
+    pub fn value(value_type: LogicalType, nullable: bool) -> Self {
         Self {
             value_type: ExpressionType::Value(value_type),
             nullable,
@@ -31,7 +32,8 @@ impl Typed {
     }
 
     /// The logical type, unless the expression is the literal `NULL`.
-    pub(crate) fn logical(&self) -> Option<&LogicalType> {
+    #[must_use]
+    pub fn logical(&self) -> Option<&LogicalType> {
         match &self.value_type {
             ExpressionType::Null => None,
             ExpressionType::Value(value_type) => Some(value_type),
@@ -82,7 +84,8 @@ pub(crate) fn is_integer(value_type: &LogicalType) -> bool {
 }
 
 /// The 32-bit signed integer.
-pub(crate) fn integer() -> LogicalType {
+#[must_use]
+pub fn integer() -> LogicalType {
     LogicalType::Integer {
         bits: IntegerBits::ThirtyTwo,
         signed: true,
@@ -90,7 +93,8 @@ pub(crate) fn integer() -> LogicalType {
 }
 
 /// The 64-bit signed integer.
-pub(crate) fn big_integer() -> LogicalType {
+#[must_use]
+pub fn big_integer() -> LogicalType {
     LogicalType::Integer {
         bits: IntegerBits::SixtyFour,
         signed: true,
@@ -98,7 +102,8 @@ pub(crate) fn big_integer() -> LogicalType {
 }
 
 /// The 128-bit signed integer.
-pub(crate) fn huge_integer() -> LogicalType {
+#[must_use]
+pub fn huge_integer() -> LogicalType {
     LogicalType::Integer {
         bits: IntegerBits::OneHundredTwentyEight,
         signed: true,
@@ -106,20 +111,23 @@ pub(crate) fn huge_integer() -> LogicalType {
 }
 
 /// The 64-bit float.
-pub(crate) fn double() -> LogicalType {
+#[must_use]
+pub fn double() -> LogicalType {
     LogicalType::Float {
         bits: FloatBits::SixtyFour,
     }
 }
 
 /// `decimal(precision, scale)`.
-pub(crate) fn decimal(precision: u8, scale: u8) -> LogicalType {
+#[must_use]
+pub fn decimal(precision: u8, scale: u8) -> LogicalType {
     LogicalType::Decimal { precision, scale }
 }
 
 /// The timestamp without time zone, precision `us`, of literals, `CAST` and `CURRENT_TIMESTAMP`
 /// (E0F-9.3, E0F-11).
-pub(crate) fn timestamp() -> LogicalType {
+#[must_use]
+pub fn timestamp() -> LogicalType {
     LogicalType::Timestamp {
         precision: TimestampPrecision::Us,
         with_time_zone: false,
@@ -127,7 +135,8 @@ pub(crate) fn timestamp() -> LogicalType {
 }
 
 /// The name of a type, for messages.
-pub(crate) fn describe(value_type: &ExpressionType) -> String {
+#[must_use]
+pub fn describe(value_type: &ExpressionType) -> String {
     let ExpressionType::Value(value_type) = value_type else {
         return "NULL".to_owned();
     };

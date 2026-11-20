@@ -17,8 +17,8 @@ use crate::references::derived::resolve_derived_references;
 use crate::structure::validate_structure;
 use crate::typing::context::check_context_time_kinds;
 use crate::typing::derived::type_derived_metrics;
-use crate::typing::value_type::{Typed, double, huge_integer, integer};
 use crate::typing::{Typing, type_expressions};
+use menura_expressions::typing::{Typed, double, huge_integer, integer};
 
 /// What E0.f finds in `model`, read in `format`: the typing of the derived and context
 /// metrics or the diagnostics that reject the model, and the time-kind check.
