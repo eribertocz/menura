@@ -45,7 +45,24 @@ fn e3_4_2_a_join_tree_is_the_union_of_the_paths() {
         vec![to_customers.clone(), to_regions.clone()],
     ]);
 
-    assert_eq!(tree.steps(), [to_regions, to_customers]);
+    assert_eq!(tree.steps(), [to_customers, to_regions]);
+}
+
+#[test]
+fn e3_4_2_a_join_tree_lists_steps_from_the_home_dataset_outward() {
+    let to_products = step("ORDERS_TO_PRODUCTS", "ORDERS", "PRODUCTS");
+    let to_customers = step("ORDERS_TO_CUSTOMERS", "ORDERS", "CUSTOMERS");
+    let to_brands = step("PRODUCTS_TO_BRANDS", "PRODUCTS", "BRANDS");
+    let to_regions = step("CUSTOMERS_TO_REGIONS", "CUSTOMERS", "REGIONS");
+    let tree = JoinTree::from_paths(vec![
+        vec![to_products.clone(), to_brands.clone()],
+        vec![to_customers.clone(), to_regions.clone()],
+    ]);
+
+    assert_eq!(
+        tree.steps(),
+        [to_customers, to_products, to_regions, to_brands]
+    );
 }
 
 #[test]
