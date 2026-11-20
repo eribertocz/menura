@@ -871,6 +871,7 @@ name = "menura-e1-parse"
 version = "0.2.0"
 dependencies = [
  "jiff",
+ "jiff-tzdb",
  "menura-contracts",
  "menura-expressions",
  "menura-model",
