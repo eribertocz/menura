@@ -37,6 +37,12 @@ pub enum InvariantViolation {
     MissingAttribute,
     /// A list attribute outside `x [NOT] IN (USER_ATTRIBUTE('name'))` (SCY-4.1).
     MisplacedListAttribute,
+    /// A function call whose arguments do not match its function (E0F-10), or whose literal
+    /// argument is not a literal integer.
+    MalformedFunctionCall,
+    /// `CURRENT_DATE`, `CURRENT_TIME` or `CURRENT_TIMESTAMP` in a query without a reference
+    /// time (`EQRY-03` is E1's to report, E0F-2.3).
+    MissingReferenceTime,
     /// A float literal without a finite value.
     NonFiniteFloat,
     /// A final node whose columns do not match the output columns of the query (E1-5).

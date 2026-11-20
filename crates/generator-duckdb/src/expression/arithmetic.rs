@@ -41,7 +41,7 @@ impl ExpressionWriter<'_, '_> {
     }
 
     /// `operand` cast to `HUGEINT`, unless it already is one.
-    fn widened(&mut self, operand: &Expression) -> Result<String, GenerateError> {
+    pub(super) fn widened(&mut self, operand: &Expression) -> Result<String, GenerateError> {
         if self.is_huge_integer(operand) {
             self.operand(operand)
         } else {
@@ -49,7 +49,7 @@ impl ExpressionWriter<'_, '_> {
         }
     }
 
-    fn is_huge_integer(&self, expression: &Expression) -> bool {
+    pub(super) fn is_huge_integer(&self, expression: &Expression) -> bool {
         self.known_type(expression)
             == Some(LogicalType::Integer {
                 bits: IntegerBits::OneHundredTwentyEight,

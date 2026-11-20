@@ -32,10 +32,10 @@ impl ExpressionWriter<'_, '_> {
     ) -> Result<String, GenerateError> {
         match operator {
             BinaryOperator::Divide => self.division(left, right),
-            BinaryOperator::Add
-            | BinaryOperator::Subtract
-            | BinaryOperator::Multiply
-            | BinaryOperator::Modulo => self.arithmetic(expression, operator, left, right),
+            BinaryOperator::Modulo => self.modulo(expression, left, right),
+            BinaryOperator::Add | BinaryOperator::Subtract | BinaryOperator::Multiply => {
+                self.arithmetic(expression, operator, left, right)
+            }
             BinaryOperator::Equal
             | BinaryOperator::NotEqual
             | BinaryOperator::Less

@@ -11,6 +11,7 @@ mod body;
 mod error;
 mod expression;
 mod identifiers;
+mod instant;
 mod output;
 mod parameters;
 mod result_schema;
@@ -54,7 +55,7 @@ pub fn generate_sql(
         catalog,
         model,
         security,
-        time_zone: &query.time().time_zone,
+        time: query.time(),
     };
     let mut writer = StepWriter::new(&environment);
     let written = writer.write(plan)?;

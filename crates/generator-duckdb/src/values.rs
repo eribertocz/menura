@@ -120,7 +120,7 @@ fn float_text(number: &FloatLiteral) -> String {
     }
 }
 
-fn date_text(date: DateValue) -> String {
+pub(crate) fn date_text(date: DateValue) -> String {
     format!("{:04}-{:02}-{:02}", date.year(), date.month(), date.day())
 }
 
@@ -141,7 +141,7 @@ fn time_text(time: &TimeOfDay) -> String {
 }
 
 /// A timestamp without time zone: `YYYY-MM-DDTHH:MM:SS` and the fraction rule (CON-4).
-fn timestamp_text(timestamp: &TimestampValue) -> String {
+pub(crate) fn timestamp_text(timestamp: &TimestampValue) -> String {
     format!(
         "{}T{}",
         date_text(timestamp.date),
