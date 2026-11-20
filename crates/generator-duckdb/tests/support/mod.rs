@@ -260,6 +260,7 @@ pub fn query_in(dimensions: &[&str], metrics: &[&str], time_zone: &str) -> Bound
     let time = QueryTime {
         time_zone: TimeZoneName::new(time_zone),
         reference_time: None,
+        reference_date: None,
     };
     BoundQuery::new(columns, time, BoundQueryParts::default())
 }
