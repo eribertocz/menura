@@ -36,7 +36,7 @@ Schema: [`schemas/compiled-plan.schema.json`](schemas/compiled-plan.schema.json)
 
 - **PLN-3.1** `plan_hash` is the SHA-256 hash of the canonical JSON of `{dialect, data_source, sql, parameters, result_schema}`.
 - **PLN-3.2** `security_fingerprint` is the security context fingerprint (SEC-3.6).
-- **PLN-3.3** `data_versions` lists, from the catalog state, the version of every period read or, for relations that are not partitioned, the version of the whole relation (`period` is then `"*"`). For a summary, its versions are those of `aggregate_build.built_from`. It is `null` when the state document gives no versions for some relation read; a key with `null` versions MUST NOT be reused across data loads, so executors SHOULD NOT cache such results beyond their own time limit.
+- **PLN-3.3** `data_versions` lists, from the catalog state, the version of every period read or, for relations that are not partitioned, the version of the whole relation (`period` is then `"*"`). For a summary, its versions are those of `aggregate_build.built_from`. It is `null` when the state document gives no versions for some relation read; a key with `null` versions MUST NOT be reused across data loads, so executors SHOULD NOT cache such results beyond their own time limit. Entries are ordered by relation `source`, then by `period`, comparing code points.
 
 ## PLN-4 Lineage
 
@@ -64,6 +64,7 @@ and a `location`: the input document and a JSON Pointer (RFC 6901), plus `line` 
 YAML or SQL text when known.
 
 - **PLN-5.1** The first error follows the precedence of E2-5 (queries) or E0-4.3 (models). Further errors MAY follow it.
+- **PLN-5.1a** A compiler defect that no specification code describes (an internal invariant that failed) is reported as a compile error with code `E_INTERNAL`, `location` `null`, and a message naming the stage. It is never expected: a conformance case or a fuzzing run that produces it is a failure.
 - **PLN-5.2** A message never reveals data a user is not authorized to see. An unauthorized dataset, field or metric is reported exactly as a nonexistent one (`E_NAME_NOT_FOUND`).
 - **PLN-5.3** `validate` returns the same document with `contract` `menura.validation_report`, where `errors` may be empty. It shares this schema and is not a separate contract. Example: [`examples/validation-report.example.json`](examples/validation-report.example.json).
 

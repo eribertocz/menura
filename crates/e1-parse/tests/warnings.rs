@@ -64,7 +64,42 @@ fn e1_2_4_warnings_are_reported_only_for_a_query_that_passes_the_json_schema() {
     let mut document = wide_table_query();
     document["contract"] = json!("semantic_compiler.query");
     document["query"]["unknown"] = json!(true);
-    assert_eq!(rejected(&document).code, ParseErrorCode::InvalidQuery);
+    let error = rejected(&document);
+    assert_eq!(error.code, ParseErrorCode::InvalidQuery);
+    assert!(error.warnings.is_empty());
+}
+
+/// The pointers of the warnings an error carries, each `WQRY-01`.
+#[cfg(test)]
+fn error_warning_pointers(document: &serde_json::Value) -> Vec<String> {
+    rejected(document)
+        .warnings
+        .iter()
+        .map(|warning| {
+            assert_eq!(warning.code(), "WQRY-01");
+            warning.pointer.clone()
+        })
+        .collect()
+}
+
+#[test]
+fn e1_2_4_an_error_after_the_json_schema_carries_the_warnings() {
+    let mut document = wide_table_query();
+    document["contract"] = json!("semantic_compiler.query");
+    document["query"] = json!({"dimensions": [], "metrics": []});
+    assert_eq!(
+        rejected(&document).code,
+        ParseErrorCode::EmptyAggregationQuery
+    );
+    assert_eq!(error_warning_pointers(&document), ["/contract"]);
+}
+
+#[test]
+fn e1_2_4_a_filter_text_error_carries_the_warnings() {
+    let mut document = wide_table_query();
+    document["contract"] = json!("semantic_compiler.query");
+    document["query"]["filter"] = json!("region = ");
+    assert_eq!(error_warning_pointers(&document), ["/contract"]);
 }
 
 #[test]

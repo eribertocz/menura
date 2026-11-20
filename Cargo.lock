@@ -850,6 +850,8 @@ dependencies = [
  "menura-e5-optimize",
  "menura-generator-duckdb",
  "menura-model",
+ "menura-representations",
+ "menura-security",
  "serde_json",
 ]
 
@@ -871,6 +873,7 @@ name = "menura-e1-parse"
 version = "0.2.0"
 dependencies = [
  "jiff",
+ "jiff-tzdb",
  "menura-contracts",
  "menura-expressions",
  "menura-model",

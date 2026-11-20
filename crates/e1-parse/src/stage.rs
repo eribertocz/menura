@@ -43,7 +43,8 @@ pub struct ParsedQuery {
 /// `EQRY-01`, `EQRY-02`, `EQRY-06`, the JSON Schema with the range of `reference_time`
 /// (`E_INVALID_QUERY`, QRY-2), the filter text
 /// (`E0F-01`, `E0F-02`), the SQL form (`E_NOT_YET_SUPPORTED`, VS-2), then
-/// `E_EMPTY_AGGREGATION_QUERY`.
+/// `E_EMPTY_AGGREGATION_QUERY`. An error after the JSON Schema carries the `WQRY-01` warnings
+/// of the query (E1-2.4), which E1 reports for every query that passes the schema.
 pub fn parse_query(text: &str) -> Result<ParsedQuery, ParseError> {
     let contract = IncomingContract::Query;
     let document = contract.parse_json(text)?;
@@ -51,6 +52,16 @@ pub fn parse_query(text: &str) -> Result<ParsedQuery, ParseError> {
     contract.validate(&document)?;
     let query: QueryDocument = decode(contract, &document)?;
     let time = query_time(&query)?;
+    let warnings = former_name_warnings(&query);
+    match query_tree(&query, time) {
+        Ok(tree) => Ok(ParsedQuery { tree, warnings }),
+        Err(error) => Err(error.with_warnings(warnings)),
+    }
+}
+
+/// The query tree of `query`, which passed the envelope and the JSON Schema: the filter text,
+/// the SQL form, then the empty query.
+fn query_tree(query: &QueryDocument, time: QueryTime) -> Result<QueryTree, ParseError> {
     let wide_table = match &query.form {
         QueryForm::WideTable(wide_table) => wide_table,
         QueryForm::Sql(_) => return Err(sql_form_not_yet_supported()),
@@ -63,11 +74,7 @@ pub fn parse_query(text: &str) -> Result<ParsedQuery, ParseError> {
             "the query has no dimensions and no metrics; request at least one".to_owned(),
         ));
     }
-    let tree = wide_table_tree(wide_table, time, filters)?;
-    Ok(ParsedQuery {
-        tree,
-        warnings: former_name_warnings(&query),
-    })
+    wide_table_tree(wide_table, time, filters)
 }
 
 /// VS-2: no SQL text is parsed before the version that adds the SQL form.
