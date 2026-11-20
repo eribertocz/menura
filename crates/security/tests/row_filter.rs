@@ -341,3 +341,30 @@ fn e4_6_2_a_policy_without_a_parsed_condition_is_an_internal_error() {
     assert!(matches!(error, RowFilterError::UnparsedCondition { .. }));
     assert!(error.to_diagnostic().is_none());
 }
+
+#[test]
+fn e4_6_9_the_policy_first_by_name_reports_its_missing_attribute() {
+    let filter = row_filter(
+        &dataset(vec![
+            policy(
+                "beta_scope",
+                equals(field("region"), attribute("region")),
+                None,
+                None,
+            ),
+            policy(
+                "alpha_scope",
+                equals(field("team"), attribute("team")),
+                None,
+                None,
+            ),
+        ]),
+        &user("[]", "{}"),
+    );
+    assert_eq!(
+        filter,
+        Err(RowFilterError::MissingAttribute {
+            attribute: "team".to_owned()
+        })
+    );
+}

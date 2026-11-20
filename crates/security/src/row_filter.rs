@@ -15,7 +15,8 @@ use crate::walk::children;
 /// The row filter of `dataset` for the user of `context`: `G AND R` (E4-6.2), or `None` when
 /// the dataset has no policy.
 ///
-/// The policies are read in the order of `dataset.row_policies`. The policies the user is
+/// The policies are read in CON-5 order of their names (E4-6.9), the order E0.h stores
+/// `dataset.row_policies` in (E0H-1.4). The policies the user is
 /// exempt from are dropped (E4-6.3); `R` is the AND of the remaining policies without
 /// `roles`, TRUE if none; `G` is the OR of the remaining policies that grant one of the
 /// user's roles, TRUE when the dataset has no role-scoped policy or the user is exempt from
@@ -26,7 +27,7 @@ use crate::walk::children;
 /// # Errors
 ///
 /// [`RowFilterError::MissingAttribute`] (`ESEC-02`) for the first attribute an applicable
-/// policy reads that the context does not provide, in policy order and then in order of
+/// policy reads that the context does not provide, in policy name order and then in order of
 /// appearance (E4-6.9); [`RowFilterError::UnparsedCondition`] for a policy whose condition E0
 /// did not parse, which no loaded model holds.
 pub fn row_filter(
@@ -37,9 +38,10 @@ pub fn row_filter(
         return Ok(None);
     }
     let user_roles = context.roles();
-    let remaining: Vec<&RowPolicy> = dataset
-        .row_policies
-        .iter()
+    let mut by_name: Vec<&RowPolicy> = dataset.row_policies.iter().collect();
+    by_name.sort_by(|left, right| left.name.cmp(&right.name));
+    let remaining: Vec<&RowPolicy> = by_name
+        .into_iter()
         .filter(|policy| !holds_any(user_roles, policy.exempt_roles.as_deref()))
         .collect();
     let applicable: Vec<&RowPolicy> = remaining
