@@ -246,3 +246,47 @@ fn qry_4_keeps_a_relative_date_range_as_written() {
         (Grain::Month, 3, None)
     );
 }
+
+#[test]
+fn qry_4_1_keeps_time_grains_as_written_for_e2_to_match() {
+    let document = with_extension(&extension_data(&json!({
+        "time_grains": [
+            { "dimension": "orders.ordered_at", "grain": "month" },
+            { "dimension": "orders.unknown", "grain": "week" },
+            { "dimension": "orders.ordered_at", "grain": "year" }
+        ]
+    })));
+    let tree = accepted(&document).tree;
+    let grains: Vec<(Vec<ReferencePart>, Grain, &str)> = tree
+        .time_grains()
+        .iter()
+        .map(|entry| {
+            (
+                entry.dimension.parts().to_vec(),
+                entry.grain,
+                entry.origin.pointer(),
+            )
+        })
+        .collect();
+    let data = "/query/nonportable_extensions/0/data";
+    assert_eq!(
+        grains,
+        [
+            (
+                vec![regular("orders"), regular("ordered_at")],
+                Grain::Month,
+                format!("{data}/time_grains/0").as_str()
+            ),
+            (
+                vec![regular("orders"), regular("unknown")],
+                Grain::Week,
+                format!("{data}/time_grains/1").as_str()
+            ),
+            (
+                vec![regular("orders"), regular("ordered_at")],
+                Grain::Year,
+                format!("{data}/time_grains/2").as_str()
+            ),
+        ]
+    );
+}

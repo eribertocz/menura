@@ -25,13 +25,12 @@ pub(crate) fn wide_table_tree(
     filters: Vec<QueryFilter>,
 ) -> Result<QueryTree, ParseError> {
     let extension = query.nonportable_extensions.iter().flatten().next();
-    let grains = extension.and_then(|extension| extension.data.time_grains.as_deref());
     let dimensions = query
         .dimensions
         .iter()
         .flatten()
         .enumerate()
-        .map(|(index, item)| dimension(index, item, grains.unwrap_or_default()))
+        .map(|(index, item)| dimension(index, item))
         .collect::<Result<_, _>>()?;
     let metrics = query
         .metrics
@@ -48,11 +47,7 @@ pub(crate) fn wide_table_tree(
     Ok(QueryTree::wide_table(dimensions, metrics, time, parts))
 }
 
-fn dimension(
-    index: usize,
-    item: &DimensionItem,
-    grains: &[TimeGrain],
-) -> Result<QueryDimension, ParseError> {
+fn dimension(index: usize, item: &DimensionItem) -> Result<QueryDimension, ParseError> {
     let (field, alias) = match item {
         DimensionItem::Reference(field) => (field, None),
         DimensionItem::Aliased(aliased) => (&aliased.field, aliased.alias.as_deref()),
@@ -61,28 +56,9 @@ fn dimension(
     let reference = reference(field, &origin)?;
     Ok(QueryDimension {
         output_name: output_name(alias, &reference),
-        kind: QueryDimensionKind::Field {
-            reference,
-            time_grain: time_grain(field, grains),
-        },
+        kind: QueryDimensionKind::Field { reference },
         origin: at(&origin),
     })
-}
-
-/// The first time grain written for the dimension `field`, matched by its text as written.
-fn time_grain(field: &str, grains: &[TimeGrain]) -> Option<TimeGrainChoice> {
-    grains
-        .iter()
-        .position(|grain| grain.dimension == field)
-        .and_then(|index| {
-            grains.get(index).map(|grain| TimeGrainChoice {
-                grain: grain.grain,
-                origin: at(&pointer::item(
-                    &pointer::extension_member(0, "time_grains"),
-                    index,
-                )),
-            })
-        })
 }
 
 fn metric(index: usize, item: &MetricItem) -> Result<QueryMetric, ParseError> {
@@ -104,8 +80,16 @@ fn output_name(alias: Option<&str>, reference: &QueryReference) -> OutputName {
     alias.map_or_else(|| OutputName::from_reference(reference), OutputName::new)
 }
 
-/// The extension elements other than filters and time grains (QRY-4).
+/// The extension elements other than filters, as written (QRY-4). E2 matches time grains to
+/// dimensions (QRY-4.1).
 fn extension_parts(data: &CompilerExtension) -> Result<QueryTreeParts, ParseError> {
+    let time_grains = data
+        .time_grains
+        .iter()
+        .flatten()
+        .enumerate()
+        .map(|(index, entry)| time_grain(index, entry))
+        .collect::<Result<_, _>>()?;
     let paths = data
         .paths
         .iter()
@@ -122,6 +106,7 @@ fn extension_parts(data: &CompilerExtension) -> Result<QueryTreeParts, ParseErro
         .collect();
     Ok(QueryTreeParts {
         filters: Vec::new(),
+        time_grains,
         date_range: data.date_range.as_ref().map(date_range).transpose()?,
         paths,
         order,
@@ -129,6 +114,15 @@ fn extension_parts(data: &CompilerExtension) -> Result<QueryTreeParts, ParseErro
             rows,
             origin: at(&pointer::extension_member(0, "limit")),
         }),
+    })
+}
+
+fn time_grain(index: usize, entry: &TimeGrain) -> Result<TimeGrainChoice, ParseError> {
+    let origin = pointer::item(&pointer::extension_member(0, "time_grains"), index);
+    Ok(TimeGrainChoice {
+        dimension: reference(&entry.dimension, &origin)?,
+        grain: entry.grain,
+        origin: at(&origin),
     })
 }
 
