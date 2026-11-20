@@ -270,7 +270,7 @@ mod tests {
 
     #[test]
     fn vs_4_a_query_outside_the_slice_is_pending_whatever_the_expectation() {
-        let query = "{metrics: [total_amount, total_target]}";
+        let query = "{metrics: [total_amount, total_refund]}";
         let status = status(&case_text(
             query,
             "{outcome: plan, rows: cs-plan-rows-001.csv}",
@@ -283,7 +283,7 @@ mod tests {
 
     #[test]
     fn vs_4_a_case_that_expects_not_yet_supported_compares_it() {
-        let query = "{metrics: [total_amount, total_target]}";
+        let query = "{metrics: [total_amount, total_refund]}";
         let expect = |pointer: &str| {
             format!(
                 "{{outcome: error, error: E_NOT_YET_SUPPORTED, location: {{document: query, \
