@@ -64,6 +64,7 @@ their check runs.
 | 12 | `E_AMBIGUOUS_MEASURE_GRAIN` | E2 |
 | 12a | Any element marked unusable in E0 (E0-4 table): its query error code, in this order: `E0B-08`, `E0B-09`, `E0D-03`–`E0D-07`, `E0F-*`, `E0G-01`, `E0G-02`, `E0C-37` | E2 |
 | 12b | `E0F-06` (non-boolean filter), `E2-01`, `EQRY-09`, `EQRY-10`, `EQRY-11`, `EQRY-12`, `EQRY-03`, `EQRY-04`, in that order | E2 |
+| 12c | `E_NOT_YET_SUPPORTED`, before 1.0.0 only (VS-2; the SQL form is detected at row 1) | E2 |
 | 13 | `E_NO_PATH` | E3 |
 | 14 | `E_PARTIAL_DIMENSION_REACHABILITY` | E3 |
 | 15 | `E_NO_ANCHOR` | E3 |
@@ -89,3 +90,4 @@ their check runs.
 | `E_WINDOW_IN_WHERE` | Window function in a filter |
 | `E_CROSS_DATASET_FILTER` | A filter reads fields of more than one dataset |
 | `E_NAME_COLLISION` | Duplicate output name |
+| `E_NOT_YET_SUPPORTED` | Before 1.0.0: the query needs a capability outside the version's slice (VS-1–VS-3) |

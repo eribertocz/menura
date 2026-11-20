@@ -16,7 +16,7 @@ already run correctly on DuckDB.
 | 0.1.0 | Contracts (schemas, examples), repository, CI with boundary rules A1–A6 and standards | Contracts can be validated |
 | 0.2.0 | E0: load and validate model, catalog and extensions | `menura validate` |
 | 0.3.0 | **Minimal vertical slice:** E1–E4 and E6 for a single-branch wide-table query (dimensions, base metrics, filters, access and row policies), no E5 rewrites | First correct, secure SQL executed on DuckDB |
-| 0.4.0 | E3 complete (paths, reachability, anchors) and E4 stitching of several branches, deduplication | Multi-dataset queries |
+| 0.4.0 | E3 complete (paths, reachability, anchors), joins with deduplication, row-policy propagation, E4 stitching of several branches, derived metrics | Multi-dataset queries |
 | 0.5.0 | SQL form (Layer 2 single-relation subset), additivity and population | Both query forms; balances |
 | 0.6.0 | E5: evidence-based rewrites and summary selection | Faster plans, same results |
 | 0.7.0 | Lineage, audit record, cache key, `describe`, `explain`, integrity checks | Full outputs; Layer 3 suites block from here (OSS-2.3) |
@@ -36,6 +36,18 @@ Every version closes only when its gates pass in CI; 1.0.0 needs all of them.
 | Compatibility | Every contract example validates; every schema change bumps its version (A5); documents of the previous minor versions are still accepted |
 | Execution | Every `plan` case executes on DuckDB with non-default session settings and returns its expected rows (E6-5.4) |
 | Performance | R1–R3 (from 0.9.0) |
+
+## 7.1c Version slices before 1.0.0
+
+Each version before 1.0.0 compiles only the queries of its slice. A query outside the slice is
+rejected, never answered partially or without a rule it needs (above all a row policy).
+
+| ID | Rule |
+|---|---|
+| VS-1 | **0.3.0 slice.** A wide-table query whose metric components, dimensions, filters and `time_grains`, `date_range` and `order_by` fields all belong to **one dataset** (its home dataset), with no `paths`; metrics without the derived, additivity, population or context extensions; dimension-only queries on one dataset; the home dataset's access, field restrictions and its own row policies. A dataset that reaches another dataset with row policies through its relationships needs propagation (E4-6.5), so it is outside the slice. |
+| VS-2 | Outside the slice, `compile` returns `E_NOT_YET_SUPPORTED`, naming the capability and the version that adds it (table of 7.1). The SQL form is detected in E1, after the checks of E2-5 row 1. Every other capability is detected after every check of E2 has passed (after E2-5 row 12b), so a query reports the same errors as it will in the version that supports it, up to that point. |
+| VS-3 | Each later version widens the slice to the content of its row in 7.1. `E_NOT_YET_SUPPORTED` disappears at 1.0.0; what 1.0.0 does not support is rejected with the codes of 7.1b's table. |
+| VS-4 | The conformance runner reports the query part of a case whose compilation returns `E_NOT_YET_SUPPORTED` as pending, never as passed or failed (CS-2.8). |
 
 ## 7.1b What 1.0.0 guarantees
 
