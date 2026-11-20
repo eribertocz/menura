@@ -1,0 +1,19 @@
+WITH
+  "menura_1_scan" AS (
+    SELECT
+      "amount" AS "AMOUNT",
+      "status" = 'paid' AS "IS_PAID"
+    FROM "main"."orders"
+  ),
+  "menura_2_aggregate" AS (
+    SELECT
+      CAST(SUM("AMOUNT") FILTER (WHERE "IS_PAID") AS DECIMAL(38,2)) AS "PAID_AMOUNT",
+      CAST(CASE WHEN COUNT("AMOUNT") = 0 THEN NULL ELSE CAST(SUM("AMOUNT") AS DOUBLE) / CAST(COUNT("AMOUNT") AS DOUBLE) END AS DOUBLE) AS "AVERAGE_AMOUNT",
+      CAST(MEDIAN(CAST("AMOUNT" AS DOUBLE)) AS DOUBLE) AS "MEDIAN_AMOUNT"
+    FROM "menura_1_scan"
+  )
+SELECT
+  "PAID_AMOUNT",
+  "AVERAGE_AMOUNT",
+  "MEDIAN_AMOUNT"
+FROM "menura_2_aggregate"

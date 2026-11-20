@@ -1,0 +1,101 @@
+//! Time grains (E6-5.2) and the types the generator needs to write them.
+
+use menura_contracts::types::common::LogicalType;
+use menura_expressions::typing::{Aggregates, Outcome, Stop, Typed, TypingScope, type_expression};
+use menura_model::expression::{DateUnit, Expression, Literal, Reference};
+
+use super::{Columns, ExpressionWriter};
+use crate::error::{GenerateError, InvariantViolation};
+use crate::parameters::SharedValue;
+use crate::types::attribute_logical_type;
+
+impl ExpressionWriter<'_, '_> {
+    /// `date_trunc('<grain>', x)` in the query time zone (E6-5.2, E6-4.10): a date is cast back
+    /// to `DATE`; a timestamp with time zone is converted to the query time zone, truncated and
+    /// converted back with `AT TIME ZONE`, the time zone a bound parameter.
+    pub(super) fn date_trunc(
+        &mut self,
+        unit: DateUnit,
+        operand: &Expression,
+    ) -> Result<String, GenerateError> {
+        let operand_type = self.type_of(operand)?;
+        let value = self.operand(operand)?;
+        let grain = unit_name(unit);
+        match operand_type {
+            LogicalType::Date => Ok(format!("CAST(date_trunc('{grain}', {value}) AS DATE)")),
+            LogicalType::Timestamp {
+                with_time_zone: true,
+                ..
+            } => {
+                let zone = self.time_zone();
+                Ok(format!(
+                    "date_trunc('{grain}', {value} AT TIME ZONE {zone}) AT TIME ZONE {zone}"
+                ))
+            }
+            LogicalType::Timestamp { .. } => Ok(format!("date_trunc('{grain}', {value})")),
+            _ => Err(self.error(InvariantViolation::UntypedOperand)),
+        }
+    }
+
+    /// The placeholder of the query time zone, a `text` parameter.
+    fn time_zone(&mut self) -> String {
+        let name = self.environment.time_zone.as_str().to_owned();
+        self.parameters.bind_shared(
+            SharedValue::TimeZone,
+            LogicalType::Text,
+            serde_json::Value::String(name),
+        )
+    }
+
+    /// The logical type of a literal, as E0.f types it (E0F-9.3).
+    pub(super) fn literal_type(&self, literal: &Literal) -> Result<LogicalType, GenerateError> {
+        self.type_of(&Expression::Literal(literal.clone()))
+    }
+
+    /// The logical type of `expression`, typed in the scope of the input columns and the
+    /// declared attributes.
+    fn type_of(&self, expression: &Expression) -> Result<LogicalType, GenerateError> {
+        let resolve = |reference: &Reference| self.column_type(reference);
+        let attributes = |name: &str| -> Outcome<Typed> {
+            let declared = self
+                .declared_type(name)
+                .map_err(|_| Stop::ReportedElsewhere)?;
+            Ok(Typed::value(attribute_logical_type(declared), false))
+        };
+        let scope =
+            TypingScope::new(&resolve, Aggregates::Allowed).with_user_attributes(&attributes);
+        type_expression(expression, &scope)
+            .ok()
+            .and_then(|typed| typed.logical().cloned())
+            .ok_or_else(|| self.error(InvariantViolation::UntypedOperand))
+    }
+
+    /// The type of an input column; catalog columns have no type here.
+    fn column_type(&self, reference: &Reference) -> Outcome<Typed> {
+        let Columns::Input(schema) = self.columns else {
+            return Err(Stop::ReportedElsewhere);
+        };
+        schema
+            .columns()
+            .iter()
+            .find(|column| {
+                reference.qualifier.is_none() && column.name.as_str() == reference.name.text()
+            })
+            .map(|column| Typed::value(column.logical_type.clone(), column.nullable))
+            .ok_or(Stop::ReportedElsewhere)
+    }
+}
+
+/// The grain name of `unit`, a literal from a closed set (E6-4.11).
+fn unit_name(unit: DateUnit) -> &'static str {
+    match unit {
+        DateUnit::Year => "year",
+        DateUnit::Quarter => "quarter",
+        DateUnit::Month => "month",
+        DateUnit::Week => "week",
+        DateUnit::Day => "day",
+        DateUnit::Hour => "hour",
+        DateUnit::Minute => "minute",
+        DateUnit::Second => "second",
+    }
+}

@@ -925,7 +925,13 @@ dependencies = [
 name = "menura-generator-duckdb"
 version = "0.2.0"
 dependencies = [
+ "menura-contracts",
  "menura-e5-optimize",
+ "menura-expressions",
+ "menura-model",
+ "menura-representations",
+ "menura-security",
+ "serde_json",
 ]
 
 [[package]]
