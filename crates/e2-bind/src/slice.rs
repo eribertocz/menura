@@ -120,7 +120,7 @@ fn metric_capabilities(metric: &Metric) -> Vec<Capability> {
     {
         needed.push(Capability::SeveralDatasets);
     }
-    if metric.derived.is_some() {
+    if is_derived(metric) {
         needed.push(Capability::DerivedMetric);
     }
     match &metric.declared_additivity {
@@ -137,6 +137,18 @@ fn metric_capabilities(metric: &Metric) -> Vec<Capability> {
         needed.push(Capability::ContextMetric);
     }
     needed
+}
+
+/// Whether `metric` is a derived metric: it has the `derived` extension, or it reads metrics
+/// with `AGG(…)` without being a context metric, as a development-line metric that reads
+/// `AGG(dataset.metric)` does (DER-2.2).
+fn is_derived(metric: &Metric) -> bool {
+    metric.derived.is_some()
+        || (metric.context.is_none()
+            && metric
+                .classification
+                .as_ref()
+                .is_some_and(|classification| !classification.inputs.is_empty()))
 }
 
 /// Whether `home` reaches, through many-to-one steps of usable relationships, another dataset

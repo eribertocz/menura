@@ -1,5 +1,5 @@
 id: e2-slice-context-development-001
-rules: [VS-1, E2-5.4, E2-5.4a, CTX-2.1]
+rules: [VS-1, E2-5.4, DER-2.2]
 model: e0-context-development
 security_context: analyst.json
 query:
@@ -10,7 +10,7 @@ query:
   query:
     dimensions: [invoices.customer_id]
     metrics:
-      - {metric: billed_share, alias: billed_share}
+      - {metric: billed, alias: billed}
 load_options: {ossie_format: development}
 expect:
   outcome: error
