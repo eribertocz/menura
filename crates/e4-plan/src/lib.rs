@@ -72,7 +72,7 @@ pub fn build_plan(
             policy_predicate.as_ref().map(|(predicate, _)| predicate),
         ],
     );
-    let mut node = scan::scan(home, &read)?;
+    let mut node = scan::scan(home, &read, Vec::new())?;
     if let Some((predicate, location)) = policy_predicate {
         node = filter(node, predicate, Origin::Model(location));
     }

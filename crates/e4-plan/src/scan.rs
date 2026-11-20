@@ -5,21 +5,29 @@ use menura_representations::logical_plan::{Operation, OutputSchema, PlanNode, Sc
 use menura_representations::names::ColumnName;
 use menura_representations::origin::Origin;
 
+use crate::columns::is_source_column;
 use crate::error::{InvariantViolation, PlanError};
 
 /// The `Scan` of `home` that projects the fields of `read`, in the order of the dataset's
-/// fields, each column named after the field's normalized name (issue #251).
+/// fields, each column named after the field's normalized name (issue #251), then
+/// `source_columns`, the source columns of `read` (issue #264).
 ///
 /// # Errors
 ///
 /// An internal error for a field that `home` does not have, or that has no type.
-pub(crate) fn scan(home: &Dataset, read: &[NormalizedName]) -> Result<PlanNode, PlanError> {
+pub(crate) fn scan(
+    home: &Dataset,
+    read: &[NormalizedName],
+    source_columns: Vec<SchemaColumn>,
+) -> Result<PlanNode, PlanError> {
     let origin = Origin::Model(home.location.clone());
     let fail = |violation| PlanError::invariant(violation, &origin);
-    if read.iter().any(|name| home.field(name).is_none()) {
+    let is_foreign =
+        |name: &NormalizedName| !is_source_column(name.as_str()) && home.field(name).is_none();
+    if read.iter().any(is_foreign) {
         return Err(fail(InvariantViolation::ForeignField));
     }
-    let columns = home
+    let mut columns = home
         .fields
         .iter()
         .filter(|field| read.contains(&field.name))
@@ -38,6 +46,7 @@ pub(crate) fn scan(home: &Dataset, read: &[NormalizedName]) -> Result<PlanNode, 
             })
         })
         .collect::<Result<Vec<_>, PlanError>>()?;
+    columns.extend(source_columns);
     Ok(PlanNode::new(
         Operation::Scan {
             dataset: home.name.clone(),
