@@ -2,13 +2,14 @@ WITH
   "menura_1_scan" AS (
     SELECT
       "Amount" AS "AMOUNT",
-      "Amount" AS "menura.source.AMOUNT"
+      "Amount" AS "menura.source.AMOUNT",
+      "Amount" AS "menura.source..AMOUNT"
     FROM "main"."orders"
   ),
   "menura_2_aggregate" AS (
     SELECT
       CAST(SUM("AMOUNT") AS DECIMAL(38,2)) AS "FIELD_TOTAL",
-      CAST(SUM("menura.source.AMOUNT") AS DECIMAL(38,2)) AS "SOURCE_TOTAL"
+      CAST(SUM("menura.source..AMOUNT") AS DECIMAL(38,2)) AS "SOURCE_TOTAL"
     FROM "menura_1_scan"
   ),
   "menura_3_project" AS (

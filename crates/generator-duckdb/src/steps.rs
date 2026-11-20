@@ -12,7 +12,7 @@ use crate::error::{GenerateError, InvariantViolation};
 use crate::expression::{Columns, Environment, ExpressionWriter, catalog_column_named};
 use crate::identifiers::{Source, classify_source, quote, source_sql};
 use crate::parameters::Parameters;
-use crate::source_columns::{empty_scan_item, source_column_name};
+use crate::source_columns::{empty_scan_item, source_column_name, source_prefix};
 use crate::types::physical_type;
 
 /// A node already written: the name of its step and the `ORDER BY` its rows keep.
@@ -104,9 +104,10 @@ impl<'input> StepWriter<'input> {
             .iter()
             .find(|relation| relation.source == dataset.source)
             .ok_or_else(|| error(InvariantViolation::UnknownRelation, node))?;
+        let prefix = source_prefix(dataset);
         let mut items = Vec::new();
         for column in node.schema().columns() {
-            if let Some(name) = source_column_name(column.name.as_str()) {
+            if let Some(name) = source_column_name(&prefix, column.name.as_str()) {
                 let catalog_column = catalog_column_named(relation, name)
                     .ok_or_else(|| error(InvariantViolation::UnknownColumn, node))?;
                 items.push(format!(
@@ -129,7 +130,7 @@ impl<'input> StepWriter<'input> {
             items.push(format!("{value} AS {}", quote(column.name.as_str())));
         }
         if items.is_empty() {
-            items.push(empty_scan_item());
+            items.push(empty_scan_item(&prefix));
         }
         Ok(SelectBody {
             items,

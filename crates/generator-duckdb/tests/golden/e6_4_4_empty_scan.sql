@@ -1,7 +1,7 @@
 WITH
   "menura_1_scan" AS (
     SELECT
-      TRUE AS "menura.source."
+      TRUE AS "menura.source.."
     FROM "main"."orders"
   ),
   "menura_2_aggregate" AS (

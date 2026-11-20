@@ -8,7 +8,6 @@ mod support;
 
 use menura_contracts::types::common::{Grain, LogicalType};
 use menura_contracts::types::query::{Direction, NullsOrder};
-use menura_e4_plan::build_plan;
 use menura_expressions::typing::big_integer;
 use menura_representations::bound_query::BoundQueryParts;
 use menura_representations::logical_plan::{
@@ -18,8 +17,8 @@ use menura_representations::names::ColumnName;
 use menura_representations::origin::Origin;
 use support::plan::{column, column_names, kinds, node, predicate};
 use support::{
-    DATASET_POINTER, anyone, at, branches, date, date_range, dimension, filter, located,
-    metric_reference, model, order, query, tree,
+    DATASET_POINTER, anyone, at, branches, build_plan, date, date_range, dimension, filter,
+    located, metric_reference, model, order, query, tree,
 };
 
 fn sales_query() -> menura_representations::bound_query::BoundQuery {

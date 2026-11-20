@@ -14,20 +14,23 @@ use support::{
 
 use menura_representations::logical_plan::PlanNode;
 
-/// The reserved prefix of a `Scan` column that names a catalog column.
-const SOURCE_PREFIX: &str = "menura.source.";
+/// The prefix of a `Scan` column of `ORDERS` that names a catalog column: its field
+/// `menura.source.AMOUNT` takes `menura.source.`.
+const SOURCE_PREFIX: &str = "menura.source..";
 
 fn source_column(name: &str) -> String {
     format!("{SOURCE_PREFIX}{name}")
 }
 
-/// `SUM` of the field `AMOUNT` and of the catalog column `Amount`, read as `source.amount`.
+/// `SUM` of the field `AMOUNT` and of the catalog column `Amount`, read as `source.amount`,
+/// next to the field `menura.source.AMOUNT`.
 fn field_and_source_column() -> PlanNode {
     let source = source_column("AMOUNT");
     let scanned = scan_of(
         "ORDERS",
         vec![
             column("AMOUNT", decimal(10, 2), true),
+            column("menura.source.AMOUNT", decimal(10, 2), true),
             column(&source, decimal(10, 2), true),
         ],
     );

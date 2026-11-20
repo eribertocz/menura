@@ -9,7 +9,7 @@ mod support;
 use std::num::NonZeroU64;
 
 use menura_contracts::types::common::Grain;
-use menura_e4_plan::{InvariantViolation, PlanError, build_plan};
+use menura_e4_plan::{InvariantViolation, PlanError};
 use menura_model::internal_model::{
     ContextMetric, ContextModifier, DatasetReach, DeclaredAdditivity, DerivedMetric, InternalModel,
     Metric, NullHandling, PathCount, ReachedDataset, SemiAdditive, SnapshotAggregation,
@@ -19,8 +19,8 @@ use menura_representations::bound_query::{
 };
 use menura_representations::paths::{Branch, Branches, ComponentKey, JoinStep, JoinTree};
 use support::{
-    anyone, branches, dimension, field_path, metric, metric_reference, metrics, model, model_with,
-    name, orders, policy, query,
+    anyone, branches, build_plan, dimension, field_path, metric, metric_reference, metrics, model,
+    model_with, name, orders, policy, query,
 };
 
 fn count_query() -> BoundQuery {

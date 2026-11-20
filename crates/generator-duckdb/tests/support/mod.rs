@@ -64,6 +64,9 @@ pub fn instant() -> LogicalType {
 fn order_fields() -> Vec<(&'static str, &'static str, LogicalType)> {
     vec![
         ("AMOUNT", "amount", decimal(10, 2)),
+        // A field whose name starts with `menura.source.`: the source columns of `ORDERS` take
+        // the prefix `menura.source..` (issue #264).
+        ("menura.source.AMOUNT", "amount", decimal(10, 2)),
         (
             "CREATED_MONTH",
             "DATE_TRUNC('month', created_at)",

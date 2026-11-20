@@ -31,7 +31,7 @@ pub(crate) fn policy_predicate(
         return Ok(None);
     };
     let location = first.location.clone();
-    let predicate = over_scan(&filter, false)
+    let predicate = over_scan(&filter, None)
         .map_err(|violation| PlanError::invariant(violation, &Origin::Model(location.clone())))?;
     Ok(Some((predicate, location)))
 }

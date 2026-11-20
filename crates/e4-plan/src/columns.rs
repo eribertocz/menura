@@ -3,7 +3,7 @@
 
 use menura_contracts::normalize_unquoted_identifier;
 use menura_model::expression::{Expression, Identifier, Reference};
-use menura_model::internal_model::NormalizedName;
+use menura_model::internal_model::{Dataset, NormalizedName};
 use menura_representations::names::ColumnName;
 
 use crate::error::InvariantViolation;
@@ -24,19 +24,25 @@ pub(crate) fn component_column(metric: usize, component: usize) -> ColumnName {
     ))
 }
 
-/// The prefix of the name of a `Scan` column that names a catalog column of the dataset
-/// `source` rather than a field (issue #264).
-const SOURCE_COLUMN_PREFIX: &str = "menura.source.";
-
-/// The `Scan` column of the source column a dataset metric reads as `source.<name>`, where
-/// `name` is the reference's normalized name (E0D-1.1).
-pub(crate) fn source_column(name: &NormalizedName) -> ColumnName {
-    ColumnName::new(&format!("{SOURCE_COLUMN_PREFIX}{}", name.as_str()))
+/// The shortest `menura.source` followed by one or more `.` that no field name of `home`
+/// starts with: the prefix of every `Scan` column of `home` that names a catalog column of its
+/// `source` rather than a field, so that the two never collide (issue #264).
+pub(crate) fn source_prefix(home: &Dataset) -> String {
+    let mut prefix = String::from("menura.source.");
+    while home
+        .fields
+        .iter()
+        .any(|field| field.name.as_str().starts_with(&prefix))
+    {
+        prefix.push('.');
+    }
+    prefix
 }
 
-/// Whether the `Scan` column `name` names a source column rather than a field.
-pub(crate) fn is_source_column(name: &str) -> bool {
-    name.starts_with(SOURCE_COLUMN_PREFIX)
+/// The `Scan` column of the source column a dataset metric reads as `source.<name>`, where
+/// `name` is the reference's normalized name (E0D-1.1), under the [`source_prefix`] `prefix`.
+pub(crate) fn source_column(prefix: &str, name: &NormalizedName) -> ColumnName {
+    ColumnName::new(&format!("{prefix}{}", name.as_str()))
 }
 
 /// The unqualified reference to the input column `name` (issue #251), as a delimited
@@ -65,28 +71,30 @@ pub(crate) fn field_name(identifier: &Identifier) -> NormalizedName {
 
 /// `expression` over the `Scan` of the home dataset, with every field reference turned into
 /// the unqualified reference to the `Scan` column of that field. A reference qualified with
-/// `source` in a dataset metric reads a source column (E0D-3), not a field: it becomes the
-/// reference to the [`source_column`] of that column.
+/// `source` in a dataset metric, whose [`source_prefix`] is `dataset_metric_prefix`, reads a
+/// source column (E0D-3), not a field: it becomes the reference to the [`source_column`] of
+/// that column. Outside a dataset metric `dataset_metric_prefix` is `None`.
 ///
 /// # Errors
 ///
 /// [`InvariantViolation::EmptyName`] for a reference with an empty name.
 pub(crate) fn over_scan(
     expression: &Expression,
-    in_dataset_metric: bool,
+    dataset_metric_prefix: Option<&str>,
 ) -> Result<Expression, InvariantViolation> {
     rewrite(expression, &mut |node| match node {
         Expression::Reference(reference) => {
-            let is_source = in_dataset_metric
-                && reference
-                    .qualifier
-                    .as_ref()
-                    .is_some_and(|qualifier| field_name(qualifier).as_str() == "SOURCE");
             let name = field_name(&reference.name);
-            if is_source {
-                return column_reference(source_column(&name).as_str()).map(Some);
+            let is_source = reference
+                .qualifier
+                .as_ref()
+                .is_some_and(|qualifier| field_name(qualifier).as_str() == "SOURCE");
+            match dataset_metric_prefix {
+                Some(prefix) if is_source => {
+                    column_reference(source_column(prefix, &name).as_str()).map(Some)
+                }
+                _ => column_reference(name.as_str()).map(Some),
             }
-            column_reference(name.as_str()).map(Some)
         }
         _ => Ok(None),
     })
