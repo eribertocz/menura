@@ -39,7 +39,8 @@ pub struct ParsedQuery {
 /// # Errors
 ///
 /// The first error, in this order (E2-5 rows 0b to 2): not JSON (`E_INVALID_QUERY`), `EQRY-08`,
-/// `EQRY-01`, `EQRY-02`, `EQRY-06`, the JSON Schema (`E_INVALID_QUERY`), the filter text
+/// `EQRY-01`, `EQRY-02`, `EQRY-06`, the JSON Schema with the range of `reference_time`
+/// (`E_INVALID_QUERY`, QRY-2), the filter text
 /// (`E0F-01`, `E0F-02`), the SQL form (`E_NOT_YET_SUPPORTED`, VS-2), then
 /// `E_EMPTY_AGGREGATION_QUERY`.
 pub fn parse_query(text: &str) -> Result<ParsedQuery, ParseError> {
@@ -48,6 +49,7 @@ pub fn parse_query(text: &str) -> Result<ParsedQuery, ParseError> {
     check_envelope(&document)?;
     contract.validate(&document)?;
     let query: QueryDocument = decode(contract, &document)?;
+    let time = query_time(&query)?;
     let wide_table = match &query.form {
         QueryForm::WideTable(wide_table) => wide_table,
         QueryForm::Sql(_) => return Err(sql_form_not_yet_supported()),
@@ -60,7 +62,7 @@ pub fn parse_query(text: &str) -> Result<ParsedQuery, ParseError> {
             "the query has no dimensions and no metrics; request at least one".to_owned(),
         ));
     }
-    let tree = wide_table_tree(wide_table, query_time(&query)?, filters)?;
+    let tree = wide_table_tree(wide_table, time, filters)?;
     Ok(ParsedQuery {
         tree,
         warnings: former_name_warnings(&query),
@@ -90,7 +92,10 @@ fn query_time(query: &QueryDocument) -> Result<QueryTime, ParseError> {
                 ParseError::new(
                     ParseErrorCode::InvalidQuery,
                     "/reference_time",
-                    format!("the reference time `{text}` cannot be represented"),
+                    format!(
+                        "the reference time `{text}` has a year outside 0001-9999, as written \
+                         or in UTC"
+                    ),
                 )
             })
         })

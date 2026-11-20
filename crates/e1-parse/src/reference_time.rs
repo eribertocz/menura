@@ -3,24 +3,46 @@
 use menura_model::expression::{DateValue, TimeOfDay, TimestampValue};
 use menura_representations::time::{ReferenceTime, UtcOffset};
 
-/// Reads an RFC 3339 instant that satisfies the `date-time` format of the query schema.
+/// The first and last years of a timestamp (QRY-2, E0F-9.3).
+const FIRST_YEAR: u16 = 1;
+const LAST_YEAR: u16 = 9999;
+
+/// The minutes of a day.
+const MINUTES_PER_DAY: i32 = 24 * 60;
+
+/// The most fraction digits of a second a reference time keeps.
+const MAXIMUM_FRACTION_DIGITS: usize = TimeOfDay::MAXIMUM_FRACTION_DIGITS;
+
+/// Reads an RFC 3339 instant that satisfies the `date-time` format of the query schema (QRY-2).
 ///
 /// Fraction digits beyond the microsecond are truncated toward the earlier instant, never
-/// rounded: `reference_time` only selects the unit that contains it (QRY-4.2), and no unit
-/// boundary falls inside a microsecond. Returns `None` for an instant that a [`ReferenceTime`]
-/// cannot hold.
+/// rounded, and a leap second `:60` reads as `:59.999999` of the same minute: neither moves
+/// the instant across a unit of QRY-4.2. Returns `None` when the year is outside 0001–9999, as
+/// written or after conversion to UTC.
 pub(crate) fn read_reference_time(text: &str) -> Option<ReferenceTime> {
     let (date, rest) = text.split_once(['T', 't'])?;
     let offset_start = rest.find(['Z', 'z', '+', '-'])?;
     let (time, offset) = rest.split_at(offset_start);
-    let local = TimestampValue {
-        date: read_date(date)?,
-        time: read_time(time)?,
-    };
-    Some(ReferenceTime {
-        local,
+    let time = ReferenceTime {
+        local: TimestampValue {
+            date: read_date(date)?,
+            time: read_time(time)?,
+        },
         offset: read_offset(offset)?,
-    })
+    };
+    is_in_range_in_utc(&time).then_some(time)
+}
+
+/// Whether the instant, converted to UTC, still has a year in 0001–9999. Offsets are whole
+/// minutes, so the seconds never change the day.
+fn is_in_range_in_utc(time: &ReferenceTime) -> bool {
+    let date = time.local.date;
+    let minute_of_day =
+        i32::from(time.local.time.hour()) * 60 + i32::from(time.local.time.minute());
+    let utc_minute_of_day = minute_of_day - i32::from(time.offset.minutes());
+    let is_first_day = date.year() == FIRST_YEAR && date.month() == 1 && date.day() == 1;
+    let is_last_day = date.year() == LAST_YEAR && date.month() == 12 && date.day() == 31;
+    !(is_first_day && utc_minute_of_day < 0 || is_last_day && utc_minute_of_day >= MINUTES_PER_DAY)
 }
 
 /// `YYYY-MM-DD`.
@@ -35,19 +57,21 @@ fn read_date(text: &str) -> Option<DateValue> {
     DateValue::new(year, month, day)
 }
 
-/// `HH:MM:SS[.fraction]`, keeping at most six fraction digits.
+/// `HH:MM:SS[.fraction]`, keeping at most six fraction digits; second 60 reads as
+/// `59.999999`.
 fn read_time(text: &str) -> Option<TimeOfDay> {
     let (clock, fraction) = text.split_once('.').unwrap_or((text, ""));
     let mut fields = clock.split(':');
     let hour = fields.next()?.parse().ok()?;
     let minute = fields.next()?.parse().ok()?;
-    let second = fields.next()?.parse().ok()?;
+    let second: u8 = fields.next()?.parse().ok()?;
     if fields.next().is_some() {
         return None;
     }
-    let kept = fraction
-        .get(..TimeOfDay::MAXIMUM_FRACTION_DIGITS)
-        .unwrap_or(fraction);
+    if second == 60 {
+        return TimeOfDay::new(hour, minute, 59, &"9".repeat(MAXIMUM_FRACTION_DIGITS));
+    }
+    let kept = fraction.get(..MAXIMUM_FRACTION_DIGITS).unwrap_or(fraction);
     TimeOfDay::new(hour, minute, second, kept)
 }
 
