@@ -12,6 +12,7 @@ use crate::error::{GenerateError, InvariantViolation};
 use crate::expression::{Columns, Environment, ExpressionWriter};
 use crate::identifiers::{Source, classify_source, quote, source_sql};
 use crate::parameters::Parameters;
+use crate::source_columns::{empty_scan_item, source_catalog_column, source_column_name};
 use crate::types::physical_type;
 
 /// A node already written: the name of its step and the `ORDER BY` its rows keep.
@@ -82,7 +83,9 @@ impl<'input> StepWriter<'input> {
 
     /// Each schema column is the expression of the field of the same name, over the columns of
     /// the catalog relation whose `source` is the dataset's, character for character (CAT-4),
-    /// a query `source` included (E6-4.3).
+    /// a query `source` included (E6-4.3); a schema column that names a catalog column is that
+    /// column, in the catalog's spelling (PLN-2.2). A `Scan` with no column selects one
+    /// constant, so that the rows can still be counted.
     fn scan(
         &mut self,
         node: &'input PlanNode,
@@ -103,6 +106,16 @@ impl<'input> StepWriter<'input> {
             .ok_or_else(|| error(InvariantViolation::UnknownRelation, node))?;
         let mut items = Vec::new();
         for column in node.schema().columns() {
+            if let Some(name) = source_column_name(column.name.as_str()) {
+                let catalog_column = source_catalog_column(relation, name)
+                    .ok_or_else(|| error(InvariantViolation::UnknownColumn, node))?;
+                items.push(format!(
+                    "{} AS {}",
+                    quote(&catalog_column.name),
+                    quote(column.name.as_str())
+                ));
+                continue;
+            }
             let field = dataset
                 .fields
                 .iter()
@@ -114,6 +127,9 @@ impl<'input> StepWriter<'input> {
                 .ok_or_else(|| error(InvariantViolation::FieldWithoutExpression, node))?;
             let value = self.expression(node, Columns::Catalog(relation), expression)?;
             items.push(format!("{value} AS {}", quote(column.name.as_str())));
+        }
+        if items.is_empty() {
+            items.push(empty_scan_item());
         }
         Ok(SelectBody {
             items,
