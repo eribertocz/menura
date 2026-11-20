@@ -24,7 +24,7 @@ use crate::types::catalog::{CatalogSchemaDocument, CatalogStateDocument};
 /// # Example
 ///
 /// ```
-/// use semantic_compiler_contracts::{AdmissionCode, admit_catalog_schema};
+/// use menura_contracts::{AdmissionCode, admit_catalog_schema};
 ///
 /// let error = admit_catalog_schema("{}").unwrap_err();
 /// assert_eq!(error.code, AdmissionCode::Ecat02);

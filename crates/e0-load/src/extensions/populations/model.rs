@@ -1,6 +1,6 @@
 //! A population of the `populations` extension (POP-2), as data types only.
 
-use semantic_compiler_contracts::types::common::Grain;
+use menura_contracts::types::common::Grain;
 
 use crate::pointer::JsonPointer;
 use crate::read::Location;

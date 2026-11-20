@@ -5,7 +5,7 @@
 
 use std::collections::HashMap;
 
-use semantic_compiler_model::expression::Reference;
+use menura_model::expression::Reference;
 
 use super::elements::{ElementTypes, column, record};
 use super::output::ElementKind;

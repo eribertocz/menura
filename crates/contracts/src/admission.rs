@@ -16,13 +16,13 @@ use crate::types::compiled_plan::InputDocument;
 /// An incoming contract document.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum IncomingContract {
-    /// `semantic_compiler.catalog_schema`.
+    /// `menura.catalog_schema`.
     CatalogSchema,
-    /// `semantic_compiler.catalog_state`.
+    /// `menura.catalog_state`.
     CatalogState,
-    /// `semantic_compiler.query`.
+    /// `menura.query`.
     Query,
-    /// `semantic_compiler.security_context`.
+    /// `menura.security_context`.
     SecurityContext,
 }
 
@@ -179,7 +179,8 @@ impl IncomingContract {
         })
     }
 
-    /// Checks that `contract` names this contract and `contract_version` is accepted (CAT-3.2).
+    /// Checks that `contract` names this contract, with its name or its former name (CON-0.5),
+    /// and `contract_version` is accepted (CAT-3.2).
     ///
     /// # Errors
     ///
@@ -189,9 +190,7 @@ impl IncomingContract {
         if kind.supports(document) {
             return Ok(());
         }
-        let names_contract =
-            document.get("contract").and_then(Value::as_str) == Some(kind.contract_name());
-        let (pointer, message) = if names_contract {
+        let (pointer, message) = if kind.is_named_by(document) {
             let latest = kind.latest_version();
             (
                 "/contract_version",

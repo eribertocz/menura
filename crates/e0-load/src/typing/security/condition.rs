@@ -1,8 +1,8 @@
 //! The problems of one row-policy condition (SCY-5.1.6).
 
-use semantic_compiler_contracts::types::common::LogicalType;
-use semantic_compiler_model::expression::{Expression, Reference};
-use semantic_compiler_security::{AttributeType, ScalarType, misplaced_list_attributes};
+use menura_contracts::types::common::LogicalType;
+use menura_model::expression::{Expression, Reference};
+use menura_security::{AttributeType, ScalarType, misplaced_list_attributes};
 
 use super::{FieldLookup, Fields};
 use crate::expressions::{ExpressionPlace, parse_element_expression};

@@ -4,18 +4,14 @@
 #[cfg(test)]
 mod support;
 
-use semantic_compiler_contracts::ContractKind;
-use semantic_compiler_contracts::types::ContractDocument;
-use semantic_compiler_contracts::types::audit_record::AuditRecordDocument;
-use semantic_compiler_contracts::types::catalog::{CatalogSchemaDocument, CatalogStateDocument};
-use semantic_compiler_contracts::types::compiled_plan::{
-    CompileErrorDocument, CompiledPlanDocument,
-};
-use semantic_compiler_contracts::types::descriptions::{
-    IntegrityChecksDocument, ModelDescriptionDocument,
-};
-use semantic_compiler_contracts::types::query::QueryDocument;
-use semantic_compiler_contracts::types::security_context::SecurityContextDocument;
+use menura_contracts::types::ContractDocument;
+use menura_contracts::types::audit_record::AuditRecordDocument;
+use menura_contracts::types::catalog::{CatalogSchemaDocument, CatalogStateDocument};
+use menura_contracts::types::compiled_plan::{CompileErrorDocument, CompiledPlanDocument};
+use menura_contracts::types::descriptions::{IntegrityChecksDocument, ModelDescriptionDocument};
+use menura_contracts::types::query::QueryDocument;
+use menura_contracts::types::security_context::SecurityContextDocument;
+use menura_contracts::{ContractKind, ContractVersion, FORMER_NAMESPACE, NAMESPACE};
 use serde_json::{Value, json};
 use support::{adding, assert_invalid_at, assert_valid, example, examples, with, without};
 
@@ -42,14 +38,18 @@ fn round_trip_of(kind: ContractKind, document: &Value) -> Option<Value> {
 #[test]
 fn con_0_1_every_public_contract_has_a_kind() {
     let readme = include_str!("../../../spec/contracts/README.md");
+    // The table names each contract with its name or its former name (CON-0.5), so only the
+    // part after the namespace is compared.
     let listed: Vec<&str> = readme
         .lines()
         .filter_map(|line| line.split('`').nth(1))
-        .filter(|name| name.starts_with("semantic_compiler."))
+        .filter_map(|name| name.split_once('.'))
+        .filter(|(namespace, _)| [NAMESPACE, FORMER_NAMESPACE].contains(namespace))
+        .map(|(_, local_name)| local_name)
         .collect();
     let kinds: Vec<&str> = ContractKind::ALL
         .iter()
-        .map(|kind| kind.contract_name())
+        .map(|kind| kind.local_name())
         .collect();
     assert_eq!(listed, kinds);
 }
@@ -65,10 +65,14 @@ fn con_0_2_every_contract_has_a_valid_example_and_a_versioned_schema_id() {
     for example in examples() {
         let document: Value = serde_json::from_str(example.text).expect("example is JSON");
         assert_valid(example.kind, &document);
-        assert_eq!(
-            document["contract_version"].as_str(),
-            Some(example.kind.latest_version().to_string().as_str()),
-            "{}",
+        // An example may still carry a previous minor version (CON-0.5); it must be accepted.
+        let version = document["contract_version"]
+            .as_str()
+            .and_then(ContractVersion::parse)
+            .expect("the example has a contract version");
+        assert!(
+            example.kind.accepts_version(version),
+            "{}: version {version} is accepted",
             example.file
         );
     }
@@ -160,11 +164,7 @@ fn pln_1_compiled_plan_schema() {
         kind,
         &with(document.clone(), "/cache_key/data_versions", Value::Null),
     );
-    let explanation = with(
-        document.clone(),
-        "/contract",
-        json!("semantic_compiler.explanation"),
-    );
+    let explanation = with(document.clone(), "/contract", json!("menura.explanation"));
     assert_invalid_at(kind, &explanation, "/parameters");
     let explanation = with(
         with(explanation, "/sql", json!("")),
@@ -188,7 +188,7 @@ fn pln_5_compile_error_schema() {
     let report = with(
         document.clone(),
         "/contract",
-        json!("semantic_compiler.validation_report"),
+        json!("menura.validation_report"),
     );
     assert_valid(kind, &with(report, "/errors", json!([])));
     assert_invalid_at(

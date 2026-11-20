@@ -1,6 +1,6 @@
 //! The text of typed literals and the `CAST` target types.
 
-use semantic_compiler_model::expression::{
+use menura_model::expression::{
     CastTarget, DateValue, DecimalTarget, Literal, TimeOfDay, TimestampValue,
 };
 

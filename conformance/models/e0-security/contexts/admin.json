@@ -1,6 +1,6 @@
 {
-  "contract": "semantic_compiler.security_context",
-  "contract_version": "1.0.0",
+  "contract": "menura.security_context",
+  "contract_version": "1.1.0",
   "subject": "security-admin",
   "roles": [
     "admin"

@@ -1,8 +1,8 @@
 //! Names, source locations and descriptions of the elements, read from the data tree
 //! (E0H-1.5, E0H-2 "Descriptions").
 
-use semantic_compiler_model::internal_model::{Descriptions, NormalizedName, SourceLocation};
-use semantic_compiler_model::json::JsonForm;
+use menura_model::internal_model::{Descriptions, NormalizedName, SourceLocation};
+use menura_model::json::JsonForm;
 
 use crate::names::Name;
 use crate::nodes::{member, text};

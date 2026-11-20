@@ -1,6 +1,6 @@
 //! The normalized expression tree (E0H-1.3).
 //!
-//! The crate `semantic-compiler-expressions` is the only producer of these trees from
+//! The crate `menura-expressions` is the only producer of these trees from
 //! expression text (S10). A tree records meaning, never format: whitespace, keyword case and
 //! parentheses leave no trace in it, so formulas that differ only in those produce equal trees.
 //!

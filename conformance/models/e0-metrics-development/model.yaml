@@ -3,7 +3,7 @@ name: e0_metrics_development
 description: Development-line model whose dataset metrics are classified with the metric's own dataset as home dataset
 nonportable_extensions:
   - vendor_name: COMMON
-    data: {namespace: semantic_compiler, version: 1, security_context: {roles: [analyst], attributes: []}}
+    data: {namespace: menura, version: 1, security_context: {roles: [analyst], attributes: []}}
 datasets:
   - name: orders
     source: shop.main.orders
@@ -28,4 +28,4 @@ datasets:
         expression: {sql: 1 + 2}
     nonportable_extensions:
       - vendor_name: COMMON
-        data: {namespace: semantic_compiler, version: 1, access: {mode: roles, roles: [analyst]}}
+        data: {namespace: menura, version: 1, access: {mode: roles, roles: [analyst]}}

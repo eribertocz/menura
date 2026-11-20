@@ -17,10 +17,10 @@ mod resolution;
 
 use std::fmt;
 
-use semantic_compiler_contracts::types::audit_record::LoadOptions;
-use semantic_compiler_contracts::types::catalog::CatalogSchemaDocument;
-use semantic_compiler_contracts::types::compiled_plan::Diagnostic;
-use semantic_compiler_model::internal_model::InternalModel;
+use menura_contracts::types::audit_record::LoadOptions;
+use menura_contracts::types::catalog::CatalogSchemaDocument;
+use menura_contracts::types::compiled_plan::Diagnostic;
+use menura_model::internal_model::InternalModel;
 
 use crate::extensions::summaries::datasets::summary_datasets;
 use crate::internal_model::{ModelInput, build_internal_model};
@@ -69,13 +69,13 @@ impl std::error::Error for LoadRejection {}
 /// # Example
 ///
 /// ```
-/// use semantic_compiler_contracts::types::audit_record::{LoadOptions, OssieFormat};
-/// use semantic_compiler_e0_load::load_model;
+/// use menura_contracts::types::audit_record::{LoadOptions, OssieFormat};
+/// use menura_e0_load::load_model;
 ///
 /// let options = LoadOptions {
 ///     grant_authenticated_to_all: false,
 ///     ossie_format: OssieFormat::Release,
-///     namespace: "semantic_compiler".to_owned(),
+///     namespace: "menura".to_owned(),
 ///     model_name: None,
 /// };
 /// let rejection = load_model(b"version: \"0.1.1\"", b"{}", &options).unwrap_err();

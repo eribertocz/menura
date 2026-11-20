@@ -1,8 +1,8 @@
 //! Identifier normalization and comparison (E0D-1, CON-5), shared by the substages that compare
 //! names.
 
-use semantic_compiler_contracts::normalize_unquoted_identifier;
-use semantic_compiler_model::expression::Identifier;
+use menura_contracts::normalize_unquoted_identifier;
+use menura_model::expression::Identifier;
 
 /// The most characters an identifier may have (E0D-1.2).
 pub(crate) const MAXIMUM_LENGTH: usize = 128;
@@ -98,7 +98,7 @@ pub(crate) fn is_too_long(text: &str) -> bool {
 
 #[cfg(test)]
 mod tests {
-    use semantic_compiler_model::expression::Identifier;
+    use menura_model::expression::Identifier;
 
     use super::{MAXIMUM_LENGTH, Name, identifier_text, is_delimited, is_malformed, is_too_long};
 

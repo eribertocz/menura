@@ -2,7 +2,7 @@
 
 use std::collections::BTreeSet;
 
-use semantic_compiler_contracts::types::audit_record::OssieFormat;
+use menura_contracts::types::audit_record::OssieFormat;
 
 use super::super::Classification;
 use super::super::output::{Additivity, QueryError};
@@ -15,7 +15,7 @@ use crate::extensions::derived::fixture::{
 use crate::names::Name;
 use crate::pointer::JsonPointer;
 use crate::typing::TypingCode;
-use semantic_compiler_contracts::types::common::{FloatBits, LogicalType};
+use menura_contracts::types::common::{FloatBits, LogicalType};
 
 fn classify(model: &str) -> Classification {
     classify_in_format(model, CATALOG, OssieFormat::Release)

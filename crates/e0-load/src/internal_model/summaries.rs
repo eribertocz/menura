@@ -1,9 +1,9 @@
 //! The summaries of the internal model and their definition hashes (E0H-2 "Summaries",
 //! E0H-3.3).
 
-use semantic_compiler_contracts::hash_value;
-use semantic_compiler_contracts::types::common::Grain;
-use semantic_compiler_model::internal_model::{
+use menura_contracts::hash_value;
+use menura_contracts::types::common::Grain;
+use menura_model::internal_model::{
     Dataset, NormalizedName, Summary, SummaryDimension, SummaryMeasure,
 };
 use serde_json::Value as Json;

@@ -64,7 +64,7 @@ impl fmt::Display for Sha256Hash {
 /// # Example
 ///
 /// ```
-/// use semantic_compiler_contracts::hash_value;
+/// use menura_contracts::hash_value;
 ///
 /// let hash = hash_value(&serde_json::json!({}));
 /// assert_eq!(

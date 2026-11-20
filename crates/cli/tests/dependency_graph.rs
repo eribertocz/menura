@@ -11,7 +11,7 @@ use std::io;
 use std::path::{Path, PathBuf};
 
 /// Prefix shared by every package of this workspace.
-const PACKAGE_PREFIX: &str = "semantic-compiler-";
+const PACKAGE_PREFIX: &str = "menura-";
 
 /// Layers of `spec/05-engineering-standards.md` §5.2, from the bottom up.
 /// A crate may depend only on crates of a strictly lower layer.

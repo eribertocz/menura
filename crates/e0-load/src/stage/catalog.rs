@@ -1,10 +1,8 @@
 //! Admission of the catalog schema before E0.a (E0-3.2, CAT-9.1).
 
-use semantic_compiler_contracts::admit_catalog_schema;
-use semantic_compiler_contracts::types::catalog::CatalogSchemaDocument;
-use semantic_compiler_contracts::types::compiled_plan::{
-    Diagnostic, DiagnosticLocation, InputDocument,
-};
+use menura_contracts::admit_catalog_schema;
+use menura_contracts::types::catalog::CatalogSchemaDocument;
+use menura_contracts::types::compiled_plan::{Diagnostic, DiagnosticLocation, InputDocument};
 
 use super::report::Report;
 

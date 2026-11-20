@@ -1,13 +1,9 @@
 //! The diagnostics of a load in report order (E0-3.2, E0-4.3): the catalog schema errors
 //! first, then each substage in order, each in document order then by code.
 
-use semantic_compiler_contracts::AdmissionError;
-use semantic_compiler_contracts::types::compiled_plan::{
-    Diagnostic, DiagnosticLocation, InputDocument,
-};
-use semantic_compiler_model::internal_model::{
-    DiagnosticCode, InternalModel, SourceLocation, Warning,
-};
+use menura_contracts::AdmissionError;
+use menura_contracts::types::compiled_plan::{Diagnostic, DiagnosticLocation, InputDocument};
+use menura_model::internal_model::{DiagnosticCode, InternalModel, SourceLocation, Warning};
 
 use super::LoadRejection;
 use super::findings::{Finding, Substage};

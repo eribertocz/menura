@@ -1,7 +1,7 @@
 //! Selection of the semantic model to compile with the load option `model_name` (E0B-3.2,
 //! DEV-7).
 
-use semantic_compiler_contracts::normalize_unquoted_identifier;
+use menura_contracts::normalize_unquoted_identifier;
 
 use super::diagnostic::{StructureCode, StructureDiagnostic};
 use crate::names::is_malformed;

@@ -4,7 +4,7 @@ semantic_model:
     description: Expression parsing (E0F-2, E0F-9 to E0F-11, E0H-1.3) with one metric per accepted or rejected form
     custom_extensions:
       - vendor_name: COMMON
-        data: '{"namespace": "semantic_compiler", "version": 1, "security_context": {"roles": ["analyst"], "attributes": []}}'
+        data: '{"namespace": "menura", "version": 1, "security_context": {"roles": ["analyst"], "attributes": []}}'
     datasets:
       - name: orders
         source: shop.main.orders
@@ -20,7 +20,7 @@ semantic_model:
             expression: {dialects: [{dialect: ANSI_SQL, expression: ordered_on}]}
         custom_extensions:
           - vendor_name: COMMON
-            data: '{"namespace": "semantic_compiler", "version": 1, "access": {"mode": "roles", "roles": ["analyst"]}}'
+            data: '{"namespace": "menura", "version": 1, "access": {"mode": "roles", "roles": ["analyst"]}}'
     metrics:
       - name: total_amount
         expression: {dialects: [{dialect: ANSI_SQL, expression: SUM(orders.amount)}]}

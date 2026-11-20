@@ -1,13 +1,13 @@
 //! The load options of architecture section 3.5, as a JSON object (ARC-5.5).
 
-use semantic_compiler_core::{LoadOptions, OssieFormat};
+use menura_core::{LoadOptions, OssieFormat};
 
 #[test]
 fn arc_5_5_an_omitted_option_takes_its_default() {
     let options = LoadOptions::from_json(b"{}").unwrap();
     assert_eq!(options, LoadOptions::default());
     assert_eq!(options.ossie_format, OssieFormat::Release);
-    assert_eq!(options.namespace, "semantic_compiler");
+    assert_eq!(options.namespace, "menura");
     assert!(!options.grant_authenticated_to_all);
     assert_eq!(options.model_name, None);
     assert_eq!(options.data_source, None);

@@ -2,7 +2,7 @@
 
 use std::collections::BTreeSet;
 
-use semantic_compiler_security::{AttributeType, Role};
+use menura_security::{AttributeType, Role};
 use serde_json::Value as Json;
 
 use super::model::{Attribute, SecurityContextDeclaration};

@@ -1,5 +1,5 @@
 {
-  "contract": "semantic_compiler.catalog_schema",
+  "contract": "menura.catalog_schema",
   "contract_version": "0.9.0",
   "document_id": {
     "origin": "warehouse:gold",

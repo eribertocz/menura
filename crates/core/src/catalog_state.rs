@@ -1,15 +1,13 @@
 //! Admission of a catalog state against a loaded model (CAT-9.1, ARC-5.2), including the
 //! summary builds of CAT-8.8, which need the model's summaries (SUM-6.1.8).
 
-use semantic_compiler_contracts::admit_catalog_state;
-use semantic_compiler_contracts::types::catalog::{
+use menura_contracts::admit_catalog_state;
+use menura_contracts::types::catalog::{
     AggregateBuild, CatalogSchemaDocument, CatalogStateDocument, RelationData,
 };
-use semantic_compiler_contracts::types::common::Grain;
-use semantic_compiler_contracts::types::compiled_plan::{
-    Diagnostic, DiagnosticLocation, InputDocument,
-};
-use semantic_compiler_model::internal_model::{InternalModel, Summary};
+use menura_contracts::types::common::Grain;
+use menura_contracts::types::compiled_plan::{Diagnostic, DiagnosticLocation, InputDocument};
+use menura_model::internal_model::{InternalModel, Summary};
 
 /// The code of a state that is not valid UTF-8 JSON (CAT-9.1).
 const NOT_JSON: &str = "WCAT-01";

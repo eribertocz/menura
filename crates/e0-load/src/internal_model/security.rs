@@ -1,11 +1,11 @@
 //! The security of the model in the form of the internal model (E0H-2 "Security"): roles,
 //! attributes, dataset access and parsed row policies.
 
-use semantic_compiler_model::internal_model::{
+use menura_model::internal_model::{
     AccessMode, AttributeType, DatasetAccess, FieldRestriction, RoleName, RowPolicy, ScalarType,
     SecurityAttribute, SecurityContext,
 };
-use semantic_compiler_security as security;
+use menura_security as security;
 
 use super::located::{located, written};
 use super::trees::parse;

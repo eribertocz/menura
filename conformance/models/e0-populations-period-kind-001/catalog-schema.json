@@ -1,6 +1,6 @@
 {
-  "contract": "semantic_compiler.catalog_schema",
-  "contract_version": "1.0.0",
+  "contract": "menura.catalog_schema",
+  "contract_version": "1.1.0",
   "document_id": {
     "origin": "conformance:e0-populations-period-kind-001",
     "snapshot": "e0-populations-period-kind-001"

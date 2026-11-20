@@ -3,8 +3,8 @@ rules: [E0B-3.3, W0B-02, OSS-2.2]
 model: e0-structure-variants
 security_context: analyst.json
 query:
-  contract: semantic_compiler.query
-  contract_version: "1.0.0"
+  contract: menura.query
+  contract_version: "1.1.0"
   reference_time: "2026-11-15T12:00:00-04:00"
   time_zone: UTC
   query:

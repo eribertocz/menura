@@ -4,7 +4,7 @@
 
 use std::collections::{HashMap, HashSet};
 
-use semantic_compiler_model::expression::Expression;
+use menura_model::expression::Expression;
 
 use super::output::{DatasetIndex, Relationships};
 use crate::expressions::{ExpressionPlace, parse_element_expression};

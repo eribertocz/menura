@@ -2,7 +2,7 @@
 //! `USER_ATTRIBUTE('name')`, and the detection of calls outside the subset and of window
 //! functions (E0F-2.4, E0F-2.6, E0F-9.4).
 
-use semantic_compiler_model::expression::Expression;
+use menura_model::expression::Expression;
 
 use super::{Parsed, Parser};
 use crate::error::{ExpressionError, ExpressionErrorKind, Span};

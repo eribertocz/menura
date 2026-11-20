@@ -3,8 +3,8 @@
 
 use std::collections::HashMap;
 
-use semantic_compiler_model::expression::Expression;
-use semantic_compiler_model::internal_model::{TypedValue, ValueType};
+use menura_model::expression::Expression;
+use menura_model::internal_model::{TypedValue, ValueType};
 
 use super::ModelInput;
 use super::index::ModelIndex;

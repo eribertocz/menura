@@ -1,9 +1,7 @@
 //! The type of an expression: a logical type of the catalog schema (CAT-4.1) or the type of
 //! the literal `NULL`, with whether the expression can be NULL (E0F-7.1).
 
-use semantic_compiler_contracts::types::common::{
-    FloatBits, IntegerBits, LogicalType, TimestampPrecision,
-};
+use menura_contracts::types::common::{FloatBits, IntegerBits, LogicalType, TimestampPrecision};
 
 /// The type of an expression.
 #[derive(Debug, Clone, PartialEq, Eq)]

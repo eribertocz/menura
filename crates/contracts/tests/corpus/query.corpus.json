@@ -14,6 +14,38 @@
       "example": "query.sql-form.example.json"
     },
     {
+      "name": "menura contract name and version 1.1.0 (CON-0.5)",
+      "valid": true,
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/contract",
+          "value": "menura.query"
+        },
+        {
+          "op": "replace",
+          "path": "/contract_version",
+          "value": "1.1.0"
+        }
+      ]
+    },
+    {
+      "name": "former contract name and version 1.0.0 (CON-0.5)",
+      "valid": true,
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/contract",
+          "value": "semantic_compiler.query"
+        },
+        {
+          "op": "replace",
+          "path": "/contract_version",
+          "value": "1.0.0"
+        }
+      ]
+    },
+    {
       "name": "aliased dimension",
       "valid": true,
       "patch": [

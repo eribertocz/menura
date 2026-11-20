@@ -6,19 +6,22 @@ use serde::{Deserialize, Serialize};
 
 use crate::contract::ContractVersion;
 
-/// The `contract` value `semantic_compiler.security_context`.
+/// The `contract` value `menura.security_context`, or its former name (CON-0.5).
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 pub enum SecurityContextContract {
-    /// The only value.
-    #[serde(rename = "semantic_compiler.security_context")]
+    /// The name the compiler writes (CON-0.5).
+    #[serde(rename = "menura.security_context")]
     SecurityContext,
+    /// The former name, read until 1.0.0 and never written (CON-0.5).
+    #[serde(rename = "semantic_compiler.security_context")]
+    FormerSecurityContext,
 }
 
 /// Who is asking (SEC-2). The host has already authenticated the subject.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct SecurityContextDocument {
-    /// Always `semantic_compiler.security_context`.
+    /// `menura.security_context`, or its former name.
     pub contract: SecurityContextContract,
     /// Contract version.
     pub contract_version: ContractVersion,

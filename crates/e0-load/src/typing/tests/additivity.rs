@@ -1,8 +1,8 @@
 //! The `over` and the population of additivity declarations in E0.f: ADD-5.1.5, ADD-5.1.7,
 //! `E0C-12` and `E0C-17`.
 
-use semantic_compiler_contracts::admit_catalog_schema;
-use semantic_compiler_contracts::types::audit_record::OssieFormat;
+use menura_contracts::admit_catalog_schema;
+use menura_contracts::types::audit_record::OssieFormat;
 
 use crate::extensions::additivity::fixture::{
     CATALOG, DEBT_BALANCE_DATA, MODEL, conformance_model, with_additivity, with_example,

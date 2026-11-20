@@ -3,8 +3,8 @@
 
 use std::collections::HashMap;
 
-use semantic_compiler_contracts::types::catalog::CatalogSchemaDocument;
-use semantic_compiler_model::expression::Expression;
+use menura_contracts::types::catalog::CatalogSchemaDocument;
+use menura_model::expression::Expression;
 
 use crate::columns::Columns;
 use crate::expressions::{ExpressionPlace, parse_element_expression};

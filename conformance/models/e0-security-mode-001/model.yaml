@@ -4,7 +4,7 @@ semantic_model:
     description: 'An access mode outside SCY-3'
     custom_extensions:
       - vendor_name: COMMON
-        data: '{"namespace": "semantic_compiler", "version": 1, "security_context": {"roles": ["admin", "analyst"], "attributes": [{"name": "regions", "type": "list<text>"}, {"name": "area_id", "type": "integer"}, {"name": "limit", "type": "decimal(18,2)"}]}}'
+        data: '{"namespace": "menura", "version": 1, "security_context": {"roles": ["admin", "analyst"], "attributes": [{"name": "regions", "type": "list<text>"}, {"name": "area_id", "type": "integer"}, {"name": "limit", "type": "decimal(18,2)"}]}}'
     datasets:
       - name: orders
         source: shop.main.orders
@@ -22,7 +22,7 @@ semantic_model:
             expression: {dialects: [{dialect: ANSI_SQL, expression: 'unit_cost'}]}
         custom_extensions:
           - vendor_name: COMMON
-            data: '{"namespace": "semantic_compiler", "version": 1, "access": {"mode": "public"}, "row_access": [{"name": "region_scope", "condition": "region IN (USER_ATTRIBUTE(''regions''))", "roles": ["analyst"]}, {"name": "open_scope", "condition": "TRUE", "roles": ["admin"]}]}'
+            data: '{"namespace": "menura", "version": 1, "access": {"mode": "public"}, "row_access": [{"name": "region_scope", "condition": "region IN (USER_ATTRIBUTE(''regions''))", "roles": ["analyst"]}, {"name": "open_scope", "condition": "TRUE", "roles": ["admin"]}]}'
       - name: notes
         source: shop.main.notes
         primary_key: [note_id]

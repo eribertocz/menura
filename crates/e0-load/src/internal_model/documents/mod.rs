@@ -10,11 +10,9 @@ pub(super) use elements::{
 };
 pub(super) use metrics::{metric, metric_definition};
 
-use semantic_compiler_model::expression::Expression;
-use semantic_compiler_model::internal_model::{
-    DiagnosticCode, NormalizedName, TypedValue, ValueType,
-};
-use semantic_compiler_model::json::JsonForm;
+use menura_model::expression::Expression;
+use menura_model::internal_model::{DiagnosticCode, NormalizedName, TypedValue, ValueType};
+use menura_model::json::JsonForm;
 use serde::Serialize;
 use serde_json::{Map, Number, Value as Json};
 

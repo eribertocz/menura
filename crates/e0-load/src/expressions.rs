@@ -1,9 +1,9 @@
 //! Substage E0.f, parsing only: turns the expression text of a model element into its
-//! normalized tree through the crate `semantic-compiler-expressions`, the only expression
+//! normalized tree through the crate `menura-expressions`, the only expression
 //! parser (S10), and turns a failure into the element's E0 diagnostic (E0-4.1, E0F-8).
 
-use semantic_compiler_expressions::{ExpressionCode, ExpressionError, ExpressionErrorKind, parse};
-use semantic_compiler_model::expression::Expression;
+use menura_expressions::{ExpressionCode, ExpressionError, ExpressionErrorKind, parse};
+use menura_model::expression::Expression;
 
 /// Where an expression appears in the model; it decides the code of a window function.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -91,10 +91,7 @@ mod tests {
     fn s10_e0_parses_through_the_expressions_crate() {
         let tree = parse_element_expression("sum((orders.amount))", ExpressionPlace::Metric)
             .expect("the expression parses");
-        assert_eq!(
-            Ok(tree),
-            semantic_compiler_expressions::parse("SUM(orders.amount)")
-        );
+        assert_eq!(Ok(tree), menura_expressions::parse("SUM(orders.amount)"));
     }
 
     #[test]

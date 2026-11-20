@@ -5,7 +5,7 @@
 //! `ossie_format: development`. Cases with `load_options` (CS-2.7) follow once the runner reads
 //! them (#115).
 
-use semantic_compiler_contracts::types::audit_record::OssieFormat;
+use menura_contracts::types::audit_record::OssieFormat;
 
 use super::diagnostic::{StructureCode, StructureDiagnostic};
 use super::output::{CompiledVariant, DeclaredDatatype, ElementKind, LogicalKind, Structure};

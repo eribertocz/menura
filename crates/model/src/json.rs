@@ -31,7 +31,7 @@ impl JsonForm {
     /// An object with `members`.
     ///
     /// ```
-    /// use semantic_compiler_model::json::JsonForm;
+    /// use menura_model::json::JsonForm;
     /// let object = JsonForm::object([("node", JsonForm::text("current_date"))]);
     /// assert_eq!(object, JsonForm::object([("node", JsonForm::text("current_date"))]));
     /// ```

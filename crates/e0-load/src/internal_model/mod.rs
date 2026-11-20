@@ -5,7 +5,7 @@
 //! to the elements that read it (E0-4.2a), removes the relationships made unusable after E0.e
 //! from the graph and recomputes reachability with the E0.e algorithm (E0H-2.3).
 
-use semantic_compiler_model::internal_model::{
+use menura_model::internal_model::{
     Dataset, ElementKind, InternalModel, ModelParts, NormalizedName, Summary, UnusableElement,
 };
 

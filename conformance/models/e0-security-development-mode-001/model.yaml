@@ -3,7 +3,7 @@ name: e0_security_development
 description: 'Development-line access without mode'
 nonportable_extensions:
   - vendor_name: COMMON
-    data: {namespace: semantic_compiler, version: 1, security_context: {roles: [admin, analyst], attributes: [{name: regions, type: list<text>}]}}
+    data: {namespace: menura, version: 1, security_context: {roles: [admin, analyst], attributes: [{name: regions, type: list<text>}]}}
 datasets:
   - name: orders
     source: shop.main.orders
@@ -19,7 +19,7 @@ datasets:
         expression: {sql: unit_cost}
     nonportable_extensions:
       - vendor_name: COMMON
-        data: {namespace: semantic_compiler, version: 1, access: {roles: [analyst]}, row_access: [{name: region_scope, condition: "region IN (USER_ATTRIBUTE('regions'))", roles: [analyst]}]}
+        data: {namespace: menura, version: 1, access: {roles: [analyst]}, row_access: [{name: region_scope, condition: "region IN (USER_ATTRIBUTE('regions'))", roles: [analyst]}]}
   - name: notes
     source: shop.main.notes
     primary_key: [note_id]
@@ -30,7 +30,7 @@ datasets:
         expression: {sql: body}
     nonportable_extensions:
       - vendor_name: COMMON
-        data: {namespace: semantic_compiler, version: 1, access: {mode: authenticated}}
+        data: {namespace: menura, version: 1, access: {mode: authenticated}}
 metrics:
   - name: total_amount
     expression: {sql: SUM(orders.amount)}

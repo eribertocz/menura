@@ -1,6 +1,6 @@
 //! The helpers the tests of the security extension in E0.c share.
 
-use semantic_compiler_contracts::types::audit_record::OssieFormat;
+use menura_contracts::types::audit_record::OssieFormat;
 
 use super::fixture::{ORDERS_DATA, with_access};
 use crate::extensions::output::{Extensions, ExtensionsFailure};

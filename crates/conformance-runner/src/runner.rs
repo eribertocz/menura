@@ -4,7 +4,7 @@
 use std::fs;
 use std::path::{Path, PathBuf};
 
-use semantic_compiler_core::LoadOptions;
+use menura_core::LoadOptions;
 
 use crate::case::Case;
 use crate::case_file::read_case;
@@ -135,7 +135,7 @@ pub(crate) fn list_directory(directory: &Path) -> Result<Vec<PathBuf>, RunnerErr
 
 #[cfg(test)]
 mod tests {
-    use semantic_compiler_core::OssieFormat;
+    use menura_core::OssieFormat;
 
     use super::*;
     use crate::case_file::parse_case;
@@ -161,7 +161,7 @@ expect: {outcome: load_error, error: E0D-02}
         let options = prepare_case(&conformance_directory(), &case).unwrap();
         assert_eq!(options.ossie_format, OssieFormat::Development);
         assert!(!options.grant_authenticated_to_all);
-        assert_eq!(options.namespace, "semantic_compiler");
+        assert_eq!(options.namespace, "menura");
     }
 
     #[test]

@@ -7,8 +7,8 @@
 
 use std::num::NonZeroU64;
 
-use semantic_compiler_contracts::types::audit_record::OssieFormat;
-use semantic_compiler_contracts::types::common::Grain;
+use menura_contracts::types::audit_record::OssieFormat;
+use menura_contracts::types::common::Grain;
 
 use super::Modifier;
 use super::fixture::{

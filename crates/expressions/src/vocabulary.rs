@@ -2,7 +2,7 @@
 //! and their arities (E0F-10), aggregates (E0F-10.5), date parts (E0F-10.1) and `CAST` target
 //! types (E0F-11). Each list is one table here.
 
-use semantic_compiler_model::expression::{
+use menura_model::expression::{
     CastTarget, DateUnit, ExtractPart, ScalarFunction, SimpleAggregate,
 };
 

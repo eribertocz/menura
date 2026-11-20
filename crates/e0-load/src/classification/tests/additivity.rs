@@ -8,7 +8,7 @@ use crate::extensions::additivity::DeclaredAdditivity;
 use crate::extensions::additivity::fixture::{
     CATALOG, DEBT_BALANCE, MODEL, STRICT_BALANCE, conformance_model, with_debt_balance_expression,
 };
-use semantic_compiler_contracts::types::audit_record::OssieFormat;
+use menura_contracts::types::audit_record::OssieFormat;
 
 use super::super::Classification;
 

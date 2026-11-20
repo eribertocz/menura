@@ -1,6 +1,6 @@
 //! The listed values of the keys of an additivity declaration (ADD-3).
 
-use semantic_compiler_contracts::types::common::Grain;
+use menura_contracts::types::common::Grain;
 
 use super::model::{NullHandling, Selection, StaleHandling, UnexpectedHandling};
 

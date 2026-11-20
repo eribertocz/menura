@@ -8,19 +8,22 @@ use super::common::{Decision, Producer};
 use crate::contract::ContractVersion;
 use crate::hash::Sha256Hash;
 
-/// The `contract` value `semantic_compiler.audit_record`.
+/// The `contract` value `menura.audit_record`, or its former name (CON-0.5).
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 pub enum AuditRecordContract {
-    /// The only value.
-    #[serde(rename = "semantic_compiler.audit_record")]
+    /// The name the compiler writes (CON-0.5).
+    #[serde(rename = "menura.audit_record")]
     AuditRecord,
+    /// The former name, read until 1.0.0 and never written (CON-0.5).
+    #[serde(rename = "semantic_compiler.audit_record")]
+    FormerAuditRecord,
 }
 
 /// An audit record of one compilation. It holds no data values and no attribute values.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct AuditRecordDocument {
-    /// Always `semantic_compiler.audit_record`.
+    /// `menura.audit_record`, or its former name.
     pub contract: AuditRecordContract,
     /// Contract version.
     pub contract_version: ContractVersion,

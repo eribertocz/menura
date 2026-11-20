@@ -54,7 +54,7 @@ use crate::structure::SelectedModel;
         reason = "the stage function takes the namespace from the load options; only the substage tests use the default"
     )
 )]
-pub(crate) const DEFAULT_NAMESPACE: &str = "semantic_compiler";
+pub(crate) const DEFAULT_NAMESPACE: &str = "menura";
 
 /// Applies the common extension rules to the selected semantic model of `document`.
 ///

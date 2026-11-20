@@ -1,7 +1,7 @@
 //! The fields of additivity declarations in E0.e: ADD-5.1.6 and `E0C-16`.
 
-use semantic_compiler_contracts::admit_catalog_schema;
-use semantic_compiler_contracts::types::audit_record::OssieFormat;
+use menura_contracts::admit_catalog_schema;
+use menura_contracts::types::audit_record::OssieFormat;
 
 use crate::extensions::additivity::fixture::{
     CATALOG, DEBT_BALANCE_DATA, MODEL, conformance_model, with_debt_balance_expression,

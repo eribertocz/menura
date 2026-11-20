@@ -27,7 +27,7 @@ pub mod value_encoding;
 pub use admission::{AdmissionCode, AdmissionError, IncomingContract, check_query_form, decode};
 pub use canonical::canonical_json;
 pub use catalog_admission::{admit_catalog_schema, admit_catalog_state};
-pub use contract::{ContractKind, ContractVersion};
+pub use contract::{ContractKind, ContractVersion, FORMER_NAMESPACE, NAMESPACE};
 pub use hash::{InvalidSha256Hash, Sha256Hash, hash_value};
 pub use identifier::normalize_unquoted_identifier;
 pub use ordering::compare_names;

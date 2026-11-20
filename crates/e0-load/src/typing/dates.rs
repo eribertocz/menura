@@ -1,7 +1,7 @@
 //! Types the date and time functions with a part or unit (E0F-10.1).
 
-use semantic_compiler_contracts::types::common::LogicalType;
-use semantic_compiler_model::expression::{DateUnit, Expression, ExtractPart};
+use menura_contracts::types::common::LogicalType;
+use menura_model::expression::{DateUnit, Expression, ExtractPart};
 
 use super::stop::{Outcome, Stop, incompatible, untyped_null};
 use super::typer::{ExpressionTyper, expect_type};

@@ -1,6 +1,6 @@
 //! The shape and the result type of one `base_aggregate` (SUM-2.1, SUM-6.1.3).
 
-use semantic_compiler_model::expression::{AggregateCall, Expression, Reference, SimpleAggregate};
+use menura_model::expression::{AggregateCall, Expression, Reference, SimpleAggregate};
 
 use super::Fields;
 use crate::expressions::{ExpressionPlace, parse_element_expression};

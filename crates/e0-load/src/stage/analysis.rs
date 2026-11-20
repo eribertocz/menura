@@ -2,7 +2,7 @@
 //! classification. Each runs the checks of the model's own elements, and the extension checks
 //! only when E0.c and the substage they depend on succeeded (E0-3.3, E0-4 extension table).
 
-use semantic_compiler_contracts::types::catalog::CatalogSchemaDocument;
+use menura_contracts::types::catalog::CatalogSchemaDocument;
 
 use super::findings::{self, Substage};
 use super::parsing::parse_warnings;

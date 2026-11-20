@@ -3,7 +3,7 @@
 
 use std::num::NonZeroU64;
 
-use semantic_compiler_contracts::types::common::Grain;
+use menura_contracts::types::common::Grain;
 use serde_json::{Map, Value as Json};
 
 use super::model::{Modifier, Removed, TimeModifier};

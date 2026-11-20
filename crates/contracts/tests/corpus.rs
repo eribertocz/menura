@@ -4,7 +4,7 @@
 
 use std::collections::BTreeSet;
 
-use semantic_compiler_contracts::{ContractKind, validate_structure};
+use menura_contracts::{ContractKind, validate_structure};
 use serde_json::Value;
 
 /// A corpus file and the contract its cases follow.

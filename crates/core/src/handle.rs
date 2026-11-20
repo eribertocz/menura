@@ -2,9 +2,9 @@
 
 use std::sync::Arc;
 
-use semantic_compiler_contracts::types::catalog::{CatalogSchemaDocument, CatalogStateDocument};
-use semantic_compiler_contracts::types::compiled_plan::Diagnostic;
-use semantic_compiler_model::internal_model::InternalModel;
+use menura_contracts::types::catalog::{CatalogSchemaDocument, CatalogStateDocument};
+use menura_contracts::types::compiled_plan::Diagnostic;
+use menura_model::internal_model::InternalModel;
 
 use crate::load_options::LoadOptions;
 

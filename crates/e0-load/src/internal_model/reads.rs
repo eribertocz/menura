@@ -69,7 +69,7 @@ fn metric_reads(
     input: &ModelInput<'_, '_>,
     index: &ModelIndex<'_, '_>,
     pointer: &JsonPointer,
-    tree: Option<&semantic_compiler_model::expression::Expression>,
+    tree: Option<&menura_model::expression::Expression>,
 ) -> Vec<JsonPointer> {
     let mut read = Vec::new();
     if let Some(tree) = tree {

@@ -9,7 +9,7 @@
 use std::path::PathBuf;
 use std::process::ExitCode;
 
-use semantic_compiler_conformance_runner::run;
+use menura_conformance_runner::run;
 
 const USAGE: &str = "usage: conformance-runner <conformance-directory> [area]";
 

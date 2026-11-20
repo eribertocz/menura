@@ -11,7 +11,7 @@ mod operators;
 mod primary;
 mod windows;
 
-use semantic_compiler_model::expression::{Expression, Identifier};
+use menura_model::expression::{Expression, Identifier};
 
 use crate::error::{ExpressionError, ExpressionErrorKind, Span};
 use crate::lexer::{Symbol, Token, TokenKind, tokenize};
@@ -31,7 +31,7 @@ type Parsed<T> = Result<T, ExpressionError>;
 /// # Examples
 ///
 /// ```
-/// use semantic_compiler_expressions::{ExpressionCode, parse};
+/// use menura_expressions::{ExpressionCode, parse};
 /// assert!(parse("COALESCE(orders.discount, 0)").is_ok());
 /// assert_eq!(parse("RANDOM()").unwrap_err().code(), ExpressionCode::OutsideSubset);
 /// assert_eq!(parse("SUM(").unwrap_err().code(), ExpressionCode::Unparsable);

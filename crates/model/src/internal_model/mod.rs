@@ -36,7 +36,7 @@ pub use security::{
 };
 pub use summary::{Summary, SummaryDimension, SummaryMeasure};
 
-use semantic_compiler_contracts::Sha256Hash;
+use menura_contracts::Sha256Hash;
 
 /// The parts of an internal model, before it is sealed with its hash.
 #[derive(Debug, Clone, PartialEq, Eq)]

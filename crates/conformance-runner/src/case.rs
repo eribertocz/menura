@@ -4,8 +4,8 @@
 
 use std::fmt;
 
-use semantic_compiler_contracts::types::audit_record::OssieFormat;
-use semantic_compiler_contracts::types::compiled_plan::InputDocument;
+use menura_contracts::types::audit_record::OssieFormat;
+use menura_contracts::types::compiled_plan::InputDocument;
 use serde::Deserialize;
 
 /// A rule ID of the specification, such as `E3-3.2` or `CS-2.1`.

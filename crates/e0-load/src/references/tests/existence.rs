@@ -108,7 +108,7 @@ fn e0d_3_1_unique_keys_and_both_relationship_ends_are_resolved() {
 fn e0d_3_2_references_inside_extensions_get_no_generic_code() {
     let dataset = orders("order_id", "").replace(
         "primary_key: [order_id]",
-        "primary_key: [order_id], custom_extensions: [{vendor_name: COMMON, data: '{\"namespace\": \"semantic_compiler\", \"version\": 1, \"additivity\": {\"over\": \"refunds.tax\"}}'}]",
+        "primary_key: [order_id], custom_extensions: [{vendor_name: COMMON, data: '{\"namespace\": \"menura\", \"version\": 1, \"additivity\": {\"over\": \"refunds.tax\"}}'}]",
     );
     assert_eq!(
         loaded((&document(&dataset, ""), CATALOG)),

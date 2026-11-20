@@ -1,6 +1,6 @@
 //! Result types of arithmetic over numeric types (E0F-5a).
 
-use semantic_compiler_contracts::types::common::LogicalType;
+use menura_contracts::types::common::LogicalType;
 
 use super::diagnostic::TypingCode;
 use super::stop::{Outcome, problem};

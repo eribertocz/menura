@@ -3,7 +3,7 @@
 
 use std::collections::BTreeSet;
 
-use semantic_compiler_model::expression::Reference;
+use menura_model::expression::Reference;
 
 use super::decomposability::class;
 use super::diagnostic::ClassificationCode;

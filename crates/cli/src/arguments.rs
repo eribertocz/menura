@@ -1,11 +1,12 @@
-//! The command line of `semantic-compiler` (ARC-5.5), parsed into the command to run. Parsing
+//! The command line of `menura` (ARC-5.5), parsed into the command to run. Parsing
 //! reads no file: it only decides which command runs, and with which paths.
 
 use std::ffi::OsString;
 use std::path::PathBuf;
 
 /// The usage text `--help` writes and every usage error repeats.
-pub(crate) const USAGE: &str = "usage: semantic-compiler validate --model <path> --catalog-schema <path> [--load-options <path>]
+pub(crate) const USAGE: &str =
+    "usage: menura validate --model <path> --catalog-schema <path> [--load-options <path>]
 
 Validates an Apache Ossie model against a catalog schema and writes the validation report as
 JSON on standard output. Exit status: 0 when the report has no error, 1 when it has errors,

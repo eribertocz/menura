@@ -6,7 +6,7 @@
 //! The structure is the official 0.1.1 JSON Schema ([`schema::OFFICIAL_SCHEMA_SOURCE`]) or, with
 //! `ossie_format: development`, the development-line JSON Schema at the tracked commit
 //! ([`schema::DEVELOPMENT_SCHEMA_SOURCE`]). Both are embedded at compile time and evaluated by
-//! the evaluator of `semantic-compiler-contracts`. `dialects`, `vendors` and `ai_context` are
+//! the evaluator of `menura-contracts`. `dialects`, `vendors` and `ai_context` are
 //! validated and kept, and never affect compilation (E0B-3.5).
 
 mod datatype;
@@ -19,7 +19,7 @@ mod selection;
 mod variants;
 mod violations;
 
-use semantic_compiler_contracts::types::audit_record::OssieFormat;
+use menura_contracts::types::audit_record::OssieFormat;
 
 pub(crate) use diagnostic::{StructureCode, StructureDiagnostic};
 pub(crate) use output::{

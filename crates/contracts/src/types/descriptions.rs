@@ -7,19 +7,22 @@ use super::common::{Dialect, Grain, LogicalType, Parameter, present};
 use crate::contract::ContractVersion;
 use crate::hash::Sha256Hash;
 
-/// The `contract` value `semantic_compiler.model_description`.
+/// The `contract` value `menura.model_description`, or its former name (CON-0.5).
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 pub enum ModelDescriptionContract {
-    /// The only value.
-    #[serde(rename = "semantic_compiler.model_description")]
+    /// The name the compiler writes (CON-0.5).
+    #[serde(rename = "menura.model_description")]
     ModelDescription,
+    /// The former name, read until 1.0.0 and never written (CON-0.5).
+    #[serde(rename = "semantic_compiler.model_description")]
+    FormerModelDescription,
 }
 
 /// What one security context may ask of one model (DSC-2).
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct ModelDescriptionDocument {
-    /// Always `semantic_compiler.model_description`.
+    /// `menura.model_description`, or its former name.
     pub contract: ModelDescriptionContract,
     /// Contract version.
     pub contract_version: ContractVersion,
@@ -127,19 +130,22 @@ pub struct AmbiguousPath {
     pub paths: Vec<Vec<String>>,
 }
 
-/// The `contract` value `semantic_compiler.integrity_checks`.
+/// The `contract` value `menura.integrity_checks`, or its former name (CON-0.5).
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 pub enum IntegrityChecksContract {
-    /// The only value.
-    #[serde(rename = "semantic_compiler.integrity_checks")]
+    /// The name the compiler writes (CON-0.5).
+    #[serde(rename = "menura.integrity_checks")]
     IntegrityChecks,
+    /// The former name, read until 1.0.0 and never written (CON-0.5).
+    #[serde(rename = "semantic_compiler.integrity_checks")]
+    FormerIntegrityChecks,
 }
 
 /// The integrity checks generated for a model (CHK-2).
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct IntegrityChecksDocument {
-    /// Always `semantic_compiler.integrity_checks`.
+    /// `menura.integrity_checks`, or its former name.
     pub contract: IntegrityChecksContract,
     /// Contract version.
     pub contract_version: ContractVersion,

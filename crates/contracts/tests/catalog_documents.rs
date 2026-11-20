@@ -1,11 +1,9 @@
 //! Admission of the catalog schema and catalog state documents: CAT-2, CAT-3, CAT-4.2, CAT-6.1,
 //! CAT-8 and CAT-9.
 
-use semantic_compiler_contracts::types::catalog::{CatalogSchemaDocument, RelationData};
-use semantic_compiler_contracts::types::common::{LogicalType, Token};
-use semantic_compiler_contracts::{
-    AdmissionCode, AdmissionError, admit_catalog_schema, admit_catalog_state,
-};
+use menura_contracts::types::catalog::{CatalogSchemaDocument, RelationData};
+use menura_contracts::types::common::{LogicalType, Token};
+use menura_contracts::{AdmissionCode, AdmissionError, admit_catalog_schema, admit_catalog_state};
 use serde_json::{Value, json};
 
 // `cfg(test)` marks the helpers as test code, where `expect` is allowed (clippy.toml).
@@ -137,7 +135,7 @@ fn cat_3_1_structure_is_checked_before_the_semantic_rules() {
 
 #[test]
 fn cat_3_2_a_newer_minor_version_is_rejected_with_ecat_02_and_wcat_02() {
-    let schema = with(schema_example(), "/contract_version", json!("1.1.0"));
+    let schema = with(schema_example(), "/contract_version", json!("1.2.0"));
     assert_eq!(
         schema_failure(&schema),
         (AdmissionCode::Ecat02, pointer("/contract_version"))
@@ -653,11 +651,7 @@ fn cat_9_1_the_contract_version_is_checked_before_the_json_schema() {
         schema_failure(&schema),
         (AdmissionCode::Ecat02, pointer("/contract_version"))
     );
-    let state = with(
-        state_example(),
-        "/contract",
-        json!("semantic_compiler.query"),
-    );
+    let state = with(state_example(), "/contract", json!("menura.query"));
     let state = with(state, "/relations", json!({}));
     assert_eq!(
         state_failure(&state),

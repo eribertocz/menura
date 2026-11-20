@@ -1,5 +1,5 @@
 [package]
-name = "semantic-compiler-e1-parse"
+name = "menura-e1-parse"
 description = "Stage E1: parses a query document."
 version.workspace = true
 edition.workspace = true
@@ -7,7 +7,7 @@ license.workspace = true
 publish.workspace = true
 
 [dependencies]
-semantic-compiler-security.workspace = true
+menura-security.workspace = true
 
 [lints]
 workspace = true

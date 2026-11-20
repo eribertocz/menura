@@ -16,7 +16,7 @@ use serde_json::{Map, Number, Value};
 /// # Example
 ///
 /// ```
-/// use semantic_compiler_contracts::canonical_json;
+/// use menura_contracts::canonical_json;
 ///
 /// let value = serde_json::json!({"b": [1.50, true], "a": "€"});
 /// assert_eq!(canonical_json(&value), r#"{"a":"€","b":[1.5,true]}"#);

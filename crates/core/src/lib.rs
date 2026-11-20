@@ -7,7 +7,7 @@
 //! # Example
 //!
 //! ```
-//! use semantic_compiler_core::{CompileErrorContract, LoadOptions, load};
+//! use menura_core::{CompileErrorContract, LoadOptions, load};
 //!
 //! let error = load(b"version: \"0.1.1\"", b"{}", None, &LoadOptions::default()).unwrap_err();
 //! assert_eq!(error.contract, CompileErrorContract::CompileError);
@@ -25,11 +25,9 @@ pub use handle::Handle;
 pub use json::{OutputError, document_json};
 pub use load::{load, validate, with_state};
 pub use load_options::{LoadOptions, LoadOptionsError};
-pub use semantic_compiler_contracts::types::audit_record::OssieFormat;
-pub use semantic_compiler_contracts::types::catalog::{
-    CatalogSchemaDocument, CatalogStateDocument,
-};
-pub use semantic_compiler_contracts::types::compiled_plan::{
+pub use menura_contracts::types::audit_record::OssieFormat;
+pub use menura_contracts::types::catalog::{CatalogSchemaDocument, CatalogStateDocument};
+pub use menura_contracts::types::compiled_plan::{
     CompileErrorContract, CompileErrorDocument, Diagnostic, DiagnosticLocation, InputDocument,
 };
-pub use semantic_compiler_model::internal_model::InternalModel;
+pub use menura_model::internal_model::InternalModel;

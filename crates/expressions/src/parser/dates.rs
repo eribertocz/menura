@@ -3,7 +3,7 @@
 //! `DATEDIFF(unit, start, end)` and `POSITION(a IN s)`. Parts and units become closed enums
 //! (E0F-10.1); a part the subset leaves out, such as `MILLISECOND` (DEV-10), is `E0F-02`.
 
-use semantic_compiler_model::expression::{DateUnit, Expression, Literal, ScalarFunction};
+use menura_model::expression::{DateUnit, Expression, Literal, ScalarFunction};
 
 use super::calls::exactly;
 use super::{Parsed, Parser};

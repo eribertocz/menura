@@ -3,8 +3,8 @@
 
 use std::collections::{HashMap, HashSet};
 
-use semantic_compiler_contracts::types::catalog::RelationSchema;
-use semantic_compiler_model::expression::Identifier;
+use menura_contracts::types::catalog::RelationSchema;
+use menura_model::expression::Identifier;
 
 use crate::names::Name;
 
@@ -51,8 +51,8 @@ impl<'catalog> Columns<'catalog> {
 
 #[cfg(test)]
 mod tests {
-    use semantic_compiler_contracts::admit_catalog_schema;
-    use semantic_compiler_model::expression::Identifier;
+    use menura_contracts::admit_catalog_schema;
+    use menura_model::expression::Identifier;
 
     use super::Columns;
 

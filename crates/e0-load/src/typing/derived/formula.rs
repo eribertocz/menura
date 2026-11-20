@@ -1,6 +1,6 @@
 //! `E0C-30`, `E0C-31` and `E0C-35`: what a derived formula may contain (DER-2.3, DER-5.1.3).
 
-use semantic_compiler_model::expression::{BinaryOperator, Expression, Reference};
+use menura_model::expression::{BinaryOperator, Expression, Reference};
 
 use super::super::populations::structure::nodes;
 use crate::extensions::ExtensionCode;

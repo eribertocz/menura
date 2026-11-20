@@ -1,6 +1,6 @@
 //! The result of structure validation, as data types only.
 
-use semantic_compiler_contracts::types::audit_record::OssieFormat;
+use menura_contracts::types::audit_record::OssieFormat;
 
 use super::diagnostic::StructureDiagnostic;
 use crate::pointer::JsonPointer;

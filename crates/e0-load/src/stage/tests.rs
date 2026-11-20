@@ -4,9 +4,9 @@
 //! The model document and catalog schema of the `sample` conformance model are read at compile
 //! time; each test edits the model text to introduce the problems it needs.
 
-use semantic_compiler_contracts::types::audit_record::{LoadOptions, OssieFormat};
-use semantic_compiler_contracts::types::compiled_plan::{Diagnostic, InputDocument};
-use semantic_compiler_model::internal_model::InternalModel;
+use menura_contracts::types::audit_record::{LoadOptions, OssieFormat};
+use menura_contracts::types::compiled_plan::{Diagnostic, InputDocument};
+use menura_model::internal_model::InternalModel;
 
 use super::{LoadRejection, load_model};
 
@@ -69,7 +69,7 @@ fn options() -> LoadOptions {
     LoadOptions {
         grant_authenticated_to_all: false,
         ossie_format: OssieFormat::Release,
-        namespace: "semantic_compiler".to_owned(),
+        namespace: "menura".to_owned(),
         model_name: None,
     }
 }

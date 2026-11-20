@@ -1,8 +1,8 @@
 //! Summaries: their mapping to their base and their definition hash (E0H-2 "Summaries",
 //! E0H-3.3).
 
-use semantic_compiler_contracts::Sha256Hash;
-use semantic_compiler_contracts::types::common::Grain;
+use menura_contracts::Sha256Hash;
+use menura_contracts::types::common::Grain;
 
 use super::common::{NormalizedName, SourceLocation};
 use crate::expression::Expression;

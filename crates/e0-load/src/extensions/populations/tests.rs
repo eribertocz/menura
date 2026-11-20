@@ -5,8 +5,8 @@
 //! time (see [`super::fixture`]), so the rules are checked against the files the conformance
 //! suite uses.
 
-use semantic_compiler_contracts::types::audit_record::OssieFormat;
-use semantic_compiler_contracts::types::common::Grain;
+use menura_contracts::types::audit_record::OssieFormat;
+use menura_contracts::types::common::Grain;
 
 use super::model::{PartialPeriod, Population, PopulationMode};
 use crate::extensions::output::{Extensions, ExtensionsFailure};

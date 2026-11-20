@@ -1,12 +1,12 @@
 //! The public functions that load a model: `validate`, `load` and `with_state` (architecture
 //! section 3.5, ARC-5.1, ARC-5.2).
 
-use semantic_compiler_contracts::ContractKind;
-use semantic_compiler_contracts::types::compiled_plan::{
+use menura_contracts::ContractKind;
+use menura_contracts::types::compiled_plan::{
     CompileErrorContract, CompileErrorDocument, Diagnostic, DiagnosticLocation, InputDocument,
 };
-use semantic_compiler_e0_load::{LoadRejection, load_model};
-use semantic_compiler_model::internal_model::Warning;
+use menura_e0_load::{LoadRejection, load_model};
+use menura_model::internal_model::Warning;
 
 use crate::catalog_state;
 use crate::handle::Handle;
@@ -14,14 +14,14 @@ use crate::load_options::LoadOptions;
 
 /// Validates the model document `model` against the catalog schema document `catalog_schema`
 /// and returns the validation report (PLN-5.3): the compile error document with `contract`
-/// `semantic_compiler.validation_report`, whose `errors` are empty when the model loads.
+/// `menura.validation_report`, whose `errors` are empty when the model loads.
 ///
 /// Both documents are the bytes as received; their problems are diagnostics of the report.
 ///
 /// # Example
 ///
 /// ```
-/// use semantic_compiler_core::{LoadOptions, validate};
+/// use menura_core::{LoadOptions, validate};
 ///
 /// let report = validate(b"version: \"0.1.1\"", b"{}", &LoadOptions::default());
 /// assert_eq!(report.errors[0].code, "ECAT-02");

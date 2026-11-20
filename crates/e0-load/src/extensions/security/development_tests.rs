@@ -1,8 +1,8 @@
 //! The security extension in the development format (MDL-2.4, E0C-2.8): the same rules read
 //! from `nonportable_extensions`.
 
-use semantic_compiler_contracts::types::audit_record::OssieFormat;
-use semantic_compiler_security::{AccessMode, Role};
+use menura_contracts::types::audit_record::OssieFormat;
+use menura_security::{AccessMode, Role};
 
 use super::fixture::conformance_model;
 use crate::extensions::output::{Extensions, ExtensionsFailure};

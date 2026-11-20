@@ -16,7 +16,7 @@ import pathlib
 import subprocess
 import sys
 
-PACKAGE_PREFIX = "semantic-compiler-"
+PACKAGE_PREFIX = "menura-"
 
 # Layers of section 5.2, from the bottom up. A crate depends only on crates of a strictly lower
 # layer, so stages (one layer) never depend on each other (S7).

@@ -51,7 +51,7 @@ pub(crate) use output::{ElementKind, TypedElement, Typing, UnusableElement};
 
 use std::collections::HashMap;
 
-use semantic_compiler_contracts::types::catalog::CatalogSchemaDocument;
+use menura_contracts::types::catalog::CatalogSchemaDocument;
 
 use crate::extensions::summaries::SummaryDatasets;
 use crate::outline::outline;

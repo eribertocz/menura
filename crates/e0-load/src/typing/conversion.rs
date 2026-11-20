@@ -1,7 +1,7 @@
 //! Implicit conversions (E0F-3) and the CASE rule of E0F-5a: the type to which every other
 //! type of a list converts implicitly.
 
-use semantic_compiler_contracts::types::common::LogicalType;
+use menura_contracts::types::common::LogicalType;
 
 use super::value_type::{ExpressionType, Numeric, numeric};
 
@@ -85,7 +85,7 @@ pub(crate) fn common_type(types: &[&ExpressionType]) -> Option<ExpressionType> {
 
 #[cfg(test)]
 mod tests {
-    use semantic_compiler_contracts::types::common::{IntegerBits, LogicalType};
+    use menura_contracts::types::common::{IntegerBits, LogicalType};
 
     use super::{common_type, converts};
     use crate::typing::value_type::{ExpressionType, big_integer, decimal, double, integer};

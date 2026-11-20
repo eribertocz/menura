@@ -1,7 +1,7 @@
 //! Primary expressions: literals, parenthesized expressions, references, `CASE`, `CAST`
 //! and `CURRENT_*`.
 
-use semantic_compiler_model::expression::{CaseBranch, Expression, Literal, Reference};
+use menura_model::expression::{CaseBranch, Expression, Literal, Reference};
 
 use super::literals::{date_value, time_value, timestamp_value};
 use super::{Parsed, Parser};

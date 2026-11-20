@@ -4,7 +4,7 @@
 //! (`E0F-05`, E0-4.2a); reachability and the multiple-path pairs are then recomputed over the
 //! remaining edges with the E0.e algorithm.
 
-use semantic_compiler_model::internal_model::{
+use menura_model::internal_model::{
     DatasetPair, DatasetReach, GraphEdge, NormalizedName, PathCount, ReachedDataset, Relationship,
     RelationshipGraph,
 };

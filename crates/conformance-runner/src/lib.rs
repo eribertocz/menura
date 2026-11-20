@@ -9,9 +9,9 @@
 //! ```no_run
 //! use std::path::Path;
 //!
-//! let report = semantic_compiler_conformance_runner::run(Path::new("conformance"), Some("sample"))?;
+//! let report = menura_conformance_runner::run(Path::new("conformance"), Some("sample"))?;
 //! print!("{}", report.render());
-//! # Ok::<(), semantic_compiler_conformance_runner::RunnerError>(())
+//! # Ok::<(), menura_conformance_runner::RunnerError>(())
 //! ```
 
 #![forbid(unsafe_code)]

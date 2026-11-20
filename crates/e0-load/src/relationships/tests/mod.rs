@@ -5,8 +5,8 @@
 //! read here at compile time, so the analysis is checked against the files the conformance suite
 //! uses. The path counts are also checked against an enumeration of every path on small graphs.
 
-use semantic_compiler_contracts::admit_catalog_schema;
-use semantic_compiler_contracts::types::audit_record::OssieFormat;
+use menura_contracts::admit_catalog_schema;
+use menura_contracts::types::audit_record::OssieFormat;
 
 use super::{RelationshipDiagnostic, Relationships, analyze_relationships};
 use crate::extensions::summaries::SummaryDatasets;

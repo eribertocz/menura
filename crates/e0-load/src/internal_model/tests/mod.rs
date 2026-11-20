@@ -11,9 +11,9 @@ mod hashes;
 mod order;
 mod propagation;
 
-use semantic_compiler_contracts::admit_catalog_schema;
-use semantic_compiler_contracts::types::audit_record::OssieFormat;
-use semantic_compiler_model::internal_model::{InternalModel, NormalizedName};
+use menura_contracts::admit_catalog_schema;
+use menura_contracts::types::audit_record::OssieFormat;
+use menura_model::internal_model::{InternalModel, NormalizedName};
 
 use super::{ModelInput, build_internal_model};
 use crate::classification::{ClassificationInput, classify_metrics};

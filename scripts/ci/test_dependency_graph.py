@@ -54,6 +54,9 @@ def violations(document):
 class DependencyGraphTest(unittest.TestCase):
     """S6, S7, S8, ARC-5.3."""
 
+    def test_con_0_5_packages_carry_the_project_name(self):
+        self.assertEqual(PREFIX, "menura-")
+
     def test_s6_specified_graph_passes(self):
         self.assertEqual(violations(metadata(VALID_EDGES)), [])
 

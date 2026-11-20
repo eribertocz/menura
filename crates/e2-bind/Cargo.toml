@@ -1,5 +1,5 @@
 [package]
-name = "semantic-compiler-e2-bind"
+name = "menura-e2-bind"
 description = "Stage E2: binds query references to the loaded model."
 version.workspace = true
 edition.workspace = true
@@ -7,7 +7,7 @@ license.workspace = true
 publish.workspace = true
 
 [dependencies]
-semantic-compiler-security.workspace = true
+menura-security.workspace = true
 
 [lints]
 workspace = true

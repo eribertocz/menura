@@ -1,6 +1,6 @@
 //! The documents of datasets, fields, populations, relationships and security.
 
-use semantic_compiler_model::internal_model::{
+use menura_model::internal_model::{
     AccessMode, AttributeType, Dataset, DatasetAccess, Descriptions, Field, Population,
     PopulationMode, Relationship, RoleName, RowPolicy, ScalarType, SecurityContext,
 };

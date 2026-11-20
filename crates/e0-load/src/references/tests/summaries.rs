@@ -1,8 +1,8 @@
 //! The summary extension in E0.d: SUM-4.1, SUM-6.1.2, SUM-6.1.7, `E0C-50`, `E0C-51`, `E0C-54`,
 //! and `E0D-04` for a metric that refers to a summary.
 
-use semantic_compiler_contracts::admit_catalog_schema;
-use semantic_compiler_contracts::types::audit_record::OssieFormat;
+use menura_contracts::admit_catalog_schema;
+use menura_contracts::types::audit_record::OssieFormat;
 
 use super::{pair, summary, unusable};
 use crate::extensions::summaries::datasets::summary_datasets;
@@ -253,7 +253,7 @@ fn sum_6_1_7_e0c_63_a_context_remove_field_of_a_summary() {
         with_text(
             "        expression: {dialects: [{dialect: ANSI_SQL, expression: 'COUNT(orders.order_id)'}]}\n",
             &format!(
-                "        expression: {{dialects: [{{dialect: ANSI_SQL, expression: 'COUNT(orders.order_id)'}}]}}\n      - name: amount_share\n        expression: {{dialects: [{{dialect: ANSI_SQL, expression: 'AGG(total_amount)'}}]}}\n        custom_extensions:\n          - vendor_name: COMMON\n            data: '{{\"namespace\": \"semantic_compiler\", \"version\": 1, \"context\": {{\"base\": \"total_amount\", \"modifier\": {{\"type\": \"share_of_total\", \"remove\": [\"{field}\"]}}}}}}'\n"
+                "        expression: {{dialects: [{{dialect: ANSI_SQL, expression: 'COUNT(orders.order_id)'}}]}}\n      - name: amount_share\n        expression: {{dialects: [{{dialect: ANSI_SQL, expression: 'AGG(total_amount)'}}]}}\n        custom_extensions:\n          - vendor_name: COMMON\n            data: '{{\"namespace\": \"menura\", \"version\": 1, \"context\": {{\"base\": \"total_amount\", \"modifier\": {{\"type\": \"share_of_total\", \"remove\": [\"{field}\"]}}}}}}'\n"
             ),
         )
     };

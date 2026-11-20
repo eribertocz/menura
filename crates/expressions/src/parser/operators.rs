@@ -6,7 +6,7 @@
 //! associate to the left. Forms the grammar lacks (`LIKE … ESCAPE`, `BETWEEN SYMMETRIC`,
 //! `IS TRUE`, quantified comparisons) cannot be parsed either (`E0F-01`, E0F-9.1).
 
-use semantic_compiler_model::expression::{BinaryOperator, Expression, LikeCase, UnaryOperator};
+use menura_model::expression::{BinaryOperator, Expression, LikeCase, UnaryOperator};
 
 use super::{Parsed, Parser};
 use crate::lexer::{Symbol, TokenKind};

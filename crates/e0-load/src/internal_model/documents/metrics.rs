@@ -1,6 +1,6 @@
 //! The documents of metrics and their extensions.
 
-use semantic_compiler_model::internal_model::{
+use menura_model::internal_model::{
     Additivity, ContextModifier, DeclaredAdditivity, DecomposabilityClass, DivisionByZero,
     FieldPath, Metric, MetricClassification, MissingHandling, NullHandling, RemovedDimensions,
     Selection, SemiAdditive, SnapshotAggregation, StaleHandling, UnexpectedHandling,

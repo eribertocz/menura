@@ -1,6 +1,6 @@
 //! The direct subexpressions of an expression tree, in written order.
 
-use semantic_compiler_model::expression::{AggregateCall, Expression};
+use menura_model::expression::{AggregateCall, Expression};
 
 /// The direct subexpressions of `expression`, in the order they are written.
 pub(crate) fn children(expression: &Expression) -> Vec<&Expression> {

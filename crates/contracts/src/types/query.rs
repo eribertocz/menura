@@ -5,19 +5,22 @@ use serde::{Deserialize, Serialize};
 use super::common::Grain;
 use crate::contract::ContractVersion;
 
-/// The `contract` value `semantic_compiler.query`.
+/// The `contract` value `menura.query`, or its former name (CON-0.5).
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 pub enum QueryContract {
-    /// The only value.
-    #[serde(rename = "semantic_compiler.query")]
+    /// The name the compiler writes (CON-0.5).
+    #[serde(rename = "menura.query")]
     Query,
+    /// The former name, read until 1.0.0 and never written (CON-0.5).
+    #[serde(rename = "semantic_compiler.query")]
+    FormerQuery,
 }
 
 /// A query document: the envelope and exactly one form (QRY-2).
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(try_from = "QueryMembers", into = "QueryMembers")]
 pub struct QueryDocument {
-    /// Always `semantic_compiler.query`.
+    /// `menura.query`, or its former name.
     pub contract: QueryContract,
     /// Contract version.
     pub contract_version: ContractVersion,
@@ -106,12 +109,15 @@ pub enum VendorName {
     Common,
 }
 
-/// The `namespace` value `semantic_compiler`.
+/// The `namespace` value `menura`, or the former namespace (CON-0.5).
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 pub enum Namespace {
-    /// The only value.
+    /// The namespace the compiler writes.
+    #[serde(rename = "menura")]
+    Menura,
+    /// The former namespace, read until 1.0.0 and never written (CON-0.5).
     #[serde(rename = "semantic_compiler")]
-    SemanticCompiler,
+    FormerName,
 }
 
 /// One `nonportable_extensions` entry.
@@ -128,7 +134,7 @@ pub struct Extension {
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct CompilerExtension {
-    /// Always `semantic_compiler`.
+    /// `menura`, or the former namespace.
     pub namespace: Namespace,
     /// Extension version.
     pub version: u64,

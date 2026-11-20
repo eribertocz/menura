@@ -1,7 +1,7 @@
 //! Components and home datasets (E0G-1.1), decomposability (E0G-3), the deduced additivity
 //! (E0G-4) and the output (E0G-6).
 
-use semantic_compiler_contracts::types::common::{FloatBits, IntegerBits, LogicalType};
+use menura_contracts::types::common::{FloatBits, IntegerBits, LogicalType};
 
 use super::*;
 

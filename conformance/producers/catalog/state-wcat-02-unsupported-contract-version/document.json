@@ -1,5 +1,5 @@
 {
-  "contract": "semantic_compiler.catalog_state",
+  "contract": "menura.catalog_state",
   "contract_version": "2.0.0",
   "document_id": {
     "origin": "warehouse:gold",

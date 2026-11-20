@@ -1,5 +1,5 @@
 [package]
-name = "semantic-compiler-e0-load"
+name = "menura-e0-load"
 description = "Stage E0: loads and validates a semantic model."
 version.workspace = true
 edition.workspace = true
@@ -7,10 +7,10 @@ license.workspace = true
 publish.workspace = true
 
 [dependencies]
-semantic-compiler-contracts.workspace = true
-semantic-compiler-expressions.workspace = true
-semantic-compiler-model.workspace = true
-semantic-compiler-security.workspace = true
+menura-contracts.workspace = true
+menura-expressions.workspace = true
+menura-model.workspace = true
+menura-security.workspace = true
 granit-parser = "2.1.0"
 serde = "1"
 serde_json = "1"

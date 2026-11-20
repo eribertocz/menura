@@ -4,7 +4,7 @@
 
 use std::collections::HashMap;
 
-use semantic_compiler_contracts::types::common::LogicalType;
+use menura_contracts::types::common::LogicalType;
 
 use super::output::{ElementKind, Typing};
 use super::value_type::{Typed, describe};

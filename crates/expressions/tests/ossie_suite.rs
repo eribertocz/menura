@@ -2,7 +2,7 @@
 //! `conformance/ossie/compliance/expressions/`. No line of `valid.txt` gives `E0F-01`, and every
 //! line of `invalid.txt` does.
 
-use semantic_compiler_expressions::{ExpressionCode, parse};
+use menura_expressions::{ExpressionCode, parse};
 
 const VALID: &str = include_str!("../../../conformance/ossie/compliance/expressions/valid.txt");
 const INVALID: &str = include_str!("../../../conformance/ossie/compliance/expressions/invalid.txt");

@@ -1,6 +1,6 @@
 //! The integrity checks the model needs, recorded as data (E0H-4.3, CHK-2, CHK-3).
 
-use semantic_compiler_contracts::Sha256Hash;
+use menura_contracts::Sha256Hash;
 
 /// The `kind` of an integrity check (CHK-2).
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]

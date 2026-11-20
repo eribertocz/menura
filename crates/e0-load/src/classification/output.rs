@@ -1,7 +1,7 @@
 //! The result of metric classification (E0G-6), as data types only.
 
-use semantic_compiler_contracts::types::common::LogicalType;
-use semantic_compiler_model::expression::{AggregateCall, Expression};
+use menura_contracts::types::common::LogicalType;
+use menura_model::expression::{AggregateCall, Expression};
 
 use std::collections::BTreeSet;
 

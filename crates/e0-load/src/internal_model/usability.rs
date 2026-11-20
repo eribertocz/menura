@@ -7,7 +7,7 @@
 
 use std::collections::{BTreeSet, HashMap, VecDeque};
 
-use semantic_compiler_model::internal_model::DiagnosticCode;
+use menura_model::internal_model::DiagnosticCode;
 
 use super::ModelInput;
 use super::index::{ModelIndex, ReadNames};
@@ -165,6 +165,6 @@ fn propagate(usability: &mut Usability, dependencies: &[(JsonPointer, JsonPointe
 }
 
 /// The names a tree reads; used by the dependency computation.
-pub(super) fn read_names(tree: &semantic_compiler_model::expression::Expression) -> ReadNames {
+pub(super) fn read_names(tree: &menura_model::expression::Expression) -> ReadNames {
     ReadNames::of(&tree.json_form())
 }

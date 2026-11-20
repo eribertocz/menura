@@ -3,8 +3,8 @@
 
 use std::collections::HashMap;
 
-use semantic_compiler_contracts::types::common::LogicalType;
-use semantic_compiler_model::expression::{Identifier, Reference};
+use menura_contracts::types::common::LogicalType;
+use menura_model::expression::{Identifier, Reference};
 
 use super::diagnostic::{TypingCode, TypingDiagnostic};
 use super::output::ElementKind;

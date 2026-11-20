@@ -1,8 +1,8 @@
 //! The access every dataset is read with (SCY-3.0, SCY-5.1.7, DEV-4): `W0C-40` and `W0C-41`,
 //! and the load option `grant_authenticated_to_all`.
 
-use semantic_compiler_contracts::types::audit_record::OssieFormat;
-use semantic_compiler_security::{AccessMode, DatasetAccess, Role};
+use menura_contracts::types::audit_record::OssieFormat;
+use menura_security::{AccessMode, DatasetAccess, Role};
 
 use super::fixture::{MODEL, NOTES, ORDERS, SEMANTIC_MODEL, conformance_model};
 use super::model::Security;

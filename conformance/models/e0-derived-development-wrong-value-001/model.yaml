@@ -37,16 +37,16 @@ metrics:
     expression: {sql: AGG(collected) / AGG(billed)}
     nonportable_extensions:
       - vendor_name: COMMON
-        data: {namespace: semantic_compiler, version: 1, derived: {on_division_by_zero: null}}
+        data: {namespace: menura, version: 1, derived: {on_division_by_zero: null}}
   - name: uncollected_rate
     expression: {sql: '1 - AGG(collection_rate)'}
     nonportable_extensions:
       - vendor_name: COMMON
-        data: {namespace: semantic_compiler, version: 1, derived: {}}
+        data: {namespace: menura, version: 1, derived: {}}
   - name: customer_count
     expression: {sql: 'COUNT(DISTINCT customers.customer_id)'}
   - name: billed_per_customer
     expression: {sql: 'AGG(billed) / AGG(customer_count)'}
     nonportable_extensions:
       - vendor_name: COMMON
-        data: {namespace: semantic_compiler, version: 1, derived: {on_division_by_zero: error}}
+        data: {namespace: menura, version: 1, derived: {on_division_by_zero: error}}

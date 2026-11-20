@@ -4,7 +4,7 @@ semantic_model:
     description: Sample model whose dataset source is not in the catalog schema
     custom_extensions:
       - vendor_name: COMMON
-        data: '{"namespace": "semantic_compiler", "version": 1, "security_context": {"roles": ["analyst"], "attributes": []}}'
+        data: '{"namespace": "menura", "version": 1, "security_context": {"roles": ["analyst"], "attributes": []}}'
     datasets:
       - name: returns
         source: shop.main.returns
@@ -14,4 +14,4 @@ semantic_model:
             expression: {dialects: [{dialect: ANSI_SQL, expression: return_id}]}
         custom_extensions:
           - vendor_name: COMMON
-            data: '{"namespace": "semantic_compiler", "version": 1, "access": {"mode": "roles", "roles": ["analyst"]}}'
+            data: '{"namespace": "menura", "version": 1, "access": {"mode": "roles", "roles": ["analyst"]}}'

@@ -39,7 +39,7 @@ impl DecimalTarget {
     /// exceeds it.
     ///
     /// ```
-    /// use semantic_compiler_model::expression::DecimalTarget;
+    /// use menura_model::expression::DecimalTarget;
     /// assert!(DecimalTarget::new(18, 2).is_some());
     /// assert!(DecimalTarget::new(2, 3).is_none());
     /// ```

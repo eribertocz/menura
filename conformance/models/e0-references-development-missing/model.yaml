@@ -3,7 +3,7 @@ name: e0_references_development_missing
 description: Development-line model with sql expressions and dataset metrics that read fields and source columns, with missing references, each making its element unusable, and keys that resolve to source columns
 nonportable_extensions:
   - vendor_name: COMMON
-    data: {namespace: semantic_compiler, version: 1, security_context: {roles: [analyst], attributes: []}}
+    data: {namespace: menura, version: 1, security_context: {roles: [analyst], attributes: []}}
 datasets:
   - name: orders
     source: shop.main.orders
@@ -30,7 +30,7 @@ datasets:
         expression: {sql: SUM(SOURCE.amount)}
     nonportable_extensions:
       - vendor_name: COMMON
-        data: {namespace: semantic_compiler, version: 1, access: {mode: roles, roles: [analyst]}}
+        data: {namespace: menura, version: 1, access: {mode: roles, roles: [analyst]}}
   - name: customers
     source: shop.main.customers
     primary_key: [customer_id]
@@ -39,7 +39,7 @@ datasets:
         expression: {sql: name}
     nonportable_extensions:
       - vendor_name: COMMON
-        data: {namespace: semantic_compiler, version: 1, access: {mode: roles, roles: [analyst]}}
+        data: {namespace: menura, version: 1, access: {mode: roles, roles: [analyst]}}
   - name: labels
     source: shop.main.labels
     primary_key: [name]
@@ -50,7 +50,7 @@ datasets:
         expression: {sql: UPPER(name)}
     nonportable_extensions:
       - vendor_name: COMMON
-        data: {namespace: semantic_compiler, version: 1, access: {mode: roles, roles: [analyst]}}
+        data: {namespace: menura, version: 1, access: {mode: roles, roles: [analyst]}}
 relationships:
   - name: orders_customers
     from: orders

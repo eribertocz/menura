@@ -1,7 +1,7 @@
 //! Every load warning of E0, in the order of E0-4.3: substage order, then document order, then
 //! by code. E0.h reports none of its own.
 
-use semantic_compiler_model::internal_model::{DiagnosticCode, Warning};
+use menura_model::internal_model::{DiagnosticCode, Warning};
 
 use super::ModelInput;
 use super::located::located;

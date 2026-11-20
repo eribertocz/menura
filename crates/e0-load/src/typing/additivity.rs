@@ -8,7 +8,7 @@
 
 use std::collections::HashMap;
 
-use semantic_compiler_contracts::types::common::LogicalType;
+use menura_contracts::types::common::LogicalType;
 
 use super::keys::same_kind;
 use super::output::{ElementKind, Typing};

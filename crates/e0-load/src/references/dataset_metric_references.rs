@@ -6,7 +6,7 @@
 //! qualifier `source` is compared as a regular identifier (E0D-1.1, E0D-1.3). Any other
 //! qualified reference is outside the accepted subset (`E0F-02`, E0D-3.4).
 
-use semantic_compiler_model::expression::Reference;
+use menura_model::expression::Reference;
 
 use super::diagnostic::ReferenceCode;
 use super::expression_references::{finding, missing_names};

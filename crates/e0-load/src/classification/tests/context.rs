@@ -3,8 +3,8 @@
 
 use std::collections::BTreeSet;
 
-use semantic_compiler_contracts::types::audit_record::OssieFormat;
-use semantic_compiler_contracts::types::common::{FloatBits, IntegerBits, LogicalType};
+use menura_contracts::types::audit_record::OssieFormat;
+use menura_contracts::types::common::{FloatBits, IntegerBits, LogicalType};
 
 use super::super::Classification;
 use super::super::output::{Additivity, QueryError};

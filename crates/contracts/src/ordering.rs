@@ -9,7 +9,7 @@ use std::cmp::Ordering;
 ///
 /// ```
 /// use std::cmp::Ordering;
-/// use semantic_compiler_contracts::compare_names;
+/// use menura_contracts::compare_names;
 ///
 /// assert_eq!(compare_names("B", "a"), Ordering::Less);
 /// ```
