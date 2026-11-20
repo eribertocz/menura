@@ -128,26 +128,26 @@ Find a rule ID or a section here, then open only that file at that line.
 | [08-conformance-suite.md](08-conformance-suite.md#L44) | 44 | rule | CS-2.2 |
 | [08-conformance-suite.md](08-conformance-suite.md#L45) | 45 | rule | CS-2.3 |
 | [08-conformance-suite.md](08-conformance-suite.md#L46) | 46 | rule | CS-2.4 |
-| [08-conformance-suite.md](08-conformance-suite.md#L47) | 47 | rule | CS-2.5 |
-| [08-conformance-suite.md](08-conformance-suite.md#L48) | 48 | rule | CS-2.6 |
-| [08-conformance-suite.md](08-conformance-suite.md#L49) | 49 | rule | CS-2.7 |
-| [08-conformance-suite.md](08-conformance-suite.md#L50) | 50 | rule | CS-2.9 |
-| [08-conformance-suite.md](08-conformance-suite.md#L51) | 51 | rule | CS-2.8 |
-| [08-conformance-suite.md](08-conformance-suite.md#L53) | 53 | section | CS-3 Apache Ossie suites |
-| [08-conformance-suite.md](08-conformance-suite.md#L55) | 55 | rule | CS-3.1 |
-| [08-conformance-suite.md](08-conformance-suite.md#L56) | 56 | rule | CS-3.2 |
-| [08-conformance-suite.md](08-conformance-suite.md#L58) | 58 | section | CS-4 Running |
-| [08-conformance-suite.md](08-conformance-suite.md#L60) | 60 | rule | CS-4.1 |
-| [08-conformance-suite.md](08-conformance-suite.md#L61) | 61 | rule | CS-4.2 |
-| [08-conformance-suite.md](08-conformance-suite.md#L62) | 62 | rule | CS-4.3 |
-| [08-conformance-suite.md](08-conformance-suite.md#L63) | 63 | rule | CS-4.4 |
-| [08-conformance-suite.md](08-conformance-suite.md#L64) | 64 | rule | CS-4.5 |
-| [08-conformance-suite.md](08-conformance-suite.md#L65) | 65 | rule | CS-4.6 |
-| [08-conformance-suite.md](08-conformance-suite.md#L67) | 67 | section | CS-5 Producer suite |
-| [08-conformance-suite.md](08-conformance-suite.md#L72) | 72 | rule | CS-5.1 |
-| [08-conformance-suite.md](08-conformance-suite.md#L73) | 73 | rule | CS-5.2 |
-| [08-conformance-suite.md](08-conformance-suite.md#L74) | 74 | rule | CS-5.3 |
-| [08-conformance-suite.md](08-conformance-suite.md#L75) | 75 | rule | CS-5.4 |
+| [08-conformance-suite.md](08-conformance-suite.md#L50) | 50 | rule | CS-2.5 |
+| [08-conformance-suite.md](08-conformance-suite.md#L51) | 51 | rule | CS-2.6 |
+| [08-conformance-suite.md](08-conformance-suite.md#L52) | 52 | rule | CS-2.7 |
+| [08-conformance-suite.md](08-conformance-suite.md#L53) | 53 | rule | CS-2.9 |
+| [08-conformance-suite.md](08-conformance-suite.md#L54) | 54 | rule | CS-2.8 |
+| [08-conformance-suite.md](08-conformance-suite.md#L56) | 56 | section | CS-3 Apache Ossie suites |
+| [08-conformance-suite.md](08-conformance-suite.md#L58) | 58 | rule | CS-3.1 |
+| [08-conformance-suite.md](08-conformance-suite.md#L59) | 59 | rule | CS-3.2 |
+| [08-conformance-suite.md](08-conformance-suite.md#L61) | 61 | section | CS-4 Running |
+| [08-conformance-suite.md](08-conformance-suite.md#L63) | 63 | rule | CS-4.1 |
+| [08-conformance-suite.md](08-conformance-suite.md#L64) | 64 | rule | CS-4.2 |
+| [08-conformance-suite.md](08-conformance-suite.md#L65) | 65 | rule | CS-4.3 |
+| [08-conformance-suite.md](08-conformance-suite.md#L66) | 66 | rule | CS-4.4 |
+| [08-conformance-suite.md](08-conformance-suite.md#L67) | 67 | rule | CS-4.5 |
+| [08-conformance-suite.md](08-conformance-suite.md#L68) | 68 | rule | CS-4.6 |
+| [08-conformance-suite.md](08-conformance-suite.md#L70) | 70 | section | CS-5 Producer suite |
+| [08-conformance-suite.md](08-conformance-suite.md#L75) | 75 | rule | CS-5.1 |
+| [08-conformance-suite.md](08-conformance-suite.md#L76) | 76 | rule | CS-5.2 |
+| [08-conformance-suite.md](08-conformance-suite.md#L77) | 77 | rule | CS-5.3 |
+| [08-conformance-suite.md](08-conformance-suite.md#L78) | 78 | rule | CS-5.4 |
 | [09-continuous-integration.md](09-continuous-integration.md#L1) | 1 | section | 9. Continuous integration |
 | [09-continuous-integration.md](09-continuous-integration.md#L6) | 6 | section | CI-1 On every pull request and every push to `main` |
 | [09-continuous-integration.md](09-continuous-integration.md#L30) | 30 | section | CI-2 Scheduled |
@@ -693,7 +693,8 @@ Find a rule ID or a section here, then open only that file at that line.
 | [stages/E2-bind.md](stages/E2-bind.md#L78) | 78 | rule | E2-5.3 |
 | [stages/E2-bind.md](stages/E2-bind.md#L79) | 79 | rule | E2-5.4 |
 | [stages/E2-bind.md](stages/E2-bind.md#L81) | 81 | rule | E2-5.5 |
-| [stages/E2-bind.md](stages/E2-bind.md#L83) | 83 | section | E2-6 Diagnostics |
+| [stages/E2-bind.md](stages/E2-bind.md#L82) | 82 | rule | E2-5.6 |
+| [stages/E2-bind.md](stages/E2-bind.md#L84) | 84 | section | E2-6 Diagnostics |
 | [stages/E3-paths.md](stages/E3-paths.md#L1) | 1 | section | E3 Resolve paths |
 | [stages/E3-paths.md](stages/E3-paths.md#L3) | 3 | section | E3-1 Purpose |
 | [stages/E3-paths.md](stages/E3-paths.md#L8) | 8 | section | E3-2 Input and output |
@@ -734,13 +735,13 @@ Find a rule ID or a section here, then open only that file at that line.
 | [stages/E4-plan.md](stages/E4-plan.md#L66) | 66 | rule | E4-6.7 |
 | [stages/E4-plan.md](stages/E4-plan.md#L67) | 67 | rule | E4-6.8 |
 | [stages/E4-plan.md](stages/E4-plan.md#L68) | 68 | rule | E4-6.9 |
-| [stages/E4-plan.md](stages/E4-plan.md#L70) | 70 | rule | E4-6.10 |
-| [stages/E4-plan.md](stages/E4-plan.md#L72) | 72 | section | E4-7 Additivity |
-| [stages/E4-plan.md](stages/E4-plan.md#L78) | 78 | section | E4-8 Context modifiers |
-| [stages/E4-plan.md](stages/E4-plan.md#L84) | 84 | section | E4-9 Order and limit |
-| [stages/E4-plan.md](stages/E4-plan.md#L86) | 86 | rule | E4-9.1 |
-| [stages/E4-plan.md](stages/E4-plan.md#L87) | 87 | rule | E4-9.2 |
-| [stages/E4-plan.md](stages/E4-plan.md#L89) | 89 | section | E4-10 Diagnostics |
+| [stages/E4-plan.md](stages/E4-plan.md#L71) | 71 | rule | E4-6.10 |
+| [stages/E4-plan.md](stages/E4-plan.md#L73) | 73 | section | E4-7 Additivity |
+| [stages/E4-plan.md](stages/E4-plan.md#L79) | 79 | section | E4-8 Context modifiers |
+| [stages/E4-plan.md](stages/E4-plan.md#L85) | 85 | section | E4-9 Order and limit |
+| [stages/E4-plan.md](stages/E4-plan.md#L87) | 87 | rule | E4-9.1 |
+| [stages/E4-plan.md](stages/E4-plan.md#L88) | 88 | rule | E4-9.2 |
+| [stages/E4-plan.md](stages/E4-plan.md#L90) | 90 | section | E4-10 Diagnostics |
 | [stages/E5-optimize.md](stages/E5-optimize.md#L1) | 1 | section | E5 Optimize |
 | [stages/E5-optimize.md](stages/E5-optimize.md#L3) | 3 | section | E5-1 Purpose |
 | [stages/E5-optimize.md](stages/E5-optimize.md#L9) | 9 | section | E5-2 Input and output |

@@ -30,7 +30,7 @@ load_options: { ossie_format: development, model_name: shop }  # optional (CS-2.
 expect:
   outcome: error                # load_error | error | plan | runtime_error
   error: E_AMBIGUOUS_PATH       # the first error code (E2-5.2)
-  warnings: [W0F-01]            # optional: load warnings that MUST be reported, by code
+  warnings: [W0F-01]            # optional: warnings that MUST be reported, by code (CS-2.4b)
   location: { document: model, pointer: /semantic_model/0/datasets/0, line: 7, column: 9 }  # optional: location of the first error
   sql: expected.sql             # optional golden file, next to the case
   rows: expected.csv            # optional result after executing on DuckDB
@@ -44,11 +44,14 @@ expect:
 | CS-2.2 | `outcome: plan` cases MUST have `rows`, so the generated SQL is executed, not only compared. |
 | CS-2.3 | A golden `sql` file is compared byte for byte (P3). Regenerating golden files requires a pull request that touches only golden files and states why. |
 | CS-2.4 | `rows` are compared with NULLs equal, decimals exactly, floats within `tolerance` (relative), and the row order as declared. |
+| CS-2.4a | **`rows` file.** CSV as RFC 4180, UTF-8. The first line holds the output names, compared in order with the plan's `result_schema`. An empty unquoted field is NULL and `""` is the empty text. Each value is read by its column's `logical_type`: integers and decimals as exact numbers (`45` equals `45.00`); floats within `tolerance` when the case gives one, exactly otherwise; dates as `YYYY-MM-DD`; timestamps in CON-4 form; booleans as `true` or `false`. |
+| CS-2.4b | `expect.warnings` lists codes each reported by a warning of its own: the load warnings for every outcome, plus the compilation warnings (`WQRY-01`, …) for `error`, `plan` and `runtime_error`. |
+| CS-2.4c | A `runtime_error` case passes when executing its plan fails with an error whose message contains the expected code, and fails when execution succeeds. |
 | CS-2.5 | Runtime-policy cases expect `outcome: runtime_error` with the runtime code (`RADD-01`, …). |
 | CS-2.6 | The **coverage scope** is the list of specification files in `spec/coverage-scope.txt`, one path per line; lines starting with `#` are comments. `rule-coverage` fails when a rule ID defined in a listed file is not covered (T1), and only reports the rule IDs of other files. The specification session adds the files of a version at its gate (7.1a); a file is never removed, so later work cannot lose coverage. |
 | CS-2.7 | `load_options` holds load options of architecture section 3.5 (`ossie_format`, `model_name`, `namespace`, `grant_authenticated_to_all`); an option it omits takes its default. It lets a case cover a rule that applies only with a load option. |
 | CS-2.9 | `location`, when present, is compared with the location of the first error: `document` and `pointer` exactly, and `line` and `column` when the case gives them (PLN-5). |
-| CS-2.8 | A case whose outcome needs stages not yet implemented is checked in parts. From 0.2.0, the runner checks its load: `load_error` cases fully, and for the other outcomes, that the model loads and reports the expected `warnings`. The query part (`error`, `plan`, `runtime_error`) is checked from the version that implements E1–E6 (0.3.0). Until then the runner reports that part as pending, never as passed, and a version gate counts only the parts that run. From 0.3.0, a query part whose compilation returns `E_NOT_YET_SUPPORTED` stays pending (VS-4). |
+| CS-2.8 | A case whose outcome needs stages not yet implemented is checked in parts. From 0.2.0, the runner checks its load: `load_error` cases fully, and for the other outcomes, that the model loads and reports the expected `warnings`. The query part (`error`, `plan`, `runtime_error`) is checked from the version that implements E1–E6 (0.3.0). Until then the runner reports that part as pending, never as passed, and a version gate counts only the parts that run. From 0.3.0, a query part whose compilation returns `E_NOT_YET_SUPPORTED` stays pending, unless the case expects that code (VS-4). |
 
 ## CS-3 Apache Ossie suites
 
