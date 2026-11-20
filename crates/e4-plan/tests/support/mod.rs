@@ -7,9 +7,15 @@
 
 pub mod plan;
 
+use menura_contracts::ContractKind;
 use menura_contracts::Sha256Hash;
+use menura_contracts::types::catalog::{
+    CatalogSchemaContract, CatalogSchemaDocument, Column, Engine, RelationSchema,
+};
+use menura_contracts::types::common::Token;
 use menura_contracts::types::common::{Grain, LogicalType, TimestampPrecision};
 use menura_contracts::types::query::{Direction, NullsOrder};
+use menura_e4_plan::PlanError;
 use menura_expressions::parse;
 use menura_expressions::typing::{big_integer, decimal};
 use menura_model::expression::{DateValue, Expression};
@@ -24,6 +30,7 @@ use menura_representations::bound_query::{
     BoundOrderItem, BoundQuery, BoundQueryParts, MetricPath,
 };
 use menura_representations::columns::Columns;
+use menura_representations::logical_plan::PlanNode;
 use menura_representations::names::OutputName;
 use menura_representations::origin::QueryLocation;
 use menura_representations::paths::{Branch, Branches, ComponentKey, JoinTree};
@@ -80,7 +87,8 @@ pub fn order_fields() -> Vec<(&'static str, LogicalType, bool)> {
     ]
 }
 
-fn field(name_text: &str, logical_type: LogicalType, nullable: bool) -> Field {
+/// A field of `ORDERS` that reads the source column of its lower-case name.
+pub fn field(name_text: &str, logical_type: LogicalType, nullable: bool) -> Field {
     Field {
         name: name(name_text),
         expression: Some(tree(&name_text.to_lowercase())),
@@ -366,4 +374,59 @@ pub fn branches(component_counts: &[usize]) -> Branches {
         join_tree: JoinTree::default(),
     }])
     .expect("one branch")
+}
+
+/// The catalog columns of `main.orders` that only dataset metrics read: name as the catalog
+/// spells it, logical type, nullable.
+pub fn source_columns() -> Vec<(&'static str, LogicalType, bool)> {
+    vec![
+        ("amount", decimal_amount(), true),
+        ("amount_cents", big_integer(), false),
+        ("Amount Cents", big_integer(), true),
+    ]
+}
+
+/// The type of the source column `amount`.
+pub fn decimal_amount() -> LogicalType {
+    decimal(12, 2)
+}
+
+/// The admitted catalog schema: the relation `main.orders` of `ORDERS`, with the columns of
+/// [`source_columns`].
+pub fn catalog() -> CatalogSchemaDocument {
+    let columns = source_columns()
+        .into_iter()
+        .map(|(column_name, logical_type, nullable)| Column {
+            name: column_name.to_owned(),
+            logical_type,
+            physical_type: "unused".to_owned(),
+            nullable,
+        })
+        .collect();
+    CatalogSchemaDocument {
+        contract: CatalogSchemaContract::CatalogSchema,
+        contract_version: ContractKind::CatalogSchema.latest_version(),
+        document_id: Token {
+            origin: "tests".to_owned(),
+            snapshot: "1".to_owned(),
+        },
+        engine: Engine {
+            name: "duckdb".to_owned(),
+            version: "1.2.0".to_owned(),
+        },
+        relations: vec![RelationSchema {
+            source: "main.orders".to_owned(),
+            columns,
+        }],
+    }
+}
+
+/// The plan of `query` over `model` and [`catalog`].
+pub fn build_plan(
+    branches: &Branches,
+    query: &BoundQuery,
+    security: &AdmittedSecurityContext,
+    model: &InternalModel,
+) -> Result<PlanNode, PlanError> {
+    menura_e4_plan::build_plan(branches, query, security, model, &catalog())
 }

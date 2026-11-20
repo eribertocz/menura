@@ -7,10 +7,11 @@
 //! versions; an input that needs them is an internal error, because E2 row 12c rules it out.
 //!
 //! The plan follows the conventions shared with E6 (issue #251): a `Scan` projects fields of
-//! its dataset by normalized name, every other node reads the columns of its input by
-//! unqualified reference, the query-filter `Filter` comes from the query, and the row-policy
-//! `Filter`, the `Aggregate` and the final `Project` come from the model, so their literals
-//! are model constants.
+//! its dataset by normalized name, and the source columns a dataset metric reads under a
+//! prefix that no field name of the dataset starts with (issue #264); every other node reads
+//! the columns of its input by unqualified reference; the query-filter `Filter` comes from the
+//! query, and the row-policy `Filter`, the `Aggregate` and the final `Project` come from the
+//! model, so their literals are model constants.
 
 #![forbid(unsafe_code)]
 
@@ -28,6 +29,7 @@ mod typing;
 
 pub use error::{InvariantViolation, PlanError};
 
+use menura_contracts::types::catalog::CatalogSchemaDocument;
 use menura_model::expression::Expression;
 use menura_model::internal_model::{InternalModel, NormalizedName};
 use menura_representations::bound_query::BoundQuery;
@@ -42,7 +44,8 @@ use crate::columns::read_fields;
 use crate::typing::typed_column;
 
 /// Builds the logical plan of `query` from its `branches`, for the user of `security`, over
-/// `model` (E4-2).
+/// `model` and the admitted `catalog` schema, which gives the type of every source column a
+/// dataset metric reads (E4-2, CAT-4).
 ///
 /// # Errors
 ///
@@ -54,6 +57,7 @@ pub fn build_plan(
     query: &BoundQuery,
     security: &AdmittedSecurityContext,
     model: &InternalModel,
+    catalog: &CatalogSchemaDocument,
 ) -> Result<PlanNode, PlanError> {
     let branch = slice::single_branch(branches)?;
     let home = slice::home_dataset(branch, model)?;
@@ -72,7 +76,7 @@ pub fn build_plan(
             policy_predicate.as_ref().map(|(predicate, _)| predicate),
         ],
     );
-    let mut node = scan::scan(home, &read)?;
+    let mut node = scan::scan(home, &read, catalog)?;
     if let Some((predicate, location)) = policy_predicate {
         node = filter(node, predicate, Origin::Model(location));
     }

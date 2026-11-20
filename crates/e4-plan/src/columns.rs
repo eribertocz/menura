@@ -1,9 +1,9 @@
-//! Plan columns: their names, references to them, and the fields of the home dataset that
-//! expressions read.
+//! Plan columns: their names, references to them, and the fields and source columns of the
+//! home dataset that expressions read.
 
 use menura_contracts::normalize_unquoted_identifier;
 use menura_model::expression::{Expression, Identifier, Reference};
-use menura_model::internal_model::NormalizedName;
+use menura_model::internal_model::{Dataset, NormalizedName};
 use menura_representations::names::ColumnName;
 
 use crate::error::InvariantViolation;
@@ -22,6 +22,27 @@ pub(crate) fn component_column(metric: usize, component: usize) -> ColumnName {
         metric + 1,
         component + 1
     ))
+}
+
+/// The shortest `menura.source` followed by one or more `.` that no field name of `home`
+/// starts with: the prefix of every `Scan` column of `home` that names a catalog column of its
+/// `source` rather than a field, so that the two never collide (issue #264).
+pub(crate) fn source_prefix(home: &Dataset) -> String {
+    let mut prefix = String::from("menura.source.");
+    while home
+        .fields
+        .iter()
+        .any(|field| field.name.as_str().starts_with(&prefix))
+    {
+        prefix.push('.');
+    }
+    prefix
+}
+
+/// The `Scan` column of the source column a dataset metric reads as `source.<name>`, where
+/// `name` is the reference's normalized name (E0D-1.1), under the [`source_prefix`] `prefix`.
+pub(crate) fn source_column(prefix: &str, name: &NormalizedName) -> ColumnName {
+    ColumnName::new(&format!("{prefix}{}", name.as_str()))
 }
 
 /// The unqualified reference to the input column `name` (issue #251), as a delimited
@@ -48,34 +69,39 @@ pub(crate) fn field_name(identifier: &Identifier) -> NormalizedName {
     }
 }
 
-/// `expression` over the fields of the home dataset, with every field reference turned into
+/// `expression` over the `Scan` of the home dataset, with every field reference turned into
 /// the unqualified reference to the `Scan` column of that field. A reference qualified with
-/// `source` in a dataset metric, a source column (E0D-3), is not a field.
+/// `source` in a dataset metric, whose [`source_prefix`] is `dataset_metric_prefix`, reads a
+/// source column (E0D-3), not a field: it becomes the reference to the [`source_column`] of
+/// that column. Outside a dataset metric `dataset_metric_prefix` is `None`.
 ///
 /// # Errors
 ///
-/// [`InvariantViolation::SourceColumn`] for a source column.
+/// [`InvariantViolation::EmptyName`] for a reference with an empty name.
 pub(crate) fn over_scan(
     expression: &Expression,
-    in_dataset_metric: bool,
+    dataset_metric_prefix: Option<&str>,
 ) -> Result<Expression, InvariantViolation> {
     rewrite(expression, &mut |node| match node {
         Expression::Reference(reference) => {
-            let is_source = in_dataset_metric
-                && reference
-                    .qualifier
-                    .as_ref()
-                    .is_some_and(|qualifier| field_name(qualifier).as_str() == "SOURCE");
-            if is_source {
-                return Err(InvariantViolation::SourceColumn);
+            let name = field_name(&reference.name);
+            let is_source = reference
+                .qualifier
+                .as_ref()
+                .is_some_and(|qualifier| field_name(qualifier).as_str() == "SOURCE");
+            match dataset_metric_prefix {
+                Some(prefix) if is_source => {
+                    column_reference(source_column(prefix, &name).as_str()).map(Some)
+                }
+                _ => column_reference(name.as_str()).map(Some),
             }
-            column_reference(field_name(&reference.name).as_str()).map(Some)
         }
         _ => Ok(None),
     })
 }
 
-/// Adds the columns `expression` reads after [`over_scan`], in written order, to `fields`.
+/// Adds the columns `expression` reads after [`over_scan`], in written order, to `fields`:
+/// field names and [`source_column`] names.
 pub(crate) fn read_fields(expression: &Expression, fields: &mut Vec<NormalizedName>) {
     let visited: Result<Expression, std::convert::Infallible> = rewrite(expression, &mut |node| {
         if let Expression::Reference(reference) = node {

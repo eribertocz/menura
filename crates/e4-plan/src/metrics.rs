@@ -12,7 +12,7 @@ use menura_representations::logical_plan::AggregateComponent;
 use menura_representations::names::ColumnName;
 use menura_representations::paths::{Branch, ComponentKey};
 
-use crate::columns::{column_reference, component_column, over_scan};
+use crate::columns::{column_reference, component_column, over_scan, source_prefix};
 use crate::dimensions::at;
 use crate::error::{InvariantViolation, PlanError};
 use crate::rewrite::rewrite;
@@ -115,17 +115,17 @@ fn check_extensions(metric: &Metric) -> Result<(), InvariantViolation> {
 ///
 /// # Errors
 ///
-/// An internal error for a key that names no component, a component of another dataset, or
-/// a source column.
+/// An internal error for a key that names no component, or a component of another dataset.
 pub(crate) fn branch_components(
     branch: &Branch,
     metrics: &[PlannedMetric<'_>],
     home: &Dataset,
 ) -> Result<Vec<AggregateComponent>, PlanError> {
+    let prefix = source_prefix(home);
     branch
         .components
         .iter()
-        .map(|key| component(*key, metrics, home))
+        .map(|key| component(*key, metrics, home, &prefix))
         .collect()
 }
 
@@ -133,6 +133,7 @@ fn component(
     key: ComponentKey,
     metrics: &[PlannedMetric<'_>],
     home: &Dataset,
+    prefix: &str,
 ) -> Result<AggregateComponent, PlanError> {
     let unknown = || {
         PlanError::invariant(
@@ -155,7 +156,7 @@ fn component(
         filter: found.filter.clone().map(Box::new),
     };
     let Expression::Aggregate { call, filter } =
-        over_scan(&aggregate, metric.in_dataset_metric).map_err(fail)?
+        over_scan(&aggregate, metric.in_dataset_metric.then_some(prefix)).map_err(fail)?
     else {
         return Err(fail(InvariantViolation::ComponentMismatch));
     };

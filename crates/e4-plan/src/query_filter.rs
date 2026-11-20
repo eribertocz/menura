@@ -43,7 +43,7 @@ fn filter_term(filter: &BoundFilter, home: &Dataset) -> Result<Expression, Invar
     if filter.datasets.iter().any(|dataset| dataset != &home.name) {
         return Err(InvariantViolation::ForeignField);
     }
-    over_scan(&filter.expression, false)
+    over_scan(&filter.expression, None)
 }
 
 /// `x >= from AND x <= to` for a date field; `x >= from AND x < to + 1 day` for a timestamp

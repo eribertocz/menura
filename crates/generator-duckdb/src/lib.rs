@@ -14,6 +14,7 @@ mod identifiers;
 mod output;
 mod parameters;
 mod result_schema;
+mod source_columns;
 mod steps;
 mod types;
 mod values;

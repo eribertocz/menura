@@ -9,7 +9,7 @@ mod support;
 use std::num::NonZeroU64;
 
 use menura_contracts::types::common::Grain;
-use menura_e4_plan::{InvariantViolation, PlanError, build_plan};
+use menura_e4_plan::{InvariantViolation, PlanError};
 use menura_model::internal_model::{
     ContextMetric, ContextModifier, DatasetReach, DeclaredAdditivity, DerivedMetric, InternalModel,
     Metric, NullHandling, PathCount, ReachedDataset, SemiAdditive, SnapshotAggregation,
@@ -19,8 +19,8 @@ use menura_representations::bound_query::{
 };
 use menura_representations::paths::{Branch, Branches, ComponentKey, JoinStep, JoinTree};
 use support::{
-    anyone, branches, dimension, field_path, metric, metric_reference, metrics, model, model_with,
-    name, orders, policy, query,
+    anyone, branches, build_plan, dimension, field_path, metric, metric_reference, metrics, model,
+    model_with, name, orders, policy, query,
 };
 
 fn count_query() -> BoundQuery {
@@ -241,27 +241,4 @@ fn vs_1_an_internal_error_has_no_specification_diagnostic() {
     );
     let error = result.expect_err("an internal error");
     assert!(error.to_diagnostic().is_none());
-}
-
-#[test]
-fn vs_1_a_source_column_of_a_dataset_metric_is_an_internal_error() {
-    let mut home = orders(Vec::new());
-    home.metrics = vec![metric(
-        "RAW_TOTAL",
-        "SUM(source.amount)",
-        menura_expressions::typing::big_integer(),
-    )];
-    let model = model_with(vec![home], metrics());
-    let raw = BoundMetric {
-        kind: BoundMetricKind::Reference(
-            menura_representations::bound_query::MetricPath::Dataset {
-                dataset: name("ORDERS"),
-                metric: name("RAW_TOTAL"),
-            },
-        ),
-        ..metric_reference("RAW_TOTAL", 0)
-    };
-    let bound = query(Vec::new(), vec![raw], BoundQueryParts::default());
-    let result = build_plan(&branches(&[1]), &bound, &anyone(), &model);
-    assert_eq!(violation(result), InvariantViolation::SourceColumn);
 }
