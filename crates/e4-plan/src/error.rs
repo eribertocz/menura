@@ -80,8 +80,6 @@ pub enum InvariantViolation {
     PopulationMetric,
     /// A context metric (CTX).
     ContextMetric,
-    /// A dataset metric that reads a source column that is not a field (E0D-3).
-    SourceColumn,
     /// A row policy whose condition E0 did not parse.
     UnparsedCondition,
     /// A date range on a field that is neither a date nor a timestamp.

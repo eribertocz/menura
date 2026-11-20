@@ -242,26 +242,3 @@ fn vs_1_an_internal_error_has_no_specification_diagnostic() {
     let error = result.expect_err("an internal error");
     assert!(error.to_diagnostic().is_none());
 }
-
-#[test]
-fn vs_1_a_source_column_of_a_dataset_metric_is_an_internal_error() {
-    let mut home = orders(Vec::new());
-    home.metrics = vec![metric(
-        "RAW_TOTAL",
-        "SUM(source.amount)",
-        menura_expressions::typing::big_integer(),
-    )];
-    let model = model_with(vec![home], metrics());
-    let raw = BoundMetric {
-        kind: BoundMetricKind::Reference(
-            menura_representations::bound_query::MetricPath::Dataset {
-                dataset: name("ORDERS"),
-                metric: name("RAW_TOTAL"),
-            },
-        ),
-        ..metric_reference("RAW_TOTAL", 0)
-    };
-    let bound = query(Vec::new(), vec![raw], BoundQueryParts::default());
-    let result = build_plan(&branches(&[1]), &bound, &anyone(), &model);
-    assert_eq!(violation(result), InvariantViolation::SourceColumn);
-}
