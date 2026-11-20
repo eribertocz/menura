@@ -11,6 +11,7 @@ use crate::error::{ParseError, ParseErrorCode, ParseWarning};
 use crate::filters::parse_filters;
 use crate::pointer::{QUERY, SQL};
 use crate::reference_time::read_reference_time;
+use crate::time_zone::local_date;
 use crate::tree::wide_table_tree;
 use crate::warnings::former_name_warnings;
 
@@ -100,8 +101,12 @@ fn query_time(query: &QueryDocument) -> Result<QueryTime, ParseError> {
             })
         })
         .transpose()?;
+    let reference_date = reference_time
+        .as_ref()
+        .and_then(|reference| local_date(reference, &query.time_zone));
     Ok(QueryTime {
         time_zone: TimeZoneName::new(&query.time_zone),
         reference_time,
+        reference_date,
     })
 }

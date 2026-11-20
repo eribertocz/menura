@@ -138,6 +138,7 @@ pub fn utc() -> QueryTime {
     QueryTime {
         time_zone: TimeZoneName::new("UTC"),
         reference_time: None,
+        reference_date: None,
     }
 }
 
@@ -225,4 +226,21 @@ pub fn tree_at(
 /// The date `year-month-day`.
 pub fn date(year: u16, month: u8, day: u8) -> menura_model::expression::DateValue {
     menura_model::expression::DateValue::new(year, month, day).expect("a date")
+}
+
+/// `Asia/Tokyo` at 2026-12-31T15:30:00Z, whose date there is 2027-01-01, as E1 computes it.
+pub fn tokyo_new_year() -> QueryTime {
+    use menura_model::expression::{TimeOfDay, TimestampValue};
+    use menura_representations::time::{ReferenceTime, UtcOffset};
+    QueryTime {
+        time_zone: TimeZoneName::new("Asia/Tokyo"),
+        reference_time: Some(ReferenceTime {
+            local: TimestampValue {
+                date: date(2026, 12, 31),
+                time: TimeOfDay::new(15, 30, 0, "").expect("a time of day"),
+            },
+            offset: UtcOffset::from_minutes(0).expect("an offset"),
+        }),
+        reference_date: Some(date(2027, 1, 1)),
+    }
 }

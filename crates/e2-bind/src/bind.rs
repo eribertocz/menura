@@ -37,7 +37,7 @@ pub fn bind(
     context: &AdmittedSecurityContext,
 ) -> Result<BoundQuery, BindError> {
     let query = resolve_and_authorize(tree, model, context)?;
-    let reference_date = reference_date(tree);
+    let reference_date = tree.time().reference_date;
     check_rows_10_to_12a(model, &query.named)?;
     let bindings = check_row_12b(model, tree, &query, reference_date)?;
     check_slice(model, &query.named)?;
@@ -87,8 +87,4 @@ fn with_grains(
         })
         .collect();
     Columns::in_select_order(columns)
-}
-
-fn reference_date(_tree: &QueryTree) -> Option<DateValue> {
-    None // PENDING #234 question 1
 }

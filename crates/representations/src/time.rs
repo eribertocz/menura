@@ -1,6 +1,6 @@
 //! The time zone and reference time of a query (E1-5 "Time zone, reference time").
 
-use menura_model::expression::TimestampValue;
+use menura_model::expression::{DateValue, TimestampValue};
 
 /// A time-zone name: the exact spelling of a zone or link of the bundled IANA database
 /// (E1-2.3). The caller has checked it is known.
@@ -66,4 +66,8 @@ pub struct QueryTime {
     pub time_zone: TimeZoneName,
     /// The `reference_time`, when present.
     pub reference_time: Option<ReferenceTime>,
+    /// The date of `reference_time` in `time_zone`, which relative ranges count from
+    /// (QRY-4.2); `None` without a reference time, or when that date falls outside the years
+    /// 0001–9999.
+    pub reference_date: Option<DateValue>,
 }
