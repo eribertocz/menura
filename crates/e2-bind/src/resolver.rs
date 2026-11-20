@@ -94,14 +94,19 @@ impl<'model> Resolver<'model> {
         Some(name.clone())
     }
 
-    /// Whether every key column of `dataset` that is a field is authorized.
+    /// Whether every key column of `dataset` is authorized: a field by its decision, any other
+    /// column, which reads that source column, by the restrictions that protect it (E2-4.2).
     fn key_fields(&mut self, dataset: &NormalizedName, columns: &[NormalizedName]) -> bool {
         columns.iter().all(|column| {
             let is_field = self
                 .model
                 .dataset(dataset)
                 .is_some_and(|found| found.field(column).is_some());
-            !is_field || self.field(&field_path(dataset, column))
+            if is_field {
+                self.field(&field_path(dataset, column))
+            } else {
+                self.authorization.key_column(dataset, column)
+            }
         })
     }
 
@@ -154,8 +159,12 @@ impl<'model> Resolver<'model> {
         })
     }
 
-    /// Whether the user may use the metric `path`.
+    /// Whether the user may use the metric `path`. The datasets it reads are used too
+    /// (E2-4.1), so they are decided and recorded first, in name order.
     fn metric(&mut self, path: &MetricPath) -> bool {
+        for dataset in self.authorization.metric_datasets(path) {
+            self.dataset(&dataset);
+        }
         self.decide(AuthorizedObject::Metric(path.clone()), |authorization| {
             authorization.metric(path)
         })

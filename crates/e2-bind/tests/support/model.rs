@@ -99,11 +99,16 @@ fn access(mode: AccessMode) -> DatasetAccess {
 }
 
 fn relationship(relationship_name: &str, from: &str, to: &str) -> Relationship {
+    keyed_relationship(relationship_name, from, to, "CUSTOMER_ID")
+}
+
+/// The relationship from `from` to `to` whose `from_columns` is `key`.
+fn keyed_relationship(relationship_name: &str, from: &str, to: &str, key: &str) -> Relationship {
     Relationship {
         name: name(relationship_name),
         from: name(from),
         to: name(to),
-        from_columns: vec![name("CUSTOMER_ID")],
+        from_columns: vec![name(key)],
         to_columns: vec![name("CUSTOMER_ID")],
         descriptions: Descriptions::default(),
         query_errors: Vec::new(),
@@ -120,8 +125,11 @@ fn orders() -> Dataset {
     let mut orders = dataset(
         "ORDERS",
         access,
-        &["AMOUNT", "CUSTOMER_ID", "ORDERED_AT", "REGION", "UNIT_COST"],
+        &["AMOUNT", "CUSTOMER_ID", "ORDERED_AT", "REGION"],
     );
+    let mut unit_cost = field("UNIT_COST");
+    unit_cost.expression = Some(column("cost"));
+    orders.fields.push(unit_cost);
     orders.metrics = vec![
         metric("ORDER_TOTAL", sum(None, "amount")),
         metric("TOTAL_COST", sum(None, "unit_cost")),
@@ -159,16 +167,19 @@ pub fn declarations() -> SecurityContext {
 }
 
 /// `CUSTOMERS` (authenticated: `Segment`, `CUSTOMER_ID`, `REGION`), `ORDERS` (admin and
-/// analyst: `AMOUNT`, `CUSTOMER_ID`, `ORDERED_AT`, `REGION`, and `UNIT_COST` restricted to
-/// admin; dataset metrics `ORDER_TOTAL` and `TOTAL_COST`), `ORDERS_SUMMARY` (internal summary),
+/// analyst: `AMOUNT`, `CUSTOMER_ID`, `ORDERED_AT`, `REGION`, and `UNIT_COST`, which reads the
+/// source column `cost` and is restricted to admin; dataset metrics `ORDER_TOTAL` and `TOTAL_COST`), `ORDERS_SUMMARY` (internal summary),
 /// `SECRETS` (admin: `CUSTOMER_ID`, `VALUE`); metrics `COST`, `REVENUE` and `SECRET_TOTAL`;
-/// relationships `ORDERS_TO_CUSTOMERS` and `ORDERS_TO_SECRETS`.
+/// relationships `ORDERS_BY_COST` (keyed by the source column `COST`), `ORDERS_BY_UNIT_COST`
+/// (keyed by the field `UNIT_COST`), `ORDERS_TO_CUSTOMERS` and `ORDERS_TO_SECRETS`.
 pub fn model() -> InternalModel {
     let parts = ModelParts {
         name: name("SALES"),
         descriptions: Descriptions::default(),
         datasets: datasets(),
         relationships: vec![
+            keyed_relationship("ORDERS_BY_COST", "ORDERS", "CUSTOMERS", "COST"),
+            keyed_relationship("ORDERS_BY_UNIT_COST", "ORDERS", "CUSTOMERS", "UNIT_COST"),
             relationship("ORDERS_TO_CUSTOMERS", "ORDERS", "CUSTOMERS"),
             relationship("ORDERS_TO_SECRETS", "ORDERS", "SECRETS"),
         ],

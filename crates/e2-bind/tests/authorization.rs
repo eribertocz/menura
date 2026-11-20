@@ -239,13 +239,78 @@ fn e2_4_8_the_authorized_subgraph_holds_only_admitted_datasets() {
         analyst.subgraph().datasets(),
         &[name("CUSTOMERS"), name("ORDERS")]
     );
+    let between_orders_and_customers = [
+        name("ORDERS_BY_COST"),
+        name("ORDERS_BY_UNIT_COST"),
+        name("ORDERS_TO_CUSTOMERS"),
+    ];
     assert_eq!(
         analyst.subgraph().relationships(),
-        &[name("ORDERS_TO_CUSTOMERS")]
+        &between_orders_and_customers
     );
     let admin = run(&query, ADMIN).expect("authorized");
     assert_eq!(
         admin.subgraph().datasets(),
         &[name("CUSTOMERS"), name("ORDERS"), name("SECRETS")]
     );
+}
+
+fn one_path(relationship: &str) -> menura_representations::query_tree::QueryTree {
+    let parts = QueryTreeParts {
+        paths: vec![path(
+            "/query/nonportable_extensions/0/data/paths/0",
+            "orders",
+            "customers",
+            &[relationship],
+        )],
+        ..QueryTreeParts::default()
+    };
+    tree(vec![dimension(0, "customers.region")], vec![], parts)
+}
+
+#[test]
+fn e2_4_8_a_relationship_with_an_unauthorized_end_is_not_found() {
+    let query = one_path("orders_to_secrets");
+    assert_eq!(
+        first_error(&query, ANALYST),
+        (
+            BindCode::NameNotFound,
+            "/query/nonportable_extensions/0/data/paths/0".to_owned()
+        )
+    );
+    assert!(run(&query, ADMIN).is_ok());
+}
+
+#[test]
+fn e2_4_2_a_relationship_keyed_by_a_restricted_field_is_not_found() {
+    let query = one_path("orders_by_unit_cost");
+    assert_eq!(first_error(&query, ANALYST).0, BindCode::NameNotFound);
+    assert!(run(&query, ADMIN).is_ok());
+}
+
+#[test]
+fn e2_4_2_a_relationship_keyed_by_a_protected_source_column_is_not_found() {
+    let query = one_path("orders_by_cost");
+    assert_eq!(first_error(&query, ANALYST).0, BindCode::NameNotFound);
+    assert!(run(&query, ADMIN).is_ok());
+}
+
+#[test]
+fn e2_4_7_a_metric_records_the_datasets_it_reads_before_itself() {
+    let query = tree(
+        vec![],
+        vec![metric(0, "revenue")],
+        QueryTreeParts::default(),
+    );
+    let authorized = run(&query, ANALYST).expect("authorized");
+    let objects: Vec<&AuthorizedObject> = authorized
+        .authorization()
+        .iter()
+        .map(|decision| &decision.object)
+        .collect();
+    let expected = [
+        AuthorizedObject::Dataset(name("ORDERS")),
+        AuthorizedObject::Metric(MetricPath::SemanticModel(name("REVENUE"))),
+    ];
+    assert_eq!(objects, expected.iter().collect::<Vec<_>>());
 }

@@ -19,7 +19,7 @@ use menura_representations::bound_query::{
 use crate::context::AdmittedSecurityContext;
 use crate::restrictions::{Restrictions, restrictions};
 use crate::role::Role;
-use reads::{ModelReads, ReadItem, model_reads};
+use reads::{ModelReads, ReadItem, column_key, model_reads};
 
 /// The authorization of one user against one model: it decides on each dataset, field and
 /// metric, and computes the authorized subgraph.
@@ -85,6 +85,27 @@ impl<'model> Authorization<'model> {
             ),
             None => decision(object, true, AuthorizationRule::NoFieldRestriction),
         }
+    }
+
+    /// Whether the user may read `column`, a key column of `dataset` in a relationship of the
+    /// model that is not a field, and so reads that source column (E2-4.2). It is granted
+    /// when no restriction protects the column, or when the user holds a role of the
+    /// intersection of those that do (SCY-3.1a). A source column is not an object of the
+    /// audit record, so no decision is returned.
+    #[must_use]
+    pub fn key_column(&self, dataset: &NormalizedName, column: &NormalizedName) -> bool {
+        let item = ReadItem::Column(column_key(dataset, column));
+        self.restrictions
+            .fields
+            .get(&item)
+            .is_none_or(|roles| self.holds_any(roles))
+    }
+
+    /// Every dataset the metric `path` reads, with those of its input metrics, ordered by name
+    /// (E2-4.1): a query that uses the metric uses them.
+    #[must_use]
+    pub fn metric_datasets(&self, path: &MetricPath) -> Vec<NormalizedName> {
+        self.datasets_read(path).into_iter().cloned().collect()
     }
 
     /// The decision on the metric `path` (E2-4.3): granted when every dataset it and its input

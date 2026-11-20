@@ -62,7 +62,40 @@ pub(crate) fn model_reads(model: &InternalModel) -> ModelReads {
         let path = MetricPath::SemanticModel(metric.name.clone());
         add_metric(&mut reads, model, path, metric, None);
     }
+    add_key_columns(&mut reads, model);
     reads
+}
+
+/// The source column `column` of `dataset`, such as a relationship key column that is not a
+/// field (E0D-1.5).
+pub(crate) fn column_key(dataset: &NormalizedName, column: &NormalizedName) -> ColumnKey {
+    (
+        dataset.clone(),
+        normalize_unquoted_identifier(column.as_str()),
+    )
+}
+
+/// Every relationship key column that is not a field of its dataset reads that source column,
+/// so the restrictions that protect the column protect the key (SCY-3.1a, E2-4.2).
+fn add_key_columns(reads: &mut ModelReads, model: &InternalModel) {
+    for relationship in &model.parts().relationships {
+        let ends = [
+            (&relationship.from, &relationship.from_columns),
+            (&relationship.to, &relationship.to_columns),
+        ];
+        for (dataset, columns) in ends {
+            let found = model.dataset(dataset);
+            for column in columns {
+                if found.is_some_and(|found| found.field(column).is_some()) {
+                    continue;
+                }
+                let key = column_key(dataset, column);
+                let item = ReadItem::Column(key.clone());
+                let input = &mut reads.restriction_input;
+                input.field_columns.insert(item, BTreeSet::from([key]));
+            }
+        }
+    }
 }
 
 /// The name an identifier refers to (E0D-1.1): a regular one in upper case, a delimited one

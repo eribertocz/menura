@@ -93,6 +93,13 @@ fn access(mode: AccessMode, fields: Vec<FieldRestriction>) -> DatasetAccess {
     DatasetAccess { mode, fields }
 }
 
+/// `ORDERS_BY_COST`, keyed by `COST`, a source column of `ORDERS` that is not a field.
+fn cost_keyed_relationship() -> Relationship {
+    let mut keyed = relationship("ORDERS_BY_COST", "ORDERS", "CUSTOMERS");
+    keyed.from_columns = vec![name("COST")];
+    keyed
+}
+
 fn relationship(relationship_name: &str, from: &str, to: &str) -> Relationship {
     Relationship {
         name: name(relationship_name),
@@ -178,6 +185,7 @@ pub(super) fn model() -> InternalModel {
         descriptions: Descriptions::default(),
         datasets: datasets(),
         relationships: vec![
+            cost_keyed_relationship(),
             relationship("ORDERS_TO_CUSTOMERS", "ORDERS", "CUSTOMERS"),
             relationship("ORDERS_TO_SECRETS", "ORDERS", "SECRETS"),
         ],

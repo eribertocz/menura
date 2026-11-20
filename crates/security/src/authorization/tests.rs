@@ -173,12 +173,19 @@ fn e2_4_8_the_subgraph_holds_admitted_datasets_and_relationships_between_them() 
     let analyst = user(&["analyst"]);
     let subgraph = Authorization::new(&model, &analyst).subgraph();
     assert_eq!(subgraph.datasets(), &[name("CUSTOMERS"), name("ORDERS")]);
-    assert_eq!(subgraph.relationships(), &[name("ORDERS_TO_CUSTOMERS")]);
+    assert_eq!(
+        subgraph.relationships(),
+        &[name("ORDERS_BY_COST"), name("ORDERS_TO_CUSTOMERS")]
+    );
     let admin = user(&["admin"]);
     let subgraph = Authorization::new(&model, &admin).subgraph();
     assert_eq!(
         subgraph.relationships(),
-        &[name("ORDERS_TO_CUSTOMERS"), name("ORDERS_TO_SECRETS")]
+        &[
+            name("ORDERS_BY_COST"),
+            name("ORDERS_TO_CUSTOMERS"),
+            name("ORDERS_TO_SECRETS"),
+        ]
     );
 }
 
@@ -207,5 +214,29 @@ fn e2_4_3_a_source_column_read_is_protected_by_the_restrictions_of_that_column()
             .metric(&scoped("RAW_AMOUNT"))
             .access,
         Access::Granted
+    );
+}
+
+#[test]
+fn e2_4_2_a_key_column_that_is_not_a_field_is_protected_by_the_restrictions_of_its_column() {
+    let model = model();
+    let analyst = user(&["analyst"]);
+    let admin = user(&["admin"]);
+    assert!(!Authorization::new(&model, &analyst).key_column(&name("ORDERS"), &name("COST")));
+    assert!(Authorization::new(&model, &admin).key_column(&name("ORDERS"), &name("COST")));
+}
+
+#[test]
+fn e2_4_1_a_metric_uses_every_dataset_it_and_its_inputs_read() {
+    let model = model();
+    let analyst = user(&["analyst"]);
+    let authorization = Authorization::new(&model, &analyst);
+    assert_eq!(
+        authorization.metric_datasets(&semantic("MARGIN")),
+        vec![name("ORDERS")]
+    );
+    assert_eq!(
+        authorization.metric_datasets(&semantic("SECRET_TOTAL")),
+        vec![name("SECRETS")]
     );
 }
