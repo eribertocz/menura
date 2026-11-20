@@ -151,7 +151,7 @@ mod tests {
     }
 
     #[test]
-    fn cs_2_4_exact_numbers_ignore_trailing_fraction_zeros() {
+    fn cs_2_4a_exact_numbers_ignore_trailing_fraction_zeros() {
         assert_eq!(exact_of_text("45.00"), exact_of_text("45"));
         assert_eq!(exact_of_text("-0.50"), Some(exact_cell(-5, 1)));
         assert_eq!(exact_of_text("1e3"), None);

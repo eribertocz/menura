@@ -335,13 +335,13 @@ mod tests {
     }
 
     #[test]
-    fn cs_2_5_a_runtime_error_case_fails_when_the_plan_executes() {
+    fn cs_2_4c_a_runtime_error_case_fails_when_the_plan_executes() {
         let expect = "{outcome: runtime_error, error: RADD-01}";
         assert_fails(status(&case_text(BY_REGION, expect)), "executes");
     }
 
     #[test]
-    fn cs_2_8_an_expected_warning_must_be_reported_by_the_compilation() {
+    fn cs_2_4b_an_expected_warning_must_be_reported_by_the_compilation() {
         let expect = "{outcome: plan, rows: cs-plan-rows-001.csv, warnings: [WQRY-01]}";
         assert_fails(status(&case_text(BY_REGION, expect)), "WQRY-01");
     }

@@ -124,7 +124,7 @@ mod tests {
     }
 
     #[test]
-    fn cs_2_4_reads_the_header_and_the_rows() {
+    fn cs_2_4a_reads_the_header_and_the_rows() {
         let rows = parse_csv("region,total\nNORTH,1.50\nSOUTH,2\n").unwrap();
         assert_eq!(rows.header, ["region", "total"]);
         assert_eq!(
@@ -137,25 +137,25 @@ mod tests {
     }
 
     #[test]
-    fn cs_2_4_an_empty_unquoted_field_is_null_and_a_quoted_one_is_empty_text() {
+    fn cs_2_4a_an_empty_unquoted_field_is_null_and_a_quoted_one_is_empty_text() {
         let rows = parse_csv("a,b,c\n,\"\",x\r\n").unwrap();
         assert_eq!(rows.rows, [vec![None, Some(text("")), Some(text("x"))]]);
     }
 
     #[test]
-    fn cs_2_4_a_quoted_field_keeps_commas_quotes_and_line_breaks() {
+    fn cs_2_4a_a_quoted_field_keeps_commas_quotes_and_line_breaks() {
         let rows = parse_csv("a\n\"x, \"\"y\"\"\nz\"").unwrap();
         assert_eq!(rows.rows, [vec![Some(text("x, \"y\"\nz"))]]);
     }
 
     #[test]
-    fn cs_2_4_a_header_without_rows_expects_no_rows() {
+    fn cs_2_4a_a_header_without_rows_expects_no_rows() {
         let rows = parse_csv("region,sale_count\n").unwrap();
         assert!(rows.rows.is_empty());
     }
 
     #[test]
-    fn cs_2_4_rejects_a_file_without_header_or_with_an_open_quote() {
+    fn cs_2_4a_rejects_a_file_without_header_or_with_an_open_quote() {
         assert!(parse_csv("").is_err());
         assert!(parse_csv("a,\n").is_err());
         assert!(parse_csv("a\n\"x\n").is_err());
