@@ -692,8 +692,8 @@ Find a rule ID or a section here, then open only that file at that line.
 | [stages/E2-bind.md](stages/E2-bind.md#L77) | 77 | rule | E2-5.2 |
 | [stages/E2-bind.md](stages/E2-bind.md#L78) | 78 | rule | E2-5.3 |
 | [stages/E2-bind.md](stages/E2-bind.md#L79) | 79 | rule | E2-5.4 |
-| [stages/E2-bind.md](stages/E2-bind.md#L80) | 80 | rule | E2-5.5 |
-| [stages/E2-bind.md](stages/E2-bind.md#L82) | 82 | section | E2-6 Diagnostics |
+| [stages/E2-bind.md](stages/E2-bind.md#L81) | 81 | rule | E2-5.5 |
+| [stages/E2-bind.md](stages/E2-bind.md#L83) | 83 | section | E2-6 Diagnostics |
 | [stages/E3-paths.md](stages/E3-paths.md#L1) | 1 | section | E3 Resolve paths |
 | [stages/E3-paths.md](stages/E3-paths.md#L3) | 3 | section | E3-1 Purpose |
 | [stages/E3-paths.md](stages/E3-paths.md#L8) | 8 | section | E3-2 Input and output |
