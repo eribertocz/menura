@@ -212,7 +212,7 @@ fn vs_1_a_derived_metric_is_0_4_0() {
 }
 
 #[test]
-fn e2_5_4_a_derived_metric_on_two_datasets_names_0_4_0() {
+fn e2_5_4a_a_derived_metric_on_two_datasets_names_several_datasets_and_0_4_0() {
     let model = model_with(|parts| {
         let revenue = semantic_metric(parts, "REVENUE");
         revenue.derived = Some(DerivedMetric {
@@ -226,10 +226,12 @@ fn e2_5_4_a_derived_metric_on_two_datasets_names_0_4_0() {
         vec![metric(0, "revenue")],
         QueryTreeParts::default(),
     );
-    assert_not_yet_supported(
-        &bind_diagnostic(&query, &model, ANALYST),
-        "/query/metrics/0",
-        "0.4.0",
+    let diagnostic = bind_diagnostic(&query, &model, ANALYST);
+    assert_not_yet_supported(&diagnostic, "/query/metrics/0", "0.4.0");
+    assert!(
+        diagnostic.message.contains("more than one dataset"),
+        "{}",
+        diagnostic.message
     );
 }
 
