@@ -10,6 +10,7 @@ use crate::authorized_query::ResolvedName;
 use crate::error::{BindCode, BindDiagnostic};
 use crate::model_elements::metric;
 use crate::named::{NamedElement, NamedTarget};
+use crate::read_metrics::metric_closure;
 
 /// A capability outside the 0.3.0 slice. The order of the variants is the order of table 7.1,
 /// then the order in which VS-1 lists the capabilities of one version.
@@ -61,10 +62,11 @@ pub(crate) fn check_slice(
 ) -> Result<(), BindDiagnostic> {
     let mut home: Option<&NormalizedName> = None;
     for element in named {
-        let datasets = element_datasets(model, &element.target);
-        let mut needed: BTreeSet<Capability> = element_capabilities(model, &element.target)
-            .into_iter()
-            .collect();
+        let ElementNeeds {
+            datasets,
+            capabilities,
+        } = element_needs(model, &element.target);
+        let mut needed: BTreeSet<Capability> = capabilities.into_iter().collect();
         match (home, datasets.first()) {
             (None, Some(first)) => {
                 home = Some(first);
@@ -84,43 +86,69 @@ pub(crate) fn check_slice(
     Ok(())
 }
 
-/// The datasets `target` reads: a field's dataset, a metric's home datasets, ordered by name.
-fn element_datasets<'model>(
+/// What one element reads and needs.
+struct ElementNeeds<'model> {
+    /// The datasets it reads, ordered by name.
+    datasets: Vec<&'model NormalizedName>,
+    /// The capabilities it needs by itself.
+    capabilities: Vec<Capability>,
+}
+
+/// What `target` reads and needs: a field reads its dataset; a metric reads the home datasets
+/// of the metric and of every metric it reads, and needs the capabilities of each of them
+/// (E2-5.4); `paths` entries need paths.
+fn element_needs<'model>(
     model: &'model InternalModel,
     target: &'model NamedTarget,
-) -> Vec<&'model NormalizedName> {
+) -> ElementNeeds<'model> {
     match target {
-        NamedTarget::Member(ResolvedName::Field(path)) => vec![&path.dataset],
-        NamedTarget::Member(ResolvedName::Metric(path)) => metric(model, path)
-            .and_then(|found| found.classification.as_ref())
-            .map(|classification| classification.home_datasets.iter().collect())
-            .unwrap_or_default(),
-        NamedTarget::Dataset(_) | NamedTarget::Relationship(_) => Vec::new(),
+        NamedTarget::Member(ResolvedName::Field(path)) => ElementNeeds {
+            datasets: vec![&path.dataset],
+            capabilities: Vec::new(),
+        },
+        NamedTarget::Member(ResolvedName::Metric(path)) => match metric(model, path) {
+            Some(found) => metric_needs(model, found),
+            None => ElementNeeds {
+                datasets: Vec::new(),
+                capabilities: Vec::new(),
+            },
+        },
+        NamedTarget::Dataset(_) | NamedTarget::Relationship(_) => ElementNeeds {
+            datasets: Vec::new(),
+            capabilities: vec![Capability::Paths],
+        },
     }
 }
 
-/// The capabilities `target` needs by itself.
-fn element_capabilities(model: &InternalModel, target: &NamedTarget) -> Vec<Capability> {
-    match target {
-        NamedTarget::Member(ResolvedName::Field(_)) => Vec::new(),
-        NamedTarget::Member(ResolvedName::Metric(path)) => metric(model, path)
-            .map(metric_capabilities)
-            .unwrap_or_default(),
-        NamedTarget::Dataset(_) | NamedTarget::Relationship(_) => vec![Capability::Paths],
+/// What `root` needs, over it and every metric it reads: their home datasets, several datasets
+/// when those are more than one, and the capabilities of their extensions.
+fn metric_needs<'model>(
+    model: &'model InternalModel,
+    root: &'model Metric,
+) -> ElementNeeds<'model> {
+    let closure = metric_closure(model, root);
+    let datasets: BTreeSet<&NormalizedName> = closure
+        .iter()
+        .filter_map(|read| read.classification.as_ref())
+        .flat_map(|classification| &classification.home_datasets)
+        .collect();
+    let mut capabilities: Vec<Capability> = closure
+        .into_iter()
+        .flat_map(extension_capabilities)
+        .collect();
+    if datasets.len() > 1 {
+        capabilities.push(Capability::SeveralDatasets);
+    }
+    ElementNeeds {
+        datasets: datasets.into_iter().collect(),
+        capabilities,
     }
 }
 
-/// The capabilities a metric needs: several home datasets, and its extensions.
-fn metric_capabilities(metric: &Metric) -> Vec<Capability> {
+/// The capabilities the extensions of one metric need.
+fn extension_capabilities(metric: &Metric) -> Vec<Capability> {
     let mut needed = Vec::new();
-    if metric
-        .classification
-        .as_ref()
-        .is_some_and(|classification| classification.home_datasets.len() > 1)
-    {
-        needed.push(Capability::SeveralDatasets);
-    }
-    if metric.derived.is_some() {
+    if is_derived(metric) {
         needed.push(Capability::DerivedMetric);
     }
     match &metric.declared_additivity {
@@ -137,6 +165,18 @@ fn metric_capabilities(metric: &Metric) -> Vec<Capability> {
         needed.push(Capability::ContextMetric);
     }
     needed
+}
+
+/// Whether `metric` is a derived metric: it has the `derived` extension, or it reads metrics
+/// with `AGG(…)` without being a context metric, as a development-line metric that reads
+/// `AGG(dataset.metric)` does (DER-2.2).
+fn is_derived(metric: &Metric) -> bool {
+    metric.derived.is_some()
+        || (metric.context.is_none()
+            && metric
+                .classification
+                .as_ref()
+                .is_some_and(|classification| !classification.inputs.is_empty()))
 }
 
 /// Whether `home` reaches, through many-to-one steps of usable relationships, another dataset

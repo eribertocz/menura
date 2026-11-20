@@ -81,6 +81,14 @@ pub fn column(text: &str) -> Expression {
     })
 }
 
+/// `AGG(qualifier.metric)`, or `AGG(metric)` without a qualifier.
+pub fn metric_aggregate(text: &str) -> Expression {
+    match column(text) {
+        Expression::Reference(reference) => Expression::MetricAggregate(reference),
+        other => other,
+    }
+}
+
 /// `left = 'x'`.
 pub fn equals_text(left: Expression) -> Expression {
     Expression::Binary {

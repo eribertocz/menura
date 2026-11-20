@@ -15,6 +15,7 @@ mod error;
 mod model_elements;
 mod named;
 mod names;
+mod read_metrics;
 mod resolver;
 mod row_12b;
 mod rows;
