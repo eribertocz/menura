@@ -19,6 +19,8 @@ use crate::time::QueryTime;
 pub struct QueryTreeParts {
     /// The filters, in the order written: `filter`, then the `filters` extension.
     pub filters: Vec<QueryFilter>,
+    /// The `time_grains` entries, in the order written.
+    pub time_grains: Vec<TimeGrainChoice>,
     /// The date range, when written.
     pub date_range: Option<QueryDateRange>,
     /// The relationships chosen by the query, in the order written.
@@ -78,6 +80,12 @@ impl QueryTree {
     #[must_use]
     pub fn time(&self) -> &QueryTime {
         &self.time
+    }
+
+    /// The `time_grains` entries, in the order written (QRY-4.1).
+    #[must_use]
+    pub fn time_grains(&self) -> &[TimeGrainChoice] {
+        &self.parts.time_grains
     }
 
     /// The filters, in the order written.
