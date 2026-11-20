@@ -306,11 +306,18 @@ Find a rule ID or a section here, then open only that file at that line.
 | [contracts/security-context.md](contracts/security-context.md#L25) | 25 | rule | SEC-3.1 |
 | [contracts/security-context.md](contracts/security-context.md#L27) | 27 | rule | SEC-3.2 |
 | [contracts/security-context.md](contracts/security-context.md#L28) | 28 | rule | SEC-3.3 |
-| [contracts/security-context.md](contracts/security-context.md#L29) | 29 | rule | SEC-3.4 |
-| [contracts/security-context.md](contracts/security-context.md#L30) | 30 | rule | SEC-3.5 |
-| [contracts/security-context.md](contracts/security-context.md#L31) | 31 | rule | SEC-3.6 |
-| [contracts/security-context.md](contracts/security-context.md#L32) | 32 | rule | SEC-3.7 |
-| [contracts/security-context.md](contracts/security-context.md#L34) | 34 | section | SEC-4 Errors |
+| [contracts/security-context.md](contracts/security-context.md#L40) | 40 | rule | SEC-3.4 |
+| [contracts/security-context.md](contracts/security-context.md#L41) | 41 | rule | SEC-3.5 |
+| [contracts/security-context.md](contracts/security-context.md#L42) | 42 | rule | SEC-3.6 |
+| [contracts/security-context.md](contracts/security-context.md#L43) | 43 | rule | SEC-3.7 |
+| [contracts/security-context.md](contracts/security-context.md#L44) | 44 | rule | SEC-3.8 |
+| [contracts/security-context.md](contracts/security-context.md#L45) | 45 | rule | SEC-3.9 |
+| [contracts/security-context.md](contracts/security-context.md#L47) | 47 | section | SEC-4 Errors |
+| [decisions/0001-security-context-admission.md](decisions/0001-security-context-admission.md#L1) | 1 | section | 0001 Security context admission and fingerprint |
+| [decisions/0001-security-context-admission.md](decisions/0001-security-context-admission.md#L3) | 3 | section | Context |
+| [decisions/0001-security-context-admission.md](decisions/0001-security-context-admission.md#L10) | 10 | section | Decision |
+| [decisions/0001-security-context-admission.md](decisions/0001-security-context-admission.md#L20) | 20 | section | Consequences |
+| [decisions/0001-security-context-admission.md](decisions/0001-security-context-admission.md#L26) | 26 | section | Rules changed |
 | [decisions/0002-e1-envelope-and-references.md](decisions/0002-e1-envelope-and-references.md#L1) | 1 | section | 0002 E1 envelope, time zone names, references and the 0.3.0 SQL-form check |
 | [decisions/0002-e1-envelope-and-references.md](decisions/0002-e1-envelope-and-references.md#L3) | 3 | section | Context |
 | [decisions/0002-e1-envelope-and-references.md](decisions/0002-e1-envelope-and-references.md#L9) | 9 | section | Decision |

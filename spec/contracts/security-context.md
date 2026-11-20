@@ -24,12 +24,25 @@ Schema: [`schemas/security-context.schema.json`](schemas/security-context.schema
 
 - **SEC-3.1** Every executable compilation requires a security context. There are no anonymous queries. Model validation (E0) needs none.
 - **SEC-3.2a** An attribute not declared in the model's `security_context` is ignored and listed in the explanation; it is excluded from the fingerprint.
-- **SEC-3.2** A role not declared in the model grants nothing. It is not an error, because identity providers carry roles unrelated to the model; the explanation lists it as ignored.
-- **SEC-3.3** An attribute is checked against its declaration in the model's `security_context` and encoded as CON-4 requires (a `decimal` or `date` attribute is a canonical string; an `integer` attribute outside ±(2^53 − 1) is a string). A value of the wrong type or encoding is an error (`ESEC-01`).
+- **SEC-3.2** A role not declared in the model grants nothing. It is not an error, because identity providers carry roles unrelated to the model; the explanation lists it as ignored, and it is excluded from the fingerprint.
+- **SEC-3.3** An attribute is checked against its declaration in the model's `security_context` and encoded as CON-4 requires. A value of the wrong type or encoding is an error (`ESEC-01`). Each declared type has exactly one encoding, so equal values always have the same fingerprint:
+
+  | Declared type | Accepted value |
+  |---|---|
+  | `text` | A JSON string |
+  | `integer` | A signed 64-bit integer: a JSON number within ±(2^53 − 1); outside that range, a string of an optional `-` and digits without leading zeros |
+  | `decimal(p,s)` | A string in the CON-4 decimal form, with exactly `s` fraction digits and at most `p − s` integer digits |
+  | `date` | A string `YYYY-MM-DD` that names a valid date of the proleptic Gregorian calendar |
+  | `boolean` | A JSON boolean |
+  | `list<T>` | A JSON array, possibly empty, whose every item is accepted for `T` |
+
+  A scalar is never accepted for a `list<…>` attribute, nor an array for a scalar one.
 - **SEC-3.4** If a row policy that applies to the query reads an attribute the context does not provide, compilation fails (`ESEC-02`). The compiler never substitutes a default value.
 - **SEC-3.5** Attribute values reach SQL only as bound parameters, never as text.
-- **SEC-3.6** The context fingerprint is the SHA-256 hash of the RFC 8785 canonical JSON of `{roles, attributes}` after CON-4 encoding, with `roles` and list attribute values sorted (CON-5 order) and duplicates removed. `subject` is excluded, so users with identical roles and attributes share cache entries safely: their results are identical by construction.
+- **SEC-3.6** The context fingerprint is the SHA-256 hash of the RFC 8785 canonical JSON of `{roles, attributes}` after CON-4 encoding, where `roles` holds only the roles the model declares, sorted (CON-5 order) without duplicates, and `attributes` holds only the declared attributes, each list value sorted by value in its declared type (numbers numerically, dates chronologically, text in CON-5 order, `false` before `true`) without duplicates. `subject` is excluded, so users with identical roles and attributes share cache entries safely: their results are identical by construction.
 - **SEC-3.7** Authorization is deny by default (P9). How the model declares access, field access and row policies is specified in the security extension.
+- **SEC-3.8** Order of checks: the document is JSON (a document that is not valid UTF-8 JSON is `ESEC-01`, located at the empty pointer), then `contract` and `contract_version` (`ESEC-03`, located at `/contract` or `/contract_version`; a missing member is unsupported), then the JSON Schema (`ESEC-01`, located at the first violation), then the declarations (SEC-3.3, `ESEC-01`), with the attributes in CON-5 order of their names and the items of a list in index order, located at `/attributes/<name>` or `/attributes/<name>/<index>` (RFC 6901 escaping). The first failure is reported, as in CAT-9.1.
+- **SEC-3.9** A security context read through the former contract name (CON-0.5) reports `WQRY-01`, located at `/contract` of the security context, only when the context is admitted. It comes before every warning of the query, because the context is admitted first (E2-5 row 0a).
 
 ## SEC-4 Errors
 
