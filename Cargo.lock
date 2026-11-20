@@ -941,8 +941,10 @@ dependencies = [
 name = "menura-security"
 version = "0.2.0"
 dependencies = [
+ "menura-contracts",
  "menura-model",
  "menura-representations",
+ "serde_json",
 ]
 
 [[package]]
