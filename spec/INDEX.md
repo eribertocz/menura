@@ -780,9 +780,11 @@ Find a rule ID or a section here, then open only that file at that line.
 | [stages/E6-generate.md](stages/E6-generate.md#L42) | 42 | rule | E6-5.3 |
 | [stages/E6-generate.md](stages/E6-generate.md#L43) | 43 | rule | E6-5.4 |
 | [stages/E6-generate.md](stages/E6-generate.md#L44) | 44 | rule | E6-5.5 |
-| [stages/E6-generate.md](stages/E6-generate.md#L46) | 46 | section | E6-6 Other outputs |
-| [stages/E6-generate.md](stages/E6-generate.md#L48) | 48 | rule | E6-6.1 |
-| [stages/E6-generate.md](stages/E6-generate.md#L49) | 49 | rule | E6-6.2 |
+| [stages/E6-generate.md](stages/E6-generate.md#L45) | 45 | rule | E6-5.6 |
+| [stages/E6-generate.md](stages/E6-generate.md#L46) | 46 | rule | E6-5.7 |
+| [stages/E6-generate.md](stages/E6-generate.md#L48) | 48 | section | E6-6 Other outputs |
+| [stages/E6-generate.md](stages/E6-generate.md#L50) | 50 | rule | E6-6.1 |
+| [stages/E6-generate.md](stages/E6-generate.md#L51) | 51 | rule | E6-6.2 |
 | [stages/README.md](stages/README.md#L1) | 1 | section | Stages |
 | [stages/README.md](stages/README.md#L5) | 5 | section | STG-1 Load |
 | [stages/README.md](stages/README.md#L11) | 11 | section | STG-2 Compile |
