@@ -67,6 +67,7 @@ With two or more branches, the plan MUST equal Apache Ossie Layer 3 section 5.5:
 | E4-6.8 | **Context modifiers never remove policies.** A modifier that removes a dimension or filter from a metric's context (E4-8) applies only to query filters and dimensions, never to row policies. |
 | E4-6.9 | Attribute values are bound parameters (SEC-3.5). A policy needing an absent attribute fails compilation (`ESEC-02`) only when it is **applicable**: it remains after exemption (E4-6.2 step 1) and either has no `roles` or lists one of the user's roles. A policy the user is exempt from, or one that grants none of the user's roles, never fails. `ESEC-02` is located at `/attributes` of the security context, and its message names only the missing attribute, never the policy, its dataset or its condition (PLN-5.2, SCY-4a.1). Datasets are visited in branch order (E3-4.3), home dataset first, their policies in CON-5 order of their names (E0H-1.4), and each condition's attributes in order of appearance; the first missing attribute is reported. |
 | E4-6.9a | **Empty list attribute.** `x IN (USER_ATTRIBUTE('a'))` is FALSE and `x NOT IN (USER_ATTRIBUTE('a'))` is TRUE when `a` is an empty list, whatever `x` is, NULL included, as SQL `= ANY` over an empty set. |
+| E4-6.9b | **Now in a row policy.** An applicable policy (E4-6.9) whose condition uses `CURRENT_DATE`, `CURRENT_TIME` or `CURRENT_TIMESTAMP` needs `reference_time` (QRY-2). Without it, compilation fails with `EQRY-03`, located at `/query`, its message naming neither the policy nor its dataset (SCY-4a.1). Policies are visited as in E4-6.9, after every `ESEC-02` check. |
 | E4-6.10 | Joins added only for propagation never add output columns, and the explanation names the policies without showing any value. |
 
 ## E4-7 Additivity
@@ -91,5 +92,6 @@ branch with its own grain and filters, stitched by the query keys.
 | Code | Condition |
 |---|---|
 | `ESEC-02` | An applicable row policy needs an absent attribute |
+| `EQRY-03` | An applicable row policy needs `reference_time` and the query has none (E4-6.9b) |
 | `E4-02` | A context modifier needs a time dimension the query lacks, or at a coarser grain |
 | `E4-03` | Query grain of a semi-additive `over` finer than its `snapshot_grain` |
