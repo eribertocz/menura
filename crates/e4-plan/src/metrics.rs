@@ -4,18 +4,17 @@
 use menura_contracts::types::common::LogicalType;
 use menura_model::expression::Expression;
 use menura_model::internal_model::{
-    Dataset, DeclaredAdditivity, InternalModel, Metric, MetricClassification, SourceLocation,
-    ValueType,
+    Dataset, DeclaredAdditivity, InternalModel, Metric, SourceLocation, ValueType,
 };
 use menura_representations::bound_query::{BoundMetric, BoundMetricKind, BoundQuery, MetricPath};
 use menura_representations::logical_plan::AggregateComponent;
 use menura_representations::names::ColumnName;
 use menura_representations::paths::{Branch, Branches, ComponentKey};
 
-use crate::columns::{column_reference, component_column, over_scan, source_prefix};
+use crate::columns::{component_column, over_scan, source_prefix};
 use crate::dimensions::at;
 use crate::error::{InvariantViolation, PlanError};
-use crate::rewrite::rewrite;
+use crate::expansion::{ExpandedMetric, expand};
 
 /// The model location of the first metric of `metrics`, where the final `Project` comes
 /// from; `None` without metrics.
@@ -23,12 +22,11 @@ pub(crate) fn first_metric_location(metrics: &[PlannedMetric<'_>]) -> Option<Sou
     metrics.first().map(|metric| metric.model.location.clone())
 }
 
-/// A metric of the query, read from the model.
+/// A metric of the query, read from the model and expanded into its base components.
 pub(crate) struct PlannedMetric<'input> {
     bound: &'input BoundMetric,
     model: &'input Metric,
-    classification: &'input MetricClassification,
-    in_dataset_metric: bool,
+    expanded: ExpandedMetric<'input>,
 }
 
 /// A metric output column, evaluated from the components.
@@ -47,8 +45,9 @@ pub(crate) struct MetricOutput {
 ///
 /// # Errors
 ///
-/// An internal error for an inline metric, a metric the model does not have or did not
-/// classify, or a metric with the derived, additivity, population or context extension.
+/// An internal error for an inline metric, a metric or input the model does not have or did
+/// not classify, a cycle of derived metrics, or a metric or input with the additivity,
+/// population or context extension.
 pub(crate) fn planned_metrics<'input>(
     query: &'input BoundQuery,
     model: &'input InternalModel,
@@ -56,12 +55,16 @@ pub(crate) fn planned_metrics<'input>(
     query
         .columns()
         .metrics()
-        .map(|bound| planned_metric(bound, model).map_err(|violation| at(violation, &bound.origin)))
+        .enumerate()
+        .map(|(position, bound)| {
+            planned_metric(bound, position, model).map_err(|violation| at(violation, &bound.origin))
+        })
         .collect()
 }
 
 fn planned_metric<'input>(
     bound: &'input BoundMetric,
+    position: usize,
     model: &'input InternalModel,
 ) -> Result<PlannedMetric<'input>, InvariantViolation> {
     let BoundMetricKind::Reference(path) = &bound.kind else {
@@ -69,15 +72,10 @@ fn planned_metric<'input>(
     };
     let found = model_metric(path, model).ok_or(InvariantViolation::UnknownMetric)?;
     check_extensions(found)?;
-    let classification = found
-        .classification
-        .as_ref()
-        .ok_or(InvariantViolation::UnknownMetric)?;
     Ok(PlannedMetric {
         bound,
         model: found,
-        classification,
-        in_dataset_metric: matches!(path, MetricPath::Dataset { .. }),
+        expanded: expand(path, position, model, &check_extensions)?,
     })
 }
 
@@ -95,9 +93,6 @@ fn model_metric<'model>(path: &MetricPath, model: &'model InternalModel) -> Opti
 
 /// Fails for a metric extension outside the slice (VS-1).
 fn check_extensions(metric: &Metric) -> Result<(), InvariantViolation> {
-    if metric.derived.is_some() {
-        return Err(InvariantViolation::DerivedMetric);
-    }
     if metric.context.is_some() {
         return Err(InvariantViolation::ContextMetric);
     }
@@ -143,11 +138,12 @@ fn component(
     };
     let metric = metrics.get(key.metric).ok_or_else(unknown)?;
     let fail = |violation| at(violation, &metric.bound.origin);
-    let found = metric
-        .classification
+    let base = metric
+        .expanded
         .components
         .get(key.component)
         .ok_or_else(|| fail(InvariantViolation::UnknownComponent))?;
+    let found = base.component;
     if found.home_dataset != home.name {
         return Err(fail(InvariantViolation::ForeignField));
     }
@@ -156,7 +152,7 @@ fn component(
         filter: found.filter.clone().map(Box::new),
     };
     let Expression::Aggregate { call, filter } =
-        over_scan(&aggregate, metric.in_dataset_metric.then_some(prefix)).map_err(fail)?
+        over_scan(&aggregate, base.in_dataset_metric.then_some(prefix)).map_err(fail)?
     else {
         return Err(fail(InvariantViolation::ComponentMismatch));
     };
@@ -198,28 +194,14 @@ fn metric_output(
     position: usize,
     metric: &PlannedMetric<'_>,
 ) -> Result<MetricOutput, InvariantViolation> {
-    let expression = metric
-        .model
-        .expression
-        .as_ref()
-        .ok_or(InvariantViolation::ComponentMismatch)?;
-    let mut next = 0;
-    let evaluated = rewrite(expression, &mut |node| {
-        let Expression::Aggregate { .. } = node else {
-            return Ok(None);
-        };
-        let key = ComponentKey {
+    let every_computed = (0..metric.expanded.components.len()).all(|component| {
+        computed.contains(&ComponentKey {
             metric: position,
-            component: next,
-        };
-        next += 1;
-        if !computed.contains(&key) {
-            return Err(InvariantViolation::UnknownComponent);
-        }
-        column_reference(component_column(key.metric, key.component).as_str()).map(Some)
-    })?;
-    if next != metric.classification.components.len() {
-        return Err(InvariantViolation::ComponentMismatch);
+            component,
+        })
+    });
+    if !every_computed {
+        return Err(InvariantViolation::UnknownComponent);
     }
     let typed = metric
         .model
@@ -231,7 +213,7 @@ fn metric_output(
     };
     Ok(MetricOutput {
         name: ColumnName::new(metric.bound.output_name.as_str()),
-        expression: evaluated,
+        expression: metric.expanded.expression.clone(),
         logical_type: logical_type.clone(),
         nullable: typed.nullable,
     })

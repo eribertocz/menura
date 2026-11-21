@@ -7,14 +7,17 @@
 
 mod support;
 
+use menura_e4_plan::{InvariantViolation, PlanError};
 use menura_expressions::typing::decimal;
 use menura_model::expression::{
     AggregateCall, BinaryOperator, Expression, IntegerLiteral, Literal, SimpleAggregate,
 };
+use menura_model::internal_model::DeclaredAdditivity;
 use menura_representations::logical_plan::{Operation, PlanNode};
-use support::derived::{derived_plan, float};
+use support::derived::{changed_model, derived_plan, float, plan_over};
 use support::plan::{column, column_reference, kind, kinds, node};
 use support::stitch::{branch, region, stitch_parts};
+use support::tree;
 
 fn binary(operator: BinaryOperator, left: Expression, right: Expression) -> Expression {
     Expression::Binary {
@@ -226,4 +229,43 @@ fn der_4_1_a_base_metric_beside_a_derived_metric_keeps_its_own_components() {
             column("budget_total", decimal(38, 2), true),
         ]
     );
+}
+
+fn violation(result: Result<PlanNode, PlanError>) -> InvariantViolation {
+    match result {
+        Err(PlanError::Invariant { violation, .. }) => violation,
+        other => panic!("expected an internal error, got {other:?}"),
+    }
+}
+
+#[test]
+fn der_2_4_a_cycle_of_derived_metrics_is_an_internal_error() {
+    let model = changed_model("SALES_TO_BUDGET", |metric| {
+        metric.expression = Some(tree("AGG(sales_to_budget_percent) / AGG(budget_total)"));
+    });
+
+    let result = plan_over(
+        &model,
+        vec![branch("BUDGETS", &[(0, 0)], false)],
+        Vec::new(),
+        &["SALES_TO_BUDGET_PERCENT"],
+    );
+
+    assert_eq!(violation(result), InvariantViolation::DerivedCycle);
+}
+
+#[test]
+fn der_4_1_an_input_outside_the_slice_is_an_internal_error() {
+    let model = changed_model("BUDGET_TOTAL", |metric| {
+        metric.declared_additivity = Some(DeclaredAdditivity::NonAdditive);
+    });
+
+    let result = plan_over(
+        &model,
+        vec![branch("BUDGETS", &[(0, 0), (0, 1)], false)],
+        Vec::new(),
+        &["AVERAGE_BUDGET"],
+    );
+
+    assert_eq!(violation(result), InvariantViolation::AdditivityMetric);
 }

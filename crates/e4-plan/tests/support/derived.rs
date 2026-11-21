@@ -2,6 +2,7 @@
 //! plans of their queries (DER-2, DER-4).
 
 use menura_contracts::types::common::LogicalType;
+use menura_e4_plan::PlanError;
 use menura_expressions::typing::double;
 use menura_model::internal_model::{
     Additivity, DerivedMetric, DivisionByZero, InternalModel, Metric, MetricClassification,
@@ -108,6 +109,16 @@ pub fn derived_plan(
     dimensions: Vec<BoundDimension>,
     metric_names: &[&str],
 ) -> PlanNode {
+    plan_over(&derived_model(), branches, dimensions, metric_names).expect("a plan")
+}
+
+/// The plan over `model` of `dimensions`, the metrics `metric_names` and `branches`.
+pub fn plan_over(
+    model: &InternalModel,
+    branches: Vec<Branch>,
+    dimensions: Vec<BoundDimension>,
+    metric_names: &[&str],
+) -> Result<PlanNode, PlanError> {
     let metrics: Vec<BoundMetric> = metric_names
         .iter()
         .enumerate()
@@ -117,7 +128,19 @@ pub fn derived_plan(
         &Branches::new(branches).expect("distinct homes"),
         &query(dimensions, metrics, BoundQueryParts::default()),
         &anyone(),
-        &derived_model(),
+        model,
     )
-    .expect("a plan")
+}
+
+/// [`derived_model`] with the metric `metric_name` changed by `change`.
+pub fn changed_model(metric_name: &str, change: impl FnOnce(&mut Metric)) -> InternalModel {
+    let base = derived_model();
+    let mut parts = base.parts().clone();
+    let metric = parts
+        .metrics
+        .iter_mut()
+        .find(|metric| metric.name == name(metric_name))
+        .expect("a metric of the model");
+    change(metric);
+    InternalModel::new(parts, base.hash().clone())
 }

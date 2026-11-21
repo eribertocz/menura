@@ -2,7 +2,7 @@
 //! rule they check.
 
 use menura_model::expression::{BinaryOperator, Expression, Identifier, Reference};
-use menura_model::internal_model::{Metric, MetricClassification};
+use menura_model::internal_model::{Dataset, Metric, MetricClassification};
 
 use super::*;
 use crate::{PathCode, PathDiagnostic};
@@ -40,6 +40,13 @@ fn derived(metric_name: &str, formula: Expression, homes: &[&str]) -> Metric {
     metric
 }
 
+/// The model with `datasets` and the semantic-model `metrics`, ordered by name as the internal
+/// model orders them (E0H-2.3).
+fn sorted_model(datasets: Vec<Dataset>, mut metrics: Vec<Metric>) -> InternalModel {
+    metrics.sort_by(|left, right| left.name.cmp(&right.name));
+    model(datasets, metrics)
+}
+
 fn branch_components(branches: &Branches) -> Vec<(&str, &[ComponentKey])> {
     branches
         .as_slice()
@@ -58,7 +65,7 @@ fn only_metric(metric_name: &str) -> menura_representations::bound_query::BoundQ
 
 #[test]
 fn der_2_1_a_derived_metric_is_expanded_into_the_components_of_its_inputs() {
-    let model = model(
+    let model = sorted_model(
         Vec::new(),
         vec![
             metric("BILLED", &["INVOICES"]),
@@ -81,7 +88,7 @@ fn der_2_1_a_derived_metric_is_expanded_into_the_components_of_its_inputs() {
 
 #[test]
 fn der_4_3_inputs_from_different_home_datasets_are_separate_branches() {
-    let model = model(
+    let model = sorted_model(
         Vec::new(),
         vec![
             metric("BUDGET", &["BUDGETS"]),
@@ -104,7 +111,7 @@ fn der_4_3_inputs_from_different_home_datasets_are_separate_branches() {
 
 #[test]
 fn der_2_2_agg_of_a_dataset_metric_reads_the_components_of_that_dataset_metric() {
-    let model = model(
+    let model = sorted_model(
         vec![
             dataset("ORDERS", vec![metric("REVENUE", &["ORDERS"])]),
             dataset("RETURNS", vec![metric("REVENUE", &["RETURNS"])]),
@@ -129,7 +136,7 @@ fn der_2_2_agg_of_a_dataset_metric_reads_the_components_of_that_dataset_metric()
 
 #[test]
 fn der_2_4_a_derived_metric_over_a_derived_metric_is_expanded_down_to_base_components() {
-    let model = model(
+    let model = sorted_model(
         Vec::new(),
         vec![
             metric("BILLED", &["INVOICES"]),
@@ -161,7 +168,7 @@ fn der_2_4_a_derived_metric_over_a_derived_metric_is_expanded_down_to_base_compo
 
 #[test]
 fn der_2_4_an_input_read_twice_is_expanded_once() {
-    let model = model(
+    let model = sorted_model(
         Vec::new(),
         vec![
             metric("BILLED", &["INVOICES"]),
@@ -194,12 +201,12 @@ fn e0g_5_2_a_dimension_must_be_reachable_from_every_home_dataset_of_a_derived_me
         Vec::new(),
         vec![
             metric("BUDGET", &["BUDGETS"]),
+            metric("SALES", &["ORDERS"]),
             derived(
                 "SALES_TO_BUDGET",
                 divided(agg(None, "SALES"), agg(None, "BUDGET")),
                 &["BUDGETS", "ORDERS"],
             ),
-            metric("SALES", &["ORDERS"]),
         ],
         &[("ORDERS_CUSTOMERS", "ORDERS", "CUSTOMERS")],
     );
@@ -219,7 +226,7 @@ fn e0g_5_2_a_dimension_must_be_reachable_from_every_home_dataset_of_a_derived_me
 
 #[test]
 fn der_2_4_a_derived_metric_that_names_a_missing_metric_is_an_invariant_violation() {
-    let model = model(
+    let model = sorted_model(
         Vec::new(),
         vec![derived(
             "BROKEN",
@@ -238,7 +245,7 @@ fn der_2_4_a_derived_metric_that_names_a_missing_metric_is_an_invariant_violatio
 
 #[test]
 fn der_2_4_a_cycle_of_derived_metrics_is_an_invariant_violation() {
-    let model = model(
+    let model = sorted_model(
         Vec::new(),
         vec![derived(
             "LOOP",
