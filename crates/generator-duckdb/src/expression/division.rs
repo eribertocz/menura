@@ -6,7 +6,7 @@ use menura_model::internal_model::{DivisionByZero, NormalizedName};
 use super::ExpressionWriter;
 use crate::values::text_sql;
 
-/// The result of a division (`/` and `%`) whose divisor is 0.
+/// The result of a division (`/`, `%` and `MOD`) whose divisor is 0.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub(crate) enum ZeroDivisor<'input> {
     /// `NULL`: every division outside derived metrics, and inside a derived metric with
@@ -40,7 +40,7 @@ impl<'input> ZeroDivisor<'input> {
 
 impl<'input> ExpressionWriter<'input, '_> {
     /// This writer, for the formula of the derived metric `metric` whose `on_division_by_zero`
-    /// is `rule` (DER-3.1): its divisions (`/` and `%`) follow `rule`.
+    /// is `rule` (DER-3.1): its divisions (`/`, `%` and `MOD`) follow `rule`.
     #[cfg_attr(
         not(test),
         expect(

@@ -32,7 +32,7 @@ impl ExpressionWriter<'_, '_> {
     ) -> Result<String, GenerateError> {
         match operator {
             BinaryOperator::Divide => self.division(left, right),
-            BinaryOperator::Modulo => self.modulo(expression, left, right, self.zero_divisor),
+            BinaryOperator::Modulo => self.modulo(expression, left, right),
             BinaryOperator::Add | BinaryOperator::Subtract | BinaryOperator::Multiply => {
                 self.arithmetic(expression, operator, left, right)
             }

@@ -233,3 +233,30 @@ fn e6_4_11_the_error_text_is_a_literal_even_in_a_query_node() {
         "{sql}"
     );
 }
+
+#[test]
+fn e6_4_6a_derived_mod_function_with_error_raises_rder_01() {
+    let metric = NormalizedName::new("UNITS_LEFT");
+    let (sql, _) = written(
+        "MOD(UNITS, ORDERS)",
+        &from_model(),
+        Some((&metric, DivisionByZero::Error)),
+    );
+    golden(
+        &sql,
+        include_str!("../../tests/golden/e6_4_6a_derived_mod_function_error.sql"),
+    );
+}
+
+#[test]
+fn e6_4_6_derived_mod_function_with_null_is_the_mod_function_outside_derived_metrics() {
+    let metric = NormalizedName::new("UNITS_LEFT");
+    let outside = written("MOD(UNITS, ORDERS)", &from_model(), None);
+    let inside = written(
+        "MOD(UNITS, ORDERS)",
+        &from_model(),
+        Some((&metric, DivisionByZero::Null)),
+    );
+    assert_eq!(inside, outside);
+    assert!(inside.0.contains("THEN NULL ELSE"), "{}", inside.0);
+}
