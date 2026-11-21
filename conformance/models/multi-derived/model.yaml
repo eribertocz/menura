@@ -1,0 +1,90 @@
+version: "0.1.1"
+semantic_model:
+  - name: multi_derived
+    description: 'invoices and budgets that share the dimension regions, with derived metrics over their metrics'
+    custom_extensions:
+      - vendor_name: COMMON
+        data: '{"namespace": "menura", "version": 1, "security_context": {"roles": ["analyst"], "attributes": []}}'
+    datasets:
+      - name: budgets
+        source: shop.main.budgets
+        primary_key: [budget_id]
+        fields:
+          - name: budget_id
+            expression: {dialects: [{dialect: ANSI_SQL, expression: 'budget_id'}]}
+          - name: region_id
+            expression: {dialects: [{dialect: ANSI_SQL, expression: 'region_id'}]}
+          - name: amount
+            expression: {dialects: [{dialect: ANSI_SQL, expression: 'amount'}]}
+        custom_extensions:
+          - vendor_name: COMMON
+            data: '{"namespace": "menura", "version": 1, "access": {"mode": "roles", "roles": ["analyst"]}}'
+      - name: invoices
+        source: shop.main.invoices
+        primary_key: [invoice_id]
+        fields:
+          - name: invoice_id
+            expression: {dialects: [{dialect: ANSI_SQL, expression: 'invoice_id'}]}
+          - name: region_id
+            expression: {dialects: [{dialect: ANSI_SQL, expression: 'region_id'}]}
+          - name: billed
+            expression: {dialects: [{dialect: ANSI_SQL, expression: 'billed'}]}
+          - name: collected
+            expression: {dialects: [{dialect: ANSI_SQL, expression: 'collected'}]}
+        custom_extensions:
+          - vendor_name: COMMON
+            data: '{"namespace": "menura", "version": 1, "access": {"mode": "roles", "roles": ["analyst"]}}'
+      - name: regions
+        source: shop.main.regions
+        primary_key: [region_id]
+        fields:
+          - name: region_id
+            expression: {dialects: [{dialect: ANSI_SQL, expression: 'region_id'}]}
+          - name: name
+            expression: {dialects: [{dialect: ANSI_SQL, expression: 'name'}]}
+        custom_extensions:
+          - vendor_name: COMMON
+            data: '{"namespace": "menura", "version": 1, "access": {"mode": "roles", "roles": ["analyst"]}}'
+    relationships:
+      - name: budgets_regions
+        from: budgets
+        to: regions
+        from_columns: [region_id]
+        to_columns: [region_id]
+      - name: invoices_regions
+        from: invoices
+        to: regions
+        from_columns: [region_id]
+        to_columns: [region_id]
+    metrics:
+      - name: billed
+        expression: {dialects: [{dialect: ANSI_SQL, expression: 'SUM(invoices.billed)'}]}
+      - name: collected
+        expression: {dialects: [{dialect: ANSI_SQL, expression: 'SUM(invoices.collected)'}]}
+      - name: budget_total
+        expression: {dialects: [{dialect: ANSI_SQL, expression: 'SUM(budgets.amount)'}]}
+      - name: collection_rate
+        expression: {dialects: [{dialect: ANSI_SQL, expression: 'AGG(collected) / AGG(billed)'}]}
+        custom_extensions:
+          - vendor_name: COMMON
+            data: '{"namespace": "menura", "version": 1, "derived": {"on_division_by_zero": "null"}}'
+      - name: strict_collection_rate
+        expression: {dialects: [{dialect: ANSI_SQL, expression: 'AGG(collected) / AGG(billed)'}]}
+        custom_extensions:
+          - vendor_name: COMMON
+            data: '{"namespace": "menura", "version": 1, "derived": {"on_division_by_zero": "error"}}'
+      - name: collected_to_budget
+        expression: {dialects: [{dialect: ANSI_SQL, expression: 'AGG(collected) / AGG(budget_total)'}]}
+        custom_extensions:
+          - vendor_name: COMMON
+            data: '{"namespace": "menura", "version": 1, "derived": {"on_division_by_zero": "null"}}'
+      - name: collection_percent
+        expression: {dialects: [{dialect: ANSI_SQL, expression: 'AGG(collection_rate) * 100'}]}
+        custom_extensions:
+          - vendor_name: COMMON
+            data: '{"namespace": "menura", "version": 1, "derived": {}}'
+      - name: strict_rate_per_budget
+        expression: {dialects: [{dialect: ANSI_SQL, expression: 'AGG(collection_rate) / AGG(budget_total)'}]}
+        custom_extensions:
+          - vendor_name: COMMON
+            data: '{"namespace": "menura", "version": 1, "derived": {"on_division_by_zero": "error"}}'

@@ -1,0 +1,15 @@
+id: der-division-by-zero-error-001
+rules: [DER-3.1, E6-4.6a]
+model: multi-derived
+security_context: analyst.json
+query:
+  contract: "menura.query"
+  contract_version: "1.1.0"
+  time_zone: "UTC"
+  query:
+    dimensions: ["regions.name"]
+    metrics:
+      - {"metric": "strict_collection_rate", "alias": "strict_collection_rate"}
+expect:
+  outcome: "runtime_error"
+  error: "RDER-01"

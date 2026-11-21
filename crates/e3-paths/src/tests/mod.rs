@@ -307,4 +307,5 @@ fn vs_1_a_metric_without_components_is_an_invariant_violation() {
     );
 }
 
+mod derived;
 mod multi_dataset;

@@ -1,0 +1,38 @@
+version: "0.3.0.dev0"
+name: multi_derived_development
+description: Development-line model whose model metric divides dataset metrics of two datasets with AGG(dataset.metric)
+nonportable_extensions:
+  - vendor_name: COMMON
+    data: {namespace: menura, version: 1, security_context: {roles: [analyst], attributes: []}}
+datasets:
+  - name: orders
+    source: shop.main.orders
+    primary_key: [order_id]
+    fields:
+      - name: order_id
+        expression: {sql: order_id}
+      - name: amount
+        expression: {sql: amount}
+    metrics:
+      - name: total_amount
+        expression: {sql: SUM(amount)}
+    nonportable_extensions:
+      - vendor_name: COMMON
+        data: {namespace: menura, version: 1, access: {mode: roles, roles: [analyst]}}
+  - name: refunds
+    source: shop.main.refunds
+    primary_key: [refund_id]
+    fields:
+      - name: refund_id
+        expression: {sql: refund_id}
+      - name: amount
+        expression: {sql: amount}
+    metrics:
+      - name: total_amount
+        expression: {sql: SUM(amount)}
+    nonportable_extensions:
+      - vendor_name: COMMON
+        data: {namespace: menura, version: 1, access: {mode: roles, roles: [analyst]}}
+metrics:
+  - name: refund_rate
+    expression: {sql: AGG(refunds.total_amount) / AGG(orders.total_amount)}

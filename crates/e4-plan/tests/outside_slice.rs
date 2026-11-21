@@ -11,8 +11,8 @@ use std::num::NonZeroU64;
 use menura_contracts::types::common::Grain;
 use menura_e4_plan::{InvariantViolation, PlanError};
 use menura_model::internal_model::{
-    ContextMetric, ContextModifier, DeclaredAdditivity, DerivedMetric, Metric, NullHandling,
-    SemiAdditive, SnapshotAggregation,
+    ContextMetric, ContextModifier, DeclaredAdditivity, Metric, NullHandling, SemiAdditive,
+    SnapshotAggregation,
 };
 use menura_representations::bound_query::{
     BoundDimension, BoundDimensionKind, BoundMetric, BoundMetricKind, BoundQuery, BoundQueryParts,
@@ -71,16 +71,6 @@ fn order_count() -> Metric {
         "COUNT(*)",
         menura_expressions::typing::big_integer(),
     )
-}
-
-#[test]
-fn vs_1_a_derived_metric_is_an_internal_error() {
-    let mut derived = order_count();
-    derived.derived = Some(DerivedMetric {
-        inputs: vec![name("TOTAL_AMOUNT")],
-        on_division_by_zero: None,
-    });
-    assert_eq!(plan_with_metric(derived), InvariantViolation::DerivedMetric);
 }
 
 fn semi_additive(population: Option<&str>) -> DeclaredAdditivity {

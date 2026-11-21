@@ -32,6 +32,7 @@ pub(crate) fn dimension_keys(
             Ok(NamedExpression {
                 name: dimension_column(position),
                 expression,
+                derived: None,
             })
         })
         .collect()

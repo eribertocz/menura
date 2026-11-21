@@ -52,7 +52,7 @@ impl<'input> NeededDatasets<'input> {
         let mut metrics = Vec::new();
         for metric in query.columns().metrics() {
             let mut homes: Vec<&NormalizedName> = components(metric, model)?
-                .iter()
+                .into_iter()
                 .map(|component| &component.home_dataset)
                 .collect();
             homes.sort();

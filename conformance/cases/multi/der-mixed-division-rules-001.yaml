@@ -1,0 +1,15 @@
+id: der-mixed-division-rules-001
+rules: [DER-3.1, DER-2.4, E6-4.6a]
+model: multi-derived
+security_context: analyst.json
+query:
+  contract: "menura.query"
+  contract_version: "1.1.0"
+  time_zone: "UTC"
+  query:
+    dimensions: ["regions.name"]
+    metrics:
+      - {"metric": "strict_rate_per_budget", "alias": "strict_rate_per_budget"}
+expect:
+  outcome: "runtime_error"
+  error: "RDER-01"

@@ -96,8 +96,9 @@ pub enum InvariantViolation {
     UnknownComponent,
     /// A metric whose aggregates do not match its components (E0G-1.1).
     ComponentMismatch,
-    /// A derived metric (DER).
-    DerivedMetric,
+    /// A derived metric whose inputs lead back to it, which E0 reports as `E0C-34`
+    /// (DER-5.1.4).
+    DerivedCycle,
     /// A metric with an additivity declaration (ADD).
     AdditivityMetric,
     /// A semi-additive metric with an expected population (POP).
