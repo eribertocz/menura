@@ -77,9 +77,15 @@ impl<'input> StepWriter<'input> {
                 (body, None, kind)
             }
         };
+        let name = self.push_step(kind, body);
+        Ok(WrittenNode { name, ordering })
+    }
+
+    /// Adds the step `body` of `kind` and returns its quoted name.
+    pub(crate) fn push_step(&mut self, kind: &str, body: SelectBody) -> String {
         let name = quote(&format!("menura_{}_{kind}", self.steps.len() + 1));
         self.steps.push((name.clone(), body));
-        Ok(WrittenNode { name, ordering })
+        name
     }
 
     /// The body and kind of a node that reads, joins, deduplicates or combines rows: `Scan`,
