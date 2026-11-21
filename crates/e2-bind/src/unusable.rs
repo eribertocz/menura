@@ -53,8 +53,8 @@ pub(crate) fn check_rows_10_to_12a(
 }
 
 /// The place of `code` in the order of row 12a: `E0B-08`, `E0B-09`, `E0D-03`–`E0D-07`,
-/// `E0F-*`, `E0G-01`, `E0G-02`, `E0C-37`, then by code within a group; `None` when row 12a
-/// does not report it.
+/// `E0F-*`, `E0G-01`, `E0G-02`, `E0C-37`, `E0H-01`, then by code within a group; `None` when
+/// row 12a does not report it.
 fn row_12a_rank(code: &DiagnosticCode) -> Option<(u8, &str)> {
     let text = code.as_str();
     let group = match text {
@@ -65,6 +65,7 @@ fn row_12a_rank(code: &DiagnosticCode) -> Option<(u8, &str)> {
         "E0G-01" => 4,
         "E0G-02" => 5,
         "E0C-37" => 6,
+        "E0H-01" => 7,
         _ => return None,
     };
     Some((group, text))

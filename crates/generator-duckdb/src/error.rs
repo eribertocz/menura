@@ -55,10 +55,9 @@ pub enum InvariantViolation {
     AmbiguousColumn,
     /// A `Deduplicate` without identity columns (E4-4.0f).
     EmptyIdentity,
-    /// A `SemiJoin` without steps (E4-3.4).
-    EmptyPath,
-    /// A `SemiJoin` step whose relationship the model does not have, or that does not lead
-    /// from its `from` dataset to its `to` dataset.
+    /// A `SemiJoin` without key equalities (E4-3.4).
+    EmptyJoinCondition,
+    /// A `SemiJoin` along a relationship the model does not have.
     UnknownRelationship,
     /// A `Stitch` column whose branch index names no branch of the node (E4-3.7).
     UnknownBranch,

@@ -1,0 +1,16 @@
+id: multi-propagation-non-unique-key-001
+rules: [E4-6.5a]
+model: multi-propagation
+security_context: north.json
+oracle: "multi-propagation-non-unique-key-001.oracle.sql"
+query:
+  contract: "menura.query"
+  contract_version: "1.1.0"
+  time_zone: "UTC"
+  query:
+    metrics:
+      - {"metric": "visit_count", "alias": "visit_count"}
+expect:
+  outcome: "plan"
+  row_order: "any"
+  rows: "multi-propagation-non-unique-key-001.csv"

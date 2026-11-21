@@ -47,7 +47,10 @@ pub use plan::{
     aggregate, column, component, component_of, filter, limit, named, project, region_count, scan,
     scan_of, sort,
 };
-pub use propagation::{generate_propagation, orders_scan, propagation_model, semi_join, step};
+pub use propagation::{
+    generate_propagation, orders_scan, policy, propagation_model, scan_fields, scan_typed,
+    semi_join, semi_join_on,
+};
 
 /// The 64-bit signed integer.
 pub fn big_integer() -> LogicalType {

@@ -14,9 +14,10 @@ use menura_model::internal_model::{
     RelationshipGraph, TypedValue, ValueType,
 };
 use menura_representations::bound_query::BoundQuery;
-use menura_representations::logical_plan::{Operation, OutputSchema, PlanNode, SchemaColumn};
+use menura_representations::logical_plan::{
+    JoinCondition, Operation, OutputSchema, PlanNode, SchemaColumn,
+};
 use menura_representations::names::ColumnName;
-use menura_representations::paths::JoinStep;
 
 use super::{big_integer, from_model, location, parse, security};
 
@@ -162,45 +163,100 @@ fn propagation_catalog() -> CatalogSchemaDocument {
     }
 }
 
-/// The `Scan` of `ORDERS` that projects `ORDER_ID` and `CUSTOMER_ID`.
-pub fn orders_scan() -> PlanNode {
-    let columns = ["ORDER_ID", "CUSTOMER_ID"]
+/// The type of the field `name` of the dataset `dataset`.
+fn field_type(dataset: &str, name: &str) -> LogicalType {
+    shapes()
         .into_iter()
-        .map(|name| SchemaColumn {
+        .find(|shape| shape.name == dataset)
+        .and_then(|shape| {
+            shape
+                .fields
+                .into_iter()
+                .find(|(field, _, _)| *field == name)
+        })
+        .map(|(_, _, logical_type)| logical_type)
+        .expect("a field of the propagation model")
+}
+
+/// The `Scan` of `dataset` that projects `fields`.
+pub fn scan_fields(dataset: &str, fields: &[&str]) -> PlanNode {
+    let columns = fields
+        .iter()
+        .map(|name| (*name, field_type(dataset, name)))
+        .collect::<Vec<_>>();
+    scan_typed(dataset, &columns)
+}
+
+/// The `Scan` of `dataset` that projects `columns`, each a field with the plan type given.
+pub fn scan_typed(dataset: &str, columns: &[(&str, LogicalType)]) -> PlanNode {
+    let columns = columns
+        .iter()
+        .map(|(name, logical_type)| SchemaColumn {
             name: ColumnName::new(name),
-            logical_type: big_integer(),
+            logical_type: logical_type.clone(),
             nullable: true,
         })
         .collect();
     PlanNode::new(
         Operation::Scan {
-            dataset: NormalizedName::new("ORDERS"),
+            dataset: NormalizedName::new(dataset),
+            row_identity: None,
         },
         OutputSchema::new(columns),
-        from_model("/semantic_model/0/datasets/2"),
+        from_model("/semantic_model/0/datasets/0"),
     )
 }
 
-/// The step that crosses `relationship` from `from` to `to`.
-pub fn step(relationship: &str, from: &str, to: &str) -> JoinStep {
-    JoinStep {
-        relationship: NormalizedName::new(relationship),
-        from: NormalizedName::new(from),
-        to: NormalizedName::new(to),
-    }
+/// The `Scan` of `ORDERS` that projects `ORDER_ID` and `CUSTOMER_ID`.
+pub fn orders_scan() -> PlanNode {
+    scan_fields("ORDERS", &["ORDER_ID", "CUSTOMER_ID"])
 }
 
-/// The `SemiJoin` of `input` along `path` by `predicate`, with the schema of its input.
-pub fn semi_join(input: PlanNode, path: Vec<JoinStep>, predicate: &str) -> PlanNode {
+/// The `Filter` of `input` by the row policy `predicate`.
+pub fn policy(input: PlanNode, predicate: &str) -> PlanNode {
+    super::filter(
+        input,
+        predicate,
+        from_model("/semantic_model/0/datasets/0/row_policies/0"),
+    )
+}
+
+/// The `SemiJoin` of `input` along `relationship`, whose key is `key` on both sides, against
+/// the rows `related_all` and the visible rows `related_visible`, with the schema of `input`.
+pub fn semi_join(
+    input: PlanNode,
+    relationship: &str,
+    key: &str,
+    related_all: PlanNode,
+    related_visible: PlanNode,
+) -> PlanNode {
+    let on = vec![JoinCondition {
+        left: ColumnName::new(key),
+        right: ColumnName::new(key),
+    }];
+    semi_join_on(input, relationship, on, related_all, related_visible)
+}
+
+/// The `SemiJoin` of `input` along `relationship` by the key equalities `on`, against the rows
+/// `related_all` and the visible rows `related_visible`, with the schema of `input`.
+pub fn semi_join_on(
+    input: PlanNode,
+    relationship: &str,
+    on: Vec<JoinCondition>,
+    related_all: PlanNode,
+    related_visible: PlanNode,
+) -> PlanNode {
     let schema = input.schema().clone();
     PlanNode::new(
         Operation::SemiJoin {
             input: Box::new(input),
-            path,
-            predicate: parse(predicate),
+            relationship: NormalizedName::new(relationship),
+            on,
+            related_all: Box::new(related_all),
+            related_visible: Box::new(related_visible),
         },
         schema,
-        from_model("/semantic_model/0/datasets/1/row_policies/0"),
+        from_model("/semantic_model/0/relationships/0"),
     )
 }
 

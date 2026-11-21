@@ -1,0 +1,17 @@
+id: multi-propagation-missing-attribute-001
+rules: [E4-6.9, E2-5]
+model: multi-propagation
+security_context: north.json
+query:
+  contract: "menura.query"
+  contract_version: "1.1.0"
+  time_zone: "UTC"
+  query:
+    metrics:
+      - {"metric": "event_count", "alias": "event_count"}
+expect:
+  outcome: "error"
+  error: "ESEC-02"
+  location:
+    document: "security_context"
+    pointer: "/attributes"

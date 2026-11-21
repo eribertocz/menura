@@ -1,0 +1,17 @@
+id: multi-propagation-reference-time-001
+rules: [E4-6.9b, E2-5]
+model: multi-propagation
+security_context: north-cities.json
+query:
+  contract: "menura.query"
+  contract_version: "1.1.0"
+  time_zone: "UTC"
+  query:
+    metrics:
+      - {"metric": "event_count", "alias": "event_count"}
+expect:
+  outcome: "error"
+  error: "EQRY-03"
+  location:
+    document: "query"
+    pointer: "/query"
