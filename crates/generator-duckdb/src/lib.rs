@@ -19,6 +19,7 @@ mod result_schema;
 mod semi_join;
 mod source_columns;
 mod steps;
+mod stitch;
 mod types;
 mod values;
 

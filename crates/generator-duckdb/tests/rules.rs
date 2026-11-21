@@ -10,7 +10,6 @@ use menura_contracts::types::compiled_plan::ColumnRole;
 use menura_generator_duckdb::InvariantViolation;
 use menura_model::internal_model::NormalizedName;
 use menura_representations::logical_plan::{JoinKind, Operation, OutputSchema, PlanNode};
-use menura_representations::names::ColumnName;
 use serde_json::json;
 use support::{
     aggregate, big_integer, column, component, filter, from_model, from_query, generate,
@@ -93,10 +92,6 @@ fn e6_3_1_nodes_outside_the_slice_are_internal_errors() {
             input: input(),
             path: Vec::new(),
             predicate: support::parse("TRUE"),
-        }),
-        node(Operation::Stitch {
-            branches: vec![scan("ORDERS", &["REGION"])],
-            keys: vec![ColumnName::new("REGION")],
         }),
     ];
     for plan in nodes {

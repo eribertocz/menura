@@ -78,6 +78,7 @@ fn two_branch_columns() -> Vec<SchemaColumn> {
 }
 
 /// The SQL of `plan` for the query `REGION` then `metrics`.
+#[cfg(test)]
 fn generated(plan: &PlanNode, metrics: &[&str]) -> GeneratedSql {
     generate(plan, &query(&["REGION"], metrics)).expect("SQL")
 }
@@ -170,9 +171,9 @@ fn e6_4_11_stitch_member_missing_in_one_branch() {
     );
 }
 
-#[test]
-fn e6_4_7_stitch_null_keys_are_equal() {
-    let by_region_and_month = |input: PlanNode, name: &str, call: &str, result: LogicalType| {
+/// The stitch of the quantities and the amounts by region and month.
+fn by_region_and_month() -> PlanNode {
+    let aggregate_by = |input: PlanNode, name: &str, call: &str, result: LogicalType| {
         aggregate(
             input,
             vec![
@@ -187,15 +188,15 @@ fn e6_4_7_stitch_null_keys_are_equal() {
             ],
         )
     };
-    let plan = stitch(
+    stitch(
         vec![
-            by_region_and_month(
+            aggregate_by(
                 scan("ORDERS", &["QUANTITY", "REGION", "CREATED_MONTH"]),
                 "TOTAL_QUANTITY",
                 "SUM(QUANTITY)",
                 huge_integer(),
             ),
-            by_region_and_month(
+            aggregate_by(
                 scan("ORDERS", &["AMOUNT", "REGION", "CREATED_MONTH"]),
                 "TOTAL_AMOUNT",
                 "SUM(AMOUNT)",
@@ -209,7 +210,12 @@ fn e6_4_7_stitch_null_keys_are_equal() {
             column("TOTAL_QUANTITY", huge_integer(), true),
             column("TOTAL_AMOUNT", decimal(38, 2), true),
         ],
-    );
+    )
+}
+
+#[test]
+fn e6_4_7_stitch_null_keys_are_equal() {
+    let plan = by_region_and_month();
     let sql = generate(
         &plan,
         &query(
@@ -349,8 +355,11 @@ fn e4_3_7_stitch_column_of_two_branches_is_an_error() {
             column("TOTAL_QUANTITY", huge_integer(), true),
         ],
     );
-    let error = generate(&plan, &query(&["REGION"], &["ORDER_COUNT", "TOTAL_QUANTITY"]))
-        .expect_err("ambiguous column");
+    let error = generate(
+        &plan,
+        &query(&["REGION"], &["ORDER_COUNT", "TOTAL_QUANTITY"]),
+    )
+    .expect_err("ambiguous column");
     assert_eq!(error.violation, InvariantViolation::AmbiguousStitchColumn);
 }
 

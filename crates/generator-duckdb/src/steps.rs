@@ -91,7 +91,7 @@ impl<'input> StepWriter<'input> {
                 "semijoin",
             ),
             Operation::Join { .. } | Operation::Stitch { .. } => {
-                return Err(error(InvariantViolation::NodeOutsideSlice, node));
+                (self.stitch_node(node)?, None, "stitch")
             }
         };
         let name = quote(&format!("menura_{}_{kind}", self.steps.len() + 1));
@@ -365,7 +365,7 @@ fn sort_term(
 }
 
 /// The `DuckDB` type of the column `name` of `node`.
-fn column_type(node: &PlanNode, name: &str) -> Result<String, GenerateError> {
+pub(crate) fn column_type(node: &PlanNode, name: &str) -> Result<String, GenerateError> {
     let column = node
         .schema()
         .columns()

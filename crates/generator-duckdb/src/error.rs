@@ -7,7 +7,7 @@ use menura_representations::origin::Origin;
 /// the stage that built the plan, not a query error, so it has no specification code.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum InvariantViolation {
-    /// A `SemiJoin` or `Stitch` node, which the generator does not generate yet (VS-1).
+    /// A `Join` node, which the generator does not generate yet (VS-1).
     NodeOutsideSlice,
     /// An expression construct the 0.3.0 generator does not translate.
     ExpressionOutsideSlice,
@@ -51,6 +51,11 @@ pub enum InvariantViolation {
     /// A `SemiJoin` step whose relationship the model does not have, or that does not lead
     /// from its `from` dataset to its `to` dataset.
     UnknownRelationship,
+    /// A `Stitch` output column that more than one branch produces (E4-3.7).
+    AmbiguousStitchColumn,
+    /// A `Stitch` output column whose empty-input value is unknown: its branch does not end
+    /// in an `Aggregate` with a component of that name (E4-5.0b).
+    UnknownEmptyInputValue,
     /// A final node whose columns do not match the output columns of the query (E1-5).
     ResultColumnMismatch,
 }
