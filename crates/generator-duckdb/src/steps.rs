@@ -30,7 +30,7 @@ pub(crate) struct WrittenNode {
 
 /// Writes the steps of one statement.
 pub(crate) struct StepWriter<'input> {
-    environment: &'input Environment<'input>,
+    pub(crate) environment: &'input Environment<'input>,
     pub(crate) parameters: Parameters,
     pub(crate) steps: Vec<(String, SelectBody)>,
 }
@@ -81,7 +81,16 @@ impl<'input> StepWriter<'input> {
                 None,
                 "deduplicate",
             ),
-            Operation::Join { .. } | Operation::SemiJoin { .. } | Operation::Stitch { .. } => {
+            Operation::SemiJoin {
+                input,
+                path,
+                predicate,
+            } => (
+                self.semi_join(node, input, path, predicate)?,
+                None,
+                "semijoin",
+            ),
+            Operation::Join { .. } | Operation::Stitch { .. } => {
                 return Err(error(InvariantViolation::NodeOutsideSlice, node));
             }
         };
@@ -137,7 +146,7 @@ impl<'input> StepWriter<'input> {
 
     /// The select item of the `Scan` column `name` of `dataset`: the expression of the field of
     /// that name over the columns of `relation`.
-    fn field_item(
+    pub(crate) fn field_item(
         &mut self,
         node: &'input PlanNode,
         dataset: &Dataset,

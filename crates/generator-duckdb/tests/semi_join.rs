@@ -33,6 +33,7 @@ fn two_steps() -> PlanNode {
     )
 }
 
+#[cfg(test)]
 fn sql_of(plan: &PlanNode) -> String {
     generate_propagation(plan, &query(&["ORDER_ID", "CUSTOMER_ID"], &[]))
         .expect("SQL")
