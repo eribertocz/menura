@@ -8,6 +8,7 @@
 #![forbid(unsafe_code)]
 
 mod body;
+mod deduplicate;
 mod error;
 mod expression;
 mod identifiers;
