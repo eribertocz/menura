@@ -1,5 +1,5 @@
 id: cs-golden-sql-001
-rules: [CS-2.3, E6-4.2, E6-4.8]
+rules: [CS-2.3, E6-4.2, E6-4.8, E6-4.1, E6-4.4, E6-4.9, E6-5.1, PLN-2.1, PLN-2.3, SEC-3.5, E6-4.2c]
 model: slice
 security_context: manager.json
 query:

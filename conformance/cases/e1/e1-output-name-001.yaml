@@ -1,5 +1,5 @@
 id: e1-output-name-001
-rules: [E1-3.1, E1-5.1, E2-3.1]
+rules: [E1-3.1, E1-5.1, E2-3.1, E6-6.1]
 model: slice
 security_context: auditor.json
 query:

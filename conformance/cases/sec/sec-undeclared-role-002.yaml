@@ -1,5 +1,5 @@
 id: sec-undeclared-role-002
-rules: [SEC-3.2]
+rules: [SEC-3.2, SEC-3.2a]
 model: slice
 security_context: analyst-unsorted.json
 query:

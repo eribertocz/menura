@@ -1,0 +1,17 @@
+id: qry-empty-query-001
+rules: [QRY-3.1]
+model: slice
+security_context: auditor.json
+query:
+  contract: "menura.query"
+  contract_version: "1.1.0"
+  time_zone: "UTC"
+  query:
+    dimensions: []
+    metrics: []
+expect:
+  outcome: "error"
+  error: "E_EMPTY_AGGREGATION_QUERY"
+  location:
+    document: "query"
+    pointer: "/query"

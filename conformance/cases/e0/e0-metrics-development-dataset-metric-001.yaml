@@ -1,5 +1,5 @@
 id: e0-metrics-development-dataset-metric-001
-rules: [OSS-5.1, E0G-1.4]
+rules: [OSS-5.1, E0G-1.4, QRY-3.2]
 model: e0-metrics-development
 security_context: analyst.json
 query:

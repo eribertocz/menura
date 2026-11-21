@@ -1,0 +1,20 @@
+id: stg-query-error-first-001
+rules: [STG-3.5]
+model: slice
+security_context: analyst-missing.json
+query:
+  contract: "menura.query"
+  contract_version: "1.1.0"
+  time_zone: "UTC"
+  query:
+    dimensions: ["sales.region"]
+    metrics:
+      - {"metric": "sale_count", "alias": "sale_count"}
+    nonportable_extensions:
+      - {"vendor_name": "COMMON", "data": {"namespace": "menura", "version": 1, "order_by": [{"output": "unknown_output", "direction": "asc", "nulls": "last"}]}}
+expect:
+  outcome: "error"
+  error: "EQRY-10"
+  location:
+    document: "query"
+    pointer: "/query/nonportable_extensions/0/data/order_by/0"
