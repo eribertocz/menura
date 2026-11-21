@@ -1,5 +1,5 @@
 id: der-derived-over-derived-001
-rules: [DER-2.4, DER-5.1.4, DER-5.1.5]
+rules: [DER-2.4, DER-4.2]
 model: multi-derived
 security_context: analyst.json
 oracle: "der-derived-over-derived-001.oracle.sql"
