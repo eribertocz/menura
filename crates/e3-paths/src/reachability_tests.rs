@@ -11,7 +11,7 @@ use menura_representations::origin::QueryLocation;
 use crate::test_support::{
     at, connected_model, dimension, filter, metric, metric_reference, name, query, subgraph,
 };
-use crate::{InvariantViolation, PathCode, PathError, resolve_paths};
+use crate::{PathCode, PathError, resolve_paths};
 
 /// Every relationship of the fixture: returns to orders to customers to regions, accounts and
 /// profiles both ways; warehouses has none.
@@ -307,16 +307,14 @@ fn e3_5_1_a_dimension_dataset_that_reaches_the_others_is_an_anchor() {
         &RELATIONSHIPS,
     );
 
-    let result = resolve_paths(&query, &fixture());
+    let branches = resolve_paths(&query, &fixture()).expect("one anchor");
 
-    assert_eq!(
-        result,
-        Err(PathError::Invariant(InvariantViolation::SeveralDatasets {
-            first: name("CUSTOMERS"),
-            second: name("ORDERS"),
-            origin: at("/query/dimensions/1"),
-        }))
-    );
+    let homes: Vec<&str> = branches
+        .as_slice()
+        .iter()
+        .map(|branch| branch.home.as_str())
+        .collect();
+    assert_eq!(homes, ["ORDERS"]);
 }
 
 #[test]

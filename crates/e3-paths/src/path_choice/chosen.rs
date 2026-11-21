@@ -5,8 +5,8 @@ use menura_model::internal_model::NormalizedName;
 use menura_representations::bound_query::BoundPath;
 use menura_representations::paths::JoinStep;
 
-use super::error::{ChoiceInvariant, PathChoiceError};
 use super::search::AuthorizedEdges;
+use crate::violation::InvariantViolation;
 
 /// One `paths` entry, with its steps and whether a branch used it.
 #[derive(Debug)]
@@ -27,13 +27,13 @@ impl<'query> ChosenPaths<'query> {
     ///
     /// # Errors
     ///
-    /// An invariant violation when an entry names a relationship outside the authorized
+    /// An [`InvariantViolation`] when an entry names a relationship outside the authorized
     /// subgraph or does not chain from its `from` to its `to`; E2 reports both first
     /// (`E_NAME_NOT_FOUND`, `EQRY-12`).
     pub(crate) fn new(
         paths: &'query [BoundPath],
         edges: &AuthorizedEdges<'_>,
-    ) -> Result<Self, PathChoiceError> {
+    ) -> Result<Self, InvariantViolation> {
         let entries = paths
             .iter()
             .map(|path| {
@@ -43,7 +43,7 @@ impl<'query> ChosenPaths<'query> {
                     used: false,
                 })
             })
-            .collect::<Result<_, PathChoiceError>>()?;
+            .collect::<Result<_, InvariantViolation>>()?;
         Ok(Self { entries })
     }
 
@@ -75,17 +75,16 @@ impl<'query> ChosenPaths<'query> {
 fn steps_of(
     path: &BoundPath,
     edges: &AuthorizedEdges<'_>,
-) -> Result<Vec<JoinStep>, PathChoiceError> {
-    let invariant = |violation| PathChoiceError::Invariant(violation);
+) -> Result<Vec<JoinStep>, InvariantViolation> {
     let origin = || path.origin().clone();
     let mut current = path.from();
     let mut steps = Vec::new();
     for relationship in path.relationships() {
         let edge = edges
             .edge(relationship)
-            .ok_or_else(|| invariant(ChoiceInvariant::UnknownRelationship { origin: origin() }))?;
+            .ok_or_else(|| InvariantViolation::UnauthorizedPathRelationship { origin: origin() })?;
         if &edge.from != current {
-            return Err(invariant(ChoiceInvariant::BrokenChain { origin: origin() }));
+            return Err(InvariantViolation::BrokenPathChain { origin: origin() });
         }
         steps.push(JoinStep {
             relationship: edge.relationship.clone(),
@@ -97,6 +96,6 @@ fn steps_of(
     if current == path.to() {
         Ok(steps)
     } else {
-        Err(invariant(ChoiceInvariant::BrokenChain { origin: origin() }))
+        Err(InvariantViolation::BrokenPathChain { origin: origin() })
     }
 }

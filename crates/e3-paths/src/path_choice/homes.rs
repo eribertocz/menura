@@ -12,11 +12,11 @@ use crate::violation::InvariantViolation;
 
 /// A home dataset with the components evaluated over it: the start of one branch (E3-4.1).
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub struct BranchHome {
+pub(crate) struct BranchHome {
     /// The home dataset, or the anchor of a dimension-only query (E3-5.3).
-    pub home: NormalizedName,
+    pub(crate) home: NormalizedName,
     /// Its components, in [`ComponentKey`] order; empty for a dimension-only query.
-    pub components: Vec<ComponentKey>,
+    pub(crate) components: Vec<ComponentKey>,
 }
 
 /// The home datasets of the components of `query`, ordered by name (E3-4.3), each with its
@@ -26,7 +26,7 @@ pub struct BranchHome {
 ///
 /// An [`InvariantViolation`] for a metric whose components cannot be read from `model`,
 /// which E2 never lets through.
-pub fn component_homes(
+pub(crate) fn component_homes(
     query: &BoundQuery,
     model: &InternalModel,
 ) -> Result<Vec<BranchHome>, InvariantViolation> {

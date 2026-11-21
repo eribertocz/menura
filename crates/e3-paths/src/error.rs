@@ -21,9 +21,12 @@ pub enum PathCode {
     /// `E_UNSUPPORTED_FILTER_PATH`: a filter dataset that some metric, or an anchor, cannot
     /// reach (E3-3.6, E3-5.2, E2-5 row 16).
     UnsupportedFilterPath,
-    /// `E_AMBIGUOUS_PATH`: a dimension-only query with more than one anchor (E3-5.1, E2-5
-    /// row 17).
+    /// `E_AMBIGUOUS_PATH`: two or more paths to a needed dataset and no `paths` choice
+    /// (E3-3.2), or a dimension-only query with more than one anchor (E3-5.1); E2-5 row 17.
     AmbiguousPath,
+    /// `E3-01`: a `paths` entry that no branch uses (E3-3.3, E2-5 row 17, after
+    /// `E_AMBIGUOUS_PATH`).
+    UnusedPathEntry,
 }
 
 impl PathCode {
@@ -36,6 +39,7 @@ impl PathCode {
             Self::NoAnchor => "E_NO_ANCHOR",
             Self::UnsupportedFilterPath => "E_UNSUPPORTED_FILTER_PATH",
             Self::AmbiguousPath => "E_AMBIGUOUS_PATH",
+            Self::UnusedPathEntry => "E3-01",
         }
     }
 }

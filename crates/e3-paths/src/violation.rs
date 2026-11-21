@@ -1,21 +1,28 @@
-//! The invariant violations of stage E3 in the 0.3.0 slice.
+//! The invariant violations of stage E3.
 
 use std::fmt;
 
 use menura_model::internal_model::NormalizedName;
 use menura_representations::origin::QueryLocation;
 
-/// A bound query that E2 cannot produce in the 0.3.0 slice (VS-1, E2-5 row 12c).
+/// A bound query that E2, or an earlier check of E3, never lets through.
 ///
 /// This is an internal error of the compiler, not a specification diagnostic: no query that
-/// passes E2 meets any of these conditions, so none has a specification code.
+/// passes those checks meets any of these conditions, so none has a specification code.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum InvariantViolation {
     /// The query has neither metrics nor dimensions.
     NoMetricAndNoDimension,
-    /// The query chooses a relationship path; the slice has no `paths` (VS-1).
-    ChosenPath {
-        /// Where the first path is written.
+    /// A `paths` entry names a relationship outside the authorized subgraph, which E2
+    /// reports as `E_NAME_NOT_FOUND` (E2-4.8).
+    UnauthorizedPathRelationship {
+        /// Where the entry is written.
+        origin: QueryLocation,
+    },
+    /// A `paths` entry whose relationships do not chain from its `from` to its `to`, which E2
+    /// reports as `EQRY-12` (QRY-4.3).
+    BrokenPathChain {
+        /// Where the entry is written.
         origin: QueryLocation,
     },
     /// An inline metric, which only the SQL form writes (0.5.0).
@@ -33,14 +40,13 @@ pub enum InvariantViolation {
         /// Where the metric is written.
         origin: QueryLocation,
     },
-    /// The query reads more than one dataset.
-    SeveralDatasets {
-        /// The first dataset the query reads, in query order (E2-5.3).
-        first: NormalizedName,
-        /// The first other dataset, in query order.
-        second: NormalizedName,
-        /// Where the element that reads `second` is written.
-        origin: QueryLocation,
+    /// No path leads from the home dataset `home` to the needed dataset `dataset`, which
+    /// E2-5 rows 13 to 16 report first.
+    UnreachableDataset {
+        /// The home dataset of the branch.
+        home: NormalizedName,
+        /// The needed dataset.
+        dataset: NormalizedName,
     },
     /// The branches were rejected because two of them share a home dataset (E3-4.1).
     DuplicateHomeDataset,
@@ -52,12 +58,13 @@ impl fmt::Display for InvariantViolation {
             Self::NoMetricAndNoDimension => {
                 formatter.write_str("the bound query has neither metrics nor dimensions")
             }
-            Self::ChosenPath { origin } => {
-                write!(
-                    formatter,
-                    "the bound query chooses a path at {}",
-                    origin.pointer()
-                )
+            Self::UnauthorizedPathRelationship { origin } => write!(
+                formatter,
+                "the path at {} names an unauthorized relationship",
+                origin.pointer()
+            ),
+            Self::BrokenPathChain { origin } => {
+                write!(formatter, "the path at {} does not chain", origin.pointer())
             }
             Self::InlineMetric { origin } => {
                 write!(formatter, "inline metric at {}", origin.pointer())
@@ -72,16 +79,11 @@ impl fmt::Display for InvariantViolation {
                     origin.pointer()
                 )
             }
-            Self::SeveralDatasets {
-                first,
-                second,
-                origin,
-            } => write!(
+            Self::UnreachableDataset { home, dataset } => write!(
                 formatter,
-                "the bound query reads {} and {} (at {})",
-                first.as_str(),
-                second.as_str(),
-                origin.pointer()
+                "no path leads from {} to {}",
+                home.as_str(),
+                dataset.as_str()
             ),
             Self::DuplicateHomeDataset => formatter.write_str("two branches share a home dataset"),
         }

@@ -5,7 +5,7 @@ use menura_model::internal_model::{FieldPath, InternalModel};
 use menura_representations::bound_query::{
     BoundDateRange, BoundMetricKind, BoundPath, BoundQueryParts, MetricPath,
 };
-use menura_representations::paths::{Branch, Branches, ComponentKey, JoinTree};
+use menura_representations::paths::{Branch, Branches, ComponentKey, JoinTree, QueryElement};
 
 use crate::test_support::{
     at, bound_metric, connected_model, dataset, dimension, false_literal, filter, metric,
@@ -223,7 +223,7 @@ fn e3_5_3_a_dimension_only_query_with_a_constant_filter_keeps_its_anchor() {
 }
 
 #[test]
-fn vs_1_a_dimension_on_another_dataset_is_an_invariant_violation() {
+fn e3_4_2_a_dimension_on_another_dataset_joins_it_to_the_home_dataset() {
     let model = orders_to_customers(vec![metric("REVENUE", &["ORDERS"])]);
     let query = query(
         vec![dimension("CUSTOMERS", "COUNTRY", 0)],
@@ -231,37 +231,42 @@ fn vs_1_a_dimension_on_another_dataset_is_an_invariant_violation() {
         authorized(BoundQueryParts::default()),
     );
 
-    assert_eq!(
-        resolve_paths(&query, &model),
-        violation(InvariantViolation::SeveralDatasets {
-            first: name("CUSTOMERS"),
-            second: name("ORDERS"),
-            origin: at("/query/metrics/0"),
-        })
-    );
+    let branches = resolve_paths(&query, &model).expect("one path");
+
+    let branch = only_branch(&branches);
+    assert_eq!(branch.home, name("ORDERS"));
+    let customers = branch
+        .join_tree
+        .bound_instance(&QueryElement::Dimension(0))
+        .and_then(|id| branch.join_tree.instance(id))
+        .expect("a join instance");
+    assert_eq!(customers.step.to, name("CUSTOMERS"));
 }
 
 #[test]
-fn vs_1_components_on_several_datasets_are_an_invariant_violation() {
-    let model = model(Vec::new(), vec![metric("NET", &["ORDERS", "RETURNS"])]);
+fn e3_4_1_components_on_several_datasets_are_one_branch_per_home_dataset() {
+    let model = model(Vec::new(), vec![metric("NET", &["RETURNS", "ORDERS"])]);
     let query = query(
         Vec::new(),
         vec![metric_reference("NET", 0)],
         BoundQueryParts::default(),
     );
 
+    let branches = resolve_paths(&query, &model).expect("two branches");
+
+    let found: Vec<(&str, &[ComponentKey])> = branches
+        .as_slice()
+        .iter()
+        .map(|branch| (branch.home.as_str(), branch.components.as_slice()))
+        .collect();
     assert_eq!(
-        resolve_paths(&query, &model),
-        violation(InvariantViolation::SeveralDatasets {
-            first: name("ORDERS"),
-            second: name("RETURNS"),
-            origin: at("/query/metrics/0"),
-        })
+        found,
+        [("ORDERS", &[key(0, 1)][..]), ("RETURNS", &[key(0, 0)][..])]
     );
 }
 
 #[test]
-fn vs_1_a_filter_on_another_dataset_is_an_invariant_violation() {
+fn e3_4_2_a_filter_on_another_dataset_joins_it_to_the_anchor() {
     let model = orders_to_customers(Vec::new());
     let query = query(
         vec![dimension("ORDERS", "STATUS", 0)],
@@ -272,18 +277,20 @@ fn vs_1_a_filter_on_another_dataset_is_an_invariant_violation() {
         ])),
     );
 
-    assert_eq!(
-        resolve_paths(&query, &model),
-        violation(InvariantViolation::SeveralDatasets {
-            first: name("ORDERS"),
-            second: name("CUSTOMERS"),
-            origin: at("/query/filters/1"),
-        })
-    );
+    let branches = resolve_paths(&query, &model).expect("one path");
+
+    let branch = only_branch(&branches);
+    assert_eq!(branch.home, name("ORDERS"));
+    let element = QueryElement::Filter {
+        filter: 1,
+        dataset: name("CUSTOMERS"),
+    };
+    assert!(branch.join_tree.bound_instance(&element).is_some());
+    assert_eq!(branch.join_tree.instances().len(), 1);
 }
 
 #[test]
-fn vs_1_a_date_range_on_another_dataset_is_an_invariant_violation() {
+fn e3_3_1_a_the_date_range_dataset_is_joined_as_a_filter_dataset() {
     let model = connected_model(
         Vec::new(),
         vec![metric("REVENUE", &["ORDERS"])],
@@ -305,14 +312,14 @@ fn vs_1_a_date_range_on_another_dataset_is_an_invariant_violation() {
     };
     let query = query(Vec::new(), vec![metric_reference("REVENUE", 0)], parts);
 
-    assert_eq!(
-        resolve_paths(&query, &model),
-        violation(InvariantViolation::SeveralDatasets {
-            first: name("ORDERS"),
-            second: name("CALENDAR"),
-            origin: at("/query/nonportable_extensions/0/data/date_range"),
-        })
-    );
+    let branches = resolve_paths(&query, &model).expect("one path");
+
+    let tree = &only_branch(&branches).join_tree;
+    let calendar = tree
+        .bound_instance(&QueryElement::DateRange)
+        .and_then(|id| tree.instance(id))
+        .expect("a join instance");
+    assert_eq!(calendar.step.relationship, name("ORDERS_CALENDAR"));
 }
 
 #[test]
@@ -331,7 +338,7 @@ fn vs_1_a_query_without_metrics_and_dimensions_is_an_invariant_violation() {
 }
 
 #[test]
-fn vs_1_a_chosen_path_is_an_invariant_violation() {
+fn qry_4_3_a_path_outside_the_authorized_subgraph_is_an_invariant_violation() {
     let model = model(Vec::new(), vec![metric("REVENUE", &["ORDERS"])]);
     let origin = at("/query/nonportable_extensions/0/data/paths/0");
     let path = BoundPath::new(
@@ -349,7 +356,7 @@ fn vs_1_a_chosen_path_is_an_invariant_violation() {
 
     assert_eq!(
         resolve_paths(&query, &model),
-        violation(InvariantViolation::ChosenPath { origin })
+        violation(InvariantViolation::UnauthorizedPathRelationship { origin })
     );
 }
 
