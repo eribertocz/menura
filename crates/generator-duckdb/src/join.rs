@@ -4,7 +4,7 @@
 use menura_representations::logical_plan::{
     JoinCondition, JoinKind, OutputSchema, PlanNode, SchemaColumn,
 };
-use menura_representations::names::ColumnPrefix;
+use menura_representations::names::{ColumnName, ColumnPrefix};
 
 use crate::body::SelectBody;
 use crate::error::{GenerateError, InvariantViolation};
@@ -61,8 +61,8 @@ impl<'input> StepWriter<'input> {
         let conditions = keys
             .iter()
             .map(|key| {
-                let left_column = key_column(node, left.schema(), &left_step.name, key, true)?;
-                let right_column = key_column(node, right.schema(), &right_step.name, key, false)?;
+                let left_column = key_column(node, left.schema(), &left_step.name, &key.left)?;
+                let right_column = key_column(node, right.schema(), &right_step.name, &key.right)?;
                 key_equality(left_column.side(), right_column.side())
                     .ok_or_else(|| error(InvariantViolation::IncompatibleJoinKeys, node))
             })
@@ -98,15 +98,13 @@ impl KeyColumn<'_> {
     }
 }
 
-/// The left (`from_left`) or right column of `key` in `schema`, the schema of the step `step`.
+/// The key column `name` of `schema`, the schema of the step `step`.
 fn key_column<'input>(
     node: &PlanNode,
     schema: &'input OutputSchema,
     step: &str,
-    key: &JoinCondition,
-    from_left: bool,
+    name: &ColumnName,
 ) -> Result<KeyColumn<'input>, GenerateError> {
-    let name = if from_left { &key.left } else { &key.right };
     let column = schema
         .columns()
         .iter()
