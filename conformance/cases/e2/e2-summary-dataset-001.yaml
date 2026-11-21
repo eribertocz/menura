@@ -1,0 +1,16 @@
+id: e2-summary-dataset-001
+rules: [E2-4.6]
+model: e0-summaries
+security_context: analyst.json
+query:
+  contract: "menura.query"
+  contract_version: "1.1.0"
+  time_zone: "UTC"
+  query:
+    dimensions: ["orders_daily.region"]
+expect:
+  outcome: "error"
+  error: "E_NAME_NOT_FOUND"
+  location:
+    document: "query"
+    pointer: "/query/dimensions/0"

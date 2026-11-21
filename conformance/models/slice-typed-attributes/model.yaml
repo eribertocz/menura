@@ -1,0 +1,29 @@
+version: "0.1.1"
+semantic_model:
+  - name: slice_typed_attributes
+    description: 'One dataset whose row policy reads decimal, date and boolean security attributes'
+    custom_extensions:
+      - vendor_name: COMMON
+        data: '{"namespace": "menura", "version": 1, "security_context": {"roles": ["viewer"], "attributes": [{"name": "min_amount", "type": "decimal(10,2)"}, {"name": "since", "type": "date"}, {"name": "show_voided", "type": "boolean"}]}}'
+    datasets:
+      - name: sales
+        source: shop.main.sales
+        primary_key: [sale_id]
+        fields:
+          - name: sale_id
+            expression: {dialects: [{dialect: ANSI_SQL, expression: 'sale_id'}]}
+          - name: region
+            expression: {dialects: [{dialect: ANSI_SQL, expression: 'region'}]}
+          - name: amount
+            expression: {dialects: [{dialect: ANSI_SQL, expression: 'amount'}]}
+          - name: voided
+            expression: {dialects: [{dialect: ANSI_SQL, expression: 'voided'}]}
+          - name: sale_date
+            expression: {dialects: [{dialect: ANSI_SQL, expression: 'sale_date'}]}
+            dimension: {is_time: true}
+        custom_extensions:
+          - vendor_name: COMMON
+            data: '{"namespace": "menura", "version": 1, "access": {"mode": "roles", "roles": ["viewer"]}, "row_access": [{"name": "typed_scope", "condition": "amount >= USER_ATTRIBUTE(''min_amount'') AND sale_date >= USER_ATTRIBUTE(''since'') AND voided = USER_ATTRIBUTE(''show_voided'')"}]}'
+    metrics:
+      - name: sale_count
+        expression: {dialects: [{dialect: ANSI_SQL, expression: 'COUNT(sales.sale_id)'}]}

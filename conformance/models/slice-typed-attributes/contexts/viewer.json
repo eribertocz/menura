@@ -1,0 +1,13 @@
+{
+  "contract": "menura.security_context",
+  "contract_version": "1.1.0",
+  "subject": "typed-viewer",
+  "roles": [
+    "viewer"
+  ],
+  "attributes": {
+    "min_amount": "7.75",
+    "since": "2026-01-20",
+    "show_voided": false
+  }
+}

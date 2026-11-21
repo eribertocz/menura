@@ -1,0 +1,15 @@
+id: e3-dimension-only-filter-001
+rules: [E3-5.2]
+model: slice
+security_context: auditor.json
+query:
+  contract: "menura.query"
+  contract_version: "1.1.0"
+  time_zone: "UTC"
+  query:
+    dimensions: ["sales.channel"]
+    filter: "sales.region = 'NORTH'"
+expect:
+  outcome: "plan"
+  row_order: "any"
+  rows: "e3-dimension-only-filter-001.csv"

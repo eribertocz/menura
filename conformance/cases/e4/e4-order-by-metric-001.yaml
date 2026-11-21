@@ -1,0 +1,18 @@
+id: e4-order-by-metric-001
+rules: [E4-9.1]
+model: slice
+security_context: auditor.json
+query:
+  contract: "menura.query"
+  contract_version: "1.1.0"
+  time_zone: "UTC"
+  query:
+    dimensions: ["sales.channel"]
+    metrics:
+      - {"metric": "total_amount", "alias": "total_amount"}
+    nonportable_extensions:
+      - {"vendor_name": "COMMON", "data": {"namespace": "menura", "version": 1, "order_by": [{"output": "total_amount", "direction": "asc", "nulls": "last"}]}}
+expect:
+  outcome: "plan"
+  row_order: "exact"
+  rows: "e4-order-by-metric-001.csv"

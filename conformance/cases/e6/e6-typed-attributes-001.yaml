@@ -1,0 +1,17 @@
+id: e6-typed-attributes-001
+rules: [E6-5.7, SEC-3.5, E6-4.2c]
+model: slice-typed-attributes
+security_context: viewer.json
+query:
+  contract: "menura.query"
+  contract_version: "1.1.0"
+  time_zone: "UTC"
+  query:
+    dimensions: ["sales.region"]
+    metrics:
+      - {"metric": "sale_count", "alias": "sale_count"}
+expect:
+  outcome: "plan"
+  sql: "e6-typed-attributes-001.sql"
+  row_order: "any"
+  rows: "e6-typed-attributes-001.csv"

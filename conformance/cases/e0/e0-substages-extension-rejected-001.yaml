@@ -1,5 +1,5 @@
 id: e0-substages-extension-rejected-001
-rules: [E0-3.3, E0C-02, W0D-01]
+rules: [E0-3.3, E0C-02, W0D-01, STG-3.4]
 model: e0-substages-extension-rejected
 expect:
   outcome: load_error

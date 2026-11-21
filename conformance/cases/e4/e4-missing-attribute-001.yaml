@@ -1,5 +1,5 @@
 id: e4-missing-attribute-001
-rules: [E4-6.9]
+rules: [E4-6.9, SEC-3.4]
 model: slice
 security_context: analyst-missing.json
 query:

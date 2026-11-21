@@ -1,5 +1,5 @@
 id: qry-date-range-instant-001
-rules: [QRY-4.2, E6-4.10]
+rules: [QRY-4.2, E6-4.10, E6-4.2b]
 model: slice
 security_context: auditor.json
 query:

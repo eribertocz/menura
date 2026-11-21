@@ -1,0 +1,19 @@
+id: qry-filter-and-filters-001
+rules: [QRY-4.4]
+model: slice
+security_context: auditor.json
+query:
+  contract: "menura.query"
+  contract_version: "1.1.0"
+  time_zone: "UTC"
+  query:
+    dimensions: ["sales.region"]
+    metrics:
+      - {"metric": "sale_count", "alias": "sale_count"}
+    filter: "sales.quantity >= 1"
+    nonportable_extensions:
+      - {"vendor_name": "COMMON", "data": {"namespace": "menura", "version": 1, "filters": ["sales.channel = 'web'"]}}
+expect:
+  outcome: "plan"
+  row_order: "any"
+  rows: "qry-filter-and-filters-001.csv"
