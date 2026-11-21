@@ -39,7 +39,7 @@ pub enum RunnerErrorKind {
     UnknownExpectedFailure(String),
     /// `ossie/runner-context.json` is not the security context of CS-4.5.
     InvalidRunnerContext(String),
-    /// A case is `differential` without `outcome: plan`, so it has no rows to compare (CS-4.7).
+    /// A case names an `oracle` without `outcome: plan`, so it has no rows to compare (CS-4.7).
     DifferentialWithoutPlan,
     /// The reviewed file of divergences classifies the same case twice (CS-4.7).
     RepeatedDivergence(String),
@@ -99,7 +99,7 @@ impl fmt::Display for RunnerErrorKind {
                 write!(formatter, "invalid runner security context: {message}")
             }
             Self::DifferentialWithoutPlan => {
-                formatter.write_str("`differential: true` requires `outcome: plan`")
+                formatter.write_str("`oracle` requires `outcome: plan`")
             }
             Self::RepeatedDivergence(case) => {
                 write!(formatter, "case `{case}` is classified twice")

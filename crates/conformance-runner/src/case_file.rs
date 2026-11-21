@@ -43,7 +43,7 @@ fn check_case(case: &Case) -> Result<(), RunnerErrorKind> {
     if case.expect.outcome.needs_security_context() && case.security_context.is_none() {
         return Err(RunnerErrorKind::MissingSecurityContext);
     }
-    if case.differential && case.expect.outcome != Outcome::Plan {
+    if case.oracle.is_some() && case.expect.outcome != Outcome::Plan {
         return Err(RunnerErrorKind::DifferentialWithoutPlan);
     }
     let needs_error = matches!(case.expect.outcome, Outcome::Error | Outcome::RuntimeError);
@@ -92,13 +92,14 @@ expect:
 
     #[test]
     fn cs_4_7_a_case_is_not_differential_by_default() {
-        assert!(!parse_case(PLAN_CASE).unwrap().differential);
+        assert_eq!(parse_case(PLAN_CASE).unwrap().oracle, None);
     }
 
     #[test]
     fn cs_4_7_reads_a_differential_plan_case() {
-        let text = PLAN_CASE.replace("model: sample", "model: sample\ndifferential: true");
-        assert!(parse_case(&text).unwrap().differential);
+        let text = PLAN_CASE.replace("model: sample", "model: sample\noracle: reference.sql");
+        let case = parse_case(&text).unwrap();
+        assert_eq!(case.oracle.as_deref(), Some("reference.sql"));
     }
 
     #[test]
@@ -107,7 +108,7 @@ expect:
 id: sample-load-error-001
 rules: [CS-4.7]
 model: sample
-differential: true
+oracle: reference.sql
 expect: {outcome: load_error, error: E0D-02}
 ";
         assert!(matches!(

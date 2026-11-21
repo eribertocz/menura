@@ -89,7 +89,7 @@ fn check_divergence_cases(
     for area_folder in area_folders(&cases_directory, None)? {
         for case_path in case_files(&area_folder)? {
             let case = read_case(&case_path)?;
-            if case.differential {
+            if case.oracle.is_some() {
                 differential.insert(case.id);
             }
         }

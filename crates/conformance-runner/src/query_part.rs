@@ -81,7 +81,9 @@ pub(crate) fn check_query(case: &Case, handle: &Handle, inputs: &QueryInputs<'_>
                 return check_runtime_error(&case.expect, &plan, inputs.connection);
             }
             match check_rows(&case.expect, &plan, inputs) {
-                CaseStatus::Passed if case.differential => check_differential(case, &plan, inputs),
+                CaseStatus::Passed if case.oracle.is_some() => {
+                    check_differential(case, &plan, inputs)
+                }
                 status => status,
             }
         }
@@ -368,27 +370,27 @@ mod tests {
         assert_fails(status(&case_text(BY_REGION, expect)), "golden");
     }
 
-    /// A differential case of `BY_REGION` named `id`, whose oracle is `<id>.oracle.sql`.
-    fn differential_case(id: &str) -> String {
+    /// A differential case of `BY_REGION` whose oracle is the file `oracle`.
+    fn differential_case(id: &str, oracle: &str) -> String {
         case_text(BY_REGION, "{outcome: plan, rows: cs-plan-rows-001.csv}")
-            .replace("id: cs-unit-001", &format!("id: {id}\ndifferential: true"))
+            .replace("id: cs-unit-001", &format!("id: {id}\noracle: {oracle}"))
     }
 
     #[test]
     fn cs_4_7_a_differential_case_passes_when_its_rows_match_the_oracle() {
-        let text = differential_case("cs-unit-oracle-001");
+        let text = differential_case("cs-unit-001", "cs-unit-oracle-001.oracle.sql");
         assert_eq!(status(&text), CaseStatus::Passed);
     }
 
     #[test]
     fn cs_4_7_an_unclassified_divergence_fails_the_case() {
-        let text = differential_case("cs-unit-divergent-001");
+        let text = differential_case("cs-unit-divergent-001", "cs-unit-divergent-001.oracle.sql");
         assert_fails(status(&text), "does not classify");
     }
 
     #[test]
     fn cs_4_7_a_classified_divergence_leaves_the_case_pending() {
-        let text = differential_case("cs-unit-divergent-001");
+        let text = differential_case("cs-unit-divergent-001", "cs-unit-divergent-001.oracle.sql");
         let divergences = parse_divergences(
             "divergences:\n  - {case: cs-unit-divergent-001, classification: bug, reason: r}\n",
         )
@@ -399,7 +401,7 @@ mod tests {
 
     #[test]
     fn cs_4_7_a_differential_case_without_its_oracle_fails() {
-        let text = differential_case("cs-unit-no-oracle-001");
+        let text = differential_case("cs-unit-001", "cs-unit-no-oracle-001.oracle.sql");
         assert_fails(status(&text), "cs-unit-no-oracle-001.oracle.sql");
     }
 

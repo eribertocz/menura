@@ -1,6 +1,6 @@
 //! The differential part of a case (CS-4.7): the rows of the compiled plan are compared under
-//! CS-2.4 with those of an independent oracle, the hand-written reference SQL
-//! `<case id>.oracle.sql` next to the case, executed on the same fixture database.
+//! CS-2.4 with those of an independent oracle, the hand-written reference SQL file that the case
+//! names in `oracle`, next to the case, executed on the same fixture database.
 //!
 //! A divergence fails the case unless the reviewed file of divergences classifies it; a
 //! classified divergence leaves the case pending, never passed, and an entry for a case that no
@@ -15,9 +15,6 @@ use crate::fixture::read_text;
 use crate::query_part::QueryInputs;
 use crate::report::CaseStatus;
 use crate::row_comparison::{Comparison, rows_divergence};
-
-/// The file name suffix of the oracle of a differential case.
-pub(crate) const ORACLE_SUFFIX: &str = ".oracle.sql";
 
 /// Compares the rows of `plan` with those of the oracle of `case`, and applies its
 /// classification when they diverge.
@@ -39,8 +36,11 @@ fn divergence_from_oracle(
     plan: &CompiledPlanDocument,
     inputs: &QueryInputs<'_>,
 ) -> Result<Option<String>, String> {
-    let file_name = format!("{}{ORACLE_SUFFIX}", case.id);
-    let sql = read_text(&inputs.case_folder.join(&file_name)).map_err(|error| error.to_string())?;
+    let file_name = case
+        .oracle
+        .as_deref()
+        .ok_or_else(|| "a differential case requires `oracle`".to_owned())?;
+    let sql = read_text(&inputs.case_folder.join(file_name)).map_err(|error| error.to_string())?;
     let oracle = execute_sql(inputs.connection, &sql, &[]).map_err(|failure| {
         format!(
             "the oracle `{file_name}` fails on DuckDB: {}",
