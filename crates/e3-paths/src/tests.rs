@@ -1,17 +1,38 @@
 //! Unit tests of stage E3 for the 0.3.0 slice (VS-1), named after the rule they check.
 
 use menura_model::expression::DateValue;
-use menura_model::internal_model::FieldPath;
+use menura_model::internal_model::{FieldPath, InternalModel};
 use menura_representations::bound_query::{
     BoundDateRange, BoundMetricKind, BoundPath, BoundQueryParts, MetricPath,
 };
 use menura_representations::paths::{Branch, Branches, ComponentKey, JoinTree};
 
 use crate::test_support::{
-    at, bound_metric, dataset, dimension, false_literal, filter, metric, metric_reference, model,
-    name, query,
+    at, bound_metric, connected_model, dataset, dimension, false_literal, filter, metric,
+    metric_reference, model, name, query, subgraph,
 };
-use crate::{InvariantViolation, resolve_paths};
+use crate::{InvariantViolation, PathError, resolve_paths};
+
+/// A model with `metrics` and one relationship, `ORDERS_CUSTOMERS`, from orders to customers.
+fn orders_to_customers(metrics: Vec<menura_model::internal_model::Metric>) -> InternalModel {
+    connected_model(
+        Vec::new(),
+        metrics,
+        &[("ORDERS_CUSTOMERS", "ORDERS", "CUSTOMERS")],
+    )
+}
+
+/// `parts` with `ORDERS_CUSTOMERS` authorized.
+fn authorized(parts: BoundQueryParts) -> BoundQueryParts {
+    BoundQueryParts {
+        subgraph: subgraph(&["ORDERS_CUSTOMERS"]),
+        ..parts
+    }
+}
+
+fn violation(violation: InvariantViolation) -> Result<Branches, PathError> {
+    Err(PathError::Invariant(violation))
+}
 
 fn key(metric: usize, component: usize) -> ComponentKey {
     ComponentKey { metric, component }
@@ -203,16 +224,16 @@ fn e3_5_3_a_dimension_only_query_with_a_constant_filter_keeps_its_anchor() {
 
 #[test]
 fn vs_1_a_dimension_on_another_dataset_is_an_invariant_violation() {
-    let model = model(Vec::new(), vec![metric("REVENUE", &["ORDERS"])]);
+    let model = orders_to_customers(vec![metric("REVENUE", &["ORDERS"])]);
     let query = query(
         vec![dimension("CUSTOMERS", "COUNTRY", 0)],
         vec![metric_reference("REVENUE", 0)],
-        BoundQueryParts::default(),
+        authorized(BoundQueryParts::default()),
     );
 
     assert_eq!(
         resolve_paths(&query, &model),
-        Err(InvariantViolation::SeveralDatasets {
+        violation(InvariantViolation::SeveralDatasets {
             first: name("CUSTOMERS"),
             second: name("ORDERS"),
             origin: at("/query/metrics/0"),
@@ -231,7 +252,7 @@ fn vs_1_components_on_several_datasets_are_an_invariant_violation() {
 
     assert_eq!(
         resolve_paths(&query, &model),
-        Err(InvariantViolation::SeveralDatasets {
+        violation(InvariantViolation::SeveralDatasets {
             first: name("ORDERS"),
             second: name("RETURNS"),
             origin: at("/query/metrics/0"),
@@ -241,16 +262,19 @@ fn vs_1_components_on_several_datasets_are_an_invariant_violation() {
 
 #[test]
 fn vs_1_a_filter_on_another_dataset_is_an_invariant_violation() {
-    let model = model(Vec::new(), Vec::new());
+    let model = orders_to_customers(Vec::new());
     let query = query(
         vec![dimension("ORDERS", "STATUS", 0)],
         Vec::new(),
-        filters(vec![filter(&["ORDERS"], 0), filter(&["CUSTOMERS"], 1)]),
+        authorized(filters(vec![
+            filter(&["ORDERS"], 0),
+            filter(&["CUSTOMERS"], 1),
+        ])),
     );
 
     assert_eq!(
         resolve_paths(&query, &model),
-        Err(InvariantViolation::SeveralDatasets {
+        violation(InvariantViolation::SeveralDatasets {
             first: name("ORDERS"),
             second: name("CUSTOMERS"),
             origin: at("/query/filters/1"),
@@ -260,7 +284,11 @@ fn vs_1_a_filter_on_another_dataset_is_an_invariant_violation() {
 
 #[test]
 fn vs_1_a_date_range_on_another_dataset_is_an_invariant_violation() {
-    let model = model(Vec::new(), vec![metric("REVENUE", &["ORDERS"])]);
+    let model = connected_model(
+        Vec::new(),
+        vec![metric("REVENUE", &["ORDERS"])],
+        &[("ORDERS_CALENDAR", "ORDERS", "CALENDAR")],
+    );
     let date = DateValue::new(2026, 1, 1).expect("a date");
     let parts = BoundQueryParts {
         date_range: Some(BoundDateRange {
@@ -272,13 +300,14 @@ fn vs_1_a_date_range_on_another_dataset_is_an_invariant_violation() {
             to: date,
             origin: at("/query/nonportable_extensions/0/data/date_range"),
         }),
+        subgraph: subgraph(&["ORDERS_CALENDAR"]),
         ..BoundQueryParts::default()
     };
     let query = query(Vec::new(), vec![metric_reference("REVENUE", 0)], parts);
 
     assert_eq!(
         resolve_paths(&query, &model),
-        Err(InvariantViolation::SeveralDatasets {
+        violation(InvariantViolation::SeveralDatasets {
             first: name("ORDERS"),
             second: name("CALENDAR"),
             origin: at("/query/nonportable_extensions/0/data/date_range"),
@@ -297,7 +326,7 @@ fn vs_1_a_query_without_metrics_and_dimensions_is_an_invariant_violation() {
 
     assert_eq!(
         resolve_paths(&query, &model),
-        Err(InvariantViolation::NoMetricAndNoDimension)
+        violation(InvariantViolation::NoMetricAndNoDimension)
     );
 }
 
@@ -320,7 +349,7 @@ fn vs_1_a_chosen_path_is_an_invariant_violation() {
 
     assert_eq!(
         resolve_paths(&query, &model),
-        Err(InvariantViolation::ChosenPath { origin })
+        violation(InvariantViolation::ChosenPath { origin })
     );
 }
 
@@ -332,7 +361,7 @@ fn vs_1_an_inline_metric_is_an_invariant_violation() {
 
     assert_eq!(
         resolve_paths(&query, &model),
-        Err(InvariantViolation::InlineMetric {
+        violation(InvariantViolation::InlineMetric {
             origin: at("/query/metrics/0"),
         })
     );
@@ -349,7 +378,7 @@ fn vs_1_a_metric_missing_from_the_model_is_an_invariant_violation() {
 
     assert_eq!(
         resolve_paths(&query, &model),
-        Err(InvariantViolation::UnclassifiedMetric {
+        violation(InvariantViolation::UnclassifiedMetric {
             origin: at("/query/metrics/0"),
         })
     );
@@ -368,7 +397,7 @@ fn vs_1_an_unclassified_metric_is_an_invariant_violation() {
 
     assert_eq!(
         resolve_paths(&query, &model),
-        Err(InvariantViolation::UnclassifiedMetric {
+        violation(InvariantViolation::UnclassifiedMetric {
             origin: at("/query/metrics/0"),
         })
     );
@@ -388,7 +417,7 @@ fn vs_1_a_metric_without_components_is_an_invariant_violation() {
 
     assert_eq!(
         resolve_paths(&query, &model),
-        Err(InvariantViolation::MetricWithoutComponents {
+        violation(InvariantViolation::MetricWithoutComponents {
             origin: at("/query/metrics/1"),
         })
     );

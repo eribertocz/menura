@@ -1,0 +1,17 @@
+id: multi-differential-refund-001
+rules: [CS-4.7, CS-4.8]
+model: slice
+security_context: auditor.json
+oracle: "multi-differential-refund-001.oracle.sql"
+query:
+  contract: "menura.query"
+  contract_version: "1.1.0"
+  time_zone: "UTC"
+  query:
+    dimensions: ["sales.region"]
+    metrics:
+      - {"metric": "total_refund", "alias": "total_refund"}
+expect:
+  outcome: "plan"
+  row_order: "any"
+  rows: "multi-differential-refund-001.csv"

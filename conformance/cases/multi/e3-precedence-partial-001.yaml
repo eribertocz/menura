@@ -1,0 +1,18 @@
+id: e3-precedence-partial-001
+rules: [E2-5]
+model: e3-reachability
+security_context: analyst.json
+query:
+  contract: "menura.query"
+  contract_version: "1.1.0"
+  time_zone: "UTC"
+  query:
+    dimensions: ["returns.reason"]
+    metrics: [{"metric": "total_amount", "alias": "total_amount"}, {"metric": "total_refund", "alias": "total_refund"}]
+    filter: "warehouses.city = 'Lima'"
+expect:
+  outcome: "error"
+  error: "E_PARTIAL_DIMENSION_REACHABILITY"
+  location:
+    document: "query"
+    pointer: "/query/dimensions/0"
