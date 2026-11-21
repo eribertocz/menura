@@ -1,0 +1,20 @@
+id: e3-precedence-filter-order-001
+rules: [E2-5]
+model: e3-reachability
+security_context: analyst.json
+query:
+  contract: "menura.query"
+  contract_version: "1.1.0"
+  time_zone: "UTC"
+  query:
+    dimensions: ["orders.status"]
+    metrics: [{"metric": "total_amount", "alias": "total_amount"}]
+    filter: "warehouses.city = 'Lima'"
+    nonportable_extensions:
+      - {"vendor_name": "COMMON", "data": {"namespace": "menura", "version": 1, "filters": ["returns.reason = 'late'"]}}
+expect:
+  outcome: "error"
+  error: "E_UNSUPPORTED_FILTER_PATH"
+  location:
+    document: "query"
+    pointer: "/query/filter"
