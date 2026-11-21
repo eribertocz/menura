@@ -1,6 +1,8 @@
 //! The model elements a bound name points to.
 
-use menura_model::internal_model::{DiagnosticCode, InternalModel, Metric};
+use menura_model::internal_model::{
+    DiagnosticCode, ElementKind, InternalModel, Metric, NormalizedName, RowAccessCut,
+};
 use menura_representations::bound_query::MetricPath;
 
 use crate::authorized_query::ResolvedName;
@@ -58,5 +60,36 @@ pub(crate) fn query_errors<'model>(
             .relationship(name)
             .map(|relationship| relationship.query_errors.iter().collect())
             .unwrap_or_default(),
+    }
+}
+
+/// The cause of `E0H-01` that E0 recorded for `target`, or else for the dataset that holds it
+/// (E0-4.2a).
+pub(crate) fn row_access_cut<'model>(
+    model: &'model InternalModel,
+    target: &NamedTarget,
+) -> Option<&'model RowAccessCut> {
+    let recorded = |kind: ElementKind, name: Vec<&NormalizedName>| {
+        model
+            .parts()
+            .unusable
+            .iter()
+            .find(|element| element.kind == kind && element.name.iter().eq(name.iter().copied()))
+            .and_then(|element| element.row_access_cut.as_ref())
+    };
+    match target {
+        NamedTarget::Member(ResolvedName::Field(path)) => {
+            recorded(ElementKind::Field, vec![&path.dataset, &path.field])
+                .or_else(|| recorded(ElementKind::Dataset, vec![&path.dataset]))
+        }
+        NamedTarget::Member(ResolvedName::Metric(MetricPath::Dataset { dataset, metric })) => {
+            recorded(ElementKind::Metric, vec![dataset, metric])
+                .or_else(|| recorded(ElementKind::Dataset, vec![dataset]))
+        }
+        NamedTarget::Member(ResolvedName::Metric(MetricPath::SemanticModel(name))) => {
+            recorded(ElementKind::Metric, vec![name])
+        }
+        NamedTarget::Dataset(name) => recorded(ElementKind::Dataset, vec![name]),
+        NamedTarget::Relationship(name) => recorded(ElementKind::Relationship, vec![name]),
     }
 }
