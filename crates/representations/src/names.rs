@@ -55,3 +55,48 @@ impl ColumnName {
         &self.0
     }
 }
+
+/// The prefix of every column of the `Scan` of a join instance that is not the home `Scan`
+/// (E6-4.12): the column of a field is the prefix followed by the field's normalized name.
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct ColumnPrefix(String);
+
+impl ColumnPrefix {
+    /// The prefix `text`.
+    #[must_use]
+    pub fn new(text: &str) -> Self {
+        Self(text.to_owned())
+    }
+
+    /// The prefix as text.
+    #[must_use]
+    pub fn as_str(&self) -> &str {
+        &self.0
+    }
+
+    /// The column of the field `field` under this prefix.
+    ///
+    /// ```
+    /// use menura_representations::names::ColumnPrefix;
+    /// let prefix = ColumnPrefix::new("ORDERS_TO_CUSTOMERS.");
+    /// assert_eq!(prefix.column("REGION").as_str(), "ORDERS_TO_CUSTOMERS.REGION");
+    /// ```
+    #[must_use]
+    pub fn column(&self, field: &str) -> ColumnName {
+        ColumnName::new(&format!("{}{field}", self.0))
+    }
+
+    /// The field whose column is `column` under this prefix; `None` when `column` does not
+    /// start with it.
+    ///
+    /// ```
+    /// use menura_representations::names::ColumnPrefix;
+    /// let prefix = ColumnPrefix::new("ORDERS_TO_CUSTOMERS.");
+    /// assert_eq!(prefix.field("ORDERS_TO_CUSTOMERS.REGION"), Some("REGION"));
+    /// assert_eq!(prefix.field("REGION"), None);
+    /// ```
+    #[must_use]
+    pub fn field<'column>(&self, column: &'column str) -> Option<&'column str> {
+        column.strip_prefix(self.0.as_str())
+    }
+}

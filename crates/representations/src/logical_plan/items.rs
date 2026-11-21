@@ -1,4 +1,4 @@
-//! The values plan nodes carry: join kinds, named expressions, components and sort items.
+//! The values plan nodes carry: join kinds and conditions, named expressions, components and sort items.
 
 use menura_contracts::types::query::{Direction, NullsOrder};
 use menura_model::expression::{AggregateCall, Expression};
@@ -12,6 +12,16 @@ pub enum JoinKind {
     Left,
     /// An inner join, set only in E5 when evidence allows it.
     Inner,
+}
+
+/// One equality of a `Join`: the `left` column equals the `right` column (E4-3.2). A NULL on
+/// either side never matches.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct JoinCondition {
+    /// The column of the left input: a `from_columns` field of the relationship.
+    pub left: ColumnName,
+    /// The column of the right input: the paired `to_columns` field.
+    pub right: ColumnName,
 }
 
 /// An expression with the name of the column it computes.

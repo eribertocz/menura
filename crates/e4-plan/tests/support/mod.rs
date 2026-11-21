@@ -5,6 +5,7 @@
     reason = "each test file uses a different part of the shared support module"
 )]
 
+pub mod joins;
 pub mod plan;
 
 use menura_contracts::ContractKind;
