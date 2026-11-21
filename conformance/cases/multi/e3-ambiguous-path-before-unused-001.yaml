@@ -1,0 +1,18 @@
+id: e3-ambiguous-path-before-unused-001
+rules: [E2-5, E3-3.2, E3-3.3]
+model: e3-path-choice
+security_context: analyst.json
+query:
+  contract: "menura.query"
+  contract_version: "1.1.0"
+  time_zone: "UTC"
+  query:
+    dimensions: ["calendar.month"]
+    metrics:
+      - {"metric": "total_amount", "alias": "total_amount"}
+    nonportable_extensions:
+      - {"vendor_name": "COMMON", "data": {"namespace": "menura", "version": 1, "paths": [{"from": "orders", "to": "customers", "relationships": ["orders_customers"]}]}}
+expect:
+  outcome: "error"
+  error: "E_AMBIGUOUS_PATH"
+  location: {document: query, pointer: /query/dimensions/0}
