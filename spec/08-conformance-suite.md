@@ -66,6 +66,7 @@ expect:
 - **CS-4.4** For Apache Ossie suites, the runner loads the fixture with `ossie_format: development` and `grant_authenticated_to_all: true`, builds the catalog schema by reading the created tables, wraps each `query.json` in a query envelope with `time_zone: UTC`, and compares the first error code or the rows. SQL-form cases refer to relations as `<model name>.<dataset name>` (QRY-5.1).
 - **CS-4.5** Runner security context for Apache Ossie suites: `{"contract": "menura.security_context", "contract_version": "1.1.0", "subject": "conformance-runner", "roles": [], "attributes": {}}`, stored as `conformance/ossie/runner-context.json`.
 - **CS-4.6** Layer 2 cases: the runner wraps the text of `query.ossie.sql` in the `sql` field of a query envelope (`time_zone: UTC`), runs `expected.sql` on the fixture to obtain the expected rows, and compares them under the case's comparison rules; an expected error is compared by its first code.
+- **CS-4.7** Differential cases compare the **result rows** of the compiled plan with those of an independent oracle under CS-2.4, never the SQL text alone. Each divergence is classified in a reviewed file as a bug, a known deviation or unsupported; an unclassified divergence fails. Generated inputs record their seeds. An oracle is test tooling only (ARC-5.3) and needs an approved `deny.toml` entry.
 
 ## CS-5 Producer suite
 

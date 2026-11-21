@@ -19,6 +19,7 @@ a cache key, and a human-readable explanation — or a precise error.
 - **Not a storage format.** Data stays in the warehouse or database the user already owns.
 - **Not a user interface.** It is a headless component used by other modules.
 - **Not an ETL/ELT tool.** It only reads the catalog state that such tools publish.
+- **Not an AI.** It contains no language model and no agent logic. Every channel (CLI, Python, MCP, gateway, agents) translates to the same public typed requests; the SQL form is a query form, not an agent protocol. Natural-language parsing, embeddings, RDF, autonomous agents, user interfaces and model-provider SDKs live in other modules.
 
 ## 1.3 Goals
 
