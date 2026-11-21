@@ -15,6 +15,10 @@ pub enum Operation {
     Scan {
         /// The dataset whose relation is read.
         dataset: NormalizedName,
+        /// The column of the synthesized row identity, a row number over the relation
+        /// (E4-4.0f): set only on the home `Scan` of a branch with a `Deduplicate`, and then
+        /// the last column of the schema.
+        row_identity: Option<ColumnName>,
     },
     /// `Join(left, right, relationship, kind)`: join along one relationship. Its output is
     /// the columns of `left`, then those of `right`.

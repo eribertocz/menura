@@ -1,4 +1,5 @@
-//! The errors of E4: `ESEC-02`, `EQRY-03`, and the internal errors of an input outside the 0.3.0 slice.
+//! The errors of E4: `ESEC-02`, `EQRY-03`, and the internal errors of an input the stages
+//! before E4 never produce.
 
 use std::fmt;
 
@@ -60,21 +61,23 @@ impl PlanError {
     }
 }
 
-/// An input that the stages before E4 never produce in the 0.3.0 slice (VS-1, E2-5 row 12c).
+/// An input that the stages before E4 never produce, or that needs a later part of E4.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum InvariantViolation {
     /// The query has no branch.
     NoBranch,
     /// The query has more than one branch: stitching comes in 0.4.0 (E4-5).
     SeveralBranches,
-    /// The branch has a join step (E4-4 step 3).
-    JoinStep,
-    /// The home dataset reaches another dataset with row policies, which needs propagation
-    /// (E4-6.5).
+    /// A join instance whose relationship the model does not have, or does not match its
+    /// step, its parent instance or its column pairs (E3-4.2a).
+    UnknownRelationship,
+    /// The home dataset reaches another dataset with row policies, or the branch joins one,
+    /// which needs propagation and visibility on every `Scan` (E4-6.5).
     Propagation,
     /// The home dataset is not in the model.
     UnknownDataset,
-    /// A field that is not in the model, or of another dataset than the home dataset.
+    /// A field that is not in the model, or of another dataset than the join instance that
+    /// reads it.
     ForeignField,
     /// A field without a type, or whose type is the type of `NULL`.
     UntypedField,
