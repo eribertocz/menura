@@ -12,7 +12,7 @@ WITH
     SELECT
       CAST(CAST(date_part('week', ("CREATED_AT" AT TIME ZONE $1)) AS BIGINT) AS BIGINT) AS "WEEK",
       CAST(CAST("ORDERED_ON" + to_months(CAST($2 AS INTEGER)) AS DATE) AS DATE) AS "LATER",
-      CAST(CAST((CAST(date_trunc('week', $3) AS DATE) - CAST(date_trunc('week', "ORDERED_ON") AS DATE)) // 7 AS BIGINT) AS BIGINT) AS "WEEKS",
+      CAST(CAST((CAST(date_trunc('week', CAST($3 AS DATE)) AS DATE) - CAST(date_trunc('week', "ORDERED_ON") AS DATE)) // 7 AS BIGINT) AS BIGINT) AS "WEEKS",
       CAST(CAST(CAST($4 AS TIMESTAMP WITH TIME ZONE) AT TIME ZONE $1 AS TIMESTAMP) AS TIMESTAMP) AS "NOW"
     FROM "menura_1_scan"
   )

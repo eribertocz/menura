@@ -12,18 +12,20 @@ use crate::parameters::SharedValue;
 use crate::values::date_text;
 
 impl ExpressionWriter<'_, '_> {
-    /// The reference date of the query in its time zone, one `date` parameter.
+    /// The reference date of the query in its time zone, one `date` parameter written
+    /// `CAST($d AS DATE)`, so that `DuckDB` never chooses its type (E6-4.10).
     pub(super) fn current_date(&mut self) -> Result<String, GenerateError> {
         let date = self
             .environment
             .time
             .reference_date
             .ok_or_else(|| self.error(InvariantViolation::MissingReferenceTime))?;
-        Ok(self.parameters.bind_shared(
+        let placeholder = self.parameters.bind_shared(
             SharedValue::ReferenceDate,
             LogicalType::Date,
             Value::String(date_text(date)),
-        ))
+        );
+        Ok(format!("CAST({placeholder} AS DATE)"))
     }
 
     /// `CAST(CAST($r AS TIMESTAMP WITH TIME ZONE) AT TIME ZONE $tz AS <type>)`: the wall clock

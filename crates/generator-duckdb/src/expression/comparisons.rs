@@ -31,19 +31,22 @@ impl ExpressionWriter<'_, '_> {
         expression: &Expression,
         other: Option<&LogicalType>,
     ) -> Result<String, GenerateError> {
-        let text = self.operand(expression)?;
-        let date_parameter = self.literals == Literals::Bound
-            && matches!(expression, Expression::Literal(Literal::Date(_)));
-        match other {
-            Some(LogicalType::Timestamp { with_time_zone, .. }) if date_parameter => {
-                let midnight = format!("CAST({text} AS TIMESTAMP)");
-                if *with_time_zone {
-                    Ok(format!("{midnight} AT TIME ZONE {}", self.time_zone()))
-                } else {
-                    Ok(midnight)
-                }
-            }
-            _ => Ok(text),
+        let date_bound = match (expression, other) {
+            (
+                Expression::Literal(literal @ Literal::Date(_)),
+                Some(LogicalType::Timestamp { with_time_zone, .. }),
+            ) if self.literals == Literals::Bound => Some((literal, *with_time_zone)),
+            _ => None,
+        };
+        let Some((literal, with_time_zone)) = date_bound else {
+            return self.operand(expression);
+        };
+        let (_, placeholder) = self.bound_literal(literal)?;
+        let midnight = format!("CAST({placeholder} AS TIMESTAMP)");
+        if with_time_zone {
+            Ok(format!("{midnight} AT TIME ZONE {}", self.time_zone()))
+        } else {
+            Ok(midnight)
         }
     }
 }

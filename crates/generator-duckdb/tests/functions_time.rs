@@ -146,11 +146,9 @@ fn e6_4_2_datediff_binds_its_arguments_in_order_of_appearance() {
         &query_with_reference_time(),
     )
     .expect("SQL");
-    assert!(
-        generated
-            .sql
-            .contains(r#"CAST(CAST("ORDERED_ON" AS DATE) - CAST($1 AS DATE) AS BIGINT)"#)
-    );
+    assert!(generated.sql.contains(
+        r#"CAST(CAST("ORDERED_ON" AS DATE) - CAST(CAST($1 AS DATE) AS DATE) AS BIGINT)"#
+    ));
     assert_eq!(generated.parameters[0].value, json!("2026-01-01"));
 }
 
@@ -171,7 +169,7 @@ fn e0f_2_3_current_date_is_the_reference_date_bound_once() {
     assert!(
         generated
             .sql
-            .contains(r#"CASE WHEN ("ORDERED_ON" <= $1) THEN $1 END"#)
+            .contains(r#"CASE WHEN ("ORDERED_ON" <= CAST($1 AS DATE)) THEN CAST($1 AS DATE) END"#)
     );
     assert_eq!(generated.parameters.len(), 1);
     assert_eq!(generated.parameters[0].logical_type, LogicalType::Date);

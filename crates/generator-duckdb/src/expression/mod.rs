@@ -15,6 +15,7 @@ mod time;
 
 use menura_contracts::normalize_unquoted_identifier;
 use menura_contracts::types::catalog::{CatalogSchemaDocument, Column, RelationSchema};
+use menura_contracts::types::common::LogicalType;
 use menura_model::expression::{Expression, Identifier, Literal, Reference};
 use menura_model::internal_model::InternalModel;
 use menura_representations::logical_plan::OutputSchema;
@@ -186,10 +187,35 @@ impl<'input, 'statement> ExpressionWriter<'input, 'statement> {
         if self.literals == Literals::Written || *literal == Literal::Null {
             return Ok(literal_sql(literal));
         }
+        let (logical_type, placeholder) = self.bound_literal(literal)?;
+        self.cast_temporal(&logical_type, placeholder)
+    }
+
+    /// Binds `literal` as a new parameter and returns its logical type and its bare
+    /// placeholder.
+    fn bound_literal(&mut self, literal: &Literal) -> Result<(LogicalType, String), GenerateError> {
         let logical_type = self.literal_type(literal)?;
         let value =
             literal_value(literal).ok_or_else(|| self.error(InvariantViolation::NonFiniteFloat))?;
-        Ok(self.parameters.bind(logical_type, value))
+        let placeholder = self.parameters.bind(logical_type.clone(), value);
+        Ok((logical_type, placeholder))
+    }
+
+    /// `CAST(placeholder AS <type>)` for a `date`, `time` or `timestamp` parameter, whose type
+    /// `DuckDB` would otherwise choose among the overloads of the function or operator that
+    /// reads it (E6-4.10); any other parameter unchanged.
+    fn cast_temporal(
+        &self,
+        logical_type: &LogicalType,
+        placeholder: String,
+    ) -> Result<String, GenerateError> {
+        match logical_type {
+            LogicalType::Date | LogicalType::Time | LogicalType::Timestamp { .. } => Ok(format!(
+                "CAST({placeholder} AS {})",
+                self.physical(logical_type)?
+            )),
+            _ => Ok(placeholder),
+        }
     }
 
     /// An input column by its name, or a catalog column as the catalog spells it (PLN-2.2).
