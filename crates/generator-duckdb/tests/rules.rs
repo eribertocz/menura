@@ -94,11 +94,6 @@ fn e6_3_1_nodes_outside_the_slice_are_internal_errors() {
             path: Vec::new(),
             predicate: support::parse("TRUE"),
         }),
-        node(Operation::Deduplicate {
-            input: input(),
-            group: vec![ColumnName::new("REGION")],
-            identity: Vec::new(),
-        }),
         node(Operation::Stitch {
             branches: vec![scan("ORDERS", &["REGION"])],
             keys: vec![ColumnName::new("REGION")],

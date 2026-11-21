@@ -30,7 +30,7 @@ pub(crate) struct WrittenNode {
 
 /// Writes the steps of one statement.
 pub(crate) struct StepWriter<'input> {
-    environment: &'input Environment<'input>,
+    pub(crate) environment: &'input Environment<'input>,
     pub(crate) parameters: Parameters,
     pub(crate) steps: Vec<(String, SelectBody)>,
 }
@@ -72,10 +72,25 @@ impl<'input> StepWriter<'input> {
                 let (body, ordering) = self.limit(node, input, *rows)?;
                 (body, ordering, "limit")
             }
-            Operation::Join { .. }
-            | Operation::SemiJoin { .. }
-            | Operation::Deduplicate { .. }
-            | Operation::Stitch { .. } => {
+            Operation::Deduplicate {
+                input,
+                group,
+                identity,
+            } => (
+                self.deduplicate(node, input, group, identity)?,
+                None,
+                "deduplicate",
+            ),
+            Operation::SemiJoin {
+                input,
+                path,
+                predicate,
+            } => (
+                self.semi_join(node, input, path, predicate)?,
+                None,
+                "semijoin",
+            ),
+            Operation::Join { .. } | Operation::Stitch { .. } => {
                 return Err(error(InvariantViolation::NodeOutsideSlice, node));
             }
         };
@@ -107,6 +122,7 @@ impl<'input> StepWriter<'input> {
             .iter()
             .find(|relation| relation.source == dataset.source)
             .ok_or_else(|| error(InvariantViolation::UnknownRelation, node))?;
+        self.parameters.start_node(node.origin());
         let prefix = source_prefix(dataset);
         let mut items = Vec::new();
         for column in node.schema().columns() {
@@ -130,7 +146,7 @@ impl<'input> StepWriter<'input> {
 
     /// The select item of the `Scan` column `name` of `dataset`: the expression of the field of
     /// that name over the columns of `relation`.
-    fn field_item(
+    pub(crate) fn field_item(
         &mut self,
         node: &'input PlanNode,
         dataset: &Dataset,
@@ -157,6 +173,7 @@ impl<'input> StepWriter<'input> {
         predicate: &Expression,
     ) -> Result<SelectBody, GenerateError> {
         let written = self.write(input)?;
+        self.parameters.start_node(node.origin());
         let items = pass_through(node, input.schema())?;
         let condition = self.expression(node, Columns::Input(input.schema()), predicate)?;
         Ok(SelectBody {
@@ -175,6 +192,7 @@ impl<'input> StepWriter<'input> {
         components: &[AggregateComponent],
     ) -> Result<SelectBody, GenerateError> {
         let written = self.write(input)?;
+        self.parameters.start_node(node.origin());
         let columns = Columns::Input(input.schema());
         let mut items = Vec::new();
         for key in keys {
@@ -214,6 +232,7 @@ impl<'input> StepWriter<'input> {
         expressions: &[NamedExpression],
     ) -> Result<SelectBody, GenerateError> {
         let written = self.write(input)?;
+        self.parameters.start_node(node.origin());
         let mut items = Vec::new();
         for named in expressions {
             let value = self.expression(node, Columns::Input(input.schema()), &named.expression)?;
@@ -240,6 +259,7 @@ impl<'input> StepWriter<'input> {
         items: &[SortItem],
     ) -> Result<(SelectBody, String), GenerateError> {
         let written = self.write(input)?;
+        self.parameters.start_node(node.origin());
         let terms = items
             .iter()
             .map(|item| sort_term(node, input.schema(), item))
@@ -261,6 +281,7 @@ impl<'input> StepWriter<'input> {
         rows: u64,
     ) -> Result<(SelectBody, Option<String>), GenerateError> {
         let written = self.write(input)?;
+        self.parameters.start_node(node.origin());
         let mut clauses: Vec<String> = written.ordering.iter().cloned().collect();
         clauses.push(format!("LIMIT {rows}"));
         let body = SelectBody {
@@ -355,6 +376,7 @@ fn column_type(node: &PlanNode, name: &str) -> Result<String, GenerateError> {
         .ok_or_else(|| error(InvariantViolation::UnsupportedType, node))
 }
 
-fn error(violation: InvariantViolation, node: &PlanNode) -> GenerateError {
+/// The error `violation` in `node`.
+pub(crate) fn error(violation: InvariantViolation, node: &PlanNode) -> GenerateError {
     GenerateError::new(violation, node.origin())
 }
