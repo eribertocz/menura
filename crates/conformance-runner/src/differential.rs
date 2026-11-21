@@ -8,7 +8,7 @@
 
 use menura_core::CompiledPlanDocument;
 
-use crate::case::{Case, RowOrder};
+use crate::case::Case;
 use crate::divergences::{DIFFERENTIAL_FOLDER, DIVERGENCES_FILE, Divergence};
 use crate::execution::{ExecutionFailure, execute_plan, execute_sql};
 use crate::fixture::read_text;
@@ -49,15 +49,11 @@ fn divergence_from_oracle(
     })?;
     let actual = execute_plan(inputs.connection, plan)
         .map_err(|failure| format!("the plan fails on DuckDB: {}", describe(failure)))?;
-    let comparison = Comparison {
-        row_order: case.expect.row_order.unwrap_or(RowOrder::Any),
-        tolerance: case.expect.tolerance,
-    };
     Ok(rows_divergence(
         &plan.result_schema,
         &actual,
         &oracle,
-        comparison,
+        Comparison::of(&case.expect),
     ))
 }
 

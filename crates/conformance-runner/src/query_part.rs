@@ -11,7 +11,7 @@ use menura_core::{
     compile,
 };
 
-use crate::case::{Case, Expectation, Outcome, RowOrder};
+use crate::case::{Case, Expectation, Outcome};
 use crate::csv_rows::parse_csv;
 use crate::diagnostic_check::{Part, describe, location_mismatch, missing_warnings};
 use crate::differential::check_differential;
@@ -189,15 +189,11 @@ fn compare_rows(
         ExecutionFailure::Parameter(reason) => format!("the plan cannot be bound: {reason}"),
         ExecutionFailure::Engine(message) => format!("the plan fails on DuckDB: {message}"),
     })?;
-    let comparison = Comparison {
-        row_order: expect.row_order.unwrap_or(RowOrder::Any),
-        tolerance: expect.tolerance,
-    };
     Ok(rows_mismatch(
         &plan.result_schema,
         &actual,
         &expected,
-        comparison,
+        Comparison::of(expect),
     ))
 }
 

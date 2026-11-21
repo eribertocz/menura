@@ -5,7 +5,7 @@
 use duckdb::types::Value;
 use menura_contracts::types::compiled_plan::ResultColumn;
 
-use crate::case::RowOrder;
+use crate::case::{Expectation, RowOrder};
 use crate::cells::{Cell, actual_cell, describe_rows, expected_cell};
 use crate::csv_rows::{CsvField, CsvRows};
 use crate::execution::StatementResult;
@@ -17,6 +17,16 @@ pub(crate) struct Comparison {
     pub(crate) row_order: RowOrder,
     /// The relative tolerance of float columns; floats are compared exactly without one.
     pub(crate) tolerance: Option<f64>,
+}
+
+impl Comparison {
+    /// The comparison a case declares: its `row_order`, `any` when omitted, and its `tolerance`.
+    pub(crate) fn of(expect: &Expectation) -> Self {
+        Self {
+            row_order: expect.row_order.unwrap_or(RowOrder::Any),
+            tolerance: expect.tolerance,
+        }
+    }
 }
 
 /// Why the actual rows differ from the expected ones, or `None` when they match.
