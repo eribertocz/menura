@@ -74,17 +74,6 @@ fn order_count() -> Metric {
 }
 
 #[test]
-fn vs_1_more_than_one_branch_is_an_internal_error() {
-    let several = Branches::new(vec![
-        branch("ORDERS", JoinTree::default()),
-        branch("RETURNS", JoinTree::default()),
-    ])
-    .expect("two homes");
-    let result = build_plan(&several, &count_query(), &anyone(), &model(Vec::new()));
-    assert_eq!(violation(result), InvariantViolation::SeveralBranches);
-}
-
-#[test]
 fn vs_1_a_derived_metric_is_an_internal_error() {
     let mut derived = order_count();
     derived.derived = Some(DerivedMetric {

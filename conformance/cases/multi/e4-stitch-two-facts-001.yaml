@@ -1,0 +1,18 @@
+id: e4-stitch-two-facts-001
+rules: [E4-3.7, E4-5.0a, E4-5.0c, PLN-1]
+model: e4-stitch
+security_context: analyst.json
+oracle: "e4-stitch-two-facts-001.oracle.sql"
+query:
+  contract: "menura.query"
+  contract_version: "1.1.0"
+  time_zone: "UTC"
+  query:
+    dimensions: ["regions.name"]
+    metrics:
+      - {"metric": "total_sales", "alias": "total_sales"}
+      - {"metric": "budget_total", "alias": "budget_total"}
+expect:
+  outcome: "plan"
+  row_order: "any"
+  rows: "e4-stitch-two-facts-001.csv"
