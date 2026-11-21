@@ -44,6 +44,25 @@ pub struct AggregateComponent {
     pub filter: Option<Expression>,
 }
 
+/// The value a component takes for a key its branch has no row for: the value of its
+/// aggregate over no rows (E4-5.0b).
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum EmptyInput {
+    /// `NULL`: every aggregate but `COUNT`.
+    Null,
+    /// The integer `0`: `COUNT`.
+    Zero,
+}
+
+/// A component of a `Stitch` node: the branch column it reads and its empty-input value.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct StitchedComponent {
+    /// The component column, output by exactly one branch.
+    pub name: ColumnName,
+    /// Its value when that branch has no row for a key (E4-5.0b).
+    pub empty_input: EmptyInput,
+}
+
 /// One ordering term of a `Sort` node.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct SortItem {

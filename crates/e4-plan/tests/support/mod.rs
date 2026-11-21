@@ -8,6 +8,7 @@
 pub mod join_plan;
 pub mod joins;
 pub mod plan;
+pub mod stitch;
 
 use menura_contracts::ContractKind;
 use menura_contracts::Sha256Hash;

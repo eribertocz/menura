@@ -7,7 +7,10 @@ mod schema;
 #[cfg(test)]
 mod tests;
 
-pub use items::{AggregateComponent, JoinCondition, JoinKind, NamedExpression, SortItem};
+pub use items::{
+    AggregateComponent, EmptyInput, JoinCondition, JoinKind, NamedExpression, SortItem,
+    StitchedComponent,
+};
 pub use operation::Operation;
 pub use schema::{OutputSchema, SchemaColumn};
 
