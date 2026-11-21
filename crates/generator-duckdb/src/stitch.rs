@@ -20,8 +20,7 @@ use crate::values::literal_sql;
 const KEYS: &str = "\"menura_keys\"";
 
 impl<'input> StepWriter<'input> {
-    /// The body of `node` when it is a `Stitch`; any other node here, a `Join`, is outside
-    /// the slice of this generator (VS-1).
+    /// The body of `node`, a `Stitch`; any other node is not one this function generates.
     pub(crate) fn stitch_node(
         &mut self,
         node: &'input PlanNode,

@@ -8,8 +8,7 @@ mod support;
 use menura_contracts::types::common::{FloatBits, LogicalType};
 use menura_contracts::types::compiled_plan::ColumnRole;
 use menura_generator_duckdb::InvariantViolation;
-use menura_model::internal_model::NormalizedName;
-use menura_representations::logical_plan::{JoinKind, Operation, OutputSchema, PlanNode};
+use menura_representations::logical_plan::{Operation, OutputSchema, PlanNode};
 use serde_json::json;
 use support::{
     aggregate, big_integer, column, component, filter, from_model, from_query, generate,
@@ -81,19 +80,11 @@ fn node(operation: Operation) -> PlanNode {
 #[test]
 fn e6_3_1_nodes_outside_the_slice_are_internal_errors() {
     let input = || Box::new(scan("ORDERS", &["REGION"]));
-    let nodes = [
-        node(Operation::Join {
-            left: input(),
-            right: input(),
-            relationship: NormalizedName::new("ORDERS_TO_CUSTOMERS"),
-            kind: JoinKind::Left,
-        }),
-        node(Operation::SemiJoin {
-            input: input(),
-            path: Vec::new(),
-            predicate: support::parse("TRUE"),
-        }),
-    ];
+    let nodes = [node(Operation::SemiJoin {
+        input: input(),
+        path: Vec::new(),
+        predicate: support::parse("TRUE"),
+    })];
     for plan in nodes {
         let error = generate(&plan, &query(&["REGION"], &[])).unwrap_err();
         assert_eq!(error.violation, InvariantViolation::NodeOutsideSlice);

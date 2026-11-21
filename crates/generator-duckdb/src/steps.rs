@@ -1,21 +1,19 @@
 //! One common table expression per plan node, in plan order (E6-4.4).
 
-use menura_contracts::types::catalog::RelationSchema;
 use menura_contracts::types::query::{Direction, NullsOrder};
 use menura_model::expression::Expression;
-use menura_model::internal_model::{Dataset, NormalizedName};
 use menura_representations::logical_plan::{
     AggregateComponent, NamedExpression, Operation, OutputSchema, PlanNode, SortItem,
 };
+use menura_representations::names::ColumnPrefix;
 
 use crate::body::SelectBody;
 use crate::error::{GenerateError, InvariantViolation};
 use crate::expression::{Columns, Environment, ExpressionWriter};
-use crate::identifiers::{Source, classify_source, quote, source_sql};
+use crate::identifiers::quote;
+use crate::join::JoinInputs;
 use crate::parameters::Parameters;
-use crate::source_columns::{
-    empty_scan_item, source_column_item, source_column_name, source_prefix,
-};
+use crate::scan::ScanRole;
 use crate::types::physical_type;
 
 /// A node already written: the name of its step and the `ORDER BY` its rows keep.
@@ -33,6 +31,8 @@ pub(crate) struct StepWriter<'input> {
     pub(crate) environment: &'input Environment<'input>,
     pub(crate) parameters: Parameters,
     pub(crate) steps: Vec<(String, SelectBody)>,
+    /// The `right_prefix` of the `Join` whose right input is being written, for its `Scan`.
+    pub(crate) column_prefix: Option<&'input ColumnPrefix>,
 }
 
 impl<'input> StepWriter<'input> {
@@ -42,13 +42,13 @@ impl<'input> StepWriter<'input> {
             environment,
             parameters: Parameters::default(),
             steps: Vec::new(),
+            column_prefix: None,
         }
     }
 
     /// Writes the steps of `node`'s inputs, then the step of `node`.
     pub(crate) fn write(&mut self, node: &'input PlanNode) -> Result<WrittenNode, GenerateError> {
         let (body, ordering, kind) = match node.operation() {
-            Operation::Scan { dataset } => (self.scan(node, dataset)?, None, "scan"),
             Operation::Filter { input, predicate } => {
                 (self.filter(node, input, predicate)?, None, "filter")
             }
@@ -72,26 +72,9 @@ impl<'input> StepWriter<'input> {
                 let (body, ordering) = self.limit(node, input, *rows)?;
                 (body, ordering, "limit")
             }
-            Operation::Deduplicate {
-                input,
-                group,
-                identity,
-            } => (
-                self.deduplicate(node, input, group, identity)?,
-                None,
-                "deduplicate",
-            ),
-            Operation::SemiJoin {
-                input,
-                path,
-                predicate,
-            } => (
-                self.semi_join(node, input, path, predicate)?,
-                None,
-                "semijoin",
-            ),
-            Operation::Join { .. } | Operation::Stitch { .. } => {
-                (self.stitch_node(node)?, None, "stitch")
+            _ => {
+                let (body, kind) = self.relation_step(node)?;
+                (body, None, kind)
             }
         };
         let name = quote(&format!("menura_{}_{kind}", self.steps.len() + 1));
@@ -99,71 +82,56 @@ impl<'input> StepWriter<'input> {
         Ok(WrittenNode { name, ordering })
     }
 
-    /// Each schema column is the expression of the field of the same name, over the columns of
-    /// the catalog relation whose `source` is the dataset's, character for character (CAT-4),
-    /// a query `source` included (E6-4.3); a schema column that names a catalog column is that
-    /// column, in the catalog's spelling (PLN-2.2). A `Scan` with no column selects one
-    /// constant, so that the rows can still be counted.
-    fn scan(
+    /// The body and kind of a node that reads, joins, deduplicates or combines rows: `Scan`,
+    /// `Join`, `Deduplicate`, `SemiJoin` and `Stitch`.
+    fn relation_step(
         &mut self,
         node: &'input PlanNode,
-        dataset: &NormalizedName,
-    ) -> Result<SelectBody, GenerateError> {
-        let model = self.environment.model;
-        let dataset = model
-            .dataset(dataset)
-            .ok_or_else(|| error(InvariantViolation::UnknownDataset, node))?;
-        let source: Source<'_> = classify_source(&dataset.source)
-            .ok_or_else(|| error(InvariantViolation::MalformedSource, node))?;
-        let relation = self
-            .environment
-            .catalog
-            .relations
-            .iter()
-            .find(|relation| relation.source == dataset.source)
-            .ok_or_else(|| error(InvariantViolation::UnknownRelation, node))?;
-        self.parameters.start_node(node.origin());
-        let prefix = source_prefix(dataset);
-        let mut items = Vec::new();
-        for column in node.schema().columns() {
-            let name = column.name.as_str();
-            let item = match source_column_name(&prefix, name) {
-                Some(catalog_name) => source_column_item(relation, catalog_name, name)
-                    .ok_or_else(|| error(InvariantViolation::UnknownColumn, node))?,
-                None => self.field_item(node, dataset, relation, name)?,
-            };
-            items.push(item);
+    ) -> Result<(SelectBody, &'static str), GenerateError> {
+        match node.operation() {
+            Operation::Scan {
+                dataset,
+                row_identity,
+            } => {
+                let role = ScanRole {
+                    column_prefix: self.column_prefix.take(),
+                    row_identity: row_identity.as_ref(),
+                };
+                Ok((self.scan(node, dataset, role)?, "scan"))
+            }
+            Operation::Join {
+                left,
+                right,
+                kind,
+                on,
+                right_prefix,
+                ..
+            } => {
+                let join = JoinInputs {
+                    left,
+                    right,
+                    kind: *kind,
+                    on,
+                    right_prefix,
+                };
+                Ok((self.join(node, &join)?, "join"))
+            }
+            Operation::Deduplicate {
+                input,
+                group,
+                identity,
+            } => Ok((
+                self.deduplicate(node, input, group, identity)?,
+                "deduplicate",
+            )),
+            Operation::SemiJoin {
+                input,
+                path,
+                predicate,
+            } => Ok((self.semi_join(node, input, path, predicate)?, "semijoin")),
+            Operation::Stitch { .. } => Ok((self.stitch_node(node)?, "stitch")),
+            _ => Err(error(InvariantViolation::NodeOutsideSlice, node)),
         }
-        if items.is_empty() {
-            items.push(empty_scan_item(&prefix));
-        }
-        Ok(SelectBody {
-            items,
-            from: source_sql(&source),
-            clauses: Vec::new(),
-        })
-    }
-
-    /// The select item of the `Scan` column `name` of `dataset`: the expression of the field of
-    /// that name over the columns of `relation`.
-    pub(crate) fn field_item(
-        &mut self,
-        node: &'input PlanNode,
-        dataset: &Dataset,
-        relation: &'input RelationSchema,
-        name: &str,
-    ) -> Result<String, GenerateError> {
-        let field = dataset
-            .fields
-            .iter()
-            .find(|field| field.name.as_str() == name)
-            .ok_or_else(|| error(InvariantViolation::UnknownField, node))?;
-        let expression = field
-            .expression
-            .as_ref()
-            .ok_or_else(|| error(InvariantViolation::FieldWithoutExpression, node))?;
-        let value = self.expression(node, Columns::Catalog(relation), expression)?;
-        Ok(format!("{value} AS {}", quote(name)))
     }
 
     fn filter(
@@ -305,7 +273,7 @@ impl<'input> StepWriter<'input> {
         )
     }
 
-    fn expression(
+    pub(crate) fn expression(
         &mut self,
         node: &'input PlanNode,
         columns: Columns<'input>,

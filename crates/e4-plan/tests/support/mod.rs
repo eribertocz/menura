@@ -5,6 +5,7 @@
     reason = "each test file uses a different part of the shared support module"
 )]
 
+pub mod join_plan;
 pub mod joins;
 pub mod plan;
 
