@@ -2,6 +2,7 @@
 
 use menura_contracts::types::compiled_plan::{Diagnostic, DiagnosticLocation, InputDocument};
 use menura_e2_bind::BindError;
+use menura_e3_paths::PathError;
 use menura_e4_plan::PlanError;
 
 use crate::compile::InternalError;
@@ -53,6 +54,14 @@ pub(crate) fn bind_stop(error: BindError) -> Stop {
             violation,
             location,
         } => InternalError::new("E2", format!("{violation:?} at {}", location.pointer())).into(),
+    }
+}
+
+/// The stop of an E3 error.
+pub(crate) fn path_stop(error: &PathError) -> Stop {
+    match error {
+        PathError::Diagnostic(diagnostic) => diagnostic.to_diagnostic().into(),
+        PathError::Invariant(violation) => InternalError::new("E3", violation.to_string()).into(),
     }
 }
 
