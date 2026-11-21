@@ -45,7 +45,7 @@ impl ExpressionWriter<'_, '_> {
     fn attribute(&mut self, name: &str) -> Result<String, GenerateError> {
         let (logical_type, value) = self.bound_attribute(name)?;
         let shared = SharedValue::Attribute(name.to_owned());
-        Ok(self.parameters.bind_shared(shared, logical_type, value))
+        self.shared_parameter(shared, logical_type, value)
     }
 
     /// The logical type and CON-4 value of the attribute `name`.

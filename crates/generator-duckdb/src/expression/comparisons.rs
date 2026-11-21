@@ -24,29 +24,27 @@ impl ExpressionWriter<'_, '_> {
     }
 
     /// `expression` as an operand compared with a value of `other` type: a `date` parameter
-    /// compared with a timestamp becomes the start of that day, `CAST($n AS TIMESTAMP)`, in the
-    /// query time zone for a timestamp with time zone (E6-4.2b, E6-4.10).
+    /// compared with a timestamp becomes the start of that day,
+    /// `CAST(CAST($n AS DATE) AS TIMESTAMP)`, in the query time zone for a timestamp with time
+    /// zone (E6-4.2b, E6-4.10).
     pub(super) fn comparand(
         &mut self,
         expression: &Expression,
         other: Option<&LogicalType>,
     ) -> Result<String, GenerateError> {
-        let date_bound = match (expression, other) {
-            (
-                Expression::Literal(literal @ Literal::Date(_)),
-                Some(LogicalType::Timestamp { with_time_zone, .. }),
-            ) if self.literals == Literals::Bound => Some((literal, *with_time_zone)),
-            _ => None,
-        };
-        let Some((literal, with_time_zone)) = date_bound else {
-            return self.operand(expression);
-        };
-        let (_, placeholder) = self.bound_literal(literal)?;
-        let midnight = format!("CAST({placeholder} AS TIMESTAMP)");
-        if with_time_zone {
-            Ok(format!("{midnight} AT TIME ZONE {}", self.time_zone()))
-        } else {
-            Ok(midnight)
+        let text = self.operand(expression)?;
+        let date_parameter = self.literals == Literals::Bound
+            && matches!(expression, Expression::Literal(Literal::Date(_)));
+        match other {
+            Some(LogicalType::Timestamp { with_time_zone, .. }) if date_parameter => {
+                let midnight = format!("CAST({text} AS TIMESTAMP)");
+                if *with_time_zone {
+                    Ok(format!("{midnight} AT TIME ZONE {}", self.time_zone()))
+                } else {
+                    Ok(midnight)
+                }
+            }
+            _ => Ok(text),
         }
     }
 }

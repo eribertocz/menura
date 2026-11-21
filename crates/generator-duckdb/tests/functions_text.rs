@@ -117,7 +117,11 @@ fn e6_4_11_the_split_part_number_is_written_in_a_query_node() {
         &query_with_reference_time(),
     )
     .expect("SQL");
-    assert!(generated.sql.contains(r#"split_part("REGION", $1, 2)"#));
+    assert!(
+        generated
+            .sql
+            .contains(r#"split_part("REGION", CAST($1 AS VARCHAR), 2)"#)
+    );
     assert_eq!(generated.parameters.len(), 1);
     assert_eq!(generated.parameters[0].value, json!("-"));
 }
@@ -158,7 +162,7 @@ fn e6_4_2_query_arguments_are_bound_parameters() {
     )
     .expect("SQL");
     assert!(generated.sql.contains(
-        r#"left("REGION", CASE WHEN $1 >= 0 THEN CAST(least($1, length("REGION")) AS BIGINT) END)"#
+        r#"left("REGION", CASE WHEN CAST($1 AS BIGINT) >= 0 THEN CAST(least(CAST($1 AS BIGINT), length("REGION")) AS BIGINT) END)"#
     ));
     assert_eq!(generated.parameters.len(), 1);
     assert_eq!(generated.parameters[0].value, json!(2));

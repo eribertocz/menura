@@ -22,7 +22,11 @@ fn pln_2_1_query_and_security_values_never_appear_in_the_sql() {
     for value in ["north", "south", "east", "west"] {
         assert!(!generated.sql.contains(value), "{value} in the SQL");
     }
-    assert!(generated.sql.contains(r#""REGION" IN ($2, $3)"#));
+    assert!(
+        generated
+            .sql
+            .contains(r#""REGION" IN (CAST($2 AS VARCHAR), CAST($3 AS VARCHAR))"#)
+    );
 }
 
 #[test]

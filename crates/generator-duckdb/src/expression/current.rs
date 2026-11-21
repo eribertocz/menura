@@ -12,25 +12,23 @@ use crate::parameters::SharedValue;
 use crate::values::date_text;
 
 impl ExpressionWriter<'_, '_> {
-    /// The reference date of the query in its time zone, one `date` parameter written
-    /// `CAST($d AS DATE)`, so that `DuckDB` never chooses its type (E6-4.10).
+    /// The reference date of the query in its time zone, one `date` parameter.
     pub(super) fn current_date(&mut self) -> Result<String, GenerateError> {
         let date = self
             .environment
             .time
             .reference_date
             .ok_or_else(|| self.error(InvariantViolation::MissingReferenceTime))?;
-        let placeholder = self.parameters.bind_shared(
+        self.shared_parameter(
             SharedValue::ReferenceDate,
             LogicalType::Date,
             Value::String(date_text(date)),
-        );
-        Ok(format!("CAST({placeholder} AS DATE)"))
+        )
     }
 
-    /// `CAST(CAST($r AS TIMESTAMP WITH TIME ZONE) AT TIME ZONE $tz AS <type>)`: the wall clock
-    /// of the reference instant `$r` in the query time zone, as the `timestamp` or `time` of
-    /// `expression`. `$r` is cast so that `DuckDB` never chooses its type (E6-4.10).
+    /// `CAST(CAST($r AS TIMESTAMP WITH TIME ZONE) AT TIME ZONE CAST($tz AS VARCHAR) AS <type>)`:
+    /// the wall clock of the reference instant `$r` in the query time zone, as the `timestamp`
+    /// or `time` of `expression`.
     pub(super) fn current_instant(
         &mut self,
         expression: &Expression,
@@ -43,18 +41,15 @@ impl ExpressionWriter<'_, '_> {
             .as_ref()
             .ok_or_else(missing)?;
         let utc = utc_text(reference).ok_or_else(missing)?;
-        let instant = self.parameters.bind_shared(
+        let instant = self.shared_parameter(
             SharedValue::ReferenceInstant,
             LogicalType::Timestamp {
                 precision: TimestampPrecision::Us,
                 with_time_zone: true,
             },
             Value::String(utc),
-        );
+        )?;
         let zone = self.time_zone();
-        self.typed(
-            expression,
-            &format!("CAST({instant} AS TIMESTAMP WITH TIME ZONE) AT TIME ZONE {zone}"),
-        )
+        self.typed(expression, &format!("{instant} AT TIME ZONE {zone}"))
     }
 }
