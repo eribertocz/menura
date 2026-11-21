@@ -27,7 +27,7 @@ use support::plan::{column, column_names, column_reference, kinds, node, predica
 use support::{anyone, build_plan, located, metric_reference, policy, query};
 
 #[test]
-fn e4_4_0c_one_join_reads_the_joined_dataset_through_its_instance() {
+fn e4_4_0c_e4_4_0g_one_join_reads_the_joined_dataset_through_its_instance() {
     let plan = segment_plan();
 
     assert_eq!(
@@ -204,7 +204,7 @@ fn e3_4_2a_two_role_playing_instances_are_two_scans() {
 }
 
 #[test]
-fn e4_4_0d_a_filter_over_two_datasets_reads_each_through_its_instance() {
+fn e4_3_3_e4_4_0d_a_filter_over_two_datasets_reads_each_through_its_instance() {
     let parts = BoundQueryParts {
         filters: vec![joined_filter(
             "orders.status = customers.segment",
@@ -293,4 +293,54 @@ fn vs_1_a_joined_dataset_with_row_policies_is_an_internal_error() {
             ..
         })
     ));
+}
+
+#[test]
+fn e4_3_1_e4_4_0a_the_plan_scans_the_home_dataset_first() {
+    let plan = segment_plan();
+    let (home, joined, ..) = join_parts(node(&plan, "Join"));
+
+    assert_eq!(scan_dataset(home), "ORDERS");
+    assert!(home.inputs().is_empty());
+    assert_eq!(scan_dataset(joined), "CUSTOMERS");
+    assert!(joined.inputs().is_empty());
+}
+
+#[test]
+fn e4_4_0b_the_home_row_policy_filters_the_home_scan_before_the_joins() {
+    let mut home = sales_orders();
+    home.row_policies = vec![policy("open_orders", "orders.status = 'open'", None, None)];
+    let plan = build_plan(
+        &joined_branches(
+            1,
+            vec![path(QueryElement::Dimension(0), vec![to_customers()])],
+        ),
+        &query(
+            vec![joined_dimension("CUSTOMERS", "SEGMENT", None, 0)],
+            vec![metric_reference("TOTAL_AMOUNT", 0)],
+            BoundQueryParts::default(),
+        ),
+        &anyone(),
+        &sales_model_with(home, Vec::new()),
+    )
+    .expect("a plan");
+
+    assert_eq!(
+        kinds(&plan),
+        [
+            "Project",
+            "Aggregate",
+            "Deduplicate",
+            "Join",
+            "Filter",
+            "Scan"
+        ]
+    );
+    let (policy_filter, ..) = join_parts(node(&plan, "Join"));
+    assert_eq!(
+        policy_filter.origin(),
+        &Origin::Model(located(support::POLICY_POINTER))
+    );
+    let home = policy_filter.inputs().first().copied().expect("one input");
+    assert_eq!(scan_dataset(home), "ORDERS");
 }
