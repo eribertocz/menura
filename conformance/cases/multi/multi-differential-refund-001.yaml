@@ -1,8 +1,8 @@
-id: cs-differential-multi-dataset-001
+id: multi-differential-refund-001
 rules: [CS-4.7]
 model: slice
 security_context: auditor.json
-oracle: "cs-differential-multi-dataset-001.oracle.sql"
+oracle: "multi-differential-refund-001.oracle.sql"
 query:
   contract: "menura.query"
   contract_version: "1.1.0"
@@ -14,4 +14,4 @@ query:
 expect:
   outcome: "plan"
   row_order: "any"
-  rows: "cs-differential-multi-dataset-001.csv"
+  rows: "multi-differential-refund-001.csv"
