@@ -21,11 +21,14 @@ mod error;
 mod metrics;
 mod output;
 mod policy;
+mod policy_visits;
+mod propagation_chains;
 mod query_filter;
 mod rewrite;
 mod scan;
 mod slice;
 mod typing;
+mod visibility;
 
 pub use error::{InvariantViolation, PlanError};
 
@@ -69,20 +72,16 @@ pub fn build_plan(
     let outputs = metrics::metric_outputs(branch, &metrics)?;
     let query_predicate = query_filter::query_predicate(query, home)?;
     let has_reference_time = query.time().reference_time.is_some();
-    let policy_predicate = policy::policy_predicate(home, security, has_reference_time)?;
+    let row_filters = policy_visits::row_filters(home, model, security, has_reference_time)?;
 
-    let read = fields_read(
+    let mut read = fields_read(
         &keys,
         &components,
-        [
-            query_predicate.as_ref().map(|(predicate, _)| predicate),
-            policy_predicate.as_ref().map(|(predicate, _)| predicate),
-        ],
+        query_predicate.as_ref().map(|(predicate, _)| predicate),
     );
-    let mut node = scan::scan(home, &read, catalog)?;
-    if let Some((predicate, location)) = policy_predicate {
-        node = filter(node, predicate, Origin::Model(location));
-    }
+    read.extend(visibility::visibility_fields(home, model, &row_filters)?);
+    let scan = scan::scan(home, &read, catalog)?;
+    let mut node = visibility::visible_rows(scan, home, None, model, &row_filters)?;
     if let Some((predicate, location)) = query_predicate {
         node = filter(node, predicate, Origin::Query(location));
     }
@@ -94,11 +93,11 @@ pub fn build_plan(
     output::order_and_limit(query, projected)
 }
 
-/// The fields the keys, the components and the predicates read.
+/// The fields the keys, the components and the query predicate read.
 fn fields_read(
     keys: &[NamedExpression],
     components: &[AggregateComponent],
-    predicates: [Option<&Expression>; 2],
+    query_predicate: Option<&Expression>,
 ) -> Vec<NormalizedName> {
     let mut read = Vec::new();
     for key in keys {
@@ -107,7 +106,7 @@ fn fields_read(
     for component in components {
         read_fields(&component_expression(component), &mut read);
     }
-    for predicate in predicates.into_iter().flatten() {
+    if let Some(predicate) = query_predicate {
         read_fields(predicate, &mut read);
     }
     read

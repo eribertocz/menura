@@ -43,11 +43,13 @@ pub(crate) fn single_branch(branches: &Branches) -> Result<&Branch, PlanError> {
     }
 }
 
-/// The home dataset of `branch`, which reaches no other dataset with row policies (E4-6.5).
+/// The home dataset of `branch`, which E0 must not mark unusable: a dataset whose row
+/// policies cannot be propagated is unusable (`E0H-01`), and planning it would read rows that
+/// are not visible.
 ///
 /// # Errors
 ///
-/// [`InvariantViolation::UnknownDataset`] or [`InvariantViolation::Propagation`].
+/// [`InvariantViolation::UnknownDataset`] or [`InvariantViolation::UnusableDataset`].
 pub(crate) fn home_dataset<'model>(
     branch: &Branch,
     model: &'model InternalModel,
@@ -55,25 +57,12 @@ pub(crate) fn home_dataset<'model>(
     let home = model
         .dataset(&branch.home)
         .ok_or_else(|| PlanError::invariant(InvariantViolation::UnknownDataset, &query_root()))?;
-    let reaches_policy = model
-        .parts()
-        .graph
-        .reachability
-        .iter()
-        .filter(|reach| reach.dataset == home.name)
-        .flat_map(|reach| &reach.reached)
-        .filter(|reached| reached.dataset != home.name)
-        .any(|reached| {
-            model
-                .dataset(&reached.dataset)
-                .is_some_and(|dataset| !dataset.row_policies.is_empty())
-        });
-    if reaches_policy {
+    if home.query_errors.is_empty() {
+        Ok(home)
+    } else {
         Err(PlanError::invariant(
-            InvariantViolation::Propagation,
+            InvariantViolation::UnusableDataset,
             &Origin::Model(home.location.clone()),
         ))
-    } else {
-        Ok(home)
     }
 }
