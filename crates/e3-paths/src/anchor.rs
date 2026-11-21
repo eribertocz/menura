@@ -4,7 +4,6 @@ use menura_model::internal_model::NormalizedName;
 use menura_representations::origin::QueryLocation;
 
 use crate::error::{PathCode, PathDiagnostic};
-use crate::metric_reach::unsupported_filter_path;
 use crate::needed::NeededDatasets;
 use crate::reachability::AuthorizedGraph;
 
@@ -54,8 +53,9 @@ pub(crate) fn choose_anchor<'input>(
             .iter()
             .all(|candidate| graph.reaches(candidate, filter.dataset))
     }) {
-        return Err(unsupported_filter_path(
-            element,
+        return Err(PathDiagnostic::unsupported_filter_path(
+            element.dataset,
+            element.origin,
             "the dataset the rows come from",
         ));
     }

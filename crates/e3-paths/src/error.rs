@@ -4,6 +4,7 @@
 use std::fmt;
 
 use menura_contracts::types::compiled_plan::{Diagnostic, DiagnosticLocation, InputDocument};
+use menura_model::internal_model::NormalizedName;
 use menura_representations::origin::QueryLocation;
 
 use crate::violation::InvariantViolation;
@@ -65,6 +66,24 @@ impl PathDiagnostic {
             message,
             location: location.clone(),
         }
+    }
+
+    /// `E_UNSUPPORTED_FILTER_PATH` for the filter or `date_range` entry written at `origin`,
+    /// whose dataset `dataset` is not reached by `source` (E3-3.6, E3-5.2).
+    pub(crate) fn unsupported_filter_path(
+        dataset: &NormalizedName,
+        origin: &QueryLocation,
+        source: &str,
+    ) -> Self {
+        Self::new(
+            PathCode::UnsupportedFilterPath,
+            format!(
+                "{source} does not reach dataset `{}`, which this filter reads, through the \
+                 relationships you may use; remove the filter or filter on a dataset it reaches",
+                dataset.as_str()
+            ),
+            origin,
+        )
     }
 
     /// The diagnostic of the compile error document (PLN-5), located in the query.
