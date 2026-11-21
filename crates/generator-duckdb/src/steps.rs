@@ -81,15 +81,7 @@ impl<'input> StepWriter<'input> {
                 None,
                 "deduplicate",
             ),
-            Operation::SemiJoin {
-                input,
-                path,
-                predicate,
-            } => (
-                self.semi_join(node, input, path, predicate)?,
-                None,
-                "semijoin",
-            ),
+            Operation::SemiJoin { .. } => (self.semi_join(node)?, None, "semijoin"),
             Operation::Join { .. } | Operation::Stitch { .. } => {
                 return Err(error(InvariantViolation::NodeOutsideSlice, node));
             }
@@ -146,7 +138,7 @@ impl<'input> StepWriter<'input> {
 
     /// The select item of the `Scan` column `name` of `dataset`: the expression of the field of
     /// that name over the columns of `relation`.
-    pub(crate) fn field_item(
+    fn field_item(
         &mut self,
         node: &'input PlanNode,
         dataset: &Dataset,
