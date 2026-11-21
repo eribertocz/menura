@@ -5,11 +5,13 @@ use menura_model::expression::Expression;
 use menura_representations::logical_plan::{
     AggregateComponent, NamedExpression, Operation, OutputSchema, PlanNode, SortItem,
 };
+use menura_representations::names::ColumnPrefix;
 
 use crate::body::SelectBody;
 use crate::error::{GenerateError, InvariantViolation};
 use crate::expression::{Columns, Environment, ExpressionWriter};
 use crate::identifiers::quote;
+use crate::join::JoinInputs;
 use crate::parameters::Parameters;
 use crate::types::physical_type;
 
@@ -28,6 +30,8 @@ pub(crate) struct StepWriter<'input> {
     pub(crate) environment: &'input Environment<'input>,
     pub(crate) parameters: Parameters,
     pub(crate) steps: Vec<(String, SelectBody)>,
+    /// The `right_prefix` of the `Join` whose right input is being written, for its `Scan`.
+    pub(crate) column_prefix: Option<&'input ColumnPrefix>,
 }
 
 impl<'input> StepWriter<'input> {
@@ -37,13 +41,13 @@ impl<'input> StepWriter<'input> {
             environment,
             parameters: Parameters::default(),
             steps: Vec::new(),
+            column_prefix: None,
         }
     }
 
     /// Writes the steps of `node`'s inputs, then the step of `node`.
     pub(crate) fn write(&mut self, node: &'input PlanNode) -> Result<WrittenNode, GenerateError> {
         let (body, ordering, kind) = match node.operation() {
-            Operation::Scan { dataset } => (self.scan(node, dataset)?, None, "scan"),
             Operation::Filter { input, predicate } => {
                 (self.filter(node, input, predicate)?, None, "filter")
             }
@@ -67,22 +71,54 @@ impl<'input> StepWriter<'input> {
                 let (body, ordering) = self.limit(node, input, *rows)?;
                 (body, ordering, "limit")
             }
-            Operation::Deduplicate {
-                input,
-                group,
-                identity,
-            } => (
-                self.deduplicate(node, input, group, identity)?,
-                None,
-                "deduplicate",
-            ),
-            Operation::Join { .. } | Operation::SemiJoin { .. } | Operation::Stitch { .. } => {
-                return Err(error(InvariantViolation::NodeOutsideSlice, node));
+            _ => {
+                let (body, kind) = self.relation_step(node)?;
+                (body, None, kind)
             }
         };
         let name = quote(&format!("menura_{}_{kind}", self.steps.len() + 1));
         self.steps.push((name.clone(), body));
         Ok(WrittenNode { name, ordering })
+    }
+
+    /// The body and kind of a node that reads, joins or deduplicates rows: `Scan`, `Join` and
+    /// `Deduplicate`. `SemiJoin` and `Stitch` are not generated yet.
+    fn relation_step(
+        &mut self,
+        node: &'input PlanNode,
+    ) -> Result<(SelectBody, &'static str), GenerateError> {
+        match node.operation() {
+            Operation::Scan { dataset } => {
+                let prefix = self.column_prefix.take();
+                Ok((self.scan(node, dataset, prefix)?, "scan"))
+            }
+            Operation::Join {
+                left,
+                right,
+                kind,
+                on,
+                right_prefix,
+                ..
+            } => {
+                let join = JoinInputs {
+                    left,
+                    right,
+                    kind: *kind,
+                    on,
+                    right_prefix,
+                };
+                Ok((self.join(node, &join)?, "join"))
+            }
+            Operation::Deduplicate {
+                input,
+                group,
+                identity,
+            } => Ok((
+                self.deduplicate(node, input, group, identity)?,
+                "deduplicate",
+            )),
+            _ => Err(error(InvariantViolation::NodeOutsideSlice, node)),
+        }
     }
 
     fn filter(

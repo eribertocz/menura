@@ -13,6 +13,8 @@ mod error;
 mod expression;
 mod identifiers;
 mod instant;
+mod join;
+mod join_keys;
 mod output;
 mod parameters;
 mod result_schema;
