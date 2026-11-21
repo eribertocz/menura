@@ -47,25 +47,9 @@ fn bound_value(logical_type: &LogicalType, value: &Json) -> Result<Value, String
         }
         LogicalType::Float { bits } => Ok(float_value(value.as_f64().ok_or_else(invalid)?, *bits)),
         LogicalType::Text => Ok(Value::Text(value.as_str().ok_or_else(invalid)?.to_owned())),
-        LogicalType::Date => {
-            let days = parse_date(value.as_str().ok_or_else(invalid)?).ok_or_else(invalid)?;
-            i32::try_from(days)
-                .map(Value::Date32)
-                .map_err(|_| invalid())
+        LogicalType::Date | LogicalType::Time | LogicalType::Timestamp { .. } => {
+            temporal_value(logical_type, value.as_str().ok_or_else(invalid)?).ok_or_else(invalid)
         }
-        LogicalType::Time => parse_time(value.as_str().ok_or_else(invalid)?)
-            .map(|micros| Value::Time64(TimeUnit::Microsecond, micros))
-            .ok_or_else(invalid),
-        LogicalType::Timestamp {
-            with_time_zone: false,
-            ..
-        } => parse_timestamp(value.as_str().ok_or_else(invalid)?, false)
-            .map(|micros| Value::Timestamp(TimeUnit::Microsecond, micros))
-            .ok_or_else(invalid),
-        LogicalType::Timestamp {
-            with_time_zone: true,
-            ..
-        } => instant_value(value.as_str().ok_or_else(invalid)?).ok_or_else(invalid),
         LogicalType::List { element } => value
             .as_array()
             .ok_or_else(invalid)?
@@ -79,6 +63,26 @@ fn bound_value(logical_type: &LogicalType, value: &Json) -> Result<Value, String
         | LogicalType::Unsupported => Err(format!(
             "the runner cannot bind a parameter of type {logical_type:?}"
         )),
+    }
+}
+
+/// The `DuckDB` value of a date, a time or a timestamp in its CON-4 text form.
+fn temporal_value(logical_type: &LogicalType, text: &str) -> Option<Value> {
+    match logical_type {
+        LogicalType::Date => i32::try_from(parse_date(text)?).ok().map(Value::Date32),
+        LogicalType::Time => {
+            parse_time(text).map(|micros| Value::Time64(TimeUnit::Microsecond, micros))
+        }
+        LogicalType::Timestamp {
+            with_time_zone: false,
+            ..
+        } => parse_timestamp(text, false)
+            .map(|micros| Value::Timestamp(TimeUnit::Microsecond, micros)),
+        LogicalType::Timestamp {
+            with_time_zone: true,
+            ..
+        } => instant_value(text),
+        _ => None,
     }
 }
 
