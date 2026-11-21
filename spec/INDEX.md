@@ -335,12 +335,12 @@ Find a rule ID or a section here, then open only that file at that line.
 | [decisions/0003-e2-query-order.md](decisions/0003-e2-query-order.md#L10) | 10 | section | Decision |
 | [decisions/0003-e2-query-order.md](decisions/0003-e2-query-order.md#L22) | 22 | section | Consequences |
 | [decisions/0003-e2-query-order.md](decisions/0003-e2-query-order.md#L27) | 27 | section | Rules changed |
-| [decisions/0004-strategic-direction-2035.md](decisions/0004-strategic-direction-2035.md#L1) | 1 | section | 0004 Strategic direction 2035+: Ossie-first core, agent-native through adapters |
-| [decisions/0004-strategic-direction-2035.md](decisions/0004-strategic-direction-2035.md#L3) | 3 | section | Context |
-| [decisions/0004-strategic-direction-2035.md](decisions/0004-strategic-direction-2035.md#L30) | 30 | section | Already specified (no change) |
-| [decisions/0004-strategic-direction-2035.md](decisions/0004-strategic-direction-2035.md#L46) | 46 | section | Decision |
-| [decisions/0004-strategic-direction-2035.md](decisions/0004-strategic-direction-2035.md#L78) | 78 | section | Consequences |
-| [decisions/0004-strategic-direction-2035.md](decisions/0004-strategic-direction-2035.md#L88) | 88 | section | Rules changed |
+| [decisions/0004-strategic-direction.md](decisions/0004-strategic-direction.md#L1) | 1 | section | 0004 Strategic direction: Ossie-first core, agent-native through adapters |
+| [decisions/0004-strategic-direction.md](decisions/0004-strategic-direction.md#L3) | 3 | section | Context |
+| [decisions/0004-strategic-direction.md](decisions/0004-strategic-direction.md#L30) | 30 | section | Already specified (no change) |
+| [decisions/0004-strategic-direction.md](decisions/0004-strategic-direction.md#L46) | 46 | section | Decision |
+| [decisions/0004-strategic-direction.md](decisions/0004-strategic-direction.md#L78) | 78 | section | Consequences |
+| [decisions/0004-strategic-direction.md](decisions/0004-strategic-direction.md#L88) | 88 | section | Rules changed |
 | [decisions/README.md](decisions/README.md#L1) | 1 | section | Decision records |
 | [extensions/README.md](extensions/README.md#L1) | 1 | section | Extensions |
 | [extensions/README.md](extensions/README.md#L18) | 18 | section | EXT-1 Runtime failure policies |

@@ -1,4 +1,4 @@
-# 0004 Strategic direction 2035+: Ossie-first core, agent-native through adapters
+# 0004 Strategic direction: Ossie-first core, agent-native through adapters
 
 ## Context
 
