@@ -68,11 +68,16 @@ pub(crate) fn check_query(case: &Case, handle: &Handle, inputs: &QueryInputs<'_>
             "the query does not compile: {}",
             describe(error.errors.first())
         )),
-        (Outcome::Plan, CompileResult::Plan(plan)) => check_plan(case, &plan, inputs, || {
-            compile_query(handle, &query, inputs.security_context)
-        }),
-        (Outcome::RuntimeError, CompileResult::Plan(plan)) => {
-            check_runtime_error(&case.expect, &plan, inputs.connection)
+        (outcome, CompileResult::Plan(plan)) => {
+            let compile_again = || compile_query(handle, &query, inputs.security_context);
+            if let Some(reason) = plan_mismatch(case, &plan, inputs.case_folder, compile_again) {
+                return CaseStatus::Failed(reason);
+            }
+            if outcome == Outcome::RuntimeError {
+                check_runtime_error(&case.expect, &plan, inputs.connection)
+            } else {
+                check_rows(&case.expect, &plan, inputs)
+            }
         }
     }
 }
@@ -123,33 +128,37 @@ fn check_error(expect: &Expectation, error: &CompileErrorDocument) -> CaseStatus
     }
 }
 
-/// Checks a compiled plan: a second compilation gives the same plan (P3, PLN-3), the SQL matches
-/// its golden file when the case gives one (CS-2.3), and the rows it returns on `DuckDB` match
-/// the expected rows (CS-2.4, E6-5.4).
-fn check_plan(
+/// Why a compiled plan does not meet the checks made before it is executed, or `None`: a second
+/// compilation gives the same plan (P3, PLN-3), and the SQL matches its golden file when the case
+/// gives one (CS-2.3).
+fn plan_mismatch(
     case: &Case,
     plan: &CompiledPlanDocument,
-    inputs: &QueryInputs<'_>,
+    case_folder: &Path,
     compile_again: impl FnOnce() -> CompileResult,
-) -> CaseStatus {
+) -> Option<String> {
     if !matches!(compile_again(), CompileResult::Plan(again) if *again == *plan) {
-        return CaseStatus::Failed(
-            "two compilations of the same inputs give different results".to_owned(),
-        );
+        return Some("two compilations of the same inputs give different results".to_owned());
     }
-    if let Some(file_name) = &case.expect.sql {
-        match read_text(&inputs.case_folder.join(file_name)) {
-            Ok(golden) if golden == plan.sql => {}
-            Ok(_) => {
-                return CaseStatus::Failed(format!(
-                    "the SQL differs from the golden file `{file_name}`; the SQL is:\n{}",
-                    plan.sql
-                ));
-            }
-            Err(error) => return CaseStatus::Failed(error.to_string()),
-        }
+    let file_name = case.expect.sql.as_ref()?;
+    match read_text(&case_folder.join(file_name)) {
+        Ok(golden) if golden == plan.sql => None,
+        Ok(_) => Some(format!(
+            "the SQL differs from the golden file `{file_name}`; the SQL is:\n{}",
+            plan.sql
+        )),
+        Err(error) => Some(error.to_string()),
     }
-    match compare_rows(&case.expect, plan, inputs) {
+}
+
+/// Executes the plan and compares the rows it returns on `DuckDB` with the expected rows
+/// (CS-2.4, E6-5.4).
+fn check_rows(
+    expect: &Expectation,
+    plan: &CompiledPlanDocument,
+    inputs: &QueryInputs<'_>,
+) -> CaseStatus {
+    match compare_rows(expect, plan, inputs) {
         Ok(None) => CaseStatus::Passed,
         Ok(Some(reason)) | Err(reason) => CaseStatus::Failed(reason),
     }
@@ -338,6 +347,12 @@ mod tests {
     fn cs_2_4c_a_runtime_error_case_fails_when_the_plan_executes() {
         let expect = "{outcome: runtime_error, error: RADD-01}";
         assert_fails(status(&case_text(BY_REGION, expect)), "executes");
+    }
+
+    #[test]
+    fn cs_2_3_a_runtime_error_case_checks_its_golden_file_before_executing() {
+        let expect = "{outcome: runtime_error, error: RADD-01, sql: cs-plan-rows-001.csv}";
+        assert_fails(status(&case_text(BY_REGION, expect)), "golden");
     }
 
     #[test]
