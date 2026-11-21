@@ -1,0 +1,18 @@
+id: e3-role-playing-001
+rules: [E3-4.2a, QRY-4.3, E3-4.2]
+model: e3-path-choice
+security_context: analyst.json
+query:
+  contract: "menura.query"
+  contract_version: "1.1.0"
+  time_zone: "UTC"
+  query:
+    dimensions: ["calendar.month", "fiscal_years.label"]
+    metrics:
+      - {"metric": "total_amount", "alias": "total_amount"}
+    nonportable_extensions:
+      - {"vendor_name": "COMMON", "data": {"namespace": "menura", "version": 1, "paths": [{"from": "orders", "to": "calendar", "relationships": ["order_date"]}, {"from": "orders", "to": "fiscal_years", "relationships": ["ship_date", "calendar_fiscal_year"]}]}}
+expect:
+  outcome: "plan"
+  rows: "e3-role-playing-001.csv"
+  row_order: "any"

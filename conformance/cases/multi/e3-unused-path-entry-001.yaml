@@ -1,0 +1,18 @@
+id: e3-unused-path-entry-001
+rules: [E3-3.3, E2-5]
+model: e3-path-choice
+security_context: analyst.json
+query:
+  contract: "menura.query"
+  contract_version: "1.1.0"
+  time_zone: "UTC"
+  query:
+    dimensions: ["regions.region_name"]
+    metrics:
+      - {"metric": "total_amount", "alias": "total_amount"}
+    nonportable_extensions:
+      - {"vendor_name": "COMMON", "data": {"namespace": "menura", "version": 1, "paths": [{"from": "orders", "to": "customers", "relationships": ["orders_customers"]}]}}
+expect:
+  outcome: "error"
+  error: "E3-01"
+  location: {document: query, pointer: /query/nonportable_extensions/0/data/paths/0}

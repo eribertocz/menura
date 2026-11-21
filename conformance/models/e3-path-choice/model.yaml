@@ -1,0 +1,101 @@
+version: "0.1.1"
+semantic_model:
+  - name: e3_path_choice
+    description: 'orders reach calendar through ship_date and order_date; calendar reaches fiscal_years; orders reach regions through customers only'
+    custom_extensions:
+      - vendor_name: COMMON
+        data: '{"namespace": "menura", "version": 1, "security_context": {"roles": ["analyst"], "attributes": []}}'
+    datasets:
+      - name: orders
+        source: shop.main.orders
+        primary_key: [order_id]
+        fields:
+          - name: order_id
+            expression: {dialects: [{dialect: ANSI_SQL, expression: 'order_id'}]}
+          - name: ship_day
+            expression: {dialects: [{dialect: ANSI_SQL, expression: 'ship_day'}]}
+          - name: order_day
+            expression: {dialects: [{dialect: ANSI_SQL, expression: 'order_day'}]}
+          - name: customer_id
+            expression: {dialects: [{dialect: ANSI_SQL, expression: 'customer_id'}]}
+          - name: amount
+            expression: {dialects: [{dialect: ANSI_SQL, expression: 'amount'}]}
+        custom_extensions:
+          - vendor_name: COMMON
+            data: '{"namespace": "menura", "version": 1, "access": {"mode": "roles", "roles": ["analyst"]}}'
+      - name: calendar
+        source: shop.main.calendar
+        primary_key: [day]
+        fields:
+          - name: day
+            expression: {dialects: [{dialect: ANSI_SQL, expression: 'day'}]}
+            dimension: {is_time: true}
+          - name: month
+            expression: {dialects: [{dialect: ANSI_SQL, expression: 'month'}]}
+          - name: fiscal_year
+            expression: {dialects: [{dialect: ANSI_SQL, expression: 'fiscal_year'}]}
+        custom_extensions:
+          - vendor_name: COMMON
+            data: '{"namespace": "menura", "version": 1, "access": {"mode": "roles", "roles": ["analyst"]}}'
+      - name: fiscal_years
+        source: shop.main.fiscal_years
+        primary_key: [fiscal_year]
+        fields:
+          - name: fiscal_year
+            expression: {dialects: [{dialect: ANSI_SQL, expression: 'fiscal_year'}]}
+          - name: label
+            expression: {dialects: [{dialect: ANSI_SQL, expression: 'label'}]}
+        custom_extensions:
+          - vendor_name: COMMON
+            data: '{"namespace": "menura", "version": 1, "access": {"mode": "roles", "roles": ["analyst"]}}'
+      - name: customers
+        source: shop.main.customers
+        primary_key: [customer_id]
+        fields:
+          - name: customer_id
+            expression: {dialects: [{dialect: ANSI_SQL, expression: 'customer_id'}]}
+          - name: region_id
+            expression: {dialects: [{dialect: ANSI_SQL, expression: 'region_id'}]}
+        custom_extensions:
+          - vendor_name: COMMON
+            data: '{"namespace": "menura", "version": 1, "access": {"mode": "roles", "roles": ["analyst"]}}'
+      - name: regions
+        source: shop.main.regions
+        primary_key: [region_id]
+        fields:
+          - name: region_id
+            expression: {dialects: [{dialect: ANSI_SQL, expression: 'region_id'}]}
+          - name: region_name
+            expression: {dialects: [{dialect: ANSI_SQL, expression: 'region_name'}]}
+        custom_extensions:
+          - vendor_name: COMMON
+            data: '{"namespace": "menura", "version": 1, "access": {"mode": "roles", "roles": ["analyst"]}}'
+    relationships:
+      - name: ship_date
+        from: orders
+        to: calendar
+        from_columns: [ship_day]
+        to_columns: [day]
+      - name: order_date
+        from: orders
+        to: calendar
+        from_columns: [order_day]
+        to_columns: [day]
+      - name: calendar_fiscal_year
+        from: calendar
+        to: fiscal_years
+        from_columns: [fiscal_year]
+        to_columns: [fiscal_year]
+      - name: orders_customers
+        from: orders
+        to: customers
+        from_columns: [customer_id]
+        to_columns: [customer_id]
+      - name: customers_regions
+        from: customers
+        to: regions
+        from_columns: [region_id]
+        to_columns: [region_id]
+    metrics:
+      - name: total_amount
+        expression: {dialects: [{dialect: ANSI_SQL, expression: 'SUM(orders.amount)'}]}
