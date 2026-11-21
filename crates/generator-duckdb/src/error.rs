@@ -7,8 +7,7 @@ use menura_representations::origin::Origin;
 /// the stage that built the plan, not a query error, so it has no specification code.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum InvariantViolation {
-    /// A `Join`, `SemiJoin`, `Deduplicate` or `Stitch` node, which 0.3.0 does not generate
-    /// (VS-1).
+    /// A `SemiJoin` or `Stitch` node, which the generator does not generate yet (VS-1).
     NodeOutsideSlice,
     /// An expression construct the 0.3.0 generator does not translate.
     ExpressionOutsideSlice,
@@ -45,6 +44,17 @@ pub enum InvariantViolation {
     MissingReferenceTime,
     /// A float literal without a finite value.
     NonFiniteFloat,
+    /// A `Join` without key pairs (E4-3.2).
+    JoinWithoutKeys,
+    /// A `Join` key pair whose two types have no common type (E0F-3.1, E6-4.13).
+    IncompatibleJoinKeys,
+    /// A column of the right side of a left `Join` that the plan marks as not nullable
+    /// (PLN-1).
+    NonNullableJoinedColumn,
+    /// A `Join` column that both inputs produce.
+    AmbiguousColumn,
+    /// A `Deduplicate` without identity columns (E4-4.0f).
+    EmptyIdentity,
     /// A final node whose columns do not match the output columns of the query (E1-5).
     ResultColumnMismatch,
 }
