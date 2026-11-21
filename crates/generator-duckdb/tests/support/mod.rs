@@ -17,10 +17,14 @@ use menura_contracts::types::common::{IntegerBits, LogicalType, TimestampPrecisi
 use menura_generator_duckdb::{GenerateError, GeneratedSql};
 
 mod expression;
+mod joins;
 mod plan;
 
 pub use expression::{
     expression_sql, query_with_reference_time, query_without_reference_time, reference_time_query,
+};
+pub use joins::{
+    ROW_IDENTITY, deduplicate, home_scan, home_scan_with_identity, join_of, joined_scan, left_join,
 };
 use menura_model::expression::Expression;
 use menura_model::internal_model::{
@@ -352,4 +356,15 @@ pub fn assert_golden(actual: &str, expected: &str) {
         actual == expected,
         "the SQL differs from its golden file; actual SQL:\n{actual}"
     );
+}
+
+/// The SQL of `plan` for the dimension-only query whose columns are those of `plan`.
+pub fn generate_all(plan: &PlanNode) -> GeneratedSql {
+    let names: Vec<&str> = plan
+        .schema()
+        .columns()
+        .iter()
+        .map(|column| column.name.as_str())
+        .collect();
+    generate(plan, &query(&names, &[])).expect("SQL")
 }

@@ -8,13 +8,17 @@
 #![forbid(unsafe_code)]
 
 mod body;
+mod deduplicate;
 mod error;
 mod expression;
 mod identifiers;
 mod instant;
+mod join;
+mod join_keys;
 mod output;
 mod parameters;
 mod result_schema;
+mod scan;
 mod source_columns;
 mod steps;
 mod types;
