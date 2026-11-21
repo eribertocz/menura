@@ -191,6 +191,7 @@ pub fn scan_fields(dataset: &str, fields: &[&str]) -> PlanNode {
     PlanNode::new(
         Operation::Scan {
             dataset: NormalizedName::new(dataset),
+            row_identity: None,
         },
         OutputSchema::new(columns),
         from_model("/semantic_model/0/datasets/0"),
