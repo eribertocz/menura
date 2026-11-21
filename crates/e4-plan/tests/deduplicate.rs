@@ -26,7 +26,7 @@ use support::plan::{column, column_names, column_reference, kinds, node, predica
 use support::{anyone, build_plan, metric_reference, query, tree};
 
 #[test]
-fn e4_4_0f_fan_out_at_a_month_grain_counts_a_home_row_once_per_group() {
+fn e4_3_5_e4_4_0f_fan_out_at_a_month_grain_counts_a_home_row_once_per_group() {
     let plan = plan(
         &joined_branches(
             1,
