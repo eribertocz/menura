@@ -66,8 +66,9 @@ impl PlanError {
 pub enum InvariantViolation {
     /// The query has no branch.
     NoBranch,
-    /// The query has more than one branch: stitching comes in 0.4.0 (E4-5).
-    SeveralBranches,
+    /// Two branches whose `Aggregate` keys differ, or a branch that does not end with its
+    /// `Aggregate`, so that they cannot be stitched (E4-5.0a).
+    UnstitchableBranches,
     /// A join instance whose relationship the model does not have, or does not match its
     /// step, its parent instance or its column pairs (E3-4.2a).
     UnknownRelationship,

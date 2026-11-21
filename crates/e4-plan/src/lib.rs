@@ -1,12 +1,12 @@
 //! Stage E4: builds the logical plan (E4-1, E4-2).
 //!
-//! In the 0.4.0 track a query has one branch, whose home dataset has its own row policies and
-//! whose join tree reaches datasets without row policies. [`build_plan`] builds its plan:
-//! `Scan` of the home dataset, the row-policy `Filter`, one left `Join` per join instance,
-//! the query-filter `Filter`, `Deduplicate` when the branch joins and has metric components,
-//! `Aggregate`, `Project`, then `Sort` and `Limit` (E4-4, E4-9). Propagation, `Stitch`,
-//! additivity and context modifiers come in later issues; an input that needs them is an
-//! internal error.
+//! In the 0.4.0 track every branch has a home dataset with its own row policies and a join
+//! tree that reaches datasets without row policies. [`build_plan`] builds the plan of each
+//! branch: `Scan` of the home dataset, the row-policy `Filter`, one left `Join` per join
+//! instance, the query-filter `Filter`, `Deduplicate` when the branch joins and has metric
+//! components, and `Aggregate` (E4-4). Two or more branches are combined by a `Stitch`
+//! (E4-5). Then come `Project`, `Sort` and `Limit` (E4-9). Propagation, additivity and context
+//! modifiers come in later issues; an input that needs them is an internal error.
 //!
 //! The plan follows the conventions shared with E6 (issue #251, E6-4.12): the home `Scan`
 //! projects fields of its dataset by normalized name, and the source columns a dataset
@@ -32,6 +32,7 @@ mod query_filter;
 mod rewrite;
 mod scan;
 mod slice;
+mod stitch;
 mod typing;
 
 pub use error::{InvariantViolation, PlanError};
@@ -42,7 +43,7 @@ use menura_model::internal_model::{InternalModel, NormalizedName};
 use menura_representations::bound_query::BoundQuery;
 use menura_representations::logical_plan::{AggregateComponent, NamedExpression, PlanNode};
 use menura_representations::origin::Origin;
-use menura_representations::paths::Branches;
+use menura_representations::paths::{Branch, Branches};
 use menura_security::AdmittedSecurityContext;
 
 use crate::columns::read_fields;
@@ -67,13 +68,42 @@ pub fn build_plan(
     model: &InternalModel,
     catalog: &CatalogSchemaDocument,
 ) -> Result<PlanNode, PlanError> {
-    let branch = slice::single_branch(branches)?;
+    let first = slice::first_branch(branches)?;
+    let metrics = metrics::planned_metrics(query, model)?;
+    let outputs = metrics::metric_outputs(branches, &metrics)?;
+    let home_origin = Origin::Model(slice::home_dataset(first, model)?.location.clone());
+    let project_origin =
+        metrics::first_metric_location(&metrics).map_or(home_origin, Origin::Model);
+    let mut plans = branches
+        .as_slice()
+        .iter()
+        .map(|branch| branch_plan(branch, query, security, model, catalog, &metrics))
+        .collect::<Result<Vec<_>, _>>()?;
+    let combined = match plans.pop() {
+        Some(only) if plans.is_empty() => only,
+        Some(last) => {
+            plans.push(last);
+            stitch::stitch(plans, project_origin.clone())?
+        }
+        None => return Err(slice::no_branch()),
+    };
+    let projected = output::project(query, combined, outputs, project_origin)?;
+    output::order_and_limit(query, projected)
+}
+
+/// The plan of `branch`, up to its `Aggregate` (E4-4).
+fn branch_plan(
+    branch: &Branch,
+    query: &BoundQuery,
+    security: &AdmittedSecurityContext,
+    model: &InternalModel,
+    catalog: &CatalogSchemaDocument,
+    metrics: &[metrics::PlannedMetric<'_>],
+) -> Result<PlanNode, PlanError> {
     let home = slice::home_dataset(branch, model)?;
     let layout = Layout::new(branch, home, model)?;
-    let metrics = metrics::planned_metrics(query, model)?;
     let keys = dimensions::dimension_keys(query, &layout)?;
-    let components = metrics::branch_components(branch, &metrics, home)?;
-    let outputs = metrics::metric_outputs(branch, &metrics)?;
+    let components = metrics::branch_components(branch, metrics, home)?;
     let query_predicate = query_filter::query_predicate(query, &layout)?;
     let has_reference_time = query.time().reference_time.is_some();
     let policy_predicate = policy::policy_predicate(home, security, has_reference_time)?;
@@ -101,11 +131,7 @@ pub fn build_plan(
     if let Some(identity) = identity {
         node = deduplicate(node, &keys, identity.clone(), home_origin.clone());
     }
-    let aggregate = aggregate(node, keys, components, &home_origin)?;
-    let project_origin =
-        metrics::first_metric_location(&metrics).map_or(home_origin, Origin::Model);
-    let projected = output::project(query, aggregate, outputs, project_origin)?;
-    output::order_and_limit(query, projected)
+    aggregate(node, keys, components, &home_origin)
 }
 
 /// The fields the keys, the components and the predicates read.

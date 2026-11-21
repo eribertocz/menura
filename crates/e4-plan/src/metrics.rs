@@ -10,7 +10,7 @@ use menura_model::internal_model::{
 use menura_representations::bound_query::{BoundMetric, BoundMetricKind, BoundQuery, MetricPath};
 use menura_representations::logical_plan::AggregateComponent;
 use menura_representations::names::ColumnName;
-use menura_representations::paths::{Branch, ComponentKey};
+use menura_representations::paths::{Branch, Branches, ComponentKey};
 
 use crate::columns::{column_reference, component_column, over_scan, source_prefix};
 use crate::dimensions::at;
@@ -167,28 +167,34 @@ fn component(
     })
 }
 
-/// Every metric, in output order, evaluated from its components in `branch`.
+/// Every metric, in output order, evaluated from its components, which `branches` compute
+/// (E4-5.0c).
 ///
 /// # Errors
 ///
 /// An internal error for a metric whose aggregates do not match its components, a component
-/// missing from `branch`, or a metric without a type.
+/// that no branch computes, or a metric without a type.
 pub(crate) fn metric_outputs(
-    branch: &Branch,
+    branches: &Branches,
     metrics: &[PlannedMetric<'_>],
 ) -> Result<Vec<MetricOutput>, PlanError> {
+    let computed: Vec<ComponentKey> = branches
+        .as_slice()
+        .iter()
+        .flat_map(|branch| branch.components.iter().copied())
+        .collect();
     metrics
         .iter()
         .enumerate()
         .map(|(position, metric)| {
-            metric_output(branch, position, metric)
+            metric_output(&computed, position, metric)
                 .map_err(|violation| at(violation, &metric.bound.origin))
         })
         .collect()
 }
 
 fn metric_output(
-    branch: &Branch,
+    computed: &[ComponentKey],
     position: usize,
     metric: &PlannedMetric<'_>,
 ) -> Result<MetricOutput, InvariantViolation> {
@@ -207,7 +213,7 @@ fn metric_output(
             component: next,
         };
         next += 1;
-        if !branch.components.contains(&key) {
+        if !computed.contains(&key) {
             return Err(InvariantViolation::UnknownComponent);
         }
         column_reference(component_column(key.metric, key.component).as_str()).map(Some)

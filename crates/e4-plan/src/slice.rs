@@ -1,5 +1,4 @@
-//! The branch and the home dataset of a query of the 0.4.0 track before stitching and
-//! propagation.
+//! The branches and the home datasets of a query of the 0.4.0 track before propagation.
 
 use menura_model::internal_model::{Dataset, InternalModel};
 use menura_representations::origin::{Origin, QueryLocation};
@@ -12,28 +11,18 @@ pub(crate) fn query_root() -> Origin {
     Origin::Query(QueryLocation::new("", None))
 }
 
-/// The single branch of `branches`.
+/// The first branch of `branches`, in branch order (E3-4.3).
 ///
 /// # Errors
 ///
-/// [`InvariantViolation::NoBranch`] or [`InvariantViolation::SeveralBranches`].
-pub(crate) fn single_branch(branches: &Branches) -> Result<&Branch, PlanError> {
-    let branch = match branches.as_slice() {
-        [] => {
-            return Err(PlanError::invariant(
-                InvariantViolation::NoBranch,
-                &query_root(),
-            ));
-        }
-        [branch] => branch,
-        [_, _, ..] => {
-            return Err(PlanError::invariant(
-                InvariantViolation::SeveralBranches,
-                &query_root(),
-            ));
-        }
-    };
-    Ok(branch)
+/// [`InvariantViolation::NoBranch`].
+pub(crate) fn first_branch(branches: &Branches) -> Result<&Branch, PlanError> {
+    branches.as_slice().first().ok_or_else(no_branch)
+}
+
+/// The internal error of a query without branches.
+pub(crate) fn no_branch() -> PlanError {
+    PlanError::invariant(InvariantViolation::NoBranch, &query_root())
 }
 
 /// The home dataset of `branch`, which reaches no other dataset with row policies (E4-6.5).
