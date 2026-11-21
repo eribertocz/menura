@@ -239,19 +239,51 @@ fn e2_4_8_the_authorized_subgraph_holds_only_admitted_datasets() {
         analyst.subgraph().datasets(),
         &[name("CUSTOMERS"), name("ORDERS")]
     );
-    let between_orders_and_customers = [
-        name("ORDERS_BY_COST"),
-        name("ORDERS_BY_UNIT_COST"),
-        name("ORDERS_TO_CUSTOMERS"),
-    ];
-    assert_eq!(
-        analyst.subgraph().relationships(),
-        &between_orders_and_customers
-    );
     let admin = run(&query, ADMIN).expect("authorized");
     assert_eq!(
         admin.subgraph().datasets(),
         &[name("CUSTOMERS"), name("ORDERS"), name("SECRETS")]
+    );
+}
+
+#[test]
+fn e2_4_8_the_authorized_subgraph_excludes_relationships_keyed_by_restricted_fields() {
+    let query = tree(
+        vec![dimension(0, "orders.region")],
+        vec![],
+        QueryTreeParts::default(),
+    );
+    let analyst = run(&query, ANALYST).expect("authorized");
+    assert_eq!(
+        analyst.subgraph().relationships(),
+        &[name("ORDERS_TO_CUSTOMERS")]
+    );
+    let admin = run(&query, ADMIN).expect("authorized");
+    assert_eq!(
+        admin.subgraph().relationships(),
+        &[
+            name("ORDERS_BY_COST"),
+            name("ORDERS_BY_UNIT_COST"),
+            name("ORDERS_TO_CUSTOMERS"),
+            name("ORDERS_TO_SECRETS"),
+        ]
+    );
+}
+
+#[test]
+fn e2_4_7_the_subgraph_records_no_decision_on_fields_the_query_does_not_name() {
+    let query = tree(
+        vec![dimension(0, "orders.region")],
+        vec![],
+        QueryTreeParts::default(),
+    );
+    let analyst = run(&query, ANALYST).expect("authorized");
+    let unit_cost = AuthorizedObject::Field(field("ORDERS", "UNIT_COST"));
+    assert!(
+        analyst
+            .authorization()
+            .iter()
+            .all(|decision| decision.object != unit_cost)
     );
 }
 

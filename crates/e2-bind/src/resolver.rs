@@ -38,7 +38,51 @@ impl<'model> Resolver<'model> {
 
     /// The decisions taken, in order, and the authorized subgraph (E2-4.8).
     pub(crate) fn finish(self) -> (Vec<AuthorizationDecision>, AuthorizedSubgraph) {
-        (self.decisions, self.authorization.subgraph())
+        let subgraph = self.authorized_subgraph();
+        (self.decisions, subgraph)
+    }
+
+    /// The authorized subgraph (E2-4.8): the datasets whose `access` admits the user, and the
+    /// relationships between them whose `from_columns` and `to_columns` read only fields the
+    /// user may see (E2-4.2). The query does not name these relationships, so checking their
+    /// keys records no decision (E2-4.7).
+    fn authorized_subgraph(&self) -> AuthorizedSubgraph {
+        let admitted = self.authorization.subgraph();
+        let relationships = admitted
+            .relationships()
+            .iter()
+            .filter(|name| {
+                self.model.relationship(name).is_some_and(|relationship| {
+                    self.keys_readable(&relationship.from, &relationship.from_columns)
+                        && self.keys_readable(&relationship.to, &relationship.to_columns)
+                })
+            })
+            .cloned()
+            .collect();
+        AuthorizedSubgraph::new(admitted.datasets().to_vec(), relationships)
+    }
+
+    /// Whether the user may read every key column of `dataset`, without recording a decision:
+    /// a field by its field restrictions, any other column by the restrictions that protect
+    /// that source column (SCY-3.1, SCY-3.1a).
+    fn keys_readable(&self, dataset: &NormalizedName, columns: &[NormalizedName]) -> bool {
+        columns.iter().all(|column| {
+            if self.is_field(dataset, column) {
+                self.authorization
+                    .field(&field_path(dataset, column))
+                    .access
+                    == Access::Granted
+            } else {
+                self.authorization.key_column(dataset, column)
+            }
+        })
+    }
+
+    /// Whether `column` is a field of `dataset`.
+    fn is_field(&self, dataset: &NormalizedName, column: &NormalizedName) -> bool {
+        self.model
+            .dataset(dataset)
+            .is_some_and(|found| found.field(column).is_some())
     }
 
     /// The field or metric a reference of the wide-table form names (QRY-3.2):
@@ -98,11 +142,7 @@ impl<'model> Resolver<'model> {
     /// column, which reads that source column, by the restrictions that protect it (E2-4.2).
     fn key_fields(&mut self, dataset: &NormalizedName, columns: &[NormalizedName]) -> bool {
         columns.iter().all(|column| {
-            let is_field = self
-                .model
-                .dataset(dataset)
-                .is_some_and(|found| found.field(column).is_some());
-            if is_field {
+            if self.is_field(dataset, column) {
                 self.field(&field_path(dataset, column))
             } else {
                 self.authorization.key_column(dataset, column)
