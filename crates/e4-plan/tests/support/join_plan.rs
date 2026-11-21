@@ -105,7 +105,15 @@ pub fn identity_type() -> LogicalType {
 /// The dataset a `Scan` reads.
 pub fn scan_dataset(scan: &PlanNode) -> &str {
     match scan.operation() {
-        Operation::Scan { dataset } => dataset.as_str(),
+        Operation::Scan { dataset, .. } => dataset.as_str(),
+        _ => panic!("not a Scan"),
+    }
+}
+
+/// The row identity a `Scan` synthesizes, when it does.
+pub fn row_identity(scan: &PlanNode) -> Option<&str> {
+    match scan.operation() {
+        Operation::Scan { row_identity, .. } => row_identity.as_ref().map(ColumnName::as_str),
         _ => panic!("not a Scan"),
     }
 }

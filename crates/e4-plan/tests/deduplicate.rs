@@ -15,7 +15,8 @@ use menura_representations::bound_query::BoundQueryParts;
 use menura_representations::logical_plan::Operation;
 use menura_representations::paths::QueryElement;
 use support::join_plan::{
-    IDENTITY, aggregate_keys, deduplicate_parts, identity_type, join_parts, plan, segment_plan,
+    IDENTITY, aggregate_keys, deduplicate_parts, identity_type, join_parts, plan, row_identity,
+    segment_plan,
 };
 use support::joins::{
     joined_branches, joined_dimension, joined_filter, ordered_on, path, sales_model_with,
@@ -59,6 +60,15 @@ fn e4_4_0f_the_identity_is_synthesized_over_the_home_scan() {
         home.schema().columns().last(),
         Some(&column(IDENTITY, identity_type(), false))
     );
+    assert_eq!(row_identity(home), Some(IDENTITY));
+}
+
+#[test]
+fn e4_4_0f_only_the_home_scan_synthesizes_the_identity() {
+    let plan = segment_plan();
+    let (_, joined, ..) = join_parts(node(&plan, "Join"));
+
+    assert_eq!(row_identity(joined), None);
 }
 
 #[test]
@@ -85,6 +95,8 @@ fn e4_4_0f_the_identity_never_takes_the_name_of_a_field() {
 
     let (_, identity) = deduplicate_parts(&result);
     assert_eq!(identity, ["menura.row_identity."]);
+    let (home, ..) = join_parts(node(&result, "Join"));
+    assert_eq!(row_identity(home), Some("menura.row_identity."));
 }
 
 #[test]
@@ -147,6 +159,7 @@ fn e4_4_0e_a_dimension_only_branch_never_gets_a_deduplicate() {
     assert_eq!(kinds(&plan), ["Project", "Aggregate", "Join", "Scan"]);
     let (home, ..) = join_parts(node(&plan, "Join"));
     assert_eq!(column_names(home), ["CUSTOMER_ID"]);
+    assert_eq!(row_identity(home), None);
     assert!(plan.is_simple_plan());
 }
 
