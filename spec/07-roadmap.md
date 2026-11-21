@@ -45,6 +45,7 @@ rejected, never answered partially or without a rule it needs (above all a row p
 | ID | Rule |
 |---|---|
 | VS-1 | **0.3.0 slice.** A wide-table query whose metric components, dimensions, filters and `time_grains`, `date_range` and `order_by` fields all belong to **one dataset** (its home dataset), with no `paths`; metrics without the derived, additivity, population or context extensions; dimension-only queries on one dataset; the home dataset's access, field restrictions and its own row policies. A home dataset that reaches, through many-to-one steps (E4-6.5), another dataset that declares `row_access` needs propagation, so it is outside the slice. This is decided from the model alone, whatever the user's roles, so that the answer never depends on policies the user does not hold. |
+| VS-1b | **0.4.0 slice.** Every wide-table query is in the slice, with these exceptions: an element that needs additivity or population (0.5.0) or a context metric (0.8.0); the SQL form, detected as VS-2 states; and `compile` with `audit: true` (VS-5). Several datasets, `paths`, derived metrics and row-policy propagation are in the slice. |
 | VS-2 | Outside the slice, `compile` returns `E_NOT_YET_SUPPORTED`, naming the capability and the version that adds it (table of 7.1), chosen and located as E2-5.4 states. The SQL form is detected in E1, right after the JSON Schema check of E2-5 row 1 (`E_INVALID_QUERY`) and before `EQRY-05` and `EQRY-13`, so no SQL text is parsed before the version that adds the SQL form. Every other capability is detected after every check of E2 has passed (after E2-5 row 12b), so a query reports the same errors as it will in the version that supports it, up to that point. |
 | VS-3 | Each later version widens the slice to the content of its row in 7.1. `E_NOT_YET_SUPPORTED` disappears at 1.0.0; what 1.0.0 does not support is rejected with the codes of 7.1b's table. |
 | VS-4 | The conformance runner reports the query part of a case whose compilation returns `E_NOT_YET_SUPPORTED` as pending, never as passed or failed (CS-2.8), unless the case itself expects `error: E_NOT_YET_SUPPORTED`: such a case tests the slice boundary and is compared like any `error` case. |
@@ -122,7 +123,7 @@ their own roadmaps in their own repositories.
 | F18 | Recomposing `STDDEV` and `VAR` from components |
 | F19 | Value masking |
 | F20 | Normative reader for the next official Apache Ossie release, with migration |
-| F21 | Dataset-scoped metrics and `AGG(dataset.metric)` in derived metrics |
+| F21 | Done for the development line: dataset-scoped metrics (QRY-3.2), and `AGG(dataset.metric)` in derived metrics from 0.4.0 (DER-2.2, DER-5.1.2) |
 | F22 | Project-specific `vendor_name` replacing `COMMON` + `namespace` |
 | F23 | Apache Ossie Layer 4 (ontology) |
 | F24 | Done: the project is named Menura (`menura`); the former name is accepted until 1.0.0 (CON-0.5) |

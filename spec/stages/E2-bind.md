@@ -31,13 +31,13 @@ unauthorized user learns nothing from later diagnostics.
 | ID | Rule |
 |---|---|
 | E2-4.1 | A query **uses** a dataset when it takes from it a dimension, a metric component, a filter, a field named in any query extension (`time_grains`, `date_range`, `order_by`), a population or carry-forward read of a metric, or when it is reached by a path the query names. Every used dataset MUST be authorized by its `access` rule. Datasets on paths that E3 chooses are authorized by construction (E2-4.8). |
-| E2-4.2 | Every field the query names anywhere, and every field a join path reads, MUST be authorized by its dataset's field restrictions (SCY-3.1, SCY-3.1a). |
+| E2-4.2 | Every field the query names anywhere MUST be authorized by its dataset's field restrictions (SCY-3.1, SCY-3.1a). A relationship whose `from_columns` or `to_columns` read a field the user is not authorized to see is not an authorized relationship (E2-4.8). E3 then reports `E_NO_PATH`, `E_PARTIAL_DIMENSION_REACHABILITY` or `E_UNSUPPORTED_FILTER_PATH` as for any unreachable dataset, and a named path that uses it is `E_NAME_NOT_FOUND`. |
 | E2-4.3 | Every metric MUST be authorized: every dataset it reads is authorized, and, when the metric is restricted (SCY-5.1.8), the user holds one of the roles of that restriction. Because SCY-5.1.8 takes the intersection of the restrictions of the fields the metric reads, this can deny a metric even when each of those fields is authorized on its own (deny by default, P9). |
 | E2-4.4 | An unauthorized dataset, field or metric is reported exactly as a nonexistent one: `E_NAME_NOT_FOUND`, with the same message (PLN-5.2). |
 | E2-4.5 | Datasets that E4 joins only to apply a row policy are not "used" and need no authorization; their columns never appear in the output. |
 | E2-4.6 | Summary datasets (`access: internal`) can never be named in a query. |
 | E2-4.7 | Every authorization decision is recorded for the audit record (PLN-6). |
-| E2-4.8 | E2 computes the **authorized subgraph**: the datasets whose `access` admits the user, and the relationships whose two ends are both such datasets (an *authorized relationship*). E3 resolves paths in that subgraph only; a named path that uses any other relationship is `E_NAME_NOT_FOUND`. Joins needed only to apply row policies are added in E4, outside this subgraph, and are never named in diagnostics. |
+| E2-4.8 | E2 computes the **authorized subgraph**: the datasets whose `access` admits the user, and the relationships whose two ends are both such datasets and whose `from_columns` and `to_columns` read only fields the user is authorized to see (SCY-3.1, SCY-3.1a) (an *authorized relationship*). E3 resolves paths in that subgraph only; a named path that uses any other relationship is `E_NAME_NOT_FOUND`. Joins needed only to apply row policies are added in E4, outside this subgraph, and are never named in diagnostics. |
 | E2-4.9 | Row policies apply to every read of a dataset, including population and carry-forward reads. Runtime failures of additivity policies count only rows the user may see. |
 
 ## E2-5 Error precedence
@@ -62,22 +62,22 @@ their check runs.
 | 10 | `E_UNAGGREGATED_FINER_GRAIN_REFERENCE` | E2 (metric recorded unusable in E0.g) |
 | 11 | `E_DEFERRED_WINDOWED_METRIC` | E2 |
 | 12 | `E_AMBIGUOUS_MEASURE_GRAIN` | E2 |
-| 12a | Any element marked unusable in E0 (E0-4 table): its query error code, in this order: `E0B-08`, `E0B-09`, `E0D-03`–`E0D-07`, `E0F-*`, `E0G-01`, `E0G-02`, `E0C-37` | E2 |
+| 12a | Any element marked unusable in E0 (E0-4 table): its query error code, in this order: `E0B-08`, `E0B-09`, `E0D-03`–`E0D-07`, `E0F-*`, `E0G-01`, `E0G-02`, `E0C-37`, `E0H-01` | E2 |
 | 12b | Filter typing (`E0F-03`–`E0F-08`, E2-3.6), `E2-01`, `EQRY-09`, `EQRY-10`, `EQRY-11`, `EQRY-12`, `EQRY-03`, then `E_INVALID_QUERY` for a relative range outside the years 0001–9999, then `EQRY-04`, in that order | E2 |
 | 12c | `E_NOT_YET_SUPPORTED`, before 1.0.0 only (VS-2; the SQL form is detected at row 1) | E2 |
 | 13 | `E_NO_PATH` | E3 |
 | 14 | `E_PARTIAL_DIMENSION_REACHABILITY` | E3 |
-| 15 | `E_NO_ANCHOR` | E3 |
-| 16 | `E_UNSUPPORTED_FILTER_PATH` | E3 |
-| 17 | `E_AMBIGUOUS_PATH`, then `E3-01` | E3 |
-| 18 | `ESEC-02` | E4 |
+| 15 | `E_NO_ANCHOR`, located at `/query/dimensions` (E3-5.1) | E3 |
+| 16 | `E_UNSUPPORTED_FILTER_PATH`, for every filter dataset, the dataset of a `date_range` included (E3-3.1a), located at its filter or `date_range` entry; with several anchors, from every anchor (E3-5.2) | E3 |
+| 17 | `E_AMBIGUOUS_PATH` (a path, located at the element that needs the dataset, or at the `date_range` entry; more than one anchor, located at `/query/dimensions`), then `E3-01` | E3 |
+| 18 | `ESEC-02`, then `EQRY-03` (E4-6.9b) | E4 |
 | 19 | `E4-02`, `E4-03` | E4 |
 
 - **E2-5.1** E1 parses only; every check that needs names (rows 3–12b) runs in E2, so the order above holds whatever the form.
 - **E2-5.2** Only the first error is guaranteed; later errors of the same stage MAY follow it in the document, in query order. Conformance cases compare the first code.
 - **E2-5.3** **Query order** is fixed by the query tree, never by the key order of the JSON document. Wide-table form: the dimensions, the metrics, `filter`, the `filters` items, the `time_grains` items, `date_range`, the `order_by` items, the `paths` entries and `limit`, each list in index order. Within an element, its references are taken in the order they appear: in the text of an expression, or in the members of an extension entry (`from`, `to`, then `relationships` in order). SQL form: the relation of `FROM`, then the clauses in the order of the E1-4 table. Each row of the table above is checked over every element before the next row, and within a row the first element in query order that fails is reported, located at that element.
 - **E2-5.4** Row 12c reports the first element in query order that needs a capability outside the version's slice (VS-1), located at that element. When that element needs several such capabilities, the message names the one whose version comes first in table 7.1, and that version. An element needs its own capabilities and those of every metric it reads, through `AGG(…)`, derived `inputs` and context `base`, recursively, because it cannot be compiled without them. A development-line metric that reads metrics with `AGG(…)` and is not a context metric is a derived metric (DER-2.2).
-- **E2-5.4a** Two capabilities of VS-1 belong to the whole query. **Several datasets:** the home dataset is the dataset of the first element in query order that reads one, and the error is located at the first element that reads another dataset; a metric whose own components span several datasets is located at that metric. **Propagation:** located at the first element that reads the home dataset. When one element needs several capabilities of the same version, the message names the first in this order: several datasets, `paths`, derived metric, row-policy propagation (0.4.0); additivity, population (0.5.0); context metric (0.8.0).
+- **E2-5.4a** Which capabilities belong to the whole query depends on the version. **0.3.0:** two capabilities of VS-1 belong to the whole query. **Several datasets:** the home dataset is the dataset of the first element in query order that reads one, and the error is located at the first element that reads another dataset; a metric whose own components span several datasets is located at that metric. **Propagation:** located at the first element that reads the home dataset. When one element needs several capabilities of the same version, the message names the first in this order: several datasets, `paths`, derived metric, row-policy propagation (0.4.0); additivity, population (0.5.0); context metric (0.8.0). **From 0.4.0:** no capability belongs to the whole query, because several datasets, `paths`, derived metrics and propagation are in the slice (VS-1b). When one element needs several capabilities of the same version, the message names the first in this order: additivity, population (0.5.0); context metric (0.8.0).
 - **E2-5.5** Output names are compared after the upper-case mapping of E0D-1.1, whether they come from an alias, a regular part or a delimited part, because DuckDB compares column names without regard to case. `Region` and `region` collide (`E_NAME_COLLISION`), and an `order_by` `output` matches an output name the same way (`EQRY-10` when none matches). The result keeps each name as written (E1-5.1).
 - **E2-5.6** At row 12b, `EQRY-03` is reported for a filter or relative `date_range` that needs "now", and also for a metric or dimension whose model expression uses `CURRENT_DATE`, `CURRENT_TIME` or `CURRENT_TIMESTAMP`, directly or through the fields and metrics it reads (QRY-2), located at that metric or dimension. Row policies are checked in E4 (E4-6.9b).
 
