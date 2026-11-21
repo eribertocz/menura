@@ -47,6 +47,7 @@ fn scan(dataset: &str) -> PlanNode {
     PlanNode::new(
         Operation::Scan {
             dataset: name(dataset),
+            row_identity: None,
         },
         region_schema(),
         in_model("/semantic_model/0/datasets/0"),

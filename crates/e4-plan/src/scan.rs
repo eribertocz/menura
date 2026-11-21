@@ -59,6 +59,7 @@ pub(crate) fn scan(
     Ok(PlanNode::new(
         Operation::Scan {
             dataset: home.name.clone(),
+            row_identity: identity.cloned(),
         },
         OutputSchema::new(columns),
         origin.clone(),
@@ -91,6 +92,7 @@ pub(crate) fn instance_scan(
     Ok(PlanNode::new(
         Operation::Scan {
             dataset: dataset.name.clone(),
+            row_identity: None,
         },
         OutputSchema::new(columns),
         origin,
