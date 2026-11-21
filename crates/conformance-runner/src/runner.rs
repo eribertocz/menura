@@ -1,6 +1,7 @@
 //! Finds the cases of a conformance directory (CS-1), runs each one (CS-4.1, CS-4.2) and
 //! collects the report (CS-4.3).
 
+use std::collections::BTreeSet;
 use std::fs;
 use std::path::{Path, PathBuf};
 
@@ -10,6 +11,7 @@ use menura_core::LoadOptions;
 use crate::case::Case;
 use crate::case_file::read_case;
 use crate::database::prepare_database;
+use crate::divergences::{DIFFERENTIAL_FOLDER, DIVERGENCES_FILE, Divergences, read_divergences};
 use crate::error::{RunnerError, RunnerErrorKind};
 use crate::fixture::{ModelFixture, read_bytes, security_context_path};
 use crate::load_options::resolve_load_options;
@@ -59,11 +61,13 @@ fn run_cases(
     conformance_directory: &Path,
     area: Option<&str>,
 ) -> Result<Vec<CaseResult>, RunnerError> {
+    let divergences = read_divergences(conformance_directory)?;
+    check_divergence_cases(conformance_directory, &divergences)?;
     let mut results = Vec::new();
     for area_folder in area_folders(&conformance_directory.join("cases"), area)? {
         for case_path in case_files(&area_folder)? {
             let case = read_case(&case_path)?;
-            let status = run_case(conformance_directory, &area_folder, &case);
+            let status = run_case(conformance_directory, &area_folder, &case, &divergences);
             results.push(CaseResult {
                 id: case.id,
                 rules: case.rules,
@@ -74,7 +78,42 @@ fn run_cases(
     Ok(results)
 }
 
-fn run_case(conformance_directory: &Path, case_folder: &Path, case: &Case) -> CaseStatus {
+/// Checks that every entry of the reviewed file of divergences names a differential case of
+/// `cases/`, whichever area runs (CS-4.8).
+fn check_divergence_cases(
+    conformance_directory: &Path,
+    divergences: &Divergences,
+) -> Result<(), RunnerError> {
+    let cases_directory = conformance_directory.join("cases");
+    let mut differential = BTreeSet::new();
+    for area_folder in area_folders(&cases_directory, None)? {
+        for case_path in case_files(&area_folder)? {
+            let case = read_case(&case_path)?;
+            if case.oracle.is_some() {
+                differential.insert(case.id);
+            }
+        }
+    }
+    match divergences
+        .cases()
+        .find(|case| !differential.contains(*case))
+    {
+        Some(case) => Err(RunnerError::new(
+            RunnerErrorKind::UnknownDivergence(case.to_string()),
+            conformance_directory
+                .join(DIFFERENTIAL_FOLDER)
+                .join(DIVERGENCES_FILE),
+        )),
+        None => Ok(()),
+    }
+}
+
+fn run_case(
+    conformance_directory: &Path,
+    case_folder: &Path,
+    case: &Case,
+    divergences: &Divergences,
+) -> CaseStatus {
     let model_folder = conformance_directory.join("models").join(&case.model);
     let prepared = prepare_case(conformance_directory, case).and_then(|prepared| {
         ModelDocuments::read(&model_folder).map(|documents| (prepared, documents))
@@ -93,6 +132,7 @@ fn run_case(conformance_directory: &Path, case_folder: &Path, case: &Case) -> Ca
                 case_folder,
                 security_context,
                 connection: &prepared.connection,
+                divergences,
             };
             check_query(case, &handle, &inputs)
         }

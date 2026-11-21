@@ -43,6 +43,9 @@ fn check_case(case: &Case) -> Result<(), RunnerErrorKind> {
     if case.expect.outcome.needs_security_context() && case.security_context.is_none() {
         return Err(RunnerErrorKind::MissingSecurityContext);
     }
+    if case.oracle.is_some() && case.expect.outcome != Outcome::Plan {
+        return Err(RunnerErrorKind::DifferentialWithoutPlan);
+    }
     let needs_error = matches!(case.expect.outcome, Outcome::Error | Outcome::RuntimeError);
     if needs_error && case.expect.error.as_deref().is_none_or(str::is_empty) {
         return Err(RunnerErrorKind::MissingErrorCode);
@@ -85,6 +88,33 @@ expect:
         assert_eq!(case.rules[0].as_str(), "CS-2.2");
         assert_eq!(case.expect.outcome, Outcome::Plan);
         assert_eq!(case.expect.rows.as_deref(), Some("expected.csv"));
+    }
+
+    #[test]
+    fn cs_4_8_a_case_is_not_differential_by_default() {
+        assert_eq!(parse_case(PLAN_CASE).unwrap().oracle, None);
+    }
+
+    #[test]
+    fn cs_4_8_reads_a_differential_plan_case() {
+        let text = PLAN_CASE.replace("model: sample", "model: sample\noracle: reference.sql");
+        let case = parse_case(&text).unwrap();
+        assert_eq!(case.oracle.as_deref(), Some("reference.sql"));
+    }
+
+    #[test]
+    fn cs_4_8_rejects_a_differential_case_without_a_plan() {
+        let text = "
+id: sample-load-error-001
+rules: [CS-4.8]
+model: sample
+oracle: reference.sql
+expect: {outcome: load_error, error: E0D-02}
+";
+        assert!(matches!(
+            parse_case(text),
+            Err(RunnerErrorKind::DifferentialWithoutPlan)
+        ));
     }
 
     #[test]
