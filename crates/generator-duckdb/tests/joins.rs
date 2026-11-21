@@ -106,3 +106,13 @@ fn e6_4_2_each_literal_occurrence_is_its_own_parameter() {
     let generated = generate(&plan, &query(&["REGION"], &[])).expect("SQL");
     assert_eq!(generated.parameters.len(), 3, "{}", generated.sql);
 }
+
+#[test]
+fn e6_4_14_deduplicate_without_identity_is_an_error() {
+    let plan = deduplicate(scan("ORDERS", &["REGION"]), &["REGION"], &[]);
+    let error = generate(&plan, &query(&["REGION"], &[])).expect_err("no identity");
+    assert_eq!(
+        error.violation,
+        menura_generator_duckdb::InvariantViolation::EmptyIdentity
+    );
+}
