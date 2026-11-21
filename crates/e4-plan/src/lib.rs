@@ -86,13 +86,10 @@ pub fn build_plan(
         .iter()
         .map(|branch| branch_plan(branch, query, security, model, catalog, &metrics))
         .collect::<Result<Vec<_>, _>>()?;
-    let combined = match plans.pop() {
-        Some(only) if plans.is_empty() => only,
-        Some(last) => {
-            plans.push(last);
-            stitch::stitch(plans, project_origin.clone())?
-        }
-        None => return Err(slice::no_branch()),
+    let combined = match plans.len() {
+        0 => return Err(slice::no_branch()),
+        1 => plans.pop().ok_or_else(slice::no_branch)?,
+        _ => stitch::stitch(plans, project_origin.clone())?,
     };
     let with_inputs = derived_inputs::compute_inputs(
         combined,
@@ -118,7 +115,9 @@ fn branch_plan(
     let components = metrics::branch_components(branch, metrics, home)?;
     let query_predicate = query_filter::query_predicate(query, &layout)?;
     let has_reference_time = query.time().reference_time.is_some();
-    let row_filters = policy_visits::row_filters(home, model, security, has_reference_time)?;
+    let graph = followed::PolicyGraph::new(model);
+    let row_filters =
+        policy_visits::row_filters(home, model, &graph, security, has_reference_time)?;
 
     let mut read = fields_read(
         &keys,
@@ -127,6 +126,7 @@ fn branch_plan(
     );
     let visibility = visibility::Visibility {
         model,
+        graph: &graph,
         filters: &row_filters,
         catalog,
     };

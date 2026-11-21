@@ -130,3 +130,110 @@ fn empty_value(call: &AggregateCall) -> Result<Option<Literal>, InvariantViolati
         | AggregateCall::Percentile { .. } => Ok(None),
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use menura_contracts::types::common::LogicalType;
+    use menura_model::expression::{AggregateCall, Expression, Identifier, Reference};
+    use menura_model::internal_model::NormalizedName;
+    use menura_representations::logical_plan::{
+        AggregateComponent, NamedExpression, Operation, OutputSchema, PlanNode, SchemaColumn,
+    };
+    use menura_representations::names::ColumnName;
+    use menura_representations::origin::{Origin, QueryLocation};
+
+    use super::stitch;
+    use crate::error::{InvariantViolation, PlanError};
+
+    fn origin() -> Origin {
+        Origin::Query(QueryLocation::new("/query", None))
+    }
+
+    fn column(name: &str, logical_type: LogicalType) -> SchemaColumn {
+        SchemaColumn {
+            name: ColumnName::new(name),
+            logical_type,
+            nullable: true,
+        }
+    }
+
+    fn scan(key_type: &LogicalType) -> PlanNode {
+        PlanNode::new(
+            Operation::Scan {
+                dataset: NormalizedName::new("ORDERS"),
+                row_identity: None,
+            },
+            OutputSchema::new(vec![column("REGION", key_type.clone())]),
+            origin(),
+        )
+    }
+
+    /// The `Aggregate` keyed by `dimension_1` of type `key_type`, with one `COUNT(*)` named
+    /// `component`.
+    fn branch(key_type: &LogicalType, component: &str) -> PlanNode {
+        let key = Expression::Reference(Reference {
+            qualifier: None,
+            name: Identifier::delimited("REGION").expect("a name"),
+        });
+        PlanNode::new(
+            Operation::Aggregate {
+                input: Box::new(scan(key_type)),
+                keys: vec![NamedExpression {
+                    name: ColumnName::new("dimension_1"),
+                    expression: key,
+                    derived: None,
+                }],
+                components: vec![AggregateComponent {
+                    name: ColumnName::new(component),
+                    call: AggregateCall::CountRows,
+                    filter: None,
+                }],
+            },
+            OutputSchema::new(vec![
+                column("dimension_1", key_type.clone()),
+                column(component, LogicalType::Boolean),
+            ]),
+            origin(),
+        )
+    }
+
+    fn violation(result: Result<PlanNode, PlanError>) -> InvariantViolation {
+        match result {
+            Err(PlanError::Invariant { violation, .. }) => violation,
+            other => panic!("not an internal error: {other:?}"),
+        }
+    }
+
+    #[test]
+    fn e4_5_0a_branches_with_keys_of_different_types_are_unstitchable() {
+        let branches = vec![
+            branch(&LogicalType::Text, "metric_1_component_1"),
+            branch(&LogicalType::Date, "metric_2_component_1"),
+        ];
+        assert_eq!(
+            violation(stitch(branches, origin())),
+            InvariantViolation::UnstitchableBranches
+        );
+    }
+
+    #[test]
+    fn e4_5_0a_a_branch_that_does_not_end_with_its_aggregate_is_unstitchable() {
+        let branches = vec![
+            branch(&LogicalType::Text, "metric_1_component_1"),
+            scan(&LogicalType::Text),
+        ];
+        assert_eq!(
+            violation(stitch(branches, origin())),
+            InvariantViolation::UnstitchableBranches
+        );
+    }
+
+    #[test]
+    fn e4_5_0a_branches_with_the_same_keys_stitch() {
+        let branches = vec![
+            branch(&LogicalType::Text, "metric_1_component_1"),
+            branch(&LogicalType::Text, "metric_2_component_1"),
+        ];
+        assert!(stitch(branches, origin()).is_ok());
+    }
+}

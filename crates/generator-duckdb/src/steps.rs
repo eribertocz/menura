@@ -124,6 +124,7 @@ impl<'input> StepWriter<'input> {
                 self.deduplicate(node, input, group, identity)?,
                 "deduplicate",
             )),
+            Operation::SemiJoin { .. } => Ok((self.semi_join(node)?, "semijoin")),
             _ => Err(error(InvariantViolation::NodeOutsideSlice, node)),
         }
     }
