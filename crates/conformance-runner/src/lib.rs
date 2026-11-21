@@ -3,7 +3,8 @@
 //! The runner reads the case format of CS-2, prepares a fresh `DuckDB` database for every case as
 //! CS-4.2 says, runs the load part and the query part of every case through `core` (CS-2.8),
 //! executes every plan on that database (E6-5.4), and reports each case under the rule IDs it
-//! covers (CS-4.3). No other crate may depend on this one.
+//! covers (CS-4.3). A differential case also compares the rows of its plan with those of its
+//! oracle (CS-4.7). No other crate may depend on this one.
 //!
 //! # Example
 //!
@@ -29,6 +30,8 @@ mod cells;
 mod csv_rows;
 pub mod database;
 mod diagnostic_check;
+mod differential;
+mod divergences;
 pub mod error;
 mod execution;
 pub mod fixture;
