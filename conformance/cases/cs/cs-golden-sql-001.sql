@@ -14,7 +14,7 @@ WITH
       "SALE_ID",
       "VOIDED"
     FROM "menura_1_scan"
-    WHERE ("CHANNEL" NOT IN (SELECT unnest($1))) AND ("VOIDED" = FALSE)
+    WHERE ("CHANNEL" NOT IN (SELECT unnest(CAST($1 AS VARCHAR[])))) AND ("VOIDED" = FALSE)
   ),
   "menura_3_filter" AS (
     SELECT
@@ -23,7 +23,7 @@ WITH
       "SALE_ID",
       "VOIDED"
     FROM "menura_2_filter"
-    WHERE "QUANTITY" >= $2
+    WHERE "QUANTITY" >= CAST($2 AS BIGINT)
   ),
   "menura_4_aggregate" AS (
     SELECT
