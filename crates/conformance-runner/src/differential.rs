@@ -1,4 +1,4 @@
-//! The differential part of a case (CS-4.7): the rows of the compiled plan are compared under
+//! The differential part of a case (CS-4.7, CS-4.8): the rows of the compiled plan are compared under
 //! CS-2.4 with those of an independent oracle, the hand-written reference SQL file that the case
 //! names in `oracle`, next to the case, executed on the same fixture database.
 //!
@@ -115,7 +115,7 @@ mod tests {
     }
 
     #[test]
-    fn cs_4_7_a_classified_divergence_is_pending_never_passed() {
+    fn cs_4_8_a_classified_divergence_is_pending_never_passed() {
         for classification in [
             Classification::Bug,
             Classification::KnownDeviation,
@@ -130,7 +130,7 @@ mod tests {
     }
 
     #[test]
-    fn cs_4_7_a_stale_classification_fails() {
+    fn cs_4_8_a_stale_classification_fails() {
         let status = classify(None, Some(&entry(Classification::Bug)));
         assert!(matches!(status, CaseStatus::Failed(_)), "{status:?}");
     }

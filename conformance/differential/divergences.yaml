@@ -1,4 +1,4 @@
-# Classified divergences of differential cases (spec/08-conformance-suite.md CS-4.7).
+# Classified divergences of differential cases (spec/08-conformance-suite.md CS-4.8).
 # Each entry names a case with an `oracle` whose rows differ from those of that reference SQL,
 # kept next to the case. `classification` is `bug` (name the issue in `reason`),
 # `known_deviation` or `unsupported`. A divergence without an entry fails its case, and an entry

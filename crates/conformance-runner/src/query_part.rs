@@ -32,7 +32,7 @@ pub(crate) struct QueryInputs<'inputs> {
     pub(crate) security_context: &'inputs [u8],
     /// The prepared database of the case (CS-4.2).
     pub(crate) connection: &'inputs Connection,
-    /// The classified divergences of differential cases (CS-4.7).
+    /// The classified divergences of differential cases (CS-4.8).
     pub(crate) divergences: &'inputs Divergences,
 }
 
@@ -389,7 +389,7 @@ mod tests {
     }
 
     #[test]
-    fn cs_4_7_a_classified_divergence_leaves_the_case_pending() {
+    fn cs_4_8_a_classified_divergence_leaves_the_case_pending() {
         let text = differential_case("cs-unit-divergent-001", "cs-unit-divergent-001.oracle.sql");
         let divergences = parse_divergences(
             "divergences:\n  - {case: cs-unit-divergent-001, classification: bug, reason: r}\n",
@@ -400,7 +400,7 @@ mod tests {
     }
 
     #[test]
-    fn cs_4_7_a_differential_case_without_its_oracle_fails() {
+    fn cs_4_8_a_differential_case_without_its_oracle_fails() {
         let text = differential_case("cs-unit-001", "cs-unit-no-oracle-001.oracle.sql");
         assert_fails(status(&text), "cs-unit-no-oracle-001.oracle.sql");
     }

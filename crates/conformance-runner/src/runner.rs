@@ -79,7 +79,7 @@ fn run_cases(
 }
 
 /// Checks that every entry of the reviewed file of divergences names a differential case of
-/// `cases/`, whichever area runs (CS-4.7).
+/// `cases/`, whichever area runs (CS-4.8).
 fn check_divergence_cases(
     conformance_directory: &Path,
     divergences: &Divergences,

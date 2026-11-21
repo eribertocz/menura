@@ -1,4 +1,4 @@
-//! The reviewed file of classified divergences of differential cases (CS-4.7):
+//! The reviewed file of classified divergences of differential cases (CS-4.8):
 //! `conformance/differential/divergences.yaml`.
 //!
 //! Every entry names a differential case whose rows differ from those of its oracle, and says
@@ -21,7 +21,7 @@ pub(crate) const DIFFERENTIAL_FOLDER: &str = "differential";
 /// The name of the reviewed file inside [`DIFFERENTIAL_FOLDER`].
 pub(crate) const DIVERGENCES_FILE: &str = "divergences.yaml";
 
-/// The kind of a classified divergence (CS-4.7).
+/// The kind of a classified divergence (CS-4.8).
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub(crate) enum Classification {
@@ -124,7 +124,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn cs_4_7_reads_every_classification() {
+    fn cs_4_8_reads_every_classification() {
         let text = "divergences:\n  \
             - {case: a-001, classification: bug, reason: 'issue #1'}\n  \
             - {case: b-001, classification: known_deviation, reason: r}\n  \
@@ -143,7 +143,7 @@ mod tests {
     }
 
     #[test]
-    fn cs_4_7_an_empty_file_classifies_nothing() {
+    fn cs_4_8_an_empty_file_classifies_nothing() {
         assert_eq!(
             parse_divergences("divergences: []\n").unwrap(),
             Divergences::default()
@@ -151,7 +151,7 @@ mod tests {
     }
 
     #[test]
-    fn cs_4_7_rejects_an_unknown_classification() {
+    fn cs_4_8_rejects_an_unknown_classification() {
         let text = "divergences:\n  - {case: a-001, classification: flaky, reason: r}\n";
         assert!(matches!(
             parse_divergences(text),
@@ -160,7 +160,7 @@ mod tests {
     }
 
     #[test]
-    fn cs_4_7_rejects_an_entry_without_reason() {
+    fn cs_4_8_rejects_an_entry_without_reason() {
         let text = "divergences:\n  - {case: a-001, classification: bug}\n";
         assert!(matches!(
             parse_divergences(text),
@@ -169,7 +169,7 @@ mod tests {
     }
 
     #[test]
-    fn cs_4_7_rejects_a_case_classified_twice() {
+    fn cs_4_8_rejects_a_case_classified_twice() {
         let text = "divergences:\n  \
             - {case: a-001, classification: bug, reason: r}\n  \
             - {case: a-001, classification: unsupported, reason: r}\n";
@@ -180,7 +180,7 @@ mod tests {
     }
 
     #[test]
-    fn cs_4_7_a_missing_file_classifies_nothing() {
+    fn cs_4_8_a_missing_file_classifies_nothing() {
         let directory = Path::new(env!("CARGO_MANIFEST_DIR")).join("src");
         assert_eq!(
             read_divergences(&directory).unwrap(),

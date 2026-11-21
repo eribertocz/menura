@@ -91,22 +91,22 @@ expect:
     }
 
     #[test]
-    fn cs_4_7_a_case_is_not_differential_by_default() {
+    fn cs_4_8_a_case_is_not_differential_by_default() {
         assert_eq!(parse_case(PLAN_CASE).unwrap().oracle, None);
     }
 
     #[test]
-    fn cs_4_7_reads_a_differential_plan_case() {
+    fn cs_4_8_reads_a_differential_plan_case() {
         let text = PLAN_CASE.replace("model: sample", "model: sample\noracle: reference.sql");
         let case = parse_case(&text).unwrap();
         assert_eq!(case.oracle.as_deref(), Some("reference.sql"));
     }
 
     #[test]
-    fn cs_4_7_rejects_a_differential_case_without_a_plan() {
+    fn cs_4_8_rejects_a_differential_case_without_a_plan() {
         let text = "
 id: sample-load-error-001
-rules: [CS-4.7]
+rules: [CS-4.8]
 model: sample
 oracle: reference.sql
 expect: {outcome: load_error, error: E0D-02}
