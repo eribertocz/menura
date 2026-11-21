@@ -3,6 +3,7 @@
 use std::collections::BTreeMap;
 
 use menura_contracts::types::common::{LogicalType, Parameter};
+use menura_representations::origin::Origin;
 use serde_json::Value;
 
 /// A value bound once and referenced wherever it appears: the query time zone, the reference
@@ -19,16 +20,24 @@ pub(crate) enum SharedValue {
     Attribute(String),
 }
 
+/// One literal occurrence of the query: the JSON Pointer of the query element a node comes
+/// from, and the position of the literal among the literals of that node, from 0. Every copy of
+/// a query element in the plan, in another branch or node, has the same occurrences (E6-4.2).
+type Occurrence = (String, usize);
+
 /// The parameters of a statement being written.
 #[derive(Debug, Default)]
 pub(crate) struct Parameters {
     bound: Vec<Parameter>,
     shared: BTreeMap<SharedValue, u64>,
+    occurrences: BTreeMap<Occurrence, u64>,
+    node_pointer: Option<String>,
+    node_literals: usize,
 }
 
 impl Parameters {
     /// Binds a new parameter and returns its placeholder, such as `$3`.
-    pub(crate) fn bind(&mut self, logical_type: LogicalType, value: Value) -> String {
+    fn bind_new(&mut self, logical_type: LogicalType, value: Value) -> String {
         let position = self.next_position();
         self.bound.push(Parameter {
             position,
@@ -50,7 +59,41 @@ impl Parameters {
             return placeholder(*position);
         }
         self.shared.insert(shared, self.next_position());
-        self.bind(logical_type, value)
+        self.bind_new(logical_type, value)
+    }
+
+    /// Starts the literals of a node that comes from `origin`: the next literal bound with
+    /// [`Parameters::bind`] is its first.
+    pub(crate) fn start_node(&mut self, origin: &Origin) {
+        self.node_pointer = match origin {
+            Origin::Query(location) => Some(location.pointer().to_owned()),
+            Origin::Model(_) => None,
+        };
+        self.node_literals = 0;
+    }
+
+    /// The placeholder, such as `$3`, of the next query literal of the current node, of
+    /// `logical_type` and `value`: the parameter of the same occurrence when an earlier node
+    /// bound it to the same value, a new parameter otherwise (E6-4.2).
+    pub(crate) fn bind(&mut self, logical_type: LogicalType, value: Value) -> String {
+        let ordinal = self.node_literals;
+        self.node_literals += 1;
+        let Some(pointer) = self.node_pointer.clone() else {
+            return self.bind_new(logical_type, value);
+        };
+        let occurrence = (pointer, ordinal);
+        if let Some(position) = self.occurrences.get(&occurrence).copied() {
+            let same = self.bound.iter().any(|parameter| {
+                parameter.position == position
+                    && parameter.logical_type == logical_type
+                    && parameter.value == value
+            });
+            if same {
+                return placeholder(position);
+            }
+        }
+        self.occurrences.insert(occurrence, self.next_position());
+        self.bind_new(logical_type, value)
     }
 
     /// The parameters, by position.
