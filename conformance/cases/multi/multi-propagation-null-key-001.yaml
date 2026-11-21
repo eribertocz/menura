@@ -1,5 +1,5 @@
 id: multi-propagation-null-key-001
-rules: [E4-6.5a]
+rules: [E4-6.5a, E4-3.4]
 model: multi-propagation
 security_context: auditor.json
 oracle: "multi-propagation-null-key-001.oracle.sql"

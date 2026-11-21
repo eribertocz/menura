@@ -242,14 +242,26 @@ mod tests {
 
     /// Runs the query part of a case with the given classified divergences.
     fn status_with(case_text: &str, divergences: &Divergences) -> CaseStatus {
+        status_in_model("slice", case_text, divergences)
+    }
+
+    /// Runs the query part of a case of the `sample` model, whose `total_balance` declares
+    /// additivity, a capability outside the 0.4.0 slice.
+    fn sample_status(case_text: &str) -> CaseStatus {
+        status_in_model("sample", case_text, &Divergences::default())
+    }
+
+    /// Runs the query part of a case of the model `model`; the files the case names are under
+    /// `cases/cs/`.
+    fn status_in_model(model: &str, case_text: &str, divergences: &Divergences) -> CaseStatus {
         let case = parse_case(case_text).unwrap();
-        let model_folder = conformance_directory().join("models/slice");
+        let model_folder = conformance_directory().join("models").join(model);
         let connection = prepare_database(&ModelFixture::read(&model_folder).unwrap()).unwrap();
         let documents = ModelDocuments::read(&model_folder).unwrap();
         let LoadOutcome::Loaded(handle) =
             check_load(&case, &documents, &resolve_load_options(None))
         else {
-            panic!("the slice model loads");
+            panic!("the {model} model loads");
         };
         let context_name = case.security_context.as_deref().unwrap();
         let security_context =
@@ -272,6 +284,17 @@ mod tests {
         )
     }
 
+    fn sample_case_text(query: &str, expect: &str) -> String {
+        format!(
+            "id: cs-unit-002\nrules: [VS-4]\nmodel: sample\nsecurity_context: analyst.json\n\
+             query: {{contract: menura.query, contract_version: \"1.1.0\", time_zone: UTC, \
+             query: {query}}}\nexpect: {expect}\n"
+        )
+    }
+
+    /// `total_balance` declares additivity, which is outside the 0.4.0 slice (VS-1b).
+    const OUTSIDE_THE_SLICE: &str = "{metrics: [total_amount, total_balance]}";
+
     const BY_REGION: &str = "{dimensions: [sales.region], metrics: [total_amount, total_quantity, \
                              sale_count]}";
 
@@ -290,9 +313,8 @@ mod tests {
 
     #[test]
     fn vs_4_a_query_outside_the_slice_is_pending_whatever_the_expectation() {
-        let query = "{metrics: [total_amount, total_refund]}";
-        let status = status(&case_text(
-            query,
+        let status = sample_status(&sample_case_text(
+            OUTSIDE_THE_SLICE,
             "{outcome: plan, rows: cs-plan-rows-001.csv}",
         ));
         let CaseStatus::Pending(reason) = status else {
@@ -303,7 +325,6 @@ mod tests {
 
     #[test]
     fn vs_4_a_case_that_expects_not_yet_supported_compares_it() {
-        let query = "{metrics: [total_amount, total_refund]}";
         let expect = |pointer: &str| {
             format!(
                 "{{outcome: error, error: E_NOT_YET_SUPPORTED, location: {{document: query, \
@@ -311,11 +332,17 @@ mod tests {
             )
         };
         assert_eq!(
-            status(&case_text(query, &expect("/query/metrics/1"))),
+            sample_status(&sample_case_text(
+                OUTSIDE_THE_SLICE,
+                &expect("/query/metrics/1")
+            )),
             CaseStatus::Passed
         );
         assert_fails(
-            status(&case_text(query, &expect("/query/metrics/0"))),
+            sample_status(&sample_case_text(
+                OUTSIDE_THE_SLICE,
+                &expect("/query/metrics/0"),
+            )),
             "location",
         );
     }

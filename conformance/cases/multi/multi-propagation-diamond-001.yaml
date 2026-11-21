@@ -1,5 +1,5 @@
 id: multi-propagation-diamond-001
-rules: [E4-6.5, E4-6.6, E2-4.5]
+rules: [E4-6.5, E4-6.6, E2-4.5, E3-3.7]
 model: multi-propagation
 security_context: north.json
 oracle: "multi-propagation-diamond-001.oracle.sql"
