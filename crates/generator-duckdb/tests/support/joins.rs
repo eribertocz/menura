@@ -11,9 +11,30 @@ use menura_representations::names::{ColumnName, ColumnPrefix};
 use super::plan::{column, field_type};
 use super::{from_model, parse};
 
+/// The row identity of the home `Scan` (E4-4.0f), as #311 names it.
+pub const ROW_IDENTITY: &str = "menura.row_identity";
+
 /// The home `Scan` of `dataset` that projects `fields`.
 pub fn home_scan(dataset: &str, fields: &[&str]) -> PlanNode {
     super::plan::scan(dataset, fields)
+}
+
+/// The home `Scan` of `dataset` that projects `fields`, then its row identity, a 64-bit
+/// integer that is never NULL.
+pub fn home_scan_with_identity(dataset: &str, fields: &[&str]) -> PlanNode {
+    let mut columns: Vec<SchemaColumn> = fields
+        .iter()
+        .map(|name| column(name, field_type(name), true))
+        .collect();
+    columns.push(column(ROW_IDENTITY, super::big_integer(), false));
+    PlanNode::new(
+        Operation::Scan {
+            dataset: NormalizedName::new(dataset),
+            row_identity: Some(ColumnName::new(ROW_IDENTITY)),
+        },
+        OutputSchema::new(columns),
+        from_model("/semantic_model/0/datasets/0"),
+    )
 }
 
 /// The `Scan` of `dataset` for the join instance whose columns take `prefix`, projecting
@@ -26,6 +47,7 @@ pub fn joined_scan(dataset: &str, prefix: &str, fields: &[&str]) -> PlanNode {
     PlanNode::new(
         Operation::Scan {
             dataset: NormalizedName::new(dataset),
+            row_identity: None,
         },
         OutputSchema::new(columns),
         from_model("/semantic_model/0/datasets/1"),

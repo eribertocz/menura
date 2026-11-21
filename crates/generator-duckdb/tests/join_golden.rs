@@ -10,8 +10,9 @@ use menura_contracts::types::common::LogicalType;
 use menura_generator_duckdb::InvariantViolation;
 use menura_representations::logical_plan::PlanNode;
 use support::{
-    aggregate, assert_golden, big_integer, column, component, decimal, deduplicate, generate,
-    generate_all, home_scan, join_of, joined_scan, left_join, named, query,
+    ROW_IDENTITY, aggregate, assert_golden, big_integer, column, component, decimal, deduplicate,
+    generate, generate_all, home_scan, home_scan_with_identity, join_of, joined_scan, left_join,
+    named, query,
 };
 
 const STAGED: &str = "ORDERS_STAGED.";
@@ -80,14 +81,10 @@ fn e6_4_13_keys_of_different_types_are_cast_to_their_common_type() {
     assert_golden(&generated.sql, include_str!("golden/e6_4_13_key_cast.sql"));
 }
 
-/// The row identity of the home `Scan` (E4-4.0f). Until #311 marks it on the `Scan`, the
-/// test reads it as a field.
-const IDENTITY: &str = "ORDERED_ON";
-
 #[test]
 fn e6_4_14_deduplicate_with_a_grain() {
     let joined = left_join(
-        home_scan("ORDERS", &["QUANTITY", "CREATED_AT", IDENTITY]),
+        home_scan_with_identity("ORDERS", &["QUANTITY", "CREATED_AT"]),
         joined_scan("STAGED", STAGED, &["QUANTITY", "REGION"]),
         "ORDERS_STAGED",
         &[("QUANTITY", "ORDERS_STAGED.QUANTITY")],
@@ -97,7 +94,7 @@ fn e6_4_14_deduplicate_with_a_grain() {
         "\"ORDERS_STAGED.REGION\"",
     ];
     let plan = aggregate(
-        deduplicate(joined, &group, &[IDENTITY]),
+        deduplicate(joined, &group, &[ROW_IDENTITY]),
         vec![
             named("CREATED_MONTH", group[0]),
             named("ORDERS_STAGED.REGION", group[1]),

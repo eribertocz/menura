@@ -13,6 +13,7 @@ use crate::expression::{Columns, Environment, ExpressionWriter};
 use crate::identifiers::quote;
 use crate::join::JoinInputs;
 use crate::parameters::Parameters;
+use crate::scan::ScanRole;
 use crate::types::physical_type;
 
 /// A node already written: the name of its step and the `ORDER BY` its rows keep.
@@ -88,9 +89,15 @@ impl<'input> StepWriter<'input> {
         node: &'input PlanNode,
     ) -> Result<(SelectBody, &'static str), GenerateError> {
         match node.operation() {
-            Operation::Scan { dataset } => {
-                let prefix = self.column_prefix.take();
-                Ok((self.scan(node, dataset, prefix)?, "scan"))
+            Operation::Scan {
+                dataset,
+                row_identity,
+            } => {
+                let role = ScanRole {
+                    column_prefix: self.column_prefix.take(),
+                    row_identity: row_identity.as_ref(),
+                };
+                Ok((self.scan(node, dataset, role)?, "scan"))
             }
             Operation::Join {
                 left,

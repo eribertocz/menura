@@ -23,7 +23,9 @@ mod plan;
 pub use expression::{
     expression_sql, query_with_reference_time, query_without_reference_time, reference_time_query,
 };
-pub use joins::{deduplicate, home_scan, join_of, joined_scan, left_join};
+pub use joins::{
+    ROW_IDENTITY, deduplicate, home_scan, home_scan_with_identity, join_of, joined_scan, left_join,
+};
 use menura_model::expression::Expression;
 use menura_model::internal_model::{
     AttributeType, Dataset, Descriptions, Field, FieldPath, InternalModel, ModelParts,

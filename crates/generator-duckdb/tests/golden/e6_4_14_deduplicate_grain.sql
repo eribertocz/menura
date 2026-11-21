@@ -3,7 +3,7 @@ WITH
     SELECT
       "quantity" AS "QUANTITY",
       "created_at" AS "CREATED_AT",
-      "ordered_on" AS "ORDERED_ON"
+      ROW_NUMBER() OVER () AS "menura.row_identity"
     FROM "main"."orders"
   ),
   "menura_2_scan" AS (
@@ -17,7 +17,7 @@ WITH
     SELECT
       "QUANTITY",
       "CREATED_AT",
-      "ORDERED_ON",
+      "menura.row_identity",
       "ORDERS_STAGED.QUANTITY",
       "ORDERS_STAGED.REGION"
     FROM "menura_1_scan"
@@ -27,11 +27,11 @@ WITH
     SELECT
       "QUANTITY",
       "CREATED_AT",
-      "ORDERED_ON",
+      "menura.row_identity",
       "ORDERS_STAGED.QUANTITY",
       "ORDERS_STAGED.REGION"
     FROM "menura_3_join"
-    QUALIFY ROW_NUMBER() OVER (PARTITION BY date_trunc('month', "CREATED_AT" AT TIME ZONE CAST($1 AS VARCHAR)) AT TIME ZONE CAST($1 AS VARCHAR), "ORDERS_STAGED.REGION", "ORDERED_ON") = 1
+    QUALIFY ROW_NUMBER() OVER (PARTITION BY date_trunc('month', "CREATED_AT" AT TIME ZONE CAST($1 AS VARCHAR)) AT TIME ZONE CAST($1 AS VARCHAR), "ORDERS_STAGED.REGION", "menura.row_identity") = 1
   ),
   "menura_5_aggregate" AS (
     SELECT

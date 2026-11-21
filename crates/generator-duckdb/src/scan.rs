@@ -4,7 +4,7 @@
 use menura_contracts::types::catalog::RelationSchema;
 use menura_model::internal_model::{Dataset, NormalizedName};
 use menura_representations::logical_plan::PlanNode;
-use menura_representations::names::ColumnPrefix;
+use menura_representations::names::{ColumnName, ColumnPrefix};
 
 use crate::body::SelectBody;
 use crate::error::{GenerateError, InvariantViolation};
@@ -15,18 +15,28 @@ use crate::source_columns::{
 };
 use crate::steps::{StepWriter, error};
 
+/// What a `Scan` reads besides its dataset: the prefix of its columns and its row identity.
+#[derive(Debug, Clone, Copy)]
+pub(crate) struct ScanRole<'input> {
+    /// The `right_prefix` of the `Join` whose right input it is (E6-4.12).
+    pub(crate) column_prefix: Option<&'input ColumnPrefix>,
+    /// The synthesized row identity of a home `Scan` (E4-4.0f).
+    pub(crate) row_identity: Option<&'input ColumnName>,
+}
+
 impl<'input> StepWriter<'input> {
     /// Each schema column is the expression of the field of the same name, over the columns of
     /// the catalog relation whose `source` is the dataset's, character for character (CAT-4),
     /// a query `source` included (E6-4.3); a schema column that names a catalog column is that
     /// column, in the catalog's spelling (PLN-2.2). In the `Scan` of a join instance, that
-    /// name follows `prefix`, the `right_prefix` of its `Join` (E6-4.12). A `Scan` with no
-    /// column selects one constant, so that the rows can still be counted.
+    /// name follows the `right_prefix` of its `Join` (E6-4.12). The row identity is a row
+    /// number over the relation (E4-4.0f). A `Scan` with no column selects one constant, so
+    /// that the rows can still be counted.
     pub(crate) fn scan(
         &mut self,
         node: &'input PlanNode,
         dataset: &NormalizedName,
-        column_prefix: Option<&ColumnPrefix>,
+        role: ScanRole<'input>,
     ) -> Result<SelectBody, GenerateError> {
         let model = self.environment.model;
         let dataset = model
@@ -46,7 +56,11 @@ impl<'input> StepWriter<'input> {
         let mut items = Vec::new();
         for column in node.schema().columns() {
             let name = column.name.as_str();
-            let local = local_name(column_prefix, name)
+            if role.row_identity == Some(&column.name) {
+                items.push(format!("ROW_NUMBER() OVER () AS {}", quote(name)));
+                continue;
+            }
+            let local = local_name(role.column_prefix, name)
                 .ok_or_else(|| error(InvariantViolation::UnknownField, node))?;
             let item = match source_column_name(&prefix, local) {
                 Some(catalog_name) => source_column_item(relation, catalog_name, name)
