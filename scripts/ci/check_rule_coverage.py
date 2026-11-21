@@ -3,7 +3,8 @@
 Reads the rule IDs of `spec/INDEX.md` and lists every behavioral rule ID that no conformance
 case cites in its `rules`, and every process rule ID that no CI workflow and no item of the
 `review-pr` skill cites (spec/README.md Conventions). A citation of an item `X.n` also covers
-rule `X`. Rule IDs whose prefix is in neither list are reported as unclassified.
+rule `X`, but never a rule with a letter suffix such as `X.na`; a citation of `X.na` covers rule
+`X.na` only. Rule IDs whose prefix is in neither list are reported as unclassified.
 
 The check fails only for uncovered rule IDs defined in a file of the coverage scope,
 `spec/coverage-scope.txt` (CS-2.6); every other finding is reported only. A scope entry is a path
@@ -23,7 +24,7 @@ import yaml
 
 # Prefixes of spec/README.md Conventions. Backlog items (`F`) are not rules.
 BEHAVIORAL = re.compile(
-    r"^(?:E[0-6][A-Z]?-|(?:STG|CAT|QRY|SEC|PLN|DSC|CHK|MDL|CON|ADD|POP|DER|CTX|SCY|SUM|EXT|DEV)-"
+    r"^(?:E[0-6][A-Z]?-|(?:STG|CAT|QRY|SEC|PLN|DSC|CHK|MDL|CON|ADD|POP|DER|CTX|SCY|SUM|EXT|DEV|VS)-"
     r"|OSS-[25](?:\.|$)|ARC-5(?:\.|$))"
 )
 PROCESS = re.compile(r"^(?:[PASQTR]\d|(?:WF|CS|CI)-|OSS-[134](?:\.|$))")
@@ -31,9 +32,11 @@ BACKLOG = re.compile(r"^F\d")
 
 INDEX_RULE = re.compile(r"^\|\s*\[([^\]]+)\]\([^)]*\)\s*\|[^|]*\|\s*rule\s*\|\s*([^|\s]+)\s*\|\s*$")
 INDEX_ROOT = "spec/"
-RULE_TOKEN = re.compile(r"\b(?:[A-Z]{1,4}\d+(?:\.\d+)*|[A-Z]{1,4}\d?[A-Z]?-\d+(?:\.\d+)*)\b")
-RANGE_TOKEN = re.compile(r"\b([A-Z]{1,4})(\d+)\s*[–-]\s*(?:\1)?(\d+)\b")
-
+RULE_TOKEN = re.compile(
+    r"\b(?:[A-Z]{1,4}\d+(?:\.\d+)*[a-z]?|[A-Z]{1,4}\d?[A-Z]?-\d+(?:\.\d+)*[a-z]?)\b"
+)
+RANGE_TOKEN = re.compile(r"\b([A-Z]{1,4})(\d+)([a-z]?)\s*[–-]\s*(?:\1)?(\d+)([a-z]?)\b")
+SUFFIXED = re.compile(r"\d[a-z]$")
 
 
 def index_rules(index_text):
@@ -109,9 +112,25 @@ def classify(rule):
 def cited_in_text(text):
     """Rule IDs cited in free text, with ranges such as `T1–T4` expanded."""
     cited = set(RULE_TOKEN.findall(text))
-    for prefix, first, last in RANGE_TOKEN.findall(text):
-        cited.update(f"{prefix}{number}" for number in range(int(first), int(last) + 1))
+    for match in RANGE_TOKEN.findall(text):
+        cited.update(expand_range(*match))
     return cited
+
+
+def expand_range(prefix, first, first_suffix, last, last_suffix):
+    """The rule IDs of a range such as `T1–T4`, `T1a–T1c` or `T1–T3a`.
+
+    A range within one number runs over its letter suffixes. Otherwise it runs over the numbers,
+    and each endpoint keeps its own suffix.
+    """
+    if first == last and first_suffix and last_suffix:
+        letters = range(ord(first_suffix), ord(last_suffix) + 1)
+        return {f"{prefix}{first}{chr(letter)}" for letter in letters}
+    numbers = range(int(first), int(last) + 1)
+    expanded = {f"{prefix}{number}" for number in numbers[1:-1]}
+    expanded.add(f"{prefix}{first}{first_suffix}")
+    expanded.add(f"{prefix}{last}{last_suffix}")
+    return expanded
 
 
 def cited_in_cases(case_texts):
@@ -125,8 +144,10 @@ def cited_in_cases(case_texts):
 
 
 def is_covered(rule, cited):
-    """Whether `rule`, or one of its items `rule.n`, is cited."""
-    return rule in cited or any(citation.startswith(rule + ".") for citation in cited)
+    """Whether `rule`, or one of its items `rule.n` without a letter suffix, is cited."""
+    return rule in cited or any(
+        citation.startswith(rule + ".") and not SUFFIXED.search(citation) for citation in cited
+    )
 
 
 def uncovered(rules, case_citations, process_citations):

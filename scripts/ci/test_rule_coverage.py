@@ -130,5 +130,31 @@ class RuleCoverageTest(unittest.TestCase):
         scope = [("spec/x.md", ("T1",))]
         self.assertEqual(check_rule_coverage.scope_rules(scope, rules), set())
 
+    def test_cs_2_1_suffixed_citation_covers_its_rule(self):
+        cases = check_rule_coverage.cited_in_cases(["id: a\nrules: [E4-6.9a]\n"])
+        self.assertTrue(check_rule_coverage.is_covered("E4-6.9a", cases))
+        rules = [("spec/a.md", "E4-6.9a"), ("spec/a.md", "E4-6.9b")]
+        findings = check_rule_coverage.uncovered(rules, cases, set())
+        self.assertEqual(findings, [("behavioral", "E4-6.9b")])
+
+    def test_cs_2_1_suffixed_citation_covers_no_other_rule(self):
+        self.assertFalse(check_rule_coverage.is_covered("E4-6.9", {"E4-6.9a"}))
+        self.assertFalse(check_rule_coverage.is_covered("E4-6", {"E4-6.9a"}))
+
+    def test_cs_2_1_item_citation_does_not_cover_a_suffixed_rule(self):
+        self.assertTrue(check_rule_coverage.is_covered("E4-6", {"E4-6.9"}))
+        self.assertFalse(check_rule_coverage.is_covered("E4-6.9a", {"E4-6.9"}))
+
+    def test_t1_reads_suffixed_rule_ids_in_text(self):
+        cited = check_rule_coverage.cited_in_text("checks CS-2.4a, SEC-3.2a and T2b; PLN-5.1")
+        self.assertEqual(cited, {"CS-2.4a", "SEC-3.2a", "T2b", "PLN-5.1"})
+
+    def test_t1_reads_suffixed_rule_inside_a_range(self):
+        self.assertEqual(check_rule_coverage.cited_in_text("T1a–T1c"), {"T1a", "T1b", "T1c"})
+        self.assertEqual(check_rule_coverage.cited_in_text("T1–T3a"), {"T1", "T2", "T3a"})
+
+    def test_t1_classifies_vs_rules_as_behavioral(self):
+        self.assertEqual(check_rule_coverage.classify("VS-1"), "behavioral")
+
 if __name__ == "__main__":
     unittest.main()
