@@ -1,5 +1,5 @@
 id: cs-not-yet-supported-001
-rules: [CS-2.8, VS-2, VS-4, E2-5.4, E2-5.4a]
+rules: [CS-2.8, VS-2, VS-4, E2-5.4, E2-5.4a, VS-1b, VS-3]
 model: sample
 security_context: analyst.json
 query:

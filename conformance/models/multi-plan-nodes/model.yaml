@@ -1,0 +1,65 @@
+version: "0.1.1"
+semantic_model:
+  - name: plan_nodes
+    description: 'Two facts, orders and refunds, that share customers; a row policy on customers propagates to both, orders has a policy of its own, and orders.customer_id is a 64-bit key joined to a 32-bit key; customer_id is not unique in the data'
+    custom_extensions:
+      - vendor_name: COMMON
+        data: '{"namespace": "menura", "version": 1, "security_context": {"roles": ["analyst"], "attributes": [{"name": "regions", "type": "list<text>"}]}}'
+    datasets:
+      - name: customers
+        source: shop.main.customers
+        primary_key: [customer_id]
+        fields:
+          - name: customer_id
+            expression: {dialects: [{dialect: ANSI_SQL, expression: 'customer_id'}]}
+          - name: region
+            expression: {dialects: [{dialect: ANSI_SQL, expression: 'region'}]}
+          - name: city
+            expression: {dialects: [{dialect: ANSI_SQL, expression: 'city'}]}
+        custom_extensions:
+          - vendor_name: COMMON
+            data: '{"namespace": "menura", "version": 1, "access": {"mode": "roles", "roles": ["analyst"]}, "row_access": [{"name": "customers_region_scope", "condition": "region IN (USER_ATTRIBUTE(''regions''))", "roles": ["analyst"]}]}'
+      - name: orders
+        source: shop.main.orders
+        primary_key: [order_id]
+        fields:
+          - name: order_id
+            expression: {dialects: [{dialect: ANSI_SQL, expression: 'order_id'}]}
+          - name: customer_id
+            expression: {dialects: [{dialect: ANSI_SQL, expression: 'customer_id'}]}
+          - name: status
+            expression: {dialects: [{dialect: ANSI_SQL, expression: 'status'}]}
+          - name: amount
+            expression: {dialects: [{dialect: ANSI_SQL, expression: 'amount'}]}
+        custom_extensions:
+          - vendor_name: COMMON
+            data: '{"namespace": "menura", "version": 1, "access": {"mode": "roles", "roles": ["analyst"]}, "row_access": [{"name": "orders_not_void", "condition": "status <> ''void''"}]}'
+      - name: refunds
+        source: shop.main.refunds
+        primary_key: [refund_id]
+        fields:
+          - name: refund_id
+            expression: {dialects: [{dialect: ANSI_SQL, expression: 'refund_id'}]}
+          - name: customer_id
+            expression: {dialects: [{dialect: ANSI_SQL, expression: 'customer_id'}]}
+          - name: amount
+            expression: {dialects: [{dialect: ANSI_SQL, expression: 'amount'}]}
+        custom_extensions:
+          - vendor_name: COMMON
+            data: '{"namespace": "menura", "version": 1, "access": {"mode": "roles", "roles": ["analyst"]}}'
+    relationships:
+      - name: orders_customers
+        from: orders
+        to: customers
+        from_columns: [customer_id]
+        to_columns: [customer_id]
+      - name: refunds_customers
+        from: refunds
+        to: customers
+        from_columns: [customer_id]
+        to_columns: [customer_id]
+    metrics:
+      - name: order_total
+        expression: {dialects: [{dialect: ANSI_SQL, expression: 'SUM(orders.amount)'}]}
+      - name: refund_total
+        expression: {dialects: [{dialect: ANSI_SQL, expression: 'SUM(refunds.amount)'}]}
