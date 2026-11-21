@@ -68,6 +68,7 @@ fn named(name: &str, expression: &str) -> NamedExpression {
     NamedExpression {
         name: ColumnName::new(name),
         expression: tree(expression),
+        derived: None,
     }
 }
 

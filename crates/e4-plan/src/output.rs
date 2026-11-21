@@ -55,6 +55,7 @@ pub(crate) fn project(
                 expressions.push(NamedExpression {
                     name: metric.name,
                     expression: metric.expression,
+                    derived: None,
                 });
             }
         }
@@ -88,6 +89,7 @@ fn dimension_output(
     let expression = NamedExpression {
         name: name.clone(),
         expression: column_reference(key.as_str()).map_err(fail)?,
+        derived: None,
     };
     let column = SchemaColumn {
         name,

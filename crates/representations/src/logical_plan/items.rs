@@ -2,6 +2,7 @@
 
 use menura_contracts::types::query::{Direction, NullsOrder};
 use menura_model::expression::{AggregateCall, Expression, Literal};
+use menura_model::internal_model::{DivisionByZero, NormalizedName};
 
 use crate::names::ColumnName;
 
@@ -31,6 +32,19 @@ pub struct NamedExpression {
     pub name: ColumnName,
     /// The expression.
     pub expression: Expression,
+    /// In a `Project`, the derived metric whose formula the expression is, when it is one:
+    /// its divisions follow that metric's `on_division_by_zero` (DER-3.1, E6-4.6a). `None`
+    /// everywhere else, where a division by zero yields NULL (E0F-6.1).
+    pub derived: Option<DerivedFormula>,
+}
+
+/// The derived metric whose formula a `Project` column computes (DER-3.1).
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct DerivedFormula {
+    /// The normalized name of the derived metric, which `RDER-01` states (E6-4.6a).
+    pub metric: NormalizedName,
+    /// Its `on_division_by_zero`.
+    pub on_division_by_zero: DivisionByZero,
 }
 
 /// A metric component evaluated by an `Aggregate` node.

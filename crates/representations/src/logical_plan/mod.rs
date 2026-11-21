@@ -8,7 +8,8 @@ mod schema;
 mod tests;
 
 pub use items::{
-    AggregateComponent, JoinCondition, JoinKind, NamedExpression, SortItem, StitchColumn,
+    AggregateComponent, DerivedFormula, JoinCondition, JoinKind, NamedExpression, SortItem,
+    StitchColumn,
 };
 pub use operation::Operation;
 pub use schema::{OutputSchema, SchemaColumn};
