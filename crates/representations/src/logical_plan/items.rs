@@ -1,7 +1,7 @@
 //! The values plan nodes carry: join kinds and conditions, named expressions, components and sort items.
 
 use menura_contracts::types::query::{Direction, NullsOrder};
-use menura_model::expression::{AggregateCall, Expression};
+use menura_model::expression::{AggregateCall, Expression, Literal};
 
 use crate::names::ColumnName;
 
@@ -44,23 +44,16 @@ pub struct AggregateComponent {
     pub filter: Option<Expression>,
 }
 
-/// The value a component takes for a key its branch has no row for: the value of its
-/// aggregate over no rows (E4-5.0b).
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub enum EmptyInput {
-    /// `NULL`: every aggregate but `COUNT`.
-    Null,
-    /// The integer `0`: `COUNT`.
-    Zero,
-}
-
-/// A component of a `Stitch` node: the branch column it reads and its empty-input value.
+/// A component column of a `Stitch` node: the branch that computes it and its value for a
+/// key that branch has no row for.
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub struct StitchedComponent {
-    /// The component column, output by exactly one branch.
+pub struct StitchColumn {
+    /// The component column, as the branch outputs it.
     pub name: ColumnName,
-    /// Its value when that branch has no row for a key (E4-5.0b).
-    pub empty_input: EmptyInput,
+    /// The position of the branch that computes it, from 0, in branch order.
+    pub branch: usize,
+    /// The component's value over no rows (E4-5.0b): `0` for `COUNT`; `None` is NULL.
+    pub empty_value: Option<Literal>,
 }
 
 /// One ordering term of a `Sort` node.

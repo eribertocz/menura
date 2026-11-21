@@ -9,7 +9,7 @@ use menura_model::internal_model::{
     MetricClassification, Relationship, TypedValue, ValueType,
 };
 use menura_representations::bound_query::{BoundDimension, BoundMetric, BoundQueryParts};
-use menura_representations::logical_plan::{Operation, PlanNode, StitchedComponent};
+use menura_representations::logical_plan::{Operation, PlanNode, StitchColumn};
 use menura_representations::names::ColumnName;
 use menura_representations::paths::{
     Branch, Branches, ComponentKey, ElementPath, JoinStep, JoinTree, QueryElement,
@@ -225,19 +225,17 @@ pub fn sales_and_budget_plan() -> PlanNode {
     )
 }
 
-/// The branches, keys, presence column and components of the `Stitch` of `plan`.
-pub fn stitch_parts(plan: &PlanNode) -> (&[PlanNode], Vec<&str>, &str, &[StitchedComponent]) {
+/// The branches, keys and component columns of the `Stitch` of `plan`.
+pub fn stitch_parts(plan: &PlanNode) -> (&[PlanNode], Vec<&str>, &[StitchColumn]) {
     match node(plan, "Stitch").operation() {
         Operation::Stitch {
             branches,
             keys,
-            presence,
-            components,
+            columns,
         } => (
             branches,
             keys.iter().map(ColumnName::as_str).collect(),
-            presence.as_str(),
-            components,
+            columns,
         ),
         _ => panic!("not a Stitch"),
     }

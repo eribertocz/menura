@@ -1,22 +1,20 @@
 //! The `Stitch` of several branches by the dimension keys (E4-3.7, E4-5).
 
-use menura_model::expression::{AggregateCall, DistinctAggregate, SimpleAggregate};
+use menura_model::expression::{
+    AggregateCall, DistinctAggregate, IntegerLiteral, Literal, SimpleAggregate,
+};
 use menura_representations::logical_plan::{
-    AggregateComponent, EmptyInput, Operation, OutputSchema, PlanNode, SchemaColumn,
-    StitchedComponent,
+    AggregateComponent, Operation, OutputSchema, PlanNode, SchemaColumn, StitchColumn,
 };
 use menura_representations::names::ColumnName;
 use menura_representations::origin::Origin;
 
 use crate::error::{InvariantViolation, PlanError};
 
-/// The synthesized presence column of every branch (E6-4.7, E6-4.12). The branch columns are
-/// `dimension_<n>` and `metric_<m>_component_<k>`, so no branch column takes this name.
-const PRESENCE: &str = "menura.presence";
-
 /// The `Stitch` of `branches`, in branch order, each ending with its `Aggregate` over the
-/// same keys (E4-5). Its output is the keys, then the components of every branch in branch
-/// order (E4-3.11).
+/// same keys (E4-5). Its output is the keys, then the components of every branch, in branch
+/// order and, within a branch, in component order (E4-3.11). E6 detects a missing branch row
+/// with a presence column of its own (E6-4.7).
 ///
 /// A key column can be NULL when it can be NULL in a branch; a component can be NULL unless
 /// both its branch value and its empty-input value are non-NULL (PLN-1).
@@ -24,13 +22,14 @@ const PRESENCE: &str = "menura.presence";
 /// # Errors
 ///
 /// [`InvariantViolation::UnstitchableBranches`] when a branch does not end with its
-/// `Aggregate`, or the branches have different keys or key types.
+/// `Aggregate`, or the branches have different keys or key types, or the empty value of a
+/// component cannot be written.
 pub(crate) fn stitch(branches: Vec<PlanNode>, origin: Origin) -> Result<PlanNode, PlanError> {
     let fail = || PlanError::invariant(InvariantViolation::UnstitchableBranches, &origin);
     let mut keys: Option<Vec<SchemaColumn>> = None;
     let mut columns = Vec::new();
-    let mut components = Vec::new();
-    for branch in &branches {
+    let mut stitched = Vec::new();
+    for (position, branch) in branches.iter().enumerate() {
         let (branch_keys, branch_components) = aggregate_parts(branch).ok_or_else(fail)?;
         let key_columns = branch_keys
             .iter()
@@ -42,15 +41,16 @@ pub(crate) fn stitch(branches: Vec<PlanNode>, origin: Origin) -> Result<PlanNode
             Some(previous) => merged_keys(previous, key_columns).ok_or_else(fail)?,
         });
         for component in branch_components {
-            let empty_input = empty_input(&component.call);
+            let empty_value = empty_value(&component.call).map_err(|_| fail())?;
             let column = schema_column(branch, &component.name).ok_or_else(fail)?;
             columns.push(SchemaColumn {
-                nullable: column.nullable || empty_input == EmptyInput::Null,
+                nullable: column.nullable || empty_value.is_none(),
                 ..column.clone()
             });
-            components.push(StitchedComponent {
+            stitched.push(StitchColumn {
                 name: component.name.clone(),
-                empty_input,
+                branch: position,
+                empty_value,
             });
         }
     }
@@ -61,8 +61,7 @@ pub(crate) fn stitch(branches: Vec<PlanNode>, origin: Origin) -> Result<PlanNode
         Operation::Stitch {
             branches,
             keys: key_names,
-            presence: ColumnName::new(PRESENCE),
-            components,
+            columns: stitched,
         },
         schema,
         origin,
@@ -107,9 +106,13 @@ fn merged_keys(previous: Vec<SchemaColumn>, next: Vec<SchemaColumn>) -> Option<V
         .collect()
 }
 
-/// The value of `call` over no rows (E4-5.0b): `0` for `COUNT`, NULL for every other
-/// aggregate (E0F-7.1).
-fn empty_input(call: &AggregateCall) -> EmptyInput {
+/// The value of `call` over no rows (E4-5.0b): `0` for `COUNT`, and `None`, NULL, for every
+/// other aggregate (E0F-7.1).
+///
+/// # Errors
+///
+/// [`InvariantViolation::UnstitchableBranches`] only if `0` were not an integer literal.
+fn empty_value(call: &AggregateCall) -> Result<Option<Literal>, InvariantViolation> {
     match call {
         AggregateCall::CountRows
         | AggregateCall::Simple {
@@ -119,9 +122,11 @@ fn empty_input(call: &AggregateCall) -> EmptyInput {
         | AggregateCall::Distinct {
             function: DistinctAggregate::Count,
             ..
-        } => EmptyInput::Zero,
+        } => IntegerLiteral::new("0")
+            .map(|zero| Some(Literal::Integer(zero)))
+            .ok_or(InvariantViolation::UnstitchableBranches),
         AggregateCall::Simple { .. }
         | AggregateCall::Distinct { .. }
-        | AggregateCall::Percentile { .. } => EmptyInput::Null,
+        | AggregateCall::Percentile { .. } => Ok(None),
     }
 }

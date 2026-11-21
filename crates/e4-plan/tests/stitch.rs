@@ -9,8 +9,9 @@ mod support;
 use menura_contracts::types::common::LogicalType;
 use menura_expressions::typing::{big_integer, decimal};
 use menura_model::expression::{BinaryOperator, Expression};
+use menura_model::expression::{IntegerLiteral, Literal};
 use menura_representations::bound_query::BoundQueryParts;
-use menura_representations::logical_plan::{EmptyInput, Operation, PlanNode, StitchedComponent};
+use menura_representations::logical_plan::{Operation, PlanNode, StitchColumn};
 use menura_representations::names::ColumnName;
 use menura_representations::origin::Origin;
 use support::join_plan::scan_dataset;
@@ -26,11 +27,16 @@ fn home_of(branch_plan: &PlanNode) -> &str {
     scan_dataset(current)
 }
 
-fn stitched(name: &str, empty_input: EmptyInput) -> StitchedComponent {
-    StitchedComponent {
+fn stitched(name: &str, branch: usize, empty_value: Option<Literal>) -> StitchColumn {
+    StitchColumn {
         name: ColumnName::new(name),
-        empty_input,
+        branch,
+        empty_value,
     }
+}
+
+fn zero() -> Literal {
+    Literal::Integer(IntegerLiteral::new("0").expect("a literal"))
 }
 
 fn project_expressions(plan: &PlanNode) -> Vec<(&str, &Expression)> {
@@ -69,25 +75,25 @@ fn e4_5_0a_the_keys_are_the_dimension_columns_of_every_branch() {
 #[test]
 fn e4_5_0b_a_count_is_zero_and_a_sum_is_null_for_a_missing_branch_row() {
     let plan = sales_and_budget_plan();
-    let (_, _, _, components) = stitch_parts(&plan);
+    let (_, _, columns) = stitch_parts(&plan);
 
     assert_eq!(
-        components,
+        columns,
         [
-            stitched("metric_2_component_1", EmptyInput::Zero),
-            stitched("metric_1_component_1", EmptyInput::Null),
+            stitched("metric_2_component_1", 0, Some(zero())),
+            stitched("metric_1_component_1", 1, None),
         ]
     );
 }
 
 #[test]
-fn e4_5_1_missing_branch_rows_are_told_by_a_synthesized_presence_column() {
+fn e4_5_1_each_column_names_the_branch_that_supplies_it() {
     let plan = sales_and_budget_plan();
-    let (branches, _, presence, _) = stitch_parts(&plan);
+    let (branches, _, columns) = stitch_parts(&plan);
 
-    assert_eq!(presence, "menura.presence");
-    for branch in branches {
-        assert!(!column_names(branch).contains(&presence));
+    for column in columns {
+        let branch = &branches[column.branch];
+        assert!(column_names(branch).contains(&column.name.as_str()));
     }
 }
 
@@ -144,12 +150,12 @@ fn e4_5_0c_a_metric_whose_components_span_two_datasets_reads_both_branches() {
         BoundQueryParts::default(),
     );
 
-    let (_, _, _, components) = stitch_parts(&plan);
+    let (_, _, columns) = stitch_parts(&plan);
     assert_eq!(
-        components,
+        columns,
         [
-            stitched("metric_1_component_2", EmptyInput::Null),
-            stitched("metric_1_component_1", EmptyInput::Null),
+            stitched("metric_1_component_2", 0, None),
+            stitched("metric_1_component_1", 1, None),
         ]
     );
     let gap = Expression::Binary {

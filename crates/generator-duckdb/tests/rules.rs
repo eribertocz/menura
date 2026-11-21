@@ -104,8 +104,7 @@ fn e6_3_1_nodes_outside_the_slice_are_internal_errors() {
         node(Operation::Stitch {
             branches: vec![scan("ORDERS", &["REGION"])],
             keys: vec![ColumnName::new("REGION")],
-            presence: ColumnName::new("menura.presence"),
-            components: Vec::new(),
+            columns: Vec::new(),
         }),
     ];
     for plan in nodes {

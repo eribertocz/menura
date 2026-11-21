@@ -5,8 +5,8 @@ use menura_contracts::types::query::{Direction, NullsOrder};
 use menura_model::expression::{AggregateCall, Expression, Identifier, Reference, SimpleAggregate};
 
 use super::{
-    AggregateComponent, EmptyInput, JoinCondition, JoinKind, NamedExpression, Operation,
-    OutputSchema, PlanNode, SchemaColumn, SortItem, StitchedComponent,
+    AggregateComponent, JoinCondition, JoinKind, NamedExpression, Operation, OutputSchema,
+    PlanNode, SchemaColumn, SortItem, StitchColumn,
 };
 use crate::names::{ColumnName, ColumnPrefix};
 use crate::origin::Origin;
@@ -245,10 +245,10 @@ fn e4_3_5_e4_3_7_deduplicate_and_stitch_keep_their_keys() {
         Operation::Stitch {
             branches: vec![aggregate(deduplicate), aggregate(scan("RETURNS"))],
             keys: vec![ColumnName::new("region")],
-            presence: ColumnName::new("menura.presence"),
-            components: vec![StitchedComponent {
+            columns: vec![StitchColumn {
                 name: ColumnName::new("amount"),
-                empty_input: EmptyInput::Null,
+                branch: 0,
+                empty_value: None,
             }],
         },
         region_schema(),
