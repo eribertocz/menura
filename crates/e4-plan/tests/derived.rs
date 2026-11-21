@@ -161,11 +161,11 @@ fn named(plan: &PlanNode, output_name: &str) -> NamedExpression {
     }
 }
 
-fn formula(metric: &str, rule: DivisionByZero) -> Option<DerivedFormula> {
-    Some(DerivedFormula {
+fn formula(metric: &str, rule: DivisionByZero) -> DerivedFormula {
+    DerivedFormula {
         metric: name(metric),
         on_division_by_zero: rule,
-    })
+    }
 }
 
 fn percent_plan(model: &InternalModel) -> PlanNode {
@@ -237,12 +237,12 @@ fn der_3_1_each_formula_carries_the_rule_of_its_own_derived_metric() {
 
     assert_eq!(
         named(&plan, "sales_to_budget_percent").derived,
-        formula("SALES_TO_BUDGET_PERCENT", DivisionByZero::Error)
+        Some(formula("SALES_TO_BUDGET_PERCENT", DivisionByZero::Error))
     );
     let lower = plan.inputs()[0];
     assert_eq!(
         named(lower, "metric_1_input_1").derived,
-        formula("SALES_TO_BUDGET", DivisionByZero::Null)
+        Some(formula("SALES_TO_BUDGET", DivisionByZero::Null))
     );
     assert_eq!(named(lower, "metric_1_component_1").derived, None);
 }
@@ -260,7 +260,7 @@ fn e6_4_6a_the_final_project_names_the_derived_metric_of_a_formula() {
 
     assert_eq!(
         named(&plan, "sales_to_budget").derived,
-        formula("SALES_TO_BUDGET", DivisionByZero::Null)
+        Some(formula("SALES_TO_BUDGET", DivisionByZero::Null))
     );
     assert_eq!(named(&plan, "name_0").derived, None);
 }

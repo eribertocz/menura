@@ -22,6 +22,7 @@
 #![forbid(unsafe_code)]
 
 mod columns;
+mod derived_inputs;
 mod dimensions;
 mod error;
 mod expansion;
@@ -93,7 +94,12 @@ pub fn build_plan(
         }
         None => return Err(slice::no_branch()),
     };
-    let projected = output::project(query, combined, outputs, project_origin)?;
+    let with_inputs = derived_inputs::compute_inputs(
+        combined,
+        &metrics::input_columns(&metrics),
+        &project_origin,
+    )?;
+    let projected = output::project(query, with_inputs, outputs, project_origin)?;
     output::order_and_limit(query, projected)
 }
 

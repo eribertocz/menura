@@ -55,7 +55,7 @@ pub(crate) fn project(
                 expressions.push(NamedExpression {
                     name: metric.name,
                     expression: metric.expression,
-                    derived: None,
+                    derived: metric.derived,
                 });
             }
         }

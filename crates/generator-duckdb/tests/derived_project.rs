@@ -93,7 +93,7 @@ fn der_3_1_each_column_follows_the_rule_of_its_own_derived_metric() {
     assert_eq!(sql.matches("RDER-01").count(), 1, "{sql}");
     assert_eq!(sql.matches("THEN NULL ELSE").count(), 2, "{sql}");
     let error = sql.find("RDER-01").expect("the error");
-    let strict = sql.find(r#"AS "STRICT_RATE""#).expect("the strict column");
-    let plain = sql.find(r#"AS "PLAIN""#).expect("the plain column");
-    assert!(plain < error && error < strict, "{sql}");
+    let strict_column = sql.find(r#"AS "STRICT_RATE""#).expect("the strict column");
+    let plain_column = sql.find(r#"AS "PLAIN""#).expect("the plain column");
+    assert!(plain_column < error && error < strict_column, "{sql}");
 }

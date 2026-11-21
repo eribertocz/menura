@@ -7,14 +7,14 @@ use menura_model::internal_model::{
     Dataset, DeclaredAdditivity, InternalModel, Metric, SourceLocation, ValueType,
 };
 use menura_representations::bound_query::{BoundMetric, BoundMetricKind, BoundQuery, MetricPath};
-use menura_representations::logical_plan::AggregateComponent;
+use menura_representations::logical_plan::{AggregateComponent, DerivedFormula};
 use menura_representations::names::ColumnName;
 use menura_representations::paths::{Branch, Branches, ComponentKey};
 
 use crate::columns::{component_column, over_scan, source_prefix};
 use crate::dimensions::at;
 use crate::error::{InvariantViolation, PlanError};
-use crate::expansion::{ExpandedMetric, expand};
+use crate::expansion::{ExpandedMetric, InputColumn, expand};
 
 /// The model location of the first metric of `metrics`, where the final `Project` comes
 /// from; `None` without metrics.
@@ -39,6 +39,8 @@ pub(crate) struct MetricOutput {
     pub(crate) logical_type: LogicalType,
     /// Whether it can be NULL.
     pub(crate) nullable: bool,
+    /// The derived metric whose formula it is, when it has a division rule (DER-3.1).
+    pub(crate) derived: Option<DerivedFormula>,
 }
 
 /// The metrics of `query`, in output order, each read from `model`.
@@ -216,5 +218,14 @@ fn metric_output(
         expression: metric.expanded.expression.clone(),
         logical_type: logical_type.clone(),
         nullable: typed.nullable,
+        derived: metric.expanded.derived.clone(),
     })
+}
+
+/// The input columns of every derived metric of `metrics`, in output order (DER-3.1).
+pub(crate) fn input_columns<'plan>(metrics: &'plan [PlannedMetric<'_>]) -> Vec<&'plan InputColumn> {
+    metrics
+        .iter()
+        .flat_map(|metric| metric.expanded.inputs.iter())
+        .collect()
 }
