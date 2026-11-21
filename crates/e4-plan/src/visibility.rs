@@ -39,6 +39,24 @@ impl Visibility<'_> {
         self.fields_on_chain(dataset, std::slice::from_ref(&dataset.name))
     }
 
+    /// The `Scan` columns of the fields that the visible rows of `dataset`, the dataset of a
+    /// join instance whose columns are under `prefix`, read.
+    ///
+    /// # Errors
+    ///
+    /// As [`Self::fields`].
+    pub(crate) fn instance_fields(
+        &self,
+        dataset: &Dataset,
+        prefix: &ColumnPrefix,
+    ) -> Result<Vec<NormalizedName>, PlanError> {
+        Ok(self
+            .fields(dataset)?
+            .iter()
+            .map(|field| NormalizedName::new(prefix.column(field.as_str()).as_str()))
+            .collect())
+    }
+
     /// The visible rows of `dataset` over its `scan`, whose columns are the fields of
     /// `dataset` under `prefix` (none for the home dataset).
     ///
@@ -143,9 +161,9 @@ impl Visibility<'_> {
         related_chain.push(related.name.clone());
         let mut visible_fields = relationship.to_columns.clone();
         visible_fields.extend(self.fields_on_chain(related, &related_chain)?);
-        let related_all = scan(related, &relationship.to_columns, self.catalog)?;
+        let related_all = scan(related, &relationship.to_columns, self.catalog, None)?;
         let related_visible = self.visible_on_chain(
-            scan(related, &visible_fields, self.catalog)?,
+            scan(related, &visible_fields, self.catalog, None)?,
             related,
             None,
             &related_chain,

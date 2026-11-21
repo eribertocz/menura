@@ -85,7 +85,7 @@ fn e4_4_step_1_the_scan_reads_the_home_dataset_and_projects_the_fields_it_needs(
     let scan = node(&plan, "Scan");
     assert!(matches!(
         scan.operation(),
-        Operation::Scan { dataset } if dataset.as_str() == "ORDERS"
+        Operation::Scan { dataset, row_identity: None } if dataset.as_str() == "ORDERS"
     ));
     assert_eq!(
         column_names(scan),

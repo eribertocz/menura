@@ -8,8 +8,7 @@ mod support;
 use menura_contracts::types::common::{FloatBits, LogicalType};
 use menura_contracts::types::compiled_plan::ColumnRole;
 use menura_generator_duckdb::InvariantViolation;
-use menura_model::internal_model::NormalizedName;
-use menura_representations::logical_plan::{JoinKind, Operation, OutputSchema, PlanNode};
+use menura_representations::logical_plan::{Operation, OutputSchema, PlanNode};
 use menura_representations::names::ColumnName;
 use serde_json::json;
 use support::{
@@ -83,23 +82,12 @@ fn node(operation: Operation) -> PlanNode {
 fn e6_3_1_nodes_outside_the_slice_are_internal_errors() {
     let input = || Box::new(scan("ORDERS", &["REGION"]));
     let nodes = [
-        node(Operation::Join {
-            left: input(),
-            right: input(),
-            relationship: NormalizedName::new("ORDERS_TO_CUSTOMERS"),
-            kind: JoinKind::Left,
-        }),
         node(Operation::SemiJoin {
             input: input(),
-            relationship: NormalizedName::new("ORDERS_TO_CUSTOMERS"),
+            relationship: menura_model::internal_model::NormalizedName::new("ORDERS_TO_CUSTOMERS"),
             on: Vec::new(),
             related_all: input(),
             related_visible: input(),
-        }),
-        node(Operation::Deduplicate {
-            input: input(),
-            group: vec![ColumnName::new("REGION")],
-            identity: Vec::new(),
         }),
         node(Operation::Stitch {
             branches: vec![scan("ORDERS", &["REGION"])],

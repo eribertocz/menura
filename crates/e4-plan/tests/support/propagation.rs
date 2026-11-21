@@ -219,7 +219,7 @@ pub fn home_branch() -> Branches {
 /// `related_visible` and input.
 pub fn outline(node: &PlanNode) -> String {
     match node.operation() {
-        Operation::Scan { dataset } => format!(
+        Operation::Scan { dataset, .. } => format!(
             "Scan {} [{}]",
             dataset.as_str(),
             column_names(node).join(", ")

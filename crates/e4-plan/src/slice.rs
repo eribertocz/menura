@@ -1,4 +1,5 @@
-//! The branch and the home dataset of a query of the 0.3.0 slice (VS-1).
+//! The branch and the home dataset of a query of the 0.4.0 track before stitching and
+//! propagation.
 
 use menura_model::internal_model::{Dataset, InternalModel};
 use menura_representations::origin::{Origin, QueryLocation};
@@ -11,12 +12,11 @@ pub(crate) fn query_root() -> Origin {
     Origin::Query(QueryLocation::new("", None))
 }
 
-/// The single branch of `branches`, with no join step.
+/// The single branch of `branches`.
 ///
 /// # Errors
 ///
-/// [`InvariantViolation::NoBranch`], [`InvariantViolation::SeveralBranches`] or
-/// [`InvariantViolation::JoinStep`].
+/// [`InvariantViolation::NoBranch`] or [`InvariantViolation::SeveralBranches`].
 pub(crate) fn single_branch(branches: &Branches) -> Result<&Branch, PlanError> {
     let branch = match branches.as_slice() {
         [] => {
@@ -33,14 +33,7 @@ pub(crate) fn single_branch(branches: &Branches) -> Result<&Branch, PlanError> {
             ));
         }
     };
-    if branch.join_tree.is_empty() {
-        Ok(branch)
-    } else {
-        Err(PlanError::invariant(
-            InvariantViolation::JoinStep,
-            &query_root(),
-        ))
-    }
+    Ok(branch)
 }
 
 /// The home dataset of `branch`, which E0 must not mark unusable: a dataset whose row

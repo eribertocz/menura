@@ -46,6 +46,7 @@ fn scan(dataset: &str) -> PlanNode {
     PlanNode::new(
         Operation::Scan {
             dataset: name(dataset),
+            row_identity: None,
         },
         region_schema(),
         in_model("/semantic_model/0/datasets/0"),
@@ -168,7 +169,7 @@ fn e4_3_every_node_carries_its_output_schema_and_origin() {
 }
 
 #[test]
-fn e4_3_join_and_semi_join_keep_their_relationships() {
+fn e4_3_2_e4_3_4_join_and_semi_join_keep_their_relationships() {
     let join = PlanNode::new(
         Operation::Join {
             left: Box::new(scan("ORDERS")),
@@ -212,7 +213,7 @@ fn e4_3_join_and_semi_join_keep_their_relationships() {
 }
 
 #[test]
-fn e4_3_deduplicate_and_stitch_keep_their_keys() {
+fn e4_3_5_e4_3_7_deduplicate_and_stitch_keep_their_keys() {
     let deduplicate = PlanNode::new(
         Operation::Deduplicate {
             input: Box::new(scan("ORDERS")),
