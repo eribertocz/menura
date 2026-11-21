@@ -251,7 +251,8 @@ mod tests {
         status_in_model("sample", case_text, &Divergences::default())
     }
 
-    /// Runs the query part of a case of the model `model`, whose files are under `cases/cs/`.
+    /// Runs the query part of a case of the model `model`; the files the case names are under
+    /// `cases/cs/`.
     fn status_in_model(model: &str, case_text: &str, divergences: &Divergences) -> CaseStatus {
         let case = parse_case(case_text).unwrap();
         let model_folder = conformance_directory().join("models").join(model);

@@ -1,5 +1,5 @@
 id: e2-policy-join-001
-rules: [VS-2]
+rules: [VS-1b]
 model: slice
 security_context: analyst-north.json
 query:
