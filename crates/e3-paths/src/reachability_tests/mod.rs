@@ -11,7 +11,7 @@ use menura_representations::origin::QueryLocation;
 use crate::test_support::{
     at, connected_model, dimension, filter, metric, metric_reference, name, query, subgraph,
 };
-use crate::{InvariantViolation, PathCode, PathError, resolve_paths};
+use crate::{PathCode, PathError, resolve_paths};
 
 /// Every relationship of the fixture: returns to orders to customers to regions, accounts and
 /// profiles both ways; warehouses has none.
@@ -295,126 +295,6 @@ fn e2_5_partial_reachability_comes_before_an_unsupported_filter_path() {
 }
 
 #[test]
-fn e3_5_1_a_dimension_dataset_that_reaches_the_others_is_an_anchor() {
-    let query = authorized_query(
-        vec![
-            dimension("CUSTOMERS", "NAME", 0),
-            dimension("ORDERS", "STATUS", 1),
-        ],
-        Vec::new(),
-        Vec::new(),
-        None,
-        &RELATIONSHIPS,
-    );
-
-    let result = resolve_paths(&query, &fixture());
-
-    assert_eq!(
-        result,
-        Err(PathError::Invariant(InvariantViolation::SeveralDatasets {
-            first: name("CUSTOMERS"),
-            second: name("ORDERS"),
-            origin: at("/query/dimensions/1"),
-        }))
-    );
-}
-
-#[test]
-fn e3_5_1_without_an_anchor_is_e_no_anchor_at_the_dimensions() {
-    let query = authorized_query(
-        vec![
-            dimension("CUSTOMERS", "NAME", 0),
-            dimension("WAREHOUSES", "CITY", 1),
-        ],
-        Vec::new(),
-        vec![filter(&["RETURNS"], 0)],
-        None,
-        &RELATIONSHIPS,
-    );
-
-    assert_eq!(
-        first_error(&query),
-        Some(error_at(PathCode::NoAnchor, "/query/dimensions"))
-    );
-}
-
-#[test]
-fn e3_5_1_more_than_one_anchor_is_e_ambiguous_path_at_the_dimensions() {
-    let query = authorized_query(
-        vec![
-            dimension("ACCOUNTS", "PLAN", 0),
-            dimension("PROFILES", "SEGMENT", 1),
-        ],
-        Vec::new(),
-        Vec::new(),
-        None,
-        &RELATIONSHIPS,
-    );
-
-    assert_eq!(
-        first_error(&query),
-        Some(error_at(PathCode::AmbiguousPath, "/query/dimensions"))
-    );
-}
-
-#[test]
-fn e3_5_2_a_filter_dataset_the_anchor_cannot_reach_is_located_at_its_filter() {
-    let query = authorized_query(
-        vec![dimension("ORDERS", "STATUS", 0)],
-        Vec::new(),
-        vec![filter(&["RETURNS"], 0)],
-        None,
-        &RELATIONSHIPS,
-    );
-
-    assert_eq!(
-        first_error(&query),
-        Some(error_at(
-            PathCode::UnsupportedFilterPath,
-            "/query/filters/0"
-        ))
-    );
-}
-
-#[test]
-fn e3_5_2_a_date_range_the_anchor_cannot_reach_is_located_at_its_entry() {
-    let query = authorized_query(
-        vec![dimension("ORDERS", "STATUS", 0)],
-        Vec::new(),
-        Vec::new(),
-        Some(date_range_on("RETURNS")),
-        &RELATIONSHIPS,
-    );
-
-    assert_eq!(
-        first_error(&query),
-        Some(error_at(PathCode::UnsupportedFilterPath, DATE_RANGE))
-    );
-}
-
-#[test]
-fn e3_5_2_with_several_anchors_the_filter_check_comes_before_the_ambiguity() {
-    let query = authorized_query(
-        vec![
-            dimension("ACCOUNTS", "PLAN", 0),
-            dimension("PROFILES", "SEGMENT", 1),
-        ],
-        Vec::new(),
-        vec![filter(&["WAREHOUSES"], 0)],
-        None,
-        &RELATIONSHIPS,
-    );
-
-    assert_eq!(
-        first_error(&query),
-        Some(error_at(
-            PathCode::UnsupportedFilterPath,
-            "/query/filters/0"
-        ))
-    );
-}
-
-#[test]
 fn e3_6_each_code_is_written_as_the_specification_names_it() {
     let codes = [
         (PathCode::NoPath, "E_NO_PATH"),
@@ -451,3 +331,5 @@ fn e3_6_a_diagnostic_is_located_in_the_query_document() {
     assert_eq!(location.pointer, "/query/dimensions/0");
     assert!(written.message.contains("WAREHOUSES"));
 }
+
+mod anchor;
