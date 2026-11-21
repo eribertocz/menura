@@ -55,6 +55,10 @@ pub enum InvariantViolation {
     AmbiguousColumn,
     /// A `Deduplicate` without identity columns (E4-4.0f).
     EmptyIdentity,
+    /// A `SemiJoin` without key equalities (E4-3.4).
+    EmptyJoinCondition,
+    /// A `SemiJoin` along a relationship the model does not have.
+    UnknownRelationship,
     /// A final node whose columns do not match the output columns of the query (E1-5).
     ResultColumnMismatch,
 }

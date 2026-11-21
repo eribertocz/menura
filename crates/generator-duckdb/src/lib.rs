@@ -19,6 +19,7 @@ mod output;
 mod parameters;
 mod result_schema;
 mod scan;
+mod semi_join;
 mod source_columns;
 mod steps;
 mod types;

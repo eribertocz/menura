@@ -1,0 +1,159 @@
+{
+  "contract": "menura.catalog_schema",
+  "contract_version": "1.1.0",
+  "document_id": {
+    "origin": "conformance:multi-propagation-keys",
+    "snapshot": "multi-propagation-keys-001"
+  },
+  "engine": {
+    "name": "duckdb",
+    "version": "2.0.0"
+  },
+  "relations": [
+    {
+      "source": "shop.main.shelves",
+      "columns": [
+        {
+          "name": "site_code",
+          "logical_type": {
+            "kind": "text"
+          },
+          "physical_type": "VARCHAR",
+          "nullable": false
+        },
+        {
+          "name": "shelf_no",
+          "logical_type": {
+            "kind": "integer",
+            "bits": 32,
+            "signed": true
+          },
+          "physical_type": "INTEGER",
+          "nullable": false
+        },
+        {
+          "name": "region",
+          "logical_type": {
+            "kind": "text"
+          },
+          "physical_type": "VARCHAR",
+          "nullable": false
+        }
+      ]
+    },
+    {
+      "source": "shop.main.items",
+      "columns": [
+        {
+          "name": "item_id",
+          "logical_type": {
+            "kind": "integer",
+            "bits": 32,
+            "signed": true
+          },
+          "physical_type": "INTEGER",
+          "nullable": false
+        },
+        {
+          "name": "site_code",
+          "logical_type": {
+            "kind": "text"
+          },
+          "physical_type": "VARCHAR",
+          "nullable": false
+        },
+        {
+          "name": "shelf_no",
+          "logical_type": {
+            "kind": "integer",
+            "bits": 32,
+            "signed": true
+          },
+          "physical_type": "INTEGER",
+          "nullable": true
+        }
+      ]
+    },
+    {
+      "source": "shop.main.desks",
+      "columns": [
+        {
+          "name": "desk_id",
+          "logical_type": {
+            "kind": "integer",
+            "bits": 32,
+            "signed": true
+          },
+          "physical_type": "INTEGER",
+          "nullable": false
+        },
+        {
+          "name": "region",
+          "logical_type": {
+            "kind": "text"
+          },
+          "physical_type": "VARCHAR",
+          "nullable": false
+        }
+      ]
+    },
+    {
+      "source": "shop.main.queues",
+      "columns": [
+        {
+          "name": "queue_id",
+          "logical_type": {
+            "kind": "integer",
+            "bits": 32,
+            "signed": true
+          },
+          "physical_type": "INTEGER",
+          "nullable": false
+        },
+        {
+          "name": "region",
+          "logical_type": {
+            "kind": "text"
+          },
+          "physical_type": "VARCHAR",
+          "nullable": false
+        }
+      ]
+    },
+    {
+      "source": "shop.main.tickets",
+      "columns": [
+        {
+          "name": "ticket_id",
+          "logical_type": {
+            "kind": "integer",
+            "bits": 32,
+            "signed": true
+          },
+          "physical_type": "INTEGER",
+          "nullable": false
+        },
+        {
+          "name": "desk_id",
+          "logical_type": {
+            "kind": "integer",
+            "bits": 32,
+            "signed": true
+          },
+          "physical_type": "INTEGER",
+          "nullable": false
+        },
+        {
+          "name": "queue_id",
+          "logical_type": {
+            "kind": "integer",
+            "bits": 32,
+            "signed": true
+          },
+          "physical_type": "INTEGER",
+          "nullable": false
+        }
+      ]
+    }
+  ]
+}

@@ -80,21 +80,11 @@ fn node(operation: Operation) -> PlanNode {
 
 #[test]
 fn e6_3_1_nodes_outside_the_slice_are_internal_errors() {
-    let input = || Box::new(scan("ORDERS", &["REGION"]));
-    let nodes = [
-        node(Operation::SemiJoin {
-            input: input(),
-            relationship: menura_model::internal_model::NormalizedName::new("ORDERS_TO_CUSTOMERS"),
-            on: Vec::new(),
-            related_all: input(),
-            related_visible: input(),
-        }),
-        node(Operation::Stitch {
-            branches: vec![scan("ORDERS", &["REGION"])],
-            keys: vec![ColumnName::new("REGION")],
-            columns: Vec::new(),
-        }),
-    ];
+    let nodes = [node(Operation::Stitch {
+        branches: vec![scan("ORDERS", &["REGION"])],
+        keys: vec![ColumnName::new("REGION")],
+        columns: Vec::new(),
+    })];
     for plan in nodes {
         let error = generate(&plan, &query(&["REGION"], &[])).unwrap_err();
         assert_eq!(error.violation, InvariantViolation::NodeOutsideSlice);
