@@ -100,6 +100,7 @@ Find a rule ID or a section here, then open only that file at that line.
 | [06-development-workflow.md](06-development-workflow.md#L64) | 64 | rule | WF-6.4 |
 | [06-development-workflow.md](06-development-workflow.md#L65) | 65 | rule | WF-6.5 |
 | [06-development-workflow.md](06-development-workflow.md#L70) | 70 | rule | WF-6.6 |
+| [06-development-workflow.md](06-development-workflow.md#L71) | 71 | rule | WF-6.6a |
 | [06-development-workflow.md](06-development-workflow.md#L72) | 72 | rule | WF-6.7 |
 | [06-development-workflow.md](06-development-workflow.md#L74) | 74 | section | 6.7 Pull request review |
 | [06-development-workflow.md](06-development-workflow.md#L83) | 83 | section | 6.8 Who owns the CI rules |
@@ -128,6 +129,9 @@ Find a rule ID or a section here, then open only that file at that line.
 | [08-conformance-suite.md](08-conformance-suite.md#L44) | 44 | rule | CS-2.2 |
 | [08-conformance-suite.md](08-conformance-suite.md#L45) | 45 | rule | CS-2.3 |
 | [08-conformance-suite.md](08-conformance-suite.md#L46) | 46 | rule | CS-2.4 |
+| [08-conformance-suite.md](08-conformance-suite.md#L47) | 47 | rule | CS-2.4a |
+| [08-conformance-suite.md](08-conformance-suite.md#L48) | 48 | rule | CS-2.4b |
+| [08-conformance-suite.md](08-conformance-suite.md#L49) | 49 | rule | CS-2.4c |
 | [08-conformance-suite.md](08-conformance-suite.md#L50) | 50 | rule | CS-2.5 |
 | [08-conformance-suite.md](08-conformance-suite.md#L51) | 51 | rule | CS-2.6 |
 | [08-conformance-suite.md](08-conformance-suite.md#L52) | 52 | rule | CS-2.7 |
@@ -241,6 +245,7 @@ Find a rule ID or a section here, then open only that file at that line.
 | [contracts/compiled-plan.md](contracts/compiled-plan.md#L53) | 53 | rule | PLN-4.2 |
 | [contracts/compiled-plan.md](contracts/compiled-plan.md#L55) | 55 | section | PLN-5 Compile error |
 | [contracts/compiled-plan.md](contracts/compiled-plan.md#L66) | 66 | rule | PLN-5.1 |
+| [contracts/compiled-plan.md](contracts/compiled-plan.md#L67) | 67 | rule | PLN-5.1a |
 | [contracts/compiled-plan.md](contracts/compiled-plan.md#L68) | 68 | rule | PLN-5.2 |
 | [contracts/compiled-plan.md](contracts/compiled-plan.md#L69) | 69 | rule | PLN-5.3 |
 | [contracts/compiled-plan.md](contracts/compiled-plan.md#L73) | 73 | section | PLN-6 Audit record |
@@ -262,6 +267,7 @@ Find a rule ID or a section here, then open only that file at that line.
 | [contracts/model-description.md](contracts/model-description.md#L20) | 20 | section | DSC-3 Rules |
 | [contracts/model-description.md](contracts/model-description.md#L22) | 22 | rule | DSC-3.1 |
 | [contracts/model-description.md](contracts/model-description.md#L23) | 23 | rule | DSC-3.2 |
+| [contracts/model-description.md](contracts/model-description.md#L24) | 24 | rule | DSC-3.2a |
 | [contracts/model-description.md](contracts/model-description.md#L25) | 25 | rule | DSC-3.3 |
 | [contracts/model-description.md](contracts/model-description.md#L26) | 26 | rule | DSC-3.4 |
 | [contracts/model-description.md](contracts/model-description.md#L27) | 27 | rule | DSC-3.5 |
@@ -304,6 +310,7 @@ Find a rule ID or a section here, then open only that file at that line.
 | [contracts/security-context.md](contracts/security-context.md#L11) | 11 | section | SEC-2 Document |
 | [contracts/security-context.md](contracts/security-context.md#L23) | 23 | section | SEC-3 Rules |
 | [contracts/security-context.md](contracts/security-context.md#L25) | 25 | rule | SEC-3.1 |
+| [contracts/security-context.md](contracts/security-context.md#L26) | 26 | rule | SEC-3.2a |
 | [contracts/security-context.md](contracts/security-context.md#L27) | 27 | rule | SEC-3.2 |
 | [contracts/security-context.md](contracts/security-context.md#L28) | 28 | rule | SEC-3.3 |
 | [contracts/security-context.md](contracts/security-context.md#L40) | 40 | rule | SEC-3.4 |
@@ -431,6 +438,7 @@ Find a rule ID or a section here, then open only that file at that line.
 | [extensions/security.md](extensions/security.md#L23) | 23 | section | SCY-3 `access` (every dataset) |
 | [extensions/security.md](extensions/security.md#L36) | 36 | rule | SCY-3.0 |
 | [extensions/security.md](extensions/security.md#L37) | 37 | rule | SCY-3.1 |
+| [extensions/security.md](extensions/security.md#L38) | 38 | rule | SCY-3.1a |
 | [extensions/security.md](extensions/security.md#L39) | 39 | rule | SCY-3.2 |
 | [extensions/security.md](extensions/security.md#L41) | 41 | section | SCY-4 `row_access` (dataset, optional) |
 | [extensions/security.md](extensions/security.md#L55) | 55 | rule | SCY-4.1 |
@@ -486,6 +494,7 @@ Find a rule ID or a section here, then open only that file at that line.
 | [stages/E0/README.md](stages/E0/README.md#L37) | 37 | section | E0-4 Errors and unusable elements |
 | [stages/E0/README.md](stages/E0/README.md#L39) | 39 | rule | E0-4.1 |
 | [stages/E0/README.md](stages/E0/README.md#L40) | 40 | rule | E0-4.2 |
+| [stages/E0/README.md](stages/E0/README.md#L41) | 41 | rule | E0-4.2a |
 | [stages/E0/README.md](stages/E0/README.md#L42) | 42 | rule | E0-4.3 |
 | [stages/E0/README.md](stages/E0/README.md#L59) | 59 | rule | E0-4.4 |
 | [stages/E0/expressions.md](stages/E0/expressions.md#L1) | 1 | section | E0.f Type expressions |
@@ -692,6 +701,7 @@ Find a rule ID or a section here, then open only that file at that line.
 | [stages/E2-bind.md](stages/E2-bind.md#L77) | 77 | rule | E2-5.2 |
 | [stages/E2-bind.md](stages/E2-bind.md#L78) | 78 | rule | E2-5.3 |
 | [stages/E2-bind.md](stages/E2-bind.md#L79) | 79 | rule | E2-5.4 |
+| [stages/E2-bind.md](stages/E2-bind.md#L80) | 80 | rule | E2-5.4a |
 | [stages/E2-bind.md](stages/E2-bind.md#L81) | 81 | rule | E2-5.5 |
 | [stages/E2-bind.md](stages/E2-bind.md#L82) | 82 | rule | E2-5.6 |
 | [stages/E2-bind.md](stages/E2-bind.md#L84) | 84 | section | E2-6 Diagnostics |
@@ -735,6 +745,8 @@ Find a rule ID or a section here, then open only that file at that line.
 | [stages/E4-plan.md](stages/E4-plan.md#L66) | 66 | rule | E4-6.7 |
 | [stages/E4-plan.md](stages/E4-plan.md#L67) | 67 | rule | E4-6.8 |
 | [stages/E4-plan.md](stages/E4-plan.md#L68) | 68 | rule | E4-6.9 |
+| [stages/E4-plan.md](stages/E4-plan.md#L69) | 69 | rule | E4-6.9a |
+| [stages/E4-plan.md](stages/E4-plan.md#L70) | 70 | rule | E4-6.9b |
 | [stages/E4-plan.md](stages/E4-plan.md#L71) | 71 | rule | E4-6.10 |
 | [stages/E4-plan.md](stages/E4-plan.md#L73) | 73 | section | E4-7 Additivity |
 | [stages/E4-plan.md](stages/E4-plan.md#L79) | 79 | section | E4-8 Context modifiers |
@@ -766,6 +778,9 @@ Find a rule ID or a section here, then open only that file at that line.
 | [stages/E6-generate.md](stages/E6-generate.md#L20) | 20 | section | E6-4 SQL rules (all dialects) |
 | [stages/E6-generate.md](stages/E6-generate.md#L24) | 24 | rule | E6-4.1 |
 | [stages/E6-generate.md](stages/E6-generate.md#L25) | 25 | rule | E6-4.2 |
+| [stages/E6-generate.md](stages/E6-generate.md#L26) | 26 | rule | E6-4.2a |
+| [stages/E6-generate.md](stages/E6-generate.md#L27) | 27 | rule | E6-4.2b |
+| [stages/E6-generate.md](stages/E6-generate.md#L28) | 28 | rule | E6-4.2c |
 | [stages/E6-generate.md](stages/E6-generate.md#L29) | 29 | rule | E6-4.3 |
 | [stages/E6-generate.md](stages/E6-generate.md#L30) | 30 | rule | E6-4.4 |
 | [stages/E6-generate.md](stages/E6-generate.md#L31) | 31 | rule | E6-4.5 |

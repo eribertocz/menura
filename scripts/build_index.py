@@ -10,7 +10,7 @@ import sys
 SPEC = pathlib.Path(__file__).resolve().parent.parent / "spec"
 INDEX = SPEC / "INDEX.md"
 HEADING = re.compile(r"^(#{1,3}) (.+)$")
-RULE = re.compile(r"\*\*([A-Z][A-Z0-9]*-[0-9][0-9.]*)\*\*|^\| ([A-Z][A-Z0-9]*-[0-9][0-9.]*|[A-Z]{1,2}[0-9]+) \|")
+RULE = re.compile(r"\*\*([A-Z][A-Z0-9]*-[0-9][0-9.]*[a-z]?)\*\*|^\| ([A-Z][A-Z0-9]*-[0-9][0-9.]*[a-z]?|[A-Z]{1,2}[0-9]+) \|")
 
 
 def collect():
