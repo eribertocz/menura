@@ -2,6 +2,7 @@ id: e3-ambiguous-path-chosen-001
 rules: [E3-3.2, QRY-4.3, E3-4.2]
 model: e3-path-choice
 security_context: analyst.json
+oracle: "e3-ambiguous-path-chosen-001.oracle.sql"
 query:
   contract: "menura.query"
   contract_version: "1.1.0"
