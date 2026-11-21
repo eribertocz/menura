@@ -1,0 +1,10 @@
+CREATE TABLE shop.main.shelves (site_code VARCHAR NOT NULL, shelf_no INTEGER NOT NULL, region VARCHAR NOT NULL);
+INSERT INTO shop.main.shelves VALUES ('A', 1, 'NORTH'), ('A', 2, 'SOUTH'), ('B', 1, 'NORTH');
+CREATE TABLE shop.main.items (item_id INTEGER NOT NULL, site_code VARCHAR NOT NULL, shelf_no INTEGER);
+INSERT INTO shop.main.items VALUES (1, 'A', 1), (2, 'A', 2), (3, 'B', 2), (4, 'B', 1), (5, 'A', NULL);
+CREATE TABLE shop.main.desks (desk_id INTEGER NOT NULL, region VARCHAR NOT NULL);
+INSERT INTO shop.main.desks VALUES (1, 'NORTH'), (2, 'SOUTH');
+CREATE TABLE shop.main.queues (queue_id INTEGER NOT NULL, region VARCHAR NOT NULL);
+INSERT INTO shop.main.queues VALUES (1, 'NORTH'), (2, 'SOUTH');
+CREATE TABLE shop.main.tickets (ticket_id INTEGER NOT NULL, desk_id INTEGER NOT NULL, queue_id INTEGER NOT NULL);
+INSERT INTO shop.main.tickets VALUES (1, 1, 1), (2, 1, 2), (3, 2, 1), (4, 2, 2);

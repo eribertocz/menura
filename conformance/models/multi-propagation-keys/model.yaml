@@ -1,0 +1,90 @@
+version: "0.1.1"
+semantic_model:
+  - name: propagation_keys
+    description: 'Row-policy propagation along a two-column key, and along two relationships of one dataset'
+    custom_extensions:
+      - vendor_name: COMMON
+        data: '{"namespace": "menura", "version": 1, "security_context": {"roles": ["analyst"], "attributes": [{"name": "regions", "type": "list<text>"}]}}'
+    datasets:
+      - name: desks
+        source: shop.main.desks
+        primary_key: [desk_id]
+        fields:
+          - name: desk_id
+            expression: {dialects: [{dialect: ANSI_SQL, expression: 'desk_id'}]}
+          - name: region
+            expression: {dialects: [{dialect: ANSI_SQL, expression: 'region'}]}
+        custom_extensions:
+          - vendor_name: COMMON
+            data: '{"namespace": "menura", "version": 1, "access": {"mode": "roles", "roles": ["analyst"]}, "row_access": [{"name": "desks_region_scope", "condition": "region IN (USER_ATTRIBUTE(''regions''))"}]}'
+      - name: items
+        source: shop.main.items
+        primary_key: [item_id]
+        fields:
+          - name: item_id
+            expression: {dialects: [{dialect: ANSI_SQL, expression: 'item_id'}]}
+          - name: site_code
+            expression: {dialects: [{dialect: ANSI_SQL, expression: 'site_code'}]}
+          - name: shelf_no
+            expression: {dialects: [{dialect: ANSI_SQL, expression: 'shelf_no'}]}
+        custom_extensions:
+          - vendor_name: COMMON
+            data: '{"namespace": "menura", "version": 1, "access": {"mode": "roles", "roles": ["analyst"]}}'
+      - name: queues
+        source: shop.main.queues
+        primary_key: [queue_id]
+        fields:
+          - name: queue_id
+            expression: {dialects: [{dialect: ANSI_SQL, expression: 'queue_id'}]}
+          - name: region
+            expression: {dialects: [{dialect: ANSI_SQL, expression: 'region'}]}
+        custom_extensions:
+          - vendor_name: COMMON
+            data: '{"namespace": "menura", "version": 1, "access": {"mode": "roles", "roles": ["analyst"]}, "row_access": [{"name": "queues_region_scope", "condition": "region IN (USER_ATTRIBUTE(''regions''))"}]}'
+      - name: shelves
+        source: shop.main.shelves
+        primary_key: [site_code, shelf_no]
+        fields:
+          - name: site_code
+            expression: {dialects: [{dialect: ANSI_SQL, expression: 'site_code'}]}
+          - name: shelf_no
+            expression: {dialects: [{dialect: ANSI_SQL, expression: 'shelf_no'}]}
+          - name: region
+            expression: {dialects: [{dialect: ANSI_SQL, expression: 'region'}]}
+        custom_extensions:
+          - vendor_name: COMMON
+            data: '{"namespace": "menura", "version": 1, "access": {"mode": "roles", "roles": ["analyst"]}, "row_access": [{"name": "shelves_region_scope", "condition": "region IN (USER_ATTRIBUTE(''regions''))"}]}'
+      - name: tickets
+        source: shop.main.tickets
+        primary_key: [ticket_id]
+        fields:
+          - name: ticket_id
+            expression: {dialects: [{dialect: ANSI_SQL, expression: 'ticket_id'}]}
+          - name: desk_id
+            expression: {dialects: [{dialect: ANSI_SQL, expression: 'desk_id'}]}
+          - name: queue_id
+            expression: {dialects: [{dialect: ANSI_SQL, expression: 'queue_id'}]}
+        custom_extensions:
+          - vendor_name: COMMON
+            data: '{"namespace": "menura", "version": 1, "access": {"mode": "roles", "roles": ["analyst"]}}'
+    relationships:
+      - name: items_shelves
+        from: items
+        to: shelves
+        from_columns: [site_code, shelf_no]
+        to_columns: [site_code, shelf_no]
+      - name: tickets_desks
+        from: tickets
+        to: desks
+        from_columns: [desk_id]
+        to_columns: [desk_id]
+      - name: tickets_queues
+        from: tickets
+        to: queues
+        from_columns: [queue_id]
+        to_columns: [queue_id]
+    metrics:
+      - name: item_count
+        expression: {dialects: [{dialect: ANSI_SQL, expression: 'COUNT(items.item_id)'}]}
+      - name: ticket_count
+        expression: {dialects: [{dialect: ANSI_SQL, expression: 'COUNT(tickets.ticket_id)'}]}
