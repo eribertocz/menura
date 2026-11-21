@@ -1,6 +1,7 @@
-//! E0-4.2a, E0H-2.3: a dataset whose every route to a dataset with `row_access` goes through
-//! an unusable relationship is unusable (`E0H-01`), because its row policies could not be
-//! propagated; propagation reports no new warning.
+//! E0-4.2a, E0H-2.3: a dataset with at least one route to a dataset with `row_access` that
+//! goes through an unusable relationship is unusable (`E0H-01`), even if other routes stay
+//! usable, because one of its row policies could not be propagated; propagation reports no new
+//! warning.
 
 use menura_model::internal_model::{DiagnosticCode, ElementKind, InternalModel};
 
@@ -10,6 +11,11 @@ const MODEL: &str =
     include_str!("../../../../../conformance/models/e0-row-access-unreachable/model.yaml");
 const CATALOG: &str =
     include_str!("../../../../../conformance/models/e0-row-access-unreachable/catalog-schema.json");
+const PARTIAL_MODEL: &str =
+    include_str!("../../../../../conformance/models/e0-row-access-partial-route/model.yaml");
+const PARTIAL_CATALOG: &str = include_str!(
+    "../../../../../conformance/models/e0-row-access-partial-route/catalog-schema.json"
+);
 
 /// The relationship made unusable by `E0E-01`.
 const BROKEN: &str = "from_columns: [customer_id, region]";
@@ -88,9 +94,22 @@ fn e0_4_2a_the_dataset_with_row_access_stays_usable() {
 }
 
 #[test]
-fn e0_4_2a_a_usable_route_keeps_the_dataset_usable() {
+fn e0_4_2a_a_repaired_route_keeps_the_dataset_usable() {
     assert_eq!(dataset_errors(&repaired(), "orders"), Vec::new());
-    assert_eq!(dataset_errors(&with_usable_route(), "orders"), Vec::new());
+}
+
+#[test]
+fn e0_4_2a_a_second_usable_route_to_the_same_dataset_does_not_restore_it() {
+    assert_eq!(dataset_errors(&with_usable_route(), "orders"), e0h_01());
+}
+
+#[test]
+fn e0_4_2a_a_usable_route_to_another_policy_does_not_hide_the_unusable_one() {
+    let model = load(PARTIAL_MODEL, PARTIAL_CATALOG);
+
+    assert_eq!(dataset_errors(&model, "orders"), e0h_01());
+    assert_eq!(dataset_errors(&model, "stores"), Vec::new());
+    assert_eq!(dataset_errors(&model, "suppliers"), Vec::new());
 }
 
 #[test]
