@@ -1,5 +1,5 @@
 id: e2-slice-derived-development-001
-rules: [VS-1, E2-5.4, E2-5.4a, DER-2.2]
+rules: [VS-1b, DER-2.2]
 model: e0-derived-development
 security_context: analyst.json
 query:
