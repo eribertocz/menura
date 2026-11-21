@@ -18,11 +18,11 @@
 mod columns;
 mod dimensions;
 mod error;
+mod followed;
 mod metrics;
 mod output;
 mod policy;
 mod policy_visits;
-mod propagation_chains;
 mod query_filter;
 mod rewrite;
 mod scan;
@@ -79,9 +79,14 @@ pub fn build_plan(
         &components,
         query_predicate.as_ref().map(|(predicate, _)| predicate),
     );
-    read.extend(visibility::visibility_fields(home, model, &row_filters)?);
+    let visibility = visibility::Visibility {
+        model,
+        filters: &row_filters,
+        catalog,
+    };
+    read.extend(visibility.fields(home)?);
     let scan = scan::scan(home, &read, catalog)?;
-    let mut node = visibility::visible_rows(scan, home, None, model, &row_filters)?;
+    let mut node = visibility.visible_rows(scan, home, None)?;
     if let Some((predicate, location)) = query_predicate {
         node = filter(node, predicate, Origin::Query(location));
     }

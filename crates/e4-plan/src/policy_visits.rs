@@ -10,8 +10,8 @@ use menura_representations::origin::Origin;
 use menura_security::{AdmittedSecurityContext, RowFilterError, row_filter};
 
 use crate::error::{InvariantViolation, PlanError};
+use crate::followed::has_policies;
 use crate::policy::reads_now;
-use crate::propagation_chains::has_policies;
 
 /// The row filter `G AND R` of one dataset for the user, as E0 wrote it, with the location of
 /// its first policy.

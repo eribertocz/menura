@@ -3,12 +3,15 @@
 
 use menura_contracts::types::common::LogicalType;
 use menura_expressions::typing::{big_integer, decimal};
+use menura_model::expression::Expression;
 use menura_model::internal_model::{
     AccessMode, Dataset, DatasetAccess, Descriptions, GraphEdge, InternalModel, Relationship,
     RoleName, RowPolicy,
 };
+use menura_representations::logical_plan::{Operation, PlanNode};
 use menura_representations::paths::{Branch, Branches, ComponentKey, JoinStep, JoinTree};
 
+use super::plan::{chain, column_names, kind};
 use super::{field, located, metrics, model_with, name, orders};
 
 /// One relationship of a test model: name, `from` dataset and column, `to` dataset and
@@ -209,4 +212,73 @@ pub fn home_branch() -> Branches {
         join_tree: JoinTree::default(),
     }])
     .expect("one branch")
+}
+
+/// A one-line outline of the visible rows under `node`: each `Scan` with its dataset and
+/// columns, each `Filter`, and each `SemiJoin` with its relationship, keys, `related_all`,
+/// `related_visible` and input.
+pub fn outline(node: &PlanNode) -> String {
+    match node.operation() {
+        Operation::Scan { dataset } => format!(
+            "Scan {} [{}]",
+            dataset.as_str(),
+            column_names(node).join(", ")
+        ),
+        Operation::Filter { input, .. } => format!("Filter({})", outline(input)),
+        Operation::SemiJoin {
+            input,
+            relationship,
+            on,
+            related_all,
+            related_visible,
+        } => {
+            let keys: Vec<String> = on
+                .iter()
+                .map(|condition| {
+                    format!("{}={}", condition.left.as_str(), condition.right.as_str())
+                })
+                .collect();
+            format!(
+                "SemiJoin {} on {} all({}) visible({}) over({})",
+                relationship.as_str(),
+                keys.join(", "),
+                outline(related_all),
+                outline(related_visible),
+                outline(input)
+            )
+        }
+        _ => format!("{}({})", kind(node), outline_first_input(node)),
+    }
+}
+
+fn outline_first_input(node: &PlanNode) -> String {
+    node.inputs()
+        .first()
+        .map_or_else(String::new, |input| outline(input))
+}
+
+/// The predicates of every `Filter` under `node`, inputs before `related_all` before
+/// `related_visible`, depth first.
+pub fn filter_predicates(node: &PlanNode) -> Vec<Expression> {
+    let mut found = Vec::new();
+    if let Operation::Filter { predicate, .. } = node.operation() {
+        found.push(predicate.clone());
+    }
+    for input in node.inputs() {
+        found.extend(filter_predicates(input));
+    }
+    found
+}
+
+/// The relationships of the `SemiJoin` nodes over the `Scan` of `plan`, from the `Scan` up.
+pub fn semi_join_relationships(plan: &PlanNode) -> Vec<String> {
+    let mut found: Vec<String> = chain(plan)
+        .into_iter()
+        .filter_map(|node| match node.operation() {
+            Operation::SemiJoin { relationship, .. } => Some(relationship.as_str().to_owned()),
+            _ => None,
+        })
+        .collect();
+    found.reverse();
+    found
 }

@@ -10,15 +10,17 @@ mod support;
 use menura_model::expression::Expression;
 use menura_model::internal_model::{Dataset, InternalModel, RowPolicy};
 use menura_representations::bound_query::{BoundQuery, BoundQueryParts};
-use menura_representations::logical_plan::{Operation, PlanNode};
-use menura_representations::paths::{Branches, JoinStep, JoinTree, QueryElement};
+use menura_representations::logical_plan::{JoinCondition, Operation, PlanNode};
+use menura_representations::names::ColumnName;
+use menura_representations::paths::{Branches, JoinTree, QueryElement};
 use menura_security::AdmittedSecurityContext;
 use support::joins::{joined_branches, joined_dimension, path};
 use support::plan::{column_names, kinds, node, nodes, predicate};
 use support::propagation::{
     BILLED_TO, CUSTOMERS_TO_STORES, Link, ORDERS_TO_CUSTOMERS, ORDERS_TO_WAREHOUSES, SHIPPED_TO,
-    STORE_OWNER, WAREHOUSES_TO_STORES, across, customers, home_branch, home_orders, linked_model,
-    readable_by, stores, warehouses, with_policies,
+    STORE_OWNER, WAREHOUSES_TO_STORES, across, customers, filter_predicates, home_branch,
+    home_orders, linked_model, outline, readable_by, semi_join_relationships, stores, warehouses,
+    with_policies,
 };
 use support::{build_plan, dimension, metric_reference, name, policy, query, tree, user};
 
@@ -71,60 +73,52 @@ fn chain_model(home: Dataset, store_policies: Vec<RowPolicy>, extra: &[Link]) ->
     )
 }
 
-fn semi_join_parts(semi_join: &PlanNode) -> (&[JoinStep], &Expression) {
-    match semi_join.operation() {
-        Operation::SemiJoin {
-            path, predicate, ..
-        } => (path, predicate),
-        _ => panic!("not a SemiJoin"),
-    }
-}
+/// The outline of the visible rows of `ORDERS` in the chain model, for an analyst.
+const CHAIN_OUTLINE: &str = concat!(
+    "SemiJoin ORDERS_TO_CUSTOMERS on CUSTOMER_ID=CUSTOMER_ID ",
+    "all(Scan CUSTOMERS [CUSTOMER_ID]) ",
+    "visible(SemiJoin CUSTOMERS_TO_STORES on STORE_ID=STORE_ID ",
+    "all(Scan STORES [STORE_ID]) ",
+    "visible(Filter(Scan STORES [REGION, STORE_ID])) ",
+    "over(Scan CUSTOMERS [CUSTOMER_ID, STORE_ID])) ",
+    "over(Scan ORDERS [AMOUNT, CUSTOMER_ID])"
+);
 
-/// The paths and predicates of the `SemiJoin` nodes of `plan`, from the `Scan` up.
-fn semi_joins(plan: &PlanNode) -> Vec<(Vec<JoinStep>, Expression)> {
-    let mut found: Vec<(Vec<JoinStep>, Expression)> = nodes(plan, "SemiJoin")
-        .into_iter()
-        .map(|semi_join| {
-            let (path, predicate) = semi_join_parts(semi_join);
-            (path.to_vec(), predicate.clone())
-        })
-        .collect();
-    found.reverse();
-    found
+fn chain_plan(context: &AdmittedSecurityContext, extra: &[Link]) -> PlanNode {
+    plan_of(
+        &home_branch(),
+        &chain_model(home_orders(), vec![region_policy()], extra),
+        context,
+    )
 }
 
 #[test]
-fn e4_6_5_a_two_step_chain_gives_one_semi_join_per_followed_relationship() {
-    let plan = plan_of(
-        &home_branch(),
-        &chain_model(home_orders(), vec![region_policy()], &[]),
-        &analyst(),
-    );
+fn e4_6_5_a_two_step_chain_nests_the_visible_rows_of_each_related_dataset() {
+    let plan = chain_plan(&analyst(), &[]);
 
-    assert_eq!(
-        kinds(&plan),
-        ["Project", "Aggregate", "SemiJoin", "SemiJoin", "Scan"]
-    );
-    assert_eq!(
-        semi_joins(&plan),
-        [
-            (vec![across(ORDERS_TO_CUSTOMERS)], tree("TRUE")),
-            (
-                vec![across(ORDERS_TO_CUSTOMERS), across(CUSTOMERS_TO_STORES)],
-                region_predicate()
-            ),
-        ]
-    );
+    assert_eq!(kinds(&plan), ["Project", "Aggregate", "SemiJoin", "Scan"]);
+    assert_eq!(outline(node(&plan, "SemiJoin")), CHAIN_OUTLINE);
+    assert_eq!(filter_predicates(&plan), [region_predicate()]);
 }
 
 #[test]
-fn e4_6_5a_the_scan_reads_the_foreign_key_of_each_followed_relationship() {
-    let plan = plan_of(
-        &home_branch(),
-        &chain_model(home_orders(), vec![region_policy()], &[]),
-        &analyst(),
-    );
+fn e4_6_5a_the_keys_pair_the_input_columns_with_the_related_columns() {
+    let plan = chain_plan(&analyst(), &[]);
 
+    let Operation::SemiJoin {
+        relationship, on, ..
+    } = node(&plan, "SemiJoin").operation()
+    else {
+        panic!("not a SemiJoin");
+    };
+    assert_eq!(relationship, &name("ORDERS_TO_CUSTOMERS"));
+    assert_eq!(
+        on,
+        &[JoinCondition {
+            left: ColumnName::new("CUSTOMER_ID"),
+            right: ColumnName::new("CUSTOMER_ID"),
+        }]
+    );
     assert_eq!(column_names(node(&plan, "Scan")), ["AMOUNT", "CUSTOMER_ID"]);
 }
 
@@ -147,14 +141,7 @@ fn e4_6_1_the_own_policy_filter_is_directly_over_the_scan_and_below_the_semi_joi
 
     assert_eq!(
         kinds(&plan),
-        [
-            "Project",
-            "Aggregate",
-            "SemiJoin",
-            "SemiJoin",
-            "Filter",
-            "Scan"
-        ]
+        ["Project", "Aggregate", "SemiJoin", "Filter", "Scan"]
     );
     assert_eq!(
         predicate(node(&plan, "Filter")),
@@ -175,54 +162,24 @@ fn e4_6_5_a_dataset_that_reaches_no_policy_gets_no_semi_join() {
 
 #[test]
 fn e4_6_5a_an_exempt_user_still_needs_a_related_row() {
-    let plan = plan_of(
-        &home_branch(),
-        &chain_model(home_orders(), vec![region_policy()], &[]),
-        &auditor(),
-    );
+    let plan = chain_plan(&auditor(), &[]);
 
-    let predicates: Vec<Expression> = semi_joins(&plan)
-        .into_iter()
-        .map(|(_, predicate)| predicate)
-        .collect();
-    assert_eq!(predicates, [tree("TRUE"), tree("TRUE AND TRUE")]);
+    assert_eq!(semi_join_relationships(&plan), ["ORDERS_TO_CUSTOMERS"]);
+    assert_eq!(filter_predicates(&plan), [tree("TRUE AND TRUE")]);
 }
 
 #[test]
-fn e4_6_4_a_user_without_grant_gets_a_false_predicate_on_the_related_row() {
-    let plan = plan_of(
-        &home_branch(),
-        &chain_model(home_orders(), vec![region_policy()], &[]),
-        &user("[]", "{}"),
-    );
+fn e4_6_4_a_user_without_grant_sees_no_related_row() {
+    let plan = chain_plan(&user("[]", "{}"), &[]);
 
-    assert_eq!(
-        semi_joins(&plan)
-            .last()
-            .map(|(_, predicate)| predicate.clone()),
-        Some(tree("FALSE AND TRUE"))
-    );
+    assert_eq!(filter_predicates(&plan), [tree("FALSE AND TRUE")]);
 }
 
 #[test]
 fn e4_6_5b_a_relationship_back_to_a_dataset_on_the_chain_is_not_followed() {
-    let plan = plan_of(
-        &home_branch(),
-        &chain_model(home_orders(), vec![region_policy()], &[STORE_OWNER]),
-        &analyst(),
-    );
+    let plan = chain_plan(&analyst(), &[STORE_OWNER]);
 
-    let paths: Vec<Vec<JoinStep>> = semi_joins(&plan)
-        .into_iter()
-        .map(|(path, _)| path)
-        .collect();
-    assert_eq!(
-        paths,
-        [
-            vec![across(ORDERS_TO_CUSTOMERS)],
-            vec![across(ORDERS_TO_CUSTOMERS), across(CUSTOMERS_TO_STORES)],
-        ]
-    );
+    assert_eq!(outline(node(&plan, "SemiJoin")), CHAIN_OUTLINE);
 }
 
 #[test]
@@ -246,8 +203,13 @@ fn e4_6_5b_a_cycle_through_the_home_dataset_is_cut_at_the_home_dataset() {
     .expect("a plan");
 
     assert_eq!(
-        semi_joins(&plan),
-        [(vec![across(CUSTOMERS_TO_STORES)], region_predicate())]
+        outline(node(&plan, "SemiJoin")),
+        concat!(
+            "SemiJoin CUSTOMERS_TO_STORES on STORE_ID=STORE_ID ",
+            "all(Scan STORES [STORE_ID]) ",
+            "visible(Filter(Scan STORES [REGION, STORE_ID])) ",
+            "over(Filter(Scan CUSTOMERS [REGION, STORE_ID]))"
+        )
     );
 }
 
@@ -272,12 +234,10 @@ fn e4_6_6_each_relationship_to_the_same_dataset_is_followed_separately() {
     );
     let plan = plan_of(&home_branch(), &model, &analyst());
 
+    assert_eq!(semi_join_relationships(&plan), ["BILLED_TO", "SHIPPED_TO"]);
     assert_eq!(
-        semi_joins(&plan),
-        [
-            (vec![across(BILLED_TO)], region_predicate()),
-            (vec![across(SHIPPED_TO)], region_predicate()),
-        ]
+        filter_predicates(&plan),
+        [region_predicate(), region_predicate()]
     );
     assert_eq!(
         column_names(node(&plan, "Scan")),
@@ -303,18 +263,13 @@ fn e4_6_5_a_diamond_follows_both_routes_to_the_restricted_dataset() {
     );
     let plan = plan_of(&home_branch(), &model, &analyst());
 
-    let paths: Vec<Vec<JoinStep>> = semi_joins(&plan)
-        .into_iter()
-        .map(|(path, _)| path)
-        .collect();
     assert_eq!(
-        paths,
-        [
-            vec![across(ORDERS_TO_CUSTOMERS)],
-            vec![across(ORDERS_TO_WAREHOUSES)],
-            vec![across(ORDERS_TO_CUSTOMERS), across(CUSTOMERS_TO_STORES)],
-            vec![across(ORDERS_TO_WAREHOUSES), across(WAREHOUSES_TO_STORES)],
-        ]
+        semi_join_relationships(&plan),
+        ["ORDERS_TO_CUSTOMERS", "ORDERS_TO_WAREHOUSES"]
+    );
+    assert_eq!(
+        filter_predicates(&plan),
+        [region_predicate(), region_predicate()]
     );
 }
 
@@ -333,17 +288,13 @@ fn e4_6_7_the_anchor_of_a_dimension_only_branch_reads_its_visible_rows() {
     )
     .expect("a plan");
 
-    assert_eq!(semi_joins(&plan).len(), 2);
-    assert_eq!(kinds(&plan).last(), Some(&"Scan"));
+    assert_eq!(semi_join_relationships(&plan), ["ORDERS_TO_CUSTOMERS"]);
+    assert_eq!(filter_predicates(&plan), [region_predicate()]);
 }
 
 #[test]
 fn e4_6_10_propagation_adds_no_output_column() {
-    let propagated = plan_of(
-        &home_branch(),
-        &chain_model(home_orders(), vec![region_policy()], &[]),
-        &analyst(),
-    );
+    let propagated = chain_plan(&analyst(), &[]);
     let plain = plan_of(
         &home_branch(),
         &chain_model(home_orders(), Vec::new(), &[]),
@@ -371,7 +322,7 @@ fn e2_4_5_a_dataset_joined_only_for_a_policy_needs_no_authorization() {
     );
     let plan = plan_of(&home_branch(), &model, &analyst());
 
-    assert_eq!(semi_joins(&plan).len(), 2);
+    assert_eq!(outline(node(&plan, "SemiJoin")), CHAIN_OUTLINE);
 }
 
 /// `TOTAL_AMOUNT` by `CUSTOMERS.TEAM`, through one join, with policies on `CUSTOMERS` and
@@ -412,32 +363,19 @@ fn e4_6_5c_a_joined_scan_reads_the_visible_rows_of_its_dataset() {
     let Operation::Join { right, .. } = node(&plan, "Join").operation() else {
         panic!("not a Join");
     };
-    assert_eq!(kinds(right), ["SemiJoin", "Filter", "Scan"]);
     assert_eq!(
-        semi_joins(right),
-        [(vec![across(CUSTOMERS_TO_STORES)], region_predicate())]
+        outline(right),
+        concat!(
+            "SemiJoin CUSTOMERS_TO_STORES on ORDERS_TO_CUSTOMERS.STORE_ID=STORE_ID ",
+            "all(Scan STORES [STORE_ID]) ",
+            "visible(Filter(Scan STORES [REGION, STORE_ID])) ",
+            "over(Filter(Scan CUSTOMERS [ORDERS_TO_CUSTOMERS.CUSTOMER_ID, ",
+            "ORDERS_TO_CUSTOMERS.REGION, ORDERS_TO_CUSTOMERS.STORE_ID, ORDERS_TO_CUSTOMERS.TEAM]))"
+        )
     );
     assert_eq!(
         predicate(node(right, "Filter")),
         &tree(r#""ORDERS_TO_CUSTOMERS.REGION" IN (USER_ATTRIBUTE('regions')) AND TRUE"#)
     );
-    assert_eq!(
-        column_names(node(right, "Scan")),
-        [
-            "ORDERS_TO_CUSTOMERS.CUSTOMER_ID",
-            "ORDERS_TO_CUSTOMERS.REGION",
-            "ORDERS_TO_CUSTOMERS.STORE_ID",
-            "ORDERS_TO_CUSTOMERS.TEAM",
-        ]
-    );
-    assert_eq!(
-        semi_joins(&plan),
-        [
-            (vec![across(ORDERS_TO_CUSTOMERS)], region_predicate()),
-            (
-                vec![across(ORDERS_TO_CUSTOMERS), across(CUSTOMERS_TO_STORES)],
-                region_predicate()
-            ),
-        ]
-    );
+    assert_eq!(semi_join_relationships(&plan), ["ORDERS_TO_CUSTOMERS"]);
 }
