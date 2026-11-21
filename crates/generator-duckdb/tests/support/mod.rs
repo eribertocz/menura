@@ -18,6 +18,7 @@ use menura_generator_duckdb::{GenerateError, GeneratedSql};
 
 mod expression;
 mod plan;
+mod propagation;
 
 pub use expression::{
     expression_sql, query_with_reference_time, query_without_reference_time, reference_time_query,
@@ -42,6 +43,7 @@ pub use plan::{
     aggregate, column, component, component_of, filter, limit, named, project, region_count, scan,
     scan_of, sort,
 };
+pub use propagation::{generate_propagation, orders_scan, propagation_model, semi_join, step};
 
 /// The 64-bit signed integer.
 pub fn big_integer() -> LogicalType {

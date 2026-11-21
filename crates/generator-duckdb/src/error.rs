@@ -46,6 +46,11 @@ pub enum InvariantViolation {
     NonFiniteFloat,
     /// A `Deduplicate` without identity columns (E4-4.0f).
     EmptyIdentity,
+    /// A `SemiJoin` without steps (E4-3.4).
+    EmptyPath,
+    /// A `SemiJoin` step whose relationship the model does not have, or that does not lead
+    /// from its `from` dataset to its `to` dataset.
+    UnknownRelationship,
     /// A final node whose columns do not match the output columns of the query (E1-5).
     ResultColumnMismatch,
 }
