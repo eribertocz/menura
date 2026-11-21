@@ -4,13 +4,17 @@
 use menura_model::internal_model::{InternalModel, NormalizedName};
 use menura_representations::bound_query::{BoundDimension, BoundDimensionKind, BoundQuery};
 use menura_representations::origin::QueryLocation;
+use menura_representations::paths::QueryElement;
 
 use crate::components::components;
 use crate::violation::InvariantViolation;
 
 /// A dataset that a query element needs, with where the element is written.
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone)]
 pub(crate) struct NeededDataset<'input> {
+    /// The element, which the join tree binds to the instance at the end of its path
+    /// (E3-4.2a).
+    pub(crate) element: QueryElement,
     /// The dataset.
     pub(crate) dataset: &'input NormalizedName,
     /// Where the element that needs it is written.
@@ -42,7 +46,8 @@ impl<'input> NeededDatasets<'input> {
         let dimensions = query
             .columns()
             .dimensions()
-            .map(dimension_dataset)
+            .enumerate()
+            .map(|(position, dimension)| dimension_dataset(position, dimension))
             .collect();
         let mut metrics = Vec::new();
         for metric in query.columns().metrics() {
@@ -62,13 +67,14 @@ impl<'input> NeededDatasets<'input> {
     }
 }
 
-/// The dataset of `dimension`.
-fn dimension_dataset(dimension: &BoundDimension) -> NeededDataset<'_> {
+/// The dataset of `dimension`, the dimension at `position` among the dimensions.
+fn dimension_dataset(position: usize, dimension: &BoundDimension) -> NeededDataset<'_> {
     let dataset = match &dimension.kind {
         BoundDimensionKind::Field { field, .. } => &field.dataset,
         BoundDimensionKind::Expression { dataset, .. } => dataset,
     };
     NeededDataset {
+        element: QueryElement::Dimension(position),
         dataset,
         origin: &dimension.origin,
     }
@@ -78,9 +84,13 @@ fn dimension_dataset(dimension: &BoundDimension) -> NeededDataset<'_> {
 /// is located at its entry (E3-3.1a).
 fn filter_datasets(query: &BoundQuery) -> Vec<NeededDataset<'_>> {
     let mut needed = Vec::new();
-    for filter in query.filters() {
+    for (position, filter) in query.filters().iter().enumerate() {
         for dataset in &filter.datasets {
             needed.push(NeededDataset {
+                element: QueryElement::Filter {
+                    filter: position,
+                    dataset: dataset.clone(),
+                },
                 dataset,
                 origin: &filter.origin,
             });
@@ -88,6 +98,7 @@ fn filter_datasets(query: &BoundQuery) -> Vec<NeededDataset<'_>> {
     }
     if let Some(date_range) = query.date_range() {
         needed.push(NeededDataset {
+            element: QueryElement::DateRange,
             dataset: &date_range.field.dataset,
             origin: &date_range.origin,
         });
