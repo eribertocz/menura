@@ -1,0 +1,15 @@
+id: e0-row-access-partial-route-001
+rules: [E0-4.2a, E0H-2.3, E2-5]
+model: e0-row-access-partial-route
+security_context: north.json
+query:
+  contract: menura.query
+  contract_version: "1.1.0"
+  time_zone: UTC
+  query:
+    metrics:
+      - {metric: order_total, alias: order_total}
+expect:
+  outcome: error
+  error: E0H-01
+  warnings: [W0E-04]

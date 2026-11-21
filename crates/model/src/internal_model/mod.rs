@@ -19,7 +19,7 @@ pub use common::{
     Descriptions, DiagnosticCode, FieldPath, NormalizedName, SourceLocation, TypedValue, ValueType,
 };
 pub use dataset::{Dataset, Field, PartialPeriod, Population, PopulationMode};
-pub use diagnostics::{ElementKind, UnusableElement, Warning};
+pub use diagnostics::{ElementKind, RowAccessCut, UnusableElement, Warning};
 pub use metric::{
     Additivity, Component, ContextMetric, ContextModifier, DeclaredAdditivity,
     DecomposabilityClass, DerivedMetric, DivisionByZero, Metric, MetricClassification,
