@@ -766,26 +766,26 @@ Find a rule ID or a section here, then open only that file at that line.
 | [stages/E6-generate.md](stages/E6-generate.md#L20) | 20 | section | E6-4 SQL rules (all dialects) |
 | [stages/E6-generate.md](stages/E6-generate.md#L24) | 24 | rule | E6-4.1 |
 | [stages/E6-generate.md](stages/E6-generate.md#L25) | 25 | rule | E6-4.2 |
-| [stages/E6-generate.md](stages/E6-generate.md#L28) | 28 | rule | E6-4.3 |
-| [stages/E6-generate.md](stages/E6-generate.md#L29) | 29 | rule | E6-4.4 |
-| [stages/E6-generate.md](stages/E6-generate.md#L30) | 30 | rule | E6-4.5 |
-| [stages/E6-generate.md](stages/E6-generate.md#L31) | 31 | rule | E6-4.6 |
-| [stages/E6-generate.md](stages/E6-generate.md#L32) | 32 | rule | E6-4.7 |
-| [stages/E6-generate.md](stages/E6-generate.md#L33) | 33 | rule | E6-4.8 |
-| [stages/E6-generate.md](stages/E6-generate.md#L34) | 34 | rule | E6-4.9 |
-| [stages/E6-generate.md](stages/E6-generate.md#L35) | 35 | rule | E6-4.10 |
-| [stages/E6-generate.md](stages/E6-generate.md#L36) | 36 | rule | E6-4.11 |
-| [stages/E6-generate.md](stages/E6-generate.md#L38) | 38 | section | E6-5 DuckDB |
-| [stages/E6-generate.md](stages/E6-generate.md#L42) | 42 | rule | E6-5.1 |
-| [stages/E6-generate.md](stages/E6-generate.md#L43) | 43 | rule | E6-5.2 |
-| [stages/E6-generate.md](stages/E6-generate.md#L44) | 44 | rule | E6-5.3 |
-| [stages/E6-generate.md](stages/E6-generate.md#L45) | 45 | rule | E6-5.4 |
-| [stages/E6-generate.md](stages/E6-generate.md#L46) | 46 | rule | E6-5.5 |
-| [stages/E6-generate.md](stages/E6-generate.md#L47) | 47 | rule | E6-5.6 |
-| [stages/E6-generate.md](stages/E6-generate.md#L48) | 48 | rule | E6-5.7 |
-| [stages/E6-generate.md](stages/E6-generate.md#L50) | 50 | section | E6-6 Other outputs |
-| [stages/E6-generate.md](stages/E6-generate.md#L52) | 52 | rule | E6-6.1 |
-| [stages/E6-generate.md](stages/E6-generate.md#L53) | 53 | rule | E6-6.2 |
+| [stages/E6-generate.md](stages/E6-generate.md#L29) | 29 | rule | E6-4.3 |
+| [stages/E6-generate.md](stages/E6-generate.md#L30) | 30 | rule | E6-4.4 |
+| [stages/E6-generate.md](stages/E6-generate.md#L31) | 31 | rule | E6-4.5 |
+| [stages/E6-generate.md](stages/E6-generate.md#L32) | 32 | rule | E6-4.6 |
+| [stages/E6-generate.md](stages/E6-generate.md#L33) | 33 | rule | E6-4.7 |
+| [stages/E6-generate.md](stages/E6-generate.md#L34) | 34 | rule | E6-4.8 |
+| [stages/E6-generate.md](stages/E6-generate.md#L35) | 35 | rule | E6-4.9 |
+| [stages/E6-generate.md](stages/E6-generate.md#L36) | 36 | rule | E6-4.10 |
+| [stages/E6-generate.md](stages/E6-generate.md#L37) | 37 | rule | E6-4.11 |
+| [stages/E6-generate.md](stages/E6-generate.md#L39) | 39 | section | E6-5 DuckDB |
+| [stages/E6-generate.md](stages/E6-generate.md#L43) | 43 | rule | E6-5.1 |
+| [stages/E6-generate.md](stages/E6-generate.md#L44) | 44 | rule | E6-5.2 |
+| [stages/E6-generate.md](stages/E6-generate.md#L45) | 45 | rule | E6-5.3 |
+| [stages/E6-generate.md](stages/E6-generate.md#L46) | 46 | rule | E6-5.4 |
+| [stages/E6-generate.md](stages/E6-generate.md#L47) | 47 | rule | E6-5.5 |
+| [stages/E6-generate.md](stages/E6-generate.md#L48) | 48 | rule | E6-5.6 |
+| [stages/E6-generate.md](stages/E6-generate.md#L49) | 49 | rule | E6-5.7 |
+| [stages/E6-generate.md](stages/E6-generate.md#L51) | 51 | section | E6-6 Other outputs |
+| [stages/E6-generate.md](stages/E6-generate.md#L53) | 53 | rule | E6-6.1 |
+| [stages/E6-generate.md](stages/E6-generate.md#L54) | 54 | rule | E6-6.2 |
 | [stages/README.md](stages/README.md#L1) | 1 | section | Stages |
 | [stages/README.md](stages/README.md#L5) | 5 | section | STG-1 Load |
 | [stages/README.md](stages/README.md#L11) | 11 | section | STG-2 Compile |
