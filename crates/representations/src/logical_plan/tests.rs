@@ -94,6 +94,7 @@ fn filtered_count() -> PlanNode {
             keys: vec![NamedExpression {
                 name: ColumnName::new("region"),
                 expression: field("orders", "region"),
+                derived: None,
             }],
             components: vec![AggregateComponent {
                 name: ColumnName::new("order_count"),
@@ -116,6 +117,7 @@ fn version_0_3_0_chain() -> PlanNode {
                     qualifier: None,
                     name: Identifier::regular("order_count").expect("a regular identifier"),
                 }),
+                derived: None,
             }],
         },
         aggregate_schema(),

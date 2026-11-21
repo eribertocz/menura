@@ -181,6 +181,7 @@ mod tests {
                 keys: vec![NamedExpression {
                     name: ColumnName::new("dimension_1"),
                     expression: key,
+                    derived: None,
                 }],
                 components: vec![AggregateComponent {
                     name: ColumnName::new(component),
