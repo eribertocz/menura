@@ -1,0 +1,18 @@
+id: e2-restricted-join-key-granted-001
+rules: [E2-4.2, E2-4.8, SCY-3.1]
+model: e2-restricted-join-key
+security_context: manager.json
+query:
+  contract: "menura.query"
+  contract_version: "1.1.0"
+  time_zone: "UTC"
+  query:
+    dimensions: ["customers.segment"]
+    metrics:
+      - {"metric": "total_amount", "alias": "total_amount"}
+    nonportable_extensions:
+      - {"vendor_name": "COMMON", "data": {"namespace": "menura", "version": 1, "paths": [{"from": "orders", "to": "customers", "relationships": ["orders_customers"]}]}}
+expect:
+  outcome: "plan"
+  rows: "e2-restricted-join-key-granted-001.csv"
+  row_order: "any"

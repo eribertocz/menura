@@ -54,9 +54,10 @@ impl ExpressionWriter<'_, '_> {
         }
     }
 
-    /// `x % y`, and `MOD(x, y)`: NULL when `y = 0`, the operands widened to `HUGEINT` when the
-    /// result is a 128-bit integer (E0F-5a). The divisor is written first, where it first
-    /// appears.
+    /// `x % y`, and `MOD(x, y)`: NULL when `y = 0`, or `RDER-01` inside a derived metric with
+    /// `on_division_by_zero: error` (E6-4.6, E6-4.6a); NULL when `y` is NULL; the operands
+    /// widened to `HUGEINT` when the result is a 128-bit integer (E0F-5a). The divisor is
+    /// written first, where it first appears.
     pub(super) fn modulo(
         &mut self,
         expression: &Expression,
@@ -71,8 +72,9 @@ impl ExpressionWriter<'_, '_> {
         } else {
             format!("{dividend_text} % {divisor_text}")
         };
+        let zero = self.zero_divisor.sql();
         Ok(format!(
-            "CASE WHEN {divisor_text} = 0 THEN NULL ELSE {remainder} END"
+            "CASE WHEN {divisor_text} = 0 THEN {zero} ELSE {remainder} END"
         ))
     }
 
