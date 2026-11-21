@@ -75,6 +75,10 @@ pub struct Case {
     pub query: Option<serde_json::Value>,
     /// The load options the case loads its model with, or `None` for all defaults (CS-2.7).
     pub load_options: Option<CaseLoadOptions>,
+    /// Whether the rows of its plan are also compared with those of its oracle, the reference
+    /// SQL `<id>.oracle.sql` next to the case (CS-4.7).
+    #[serde(default)]
+    pub differential: bool,
     /// The expected result.
     pub expect: Expectation,
 }

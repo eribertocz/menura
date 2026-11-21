@@ -43,6 +43,9 @@ fn check_case(case: &Case) -> Result<(), RunnerErrorKind> {
     if case.expect.outcome.needs_security_context() && case.security_context.is_none() {
         return Err(RunnerErrorKind::MissingSecurityContext);
     }
+    if case.differential && case.expect.outcome != Outcome::Plan {
+        return Err(RunnerErrorKind::DifferentialWithoutPlan);
+    }
     let needs_error = matches!(case.expect.outcome, Outcome::Error | Outcome::RuntimeError);
     if needs_error && case.expect.error.as_deref().is_none_or(str::is_empty) {
         return Err(RunnerErrorKind::MissingErrorCode);
@@ -85,6 +88,32 @@ expect:
         assert_eq!(case.rules[0].as_str(), "CS-2.2");
         assert_eq!(case.expect.outcome, Outcome::Plan);
         assert_eq!(case.expect.rows.as_deref(), Some("expected.csv"));
+    }
+
+    #[test]
+    fn cs_4_7_a_case_is_not_differential_by_default() {
+        assert!(!parse_case(PLAN_CASE).unwrap().differential);
+    }
+
+    #[test]
+    fn cs_4_7_reads_a_differential_plan_case() {
+        let text = PLAN_CASE.replace("model: sample", "model: sample\ndifferential: true");
+        assert!(parse_case(&text).unwrap().differential);
+    }
+
+    #[test]
+    fn cs_4_7_rejects_a_differential_case_without_a_plan() {
+        let text = "
+id: sample-load-error-001
+rules: [CS-4.7]
+model: sample
+differential: true
+expect: {outcome: load_error, error: E0D-02}
+";
+        assert!(matches!(
+            parse_case(text),
+            Err(RunnerErrorKind::DifferentialWithoutPlan)
+        ));
     }
 
     #[test]

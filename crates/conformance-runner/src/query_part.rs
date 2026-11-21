@@ -14,6 +14,8 @@ use menura_core::{
 use crate::case::{Case, Expectation, Outcome, RowOrder};
 use crate::csv_rows::parse_csv;
 use crate::diagnostic_check::{Part, describe, location_mismatch, missing_warnings};
+use crate::differential::check_differential;
+use crate::divergences::Divergences;
 use crate::execution::{ExecutionFailure, execute_plan};
 use crate::fixture::read_text;
 use crate::report::CaseStatus;
@@ -30,6 +32,8 @@ pub(crate) struct QueryInputs<'inputs> {
     pub(crate) security_context: &'inputs [u8],
     /// The prepared database of the case (CS-4.2).
     pub(crate) connection: &'inputs Connection,
+    /// The classified divergences of differential cases (CS-4.7).
+    pub(crate) divergences: &'inputs Divergences,
 }
 
 /// Compiles the query of `case` over `handle` and compares the result with its expectation.
@@ -74,9 +78,11 @@ pub(crate) fn check_query(case: &Case, handle: &Handle, inputs: &QueryInputs<'_>
                 return CaseStatus::Failed(reason);
             }
             if outcome == Outcome::RuntimeError {
-                check_runtime_error(&case.expect, &plan, inputs.connection)
-            } else {
-                check_rows(&case.expect, &plan, inputs)
+                return check_runtime_error(&case.expect, &plan, inputs.connection);
+            }
+            match check_rows(&case.expect, &plan, inputs) {
+                CaseStatus::Passed if case.differential => check_differential(case, &plan, inputs),
+                status => status,
             }
         }
     }
@@ -222,6 +228,7 @@ mod tests {
     use super::*;
     use crate::case_file::parse_case;
     use crate::database::prepare_database;
+    use crate::divergences::parse_divergences;
     use crate::fixture::{ModelFixture, read_bytes, security_context_path};
     use crate::load_options::resolve_load_options;
     use crate::load_part::{LoadOutcome, ModelDocuments, check_load};
@@ -232,6 +239,11 @@ mod tests {
 
     /// Runs the query part of a case of the `slice` model, whose files are under `cases/cs/`.
     fn status(case_text: &str) -> CaseStatus {
+        status_with(case_text, &Divergences::default())
+    }
+
+    /// Runs the query part of a case with the given classified divergences.
+    fn status_with(case_text: &str, divergences: &Divergences) -> CaseStatus {
         let case = parse_case(case_text).unwrap();
         let model_folder = conformance_directory().join("models/slice");
         let connection = prepare_database(&ModelFixture::read(&model_folder).unwrap()).unwrap();
@@ -249,6 +261,7 @@ mod tests {
             case_folder: &case_folder,
             security_context: &security_context,
             connection: &connection,
+            divergences,
         };
         check_query(&case, &handle, &inputs)
     }
@@ -353,6 +366,41 @@ mod tests {
     fn cs_2_3_a_runtime_error_case_checks_its_golden_file_before_executing() {
         let expect = "{outcome: runtime_error, error: RADD-01, sql: cs-plan-rows-001.csv}";
         assert_fails(status(&case_text(BY_REGION, expect)), "golden");
+    }
+
+    /// A differential case of `BY_REGION` named `id`, whose oracle is `<id>.oracle.sql`.
+    fn differential_case(id: &str) -> String {
+        case_text(BY_REGION, "{outcome: plan, rows: cs-plan-rows-001.csv}")
+            .replace("id: cs-unit-001", &format!("id: {id}\ndifferential: true"))
+    }
+
+    #[test]
+    fn cs_4_7_a_differential_case_passes_when_its_rows_match_the_oracle() {
+        let text = differential_case("cs-unit-oracle-001");
+        assert_eq!(status(&text), CaseStatus::Passed);
+    }
+
+    #[test]
+    fn cs_4_7_an_unclassified_divergence_fails_the_case() {
+        let text = differential_case("cs-unit-divergent-001");
+        assert_fails(status(&text), "does not classify");
+    }
+
+    #[test]
+    fn cs_4_7_a_classified_divergence_leaves_the_case_pending() {
+        let text = differential_case("cs-unit-divergent-001");
+        let divergences = parse_divergences(
+            "divergences:\n  - {case: cs-unit-divergent-001, classification: bug, reason: r}\n",
+        )
+        .unwrap();
+        let status = status_with(&text, &divergences);
+        assert!(matches!(status, CaseStatus::Pending(_)), "{status:?}");
+    }
+
+    #[test]
+    fn cs_4_7_a_differential_case_without_its_oracle_fails() {
+        let text = differential_case("cs-unit-no-oracle-001");
+        assert_fails(status(&text), "cs-unit-no-oracle-001.oracle.sql");
     }
 
     #[test]

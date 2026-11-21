@@ -1,0 +1,6 @@
+# Classified divergences of differential cases (spec/08-conformance-suite.md CS-4.7).
+# Each entry names a case with `differential: true` whose rows differ from those of its oracle,
+# `<case id>.oracle.sql` next to the case. `classification` is `bug` (name the issue in `reason`),
+# `known_deviation` or `unsupported`. A divergence without an entry fails its case, and an entry
+# whose case no longer diverges fails too. Changes to this file are reviewed.
+divergences: []

@@ -8,6 +8,7 @@ use menura_contracts::types::compiled_plan::ResultColumn;
 use crate::case::RowOrder;
 use crate::cells::{Cell, actual_cell, describe_rows, expected_cell};
 use crate::csv_rows::{CsvField, CsvRows};
+use crate::execution::StatementResult;
 
 /// How expected and actual values are compared.
 #[derive(Debug, Clone, Copy, PartialEq)]
@@ -41,22 +42,63 @@ pub(crate) fn rows_mismatch(
         Ok(expected) => expected,
         Err(reason) => return Some(reason),
     };
+    cells_mismatch(&actual, &expected, comparison)
+}
+
+/// Why the rows of a plan differ from those its oracle returns (CS-4.7), or `None` when they
+/// match under CS-2.4. Both are read by the logical types of the plan's `result_schema`.
+pub(crate) fn rows_divergence(
+    schema: &[ResultColumn],
+    actual: &[Vec<Value>],
+    oracle: &StatementResult,
+    comparison: Comparison,
+) -> Option<String> {
+    let names: Vec<&str> = schema.iter().map(|column| column.name.as_str()).collect();
+    if names != oracle.names {
+        return Some(format!(
+            "the output names are [{}], the oracle's are [{}]",
+            names.join(", "),
+            oracle.names.join(", ")
+        ));
+    }
+    let actual = match cells_of_actual(schema, actual) {
+        Ok(actual) => actual,
+        Err(reason) => return Some(reason),
+    };
+    let oracle_rows = match cells_of_actual(schema, &oracle.rows) {
+        Ok(rows) => rows,
+        Err(reason) => return Some(format!("the oracle: {reason}")),
+    };
+    cells_mismatch(&actual, &oracle_rows, comparison).map(|reason| {
+        format!(
+            "{reason}; the oracle returns {}",
+            describe_rows(&oracle_rows)
+        )
+    })
+}
+
+/// Why the actual cells differ from the expected ones, or `None` when they match.
+fn cells_mismatch(
+    actual: &[Vec<Cell>],
+    expected: &[Vec<Cell>],
+    comparison: Comparison,
+) -> Option<String> {
     if actual.len() != expected.len() {
         return Some(format!(
             "the plan returns {} rows, expected {}: {}",
             actual.len(),
             expected.len(),
-            describe_rows(&actual)
+            describe_rows(actual)
         ));
     }
     let matched = match comparison.row_order {
         RowOrder::Exact => actual
             .iter()
-            .zip(&expected)
+            .zip(expected)
             .all(|(row, wanted)| rows_equal(row, wanted, comparison.tolerance)),
-        RowOrder::Any => same_multiset(&actual, &expected, comparison.tolerance),
+        RowOrder::Any => same_multiset(actual, expected, comparison.tolerance),
     };
-    (!matched).then(|| format!("the plan returns the rows {}", describe_rows(&actual)))
+    (!matched).then(|| format!("the plan returns the rows {}", describe_rows(actual)))
 }
 
 /// Whether every expected row matches its own actual row.
@@ -237,6 +279,55 @@ mod tests {
     fn cs_2_4_a_different_row_count_fails() {
         assert!(mismatch(&[], "region,total,rate\nA,1,\n", ANY).is_some());
         assert_eq!(mismatch(&[], "region,total,rate\n", ANY), None);
+    }
+
+    fn oracle(names: &[&str], rows: Vec<Vec<Value>>) -> StatementResult {
+        StatementResult {
+            names: names.iter().map(|name| (*name).to_owned()).collect(),
+            rows,
+        }
+    }
+
+    const NAMES: [&str; 3] = ["region", "total", "rate"];
+
+    #[test]
+    fn cs_4_7_rows_equal_to_the_oracle_s_under_cs_2_4_do_not_diverge() {
+        let actual = [row(Some("A"), 100, Some(0.5)), row(None, 4500, None)];
+        let rows = vec![row(None, 4500, None), row(Some("A"), 100, Some(0.5))];
+        assert_eq!(
+            rows_divergence(&schema(), &actual, &oracle(&NAMES, rows), ANY),
+            None
+        );
+    }
+
+    #[test]
+    fn cs_4_7_other_rows_than_the_oracle_s_diverge() {
+        let actual = [row(Some("A"), 100, None)];
+        let rows = vec![row(Some("A"), 101, None)];
+        let reason = rows_divergence(&schema(), &actual, &oracle(&NAMES, rows), ANY).unwrap();
+        assert!(reason.contains("the oracle returns"), "{reason}");
+    }
+
+    #[test]
+    fn cs_4_7_other_output_names_than_the_oracle_s_diverge() {
+        let actual = [row(Some("A"), 100, None)];
+        let rows = vec![row(Some("A"), 100, None)];
+        let names = ["region", "amount", "rate"];
+        let reason = rows_divergence(&schema(), &actual, &oracle(&names, rows), ANY).unwrap();
+        assert!(reason.contains("output names"), "{reason}");
+    }
+
+    #[test]
+    fn cs_4_7_the_oracle_rows_are_compared_in_the_declared_order() {
+        let actual = [row(Some("A"), 1, None), row(Some("B"), 2, None)];
+        let rows = vec![row(Some("B"), 2, None), row(Some("A"), 1, None)];
+        let exact = Comparison {
+            row_order: RowOrder::Exact,
+            ..ANY
+        };
+        let oracle = oracle(&NAMES, rows);
+        assert_eq!(rows_divergence(&schema(), &actual, &oracle, ANY), None);
+        assert!(rows_divergence(&schema(), &actual, &oracle, exact).is_some());
     }
 
     #[test]
