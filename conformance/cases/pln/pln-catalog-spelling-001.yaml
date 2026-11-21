@@ -1,0 +1,17 @@
+id: pln-catalog-spelling-001
+rules: [PLN-2.2, STG-3.6]
+model: e0-references-catalog-columns
+security_context: analyst.json
+query:
+  contract: "menura.query"
+  contract_version: "1.1.0"
+  time_zone: "UTC"
+  query:
+    metrics:
+      - {"metric": "total_exact", "alias": "total_exact"}
+expect:
+  outcome: "plan"
+  warnings: [W0D-01]
+  sql: "pln-catalog-spelling-001.sql"
+  row_order: "any"
+  rows: "pln-catalog-spelling-001.csv"

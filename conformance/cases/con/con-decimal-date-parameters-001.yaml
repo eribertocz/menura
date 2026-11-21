@@ -1,0 +1,17 @@
+id: con-decimal-date-parameters-001
+rules: [CON-4, E6-4.2a]
+model: slice
+security_context: auditor.json
+query:
+  contract: "menura.query"
+  contract_version: "1.1.0"
+  time_zone: "UTC"
+  query:
+    dimensions: ["sales.region"]
+    metrics:
+      - {"metric": "sale_count", "alias": "sale_count"}
+    filter: "sales.amount >= 10.50 AND sales.sale_date >= DATE '2026-01-20'"
+expect:
+  outcome: "plan"
+  row_order: "any"
+  rows: "con-decimal-date-parameters-001.csv"

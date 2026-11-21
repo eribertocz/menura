@@ -1,5 +1,5 @@
 id: e2-unauthorized-dataset-001
-rules: [E2-4.1, E2-4.4]
+rules: [E2-4.1, E2-4.4, PLN-5.2]
 model: slice
 security_context: analyst-north.json
 query:

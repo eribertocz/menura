@@ -1,0 +1,20 @@
+id: e6-literals-001
+rules: [E6-4.11, E6-4.1, E6-4.4, E6-4.9, E6-5.1, PLN-2.1, PLN-2.3]
+model: slice
+security_context: auditor.json
+query:
+  contract: "menura.query"
+  contract_version: "1.1.0"
+  time_zone: "UTC"
+  query:
+    dimensions: ["sales.sale_date"]
+    metrics:
+      - {"metric": "sale_count", "alias": "sale_count"}
+    filter: "sales.quantity >= 2"
+    nonportable_extensions:
+      - {"vendor_name": "COMMON", "data": {"namespace": "menura", "version": 1, "time_grains": [{"dimension": "sales.sale_date", "grain": "month"}], "order_by": [{"output": "sale_date", "direction": "asc", "nulls": "last"}], "limit": 2}}
+expect:
+  outcome: "plan"
+  sql: "e6-literals-001.sql"
+  row_order: "exact"
+  rows: "e6-literals-001.csv"
