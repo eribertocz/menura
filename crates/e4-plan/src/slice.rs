@@ -1,5 +1,4 @@
-//! The branch and the home dataset of a query of the 0.4.0 track before stitching and
-//! propagation.
+//! The branches and the home datasets of a query of the 0.4.0 track.
 
 use menura_model::internal_model::{Dataset, InternalModel};
 use menura_representations::origin::{Origin, QueryLocation};
@@ -12,35 +11,27 @@ pub(crate) fn query_root() -> Origin {
     Origin::Query(QueryLocation::new("", None))
 }
 
-/// The single branch of `branches`.
+/// The first branch of `branches`, in branch order (E3-4.3).
 ///
 /// # Errors
 ///
-/// [`InvariantViolation::NoBranch`] or [`InvariantViolation::SeveralBranches`].
-pub(crate) fn single_branch(branches: &Branches) -> Result<&Branch, PlanError> {
-    let branch = match branches.as_slice() {
-        [] => {
-            return Err(PlanError::invariant(
-                InvariantViolation::NoBranch,
-                &query_root(),
-            ));
-        }
-        [branch] => branch,
-        [_, _, ..] => {
-            return Err(PlanError::invariant(
-                InvariantViolation::SeveralBranches,
-                &query_root(),
-            ));
-        }
-    };
-    Ok(branch)
+/// [`InvariantViolation::NoBranch`].
+pub(crate) fn first_branch(branches: &Branches) -> Result<&Branch, PlanError> {
+    branches.as_slice().first().ok_or_else(no_branch)
 }
 
-/// The home dataset of `branch`, which reaches no other dataset with row policies (E4-6.5).
+/// The internal error of a query without branches.
+pub(crate) fn no_branch() -> PlanError {
+    PlanError::invariant(InvariantViolation::NoBranch, &query_root())
+}
+
+/// The home dataset of `branch`, which E0 must not mark unusable: a dataset whose row
+/// policies cannot be propagated is unusable (`E0H-01`), and planning it would read rows that
+/// are not visible.
 ///
 /// # Errors
 ///
-/// [`InvariantViolation::UnknownDataset`] or [`InvariantViolation::Propagation`].
+/// [`InvariantViolation::UnknownDataset`] or [`InvariantViolation::UnusableDataset`].
 pub(crate) fn home_dataset<'model>(
     branch: &Branch,
     model: &'model InternalModel,
@@ -48,25 +39,12 @@ pub(crate) fn home_dataset<'model>(
     let home = model
         .dataset(&branch.home)
         .ok_or_else(|| PlanError::invariant(InvariantViolation::UnknownDataset, &query_root()))?;
-    let reaches_policy = model
-        .parts()
-        .graph
-        .reachability
-        .iter()
-        .filter(|reach| reach.dataset == home.name)
-        .flat_map(|reach| &reach.reached)
-        .filter(|reached| reached.dataset != home.name)
-        .any(|reached| {
-            model
-                .dataset(&reached.dataset)
-                .is_some_and(|dataset| !dataset.row_policies.is_empty())
-        });
-    if reaches_policy {
+    if home.query_errors.is_empty() {
+        Ok(home)
+    } else {
         Err(PlanError::invariant(
-            InvariantViolation::Propagation,
+            InvariantViolation::UnusableDataset,
             &Origin::Model(home.location.clone()),
         ))
-    } else {
-        Ok(home)
     }
 }

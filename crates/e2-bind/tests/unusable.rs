@@ -96,13 +96,14 @@ fn e2_5_row_12a_an_unusable_field_reports_its_query_error_code() {
 
 #[test]
 fn e2_5_row_12a_an_element_with_several_codes_reports_the_first_in_the_row_order() {
-    let cases: [(&[&str], &str); 6] = [
+    let cases: [(&[&str], &str); 7] = [
         (&["E0B-09", "E0B-08"], "E0B-08"),
         (&["E0D-03", "E0B-09"], "E0B-09"),
         (&["E0F-03", "E0D-07"], "E0D-07"),
         (&["E0G-01", "E0F-08"], "E0F-08"),
         (&["E0G-02", "E0G-01"], "E0G-01"),
         (&["E0C-37", "E0G-02"], "E0G-02"),
+        (&["E0H-01", "E0C-37"], "E0C-37"),
     ];
     for (codes, first) in cases {
         let model = model_with(|parts| mark_metric(parts, "REVENUE", codes));
@@ -128,6 +129,22 @@ fn e2_5_row_12a_the_first_unusable_element_in_query_order_is_reported() {
     assert_eq!(
         bind_error(&query, &model, &["admin"]),
         error(unusable("E0C-37"), "/query/metrics/0")
+    );
+}
+
+#[test]
+fn e2_5_row_12a_a_dataset_cut_off_from_its_row_policies_reports_e0h_01() {
+    let model = model_with(|parts| {
+        let orders = parts
+            .datasets
+            .iter_mut()
+            .find(|dataset| dataset.name.as_str() == "ORDERS")
+            .expect("ORDERS");
+        orders.query_errors = vec![DiagnosticCode::new("E0H-01")];
+    });
+    assert_eq!(
+        bind_error(&two_metrics(), &model, &["admin"]),
+        error(unusable("E0H-01"), "/query/dimensions/0")
     );
 }
 
