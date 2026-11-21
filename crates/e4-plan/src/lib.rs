@@ -79,7 +79,9 @@ pub fn build_plan(
     let outputs = metrics::metric_outputs(branch, &metrics)?;
     let query_predicate = query_filter::query_predicate(query, &layout)?;
     let has_reference_time = query.time().reference_time.is_some();
-    let row_filters = policy_visits::row_filters(home, model, security, has_reference_time)?;
+    let graph = followed::PolicyGraph::new(model);
+    let row_filters =
+        policy_visits::row_filters(home, model, &graph, security, has_reference_time)?;
 
     let mut read = fields_read(
         &keys,
@@ -88,6 +90,7 @@ pub fn build_plan(
     );
     let visibility = visibility::Visibility {
         model,
+        graph: &graph,
         filters: &row_filters,
         catalog,
     };

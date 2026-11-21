@@ -2,7 +2,7 @@
 //! dataset, checked in the visit order of E4-6.9: `ESEC-02` over every dataset first, then
 //! `EQRY-03` (E4-6.9b, E2-5 row 18).
 
-use std::collections::{BTreeMap, BTreeSet, VecDeque};
+use std::collections::BTreeMap;
 
 use menura_model::expression::Expression;
 use menura_model::internal_model::{Dataset, InternalModel, NormalizedName, SourceLocation};
@@ -10,7 +10,7 @@ use menura_representations::origin::Origin;
 use menura_security::{AdmittedSecurityContext, RowFilterError, row_filter};
 
 use crate::error::{InvariantViolation, PlanError};
-use crate::followed::has_policies;
+use crate::followed::PolicyGraph;
 use crate::policy::reads_now;
 
 /// The row filter `G AND R` of one dataset for the user, as E0 wrote it, with the location of
@@ -43,14 +43,15 @@ impl RowFilters {
 /// that needs an absent attribute; then [`PlanError::MissingReferenceTime`] (`EQRY-03`) for the
 /// first one that reads the current date or time without `reference_time`; an internal error
 /// for a condition E0 did not parse.
-pub(crate) fn row_filters(
-    home: &Dataset,
-    model: &InternalModel,
+pub(crate) fn row_filters<'model>(
+    home: &'model Dataset,
+    model: &'model InternalModel,
+    graph: &PolicyGraph<'model>,
     context: &AdmittedSecurityContext,
     has_reference_time: bool,
 ) -> Result<RowFilters, PlanError> {
     let mut filters = BTreeMap::new();
-    for dataset in visit_order(home, model) {
+    for dataset in visit_order(home, model, graph) {
         let filter = row_filter(dataset, context).map_err(|error| match error {
             RowFilterError::MissingAttribute { .. } => PlanError::MissingAttribute(error),
             RowFilterError::UnparsedCondition { location } => PlanError::invariant(
@@ -83,39 +84,21 @@ pub(crate) fn row_filters(
 fn visit_order<'model>(
     home: &'model Dataset,
     model: &'model InternalModel,
+    graph: &PolicyGraph<'model>,
 ) -> Vec<&'model Dataset> {
-    let mut order = vec![home];
-    let mut reached: Vec<(usize, &NormalizedName)> = distances(model, &home.name)
+    let mut reached: Vec<(usize, &NormalizedName)> = graph
+        .distances(&home.name)
         .into_iter()
-        .filter(|(dataset, _)| *dataset != &home.name && has_policies(model, dataset))
+        .filter(|(dataset, _)| *dataset != &home.name)
         .map(|(dataset, distance)| (distance, dataset))
         .collect();
     reached.sort();
+    let mut order = vec![home];
     order.extend(
         reached
             .into_iter()
-            .filter_map(|(_, dataset)| model.dataset(dataset)),
+            .filter_map(|(_, dataset)| model.dataset(dataset))
+            .filter(|dataset| !dataset.row_policies.is_empty()),
     );
     order
-}
-
-/// The length of the shortest path from `home` to every dataset it reaches along usable
-/// relationships.
-fn distances<'model>(
-    model: &'model InternalModel,
-    home: &'model NormalizedName,
-) -> Vec<(&'model NormalizedName, usize)> {
-    let edges = &model.parts().graph.edges;
-    let mut seen: BTreeSet<&NormalizedName> = BTreeSet::from([home]);
-    let mut found = Vec::new();
-    let mut pending = VecDeque::from([(home, 0)]);
-    while let Some((current, distance)) = pending.pop_front() {
-        found.push((current, distance));
-        for edge in edges.iter().filter(|edge| &edge.from == current) {
-            if seen.insert(&edge.to) {
-                pending.push_back((&edge.to, distance + 1));
-            }
-        }
-    }
-    found
 }

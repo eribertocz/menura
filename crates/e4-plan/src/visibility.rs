@@ -6,14 +6,16 @@
 
 use menura_contracts::types::catalog::CatalogSchemaDocument;
 use menura_model::expression::Expression;
-use menura_model::internal_model::{Dataset, GraphEdge, InternalModel, NormalizedName};
+use menura_model::internal_model::{
+    Dataset, GraphEdge, InternalModel, NormalizedName, Relationship,
+};
 use menura_representations::logical_plan::{JoinCondition, Operation, PlanNode};
 use menura_representations::names::{ColumnName, ColumnPrefix};
 use menura_representations::origin::Origin;
 
 use crate::columns::{column_reference, over_scan, read_fields};
 use crate::error::{InvariantViolation, PlanError};
-use crate::followed::followed_relationships;
+use crate::followed::PolicyGraph;
 use crate::policy_visits::{RowFilter, RowFilters};
 use crate::rewrite::rewrite;
 use crate::scan::scan;
@@ -23,6 +25,8 @@ use crate::scan::scan;
 pub(crate) struct Visibility<'plan> {
     /// The model.
     pub(crate) model: &'plan InternalModel,
+    /// The usable graph, indexed.
+    pub(crate) graph: &'plan PolicyGraph<'plan>,
     /// The row filters of the user, by dataset.
     pub(crate) filters: &'plan RowFilters,
     /// The admitted catalog schema.
@@ -86,7 +90,7 @@ impl Visibility<'_> {
             })?;
             read_fields(&predicate, &mut fields);
         }
-        for edge in followed_relationships(self.model, &dataset.name, chain) {
+        for edge in self.graph.followed(&dataset.name, chain) {
             let relationship = self
                 .model
                 .relationship(&edge.relationship)
@@ -119,7 +123,7 @@ impl Visibility<'_> {
                 origin,
             );
         }
-        for edge in followed_relationships(self.model, &dataset.name, chain) {
+        for edge in self.graph.followed(&dataset.name, chain) {
             node = self.semi_join(node, dataset, edge, prefix, chain)?;
         }
         Ok(node)
@@ -138,6 +142,22 @@ impl Visibility<'_> {
         }
     }
 
+    /// The dataset `edge` reaches, which E0 must not mark unusable.
+    fn related_dataset(&self, edge: &GraphEdge, origin: &Origin) -> Result<&Dataset, PlanError> {
+        let related = self
+            .model
+            .dataset(&edge.to)
+            .ok_or_else(|| PlanError::invariant(InvariantViolation::UnknownDataset, origin))?;
+        if related.query_errors.is_empty() {
+            Ok(related)
+        } else {
+            Err(PlanError::invariant(
+                InvariantViolation::UnusableDataset,
+                &Origin::Model(related.location.clone()),
+            ))
+        }
+    }
+
     /// The `SemiJoin` of `input`, rows of `dataset`, along `edge`.
     fn semi_join(
         &self,
@@ -152,25 +172,8 @@ impl Visibility<'_> {
             .relationship(&edge.relationship)
             .ok_or_else(|| unknown_relationship(dataset))?;
         let origin = Origin::Model(relationship.location.clone());
-        let related = self
-            .model
-            .dataset(&edge.to)
-            .ok_or_else(|| PlanError::invariant(InvariantViolation::UnknownDataset, &origin))?;
-        if !related.query_errors.is_empty() {
-            return Err(PlanError::invariant(
-                InvariantViolation::UnusableDataset,
-                &Origin::Model(related.location.clone()),
-            ));
-        }
-        let on = relationship
-            .from_columns
-            .iter()
-            .zip(&relationship.to_columns)
-            .map(|(from, to)| JoinCondition {
-                left: column_of(from, prefix),
-                right: ColumnName::new(to.as_str()),
-            })
-            .collect();
+        let related = self.related_dataset(edge, &origin)?;
+        let on = key_pairs(relationship, prefix);
         let mut related_chain = chain.to_vec();
         related_chain.push(related.name.clone());
         let mut visible_fields = relationship.to_columns.clone();
@@ -195,6 +198,20 @@ impl Visibility<'_> {
             origin,
         ))
     }
+}
+
+/// The equalities of `relationship`: each `from_columns` field as a column of the input
+/// under `prefix`, with its paired `to_columns` field of the related dataset.
+fn key_pairs(relationship: &Relationship, prefix: Option<&ColumnPrefix>) -> Vec<JoinCondition> {
+    relationship
+        .from_columns
+        .iter()
+        .zip(&relationship.to_columns)
+        .map(|(from, to)| JoinCondition {
+            left: column_of(from, prefix),
+            right: ColumnName::new(to.as_str()),
+        })
+        .collect()
 }
 
 fn unknown_relationship(dataset: &Dataset) -> PlanError {
