@@ -5,7 +5,7 @@ use menura_model::internal_model::NormalizedName;
 use menura_representations::bound_query::BoundPath;
 use menura_representations::paths::JoinStep;
 
-use super::search::AuthorizedEdges;
+use super::search::{AuthorizedEdges, step};
 use crate::violation::InvariantViolation;
 
 /// One `paths` entry, with its steps and whether a branch used it.
@@ -86,11 +86,7 @@ fn steps_of(
         if &edge.from != current {
             return Err(InvariantViolation::BrokenPathChain { origin: origin() });
         }
-        steps.push(JoinStep {
-            relationship: edge.relationship.clone(),
-            from: edge.from.clone(),
-            to: edge.to.clone(),
-        });
+        steps.push(step(edge));
         current = &edge.to;
     }
     if current == path.to() {

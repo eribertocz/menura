@@ -10,6 +10,8 @@ mod chosen;
 mod homes;
 mod search;
 #[cfg(test)]
+mod search_tests;
+#[cfg(test)]
 mod test_support;
 
 pub(crate) use homes::{BranchHome, component_homes};
