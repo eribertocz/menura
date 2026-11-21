@@ -1,0 +1,17 @@
+id: e3-dimension-only-filter-path-001
+rules: [E3-5.2]
+model: e3-reachability
+security_context: analyst.json
+query:
+  contract: "menura.query"
+  contract_version: "1.1.0"
+  time_zone: "UTC"
+  query:
+    dimensions: ["orders.status"]
+    filter: "returns.reason = 'late'"
+expect:
+  outcome: "error"
+  error: "E_UNSUPPORTED_FILTER_PATH"
+  location:
+    document: "query"
+    pointer: "/query/filter"

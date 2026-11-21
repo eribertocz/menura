@@ -1,0 +1,19 @@
+id: e3-unsupported-filter-path-filters-001
+rules: [E3-3.6, E3-3.1a]
+model: e3-reachability
+security_context: analyst.json
+query:
+  contract: "menura.query"
+  contract_version: "1.1.0"
+  time_zone: "UTC"
+  query:
+    dimensions: ["orders.status"]
+    metrics: [{"metric": "total_amount", "alias": "total_amount"}]
+    nonportable_extensions:
+      - {"vendor_name": "COMMON", "data": {"namespace": "menura", "version": 1, "filters": ["orders.status = 'open'", "returns.reason = 'late'"]}}
+expect:
+  outcome: "error"
+  error: "E_UNSUPPORTED_FILTER_PATH"
+  location:
+    document: "query"
+    pointer: "/query/nonportable_extensions/0/data/filters/1"
