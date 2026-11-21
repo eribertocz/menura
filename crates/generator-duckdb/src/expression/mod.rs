@@ -10,6 +10,7 @@ mod dates;
 mod functions;
 mod numbers;
 mod operators;
+mod placeholders;
 mod text;
 mod time;
 
@@ -189,7 +190,7 @@ impl<'input, 'statement> ExpressionWriter<'input, 'statement> {
         let logical_type = self.literal_type(literal)?;
         let value =
             literal_value(literal).ok_or_else(|| self.error(InvariantViolation::NonFiniteFloat))?;
-        Ok(self.parameters.bind(logical_type, value))
+        self.parameter(logical_type, value)
     }
 
     /// An input column by its name, or a catalog column as the catalog spells it (PLN-2.2).

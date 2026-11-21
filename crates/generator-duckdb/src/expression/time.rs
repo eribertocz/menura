@@ -4,6 +4,7 @@ use menura_contracts::types::common::LogicalType;
 use menura_expressions::typing::{Aggregates, Outcome, Stop, Typed, TypingScope, type_expression};
 use menura_model::expression::{DateUnit, Expression, Literal, Reference};
 
+use super::placeholders::cast;
 use super::{Columns, ExpressionWriter, catalog_column};
 use crate::error::{GenerateError, InvariantViolation};
 use crate::parameters::SharedValue;
@@ -37,14 +38,16 @@ impl ExpressionWriter<'_, '_> {
         }
     }
 
-    /// The placeholder of the query time zone, a `text` parameter.
+    /// The query time zone, a `text` parameter: `CAST($tz AS VARCHAR)`. `text` always has a
+    /// `DuckDB` name, so it is written here without the fallible lookup.
     pub(super) fn time_zone(&mut self) -> String {
         let name = self.environment.time.time_zone.as_str().to_owned();
-        self.parameters.bind_shared(
+        let placeholder = self.parameters.bind_shared(
             SharedValue::TimeZone,
             LogicalType::Text,
             serde_json::Value::String(name),
-        )
+        );
+        cast(&placeholder, "VARCHAR")
     }
 
     /// The logical type of a literal, as E0.f types it (E0F-9.3).

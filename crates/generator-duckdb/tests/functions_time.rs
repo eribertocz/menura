@@ -68,7 +68,7 @@ fn e0f_10_1_parts_of_an_instant_are_read_in_the_query_time_zone() {
     assert!(
         generated
             .sql
-            .contains(r#"date_part('hour', ("CREATED_AT" AT TIME ZONE $1))"#)
+            .contains(r#"date_part('hour', ("CREATED_AT" AT TIME ZONE CAST($1 AS VARCHAR)))"#)
     );
     assert_eq!(generated.parameters.len(), 1);
     assert_eq!(generated.parameters[0].value, json!("America/New_York"));
@@ -96,7 +96,7 @@ fn e0f_10_1_dateadd_adds_calendar_intervals() {
 fn e0f_10_1_dateadd_of_an_instant_adds_in_the_query_time_zone() {
     let generated = model_sql("DATEADD(day, 1, CREATED_AT)", instant());
     assert!(generated.sql.contains(
-        r#"CAST((("CREATED_AT" AT TIME ZONE $1) + to_days(CAST(1 AS INTEGER))) AT TIME ZONE $1 AS TIMESTAMP WITH TIME ZONE)"#
+        r#"CAST((("CREATED_AT" AT TIME ZONE CAST($1 AS VARCHAR)) + to_days(CAST(1 AS INTEGER))) AT TIME ZONE CAST($1 AS VARCHAR) AS TIMESTAMP WITH TIME ZONE)"#
     ));
 }
 
@@ -133,7 +133,7 @@ fn e0f_10_1_datediff_weeks_start_on_monday() {
 fn e0f_10_1_datediff_of_time_units_counts_truncated_instants() {
     let generated = model_sql("DATEDIFF(hour, CREATED_AT, CREATED_AT)", big_integer());
     assert!(generated.sql.contains(
-        r#"(epoch_us(date_trunc('hour', ("CREATED_AT" AT TIME ZONE $1))) - epoch_us(date_trunc('hour', ("CREATED_AT" AT TIME ZONE $1)))) // 3600000000"#
+        r#"(epoch_us(date_trunc('hour', ("CREATED_AT" AT TIME ZONE CAST($1 AS VARCHAR)))) - epoch_us(date_trunc('hour', ("CREATED_AT" AT TIME ZONE CAST($1 AS VARCHAR))))) // 3600000000"#
     ));
 }
 
@@ -146,11 +146,9 @@ fn e6_4_2_datediff_binds_its_arguments_in_order_of_appearance() {
         &query_with_reference_time(),
     )
     .expect("SQL");
-    assert!(
-        generated
-            .sql
-            .contains(r#"CAST(CAST("ORDERED_ON" AS DATE) - CAST($1 AS DATE) AS BIGINT)"#)
-    );
+    assert!(generated.sql.contains(
+        r#"CAST(CAST("ORDERED_ON" AS DATE) - CAST(CAST($1 AS DATE) AS DATE) AS BIGINT)"#
+    ));
     assert_eq!(generated.parameters[0].value, json!("2026-01-01"));
 }
 
@@ -171,7 +169,7 @@ fn e0f_2_3_current_date_is_the_reference_date_bound_once() {
     assert!(
         generated
             .sql
-            .contains(r#"CASE WHEN ("ORDERED_ON" <= $1) THEN $1 END"#)
+            .contains(r#"CASE WHEN ("ORDERED_ON" <= CAST($1 AS DATE)) THEN CAST($1 AS DATE) END"#)
     );
     assert_eq!(generated.parameters.len(), 1);
     assert_eq!(generated.parameters[0].logical_type, LogicalType::Date);
@@ -181,11 +179,9 @@ fn e0f_2_3_current_date_is_the_reference_date_bound_once() {
 #[test]
 fn e0f_2_3_current_timestamp_is_the_wall_clock_of_the_reference_time() {
     let generated = model_sql("CURRENT_TIMESTAMP", timestamp());
-    assert!(
-        generated
-            .sql
-            .contains("CAST($1 AT TIME ZONE $2 AS TIMESTAMP)")
-    );
+    assert!(generated.sql.contains(
+        "CAST(CAST($1 AS TIMESTAMP WITH TIME ZONE) AT TIME ZONE CAST($2 AS VARCHAR) AS TIMESTAMP)"
+    ));
     assert_eq!(generated.parameters[0].logical_type, instant());
     assert_eq!(
         generated.parameters[0].value,
@@ -197,7 +193,9 @@ fn e0f_2_3_current_timestamp_is_the_wall_clock_of_the_reference_time() {
 #[test]
 fn e0f_2_3_current_time_is_the_time_of_the_reference_time() {
     let generated = model_sql("CURRENT_TIME", LogicalType::Time);
-    assert!(generated.sql.contains("CAST($1 AT TIME ZONE $2 AS TIME)"));
+    assert!(generated.sql.contains(
+        "CAST(CAST($1 AS TIMESTAMP WITH TIME ZONE) AT TIME ZONE CAST($2 AS VARCHAR) AS TIME)"
+    ));
 }
 
 #[test]

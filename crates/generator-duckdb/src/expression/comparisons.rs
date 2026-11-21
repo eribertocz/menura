@@ -24,8 +24,9 @@ impl ExpressionWriter<'_, '_> {
     }
 
     /// `expression` as an operand compared with a value of `other` type: a `date` parameter
-    /// compared with a timestamp becomes the start of that day, `CAST($n AS TIMESTAMP)`, in the
-    /// query time zone for a timestamp with time zone (E6-4.2b, E6-4.10).
+    /// compared with a timestamp becomes the start of that day,
+    /// `CAST(CAST($n AS DATE) AS TIMESTAMP)`, in the query time zone for a timestamp with time
+    /// zone (E6-4.2b, E6-4.10).
     pub(super) fn comparand(
         &mut self,
         expression: &Expression,

@@ -10,14 +10,14 @@ WITH
       "QUANTITY",
       "REGION"
     FROM "menura_1_scan"
-    WHERE "REGION" IN (SELECT unnest($1))
+    WHERE "REGION" IN (SELECT unnest(CAST($1 AS VARCHAR[])))
   ),
   "menura_3_filter" AS (
     SELECT
       "QUANTITY",
       "REGION"
     FROM "menura_2_filter"
-    WHERE "QUANTITY" NOT IN (SELECT unnest($2))
+    WHERE "QUANTITY" NOT IN (SELECT unnest(CAST($2 AS BIGINT[])))
   )
 SELECT
   "QUANTITY",

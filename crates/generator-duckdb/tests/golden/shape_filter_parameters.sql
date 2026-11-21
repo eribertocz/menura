@@ -10,7 +10,7 @@ WITH
       "AMOUNT",
       "REGION"
     FROM "menura_1_scan"
-    WHERE ("REGION" = $1) AND ("AMOUNT" > $2)
+    WHERE ("REGION" = CAST($1 AS VARCHAR)) AND ("AMOUNT" > CAST($2 AS DECIMAL(4,2)))
   )
 SELECT
   "AMOUNT",
