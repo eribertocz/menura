@@ -8,9 +8,13 @@
 #![forbid(unsafe_code)]
 
 mod components;
+mod path_choice;
 mod single_dataset;
 mod violation;
 
+pub use path_choice::{
+    BranchHome, ChoiceInvariant, PathChoiceCode, PathChoiceError, choose_paths, component_homes,
+};
 pub use violation::InvariantViolation;
 
 use menura_model::internal_model::InternalModel;
