@@ -41,13 +41,6 @@ impl<'input> ZeroDivisor<'input> {
 impl<'input> ExpressionWriter<'input, '_> {
     /// This writer, for the formula of the derived metric `metric` whose `on_division_by_zero`
     /// is `rule` (DER-3.1): its divisions (`/`, `%` and `MOD`) follow `rule`.
-    #[cfg_attr(
-        not(test),
-        expect(
-            dead_code,
-            reason = "the derived-metrics planning issue calls it once derived metrics compile (#318)"
-        )
-    )]
     pub(crate) fn in_derived_metric(
         mut self,
         metric: &'input NormalizedName,

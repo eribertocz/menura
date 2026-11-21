@@ -6,8 +6,9 @@
 //! `Scan` reads the visible rows of its dataset the same way (E4-6.5c), the query-filter
 //! `Filter`, `Deduplicate` when the branch joins and has metric components, and `Aggregate`
 //! (E4-4). Two or more branches are combined by a `Stitch` (E4-5). Then come `Project`,
-//! `Sort` and `Limit` (E4-9). Additivity and context modifiers come in later issues; an input
-//! that needs them is an internal error.
+//! `Sort` and `Limit` (E4-9). A derived metric is expanded into the components of its inputs,
+//! and its formula is computed in the final `Project` over them (DER-4.1). Additivity and
+//! context modifiers come in later issues; an input that needs them is an internal error.
 //!
 //! The plan follows the conventions shared with E6 (issue #251, E6-4.12): the home `Scan`
 //! projects fields of its dataset by normalized name, and the source columns a dataset
@@ -21,8 +22,10 @@
 #![forbid(unsafe_code)]
 
 mod columns;
+mod derived_inputs;
 mod dimensions;
 mod error;
+mod expansion;
 mod followed;
 mod joins;
 mod layout;
@@ -88,7 +91,12 @@ pub fn build_plan(
         1 => plans.pop().ok_or_else(slice::no_branch)?,
         _ => stitch::stitch(plans, project_origin.clone())?,
     };
-    let projected = output::project(query, combined, outputs, project_origin)?;
+    let with_inputs = derived_inputs::compute_inputs(
+        combined,
+        &metrics::input_columns(&metrics),
+        &project_origin,
+    )?;
+    let projected = output::project(query, with_inputs, outputs, project_origin)?;
     output::order_and_limit(query, projected)
 }
 

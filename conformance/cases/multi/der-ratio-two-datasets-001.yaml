@@ -1,0 +1,18 @@
+id: der-ratio-two-datasets-001
+rules: [DER-4.3, DER-4.1, DER-5.1.6, E0G-5.2]
+model: multi-derived
+security_context: analyst.json
+oracle: "der-ratio-two-datasets-001.oracle.sql"
+query:
+  contract: "menura.query"
+  contract_version: "1.1.0"
+  time_zone: "UTC"
+  query:
+    dimensions: ["regions.name"]
+    metrics:
+      - {"metric": "collected_to_budget", "alias": "collected_to_budget"}
+expect:
+  outcome: "plan"
+  row_order: "any"
+  rows: "der-ratio-two-datasets-001.csv"
+  tolerance: 1.0e-9

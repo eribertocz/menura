@@ -24,6 +24,12 @@ pub(crate) fn component_column(metric: usize, component: usize) -> ColumnName {
     ))
 }
 
+/// The column of the input `input` of the metric `metric`, both from 0: the value of an input
+/// of a derived metric, computed below the final `Project` (DER-3.1).
+pub(crate) fn input_column(metric: usize, input: usize) -> ColumnName {
+    ColumnName::new(&format!("metric_{}_input_{}", metric + 1, input + 1))
+}
+
 /// The shortest `menura.source` followed by one or more `.` that no field name of `home`
 /// starts with: the prefix of every `Scan` column of `home` that names a catalog column of its
 /// `source` rather than a field, so that the two never collide (issue #264).

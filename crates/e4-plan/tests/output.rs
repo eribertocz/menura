@@ -65,6 +65,7 @@ fn named(name: &str, expression: &str) -> NamedExpression {
     NamedExpression {
         name: ColumnName::new(name),
         expression: tree(expression),
+        derived: None,
     }
 }
 
@@ -78,10 +79,12 @@ fn e4_4_the_project_evaluates_each_metric_from_its_components_in_output_order() 
             NamedExpression {
                 name: ColumnName::new("region"),
                 expression: column_reference("dimension_1"),
+                derived: None,
             },
             NamedExpression {
                 name: ColumnName::new("order_date"),
                 expression: column_reference("dimension_2"),
+                derived: None,
             },
             named(
                 "average_amount",
@@ -90,6 +93,7 @@ fn e4_4_the_project_evaluates_each_metric_from_its_components_in_output_order() 
             NamedExpression {
                 name: ColumnName::new("order_count"),
                 expression: column_reference("metric_2_component_1"),
+                derived: None,
             },
         ]
     );

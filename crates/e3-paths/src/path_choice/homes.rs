@@ -36,7 +36,7 @@ pub(crate) fn component_homes(
         OutputColumn::Dimension(_) => None,
     });
     for (metric_position, metric) in metrics.enumerate() {
-        for (position, component) in components(metric, model)?.iter().enumerate() {
+        for (position, component) in components(metric, model)?.into_iter().enumerate() {
             homes
                 .entry(&component.home_dataset)
                 .or_default()

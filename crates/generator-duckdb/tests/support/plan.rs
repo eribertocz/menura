@@ -70,6 +70,7 @@ pub fn named(name: &str, expression: &str) -> NamedExpression {
     NamedExpression {
         name: ColumnName::new(name),
         expression: parse(expression),
+        derived: None,
     }
 }
 

@@ -194,18 +194,26 @@ impl<'input> StepWriter<'input> {
         })
     }
 
-    /// Each output column; a computed one is cast to its type (E6-4.5).
+    /// Each output column; a computed one is cast to its type (E6-4.5), and the divisions of a
+    /// derived formula follow its `on_division_by_zero` (E6-4.6a).
     fn project(
         &mut self,
         node: &'input PlanNode,
         input: &'input PlanNode,
-        expressions: &[NamedExpression],
+        expressions: &'input [NamedExpression],
     ) -> Result<SelectBody, GenerateError> {
         let written = self.write(input)?;
         self.parameters.start_node(node.origin());
         let mut items = Vec::new();
         for named in expressions {
-            let value = self.expression(node, Columns::Input(input.schema()), &named.expression)?;
+            let writer = self.writer(node, Columns::Input(input.schema()));
+            let mut writer = match &named.derived {
+                Some(formula) => {
+                    writer.in_derived_metric(&formula.metric, formula.on_division_by_zero)
+                }
+                None => writer,
+            };
+            let value = writer.write(&named.expression)?;
             let value = match named.expression {
                 Expression::Reference(_) => value,
                 _ => format!(

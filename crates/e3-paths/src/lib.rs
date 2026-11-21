@@ -9,6 +9,7 @@
 
 mod anchor;
 mod components;
+mod derived;
 mod error;
 mod metric_reach;
 mod needed;
