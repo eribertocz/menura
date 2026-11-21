@@ -163,8 +163,8 @@ where
             .expression
             .as_ref()
             .ok_or(InvariantViolation::ComponentMismatch)?;
+        (self.check)(metric)?;
         if !is_derived(expression) {
-            (self.check)(metric)?;
             let expression = self.base(metric, key.dataset.is_some(), expression)?;
             return Ok(Value {
                 expression,

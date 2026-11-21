@@ -73,7 +73,6 @@ fn planned_metric<'input>(
         return Err(InvariantViolation::InlineMetric);
     };
     let found = model_metric(path, model).ok_or(InvariantViolation::UnknownMetric)?;
-    check_extensions(found)?;
     Ok(PlannedMetric {
         bound,
         model: found,
