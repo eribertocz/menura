@@ -33,7 +33,7 @@ pub(crate) fn single_branch(branches: &Branches) -> Result<&Branch, PlanError> {
             ));
         }
     };
-    if branch.join_tree.steps().is_empty() {
+    if branch.join_tree.is_empty() {
         Ok(branch)
     } else {
         Err(PlanError::invariant(
