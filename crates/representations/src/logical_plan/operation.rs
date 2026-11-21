@@ -4,12 +4,11 @@ use menura_model::expression::Expression;
 use menura_model::internal_model::NormalizedName;
 
 use super::PlanNode;
-use super::items::{AggregateComponent, JoinKind, NamedExpression, SortItem};
-use crate::names::ColumnName;
+use super::items::{AggregateComponent, JoinCondition, JoinKind, NamedExpression, SortItem};
+use crate::names::{ColumnName, ColumnPrefix};
 use crate::paths::JoinStep;
 
-/// What a plan node does (E4-3). Every node of the table is defined; 0.3.0 builds only
-/// `Scan`, `Filter`, `Aggregate`, `Project`, `Sort` and `Limit` (VS-1).
+/// What a plan node does (E4-3). Every node of the table is defined.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Operation {
     /// `Scan(relation)`: read the catalog relation of a dataset.
@@ -17,16 +16,21 @@ pub enum Operation {
         /// The dataset whose relation is read.
         dataset: NormalizedName,
     },
-    /// `Join(left, right, relationship, kind)`: join along one relationship.
+    /// `Join(left, right, relationship, kind)`: join along one relationship. Its output is
+    /// the columns of `left`, then those of `right`.
     Join {
-        /// The left input.
+        /// The left input: the home `Scan`, or the previous `Join`.
         left: Box<PlanNode>,
-        /// The right input.
+        /// The right input: the `Scan` of the join instance the step reaches.
         right: Box<PlanNode>,
         /// The relationship joined along.
         relationship: NormalizedName,
         /// `left`, unless evidence allows `inner` (set only in E5).
         kind: JoinKind,
+        /// The equalities of the relationship's column pairs, in the order written.
+        on: Vec<JoinCondition>,
+        /// The prefix of every column of `right` (E6-4.12).
+        right_prefix: ColumnPrefix,
     },
     /// `Filter(input, predicate)`: keep the rows where the predicate is TRUE.
     Filter {
@@ -45,14 +49,15 @@ pub enum Operation {
         /// The predicate on the related row.
         predicate: Expression,
     },
-    /// `Deduplicate(input, group, identity)`: keep one row per (dimension key tuple, home row
-    /// identity) pair.
+    /// `Deduplicate(input, group, identity)`: keep one row per (`group` values, `identity`)
+    /// pair, NULLs compared equal (E4-3.5). Its output is the columns of `input`.
     Deduplicate {
         /// The input.
         input: Box<PlanNode>,
-        /// The columns of the dimension key tuple.
-        group: Vec<ColumnName>,
-        /// The columns that identify a home row.
+        /// The `Aggregate` key expressions, after time-grain truncation, over the columns of
+        /// `input` (E4-4.0f).
+        group: Vec<Expression>,
+        /// The columns that identify a home row: the synthesized row identity (E4-4.0f).
         identity: Vec<ColumnName>,
     },
     /// `Aggregate(input, keys, components)`: group and evaluate components.

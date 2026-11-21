@@ -1,11 +1,13 @@
 //! The branches: the output of E3 (E3-4, E3-5), each with its home dataset, components and
-//! join tree.
+//! join tree of join instances.
 
+mod element;
 mod join_tree;
 #[cfg(test)]
 mod tests;
 
-pub use join_tree::{JoinStep, JoinTree};
+pub use element::{ElementPath, QueryElement};
+pub use join_tree::{InstanceId, JoinInstance, JoinStep, JoinTree};
 
 use menura_model::internal_model::NormalizedName;
 
@@ -26,7 +28,8 @@ pub struct Branch {
     pub home: NormalizedName,
     /// The components whose home dataset it is; empty for a dimension-only query (E3-5.3).
     pub components: Vec<ComponentKey>,
-    /// The union of the paths to every dimension and filter dataset (E3-4.2).
+    /// The union of the paths to every dimension and filter dataset, as join instances, with
+    /// the instance each query element is bound to (E3-4.2, E3-4.2a).
     pub join_tree: JoinTree,
 }
 

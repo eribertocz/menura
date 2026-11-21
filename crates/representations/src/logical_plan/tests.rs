@@ -5,10 +5,10 @@ use menura_contracts::types::query::{Direction, NullsOrder};
 use menura_model::expression::{AggregateCall, Expression, Identifier, Reference, SimpleAggregate};
 
 use super::{
-    AggregateComponent, JoinKind, NamedExpression, Operation, OutputSchema, PlanNode, SchemaColumn,
-    SortItem,
+    AggregateComponent, JoinCondition, JoinKind, NamedExpression, Operation, OutputSchema,
+    PlanNode, SchemaColumn, SortItem,
 };
-use crate::names::ColumnName;
+use crate::names::{ColumnName, ColumnPrefix};
 use crate::origin::Origin;
 use crate::paths::JoinStep;
 use crate::test_support::{at, in_model, name, reference, true_literal};
@@ -26,6 +26,13 @@ fn count_type() -> LogicalType {
         bits: IntegerBits::SixtyFour,
         signed: true,
     }
+}
+
+fn column_reference(text: &str) -> Expression {
+    Expression::Reference(Reference {
+        qualifier: None,
+        name: Identifier::delimited(text).expect("a column name"),
+    })
 }
 
 fn region_schema() -> OutputSchema {
@@ -169,6 +176,11 @@ fn e4_3_join_and_semi_join_keep_their_relationships() {
             right: Box::new(scan("CUSTOMERS")),
             relationship: name("ORDERS_TO_CUSTOMERS"),
             kind: JoinKind::Left,
+            on: vec![JoinCondition {
+                left: ColumnName::new("customer_id"),
+                right: ColumnName::new("ORDERS_TO_CUSTOMERS.customer_id"),
+            }],
+            right_prefix: ColumnPrefix::new("ORDERS_TO_CUSTOMERS."),
         },
         region_schema(),
         query_origin(),
@@ -204,7 +216,7 @@ fn e4_3_deduplicate_and_stitch_keep_their_keys() {
     let deduplicate = PlanNode::new(
         Operation::Deduplicate {
             input: Box::new(scan("ORDERS")),
-            group: vec![ColumnName::new("region")],
+            group: vec![column_reference("region")],
             identity: vec![ColumnName::new("order_id")],
         },
         region_schema(),
@@ -245,4 +257,24 @@ fn e4_3_deduplicate_and_stitch_keep_their_keys() {
     let first_branch = stitch.inputs().first().copied().expect("two branches");
     let deduplicate = first_branch.inputs().first().copied().expect("one input");
     assert_eq!(kind_of(deduplicate.operation()), "Deduplicate");
+    assert!(!stitch.is_simple_plan());
+    assert!(!first_branch.is_simple_plan());
+}
+
+#[test]
+fn e4_4_2_a_plan_without_stitch_and_deduplicate_is_simple() {
+    let join = PlanNode::new(
+        Operation::Join {
+            left: Box::new(scan("ORDERS")),
+            right: Box::new(scan("CUSTOMERS")),
+            relationship: name("ORDERS_TO_CUSTOMERS"),
+            kind: JoinKind::Left,
+            on: Vec::new(),
+            right_prefix: ColumnPrefix::new("ORDERS_TO_CUSTOMERS."),
+        },
+        region_schema(),
+        query_origin(),
+    );
+
+    assert!(join.is_simple_plan());
 }
