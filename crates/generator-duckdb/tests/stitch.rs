@@ -10,7 +10,10 @@ mod support;
 
 use menura_contracts::types::common::{IntegerBits, LogicalType};
 use menura_generator_duckdb::{GeneratedSql, InvariantViolation};
-use menura_representations::logical_plan::{Operation, OutputSchema, PlanNode, SchemaColumn};
+use menura_model::expression::{IntegerLiteral, Literal};
+use menura_representations::logical_plan::{
+    Operation, OutputSchema, PlanNode, SchemaColumn, StitchColumn,
+};
 use menura_representations::names::ColumnName;
 use support::{
     aggregate, assert_golden, big_integer, column, component, decimal, filter, from_model,
@@ -55,12 +58,33 @@ fn region_quantities() -> PlanNode {
     )
 }
 
-/// The `Stitch` of `branches` by `keys`, producing `schema`.
-fn stitch(branches: Vec<PlanNode>, keys: &[&str], schema: Vec<SchemaColumn>) -> PlanNode {
+/// The `Stitch` of `branches` by `keys`, producing `schema`: the non-key column at position
+/// `i` comes from the branch `owners[i]`, and its empty-input value is `0` when it is one of
+/// `counts` and NULL otherwise.
+fn stitch(
+    branches: Vec<PlanNode>,
+    keys: &[&str],
+    schema: Vec<SchemaColumn>,
+    owners: &[usize],
+    counts: &[&str],
+) -> PlanNode {
+    let columns = schema
+        .iter()
+        .skip(keys.len())
+        .zip(owners)
+        .map(|(column, branch)| StitchColumn {
+            name: column.name.clone(),
+            branch: *branch,
+            empty_value: counts
+                .contains(&column.name.as_str())
+                .then(|| Literal::Integer(IntegerLiteral::new("0").expect("digits"))),
+        })
+        .collect();
     PlanNode::new(
         Operation::Stitch {
             branches,
             keys: keys.iter().map(|key| ColumnName::new(key)).collect(),
+            columns,
         },
         OutputSchema::new(schema),
         from_model("/semantic_model/0/metrics/0"),
@@ -88,6 +112,8 @@ fn two_branches() -> PlanNode {
         vec![region_count(), region_amount()],
         &["REGION"],
         two_branch_columns(),
+        &[0, 0, 1],
+        &["ORDER_COUNT"],
     )
 }
 
@@ -109,6 +135,8 @@ fn e6_4_12_stitch_of_three_branches_in_branch_order() {
         vec![region_count(), region_amount(), region_quantities()],
         &["REGION"],
         columns,
+        &[0, 0, 1, 2],
+        &["ORDER_COUNT", "DISTINCT_QUANTITIES"],
     );
     let sql = generated(
         &plan,
@@ -155,6 +183,8 @@ fn e6_4_11_stitch_member_missing_in_one_branch() {
         vec![north, region_amount()],
         &["REGION"],
         two_branch_columns(),
+        &[0, 0, 1],
+        &["ORDER_COUNT"],
     );
     let generated = generated(&plan, &TWO_METRICS);
     assert_golden(
@@ -210,6 +240,8 @@ fn by_region_and_month() -> PlanNode {
             column("TOTAL_QUANTITY", huge_integer(), true),
             column("TOTAL_AMOUNT", decimal(38, 2), true),
         ],
+        &[0, 1],
+        &[],
     )
 }
 
@@ -264,6 +296,8 @@ fn e4_5_2_stitch_without_keys_joins_one_row_per_branch() {
             column("ORDER_COUNT", big_integer(), false),
             column("TOTAL_AMOUNT", decimal(38, 2), true),
         ],
+        &[0, 1],
+        &["ORDER_COUNT"],
     );
     let sql = generate(&plan, &query(&[], &["ORDER_COUNT", "TOTAL_AMOUNT"]))
         .expect("SQL")
@@ -309,6 +343,8 @@ fn e6_4_12_presence_column_never_collides_with_a_branch_column() {
             column("menura.present", huge_integer(), true),
             column("TOTAL_AMOUNT", decimal(38, 2), true),
         ],
+        &[0, 1],
+        &[],
     );
     let sql = generated(&plan, &["menura.present", "TOTAL_AMOUNT"]).sql;
     assert!(
@@ -323,6 +359,8 @@ fn e4_3_7_stitch_key_missing_in_a_branch_is_an_error() {
         vec![region_count(), region_amount()],
         &["CREATED_MONTH"],
         two_branch_columns(),
+        &[0, 0, 1],
+        &["ORDER_COUNT"],
     );
     let error = generate(&plan, &query(&["REGION"], &TWO_METRICS)).expect_err("unknown key");
     assert_eq!(error.violation, InvariantViolation::UnknownColumn);
@@ -332,7 +370,13 @@ fn e4_3_7_stitch_key_missing_in_a_branch_is_an_error() {
 fn e4_3_7_stitch_column_of_no_branch_is_an_error() {
     let mut columns = two_branch_columns();
     columns.push(column("MISSING", big_integer(), true));
-    let plan = stitch(vec![region_count(), region_amount()], &["REGION"], columns);
+    let plan = stitch(
+        vec![region_count(), region_amount()],
+        &["REGION"],
+        columns,
+        &[0, 0, 1, 1],
+        &["ORDER_COUNT"],
+    );
     let error = generate(
         &plan,
         &query(
@@ -345,36 +389,34 @@ fn e4_3_7_stitch_column_of_no_branch_is_an_error() {
 }
 
 #[test]
-fn e4_3_7_stitch_column_of_two_branches_is_an_error() {
+fn e4_3_7_stitch_column_of_an_unknown_branch_is_an_error() {
     let plan = stitch(
-        vec![region_count(), region_count()],
+        vec![region_count(), region_amount()],
         &["REGION"],
-        vec![
-            column("REGION", LogicalType::Text, true),
-            column("ORDER_COUNT", big_integer(), false),
-            column("TOTAL_QUANTITY", huge_integer(), true),
-        ],
+        two_branch_columns(),
+        &[0, 0, 2],
+        &["ORDER_COUNT"],
     );
-    let error = generate(
-        &plan,
-        &query(&["REGION"], &["ORDER_COUNT", "TOTAL_QUANTITY"]),
-    )
-    .expect_err("ambiguous column");
-    assert_eq!(error.violation, InvariantViolation::AmbiguousStitchColumn);
+    let error = generate(&plan, &query(&["REGION"], &TWO_METRICS)).expect_err("unknown branch");
+    assert_eq!(error.violation, InvariantViolation::UnknownBranch);
 }
 
 #[test]
-fn e4_5_0b_stitch_branch_without_aggregate_is_an_error() {
-    let plan = stitch(
-        vec![scan("ORDERS", &["REGION", "QUANTITY"]), region_amount()],
-        &["REGION"],
-        vec![
-            column("REGION", LogicalType::Text, true),
-            column("QUANTITY", big_integer(), true),
-            column("TOTAL_AMOUNT", decimal(38, 2), true),
-        ],
+fn e4_3_7_stitch_schema_out_of_column_order_is_an_error() {
+    let mut columns = two_branch_columns();
+    columns.swap(1, 3);
+    let plan = PlanNode::new(
+        two_branches().operation().clone(),
+        OutputSchema::new(columns),
+        from_model("/semantic_model/0/metrics/0"),
     );
-    let error = generate(&plan, &query(&["REGION"], &["QUANTITY", "TOTAL_AMOUNT"]))
-        .expect_err("no empty-input value");
-    assert_eq!(error.violation, InvariantViolation::UnknownEmptyInputValue);
+    let error = generate(
+        &plan,
+        &query(
+            &["REGION"],
+            &["TOTAL_AMOUNT", "TOTAL_QUANTITY", "ORDER_COUNT"],
+        ),
+    )
+    .expect_err("schema out of order");
+    assert_eq!(error.violation, InvariantViolation::UnknownColumn);
 }

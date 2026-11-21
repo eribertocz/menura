@@ -4,28 +4,20 @@
 //! NULLs as equal (E4-5.0a). Each branch is joined to the keys with `IS NOT DISTINCT FROM` and
 //! carries a presence column, so a missing branch row is told apart from a branch row whose
 //! values are NULL (E4-5.1): a present row gives its values, a missing one the empty-input
-//! value of each component (E4-5.0b), a literal (E6-4.11). The steps of the branches come
-//! first, in branch order (E6-4.12).
+//! value that E4 gives each column (E4-5.0b), written as a literal (E6-4.11). The steps of the
+//! branches come first, in branch order (E6-4.12).
 
-use menura_model::expression::{AggregateCall, DistinctAggregate, SimpleAggregate};
-use menura_representations::logical_plan::{Operation, PlanNode};
+use menura_representations::logical_plan::{Operation, PlanNode, StitchColumn};
 use menura_representations::names::ColumnName;
 
 use crate::body::SelectBody;
 use crate::error::{GenerateError, InvariantViolation};
 use crate::identifiers::quote;
 use crate::steps::{StepWriter, column_type, error};
+use crate::values::literal_sql;
 
 /// The alias of the distinct key tuples.
 const KEYS: &str = "\"menura_keys\"";
-
-/// The value of a component over no rows (E4-5.0b).
-enum EmptyValue {
-    /// `0`, the value of a count.
-    Zero,
-    /// `NULL`, the value of every other aggregate.
-    Null,
-}
 
 impl<'input> StepWriter<'input> {
     /// The body of `node` when it is a `Stitch`; any other node here, a `Join`, is outside
@@ -35,18 +27,25 @@ impl<'input> StepWriter<'input> {
         node: &'input PlanNode,
     ) -> Result<SelectBody, GenerateError> {
         match node.operation() {
-            Operation::Stitch { branches, keys } => self.stitch(node, branches, keys),
+            Operation::Stitch {
+                branches,
+                keys,
+                columns,
+            } => self.stitch(node, branches, keys, columns),
             _ => Err(error(InvariantViolation::NodeOutsideSlice, node)),
         }
     }
 
-    /// The steps of `branches`, in branch order, then the body of the `Stitch` `node`.
+    /// The steps of `branches`, in branch order, then the body of the `Stitch` `node`: the
+    /// `keys`, then `columns`, in order.
     fn stitch(
         &mut self,
         node: &'input PlanNode,
         branches: &'input [PlanNode],
         keys: &[ColumnName],
+        columns: &[StitchColumn],
     ) -> Result<SelectBody, GenerateError> {
+        check_output(node, keys, columns)?;
         let mut names = Vec::new();
         for branch in branches {
             if !keys.iter().all(|key| has_column(branch, key)) {
@@ -56,12 +55,16 @@ impl<'input> StepWriter<'input> {
         }
         self.parameters.start_node(node.origin());
         let presence = presence_column(branches);
-        let items = node
-            .schema()
-            .columns()
+        let mut items: Vec<String> = keys
             .iter()
-            .map(|column| stitched_item(node, branches, keys, &presence, &column.name))
-            .collect::<Result<Vec<_>, _>>()?;
+            .map(|key| {
+                let key = quote(key.as_str());
+                format!("{KEYS}.{key} AS {key}")
+            })
+            .collect();
+        for column in columns {
+            items.push(stitched_item(node, branches, &presence, column)?);
+        }
         let clauses = names
             .iter()
             .enumerate()
@@ -72,6 +75,26 @@ impl<'input> StepWriter<'input> {
             from: format!("({}) AS {KEYS}", distinct_keys(&names, keys)),
             clauses,
         })
+    }
+}
+
+/// Checks that the schema of `node` is `keys`, then `columns`, in order.
+fn check_output(
+    node: &PlanNode,
+    keys: &[ColumnName],
+    columns: &[StitchColumn],
+) -> Result<(), GenerateError> {
+    let expected = keys.iter().chain(columns.iter().map(|column| &column.name));
+    let schema = node.schema().columns();
+    if schema.len() == keys.len() + columns.len()
+        && schema
+            .iter()
+            .zip(expected)
+            .all(|(column, name)| &column.name == name)
+    {
+        Ok(())
+    } else {
+        Err(error(InvariantViolation::UnknownColumn, node))
     }
 }
 
@@ -143,64 +166,32 @@ fn branch_join(index: usize, name: &str, keys: &[ColumnName], presence: &str) ->
     )
 }
 
-/// The select item of the output column `name`: a key from the distinct keys, or the value of
-/// the one branch that produces it, replaced by its empty-input value when the branch has no
-/// row for the key.
+/// The select item of `column`: the value of its branch, or its empty-input value cast to the
+/// column type when the branch has no row for the key (`NULL` when it has none).
 fn stitched_item(
     node: &PlanNode,
     branches: &[PlanNode],
-    keys: &[ColumnName],
     presence: &str,
-    name: &ColumnName,
+    column: &StitchColumn,
 ) -> Result<String, GenerateError> {
-    let column = quote(name.as_str());
-    if keys.contains(name) {
-        return Ok(format!("{KEYS}.{column} AS {column}"));
+    let branch = branches
+        .get(column.branch)
+        .ok_or_else(|| error(InvariantViolation::UnknownBranch, node))?;
+    if !has_column(branch, &column.name) {
+        return Err(error(InvariantViolation::UnknownColumn, node));
     }
-    let mut owners = branches
-        .iter()
-        .enumerate()
-        .filter(|(_, branch)| has_column(branch, name));
-    let (index, branch) = owners
-        .next()
-        .ok_or_else(|| error(InvariantViolation::UnknownColumn, node))?;
-    if owners.next().is_some() {
-        return Err(error(InvariantViolation::AmbiguousStitchColumn, node));
-    }
-    let empty = match empty_value(branch, name)
-        .ok_or_else(|| error(InvariantViolation::UnknownEmptyInputValue, node))?
-    {
-        EmptyValue::Zero => format!("CAST(0 AS {})", column_type(node, name.as_str())?),
-        EmptyValue::Null => "NULL".to_owned(),
+    let empty = match &column.empty_value {
+        Some(literal) => format!(
+            "CAST({} AS {})",
+            literal_sql(literal),
+            column_type(node, column.name.as_str())?
+        ),
+        None => "NULL".to_owned(),
     };
-    let alias = branch_alias(index);
+    let alias = branch_alias(column.branch);
+    let name = quote(column.name.as_str());
     Ok(format!(
-        "CASE WHEN {alias}.{} THEN {alias}.{column} ELSE {empty} END AS {column}",
+        "CASE WHEN {alias}.{} THEN {alias}.{name} ELSE {empty} END AS {name}",
         quote(presence)
     ))
-}
-
-/// The empty-input value of the component `name` of the `Aggregate` at the root of `branch`,
-/// or `None` when the root is not an `Aggregate` or has no such component.
-fn empty_value(branch: &PlanNode, name: &ColumnName) -> Option<EmptyValue> {
-    let Operation::Aggregate { components, .. } = branch.operation() else {
-        return None;
-    };
-    let component = components
-        .iter()
-        .find(|component| &component.name == name)?;
-    Some(match component.call {
-        AggregateCall::CountRows
-        | AggregateCall::Simple {
-            function: SimpleAggregate::Count,
-            ..
-        }
-        | AggregateCall::Distinct {
-            function: DistinctAggregate::Count,
-            ..
-        } => EmptyValue::Zero,
-        AggregateCall::Simple { .. }
-        | AggregateCall::Distinct { .. }
-        | AggregateCall::Percentile { .. } => EmptyValue::Null,
-    })
 }
