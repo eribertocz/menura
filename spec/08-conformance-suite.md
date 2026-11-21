@@ -13,10 +13,11 @@ conformance/
   models/<model-name>/contexts/*.json      security contexts
   ossie/expected-failures.yaml             Apache Ossie suite cases not yet passing (OSS-2.4)
   cases/<area>/<case-id>.yaml              one case per file
+  differential/divergences.yaml            classified divergences of differential cases (CS-4.7)
   ossie/                                   Apache Ossie suites, vendored at the tracked commit
 ```
 
-`<area>` is the rule prefix in lower case: `e0`, `e1`, …, `cat`, `qry`, `sec`, `add`, `ctx`, …
+`<area>` is the rule prefix in lower case: `e0`, `e1`, …, `cat`, `qry`, `sec`, `add`, `ctx`, …. During a version, the area `multi` holds the cases that need that version's new slice, which stay pending (VS-4) until the slice is widened; from then on they must pass like any other area.
 
 ## CS-2 Case format
 
@@ -36,6 +37,7 @@ expect:
   rows: expected.csv            # optional result after executing on DuckDB
   row_order: any                # any | exact
   tolerance: 1.0e-9             # for float columns only
+oracle: expected.oracle.sql      # optional: reference SQL for a differential case (CS-4.7); requires outcome plan
 ```
 
 | ID | Rule |
@@ -67,6 +69,7 @@ expect:
 - **CS-4.5** Runner security context for Apache Ossie suites: `{"contract": "menura.security_context", "contract_version": "1.1.0", "subject": "conformance-runner", "roles": [], "attributes": {}}`, stored as `conformance/ossie/runner-context.json`.
 - **CS-4.6** Layer 2 cases: the runner wraps the text of `query.ossie.sql` in the `sql` field of a query envelope (`time_zone: UTC`), runs `expected.sql` on the fixture to obtain the expected rows, and compares them under the case's comparison rules; an expected error is compared by its first code.
 - **CS-4.7** Differential cases compare the **result rows** of the compiled plan with those of an independent oracle under CS-2.4, never the SQL text alone. Each divergence is classified in a reviewed file as a bug, a known deviation or unsupported; an unclassified divergence fails. Generated inputs record their seeds. An oracle is test tooling only (ARC-5.3) and needs an approved `deny.toml` entry.
+- **CS-4.8** A differential case names its reference SQL with `oracle`, a file next to the case, run on the same fixture database without the compiler. A divergence classified in `differential/divergences.yaml` (`{case, classification: bug | known_deviation | unsupported, reason}`) leaves the case pending, never passed. An entry whose case no longer diverges fails the case, and an entry that names no differential case fails the run.
 
 ## CS-5 Producer suite
 
