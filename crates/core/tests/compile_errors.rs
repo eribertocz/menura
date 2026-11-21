@@ -108,11 +108,11 @@ fn e2_5_row_3_an_unknown_name_is_an_e2_error() {
 }
 
 #[test]
-fn e2_5_row_12c_a_query_outside_the_slice_is_e_not_yet_supported() {
+fn vs_1b_a_query_on_two_datasets_is_in_the_0_4_0_slice_and_reaches_e3() {
     let two_datasets = query(r#"{"dimensions": ["orders.region"], "metrics": ["customer_count"]}"#);
     assert_eq!(
         first_code(compile_default(&handle(), &two_datasets, &analyst())),
-        "E_NOT_YET_SUPPORTED"
+        "E_NO_PATH"
     );
 }
 

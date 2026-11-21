@@ -13,7 +13,7 @@ query:
       - {"metric": "total_target", "alias": "total_target"}
 expect:
   outcome: "error"
-  error: "E_NOT_YET_SUPPORTED"
+  error: "E_PARTIAL_DIMENSION_REACHABILITY"
   location:
     document: "query"
-    pointer: "/query/metrics/1"
+    pointer: "/query/dimensions/0"
