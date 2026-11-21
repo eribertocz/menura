@@ -16,6 +16,7 @@ mod instant;
 mod output;
 mod parameters;
 mod result_schema;
+mod scan;
 mod source_columns;
 mod steps;
 mod types;
