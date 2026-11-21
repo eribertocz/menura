@@ -123,7 +123,7 @@ from the first commit, and a violation fails the build.
 | ID | Rule | Check |
 |---|---|---|
 | A1 | The core MUST NOT depend on any crate or package of another module. | Dependency allowlist (`cargo deny`) |
-| A2 | The core MUST NOT depend on network, filesystem, clock or database libraries. Only `cli` and the test-tooling crate `conformance-runner` (ARC-5.3) are exempt. | Banned dependency list |
+| A2 | The core MUST NOT depend on network, filesystem, clock or database libraries. Only the wrappers `cli` and `menura-mcp` (F29, once it exists) and the test-tooling crate `conformance-runner` (ARC-5.3) are exempt. | Banned dependency list |
 | A3 | Cross-module data MUST be a contract document validated against its JSON Schema. | Contract tests at every boundary |
 | A4 | Wrappers (Python, CLI, HTTP) MUST contain no compilation logic. | Wrappers may depend only on `core` (allowlist), and the conformance suite runs through each wrapper with identical results |
 | A5 | Every contract change MUST bump its version and update its examples. | Schema diff check in CI |

@@ -21,8 +21,8 @@ already run correctly on DuckDB.
 | 0.6.0 | E5: evidence-based rewrites and summary selection | Faster plans, same results |
 | 0.7.0 | Lineage, audit record, cache key, `describe`, `explain`, integrity checks | Full outputs; Layer 3 suites block from here (OSS-2.3) |
 | 0.8.0 | Context modifiers: period to date, prior period, share of total | Time intelligence |
-| 0.9.0 | Python package, CLI complete, performance targets (R1–R3) | Release candidate |
-| **1.0.0** | **MVP.** Every gate of 7.1a passes; contracts frozen at major version 1 | Production use |
+| 0.9.0 | Python package, CLI complete, performance targets (R1–R3); a smoke test with one external agent or client that uses only public interfaces (discover, compile, a typed error, a refused metric), with a deterministic stub in CI, which never blocks a release | Release candidate |
+| **1.0.0** | **MVP.** Every gate of 7.1a passes; contracts frozen at major version 1; a published compatibility matrix per implementation and channel, backed by suite results, never a universal claim | Production use |
 
 ## 7.1a Gates
 
@@ -129,3 +129,9 @@ their own roadmaps in their own repositories.
 | F26 | Natural-language translator module (separate repository) |
 | F27 | Filling time gaps with an explicit time spine |
 | F28 | Layer 2 SQL growth, one construct per release with its suite cases: many-to-one `JOIN`, `HAVING`, CTEs and subqueries, other join types, set operators, until full Layer 2 conformance |
+| F29 | `menura-mcp`: a thin MCP binary in this repository, a wrapper like `cli`, with one tool per public operation, no logic of its own, standard input and output only, no network (after 0.7.0) |
+| F30 | An in-toto Statement v1 export of the audit record (PLN-6) and the plan, built by an external adapter, never by the core (after 0.7.0) |
+| F31 | A limited Kani pilot on small pure functions, with stated properties and limits; never presented as a global proof |
+| F32 | A `wasm32` build profile study, never required |
+| F33 | `menura diff`: a pure CLI command that classifies changes to metrics and fields between two models (added, changed, removed) from the per-definition hashes and `migrate` (E0H-3) |
+| F34 | Context modifiers (`prior_period`, `period_to_date`) in the typed query, after 1.0.0; until then they are model metrics (CTX) |

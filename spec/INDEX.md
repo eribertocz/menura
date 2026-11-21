@@ -9,7 +9,7 @@ Find a rule ID or a section here, then open only that file at that line.
 | [01-vision.md](01-vision.md#L1) | 1 | section | 1. Vision |
 | [01-vision.md](01-vision.md#L3) | 3 | section | 1.1 What it is |
 | [01-vision.md](01-vision.md#L15) | 15 | section | 1.2 What it is not |
-| [01-vision.md](01-vision.md#L23) | 23 | section | 1.3 Goals |
+| [01-vision.md](01-vision.md#L24) | 24 | section | 1.3 Goals |
 | [02-principles.md](02-principles.md#L1) | 1 | section | 2. Principles |
 | [02-principles.md](02-principles.md#L5) | 5 | rule | P1 |
 | [02-principles.md](02-principles.md#L6) | 6 | rule | P2 |
@@ -147,11 +147,12 @@ Find a rule ID or a section here, then open only that file at that line.
 | [08-conformance-suite.md](08-conformance-suite.md#L66) | 66 | rule | CS-4.4 |
 | [08-conformance-suite.md](08-conformance-suite.md#L67) | 67 | rule | CS-4.5 |
 | [08-conformance-suite.md](08-conformance-suite.md#L68) | 68 | rule | CS-4.6 |
-| [08-conformance-suite.md](08-conformance-suite.md#L70) | 70 | section | CS-5 Producer suite |
-| [08-conformance-suite.md](08-conformance-suite.md#L75) | 75 | rule | CS-5.1 |
-| [08-conformance-suite.md](08-conformance-suite.md#L76) | 76 | rule | CS-5.2 |
-| [08-conformance-suite.md](08-conformance-suite.md#L77) | 77 | rule | CS-5.3 |
-| [08-conformance-suite.md](08-conformance-suite.md#L78) | 78 | rule | CS-5.4 |
+| [08-conformance-suite.md](08-conformance-suite.md#L69) | 69 | rule | CS-4.7 |
+| [08-conformance-suite.md](08-conformance-suite.md#L71) | 71 | section | CS-5 Producer suite |
+| [08-conformance-suite.md](08-conformance-suite.md#L76) | 76 | rule | CS-5.1 |
+| [08-conformance-suite.md](08-conformance-suite.md#L77) | 77 | rule | CS-5.2 |
+| [08-conformance-suite.md](08-conformance-suite.md#L78) | 78 | rule | CS-5.3 |
+| [08-conformance-suite.md](08-conformance-suite.md#L79) | 79 | rule | CS-5.4 |
 | [09-continuous-integration.md](09-continuous-integration.md#L1) | 1 | section | 9. Continuous integration |
 | [09-continuous-integration.md](09-continuous-integration.md#L6) | 6 | section | CI-1 On every pull request and every push to `main` |
 | [09-continuous-integration.md](09-continuous-integration.md#L30) | 30 | section | CI-2 Scheduled |
