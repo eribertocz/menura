@@ -7,6 +7,7 @@
 
 pub mod joins;
 pub mod plan;
+pub mod propagation;
 
 use menura_contracts::ContractKind;
 use menura_contracts::Sha256Hash;

@@ -23,7 +23,7 @@ use support::joins::{
     sales_model, sales_model_with, sales_orders, shipped_on, to_customers, to_regions,
 };
 use support::plan::{column, column_names, column_reference, kinds, node, predicate};
-use support::{anyone, build_plan, located, metric_reference, policy, query, tree};
+use support::{anyone, build_plan, located, metric_reference, query, tree};
 
 const IDENTITY: &str = "menura.row_identity";
 
@@ -529,35 +529,6 @@ fn e3_4_2a_an_element_bound_to_an_instance_of_another_dataset_is_an_internal_err
         result,
         Err(PlanError::Invariant {
             violation: InvariantViolation::ForeignField,
-            ..
-        })
-    ));
-}
-
-#[test]
-fn vs_1_a_joined_dataset_with_row_policies_is_an_internal_error() {
-    let model = sales_model_with(
-        sales_orders(),
-        vec![policy("segment_scope", "TRUE", None, None)],
-    );
-    let result = build_plan(
-        &joined_branches(
-            1,
-            vec![path(QueryElement::Dimension(0), vec![to_customers()])],
-        ),
-        &query(
-            vec![joined_dimension("CUSTOMERS", "SEGMENT", None, 0)],
-            vec![metric_reference("TOTAL_AMOUNT", 0)],
-            BoundQueryParts::default(),
-        ),
-        &anyone(),
-        &model,
-    );
-
-    assert!(matches!(
-        result,
-        Err(PlanError::Invariant {
-            violation: InvariantViolation::Propagation,
             ..
         })
     ));

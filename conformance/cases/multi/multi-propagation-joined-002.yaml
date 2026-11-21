@@ -1,0 +1,17 @@
+id: multi-propagation-joined-002
+rules: [E4-6.5, E4-6.5c]
+model: multi-propagation
+security_context: south.json
+oracle: "multi-propagation-joined-002.oracle.sql"
+query:
+  contract: "menura.query"
+  contract_version: "1.1.0"
+  time_zone: "UTC"
+  query:
+    dimensions: ["stores.region"]
+    metrics:
+      - {"metric": "customer_count", "alias": "customer_count"}
+expect:
+  outcome: "plan"
+  row_order: "any"
+  rows: "multi-propagation-joined-002.csv"
