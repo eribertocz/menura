@@ -177,7 +177,7 @@ fn e6_3_2_dialect_knowledge_stays_in_the_generator() {
     assert!(
         generated
             .sql
-            .contains(r#"date_trunc('month', "CREATED_AT" AT TIME ZONE $1)"#)
+            .contains(r#"date_trunc('month', "CREATED_AT" AT TIME ZONE CAST($1 AS VARCHAR))"#)
     );
     assert_eq!(
         generated.result_schema[0].physical_type,
@@ -244,7 +244,11 @@ fn e6_4_2_parameters_in_order_of_first_appearance() {
         .map(|position| generated.sql.find(&format!("${position}")).expect("used"))
         .collect();
     assert!(first_appearances.is_sorted());
-    assert!(generated.sql.contains(r#""QUANTITY" <> $1"#));
+    assert!(
+        generated
+            .sql
+            .contains(r#""QUANTITY" <> CAST($1 AS BIGINT)"#)
+    );
 }
 
 #[test]
@@ -300,7 +304,7 @@ fn e6_4_10_sql_does_not_depend_on_session_settings() {
     let generated =
         generate(&plan, &query(&["CREATED_AT_YEAR"], &["AVERAGE_QUANTITY"])).expect("SQL");
     assert!(generated.sql.contains(
-        r#"date_trunc('year', "CREATED_AT" AT TIME ZONE $1) AT TIME ZONE $1 AS "CREATED_AT_YEAR""#
+        r#"date_trunc('year', "CREATED_AT" AT TIME ZONE CAST($1 AS VARCHAR)) AT TIME ZONE CAST($1 AS VARCHAR) AS "CREATED_AT_YEAR""#
     ));
     assert!(generated.sql.contains(
         r#"CASE WHEN COUNT("QUANTITY") = 0 THEN NULL ELSE CAST(SUM("QUANTITY") AS DOUBLE) / CAST(COUNT("QUANTITY") AS DOUBLE) END"#
@@ -342,7 +346,11 @@ fn e6_4_11_only_closed_or_validated_values_are_literals() {
             .sql
             .contains(r#"WHERE FALSE OR ("REGION" = 'north')"#)
     );
-    assert!(generated.sql.contains(r#"WHERE "REGION" = $1"#));
+    assert!(
+        generated
+            .sql
+            .contains(r#"WHERE "REGION" = CAST($1 AS VARCHAR)"#)
+    );
     assert!(generated.sql.contains("LIMIT 25"));
     assert!(!generated.sql.contains("south"));
     assert_eq!(generated.parameters[0].value, json!("south"));

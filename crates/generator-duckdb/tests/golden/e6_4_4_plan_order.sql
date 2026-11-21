@@ -10,7 +10,7 @@ WITH
       "AMOUNT",
       "REGION"
     FROM "menura_1_scan"
-    WHERE "REGION" <> $1
+    WHERE "REGION" <> CAST($1 AS VARCHAR)
   ),
   "menura_3_aggregate" AS (
     SELECT

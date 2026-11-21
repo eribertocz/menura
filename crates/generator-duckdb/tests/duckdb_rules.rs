@@ -266,7 +266,7 @@ fn e6_4_5_every_aggregate_has_its_fixed_type() {
         r#"CAST(STDDEV_SAMP("AMOUNT") AS DOUBLE) AS "SPREAD""#,
         r#"CAST(PERCENTILE_CONT(0.9) WITHIN GROUP (ORDER BY CAST("AMOUNT" AS DOUBLE) DESC) AS DOUBLE) AS "P90""#,
         r#"CAST(MAX("AMOUNT") AS DECIMAL(10,2)) AS "LARGEST""#,
-        r#"CAST(COUNT(*) FILTER (WHERE "AMOUNT" > $1) AS BIGINT) AS "ROWS""#,
+        r#"CAST(COUNT(*) FILTER (WHERE "AMOUNT" > CAST($1 AS BIGINT)) AS BIGINT) AS "ROWS""#,
     ] {
         assert!(
             generated.sql.contains(expected),
@@ -302,7 +302,7 @@ fn e6_5_2_field_expressions_are_typed_from_the_catalog() {
     );
     let generated = generate(&plan, &query(&["CREATED_MONTH", "LINE_SQUARE"], &[])).expect("SQL");
     assert!(generated.sql.contains(
-        r#"date_trunc('month', "created_at" AT TIME ZONE $1) AT TIME ZONE $1 AS "CREATED_MONTH""#
+        r#"date_trunc('month', "created_at" AT TIME ZONE CAST($1 AS VARCHAR)) AT TIME ZONE CAST($1 AS VARCHAR) AS "CREATED_MONTH""#
     ));
     assert!(
         generated.sql.contains(
