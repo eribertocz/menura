@@ -7,7 +7,7 @@ use menura_representations::origin::Origin;
 /// the stage that built the plan, not a query error, so it has no specification code.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum InvariantViolation {
-    /// A `SemiJoin` or `Stitch` node, which the generator does not generate yet (VS-1).
+    /// A node the generator does not generate (VS-1).
     NodeOutsideSlice,
     /// An expression construct the 0.3.0 generator does not translate.
     ExpressionOutsideSlice,
@@ -59,6 +59,8 @@ pub enum InvariantViolation {
     EmptyJoinCondition,
     /// A `SemiJoin` along a relationship the model does not have.
     UnknownRelationship,
+    /// A `Stitch` column whose branch index names no branch of the node (E4-3.7).
+    UnknownBranch,
     /// A final node whose columns do not match the output columns of the query (E1-5).
     ResultColumnMismatch,
 }

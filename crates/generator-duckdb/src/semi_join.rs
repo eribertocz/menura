@@ -126,13 +126,6 @@ impl<'input> StepWriter<'input> {
         }
         Ok(())
     }
-
-    /// Adds the step `body` of `kind` and returns its quoted name.
-    fn push_step(&mut self, kind: &str, body: SelectBody) -> String {
-        let name = quote(&format!("menura_{}_{kind}", self.steps.len() + 1));
-        self.steps.push((name.clone(), body));
-        name
-    }
 }
 
 /// Whether `schema` has the column `name`.

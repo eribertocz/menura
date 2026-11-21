@@ -20,6 +20,7 @@ mod expression;
 mod joins;
 mod plan;
 mod propagation;
+mod stitch;
 
 pub use expression::{
     expression_sql, query_with_reference_time, query_without_reference_time, reference_time_query,
@@ -50,6 +51,10 @@ pub use plan::{
 pub use propagation::{
     generate_propagation, orders_scan, policy, propagation_model, scan_fields, scan_typed,
     semi_join, semi_join_on,
+};
+pub use stitch::{
+    TWO_METRICS, generated, huge_integer, region_amount, region_quantities, stitch,
+    two_branch_columns, two_branches,
 };
 
 /// The 64-bit signed integer.

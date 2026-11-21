@@ -77,13 +77,19 @@ impl<'input> StepWriter<'input> {
                 (body, None, kind)
             }
         };
-        let name = quote(&format!("menura_{}_{kind}", self.steps.len() + 1));
-        self.steps.push((name.clone(), body));
+        let name = self.push_step(kind, body);
         Ok(WrittenNode { name, ordering })
     }
 
-    /// The body and kind of a node that reads, joins or deduplicates rows: `Scan`, `Join` and
-    /// `Deduplicate`. `SemiJoin` and `Stitch` are not generated yet.
+    /// Adds the step `body` of `kind` and returns its quoted name.
+    pub(crate) fn push_step(&mut self, kind: &str, body: SelectBody) -> String {
+        let name = quote(&format!("menura_{}_{kind}", self.steps.len() + 1));
+        self.steps.push((name.clone(), body));
+        name
+    }
+
+    /// The body and kind of a node that reads, joins, deduplicates or combines rows: `Scan`,
+    /// `Join`, `Deduplicate`, `SemiJoin` and `Stitch`.
     fn relation_step(
         &mut self,
         node: &'input PlanNode,
@@ -125,6 +131,7 @@ impl<'input> StepWriter<'input> {
                 "deduplicate",
             )),
             Operation::SemiJoin { .. } => Ok((self.semi_join(node)?, "semijoin")),
+            Operation::Stitch { .. } => Ok((self.stitch_node(node)?, "stitch")),
             _ => Err(error(InvariantViolation::NodeOutsideSlice, node)),
         }
     }
@@ -336,7 +343,7 @@ fn sort_term(
 }
 
 /// The `DuckDB` type of the column `name` of `node`.
-fn column_type(node: &PlanNode, name: &str) -> Result<String, GenerateError> {
+pub(crate) fn column_type(node: &PlanNode, name: &str) -> Result<String, GenerateError> {
     let column = node
         .schema()
         .columns()
