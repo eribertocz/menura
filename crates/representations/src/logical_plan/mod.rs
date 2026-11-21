@@ -7,7 +7,7 @@ mod schema;
 #[cfg(test)]
 mod tests;
 
-pub use items::{AggregateComponent, JoinKind, NamedExpression, SortItem};
+pub use items::{AggregateComponent, JoinCondition, JoinKind, NamedExpression, SortItem};
 pub use operation::Operation;
 pub use schema::{OutputSchema, SchemaColumn};
 
@@ -48,6 +48,16 @@ impl PlanNode {
     #[must_use]
     pub fn origin(&self) -> &Origin {
         &self.origin
+    }
+
+    /// Whether the plan rooted at this node is a **simple plan**: it has no `Stitch` and no
+    /// `Deduplicate` node (E4-4.2).
+    #[must_use]
+    pub fn is_simple_plan(&self) -> bool {
+        !matches!(
+            self.operation,
+            Operation::Stitch { .. } | Operation::Deduplicate { .. }
+        ) && self.inputs().into_iter().all(PlanNode::is_simple_plan)
     }
 
     /// The input nodes, in order: none for `Scan`, `left` then `right` for `Join`, the
