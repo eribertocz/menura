@@ -104,6 +104,16 @@
           },
           "physical_type": "TIMESTAMP WITH TIME ZONE",
           "nullable": false
+        },
+        {
+          "name": "entered_at",
+          "logical_type": {
+            "kind": "timestamp",
+            "precision": "us",
+            "with_time_zone": false
+          },
+          "physical_type": "TIMESTAMP",
+          "nullable": false
         }
       ]
     },
