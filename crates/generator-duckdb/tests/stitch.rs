@@ -77,7 +77,8 @@ fn stitch(
             branch: *branch,
             empty_value: counts
                 .contains(&column.name.as_str())
-                .then(|| Literal::Integer(IntegerLiteral::new("0").expect("digits"))),
+                .then(|| IntegerLiteral::new("0").map(Literal::Integer))
+                .flatten(),
         })
         .collect();
     PlanNode::new(
