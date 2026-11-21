@@ -6,7 +6,7 @@ WITH
   ),
   "menura_2_scan" AS (
     SELECT
-      "Amount" AS "ORDERS_STAGED.AMOUNT",
+      CAST("quantity" AS HUGEINT) * CAST("quantity" AS HUGEINT) AS "ORDERS_STAGED.LINE_SQUARE",
       "Sales Region" AS "ORDERS_STAGED.REGION"
     FROM (select * from "raw"."orders"
     )
@@ -14,13 +14,13 @@ WITH
   "menura_3_join" AS (
     SELECT
       "QUANTITY",
-      "ORDERS_STAGED.AMOUNT",
+      "ORDERS_STAGED.LINE_SQUARE",
       "ORDERS_STAGED.REGION"
     FROM "menura_1_scan"
-    LEFT JOIN "menura_2_scan" ON CAST("menura_1_scan"."QUANTITY" AS DECIMAL(38,2)) = CAST("menura_2_scan"."ORDERS_STAGED.AMOUNT" AS DECIMAL(38,2))
+    LEFT JOIN "menura_2_scan" ON CAST("menura_1_scan"."QUANTITY" AS HUGEINT) = CAST("menura_2_scan"."ORDERS_STAGED.LINE_SQUARE" AS HUGEINT)
   )
 SELECT
   "QUANTITY",
-  "ORDERS_STAGED.AMOUNT",
+  "ORDERS_STAGED.LINE_SQUARE",
   "ORDERS_STAGED.REGION"
 FROM "menura_3_join"

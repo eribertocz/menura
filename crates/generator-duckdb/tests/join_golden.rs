@@ -73,9 +73,9 @@ fn e6_4_12_role_playing_instances_are_two_scans() {
 fn e6_4_13_keys_of_different_types_are_cast_to_their_common_type() {
     let plan = left_join(
         home_scan("ORDERS", &["QUANTITY"]),
-        joined_scan("STAGED", STAGED, &["AMOUNT", "REGION"]),
+        joined_scan("STAGED", STAGED, &["LINE_SQUARE", "REGION"]),
         "ORDERS_STAGED",
-        &[("QUANTITY", "ORDERS_STAGED.AMOUNT")],
+        &[("QUANTITY", "ORDERS_STAGED.LINE_SQUARE")],
     );
     let generated = generate_all(&plan);
     assert_golden(&generated.sql, include_str!("golden/e6_4_13_key_cast.sql"));
@@ -116,7 +116,20 @@ fn e6_4_14_deduplicate_with_a_grain() {
 
 #[test]
 fn pln_1_columns_of_the_right_side_of_a_left_join_are_nullable() {
-    let generated = generate_all(&one_join());
+    let home = support::scan_of(
+        "ORDERS",
+        vec![
+            column("QUANTITY", big_integer(), false),
+            column("REGION", LogicalType::Text, true),
+        ],
+    );
+    let plan = left_join(
+        home,
+        joined_scan("STAGED", STAGED, &["QUANTITY", "REGION"]),
+        "ORDERS_STAGED",
+        &[("QUANTITY", "ORDERS_STAGED.QUANTITY")],
+    );
+    let generated = generate_all(&plan);
     let nullable: Vec<(&str, bool)> = generated
         .result_schema
         .iter()
@@ -125,7 +138,7 @@ fn pln_1_columns_of_the_right_side_of_a_left_join_are_nullable() {
     assert_eq!(
         nullable,
         [
-            ("QUANTITY", true),
+            ("QUANTITY", false),
             ("REGION", true),
             ("ORDERS_STAGED.QUANTITY", true),
             ("ORDERS_STAGED.REGION", true),

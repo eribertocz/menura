@@ -64,7 +64,7 @@ fn is_numeric(logical_type: &LogicalType) -> bool {
 mod tests {
     use menura_contracts::types::common::{IntegerBits, LogicalType};
 
-    use super::{KeySide, comparison_type, key_equality};
+    use super::{KeySide, key_equality};
 
     fn integer(bits: IntegerBits) -> LogicalType {
         LogicalType::Integer { bits, signed: true }
@@ -83,24 +83,44 @@ mod tests {
         );
     }
 
+    fn decimal(precision: u8, scale: u8) -> LogicalType {
+        LogicalType::Decimal { precision, scale }
+    }
+
+    /// The condition of the key pair `left`, `right`, from both sides.
+    fn both_ways(left: &LogicalType, right: &LogicalType) -> (Option<String>, Option<String>) {
+        (
+            key_equality(side("\"L\"", left), side("\"R\"", right)),
+            key_equality(side("\"R\"", right), side("\"L\"", left)),
+        )
+    }
+
     #[test]
-    fn e6_4_13_keys_of_two_types_are_cast_to_their_common_type() {
-        let small = integer(IntegerBits::ThirtyTwo);
-        let money = LogicalType::Decimal {
-            precision: 12,
-            scale: 2,
-        };
-        let common = comparison_type(&small, &money).expect("a common type");
-        assert_eq!(
-            comparison_type(&money, &small).as_ref(),
-            Some(&common),
-            "the common type does not depend on the side"
+    fn e6_4_13_integer_keys_of_two_widths_are_cast_to_their_common_type() {
+        let (forward, backward) = both_ways(
+            &integer(IntegerBits::ThirtyTwo),
+            &integer(IntegerBits::SixtyFour),
         );
-        let equality = key_equality(side("\"L\"", &small), side("\"R\"", &money)).expect("SQL");
-        assert!(
-            equality.starts_with("CAST(\"L\" AS DECIMAL(")
-                && equality.contains(") = CAST(\"R\" AS DECIMAL("),
-            "{equality}"
+        assert_eq!(
+            forward.as_deref(),
+            Some("CAST(\"L\" AS HUGEINT) = CAST(\"R\" AS HUGEINT)")
+        );
+        assert_eq!(
+            backward.as_deref(),
+            Some("CAST(\"R\" AS HUGEINT) = CAST(\"L\" AS HUGEINT)")
+        );
+    }
+
+    #[test]
+    fn e6_4_13_decimal_keys_of_two_sizes_are_cast_to_their_common_type() {
+        let (forward, backward) = both_ways(&decimal(10, 2), &decimal(12, 2));
+        assert_eq!(
+            forward.as_deref(),
+            Some("CAST(\"L\" AS DECIMAL(13,2)) = CAST(\"R\" AS DECIMAL(13,2))")
+        );
+        assert_eq!(
+            backward.as_deref(),
+            Some("CAST(\"R\" AS DECIMAL(13,2)) = CAST(\"L\" AS DECIMAL(13,2))")
         );
     }
 
