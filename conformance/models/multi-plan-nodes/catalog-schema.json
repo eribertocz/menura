@@ -1,0 +1,123 @@
+{
+  "contract": "menura.catalog_schema",
+  "contract_version": "1.1.0",
+  "document_id": {
+    "origin": "conformance:multi-plan-nodes",
+    "snapshot": "multi-plan-nodes-001"
+  },
+  "engine": {
+    "name": "duckdb",
+    "version": "2.0.0"
+  },
+  "relations": [
+    {
+      "source": "shop.main.customers",
+      "columns": [
+        {
+          "name": "customer_id",
+          "logical_type": {
+            "kind": "integer",
+            "bits": 32,
+            "signed": true
+          },
+          "physical_type": "INTEGER",
+          "nullable": false
+        },
+        {
+          "name": "region",
+          "logical_type": {
+            "kind": "text"
+          },
+          "physical_type": "VARCHAR",
+          "nullable": false
+        },
+        {
+          "name": "city",
+          "logical_type": {
+            "kind": "text"
+          },
+          "physical_type": "VARCHAR",
+          "nullable": true
+        }
+      ]
+    },
+    {
+      "source": "shop.main.orders",
+      "columns": [
+        {
+          "name": "order_id",
+          "logical_type": {
+            "kind": "integer",
+            "bits": 32,
+            "signed": true
+          },
+          "physical_type": "INTEGER",
+          "nullable": false
+        },
+        {
+          "name": "customer_id",
+          "logical_type": {
+            "kind": "integer",
+            "bits": 64,
+            "signed": true
+          },
+          "physical_type": "BIGINT",
+          "nullable": true
+        },
+        {
+          "name": "status",
+          "logical_type": {
+            "kind": "text"
+          },
+          "physical_type": "VARCHAR",
+          "nullable": false
+        },
+        {
+          "name": "amount",
+          "logical_type": {
+            "kind": "decimal",
+            "precision": 10,
+            "scale": 2
+          },
+          "physical_type": "DECIMAL(10,2)",
+          "nullable": false
+        }
+      ]
+    },
+    {
+      "source": "shop.main.refunds",
+      "columns": [
+        {
+          "name": "refund_id",
+          "logical_type": {
+            "kind": "integer",
+            "bits": 32,
+            "signed": true
+          },
+          "physical_type": "INTEGER",
+          "nullable": false
+        },
+        {
+          "name": "customer_id",
+          "logical_type": {
+            "kind": "integer",
+            "bits": 32,
+            "signed": true
+          },
+          "physical_type": "INTEGER",
+          "nullable": true
+        },
+        {
+          "name": "amount",
+          "logical_type": {
+            "kind": "decimal",
+            "precision": 10,
+            "scale": 2
+          },
+          "physical_type": "DECIMAL(10,2)",
+          "nullable": false
+        }
+      ]
+    }
+  ]
+}

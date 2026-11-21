@@ -1,0 +1,21 @@
+id: multi-plan-nodes-001
+rules: [E4-3.1, E4-3.2, E4-3.3, E4-3.4, E4-3.5, E4-3.6, E4-3.8, E4-3.9, E4-3.10, E4-3.11, E4-4.0a, E4-4.0b, E4-4.0c, E4-4.0e, E4-4.0f, E4-4.0g, E4-6.10, E3-4.3, E6-4.7, E6-4.12, E6-4.13, VS-1b]
+model: multi-plan-nodes
+security_context: north.json
+oracle: "multi-plan-nodes-001.oracle.sql"
+query:
+  contract: "menura.query"
+  contract_version: "1.1.0"
+  time_zone: "UTC"
+  query:
+    dimensions: ["customers.city"]
+    metrics:
+      - {"metric": "refund_total", "alias": "refund_total"}
+      - {"metric": "order_total", "alias": "order_total"}
+    nonportable_extensions:
+      - {"vendor_name": "COMMON", "data": {"namespace": "menura", "version": 1, "order_by": [{"output": "city", "direction": "asc", "nulls": "first"}], "limit": 2}}
+expect:
+  outcome: "plan"
+  sql: "multi-plan-nodes-001.sql"
+  row_order: "exact"
+  rows: "multi-plan-nodes-001.csv"
