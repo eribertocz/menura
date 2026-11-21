@@ -48,7 +48,7 @@ impl<'input> StepWriter<'input> {
     /// Writes the steps of `node`'s inputs, then the step of `node`.
     pub(crate) fn write(&mut self, node: &'input PlanNode) -> Result<WrittenNode, GenerateError> {
         let (body, ordering, kind) = match node.operation() {
-            Operation::Scan { dataset } => (self.scan(node, dataset)?, None, "scan"),
+            Operation::Scan { dataset, .. } => (self.scan(node, dataset)?, None, "scan"),
             Operation::Filter { input, predicate } => {
                 (self.filter(node, input, predicate)?, None, "filter")
             }
