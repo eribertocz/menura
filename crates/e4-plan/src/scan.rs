@@ -67,17 +67,22 @@ pub(crate) fn scan(
 }
 
 /// The `Scan` of the join instance of `dataset` whose columns are under `prefix`: the fields
-/// whose column `read` names, in the order of the dataset's fields (E6-4.12).
+/// whose column `read` names, in the order of the dataset's fields (E6-4.12), then the source
+/// columns `read` names under `prefix` and the [`source_prefix`] of `dataset`, in first-read
+/// order, each with the type and nullability `catalog` gives it (E0D-3.1).
 ///
 /// # Errors
 ///
-/// An internal error for a field without a type.
+/// An internal error for a field without a type, and for a source column that the catalog
+/// relation of `dataset` does not have.
 pub(crate) fn instance_scan(
     dataset: &Dataset,
     prefix: &ColumnPrefix,
     read: &[NormalizedName],
+    catalog: &CatalogSchemaDocument,
 ) -> Result<PlanNode, PlanError> {
     let origin = Origin::Model(dataset.location.clone());
+    let fail = |violation| PlanError::invariant(violation, &origin);
     let fields: Vec<&NormalizedName> = dataset
         .fields
         .iter()
@@ -87,8 +92,30 @@ pub(crate) fn instance_scan(
             read.iter().any(|wanted| wanted.as_str() == column.as_str())
         })
         .collect();
-    let columns = field_columns(dataset, &fields, |name| prefix.column(name))
-        .map_err(|violation| PlanError::invariant(violation, &origin))?;
+    let mut columns = field_columns(dataset, &fields, |name| prefix.column(name)).map_err(fail)?;
+    let source = prefix.column(&source_prefix(dataset));
+    let mut relation = None;
+    for name in read {
+        let Some(catalog_name) = name.as_str().strip_prefix(source.as_str()) else {
+            continue;
+        };
+        if columns
+            .iter()
+            .any(|column| column.name.as_str() == name.as_str())
+        {
+            continue;
+        }
+        let found = match relation {
+            Some(found) => found,
+            None => catalog
+                .relations
+                .iter()
+                .find(|candidate| candidate.source == dataset.source)
+                .ok_or_else(|| fail(InvariantViolation::UnknownRelation))?,
+        };
+        relation = Some(found);
+        columns.push(source_column(found, name, catalog_name).map_err(fail)?);
+    }
     Ok(PlanNode::new(
         Operation::Scan {
             dataset: dataset.name.clone(),

@@ -44,7 +44,8 @@ impl<'model> Layout<'model> {
     ///
     /// An internal error for an instance whose dataset or relationship the model does not
     /// have or does not match its step, whose dataset has row policies, which need
-    /// visibility on every `Scan` (E4-6.5c), or whose relationship columns are not fields.
+    /// visibility on every `Scan` (E4-6.5c), or whose relationship columns are neither fields
+    /// nor source columns of its datasets (E0D-3.1).
     pub(crate) fn new(
         branch: &'model Branch,
         home: &'model Dataset,
@@ -99,12 +100,12 @@ impl<'model> Layout<'model> {
         if !matches {
             return Err(fail(InvariantViolation::UnknownRelationship));
         }
-        let prefix = self.unique_prefix(instance, dataset, taken);
+        let names = instance_names(dataset, model);
+        let prefix = self.unique_prefix(instance, &names, taken);
         taken.extend(
-            dataset
-                .fields
+            names
                 .iter()
-                .map(|field| prefix.column(field.name.as_str()).as_str().to_owned()),
+                .map(|name| prefix.column(name.as_str()).as_str().to_owned()),
         );
         let mut on = Vec::new();
         for (from, to) in relationship
@@ -112,12 +113,11 @@ impl<'model> Layout<'model> {
             .iter()
             .zip(&relationship.to_columns)
         {
-            let left = self.field_column(instance.parent, parent_dataset, from);
-            let right = dataset.field(to).map(|_| prefix.column(to.as_str()));
-            match (left, right) {
-                (Ok(left), Some(right)) => on.push(JoinCondition { left, right }),
-                _ => return Err(fail(InvariantViolation::ForeignField)),
-            }
+            let left = self
+                .key_column(instance.parent, parent_dataset, from)
+                .map_err(fail)?;
+            let right = prefix.column(key_name(dataset, to).as_str());
+            on.push(JoinCondition { left, right });
         }
         Ok(PlacedInstance {
             dataset,
@@ -129,31 +129,31 @@ impl<'model> Layout<'model> {
     }
 
     /// The relationship names along the path of `instance`, each followed by `.`, then as
-    /// many more `.` as needed so that no column of `dataset` under it is `taken` and none
+    /// many more `.` as needed so that no column of `names` under it is `taken` and none
     /// starts with the source prefix of the home dataset (E6-4.12).
     fn unique_prefix(
         &self,
         instance: &JoinInstance,
-        dataset: &Dataset,
+        names: &[NormalizedName],
         taken: &BTreeSet<String>,
     ) -> ColumnPrefix {
         let mut text = String::new();
         let mut current = Some(instance);
-        let mut names = Vec::new();
+        let mut path = Vec::new();
         while let Some(found) = current {
-            names.push(found.step.relationship.as_str());
+            path.push(found.step.relationship.as_str());
             current = found
                 .parent
                 .and_then(|parent| self.branch.join_tree.instance(parent));
         }
-        for name in names.into_iter().rev() {
+        for name in path.into_iter().rev() {
             text.push_str(name);
             text.push('.');
         }
         let source = source_prefix(self.home);
         loop {
-            let collides = dataset.fields.iter().any(|field| {
-                let column = format!("{text}{}", field.name.as_str());
+            let collides = names.iter().any(|name| {
+                let column = format!("{text}{}", name.as_str());
                 taken.contains(&column) || column.starts_with(&source)
             });
             if !collides {
@@ -217,6 +217,26 @@ impl<'model> Layout<'model> {
         self.field_column(instance, dataset, &field.field)
     }
 
+    /// The plan column of the relationship key column `key` of `dataset`, the dataset of
+    /// `instance`: the column of the field of that name, or else of the source column of that
+    /// name (E0D-3.1).
+    fn key_column(
+        &self,
+        instance: Option<InstanceId>,
+        dataset: &Dataset,
+        key: &NormalizedName,
+    ) -> Result<ColumnName, InvariantViolation> {
+        if dataset.field(key).is_some() {
+            return self.field_column(instance, dataset, key);
+        }
+        let name = source_key(dataset, key);
+        match instance.and_then(|id| self.instances.get(id.index())) {
+            None if instance.is_none() => Ok(ColumnName::new(name.as_str())),
+            None => Err(InvariantViolation::UnknownDataset),
+            Some(placed) => Ok(placed.prefix.column(name.as_str())),
+        }
+    }
+
     /// The plan column of the field `field` of `dataset`, the dataset of `instance`.
     fn field_column(
         &self,
@@ -233,4 +253,47 @@ impl<'model> Layout<'model> {
             Some(placed) => Ok(placed.prefix.column(field.as_str())),
         }
     }
+}
+
+/// The name, under the prefix of an instance of `dataset`, of the relationship key column
+/// `key` of `dataset`: the field name when `dataset` has that field, or else the
+/// [`source_key`] name (E0D-3.1).
+fn key_name(dataset: &Dataset, key: &NormalizedName) -> NormalizedName {
+    if dataset.field(key).is_some() {
+        key.clone()
+    } else {
+        source_key(dataset, key)
+    }
+}
+
+/// The name of the source column `key` of `dataset` in a `Scan` of `dataset`: under the
+/// [`source_prefix`] of `dataset`, as a dataset metric reads it (E0D-3.1, E6-4.12).
+fn source_key(dataset: &Dataset, key: &NormalizedName) -> NormalizedName {
+    NormalizedName::new(&format!("{}{}", source_prefix(dataset), key.as_str()))
+}
+
+/// The names an instance of `dataset` can project under its prefix: its fields, then the
+/// [`source_key`] names of the relationship key columns of `dataset` that are not fields.
+fn instance_names(dataset: &Dataset, model: &InternalModel) -> Vec<NormalizedName> {
+    let mut names: Vec<NormalizedName> = dataset
+        .fields
+        .iter()
+        .map(|field| field.name.clone())
+        .collect();
+    for relationship in &model.parts().relationships {
+        let mut keys = Vec::new();
+        if relationship.from == dataset.name {
+            keys.extend(&relationship.from_columns);
+        }
+        if relationship.to == dataset.name {
+            keys.extend(&relationship.to_columns);
+        }
+        for key in keys {
+            let name = key_name(dataset, key);
+            if !names.contains(&name) {
+                names.push(name);
+            }
+        }
+    }
+    names
 }
