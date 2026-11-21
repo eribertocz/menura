@@ -3,7 +3,7 @@
 //! usable, because one of its row policies could not be propagated; propagation reports no new
 //! warning.
 
-use menura_model::internal_model::{DiagnosticCode, ElementKind, InternalModel};
+use menura_model::internal_model::{DiagnosticCode, ElementKind, InternalModel, RowAccessCut};
 
 use super::{load, name};
 
@@ -121,4 +121,43 @@ fn e0_4_2a_e0h_01_adds_no_warning() {
         .map(|warning| warning.code.as_str().to_owned())
         .collect();
     assert_eq!(codes, ["W0E-04"]);
+}
+
+fn cut_of(model: &InternalModel, kind: ElementKind, last: &str) -> Option<RowAccessCut> {
+    model
+        .parts()
+        .unusable
+        .iter()
+        .find(|element| element.kind == kind && element.name.last() == Some(&name(last)))
+        .and_then(|element| element.row_access_cut.clone())
+}
+
+fn cut(dataset: &str, relationship: &str) -> RowAccessCut {
+    RowAccessCut {
+        dataset: name(dataset),
+        relationship: name(relationship),
+    }
+}
+
+#[test]
+fn e0_4_2a_e0h_01_records_the_dataset_and_the_unusable_relationship() {
+    let model = load(PARTIAL_MODEL, PARTIAL_CATALOG);
+
+    let expected = Some(cut("orders", "orders_suppliers"));
+    assert_eq!(cut_of(&model, ElementKind::Dataset, "orders"), expected);
+    assert_eq!(cut_of(&model, ElementKind::Field, "amount"), expected);
+    assert_eq!(cut_of(&model, ElementKind::Metric, "order_total"), expected);
+}
+
+#[test]
+fn e0_4_2a_the_cut_is_not_part_of_the_model_hash() {
+    let model = unreachable();
+    let mut parts = model.parts().clone();
+    for element in &mut parts.unusable {
+        element.row_access_cut = None;
+    }
+    assert_eq!(
+        super::super::hashing::model_hash(&parts),
+        model.hash().clone()
+    );
 }
