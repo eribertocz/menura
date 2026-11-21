@@ -1,5 +1,5 @@
 id: e2-policy-join-001
-rules: [VS-2]
+rules: [VS-1b]
 model: slice
 security_context: analyst-north.json
 query:
@@ -10,8 +10,6 @@ query:
     metrics:
       - {"metric": "total_refund", "alias": "total_refund"}
 expect:
-  outcome: "error"
-  error: "E_NOT_YET_SUPPORTED"
-  location:
-    document: "query"
-    pointer: "/query/metrics/0"
+  outcome: "plan"
+  row_order: "any"
+  rows: "e2-policy-join-001.csv"

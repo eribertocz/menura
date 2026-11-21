@@ -1,6 +1,7 @@
-//! E2-5 row 12c, E2-5.4, VS-1 and VS-2: the first element outside the 0.3.0 slice is
-//! `E_NOT_YET_SUPPORTED`, located at that element, naming the capability whose version comes
-//! first.
+//! E2-5 row 12c, E2-5.4, E2-5.4a, VS-1b and VS-2: several datasets, `paths` and derived metrics
+//! are in the 0.4.0 slice; the first element that needs additivity, a population or a context
+//! metric is `E_NOT_YET_SUPPORTED`, located at that element, naming the capability whose version
+//! comes first.
 
 #[cfg(test)]
 mod support;
@@ -32,6 +33,11 @@ fn assert_not_yet_supported(diagnostic: &BindDiagnostic, pointer: &str, version:
         "{}",
         diagnostic.message
     );
+}
+
+fn assert_in_the_slice(query: &QueryTree, model: &menura_model::internal_model::InternalModel) {
+    let result = bind_query(query, model, ADMIN);
+    assert!(result.is_ok(), "{:?}", result.err());
 }
 
 fn revenue_by(dimension_text: &str) -> QueryTree {
@@ -90,13 +96,12 @@ fn vs_1_base_metrics_dimensions_filters_and_time_settings_on_one_dataset_are_acc
 }
 
 #[test]
-fn vs_1_a_metric_on_another_dataset_than_the_dimensions_is_0_4_0_at_the_metric() {
-    let diagnostic = bind_diagnostic(&revenue_by("customers.region"), &model(), ANALYST);
-    assert_not_yet_supported(&diagnostic, "/query/metrics/0", "0.4.0");
+fn vs_1b_a_metric_on_another_dataset_than_the_dimensions_is_in_the_slice() {
+    assert_in_the_slice(&revenue_by("customers.region"), &model());
 }
 
 #[test]
-fn vs_1_a_metric_whose_components_span_two_datasets_is_0_4_0_at_the_metric() {
+fn vs_1b_a_metric_whose_components_span_two_datasets_is_in_the_slice() {
     let model = model_with(|parts| {
         semantic_metric(parts, "REVENUE").classification =
             Some(classification(&["CUSTOMERS", "ORDERS"]));
@@ -106,15 +111,11 @@ fn vs_1_a_metric_whose_components_span_two_datasets_is_0_4_0_at_the_metric() {
         vec![metric(0, "revenue")],
         QueryTreeParts::default(),
     );
-    assert_not_yet_supported(
-        &bind_diagnostic(&query, &model, ANALYST),
-        "/query/metrics/0",
-        "0.4.0",
-    );
+    assert_in_the_slice(&query, &model);
 }
 
 #[test]
-fn vs_1_dimensions_on_two_datasets_are_0_4_0_at_the_second() {
+fn vs_1b_dimensions_on_two_datasets_are_in_the_slice() {
     let query = tree(
         vec![
             dimension(0, "orders.region"),
@@ -123,15 +124,11 @@ fn vs_1_dimensions_on_two_datasets_are_0_4_0_at_the_second() {
         vec![],
         QueryTreeParts::default(),
     );
-    assert_not_yet_supported(
-        &bind_diagnostic(&query, &model(), ANALYST),
-        "/query/dimensions/1",
-        "0.4.0",
-    );
+    assert_in_the_slice(&query, &model());
 }
 
 #[test]
-fn vs_1_a_filter_on_another_dataset_is_0_4_0_at_the_filter() {
+fn vs_1b_a_filter_on_another_dataset_is_in_the_slice() {
     let query = tree(
         vec![dimension(0, "orders.region")],
         vec![],
@@ -143,15 +140,11 @@ fn vs_1_a_filter_on_another_dataset_is_0_4_0_at_the_filter() {
             ..QueryTreeParts::default()
         },
     );
-    assert_not_yet_supported(
-        &bind_diagnostic(&query, &model(), ANALYST),
-        "/query/filter",
-        "0.4.0",
-    );
+    assert_in_the_slice(&query, &model());
 }
 
 #[test]
-fn vs_1_a_date_range_on_another_dataset_is_0_4_0_at_the_date_range() {
+fn vs_1b_a_date_range_on_another_dataset_is_in_the_slice() {
     let pointer = "/query/nonportable_extensions/0/data/date_range";
     let query = tree(
         vec![dimension(0, "customers.region")],
@@ -166,15 +159,11 @@ fn vs_1_a_date_range_on_another_dataset_is_0_4_0_at_the_date_range() {
             ..QueryTreeParts::default()
         },
     );
-    assert_not_yet_supported(
-        &bind_diagnostic(&query, &model(), ANALYST),
-        pointer,
-        "0.4.0",
-    );
+    assert_in_the_slice(&query, &model());
 }
 
 #[test]
-fn vs_1_paths_are_0_4_0_at_the_path() {
+fn vs_1b_paths_are_in_the_slice() {
     let pointer = "/query/nonportable_extensions/0/data/paths/0";
     let query = tree(
         vec![dimension(0, "orders.region")],
@@ -189,28 +178,22 @@ fn vs_1_paths_are_0_4_0_at_the_path() {
             ..QueryTreeParts::default()
         },
     );
-    assert_not_yet_supported(&bind_diagnostic(&query, &model(), ADMIN), pointer, "0.4.0");
+    assert_in_the_slice(&query, &model());
 }
 
 #[test]
-fn vs_1_a_derived_metric_is_0_4_0() {
+fn vs_1b_a_derived_metric_is_in_the_slice() {
     let model = model_with(|parts| {
         semantic_metric(parts, "REVENUE").derived = Some(DerivedMetric {
             inputs: Vec::new(),
             on_division_by_zero: None,
         });
     });
-    let diagnostic = bind_diagnostic(&revenue_by("orders.region"), &model, ANALYST);
-    assert_not_yet_supported(&diagnostic, "/query/metrics/0", "0.4.0");
-    assert!(
-        diagnostic.message.contains("derived"),
-        "{}",
-        diagnostic.message
-    );
+    assert_in_the_slice(&revenue_by("orders.region"), &model);
 }
 
 #[test]
-fn e2_5_4a_a_derived_metric_on_two_datasets_names_several_datasets_and_0_4_0() {
+fn vs_1b_a_derived_metric_on_two_datasets_is_in_the_slice() {
     let model = model_with(|parts| {
         let revenue = semantic_metric(parts, "REVENUE");
         revenue.derived = Some(DerivedMetric {
@@ -224,13 +207,7 @@ fn e2_5_4a_a_derived_metric_on_two_datasets_names_several_datasets_and_0_4_0() {
         vec![metric(0, "revenue")],
         QueryTreeParts::default(),
     );
-    let diagnostic = bind_diagnostic(&query, &model, ANALYST);
-    assert_not_yet_supported(&diagnostic, "/query/metrics/0", "0.4.0");
-    assert!(
-        diagnostic.message.contains("more than one dataset"),
-        "{}",
-        diagnostic.message
-    );
+    assert_in_the_slice(&query, &model);
 }
 
 #[test]
@@ -336,12 +313,10 @@ fn e2_5_4a_a_semi_additive_metric_with_a_population_names_additivity() {
 }
 
 #[test]
-fn e2_5_4_a_derived_metric_before_paths_is_reported_at_the_metric() {
+fn e2_5_4a_paths_do_not_belong_to_the_whole_query_from_0_4_0() {
     let model = model_with(|parts| {
-        semantic_metric(parts, "REVENUE").derived = Some(DerivedMetric {
-            inputs: Vec::new(),
-            on_division_by_zero: None,
-        });
+        semantic_metric(parts, "REVENUE").declared_additivity =
+            Some(DeclaredAdditivity::NonAdditive);
     });
     let query = tree(
         vec![dimension(0, "orders.region")],
@@ -357,9 +332,54 @@ fn e2_5_4_a_derived_metric_before_paths_is_reported_at_the_metric() {
         },
     );
     let diagnostic = bind_diagnostic(&query, &model, ADMIN);
-    assert_not_yet_supported(&diagnostic, "/query/metrics/0", "0.4.0");
+    assert_not_yet_supported(&diagnostic, "/query/metrics/0", "0.5.0");
     assert!(
-        diagnostic.message.contains("derived"),
+        diagnostic.message.contains("additivity"),
+        "{}",
+        diagnostic.message
+    );
+}
+
+#[test]
+fn e2_5_4a_several_datasets_do_not_belong_to_the_whole_query_from_0_4_0() {
+    let model = model_with(|parts| {
+        semantic_metric(parts, "REVENUE").declared_additivity =
+            Some(DeclaredAdditivity::NonAdditive);
+    });
+    let query = tree(
+        vec![
+            dimension(0, "customers.customer_id"),
+            dimension(1, "orders.region"),
+        ],
+        vec![metric(0, "revenue")],
+        QueryTreeParts::default(),
+    );
+    assert_not_yet_supported(
+        &bind_diagnostic(&query, &model, ADMIN),
+        "/query/metrics/0",
+        "0.5.0",
+    );
+}
+
+#[test]
+fn e2_5_4a_additivity_comes_before_a_context_metric_in_one_element() {
+    let model = model_with(|parts| {
+        let cost = semantic_metric(parts, "COST");
+        cost.declared_additivity = Some(DeclaredAdditivity::NonAdditive);
+        cost.context = Some(ContextMetric {
+            base: name("REVENUE"),
+            modifier: ContextModifier::ShareOfTotal(RemovedDimensions::All),
+        });
+    });
+    let query = tree(
+        vec![dimension(0, "orders.region")],
+        vec![metric(0, "cost")],
+        QueryTreeParts::default(),
+    );
+    let diagnostic = bind_diagnostic(&query, &model, ADMIN);
+    assert_not_yet_supported(&diagnostic, "/query/metrics/0", "0.5.0");
+    assert!(
+        diagnostic.message.contains("additivity"),
         "{}",
         diagnostic.message
     );
