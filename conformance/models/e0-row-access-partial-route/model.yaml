@@ -1,0 +1,61 @@
+version: "0.1.1"
+semantic_model:
+  - name: partial_route
+    description: 'One route from orders to a row policy is usable, the other goes through an unusable relationship'
+    custom_extensions:
+      - vendor_name: COMMON
+        data: '{"namespace": "menura", "version": 1, "security_context": {"roles": ["analyst", "auditor"], "attributes": [{"name": "regions", "type": "list<text>"}]}}'
+    datasets:
+      - name: orders
+        source: shop.main.orders
+        primary_key: [order_id]
+        fields:
+          - name: order_id
+            expression: {dialects: [{dialect: ANSI_SQL, expression: 'order_id'}]}
+          - name: store_id
+            expression: {dialects: [{dialect: ANSI_SQL, expression: 'store_id'}]}
+          - name: supplier_id
+            expression: {dialects: [{dialect: ANSI_SQL, expression: 'supplier_id'}]}
+          - name: region
+            expression: {dialects: [{dialect: ANSI_SQL, expression: 'region'}]}
+          - name: amount
+            expression: {dialects: [{dialect: ANSI_SQL, expression: 'amount'}]}
+        custom_extensions:
+          - vendor_name: COMMON
+            data: '{"namespace": "menura", "version": 1, "access": {"mode": "roles", "roles": ["analyst", "auditor"]}}'
+      - name: stores
+        source: shop.main.stores
+        primary_key: [store_id]
+        fields:
+          - name: store_id
+            expression: {dialects: [{dialect: ANSI_SQL, expression: 'store_id'}]}
+          - name: region
+            expression: {dialects: [{dialect: ANSI_SQL, expression: 'region'}]}
+        custom_extensions:
+          - vendor_name: COMMON
+            data: '{"namespace": "menura", "version": 1, "access": {"mode": "roles", "roles": ["analyst", "auditor"]}, "row_access": [{"name": "store_region", "condition": "region IN (USER_ATTRIBUTE(''regions''))", "roles": ["analyst"], "exempt_roles": ["auditor"]}]}'
+      - name: suppliers
+        source: shop.main.suppliers
+        primary_key: [supplier_id]
+        fields:
+          - name: supplier_id
+            expression: {dialects: [{dialect: ANSI_SQL, expression: 'supplier_id'}]}
+          - name: region
+            expression: {dialects: [{dialect: ANSI_SQL, expression: 'region'}]}
+        custom_extensions:
+          - vendor_name: COMMON
+            data: '{"namespace": "menura", "version": 1, "access": {"mode": "roles", "roles": ["analyst", "auditor"]}, "row_access": [{"name": "supplier_region", "condition": "region IN (USER_ATTRIBUTE(''regions''))", "roles": ["analyst"], "exempt_roles": ["auditor"]}]}'
+    relationships:
+      - name: orders_stores
+        from: orders
+        to: stores
+        from_columns: [store_id]
+        to_columns: [store_id]
+      - name: orders_suppliers
+        from: orders
+        to: suppliers
+        from_columns: [supplier_id, region]
+        to_columns: [supplier_id]
+    metrics:
+      - name: order_total
+        expression: {dialects: [{dialect: ANSI_SQL, expression: 'SUM(orders.amount)'}]}

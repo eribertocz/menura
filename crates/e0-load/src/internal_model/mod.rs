@@ -190,6 +190,7 @@ fn unusable_elements(
             name,
             load_warning: usability.load_warning(pointer),
             query_errors: usability.codes(pointer),
+            row_access_cut: usability.row_access_cut(pointer),
             location: location_of(assembly.document, pointer),
         })
         .collect();
