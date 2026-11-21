@@ -1,0 +1,17 @@
+id: e3-no-path-metric-datasets-001
+rules: [E3-3.4]
+model: e3-reachability
+security_context: analyst.json
+query:
+  contract: "menura.query"
+  contract_version: "1.1.0"
+  time_zone: "UTC"
+  query:
+    dimensions: ["returns.reason"]
+    metrics: [{"metric": "net_amount", "alias": "net_amount"}]
+expect:
+  outcome: "error"
+  error: "E_NO_PATH"
+  location:
+    document: "query"
+    pointer: "/query/dimensions/0"

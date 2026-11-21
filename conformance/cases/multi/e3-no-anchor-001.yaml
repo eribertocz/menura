@@ -1,0 +1,16 @@
+id: e3-no-anchor-001
+rules: [E3-5.1]
+model: e3-reachability
+security_context: analyst.json
+query:
+  contract: "menura.query"
+  contract_version: "1.1.0"
+  time_zone: "UTC"
+  query:
+    dimensions: ["customers.customer_name", "warehouses.city"]
+expect:
+  outcome: "error"
+  error: "E_NO_ANCHOR"
+  location:
+    document: "query"
+    pointer: "/query/dimensions"

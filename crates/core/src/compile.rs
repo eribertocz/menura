@@ -16,7 +16,8 @@ use crate::compile_options::CompileOptions;
 use crate::handle::Handle;
 use crate::plan_document::plan_document;
 use crate::stop::{
-    Stop, audit_not_yet_supported, bind_stop, context_not_utf8, plan_stop, query_not_utf8,
+    Stop, audit_not_yet_supported, bind_stop, context_not_utf8, path_stop, plan_stop,
+    query_not_utf8,
 };
 
 /// What `compile` returns: a compiled plan or a compile error (PLN-1, PLN-5).
@@ -62,7 +63,7 @@ impl InternalError {
 ///
 /// [`CompileResult::Error`], the compile error document (PLN-5) with the first error and the
 /// warnings gathered before it: `E_NOT_YET_SUPPORTED` for `audit: true` (VS-5); `ESEC-01` or
-/// `ESEC-03` for the security context (SEC-3.8, SEC-3.1); then the errors of E1, E2 and E4, in
+/// `ESEC-03` for the security context (SEC-3.8, SEC-3.1); then the errors of E1, E2, E3 and E4, in
 /// the order of E2-5; `E_INTERNAL`, without location, for a defect of the compiler
 /// (PLN-5.1a).
 ///
@@ -126,8 +127,7 @@ fn compile_stages(
     warnings.extend(parsed.warnings.iter().map(ParseWarning::diagnostic));
     let model = handle.model();
     let bound = bind(&parsed.tree, model, &context).map_err(bind_stop)?;
-    let branches = resolve_paths(&bound, model)
-        .map_err(|violation| InternalError::new("E3", violation.to_string()))?;
+    let branches = resolve_paths(&bound, model).map_err(|error| path_stop(&error))?;
     let plan = build_plan(&branches, &bound, &context, model, handle.catalog_schema())
         .map_err(|error| plan_stop(&error))?;
     let generated = generate_sql(&plan, handle.catalog_schema(), model, &bound, &context)
