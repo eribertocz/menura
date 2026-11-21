@@ -182,9 +182,18 @@ fn field_type(dataset: &str, name: &str) -> LogicalType {
 pub fn scan_fields(dataset: &str, fields: &[&str]) -> PlanNode {
     let columns = fields
         .iter()
-        .map(|name| SchemaColumn {
+        .map(|name| (*name, field_type(dataset, name)))
+        .collect::<Vec<_>>();
+    scan_typed(dataset, &columns)
+}
+
+/// The `Scan` of `dataset` that projects `columns`, each a field with the plan type given.
+pub fn scan_typed(dataset: &str, columns: &[(&str, LogicalType)]) -> PlanNode {
+    let columns = columns
+        .iter()
+        .map(|(name, logical_type)| SchemaColumn {
             name: ColumnName::new(name),
-            logical_type: field_type(dataset, name),
+            logical_type: logical_type.clone(),
             nullable: true,
         })
         .collect();

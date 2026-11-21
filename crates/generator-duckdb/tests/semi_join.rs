@@ -8,11 +8,12 @@
 #[cfg(test)]
 mod support;
 
+use menura_contracts::types::common::{IntegerBits, LogicalType};
 use menura_generator_duckdb::{GenerateError, GeneratedSql, InvariantViolation};
 use menura_representations::logical_plan::PlanNode;
 use support::{
-    assert_golden, generate_propagation, orders_scan, policy, query, scan_fields, semi_join,
-    semi_join_on,
+    assert_golden, big_integer, generate_propagation, orders_scan, policy, query, scan_fields,
+    scan_typed, semi_join, semi_join_on,
 };
 
 /// The visible customers: those in the north.
@@ -154,4 +155,39 @@ fn e4_3_4_semi_join_along_an_unknown_relationship_is_an_error() {
     );
     let error = generate(&plan).expect_err("unknown relationship");
     assert_eq!(error.violation, InvariantViolation::UnknownRelationship);
+}
+
+/// `ORDERS` whose `CUSTOMER_ID` is typed `key_type`, kept when its customer is in the north.
+fn typed_key(key_type: LogicalType) -> PlanNode {
+    semi_join(
+        scan_typed(
+            "ORDERS",
+            &[("ORDER_ID", big_integer()), ("CUSTOMER_ID", key_type)],
+        ),
+        "ORDERS_CUSTOMER",
+        "CUSTOMER_ID",
+        scan_fields("CUSTOMERS", &["CUSTOMER_ID"]),
+        north_customers(&["CUSTOMER_ID", "REGION"]),
+    )
+}
+
+#[test]
+fn e6_4_13_semi_join_keys_of_two_types_are_cast_to_their_common_type() {
+    let key_type = LogicalType::Integer {
+        bits: IntegerBits::ThirtyTwo,
+        signed: true,
+    };
+    let sql = sql_of(&typed_key(key_type));
+    for alias in ["menura_related", "menura_visible"] {
+        let condition = format!(
+            r#"ON CAST("menura_row"."CUSTOMER_ID" AS HUGEINT) = CAST("{alias}"."menura.key_1" AS HUGEINT)"#
+        );
+        assert!(sql.contains(&condition), "{sql}");
+    }
+}
+
+#[test]
+fn e6_4_13_semi_join_keys_without_a_common_type_are_an_error() {
+    let error = generate(&typed_key(LogicalType::Text)).expect_err("incompatible keys");
+    assert_eq!(error.violation, InvariantViolation::IncompatibleJoinKeys);
 }

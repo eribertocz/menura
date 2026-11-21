@@ -7,6 +7,7 @@
 //! when its key finds a group of `related_all` and the same number of visible rows. Keys are
 //! compared with `=`, so a NULL key never matches.
 
+use menura_contracts::types::common::LogicalType;
 use menura_model::internal_model::NormalizedName;
 use menura_representations::logical_plan::{JoinCondition, Operation, OutputSchema, PlanNode};
 use menura_representations::names::ColumnName;
@@ -14,6 +15,7 @@ use menura_representations::names::ColumnName;
 use crate::body::SelectBody;
 use crate::error::{GenerateError, InvariantViolation};
 use crate::identifiers::quote;
+use crate::join_keys::{KeySide, key_equality};
 use crate::steps::{StepWriter, error};
 
 /// The alias of the input row.
@@ -73,18 +75,27 @@ impl<'input> StepWriter<'input> {
         let visible = self.write(inputs.related_visible)?;
         let all_counts = self.push_step("related", key_counts(inputs.on, &all.name));
         let visible_counts = self.push_step("visible", key_counts(inputs.on, &visible.name));
+        let input_schema = inputs.input.schema();
+        let all_condition = key_condition(
+            node,
+            inputs.on,
+            input_schema,
+            inputs.related_all.schema(),
+            RELATED,
+        )?;
+        let visible_condition = key_condition(
+            node,
+            inputs.on,
+            input_schema,
+            inputs.related_visible.schema(),
+            VISIBLE,
+        )?;
         Ok(SelectBody {
-            items: kept_columns(node, inputs.input.schema())?,
+            items: kept_columns(node, input_schema)?,
             from: format!("{} AS {ROW}", input.name),
             clauses: vec![
-                format!(
-                    "JOIN {all_counts} AS {RELATED} ON {}",
-                    key_condition(inputs.on, RELATED)
-                ),
-                format!(
-                    "LEFT JOIN {visible_counts} AS {VISIBLE} ON {}",
-                    key_condition(inputs.on, VISIBLE)
-                ),
+                format!("JOIN {all_counts} AS {RELATED} ON {all_condition}"),
+                format!("LEFT JOIN {visible_counts} AS {VISIBLE} ON {visible_condition}"),
                 format!("WHERE {RELATED}.{ROWS} = {VISIBLE}.{ROWS}"),
             ],
         })
@@ -165,19 +176,52 @@ fn key_counts(on: &[JoinCondition], related: &str) -> SelectBody {
     }
 }
 
-/// `row.left_1 = alias.key_1 AND …`, one equality per condition, in the order written.
-fn key_condition(on: &[JoinCondition], alias: &str) -> String {
-    on.iter()
+/// `row.left_1 = alias.key_1 AND …`, one equality per condition, in the order written; a
+/// pair of two types is compared in their common type (E6-4.13). The key columns of `alias`
+/// have the types of their columns in `related`.
+fn key_condition(
+    node: &PlanNode,
+    on: &[JoinCondition],
+    input: &OutputSchema,
+    related: &OutputSchema,
+    alias: &str,
+) -> Result<String, GenerateError> {
+    let equalities = on
+        .iter()
         .enumerate()
         .map(|(index, condition)| {
-            format!(
-                "{ROW}.{} = {alias}.{}",
-                quote(condition.left.as_str()),
-                key_name(index)
+            let left_type = column_type(node, input, &condition.left)?;
+            let right_type = column_type(node, related, &condition.right)?;
+            let left_sql = format!("{ROW}.{}", quote(condition.left.as_str()));
+            let right_sql = format!("{alias}.{}", key_name(index));
+            key_equality(
+                KeySide {
+                    sql: &left_sql,
+                    logical_type: left_type,
+                },
+                KeySide {
+                    sql: &right_sql,
+                    logical_type: right_type,
+                },
             )
+            .ok_or_else(|| error(InvariantViolation::IncompatibleJoinKeys, node))
         })
-        .collect::<Vec<_>>()
-        .join(" AND ")
+        .collect::<Result<Vec<_>, _>>()?;
+    Ok(equalities.join(" AND "))
+}
+
+/// The logical type of the column `name` of `schema`.
+fn column_type<'schema>(
+    node: &PlanNode,
+    schema: &'schema OutputSchema,
+    name: &ColumnName,
+) -> Result<&'schema LogicalType, GenerateError> {
+    schema
+        .columns()
+        .iter()
+        .find(|column| &column.name == name)
+        .map(|column| &column.logical_type)
+        .ok_or_else(|| error(InvariantViolation::UnknownColumn, node))
 }
 
 /// The name of the key column at `index`, from 0, of a grouped step.

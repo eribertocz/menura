@@ -48,8 +48,8 @@ pub use plan::{
     scan_of, sort,
 };
 pub use propagation::{
-    generate_propagation, orders_scan, policy, propagation_model, scan_fields, semi_join,
-    semi_join_on,
+    generate_propagation, orders_scan, policy, propagation_model, scan_fields, scan_typed,
+    semi_join, semi_join_on,
 };
 
 /// The 64-bit signed integer.
