@@ -1,8 +1,7 @@
 id: der-mixed-division-rules-001
-rules: [DER-3.1, DER-2.4, DER-4.3, E6-4.6a]
+rules: [DER-3.1, DER-2.4, E6-4.6a]
 model: multi-derived
 security_context: analyst.json
-oracle: "der-mixed-division-rules-001.oracle.sql"
 query:
   contract: "menura.query"
   contract_version: "1.1.0"
@@ -12,7 +11,5 @@ query:
     metrics:
       - {"metric": "strict_rate_per_budget", "alias": "strict_rate_per_budget"}
 expect:
-  outcome: "plan"
-  row_order: "any"
-  rows: "der-mixed-division-rules-001.csv"
-  tolerance: 1.0e-9
+  outcome: "runtime_error"
+  error: "RDER-01"

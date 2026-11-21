@@ -12,7 +12,10 @@ use menura_expressions::typing::decimal;
 use menura_model::expression::{
     AggregateCall, BinaryOperator, Expression, IntegerLiteral, Literal, SimpleAggregate,
 };
-use menura_model::internal_model::{DeclaredAdditivity, DivisionByZero, InternalModel};
+use menura_model::internal_model::{
+    ContextMetric, ContextModifier, DeclaredAdditivity, DivisionByZero, InternalModel,
+    RemovedDimensions,
+};
 use menura_representations::logical_plan::{DerivedFormula, NamedExpression, Operation, PlanNode};
 use support::derived::{changed_model, derived_model, derived_plan, float, plan_over};
 use support::plan::{column, column_names, column_reference, kind, kinds, node};
@@ -378,4 +381,31 @@ fn der_4_1_an_input_outside_the_slice_is_an_internal_error() {
     );
 
     assert_eq!(violation(result), InvariantViolation::AdditivityMetric);
+}
+
+#[test]
+fn vs_1_a_context_metric_read_as_an_input_is_an_internal_error() {
+    let model = changed_model("SALES_TO_BUDGET", |metric| {
+        metric.context = Some(ContextMetric {
+            base: name("SALES_TOTAL"),
+            modifier: ContextModifier::ShareOfTotal(RemovedDimensions::All),
+        });
+    });
+
+    assert_eq!(
+        violation(percent_plan_result(&model)),
+        InvariantViolation::ContextMetric
+    );
+}
+
+fn percent_plan_result(model: &InternalModel) -> Result<PlanNode, PlanError> {
+    plan_over(
+        model,
+        vec![
+            branch("ORDERS", &[(0, 0)], true),
+            branch("BUDGETS", &[(0, 1)], true),
+        ],
+        vec![region()],
+        &["SALES_TO_BUDGET_PERCENT"],
+    )
 }
