@@ -156,7 +156,7 @@ fn e6_4_12_stitch_of_three_branches_in_branch_order() {
     let position = |name: &str| sql.find(name).expect(name);
     assert!(position(r#""menura_2_aggregate""#) < position(r#""menura_4_aggregate""#));
     assert!(position(r#""menura_4_aggregate""#) < position(r#""menura_6_aggregate""#));
-    assert!(position(r#""menura_6_aggregate""#) < position(r#""menura_7_stitch""#));
+    assert!(position(r#""menura_6_aggregate""#) < position(r#""menura_11_stitch""#));
 }
 
 #[test]
@@ -261,7 +261,7 @@ fn e6_4_7_stitch_null_keys_are_equal() {
     assert_golden(&sql, include_str!("golden/e6_4_7_stitch_null_keys.sql"));
     // A NULL key is one key (E4-5.0a, E4-5.1): `UNION` and `IS NOT DISTINCT FROM` compare
     // NULLs as equal, and no value that can be NULL is coalesced.
-    assert!(sql.contains(" UNION SELECT "), "{sql}");
+    assert!(sql.contains("\n    UNION\n"), "{sql}");
     assert!(!sql.contains("UNION ALL"), "{sql}");
     assert!(!sql.contains("COALESCE"), "{sql}");
     assert_eq!(sql.matches(" IS NOT DISTINCT FROM ").count(), 4, "{sql}");
@@ -349,7 +349,7 @@ fn e6_4_12_presence_column_never_collides_with_a_branch_column() {
     );
     let sql = generated(&plan, &["menura.present", "TOTAL_AMOUNT"]).sql;
     assert!(
-        sql.contains(r#"TRUE AS "menura.present." FROM "menura_2_aggregate""#),
+        sql.contains(r#"TRUE AS "menura.present.""#),
         "{sql}"
     );
 }

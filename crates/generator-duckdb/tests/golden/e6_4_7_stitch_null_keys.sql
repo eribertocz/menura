@@ -29,19 +29,46 @@ WITH
     FROM "menura_3_scan"
     GROUP BY 1, 2
   ),
-  "menura_5_stitch" AS (
+  "menura_5_present" AS (
+    SELECT
+      "REGION",
+      "CREATED_MONTH",
+      "TOTAL_QUANTITY",
+      TRUE AS "menura.present"
+    FROM "menura_2_aggregate"
+  ),
+  "menura_6_present" AS (
+    SELECT
+      "REGION",
+      "CREATED_MONTH",
+      "TOTAL_AMOUNT",
+      TRUE AS "menura.present"
+    FROM "menura_4_aggregate"
+  ),
+  "menura_7_keys" AS (
+    SELECT
+      "REGION",
+      "CREATED_MONTH"
+    FROM "menura_2_aggregate"
+    UNION
+    SELECT
+      "REGION",
+      "CREATED_MONTH"
+    FROM "menura_4_aggregate"
+  ),
+  "menura_8_stitch" AS (
     SELECT
       "menura_keys"."REGION" AS "REGION",
       "menura_keys"."CREATED_MONTH" AS "CREATED_MONTH",
       CASE WHEN "menura_branch_1"."menura.present" THEN "menura_branch_1"."TOTAL_QUANTITY" ELSE NULL END AS "TOTAL_QUANTITY",
       CASE WHEN "menura_branch_2"."menura.present" THEN "menura_branch_2"."TOTAL_AMOUNT" ELSE NULL END AS "TOTAL_AMOUNT"
-    FROM (SELECT "REGION", "CREATED_MONTH" FROM "menura_2_aggregate" UNION SELECT "REGION", "CREATED_MONTH" FROM "menura_4_aggregate") AS "menura_keys"
-    LEFT JOIN (SELECT *, TRUE AS "menura.present" FROM "menura_2_aggregate") AS "menura_branch_1" ON "menura_keys"."REGION" IS NOT DISTINCT FROM "menura_branch_1"."REGION" AND "menura_keys"."CREATED_MONTH" IS NOT DISTINCT FROM "menura_branch_1"."CREATED_MONTH"
-    LEFT JOIN (SELECT *, TRUE AS "menura.present" FROM "menura_4_aggregate") AS "menura_branch_2" ON "menura_keys"."REGION" IS NOT DISTINCT FROM "menura_branch_2"."REGION" AND "menura_keys"."CREATED_MONTH" IS NOT DISTINCT FROM "menura_branch_2"."CREATED_MONTH"
+    FROM "menura_7_keys" AS "menura_keys"
+    LEFT JOIN "menura_5_present" AS "menura_branch_1" ON "menura_keys"."REGION" IS NOT DISTINCT FROM "menura_branch_1"."REGION" AND "menura_keys"."CREATED_MONTH" IS NOT DISTINCT FROM "menura_branch_1"."CREATED_MONTH"
+    LEFT JOIN "menura_6_present" AS "menura_branch_2" ON "menura_keys"."REGION" IS NOT DISTINCT FROM "menura_branch_2"."REGION" AND "menura_keys"."CREATED_MONTH" IS NOT DISTINCT FROM "menura_branch_2"."CREATED_MONTH"
   )
 SELECT
   "REGION",
   "CREATED_MONTH",
   "TOTAL_QUANTITY",
   "TOTAL_AMOUNT"
-FROM "menura_5_stitch"
+FROM "menura_8_stitch"

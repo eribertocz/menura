@@ -1,8 +1,9 @@
 //! The step of a `Stitch` node (E4-3.7, E4-5, E6-4.7): the branches combined by their keys.
 //!
-//! The keys are the distinct key tuples of all branches, taken with `UNION`, which compares
-//! NULLs as equal (E4-5.0a). Each branch is joined to the keys with `IS NOT DISTINCT FROM` and
-//! carries a presence column, so a missing branch row is told apart from a branch row whose
+//! After the steps of the branches come one `present` step per branch, its rows with a
+//! presence column, then one `keys` step: the distinct key tuples of all branches, taken with
+//! `UNION`, which compares NULLs as equal (E4-5.0a). Each `present` step is joined to the keys
+//! with `IS NOT DISTINCT FROM`; its presence column is TRUE on every row, so a missing branch row is told apart from a branch row whose
 //! values are NULL (E4-5.1): a present row gives its values, a missing one the empty-input
 //! value that E4 gives each column (E4-5.0b), written as a literal (E6-4.11). The steps of the
 //! branches come first, in branch order (E6-4.12).
@@ -54,6 +55,11 @@ impl<'input> StepWriter<'input> {
         }
         self.parameters.start_node(node.origin());
         let presence = presence_column(branches);
+        let present: Vec<String> = branches
+            .iter()
+            .zip(&names)
+            .map(|(branch, name)| self.push_step("present", present_rows(branch, name, &presence)))
+            .collect();
         let mut items: Vec<String> = keys
             .iter()
             .map(|key| {
@@ -64,16 +70,52 @@ impl<'input> StepWriter<'input> {
         for column in columns {
             items.push(stitched_item(node, branches, &presence, column)?);
         }
-        let clauses = names
+        let (from, first) = match distinct_keys(&names, keys) {
+            Some(body) => (format!("{} AS {KEYS}", self.push_step("keys", body)), 0),
+            None => (
+                format!("{} AS {}", first_name(node, &present)?, branch_alias(0)),
+                1,
+            ),
+        };
+        let clauses = present
             .iter()
             .enumerate()
-            .map(|(index, name)| branch_join(index, name, keys, &presence))
+            .skip(first)
+            .map(|(index, name)| branch_join(index, name, keys))
             .collect();
         Ok(SelectBody {
             items,
-            from: format!("({}) AS {KEYS}", distinct_keys(&names, keys)),
+            from,
             clauses,
         })
+    }
+}
+
+/// The first `present` step: the `FROM` of a `Stitch` without keys.
+fn first_name<'name>(
+    node: &PlanNode,
+    present: &'name [String],
+) -> Result<&'name str, GenerateError> {
+    present
+        .first()
+        .map(String::as_str)
+        .ok_or_else(|| error(InvariantViolation::UnknownBranch, node))
+}
+
+/// The rows of the branch step `name`, each column of `branch` unchanged, with the presence
+/// column `presence`, TRUE on every row (E6-4.7).
+fn present_rows(branch: &PlanNode, name: &str, presence: &str) -> SelectBody {
+    let mut items: Vec<String> = branch
+        .schema()
+        .columns()
+        .iter()
+        .map(|column| quote(column.name.as_str()))
+        .collect();
+    items.push(format!("TRUE AS {}", quote(presence)));
+    SelectBody {
+        items,
+        from: name.to_owned(),
+        clauses: Vec::new(),
     }
 }
 
@@ -126,27 +168,35 @@ fn branch_alias(index: usize) -> String {
     quote(&format!("menura_branch_{}", index + 1))
 }
 
-/// `SELECT keys FROM branch_1 UNION SELECT keys FROM branch_2 …`, or one row without keys
-/// (E4-5.2).
-fn distinct_keys(names: &[String], keys: &[ColumnName]) -> String {
+/// The distinct key tuples of the branch steps `names`: `SELECT keys FROM branch_1`, then one
+/// `UNION` per further branch, one clause per line (E6-4.9); `None` without keys (E4-5.2).
+fn distinct_keys(names: &[String], keys: &[ColumnName]) -> Option<SelectBody> {
+    let (first, others) = names.split_first()?;
     if keys.is_empty() {
-        return "SELECT TRUE".to_owned();
+        return None;
     }
-    let columns = keys
-        .iter()
-        .map(|key| quote(key.as_str()))
-        .collect::<Vec<_>>()
-        .join(", ");
-    names
-        .iter()
-        .map(|name| format!("SELECT {columns} FROM {name}"))
-        .collect::<Vec<_>>()
-        .join(" UNION ")
+    let items: Vec<String> = keys.iter().map(|key| quote(key.as_str())).collect();
+    let mut clauses = Vec::new();
+    for name in others {
+        clauses.push("UNION".to_owned());
+        clauses.push("SELECT".to_owned());
+        let last = items.len().saturating_sub(1);
+        for (index, item) in items.iter().enumerate() {
+            let separator = if index == last { "" } else { "," };
+            clauses.push(format!("  {item}{separator}"));
+        }
+        clauses.push(format!("FROM {name}"));
+    }
+    Some(SelectBody {
+        items,
+        from: first.clone(),
+        clauses,
+    })
 }
 
-/// `LEFT JOIN (SELECT *, TRUE AS presence FROM branch) AS alias ON keys.k IS NOT DISTINCT FROM
-/// alias.k AND …`, or `ON TRUE` without keys.
-fn branch_join(index: usize, name: &str, keys: &[ColumnName], presence: &str) -> String {
+/// `LEFT JOIN present AS alias ON keys.k IS NOT DISTINCT FROM alias.k AND …`, or `ON TRUE`
+/// without keys.
+fn branch_join(index: usize, present: &str, keys: &[ColumnName]) -> String {
     let alias = branch_alias(index);
     let condition = if keys.is_empty() {
         "TRUE".to_owned()
@@ -159,10 +209,7 @@ fn branch_join(index: usize, name: &str, keys: &[ColumnName], presence: &str) ->
             .collect::<Vec<_>>()
             .join(" AND ")
     };
-    format!(
-        "LEFT JOIN (SELECT *, TRUE AS {} FROM {name}) AS {alias} ON {condition}",
-        quote(presence)
-    )
+    format!("LEFT JOIN {present} AS {alias} ON {condition}")
 }
 
 /// The select item of `column`: the value of its branch, or its empty-input value cast to the

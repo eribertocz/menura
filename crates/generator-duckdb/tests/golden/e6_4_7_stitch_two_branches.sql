@@ -26,19 +26,43 @@ WITH
     FROM "menura_3_scan"
     GROUP BY 1
   ),
-  "menura_5_stitch" AS (
+  "menura_5_present" AS (
+    SELECT
+      "REGION",
+      "ORDER_COUNT",
+      "TOTAL_QUANTITY",
+      TRUE AS "menura.present"
+    FROM "menura_2_aggregate"
+  ),
+  "menura_6_present" AS (
+    SELECT
+      "REGION",
+      "TOTAL_AMOUNT",
+      TRUE AS "menura.present"
+    FROM "menura_4_aggregate"
+  ),
+  "menura_7_keys" AS (
+    SELECT
+      "REGION"
+    FROM "menura_2_aggregate"
+    UNION
+    SELECT
+      "REGION"
+    FROM "menura_4_aggregate"
+  ),
+  "menura_8_stitch" AS (
     SELECT
       "menura_keys"."REGION" AS "REGION",
       CASE WHEN "menura_branch_1"."menura.present" THEN "menura_branch_1"."ORDER_COUNT" ELSE CAST(0 AS BIGINT) END AS "ORDER_COUNT",
       CASE WHEN "menura_branch_1"."menura.present" THEN "menura_branch_1"."TOTAL_QUANTITY" ELSE NULL END AS "TOTAL_QUANTITY",
       CASE WHEN "menura_branch_2"."menura.present" THEN "menura_branch_2"."TOTAL_AMOUNT" ELSE NULL END AS "TOTAL_AMOUNT"
-    FROM (SELECT "REGION" FROM "menura_2_aggregate" UNION SELECT "REGION" FROM "menura_4_aggregate") AS "menura_keys"
-    LEFT JOIN (SELECT *, TRUE AS "menura.present" FROM "menura_2_aggregate") AS "menura_branch_1" ON "menura_keys"."REGION" IS NOT DISTINCT FROM "menura_branch_1"."REGION"
-    LEFT JOIN (SELECT *, TRUE AS "menura.present" FROM "menura_4_aggregate") AS "menura_branch_2" ON "menura_keys"."REGION" IS NOT DISTINCT FROM "menura_branch_2"."REGION"
+    FROM "menura_7_keys" AS "menura_keys"
+    LEFT JOIN "menura_5_present" AS "menura_branch_1" ON "menura_keys"."REGION" IS NOT DISTINCT FROM "menura_branch_1"."REGION"
+    LEFT JOIN "menura_6_present" AS "menura_branch_2" ON "menura_keys"."REGION" IS NOT DISTINCT FROM "menura_branch_2"."REGION"
   )
 SELECT
   "REGION",
   "ORDER_COUNT",
   "TOTAL_QUANTITY",
   "TOTAL_AMOUNT"
-FROM "menura_5_stitch"
+FROM "menura_8_stitch"

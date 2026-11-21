@@ -19,15 +19,26 @@ WITH
       CAST(SUM("AMOUNT") AS DECIMAL(38,2)) AS "TOTAL_AMOUNT"
     FROM "menura_3_scan"
   ),
-  "menura_5_stitch" AS (
+  "menura_5_present" AS (
+    SELECT
+      "ORDER_COUNT",
+      TRUE AS "menura.present"
+    FROM "menura_2_aggregate"
+  ),
+  "menura_6_present" AS (
+    SELECT
+      "TOTAL_AMOUNT",
+      TRUE AS "menura.present"
+    FROM "menura_4_aggregate"
+  ),
+  "menura_7_stitch" AS (
     SELECT
       CASE WHEN "menura_branch_1"."menura.present" THEN "menura_branch_1"."ORDER_COUNT" ELSE CAST(0 AS BIGINT) END AS "ORDER_COUNT",
       CASE WHEN "menura_branch_2"."menura.present" THEN "menura_branch_2"."TOTAL_AMOUNT" ELSE NULL END AS "TOTAL_AMOUNT"
-    FROM (SELECT TRUE) AS "menura_keys"
-    LEFT JOIN (SELECT *, TRUE AS "menura.present" FROM "menura_2_aggregate") AS "menura_branch_1" ON TRUE
-    LEFT JOIN (SELECT *, TRUE AS "menura.present" FROM "menura_4_aggregate") AS "menura_branch_2" ON TRUE
+    FROM "menura_5_present" AS "menura_branch_1"
+    LEFT JOIN "menura_6_present" AS "menura_branch_2" ON TRUE
   )
 SELECT
   "ORDER_COUNT",
   "TOTAL_AMOUNT"
-FROM "menura_5_stitch"
+FROM "menura_7_stitch"
