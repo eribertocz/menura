@@ -10,7 +10,7 @@ use menura_contracts::types::compiled_plan::ColumnRole;
 use menura_generator_duckdb::InvariantViolation;
 use menura_model::internal_model::NormalizedName;
 use menura_representations::logical_plan::{JoinKind, Operation, OutputSchema, PlanNode};
-use menura_representations::names::ColumnName;
+use menura_representations::names::{ColumnName, ColumnPrefix};
 use serde_json::json;
 use support::{
     aggregate, big_integer, column, component, filter, from_model, from_query, generate,
@@ -88,6 +88,8 @@ fn e6_3_1_nodes_outside_the_slice_are_internal_errors() {
             right: input(),
             relationship: NormalizedName::new("ORDERS_TO_CUSTOMERS"),
             kind: JoinKind::Left,
+            on: Vec::new(),
+            right_prefix: ColumnPrefix::new("ORDERS_TO_CUSTOMERS."),
         }),
         node(Operation::SemiJoin {
             input: input(),
@@ -96,7 +98,7 @@ fn e6_3_1_nodes_outside_the_slice_are_internal_errors() {
         }),
         node(Operation::Deduplicate {
             input: input(),
-            group: vec![ColumnName::new("REGION")],
+            group: vec![support::parse("REGION")],
             identity: Vec::new(),
         }),
         node(Operation::Stitch {

@@ -17,7 +17,7 @@ use menura_model::internal_model::{
 use menura_representations::bound_query::{
     BoundDimension, BoundDimensionKind, BoundMetric, BoundMetricKind, BoundQuery, BoundQueryParts,
 };
-use menura_representations::paths::{Branch, Branches, ComponentKey, JoinStep, JoinTree};
+use menura_representations::paths::{Branch, Branches, ComponentKey, JoinTree};
 use support::{
     anyone, branches, build_plan, dimension, field_path, metric, metric_reference, metrics, model,
     model_with, name, orders, policy, query,
@@ -82,18 +82,6 @@ fn vs_1_more_than_one_branch_is_an_internal_error() {
     .expect("two homes");
     let result = build_plan(&several, &count_query(), &anyone(), &model(Vec::new()));
     assert_eq!(violation(result), InvariantViolation::SeveralBranches);
-}
-
-#[test]
-fn vs_1_a_join_step_is_an_internal_error() {
-    let joined = JoinTree::from_paths(vec![vec![JoinStep {
-        relationship: name("ORDERS_TO_CUSTOMERS"),
-        from: name("ORDERS"),
-        to: name("CUSTOMERS"),
-    }]]);
-    let several = Branches::new(vec![branch("ORDERS", joined)]).expect("one home");
-    let result = build_plan(&several, &count_query(), &anyone(), &model(Vec::new()));
-    assert_eq!(violation(result), InvariantViolation::JoinStep);
 }
 
 #[test]

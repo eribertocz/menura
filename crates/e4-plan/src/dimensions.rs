@@ -2,30 +2,32 @@
 
 use menura_contracts::types::common::Grain;
 use menura_model::expression::{DateUnit, Expression};
-use menura_model::internal_model::{Dataset, FieldPath};
 use menura_representations::bound_query::{BoundDimension, BoundDimensionKind, BoundQuery};
 use menura_representations::logical_plan::NamedExpression;
 use menura_representations::origin::{Origin, QueryLocation};
+use menura_representations::paths::QueryElement;
 
 use crate::columns::{column_reference, dimension_column};
 use crate::error::{InvariantViolation, PlanError};
+use crate::layout::Layout;
 
-/// The key of every dimension of `query`, in output order, over the `Scan` columns of
-/// `home`.
+/// The key of every dimension of `query`, in output order, over the columns of the `Scan` of
+/// the join instance each dimension is bound to (E3-4.2a).
 ///
 /// # Errors
 ///
-/// An internal error for a dimension of the SQL form or a field outside `home`.
+/// An internal error for a dimension of the SQL form or a field outside its instance.
 pub(crate) fn dimension_keys(
     query: &BoundQuery,
-    home: &Dataset,
+    layout: &Layout<'_>,
 ) -> Result<Vec<NamedExpression>, PlanError> {
     query
         .columns()
         .dimensions()
         .enumerate()
         .map(|(position, dimension)| {
-            let expression = dimension_key(dimension, home)
+            let element = QueryElement::Dimension(position);
+            let expression = dimension_key(dimension, &element, layout)
                 .map_err(|violation| at(violation, &dimension.origin))?;
             Ok(NamedExpression {
                 name: dimension_column(position),
@@ -37,12 +39,13 @@ pub(crate) fn dimension_keys(
 
 fn dimension_key(
     dimension: &BoundDimension,
-    home: &Dataset,
+    element: &QueryElement,
+    layout: &Layout<'_>,
 ) -> Result<Expression, InvariantViolation> {
     let BoundDimensionKind::Field { field, time_grain } = &dimension.kind else {
         return Err(InvariantViolation::ExpressionDimension);
     };
-    let column = home_field_column(field, home)?;
+    let column = column_reference(layout.element_column(element, field)?.as_str())?;
     Ok(match time_grain {
         Some(grain) => Expression::DateTrunc {
             unit: grain_unit(*grain),
@@ -50,21 +53,6 @@ fn dimension_key(
         },
         None => column,
     })
-}
-
-/// The `Scan` column of `field`, a field of `home`.
-///
-/// # Errors
-///
-/// [`InvariantViolation::ForeignField`] for a field outside `home`.
-pub(crate) fn home_field_column(
-    field: &FieldPath,
-    home: &Dataset,
-) -> Result<Expression, InvariantViolation> {
-    if field.dataset != home.name || home.field(&field.field).is_none() {
-        return Err(InvariantViolation::ForeignField);
-    }
-    column_reference(field.field.as_str())
 }
 
 /// The unit a time grain truncates to; E6 truncates in the query time zone (E6-5.2).
