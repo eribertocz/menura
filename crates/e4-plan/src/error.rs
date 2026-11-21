@@ -69,11 +69,13 @@ pub enum InvariantViolation {
     /// The query has more than one branch: stitching comes in 0.4.0 (E4-5).
     SeveralBranches,
     /// A join instance whose relationship the model does not have, or does not match its
-    /// step, its parent instance or its column pairs (E3-4.2a).
+    /// step, its parent instance or its column pairs (E3-4.2a); or a relationship of the
+    /// usable graph that the model does not have.
     UnknownRelationship,
-    /// The home dataset reaches another dataset with row policies, or the branch joins one,
-    /// which needs propagation and visibility on every `Scan` (E4-6.5).
-    Propagation,
+    /// A scanned dataset that E0 marks unusable, which E2 rules out (E0-4.2a, E2-5 row 12a).
+    UnusableDataset,
+    /// A scanned dataset with row policies whose row filter was not computed (E4-6.9).
+    UnvisitedPolicies,
     /// The home dataset is not in the model.
     UnknownDataset,
     /// A field that is not in the model, or of another dataset than the join instance that

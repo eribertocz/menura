@@ -3,15 +3,18 @@
 //! The own causes come from the substages, in substage order; E0.h then propagates them,
 //! transitively, to every element that reads an unusable element: the fields and dataset
 //! metrics of a dataset, the fields and metrics an expression or an extension reads, and the
-//! datasets and fields a relationship names. A propagated cause reports no new warning.
+//! datasets and fields a relationship names. A dataset that reaches an unusable relationship
+//! leading to row policies is then unusable too (`E0H-01`), and is propagated in turn with the
+//! relationship that cuts it off. A propagated cause reports no new warning.
 
 use std::collections::{BTreeSet, HashMap, VecDeque};
 
-use menura_model::internal_model::DiagnosticCode;
+use menura_model::internal_model::{DiagnosticCode, NormalizedName, RowAccessCut};
 
 use super::ModelInput;
 use super::index::{ModelIndex, ReadNames};
 use super::reads::reads;
+use super::row_access_routes::{DeclaredGraph, UNREACHABLE_ROW_ACCESS};
 use crate::classification::ClassificationCode;
 use crate::expressions::{ExpressionDiagnostic, ExpressionPlace};
 use crate::extensions::ExtensionCode;
@@ -26,6 +29,7 @@ use crate::typing::TYPING_WARNING;
 pub(super) struct Usability {
     codes: HashMap<JsonPointer, BTreeSet<&'static str>>,
     warnings: HashMap<JsonPointer, &'static str>,
+    cuts: HashMap<JsonPointer, RowAccessCut>,
 }
 
 impl Usability {
@@ -49,6 +53,49 @@ impl Usability {
             .map(|code| DiagnosticCode::new(code))
     }
 
+    /// Records `code` for the element at `pointer` with no load warning of its own, because
+    /// its cause already has one (E0-4.2a).
+    fn record_without_warning(&mut self, pointer: &JsonPointer, code: &'static str) {
+        self.codes.entry(pointer.clone()).or_default().insert(code);
+    }
+
+    /// The cause of `E0H-01` of the element at `pointer`, if it has one.
+    pub(super) fn row_access_cut(&self, pointer: &JsonPointer) -> Option<RowAccessCut> {
+        self.cuts.get(pointer).cloned()
+    }
+
+    /// Records `cut` for the element at `pointer` unless it already has a smaller one, by
+    /// relationship name, then by dataset name; whether it changed.
+    fn record_cut(&mut self, pointer: &JsonPointer, cut: RowAccessCut) -> bool {
+        let smaller = self
+            .cuts
+            .get(pointer)
+            .is_none_or(|current| cut_order(&cut) < cut_order(current));
+        if smaller {
+            self.cuts.insert(pointer.clone(), cut);
+        }
+        smaller
+    }
+
+    /// Gives every element that reads an element with a cut the smallest cut it reads.
+    fn propagate_cuts(&mut self, dependencies: &[(JsonPointer, JsonPointer)]) {
+        let mut readers: HashMap<&JsonPointer, Vec<&JsonPointer>> = HashMap::new();
+        for (reader, read) in dependencies {
+            readers.entry(read).or_default().push(reader);
+        }
+        let mut queue: VecDeque<JsonPointer> = self.cuts.keys().cloned().collect();
+        while let Some(read) = queue.pop_front() {
+            let Some(cut) = self.cuts.get(&read).cloned() else {
+                continue;
+            };
+            for reader in readers.get(&read).into_iter().flatten() {
+                if self.record_cut(reader, cut.clone()) {
+                    queue.push_back((*reader).clone());
+                }
+            }
+        }
+    }
+
     fn record(&mut self, pointer: &JsonPointer, code: &'static str, warning: &'static str) {
         self.codes.entry(pointer.clone()).or_default().insert(code);
         self.warnings.entry(pointer.clone()).or_insert(warning);
@@ -61,7 +108,22 @@ pub(super) fn usability(input: &ModelInput<'_, '_>, model: &ModelOutline<'_>) ->
     let index = ModelIndex::new(model);
     let dependencies = reads(input, model, &index);
     propagate(&mut usability, &dependencies);
+    // One pass is enough: a relationship made unusable by `E0H-01` touches a dataset already
+    // cut off, and every dataset that reaches it reaches the same unusable relationship.
+    let cut_off =
+        DeclaredGraph::new(input, model).cut_off(|relationship| usability.is_usable(relationship));
+    for (dataset, cut) in cut_off {
+        usability.record_without_warning(dataset, UNREACHABLE_ROW_ACCESS);
+        usability.record_cut(dataset, cut);
+    }
+    propagate(&mut usability, &dependencies);
+    usability.propagate_cuts(&dependencies);
     usability
+}
+
+/// The order of cuts: by relationship name, then by dataset name (E0-4.2a).
+fn cut_order(cut: &RowAccessCut) -> (&NormalizedName, &NormalizedName) {
+    (&cut.relationship, &cut.dataset)
 }
 
 /// The causes every substage recorded, in substage order (E0-4 table).

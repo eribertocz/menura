@@ -6,7 +6,9 @@ mod support;
 
 use menura_contracts::types::common::Grain;
 use menura_e2_bind::BindCode;
-use menura_model::internal_model::DiagnosticCode;
+use menura_model::internal_model::{
+    DiagnosticCode, ElementKind, NormalizedName, RowAccessCut, SourceLocation, UnusableElement,
+};
 use menura_representations::query_tree::QueryTreeParts;
 
 use support::bind_error;
@@ -96,13 +98,14 @@ fn e2_5_row_12a_an_unusable_field_reports_its_query_error_code() {
 
 #[test]
 fn e2_5_row_12a_an_element_with_several_codes_reports_the_first_in_the_row_order() {
-    let cases: [(&[&str], &str); 6] = [
+    let cases: [(&[&str], &str); 7] = [
         (&["E0B-09", "E0B-08"], "E0B-08"),
         (&["E0D-03", "E0B-09"], "E0B-09"),
         (&["E0F-03", "E0D-07"], "E0D-07"),
         (&["E0G-01", "E0F-08"], "E0F-08"),
         (&["E0G-02", "E0G-01"], "E0G-01"),
         (&["E0C-37", "E0G-02"], "E0G-02"),
+        (&["E0H-01", "E0C-37"], "E0C-37"),
     ];
     for (codes, first) in cases {
         let model = model_with(|parts| mark_metric(parts, "REVENUE", codes));
@@ -129,6 +132,52 @@ fn e2_5_row_12a_the_first_unusable_element_in_query_order_is_reported() {
         bind_error(&query, &model, &["admin"]),
         error(unusable("E0C-37"), "/query/metrics/0")
     );
+}
+
+#[test]
+fn e2_5_row_12a_a_dataset_cut_off_from_its_row_policies_reports_e0h_01() {
+    let model = model_with(|parts| {
+        let orders = parts
+            .datasets
+            .iter_mut()
+            .find(|dataset| dataset.name.as_str() == "ORDERS")
+            .expect("ORDERS");
+        orders.query_errors = vec![DiagnosticCode::new("E0H-01")];
+    });
+    assert_eq!(
+        bind_error(&two_metrics(), &model, &["admin"]),
+        error(unusable("E0H-01"), "/query/dimensions/0")
+    );
+}
+
+#[test]
+fn e2_5_row_12a_the_e0h_01_message_names_the_dataset_and_the_relationship() {
+    let model = model_with(|parts| {
+        mark_metric(parts, "REVENUE", &["E0H-01"]);
+        parts.unusable.push(UnusableElement {
+            kind: ElementKind::Metric,
+            name: vec![NormalizedName::new("REVENUE")],
+            load_warning: None,
+            query_errors: vec![DiagnosticCode::new("E0H-01")],
+            row_access_cut: Some(RowAccessCut {
+                dataset: NormalizedName::new("ORDERS"),
+                relationship: NormalizedName::new("ORDERS_TO_CUSTOMERS"),
+            }),
+            location: SourceLocation {
+                pointer: "/semantic_model/0/metrics/0".to_owned(),
+                line: 1,
+                column: 1,
+            },
+        });
+    });
+    let diagnostic = support::bind_diagnostic(&two_metrics(), &model, &["admin"]);
+    for expected in ["`revenue`", "E0H-01", "`ORDERS`", "`ORDERS_TO_CUSTOMERS`"] {
+        assert!(
+            diagnostic.message.contains(expected),
+            "{}",
+            diagnostic.message
+        );
+    }
 }
 
 #[test]

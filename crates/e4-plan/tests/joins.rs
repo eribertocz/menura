@@ -267,35 +267,6 @@ fn e3_4_2a_an_element_bound_to_an_instance_of_another_dataset_is_an_internal_err
 }
 
 #[test]
-fn vs_1_a_joined_dataset_with_row_policies_is_an_internal_error() {
-    let model = sales_model_with(
-        sales_orders(),
-        vec![policy("segment_scope", "TRUE", None, None)],
-    );
-    let result = build_plan(
-        &joined_branches(
-            1,
-            vec![path(QueryElement::Dimension(0), vec![to_customers()])],
-        ),
-        &query(
-            vec![joined_dimension("CUSTOMERS", "SEGMENT", None, 0)],
-            vec![metric_reference("TOTAL_AMOUNT", 0)],
-            BoundQueryParts::default(),
-        ),
-        &anyone(),
-        &model,
-    );
-
-    assert!(matches!(
-        result,
-        Err(PlanError::Invariant {
-            violation: InvariantViolation::Propagation,
-            ..
-        })
-    ));
-}
-
-#[test]
 fn e4_3_1_e4_4_0a_the_plan_scans_the_home_dataset_first() {
     let plan = segment_plan();
     let (home, joined, ..) = join_parts(node(&plan, "Join"));

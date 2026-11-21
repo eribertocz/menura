@@ -1,12 +1,12 @@
 //! Stage E4: builds the logical plan (E4-1, E4-2).
 //!
-//! In the 0.4.0 track a query has one branch, whose home dataset has its own row policies and
-//! whose join tree reaches datasets without row policies. [`build_plan`] builds its plan:
-//! `Scan` of the home dataset, the row-policy `Filter`, one left `Join` per join instance,
-//! the query-filter `Filter`, `Deduplicate` when the branch joins and has metric components,
-//! `Aggregate`, `Project`, then `Sort` and `Limit` (E4-4, E4-9). Propagation, `Stitch`,
-//! additivity and context modifiers come in later issues; an input that needs them is an
-//! internal error.
+//! In the 0.4.0 track a query has one branch. [`build_plan`] builds its plan: `Scan` of the
+//! home dataset, which reads its visible rows (the row-policy `Filter`, then one `SemiJoin`
+//! per relationship that propagation follows, E4-6.5), one left `Join` per join instance,
+//! whose `Scan` reads the visible rows of its dataset the same way (E4-6.5c), the
+//! query-filter `Filter`, `Deduplicate` when the branch joins and has metric components,
+//! `Aggregate`, `Project`, then `Sort` and `Limit` (E4-4, E4-9). `Stitch`, additivity and
+//! context modifiers come in later issues; an input that needs them is an internal error.
 //!
 //! The plan follows the conventions shared with E6 (issue #251, E6-4.12): the home `Scan`
 //! projects fields of its dataset by normalized name, and the source columns a dataset
@@ -22,17 +22,20 @@
 mod columns;
 mod dimensions;
 mod error;
+mod followed;
 mod joins;
 mod layout;
 mod metrics;
 mod nodes;
 mod output;
 mod policy;
+mod policy_visits;
 mod query_filter;
 mod rewrite;
 mod scan;
 mod slice;
 mod typing;
+mod visibility;
 
 pub use error::{InvariantViolation, PlanError};
 
@@ -76,24 +79,31 @@ pub fn build_plan(
     let outputs = metrics::metric_outputs(branch, &metrics)?;
     let query_predicate = query_filter::query_predicate(query, &layout)?;
     let has_reference_time = query.time().reference_time.is_some();
-    let policy_predicate = policy::policy_predicate(home, security, has_reference_time)?;
+    let graph = followed::PolicyGraph::new(model);
+    let row_filters =
+        policy_visits::row_filters(home, model, &graph, security, has_reference_time)?;
 
     let mut read = fields_read(
         &keys,
         &components,
-        [
-            query_predicate.as_ref().map(|(predicate, _)| predicate),
-            policy_predicate.as_ref().map(|(predicate, _)| predicate),
-        ],
+        query_predicate.as_ref().map(|(predicate, _)| predicate),
     );
+    let visibility = visibility::Visibility {
+        model,
+        graph: &graph,
+        filters: &row_filters,
+        catalog,
+    };
     read.extend(joins::join_reads(&layout));
+    read.extend(visibility.fields(home)?);
+    for instance in layout.instances() {
+        read.extend(visibility.instance_fields(instance.dataset, &instance.prefix)?);
+    }
     let deduplicated = !branch.join_tree.is_empty() && !components.is_empty();
     let identity = deduplicated.then(|| layout.identity());
-    let mut node = scan::scan(home, &joins::home_reads(&layout, &read), catalog, identity)?;
-    if let Some((predicate, location)) = policy_predicate {
-        node = filter(node, predicate, Origin::Model(location));
-    }
-    node = joins::join_instances(node, &layout, &read)?;
+    let scan = scan::scan(home, &joins::home_reads(&layout, &read), catalog, identity)?;
+    let mut node = visibility.visible_rows(scan, home, None)?;
+    node = joins::join_instances(node, &layout, &read, &visibility)?;
     if let Some((predicate, location)) = query_predicate {
         node = filter(node, predicate, Origin::Query(location));
     }
@@ -108,11 +118,11 @@ pub fn build_plan(
     output::order_and_limit(query, projected)
 }
 
-/// The fields the keys, the components and the predicates read.
+/// The fields the keys, the components and the query predicate read.
 fn fields_read(
     keys: &[NamedExpression],
     components: &[AggregateComponent],
-    predicates: [Option<&Expression>; 2],
+    query_predicate: Option<&Expression>,
 ) -> Vec<NormalizedName> {
     let mut read = Vec::new();
     for key in keys {
@@ -121,7 +131,7 @@ fn fields_read(
     for component in components {
         read_fields(&component_expression(component), &mut read);
     }
-    for predicate in predicates.into_iter().flatten() {
+    if let Some(predicate) = query_predicate {
         read_fields(predicate, &mut read);
     }
     read

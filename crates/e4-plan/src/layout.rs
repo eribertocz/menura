@@ -99,9 +99,6 @@ impl<'model> Layout<'model> {
         if !matches {
             return Err(fail(InvariantViolation::UnknownRelationship));
         }
-        if !dataset.row_policies.is_empty() {
-            return Err(fail(InvariantViolation::Propagation));
-        }
         let prefix = self.unique_prefix(instance, dataset, taken);
         taken.extend(
             dataset

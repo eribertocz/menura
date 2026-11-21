@@ -1,0 +1,406 @@
+{
+  "contract": "menura.catalog_schema",
+  "contract_version": "1.1.0",
+  "document_id": {
+    "origin": "conformance:multi-propagation",
+    "snapshot": "multi-propagation-001"
+  },
+  "engine": {
+    "name": "duckdb",
+    "version": "2.0.0"
+  },
+  "relations": [
+    {
+      "source": "shop.main.stores",
+      "columns": [
+        {
+          "name": "store_id",
+          "logical_type": {
+            "kind": "integer",
+            "bits": 32,
+            "signed": true
+          },
+          "physical_type": "INTEGER",
+          "nullable": false
+        },
+        {
+          "name": "region",
+          "logical_type": {
+            "kind": "text"
+          },
+          "physical_type": "VARCHAR",
+          "nullable": false
+        }
+      ]
+    },
+    {
+      "source": "shop.main.customers",
+      "columns": [
+        {
+          "name": "customer_id",
+          "logical_type": {
+            "kind": "integer",
+            "bits": 32,
+            "signed": true
+          },
+          "physical_type": "INTEGER",
+          "nullable": false
+        },
+        {
+          "name": "store_id",
+          "logical_type": {
+            "kind": "integer",
+            "bits": 32,
+            "signed": true
+          },
+          "physical_type": "INTEGER",
+          "nullable": true
+        },
+        {
+          "name": "name",
+          "logical_type": {
+            "kind": "text"
+          },
+          "physical_type": "VARCHAR",
+          "nullable": false
+        }
+      ]
+    },
+    {
+      "source": "shop.main.orders",
+      "columns": [
+        {
+          "name": "order_id",
+          "logical_type": {
+            "kind": "integer",
+            "bits": 32,
+            "signed": true
+          },
+          "physical_type": "INTEGER",
+          "nullable": false
+        },
+        {
+          "name": "customer_id",
+          "logical_type": {
+            "kind": "integer",
+            "bits": 32,
+            "signed": true
+          },
+          "physical_type": "INTEGER",
+          "nullable": true
+        },
+        {
+          "name": "amount",
+          "logical_type": {
+            "kind": "decimal",
+            "precision": 10,
+            "scale": 2
+          },
+          "physical_type": "DECIMAL(10, 2)",
+          "nullable": false
+        }
+      ]
+    },
+    {
+      "source": "shop.main.suppliers",
+      "columns": [
+        {
+          "name": "supplier_id",
+          "logical_type": {
+            "kind": "integer",
+            "bits": 32,
+            "signed": true
+          },
+          "physical_type": "INTEGER",
+          "nullable": false
+        },
+        {
+          "name": "region",
+          "logical_type": {
+            "kind": "text"
+          },
+          "physical_type": "VARCHAR",
+          "nullable": false
+        }
+      ]
+    },
+    {
+      "source": "shop.main.products",
+      "columns": [
+        {
+          "name": "product_id",
+          "logical_type": {
+            "kind": "integer",
+            "bits": 32,
+            "signed": true
+          },
+          "physical_type": "INTEGER",
+          "nullable": false
+        },
+        {
+          "name": "supplier_id",
+          "logical_type": {
+            "kind": "integer",
+            "bits": 32,
+            "signed": true
+          },
+          "physical_type": "INTEGER",
+          "nullable": false
+        }
+      ]
+    },
+    {
+      "source": "shop.main.warehouses",
+      "columns": [
+        {
+          "name": "warehouse_id",
+          "logical_type": {
+            "kind": "integer",
+            "bits": 32,
+            "signed": true
+          },
+          "physical_type": "INTEGER",
+          "nullable": false
+        },
+        {
+          "name": "supplier_id",
+          "logical_type": {
+            "kind": "integer",
+            "bits": 32,
+            "signed": true
+          },
+          "physical_type": "INTEGER",
+          "nullable": false
+        }
+      ]
+    },
+    {
+      "source": "shop.main.lines",
+      "columns": [
+        {
+          "name": "line_id",
+          "logical_type": {
+            "kind": "integer",
+            "bits": 32,
+            "signed": true
+          },
+          "physical_type": "INTEGER",
+          "nullable": false
+        },
+        {
+          "name": "product_id",
+          "logical_type": {
+            "kind": "integer",
+            "bits": 32,
+            "signed": true
+          },
+          "physical_type": "INTEGER",
+          "nullable": false
+        },
+        {
+          "name": "warehouse_id",
+          "logical_type": {
+            "kind": "integer",
+            "bits": 32,
+            "signed": true
+          },
+          "physical_type": "INTEGER",
+          "nullable": false
+        },
+        {
+          "name": "quantity",
+          "logical_type": {
+            "kind": "integer",
+            "bits": 32,
+            "signed": true
+          },
+          "physical_type": "INTEGER",
+          "nullable": false
+        }
+      ]
+    },
+    {
+      "source": "shop.main.teams",
+      "columns": [
+        {
+          "name": "team_id",
+          "logical_type": {
+            "kind": "integer",
+            "bits": 32,
+            "signed": true
+          },
+          "physical_type": "INTEGER",
+          "nullable": false
+        },
+        {
+          "name": "lead_id",
+          "logical_type": {
+            "kind": "integer",
+            "bits": 32,
+            "signed": true
+          },
+          "physical_type": "INTEGER",
+          "nullable": true
+        },
+        {
+          "name": "region",
+          "logical_type": {
+            "kind": "text"
+          },
+          "physical_type": "VARCHAR",
+          "nullable": false
+        }
+      ]
+    },
+    {
+      "source": "shop.main.people",
+      "columns": [
+        {
+          "name": "person_id",
+          "logical_type": {
+            "kind": "integer",
+            "bits": 32,
+            "signed": true
+          },
+          "physical_type": "INTEGER",
+          "nullable": false
+        },
+        {
+          "name": "team_id",
+          "logical_type": {
+            "kind": "integer",
+            "bits": 32,
+            "signed": true
+          },
+          "physical_type": "INTEGER",
+          "nullable": false
+        }
+      ]
+    },
+    {
+      "source": "shop.main.zones",
+      "columns": [
+        {
+          "name": "zone_code",
+          "logical_type": {
+            "kind": "text"
+          },
+          "physical_type": "VARCHAR",
+          "nullable": false
+        },
+        {
+          "name": "region",
+          "logical_type": {
+            "kind": "text"
+          },
+          "physical_type": "VARCHAR",
+          "nullable": false
+        }
+      ]
+    },
+    {
+      "source": "shop.main.visits",
+      "columns": [
+        {
+          "name": "visit_id",
+          "logical_type": {
+            "kind": "integer",
+            "bits": 32,
+            "signed": true
+          },
+          "physical_type": "INTEGER",
+          "nullable": false
+        },
+        {
+          "name": "zone_code",
+          "logical_type": {
+            "kind": "text"
+          },
+          "physical_type": "VARCHAR",
+          "nullable": false
+        }
+      ]
+    },
+    {
+      "source": "shop.main.cities",
+      "columns": [
+        {
+          "name": "city_id",
+          "logical_type": {
+            "kind": "integer",
+            "bits": 32,
+            "signed": true
+          },
+          "physical_type": "INTEGER",
+          "nullable": false
+        },
+        {
+          "name": "region",
+          "logical_type": {
+            "kind": "text"
+          },
+          "physical_type": "VARCHAR",
+          "nullable": false
+        }
+      ]
+    },
+    {
+      "source": "shop.main.venues",
+      "columns": [
+        {
+          "name": "venue_id",
+          "logical_type": {
+            "kind": "integer",
+            "bits": 32,
+            "signed": true
+          },
+          "physical_type": "INTEGER",
+          "nullable": false
+        },
+        {
+          "name": "city_id",
+          "logical_type": {
+            "kind": "integer",
+            "bits": 32,
+            "signed": true
+          },
+          "physical_type": "INTEGER",
+          "nullable": false
+        },
+        {
+          "name": "opened_on",
+          "logical_type": {
+            "kind": "date"
+          },
+          "physical_type": "DATE",
+          "nullable": false
+        }
+      ]
+    },
+    {
+      "source": "shop.main.events",
+      "columns": [
+        {
+          "name": "event_id",
+          "logical_type": {
+            "kind": "integer",
+            "bits": 32,
+            "signed": true
+          },
+          "physical_type": "INTEGER",
+          "nullable": false
+        },
+        {
+          "name": "venue_id",
+          "logical_type": {
+            "kind": "integer",
+            "bits": 32,
+            "signed": true
+          },
+          "physical_type": "INTEGER",
+          "nullable": false
+        }
+      ]
+    }
+  ]
+}

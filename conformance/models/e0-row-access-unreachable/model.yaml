@@ -1,0 +1,43 @@
+version: "0.1.1"
+semantic_model:
+  - name: unreachable
+    description: 'Every route from orders to the row policies of customers goes through an unusable relationship'
+    custom_extensions:
+      - vendor_name: COMMON
+        data: '{"namespace": "menura", "version": 1, "security_context": {"roles": ["analyst"], "attributes": [{"name": "regions", "type": "list<text>"}]}}'
+    datasets:
+      - name: customers
+        source: shop.main.customers
+        primary_key: [customer_id]
+        fields:
+          - name: customer_id
+            expression: {dialects: [{dialect: ANSI_SQL, expression: 'customer_id'}]}
+          - name: region
+            expression: {dialects: [{dialect: ANSI_SQL, expression: 'region'}]}
+        custom_extensions:
+          - vendor_name: COMMON
+            data: '{"namespace": "menura", "version": 1, "access": {"mode": "roles", "roles": ["analyst"]}, "row_access": [{"name": "customer_region", "condition": "region IN (USER_ATTRIBUTE(''regions''))"}]}'
+      - name: orders
+        source: shop.main.orders
+        primary_key: [order_id]
+        fields:
+          - name: order_id
+            expression: {dialects: [{dialect: ANSI_SQL, expression: 'order_id'}]}
+          - name: customer_id
+            expression: {dialects: [{dialect: ANSI_SQL, expression: 'customer_id'}]}
+          - name: region
+            expression: {dialects: [{dialect: ANSI_SQL, expression: 'region'}]}
+          - name: amount
+            expression: {dialects: [{dialect: ANSI_SQL, expression: 'amount'}]}
+        custom_extensions:
+          - vendor_name: COMMON
+            data: '{"namespace": "menura", "version": 1, "access": {"mode": "roles", "roles": ["analyst"]}}'
+    relationships:
+      - name: orders_customers
+        from: orders
+        to: customers
+        from_columns: [customer_id, region]
+        to_columns: [customer_id]
+    metrics:
+      - name: order_total
+        expression: {dialects: [{dialect: ANSI_SQL, expression: 'SUM(orders.amount)'}]}
