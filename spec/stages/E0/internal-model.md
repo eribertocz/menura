@@ -56,4 +56,4 @@ report the results in the catalog state.
 
 | Code | Condition |
 |---|---|
-| `E0H-01` | A dataset with a route to a dataset with `row_access` that goes through an unusable relationship (E0-4.2a); the message names the dataset and the relationship |
+| `E0H-01` | A dataset that reaches an unusable relationship whose target is or reaches a dataset with `row_access` (E0-4.2a); the message names the dataset and the first such relationship by normalized name |
