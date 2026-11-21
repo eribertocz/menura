@@ -1,0 +1,18 @@
+id: der-division-by-zero-null-001
+rules: [DER-3.1, DER-4.2, DER-5.1.3]
+model: multi-derived
+security_context: analyst.json
+oracle: "der-division-by-zero-null-001.oracle.sql"
+query:
+  contract: "menura.query"
+  contract_version: "1.1.0"
+  time_zone: "UTC"
+  query:
+    dimensions: ["regions.name"]
+    metrics:
+      - {"metric": "collection_rate", "alias": "collection_rate"}
+expect:
+  outcome: "plan"
+  row_order: "any"
+  rows: "der-division-by-zero-null-001.csv"
+  tolerance: 1.0e-9

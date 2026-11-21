@@ -35,7 +35,13 @@ pub enum InvariantViolation {
         /// Where the metric is written.
         origin: QueryLocation,
     },
-    /// A metric without components, such as a derived metric (0.4.0).
+    /// A derived metric whose inputs lead back to itself, which E0 reports as `E0C-34`
+    /// (DER-5.1.4).
+    DerivedCycle {
+        /// Where the metric is written.
+        origin: QueryLocation,
+    },
+    /// A metric without components: neither aggregates of its own nor `AGG(…)` inputs.
     MetricWithoutComponents {
         /// Where the metric is written.
         origin: QueryLocation,
@@ -71,6 +77,9 @@ impl fmt::Display for InvariantViolation {
             }
             Self::UnclassifiedMetric { origin } => {
                 write!(formatter, "unclassified metric at {}", origin.pointer())
+            }
+            Self::DerivedCycle { origin } => {
+                write!(formatter, "derived metric cycle at {}", origin.pointer())
             }
             Self::MetricWithoutComponents { origin } => {
                 write!(

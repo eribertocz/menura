@@ -1,0 +1,18 @@
+id: der-dataset-metric-inputs-001
+rules: [DER-2.2, DER-5.1.2, DER-4.3]
+model: multi-derived-development
+security_context: analyst.json
+oracle: "der-dataset-metric-inputs-001.oracle.sql"
+query:
+  contract: "menura.query"
+  contract_version: "1.1.0"
+  time_zone: "UTC"
+  query:
+    metrics:
+      - {"metric": "refund_rate", "alias": "refund_rate"}
+load_options: {ossie_format: development}
+expect:
+  outcome: "plan"
+  row_order: "any"
+  rows: "der-dataset-metric-inputs-001.csv"
+  tolerance: 1.0e-9

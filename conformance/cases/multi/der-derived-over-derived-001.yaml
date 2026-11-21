@@ -1,0 +1,18 @@
+id: der-derived-over-derived-001
+rules: [DER-2.4, DER-5.1.4, DER-5.1.5]
+model: multi-derived
+security_context: analyst.json
+oracle: "der-derived-over-derived-001.oracle.sql"
+query:
+  contract: "menura.query"
+  contract_version: "1.1.0"
+  time_zone: "UTC"
+  query:
+    dimensions: ["regions.name"]
+    metrics:
+      - {"metric": "collection_percent", "alias": "collection_percent"}
+expect:
+  outcome: "plan"
+  row_order: "any"
+  rows: "der-derived-over-derived-001.csv"
+  tolerance: 1.0e-9
