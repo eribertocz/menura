@@ -1,7 +1,7 @@
 //! A model with two facts, `ORDERS` and `BUDGETS`, that share the dimension `REGIONS`, and
 //! the branches of their queries, for the stitching tests (E4-5).
 
-use menura_contracts::types::common::LogicalType;
+use menura_contracts::types::common::{FloatBits, LogicalType};
 use menura_expressions::typing::{big_integer, decimal};
 use menura_model::expression::Expression;
 use menura_model::internal_model::{
@@ -122,33 +122,81 @@ fn collect_aggregates(expression: &Expression, aggregates: &mut Vec<Expression>)
     }
 }
 
+/// One metric of `BUDGETS` per aggregate other than `COUNT(*)` and `SUM`.
+fn aggregate_metrics() -> Vec<Metric> {
+    vec![
+        metric(
+            "BUDGET_DISTINCT",
+            "COUNT(DISTINCT budgets.amount)",
+            &["BUDGETS"],
+            big_integer(),
+        ),
+        metric(
+            "BUDGET_ROWS",
+            "COUNT(budgets.amount)",
+            &["BUDGETS"],
+            big_integer(),
+        ),
+        metric(
+            "BUDGET_MINIMUM",
+            "MIN(budgets.amount)",
+            &["BUDGETS"],
+            decimal(12, 2),
+        ),
+        metric(
+            "BUDGET_MAXIMUM",
+            "MAX(budgets.amount)",
+            &["BUDGETS"],
+            decimal(12, 2),
+        ),
+        metric(
+            "BUDGET_AVERAGE",
+            "AVG(budgets.amount)",
+            &["BUDGETS"],
+            decimal(38, 6),
+        ),
+        metric(
+            "BUDGET_MEDIAN",
+            "PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY budgets.amount)",
+            &["BUDGETS"],
+            LogicalType::Float {
+                bits: FloatBits::SixtyFour,
+            },
+        ),
+    ]
+}
+
 /// The model of `BUDGETS` and `ORDERS`, each related to `REGIONS`, with the metrics
-/// `BUDGET_COUNT` (`COUNT(*)` of `BUDGETS`), `BUDGET_TOTAL` (`SUM` of `BUDGETS`), `GAP`
-/// (`ORDERS` minus `BUDGETS`) and `SALES_TOTAL` (`SUM` of `ORDERS`).
+/// `BUDGET_COUNT` (`COUNT(*)` of `BUDGETS`), `BUDGET_TOTAL` (`SUM` of `BUDGETS`), one metric of
+/// `BUDGETS` per other aggregate (`COUNT(x)`, `COUNT(DISTINCT x)`, `MIN`, `MAX`, `AVG`,
+/// `PERCENTILE_CONT`), `GAP` (`ORDERS` minus `BUDGETS`) and `SALES_TOTAL` (`SUM` of `ORDERS`).
 pub fn two_facts_model() -> InternalModel {
+    let mut metrics = vec![
+        metric("BUDGET_COUNT", "COUNT(*)", &["BUDGETS"], big_integer()),
+        metric(
+            "BUDGET_TOTAL",
+            "SUM(budgets.amount)",
+            &["BUDGETS"],
+            decimal(38, 2),
+        ),
+        metric(
+            "GAP",
+            "SUM(orders.amount) - SUM(budgets.amount)",
+            &["ORDERS", "BUDGETS"],
+            decimal(38, 2),
+        ),
+        metric(
+            "SALES_TOTAL",
+            "SUM(orders.amount)",
+            &["ORDERS"],
+            decimal(38, 2),
+        ),
+    ];
+    metrics.extend(aggregate_metrics());
+    metrics.sort_by(|left, right| left.name.cmp(&right.name));
     let base = model_with(
         vec![fact("BUDGETS", 0), fact("ORDERS", 1), regions()],
-        vec![
-            metric("BUDGET_COUNT", "COUNT(*)", &["BUDGETS"], big_integer()),
-            metric(
-                "BUDGET_TOTAL",
-                "SUM(budgets.amount)",
-                &["BUDGETS"],
-                decimal(38, 2),
-            ),
-            metric(
-                "GAP",
-                "SUM(orders.amount) - SUM(budgets.amount)",
-                &["ORDERS", "BUDGETS"],
-                decimal(38, 2),
-            ),
-            metric(
-                "SALES_TOTAL",
-                "SUM(orders.amount)",
-                &["ORDERS"],
-                decimal(38, 2),
-            ),
-        ],
+        metrics,
     );
     let mut parts = base.parts().clone();
     parts.relationships = vec![to_regions("BUDGETS", 0), to_regions("ORDERS", 1)];

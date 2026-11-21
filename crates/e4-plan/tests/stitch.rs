@@ -86,6 +86,67 @@ fn e4_5_0b_a_count_is_zero_and_a_sum_is_null_for_a_missing_branch_row() {
     );
 }
 
+/// The plan of `REGIONS.NAME`, `SALES_TOTAL` and one `BUDGETS` metric per aggregate.
+fn every_aggregate_plan() -> PlanNode {
+    let budget_metrics = [
+        "BUDGET_COUNT",
+        "BUDGET_ROWS",
+        "BUDGET_DISTINCT",
+        "BUDGET_MINIMUM",
+        "BUDGET_MAXIMUM",
+        "BUDGET_AVERAGE",
+        "BUDGET_MEDIAN",
+    ];
+    let mut metric_names = vec!["SALES_TOTAL"];
+    metric_names.extend(budget_metrics);
+    let budget_components: Vec<_> = (1..=budget_metrics.len())
+        .map(|metric| (metric, 0))
+        .collect();
+    stitch_plan(
+        vec![
+            branch("ORDERS", &[(0, 0)], true),
+            branch("BUDGETS", &budget_components, true),
+        ],
+        vec![region()],
+        &metric_names,
+        BoundQueryParts::default(),
+    )
+}
+
+#[test]
+fn e4_5_0b_every_count_is_zero_and_every_other_aggregate_is_null() {
+    let plan = every_aggregate_plan();
+
+    let (_, _, columns) = stitch_parts(&plan);
+    let empty_values: Vec<_> = columns
+        .iter()
+        .map(|column| (column.name.as_str(), column.empty_value.clone()))
+        .collect();
+    assert_eq!(
+        empty_values,
+        [
+            ("metric_2_component_1", Some(zero())),
+            ("metric_3_component_1", Some(zero())),
+            ("metric_4_component_1", Some(zero())),
+            ("metric_5_component_1", None),
+            ("metric_6_component_1", None),
+            ("metric_7_component_1", None),
+            ("metric_8_component_1", None),
+            ("metric_1_component_1", None),
+        ]
+    );
+    let nullable: Vec<_> = support::plan::node(&plan, "Stitch")
+        .schema()
+        .columns()
+        .iter()
+        .map(|column| column.nullable)
+        .collect();
+    assert_eq!(
+        nullable,
+        [true, false, false, false, true, true, true, true, true]
+    );
+}
+
 #[test]
 fn e4_5_1_each_column_names_the_branch_that_supplies_it() {
     let plan = sales_and_budget_plan();
