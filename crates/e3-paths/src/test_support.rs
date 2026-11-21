@@ -3,12 +3,13 @@
 use menura_contracts::Sha256Hash;
 use menura_model::expression::{AggregateCall, Expression, Literal};
 use menura_model::internal_model::{
-    Additivity, Component, Dataset, DecomposabilityClass, Descriptions, FieldPath, InternalModel,
-    Metric, MetricClassification, ModelParts, NormalizedName, RelationshipGraph, SourceLocation,
+    Additivity, Component, Dataset, DecomposabilityClass, Descriptions, FieldPath, GraphEdge,
+    InternalModel, Metric, MetricClassification, ModelParts, NormalizedName, RelationshipGraph,
+    SourceLocation,
 };
 use menura_representations::bound_query::{
-    BoundDimension, BoundDimensionKind, BoundFilter, BoundMetric, BoundMetricKind, BoundQuery,
-    BoundQueryParts, MetricPath,
+    AuthorizedSubgraph, BoundDimension, BoundDimensionKind, BoundFilter, BoundMetric,
+    BoundMetricKind, BoundQuery, BoundQueryParts, MetricPath,
 };
 use menura_representations::columns::Columns;
 use menura_representations::names::OutputName;
@@ -88,14 +89,37 @@ pub(crate) fn dataset(dataset_name: &str, metrics: Vec<Metric>) -> Dataset {
     }
 }
 
-/// The model with `datasets` and the semantic-model `metrics`.
+/// The model with `datasets` and the semantic-model `metrics`, without relationships.
 pub(crate) fn model(datasets: Vec<Dataset>, metrics: Vec<Metric>) -> InternalModel {
+    connected_model(datasets, metrics, &[])
+}
+
+/// The model with `datasets`, the semantic-model `metrics` and one graph edge for each
+/// `(relationship, from, to)` of `edges`.
+pub(crate) fn connected_model(
+    datasets: Vec<Dataset>,
+    metrics: Vec<Metric>,
+    edges: &[(&str, &str, &str)],
+) -> InternalModel {
+    let edges = edges
+        .iter()
+        .map(|(relationship, from, to)| GraphEdge {
+            relationship: name(relationship),
+            from: name(from),
+            to: name(to),
+            one_to_one: false,
+        })
+        .collect();
+    let graph = RelationshipGraph {
+        edges,
+        ..RelationshipGraph::default()
+    };
     let parts = ModelParts {
         name: name("SALES"),
         descriptions: Descriptions::default(),
         datasets,
         relationships: Vec::new(),
-        graph: RelationshipGraph::default(),
+        graph,
         metrics,
         security_context: None,
         summaries: Vec::new(),
@@ -168,5 +192,17 @@ pub(crate) fn query(
         Columns::dimensions_then_metrics(dimensions, metrics),
         time,
         parts,
+    )
+}
+
+/// The authorized subgraph with the relationships `relationships` and no dataset: E3 reads
+/// only its relationships.
+pub(crate) fn subgraph(relationships: &[&str]) -> AuthorizedSubgraph {
+    AuthorizedSubgraph::new(
+        Vec::new(),
+        relationships
+            .iter()
+            .map(|relationship| name(relationship))
+            .collect(),
     )
 }

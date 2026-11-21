@@ -1,0 +1,16 @@
+id: e3-several-anchors-001
+rules: [E3-5.1]
+model: e3-reachability
+security_context: analyst.json
+query:
+  contract: "menura.query"
+  contract_version: "1.1.0"
+  time_zone: "UTC"
+  query:
+    dimensions: ["accounts.plan_name", "profiles.segment"]
+expect:
+  outcome: "error"
+  error: "E_AMBIGUOUS_PATH"
+  location:
+    document: "query"
+    pointer: "/query/dimensions"

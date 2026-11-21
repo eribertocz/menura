@@ -1,0 +1,15 @@
+id: multi-propagation-dimension-only-002
+rules: [E4-6.5c, E4-6.7]
+model: multi-propagation
+security_context: south.json
+oracle: "multi-propagation-dimension-only-002.oracle.sql"
+query:
+  contract: "menura.query"
+  contract_version: "1.1.0"
+  time_zone: "UTC"
+  query:
+    dimensions: ["customers.name"]
+expect:
+  outcome: "plan"
+  row_order: "any"
+  rows: "multi-propagation-dimension-only-002.csv"

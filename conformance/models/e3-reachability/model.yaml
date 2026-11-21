@@ -1,0 +1,137 @@
+version: "0.1.1"
+semantic_model:
+  - name: e3_reachability
+    description: >-
+      Reachability for E3: returns to orders to customers to regions, an unconnected warehouses
+      dataset, and accounts and profiles joined both ways one to one. The guest role cannot see
+      customers.region_id, so the relationship from customers to regions is not authorized for it
+    custom_extensions:
+      - vendor_name: COMMON
+        data: '{"namespace": "menura", "version": 1, "security_context": {"roles": ["analyst", "guest"], "attributes": []}}'
+    datasets:
+      - name: orders
+        source: shop.main.orders
+        primary_key: [order_id]
+        fields:
+          - name: order_id
+            expression: {dialects: [{dialect: ANSI_SQL, expression: order_id}]}
+          - name: customer_id
+            expression: {dialects: [{dialect: ANSI_SQL, expression: customer_id}]}
+          - name: status
+            expression: {dialects: [{dialect: ANSI_SQL, expression: status}]}
+          - name: amount
+            expression: {dialects: [{dialect: ANSI_SQL, expression: amount}]}
+          - name: order_date
+            expression: {dialects: [{dialect: ANSI_SQL, expression: order_date}]}
+            dimension: {is_time: true}
+        custom_extensions:
+          - vendor_name: COMMON
+            data: '{"namespace": "menura", "version": 1, "access": {"mode": "roles", "roles": ["analyst", "guest"]}}'
+      - name: customers
+        source: shop.main.customers
+        primary_key: [customer_id]
+        fields:
+          - name: customer_id
+            expression: {dialects: [{dialect: ANSI_SQL, expression: customer_id}]}
+          - name: region_id
+            expression: {dialects: [{dialect: ANSI_SQL, expression: region_id}]}
+          - name: customer_name
+            expression: {dialects: [{dialect: ANSI_SQL, expression: customer_name}]}
+        custom_extensions:
+          - vendor_name: COMMON
+            data: '{"namespace": "menura", "version": 1, "access": {"mode": "roles", "roles": ["analyst", "guest"], "fields": [{"names": ["region_id"], "roles": ["analyst"]}]}}'
+      - name: regions
+        source: shop.main.regions
+        primary_key: [region_id]
+        fields:
+          - name: region_id
+            expression: {dialects: [{dialect: ANSI_SQL, expression: region_id}]}
+          - name: region_name
+            expression: {dialects: [{dialect: ANSI_SQL, expression: region_name}]}
+        custom_extensions:
+          - vendor_name: COMMON
+            data: '{"namespace": "menura", "version": 1, "access": {"mode": "roles", "roles": ["analyst", "guest"]}}'
+      - name: returns
+        source: shop.main.returns
+        primary_key: [return_id]
+        fields:
+          - name: return_id
+            expression: {dialects: [{dialect: ANSI_SQL, expression: return_id}]}
+          - name: order_id
+            expression: {dialects: [{dialect: ANSI_SQL, expression: order_id}]}
+          - name: reason
+            expression: {dialects: [{dialect: ANSI_SQL, expression: reason}]}
+          - name: refund
+            expression: {dialects: [{dialect: ANSI_SQL, expression: refund}]}
+          - name: return_date
+            expression: {dialects: [{dialect: ANSI_SQL, expression: return_date}]}
+            dimension: {is_time: true}
+        custom_extensions:
+          - vendor_name: COMMON
+            data: '{"namespace": "menura", "version": 1, "access": {"mode": "roles", "roles": ["analyst", "guest"]}}'
+      - name: warehouses
+        source: shop.main.warehouses
+        primary_key: [warehouse_id]
+        fields:
+          - name: warehouse_id
+            expression: {dialects: [{dialect: ANSI_SQL, expression: warehouse_id}]}
+          - name: city
+            expression: {dialects: [{dialect: ANSI_SQL, expression: city}]}
+        custom_extensions:
+          - vendor_name: COMMON
+            data: '{"namespace": "menura", "version": 1, "access": {"mode": "roles", "roles": ["analyst", "guest"]}}'
+      - name: accounts
+        source: shop.main.accounts
+        primary_key: [account_id]
+        fields:
+          - name: account_id
+            expression: {dialects: [{dialect: ANSI_SQL, expression: account_id}]}
+          - name: plan_name
+            expression: {dialects: [{dialect: ANSI_SQL, expression: plan_name}]}
+        custom_extensions:
+          - vendor_name: COMMON
+            data: '{"namespace": "menura", "version": 1, "access": {"mode": "roles", "roles": ["analyst", "guest"]}}'
+      - name: profiles
+        source: shop.main.profiles
+        primary_key: [account_id]
+        fields:
+          - name: account_id
+            expression: {dialects: [{dialect: ANSI_SQL, expression: account_id}]}
+          - name: segment
+            expression: {dialects: [{dialect: ANSI_SQL, expression: segment}]}
+        custom_extensions:
+          - vendor_name: COMMON
+            data: '{"namespace": "menura", "version": 1, "access": {"mode": "roles", "roles": ["analyst", "guest"]}}'
+    relationships:
+      - name: returns_orders
+        from: returns
+        to: orders
+        from_columns: [order_id]
+        to_columns: [order_id]
+      - name: orders_customers
+        from: orders
+        to: customers
+        from_columns: [customer_id]
+        to_columns: [customer_id]
+      - name: customers_regions
+        from: customers
+        to: regions
+        from_columns: [region_id]
+        to_columns: [region_id]
+      - name: accounts_profiles
+        from: accounts
+        to: profiles
+        from_columns: [account_id]
+        to_columns: [account_id]
+      - name: profiles_accounts
+        from: profiles
+        to: accounts
+        from_columns: [account_id]
+        to_columns: [account_id]
+    metrics:
+      - name: total_amount
+        expression: {dialects: [{dialect: ANSI_SQL, expression: 'SUM(orders.amount)'}]}
+      - name: total_refund
+        expression: {dialects: [{dialect: ANSI_SQL, expression: 'SUM(returns.refund)'}]}
+      - name: net_amount
+        expression: {dialects: [{dialect: ANSI_SQL, expression: 'SUM(orders.amount) - SUM(returns.refund)'}]}

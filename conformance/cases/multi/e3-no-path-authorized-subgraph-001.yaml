@@ -1,0 +1,17 @@
+id: e3-no-path-authorized-subgraph-001
+rules: [E3-3.1, E2-4.8]
+model: e3-reachability
+security_context: guest.json
+query:
+  contract: "menura.query"
+  contract_version: "1.1.0"
+  time_zone: "UTC"
+  query:
+    dimensions: ["regions.region_name"]
+    metrics: [{"metric": "total_amount", "alias": "total_amount"}]
+expect:
+  outcome: "error"
+  error: "E_NO_PATH"
+  location:
+    document: "query"
+    pointer: "/query/dimensions/0"

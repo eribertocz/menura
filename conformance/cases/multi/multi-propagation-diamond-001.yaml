@@ -1,0 +1,16 @@
+id: multi-propagation-diamond-001
+rules: [E4-6.5, E4-6.6, E2-4.5]
+model: multi-propagation
+security_context: north.json
+oracle: "multi-propagation-diamond-001.oracle.sql"
+query:
+  contract: "menura.query"
+  contract_version: "1.1.0"
+  time_zone: "UTC"
+  query:
+    metrics:
+      - {"metric": "line_quantity", "alias": "line_quantity"}
+expect:
+  outcome: "plan"
+  row_order: "any"
+  rows: "multi-propagation-diamond-001.csv"
