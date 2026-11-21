@@ -6,7 +6,7 @@ use menura_model::expression::{AggregateCall, Expression, Identifier, Reference,
 
 use super::{
     AggregateComponent, JoinCondition, JoinKind, NamedExpression, Operation, OutputSchema,
-    PlanNode, SchemaColumn, SortItem,
+    PlanNode, SchemaColumn, SortItem, StitchColumn,
 };
 use crate::names::{ColumnName, ColumnPrefix};
 use crate::origin::Origin;
@@ -245,6 +245,11 @@ fn e4_3_5_e4_3_7_deduplicate_and_stitch_keep_their_keys() {
         Operation::Stitch {
             branches: vec![aggregate(deduplicate), aggregate(scan("RETURNS"))],
             keys: vec![ColumnName::new("region")],
+            columns: vec![StitchColumn {
+                name: ColumnName::new("amount"),
+                branch: 0,
+                empty_value: None,
+            }],
         },
         region_schema(),
         query_origin(),

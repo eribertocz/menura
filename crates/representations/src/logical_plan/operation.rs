@@ -4,7 +4,9 @@ use menura_model::expression::Expression;
 use menura_model::internal_model::NormalizedName;
 
 use super::PlanNode;
-use super::items::{AggregateComponent, JoinCondition, JoinKind, NamedExpression, SortItem};
+use super::items::{
+    AggregateComponent, JoinCondition, JoinKind, NamedExpression, SortItem, StitchColumn,
+};
 use crate::names::{ColumnName, ColumnPrefix};
 
 /// What a plan node does (E4-3). Every node of the table is defined.
@@ -80,12 +82,17 @@ pub enum Operation {
         /// The components evaluated per group.
         components: Vec<AggregateComponent>,
     },
-    /// `Stitch(branches, keys)`: combine branches by dimension keys (E4-5).
+    /// `Stitch(branches, keys)`: combine branches by dimension keys (E4-5). Its output is
+    /// the key columns, then `columns`, in order.
     Stitch {
-        /// The branch plans, in branch order (E3-4.3).
+        /// The branch plans, in branch order (E3-4.3), each ending with its `Aggregate`.
         branches: Vec<PlanNode>,
-        /// The dimension key columns.
+        /// The dimension key columns, which every branch outputs, compared with NULLs equal
+        /// (E4-5.0a).
         keys: Vec<ColumnName>,
+        /// The component columns, in branch order and, within a branch, in component order,
+        /// each with its branch and empty-input value (E4-5.0b).
+        columns: Vec<StitchColumn>,
     },
     /// `Project(input, expressions)`: compute the output columns.
     Project {
