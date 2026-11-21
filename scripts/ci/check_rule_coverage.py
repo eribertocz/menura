@@ -3,8 +3,8 @@
 Reads the rule IDs of `spec/INDEX.md` and lists every behavioral rule ID that no conformance
 case cites in its `rules`, and every process rule ID that no CI workflow and no item of the
 `review-pr` skill cites (spec/README.md Conventions). A citation of an item `X.n` also covers
-rule `X`, but never a rule with a letter suffix such as `X.na`; a citation of `X.na` covers rule
-`X.na` only. Rule IDs whose prefix is in neither list are reported as unclassified.
+rule `X`, but never a rule with a letter suffix such as `X.na`. A citation of `X.na` covers
+`X.na` and, like `X.n`, rule `X`, but never its sibling `X.n`. Rule IDs whose prefix is in neither list are reported as unclassified.
 
 The check fails only for uncovered rule IDs defined in a file of the coverage scope,
 `spec/coverage-scope.txt` (CS-2.6); every other finding is reported only. A scope entry is a path
@@ -36,7 +36,7 @@ RULE_TOKEN = re.compile(
     r"\b(?:[A-Z]{1,4}\d+(?:\.\d+)*[a-z]?|[A-Z]{1,4}\d?[A-Z]?-\d+(?:\.\d+)*[a-z]?)\b"
 )
 RANGE_TOKEN = re.compile(r"\b([A-Z]{1,4})(\d+)([a-z]?)\s*[–-]\s*(?:\1)?(\d+)([a-z]?)\b")
-SUFFIXED = re.compile(r"\d[a-z]$")
+SUFFIX = re.compile(r"(?<=\d)[a-z]$")
 
 
 def index_rules(index_text):
@@ -144,9 +144,13 @@ def cited_in_cases(case_texts):
 
 
 def is_covered(rule, cited):
-    """Whether `rule`, or one of its items `rule.n` without a letter suffix, is cited."""
+    """Whether `rule`, or one of its items `rule.n` or `rule.na`, is cited.
+
+    The letter suffix of a citation is dropped before matching items, so `X.na` covers `X` but
+    never `X.n`.
+    """
     return rule in cited or any(
-        citation.startswith(rule + ".") and not SUFFIXED.search(citation) for citation in cited
+        SUFFIX.sub("", citation).startswith(rule + ".") for citation in cited
     )
 
 

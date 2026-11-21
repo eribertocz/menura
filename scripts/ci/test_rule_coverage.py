@@ -137,9 +137,10 @@ class RuleCoverageTest(unittest.TestCase):
         findings = check_rule_coverage.uncovered(rules, cases, set())
         self.assertEqual(findings, [("behavioral", "E4-6.9b")])
 
-    def test_cs_2_1_suffixed_citation_covers_no_other_rule(self):
+    def test_cs_2_1_suffixed_citation_covers_its_parent_section_but_not_its_sibling(self):
+        self.assertTrue(check_rule_coverage.is_covered("E4-6", {"E4-6.9a"}))
         self.assertFalse(check_rule_coverage.is_covered("E4-6.9", {"E4-6.9a"}))
-        self.assertFalse(check_rule_coverage.is_covered("E4-6", {"E4-6.9a"}))
+        self.assertFalse(check_rule_coverage.is_covered("E4-6.9b", {"E4-6.9a"}))
 
     def test_cs_2_1_item_citation_does_not_cover_a_suffixed_rule(self):
         self.assertTrue(check_rule_coverage.is_covered("E4-6", {"E4-6.9"}))
