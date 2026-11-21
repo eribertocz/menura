@@ -1,0 +1,18 @@
+id: cs-error-location-001
+rules: [CS-2.9, E2-3.2]
+model: slice
+security_context: auditor.json
+query:
+  contract: "menura.query"
+  contract_version: "1.1.0"
+  time_zone: "UTC"
+  query:
+    dimensions: ["sales.nowhere"]
+    metrics:
+      - {"metric": "sale_count", "alias": "sale_count"}
+expect:
+  outcome: "error"
+  error: "E_NAME_NOT_FOUND"
+  location:
+    document: "query"
+    pointer: "/query/dimensions/0"

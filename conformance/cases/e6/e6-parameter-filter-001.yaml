@@ -1,0 +1,17 @@
+id: e6-parameter-filter-001
+rules: [E6-4.2]
+model: slice
+security_context: auditor.json
+query:
+  contract: "menura.query"
+  contract_version: "1.1.0"
+  time_zone: "UTC"
+  query:
+    dimensions: ["sales.region"]
+    metrics:
+      - {"metric": "sale_count", "alias": "sale_count"}
+    filter: "sales.quantity > 1"
+expect:
+  outcome: "plan"
+  rows: "e6-parameter-filter-001.csv"
+  row_order: "any"

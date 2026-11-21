@@ -1,0 +1,13 @@
+{
+  "contract": "menura.security_context",
+  "contract_version": "9.0.0",
+  "subject": "unsupported-version",
+  "roles": [
+    "analyst"
+  ],
+  "attributes": {
+    "regions": [
+      "NORTH"
+    ]
+  }
+}

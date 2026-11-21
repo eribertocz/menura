@@ -1,0 +1,18 @@
+id: qry-limit-001
+rules: [QRY-4.6]
+model: slice
+security_context: auditor.json
+query:
+  contract: "menura.query"
+  contract_version: "1.1.0"
+  time_zone: "UTC"
+  query:
+    dimensions: ["sales.region"]
+    metrics:
+      - {"metric": "total_amount", "alias": "total_amount"}
+    nonportable_extensions:
+      - {"vendor_name": "COMMON", "data": {"namespace": "menura", "version": 1, "limit": 2, "order_by": [{"output": "total_amount", "direction": "desc", "nulls": "last"}, {"output": "region", "direction": "asc", "nulls": "last"}]}}
+expect:
+  outcome: "plan"
+  row_order: "exact"
+  rows: "qry-limit-001.csv"

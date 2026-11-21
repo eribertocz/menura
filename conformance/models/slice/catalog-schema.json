@@ -1,0 +1,179 @@
+{
+  "contract": "menura.catalog_schema",
+  "contract_version": "1.1.0",
+  "document_id": {
+    "origin": "conformance:slice",
+    "snapshot": "slice-001"
+  },
+  "engine": {
+    "name": "duckdb",
+    "version": "2.0.0"
+  },
+  "relations": [
+    {
+      "source": "shop.main.sales",
+      "columns": [
+        {
+          "name": "sale_id",
+          "logical_type": {
+            "kind": "integer",
+            "bits": 32,
+            "signed": true
+          },
+          "physical_type": "INTEGER",
+          "nullable": false
+        },
+        {
+          "name": "region",
+          "logical_type": {
+            "kind": "text"
+          },
+          "physical_type": "VARCHAR",
+          "nullable": false
+        },
+        {
+          "name": "channel",
+          "logical_type": {
+            "kind": "text"
+          },
+          "physical_type": "VARCHAR",
+          "nullable": true
+        },
+        {
+          "name": "team_id",
+          "logical_type": {
+            "kind": "integer",
+            "bits": 32,
+            "signed": true
+          },
+          "physical_type": "INTEGER",
+          "nullable": false
+        },
+        {
+          "name": "quantity",
+          "logical_type": {
+            "kind": "integer",
+            "bits": 32,
+            "signed": true
+          },
+          "physical_type": "INTEGER",
+          "nullable": false
+        },
+        {
+          "name": "amount",
+          "logical_type": {
+            "kind": "decimal",
+            "precision": 10,
+            "scale": 2
+          },
+          "physical_type": "DECIMAL(10,2)",
+          "nullable": false
+        },
+        {
+          "name": "cost",
+          "logical_type": {
+            "kind": "decimal",
+            "precision": 10,
+            "scale": 2
+          },
+          "physical_type": "DECIMAL(10,2)",
+          "nullable": false
+        },
+        {
+          "name": "voided",
+          "logical_type": {
+            "kind": "boolean"
+          },
+          "physical_type": "BOOLEAN",
+          "nullable": false
+        },
+        {
+          "name": "sale_date",
+          "logical_type": {
+            "kind": "date"
+          },
+          "physical_type": "DATE",
+          "nullable": false
+        },
+        {
+          "name": "sold_at",
+          "logical_type": {
+            "kind": "timestamp",
+            "precision": "us",
+            "with_time_zone": true
+          },
+          "physical_type": "TIMESTAMP WITH TIME ZONE",
+          "nullable": false
+        },
+        {
+          "name": "entered_at",
+          "logical_type": {
+            "kind": "timestamp",
+            "precision": "us",
+            "with_time_zone": false
+          },
+          "physical_type": "TIMESTAMP",
+          "nullable": false
+        }
+      ]
+    },
+    {
+      "source": "shop.main.targets",
+      "columns": [
+        {
+          "name": "region",
+          "logical_type": {
+            "kind": "text"
+          },
+          "physical_type": "VARCHAR",
+          "nullable": false
+        },
+        {
+          "name": "target",
+          "logical_type": {
+            "kind": "integer",
+            "bits": 32,
+            "signed": true
+          },
+          "physical_type": "INTEGER",
+          "nullable": false
+        }
+      ]
+    },
+    {
+      "source": "shop.main.returns",
+      "columns": [
+        {
+          "name": "return_id",
+          "logical_type": {
+            "kind": "integer",
+            "bits": 32,
+            "signed": true
+          },
+          "physical_type": "INTEGER",
+          "nullable": false
+        },
+        {
+          "name": "sale_id",
+          "logical_type": {
+            "kind": "integer",
+            "bits": 32,
+            "signed": true
+          },
+          "physical_type": "INTEGER",
+          "nullable": false
+        },
+        {
+          "name": "refund",
+          "logical_type": {
+            "kind": "decimal",
+            "precision": 10,
+            "scale": 2
+          },
+          "physical_type": "DECIMAL(10,2)",
+          "nullable": false
+        }
+      ]
+    }
+  ]
+}

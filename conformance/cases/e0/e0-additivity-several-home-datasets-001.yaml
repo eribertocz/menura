@@ -1,6 +1,7 @@
 id: e0-additivity-several-home-datasets-001
 rules: [ADD-5.1.6, ADD-5.1.8, E0G-4.2, E0G-4.3, E0G-01, W0G-01]
 model: e0-additivity-conflicts
+load_options: {grant_authenticated_to_all: true}
 security_context: analyst.json
 query:
   contract: menura.query

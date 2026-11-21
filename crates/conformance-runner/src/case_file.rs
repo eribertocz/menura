@@ -11,7 +11,8 @@ use crate::error::{RunnerError, RunnerErrorKind};
 /// # Errors
 ///
 /// Returns a [`RunnerError`] when the file cannot be read or parsed, when its name differs from
-/// its `id` (CS-1), or when it breaks CS-2.1, CS-2.2 or the security context requirement of CS-2.
+/// its `id` (CS-1), or when it breaks CS-2.1, CS-2.2, or the security context or error code
+/// requirement of CS-2.
 pub fn read_case(path: &Path) -> Result<Case, RunnerError> {
     let text = fs::read_to_string(path)
         .map_err(|error| RunnerError::new(RunnerErrorKind::Unreadable(error), path))?;
@@ -41,6 +42,10 @@ fn check_case(case: &Case) -> Result<(), RunnerErrorKind> {
     }
     if case.expect.outcome.needs_security_context() && case.security_context.is_none() {
         return Err(RunnerErrorKind::MissingSecurityContext);
+    }
+    let needs_error = matches!(case.expect.outcome, Outcome::Error | Outcome::RuntimeError);
+    if needs_error && case.expect.error.as_deref().is_none_or(str::is_empty) {
+        return Err(RunnerErrorKind::MissingErrorCode);
     }
     Ok(())
 }
@@ -104,6 +109,26 @@ expect:
             parse_case(&text),
             Err(RunnerErrorKind::MissingSecurityContext)
         ));
+    }
+
+    #[test]
+    fn cs_2_requires_the_error_code_of_an_error_or_runtime_error_case() {
+        let error_case = PLAN_CASE.replace(
+            "  outcome: plan\n  rows: expected.csv\n  row_order: any\n",
+            "  outcome: error\n",
+        );
+        assert!(matches!(
+            parse_case(&error_case),
+            Err(RunnerErrorKind::MissingErrorCode)
+        ));
+        let runtime_case =
+            error_case.replace("outcome: error", "outcome: runtime_error\n  error: ''");
+        assert!(matches!(
+            parse_case(&runtime_case),
+            Err(RunnerErrorKind::MissingErrorCode)
+        ));
+        let named = error_case.replace("outcome: error", "outcome: error\n  error: E2-01");
+        assert!(parse_case(&named).is_ok());
     }
 
     #[test]

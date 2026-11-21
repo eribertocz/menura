@@ -1,0 +1,20 @@
+id: e2-unknown-relationship-001
+rules: [E2-3.5]
+model: slice
+security_context: manager.json
+query:
+  contract: "menura.query"
+  contract_version: "1.1.0"
+  time_zone: "UTC"
+  query:
+    dimensions: ["sales.region"]
+    metrics:
+      - {"metric": "sale_count", "alias": "sale_count"}
+    nonportable_extensions:
+      - {"vendor_name": "COMMON", "data": {"namespace": "menura", "version": 1, "paths": [{"from": "sales", "to": "targets", "relationships": ["sales_nowhere"]}]}}
+expect:
+  outcome: "error"
+  error: "E_NAME_NOT_FOUND"
+  location:
+    document: "query"
+    pointer: "/query/nonportable_extensions/0/data/paths/0"

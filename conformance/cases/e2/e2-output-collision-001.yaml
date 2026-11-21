@@ -1,0 +1,16 @@
+id: e2-output-collision-001
+rules: [E2-5.5]
+model: slice
+security_context: auditor.json
+query:
+  contract: "menura.query"
+  contract_version: "1.1.0"
+  time_zone: "UTC"
+  query:
+    dimensions:
+      - {"field": "sales.region", "alias": "Region"}
+    metrics:
+      - {"metric": "sale_count", "alias": "REGION"}
+expect:
+  outcome: "error"
+  error: "E_NAME_COLLISION"
