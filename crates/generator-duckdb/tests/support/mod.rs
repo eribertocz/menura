@@ -19,6 +19,7 @@ use menura_generator_duckdb::{GenerateError, GeneratedSql};
 mod expression;
 mod joins;
 mod plan;
+mod propagation;
 
 pub use expression::{
     expression_sql, query_with_reference_time, query_without_reference_time, reference_time_query,
@@ -45,6 +46,10 @@ use menura_security::{AdmittedSecurityContext, admit_security_context};
 pub use plan::{
     aggregate, column, component, component_of, filter, limit, named, project, region_count, scan,
     scan_of, sort,
+};
+pub use propagation::{
+    generate_propagation, orders_scan, policy, propagation_model, scan_fields, scan_typed,
+    semi_join, semi_join_on,
 };
 
 /// The 64-bit signed integer.
