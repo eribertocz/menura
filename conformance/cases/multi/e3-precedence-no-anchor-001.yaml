@@ -1,0 +1,17 @@
+id: e3-precedence-no-anchor-001
+rules: [E2-5]
+model: e3-reachability
+security_context: analyst.json
+query:
+  contract: "menura.query"
+  contract_version: "1.1.0"
+  time_zone: "UTC"
+  query:
+    dimensions: ["customers.customer_name", "warehouses.city"]
+    filter: "returns.reason = 'late'"
+expect:
+  outcome: "error"
+  error: "E_NO_ANCHOR"
+  location:
+    document: "query"
+    pointer: "/query/dimensions"

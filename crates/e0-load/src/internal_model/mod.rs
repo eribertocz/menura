@@ -31,6 +31,7 @@ mod index;
 mod located;
 mod metrics;
 mod reads;
+mod row_access_routes;
 mod security;
 mod summaries;
 mod trees;

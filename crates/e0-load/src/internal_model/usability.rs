@@ -3,7 +3,9 @@
 //! The own causes come from the substages, in substage order; E0.h then propagates them,
 //! transitively, to every element that reads an unusable element: the fields and dataset
 //! metrics of a dataset, the fields and metrics an expression or an extension reads, and the
-//! datasets and fields a relationship names. A propagated cause reports no new warning.
+//! datasets and fields a relationship names. A dataset whose every route to row policies goes
+//! through an unusable relationship is then unusable too (`E0H-01`), and is propagated in
+//! turn, until nothing changes. A propagated cause reports no new warning.
 
 use std::collections::{BTreeSet, HashMap, VecDeque};
 
@@ -12,6 +14,7 @@ use menura_model::internal_model::DiagnosticCode;
 use super::ModelInput;
 use super::index::{ModelIndex, ReadNames};
 use super::reads::reads;
+use super::row_access_routes::{DeclaredGraph, UNREACHABLE_ROW_ACCESS};
 use crate::classification::ClassificationCode;
 use crate::expressions::{ExpressionDiagnostic, ExpressionPlace};
 use crate::extensions::ExtensionCode;
@@ -49,6 +52,12 @@ impl Usability {
             .map(|code| DiagnosticCode::new(code))
     }
 
+    /// Records `code` for the element at `pointer` with no load warning of its own, because
+    /// its cause already has one (E0-4.2a).
+    fn record_without_warning(&mut self, pointer: &JsonPointer, code: &'static str) -> bool {
+        self.codes.entry(pointer.clone()).or_default().insert(code)
+    }
+
     fn record(&mut self, pointer: &JsonPointer, code: &'static str, warning: &'static str) {
         self.codes.entry(pointer.clone()).or_default().insert(code);
         self.warnings.entry(pointer.clone()).or_insert(warning);
@@ -61,7 +70,18 @@ pub(super) fn usability(input: &ModelInput<'_, '_>, model: &ModelOutline<'_>) ->
     let index = ModelIndex::new(model);
     let dependencies = reads(input, model, &index);
     propagate(&mut usability, &dependencies);
-    usability
+    let graph = DeclaredGraph::new(input, model);
+    loop {
+        let cut_off = graph.cut_off(|relationship| usability.is_usable(relationship));
+        let mut grew = false;
+        for dataset in cut_off {
+            grew |= usability.record_without_warning(dataset, UNREACHABLE_ROW_ACCESS);
+        }
+        if !grew {
+            return usability;
+        }
+        propagate(&mut usability, &dependencies);
+    }
 }
 
 /// The causes every substage recorded, in substage order (E0-4 table).

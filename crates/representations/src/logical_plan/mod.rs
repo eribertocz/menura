@@ -62,16 +62,22 @@ impl PlanNode {
         ) && self.inputs().into_iter().all(PlanNode::is_simple_plan)
     }
 
-    /// The input nodes, in order: none for `Scan`, `left` then `right` for `Join`, the
-    /// branches for `Stitch`, and the one input otherwise.
+    /// The input nodes, in order: none for `Scan`, `left` then `right` for `Join`, `input`,
+    /// `related_all` then `related_visible` for `SemiJoin`, the branches for `Stitch`, and the
+    /// one input otherwise.
     #[must_use]
     pub fn inputs(&self) -> Vec<&PlanNode> {
         match &self.operation {
             Operation::Scan { .. } => Vec::new(),
             Operation::Join { left, right, .. } => vec![left, right],
+            Operation::SemiJoin {
+                input,
+                related_all,
+                related_visible,
+                ..
+            } => vec![input, related_all, related_visible],
             Operation::Stitch { branches, .. } => branches.iter().collect(),
             Operation::Filter { input, .. }
-            | Operation::SemiJoin { input, .. }
             | Operation::Deduplicate { input, .. }
             | Operation::Aggregate { input, .. }
             | Operation::Project { input, .. }

@@ -1,0 +1,242 @@
+version: "0.1.1"
+semantic_model:
+  - name: propagation
+    description: 'Row-policy propagation: chains, a diamond, a cycle, a non-unique key and NULL foreign keys'
+    custom_extensions:
+      - vendor_name: COMMON
+        data: '{"namespace": "menura", "version": 1, "security_context": {"roles": ["analyst", "auditor"], "attributes": [{"name": "cities", "type": "list<text>"}, {"name": "regions", "type": "list<text>"}]}}'
+    datasets:
+      - name: stores
+        source: shop.main.stores
+        primary_key: [store_id]
+        fields:
+          - name: store_id
+            expression: {dialects: [{dialect: ANSI_SQL, expression: 'store_id'}]}
+          - name: region
+            expression: {dialects: [{dialect: ANSI_SQL, expression: 'region'}]}
+        custom_extensions:
+          - vendor_name: COMMON
+            data: '{"namespace": "menura", "version": 1, "access": {"mode": "roles", "roles": ["analyst", "auditor"]}, "row_access": [{"name": "stores_region_scope", "condition": "region IN (USER_ATTRIBUTE(''regions''))", "roles": ["analyst"], "exempt_roles": ["auditor"]}]}'
+      - name: customers
+        source: shop.main.customers
+        primary_key: [customer_id]
+        fields:
+          - name: customer_id
+            expression: {dialects: [{dialect: ANSI_SQL, expression: 'customer_id'}]}
+          - name: store_id
+            expression: {dialects: [{dialect: ANSI_SQL, expression: 'store_id'}]}
+          - name: name
+            expression: {dialects: [{dialect: ANSI_SQL, expression: 'name'}]}
+        custom_extensions:
+          - vendor_name: COMMON
+            data: '{"namespace": "menura", "version": 1, "access": {"mode": "roles", "roles": ["analyst", "auditor"]}}'
+      - name: orders
+        source: shop.main.orders
+        primary_key: [order_id]
+        fields:
+          - name: order_id
+            expression: {dialects: [{dialect: ANSI_SQL, expression: 'order_id'}]}
+          - name: customer_id
+            expression: {dialects: [{dialect: ANSI_SQL, expression: 'customer_id'}]}
+          - name: amount
+            expression: {dialects: [{dialect: ANSI_SQL, expression: 'amount'}]}
+        custom_extensions:
+          - vendor_name: COMMON
+            data: '{"namespace": "menura", "version": 1, "access": {"mode": "roles", "roles": ["analyst", "auditor"]}}'
+      - name: suppliers
+        source: shop.main.suppliers
+        primary_key: [supplier_id]
+        fields:
+          - name: supplier_id
+            expression: {dialects: [{dialect: ANSI_SQL, expression: 'supplier_id'}]}
+          - name: region
+            expression: {dialects: [{dialect: ANSI_SQL, expression: 'region'}]}
+        custom_extensions:
+          - vendor_name: COMMON
+            data: '{"namespace": "menura", "version": 1, "access": {"mode": "roles", "roles": ["auditor"]}, "row_access": [{"name": "suppliers_region_scope", "condition": "region IN (USER_ATTRIBUTE(''regions''))", "roles": ["analyst"], "exempt_roles": ["auditor"]}]}'
+      - name: products
+        source: shop.main.products
+        primary_key: [product_id]
+        fields:
+          - name: product_id
+            expression: {dialects: [{dialect: ANSI_SQL, expression: 'product_id'}]}
+          - name: supplier_id
+            expression: {dialects: [{dialect: ANSI_SQL, expression: 'supplier_id'}]}
+        custom_extensions:
+          - vendor_name: COMMON
+            data: '{"namespace": "menura", "version": 1, "access": {"mode": "roles", "roles": ["analyst", "auditor"]}}'
+      - name: warehouses
+        source: shop.main.warehouses
+        primary_key: [warehouse_id]
+        fields:
+          - name: warehouse_id
+            expression: {dialects: [{dialect: ANSI_SQL, expression: 'warehouse_id'}]}
+          - name: supplier_id
+            expression: {dialects: [{dialect: ANSI_SQL, expression: 'supplier_id'}]}
+        custom_extensions:
+          - vendor_name: COMMON
+            data: '{"namespace": "menura", "version": 1, "access": {"mode": "roles", "roles": ["analyst", "auditor"]}}'
+      - name: lines
+        source: shop.main.lines
+        primary_key: [line_id]
+        fields:
+          - name: line_id
+            expression: {dialects: [{dialect: ANSI_SQL, expression: 'line_id'}]}
+          - name: product_id
+            expression: {dialects: [{dialect: ANSI_SQL, expression: 'product_id'}]}
+          - name: warehouse_id
+            expression: {dialects: [{dialect: ANSI_SQL, expression: 'warehouse_id'}]}
+          - name: quantity
+            expression: {dialects: [{dialect: ANSI_SQL, expression: 'quantity'}]}
+        custom_extensions:
+          - vendor_name: COMMON
+            data: '{"namespace": "menura", "version": 1, "access": {"mode": "roles", "roles": ["analyst", "auditor"]}}'
+      - name: teams
+        source: shop.main.teams
+        primary_key: [team_id]
+        fields:
+          - name: team_id
+            expression: {dialects: [{dialect: ANSI_SQL, expression: 'team_id'}]}
+          - name: lead_id
+            expression: {dialects: [{dialect: ANSI_SQL, expression: 'lead_id'}]}
+          - name: region
+            expression: {dialects: [{dialect: ANSI_SQL, expression: 'region'}]}
+        custom_extensions:
+          - vendor_name: COMMON
+            data: '{"namespace": "menura", "version": 1, "access": {"mode": "roles", "roles": ["analyst", "auditor"]}, "row_access": [{"name": "teams_region_scope", "condition": "region IN (USER_ATTRIBUTE(''regions''))", "roles": ["analyst"], "exempt_roles": ["auditor"]}]}'
+      - name: people
+        source: shop.main.people
+        primary_key: [person_id]
+        fields:
+          - name: person_id
+            expression: {dialects: [{dialect: ANSI_SQL, expression: 'person_id'}]}
+          - name: team_id
+            expression: {dialects: [{dialect: ANSI_SQL, expression: 'team_id'}]}
+        custom_extensions:
+          - vendor_name: COMMON
+            data: '{"namespace": "menura", "version": 1, "access": {"mode": "roles", "roles": ["analyst", "auditor"]}}'
+      - name: zones
+        source: shop.main.zones
+        fields:
+          - name: zone_code
+            expression: {dialects: [{dialect: ANSI_SQL, expression: 'zone_code'}]}
+          - name: region
+            expression: {dialects: [{dialect: ANSI_SQL, expression: 'region'}]}
+        custom_extensions:
+          - vendor_name: COMMON
+            data: '{"namespace": "menura", "version": 1, "access": {"mode": "roles", "roles": ["analyst", "auditor"]}, "row_access": [{"name": "zones_region_scope", "condition": "region IN (USER_ATTRIBUTE(''regions''))", "roles": ["analyst"], "exempt_roles": ["auditor"]}]}'
+      - name: visits
+        source: shop.main.visits
+        primary_key: [visit_id]
+        fields:
+          - name: visit_id
+            expression: {dialects: [{dialect: ANSI_SQL, expression: 'visit_id'}]}
+          - name: zone_code
+            expression: {dialects: [{dialect: ANSI_SQL, expression: 'zone_code'}]}
+        custom_extensions:
+          - vendor_name: COMMON
+            data: '{"namespace": "menura", "version": 1, "access": {"mode": "roles", "roles": ["analyst", "auditor"]}}'
+      - name: cities
+        source: shop.main.cities
+        primary_key: [city_id]
+        fields:
+          - name: city_id
+            expression: {dialects: [{dialect: ANSI_SQL, expression: 'city_id'}]}
+          - name: region
+            expression: {dialects: [{dialect: ANSI_SQL, expression: 'region'}]}
+        custom_extensions:
+          - vendor_name: COMMON
+            data: '{"namespace": "menura", "version": 1, "access": {"mode": "roles", "roles": ["analyst", "auditor"]}, "row_access": [{"name": "cities_city_scope", "condition": "region IN (USER_ATTRIBUTE(''cities''))"}]}'
+      - name: venues
+        source: shop.main.venues
+        primary_key: [venue_id]
+        fields:
+          - name: venue_id
+            expression: {dialects: [{dialect: ANSI_SQL, expression: 'venue_id'}]}
+          - name: city_id
+            expression: {dialects: [{dialect: ANSI_SQL, expression: 'city_id'}]}
+          - name: opened_on
+            expression: {dialects: [{dialect: ANSI_SQL, expression: 'opened_on'}]}
+        custom_extensions:
+          - vendor_name: COMMON
+            data: '{"namespace": "menura", "version": 1, "access": {"mode": "roles", "roles": ["analyst", "auditor"]}, "row_access": [{"name": "venues_opened_scope", "condition": "opened_on <= CURRENT_DATE"}]}'
+      - name: events
+        source: shop.main.events
+        primary_key: [event_id]
+        fields:
+          - name: event_id
+            expression: {dialects: [{dialect: ANSI_SQL, expression: 'event_id'}]}
+          - name: venue_id
+            expression: {dialects: [{dialect: ANSI_SQL, expression: 'venue_id'}]}
+        custom_extensions:
+          - vendor_name: COMMON
+            data: '{"namespace": "menura", "version": 1, "access": {"mode": "roles", "roles": ["analyst", "auditor"]}}'
+    relationships:
+      - name: customers_stores
+        from: customers
+        to: stores
+        from_columns: [store_id]
+        to_columns: [store_id]
+      - name: events_venues
+        from: events
+        to: venues
+        from_columns: [venue_id]
+        to_columns: [venue_id]
+      - name: lines_products
+        from: lines
+        to: products
+        from_columns: [product_id]
+        to_columns: [product_id]
+      - name: lines_warehouses
+        from: lines
+        to: warehouses
+        from_columns: [warehouse_id]
+        to_columns: [warehouse_id]
+      - name: orders_customers
+        from: orders
+        to: customers
+        from_columns: [customer_id]
+        to_columns: [customer_id]
+      - name: people_teams
+        from: people
+        to: teams
+        from_columns: [team_id]
+        to_columns: [team_id]
+      - name: products_suppliers
+        from: products
+        to: suppliers
+        from_columns: [supplier_id]
+        to_columns: [supplier_id]
+      - name: teams_leads
+        from: teams
+        to: people
+        from_columns: [lead_id]
+        to_columns: [person_id]
+      - name: venues_cities
+        from: venues
+        to: cities
+        from_columns: [city_id]
+        to_columns: [city_id]
+      - name: visits_zones
+        from: visits
+        to: zones
+        from_columns: [zone_code]
+        to_columns: [zone_code]
+      - name: warehouses_suppliers
+        from: warehouses
+        to: suppliers
+        from_columns: [supplier_id]
+        to_columns: [supplier_id]
+    metrics:
+      - name: customer_count
+        expression: {dialects: [{dialect: ANSI_SQL, expression: 'COUNT(customers.customer_id)'}]}
+      - name: event_count
+        expression: {dialects: [{dialect: ANSI_SQL, expression: 'COUNT(events.event_id)'}]}
+      - name: line_quantity
+        expression: {dialects: [{dialect: ANSI_SQL, expression: 'SUM(lines.quantity)'}]}
+      - name: order_total
+        expression: {dialects: [{dialect: ANSI_SQL, expression: 'SUM(orders.amount)'}]}
+      - name: person_count
+        expression: {dialects: [{dialect: ANSI_SQL, expression: 'COUNT(people.person_id)'}]}
+      - name: visit_count
+        expression: {dialects: [{dialect: ANSI_SQL, expression: 'COUNT(visits.visit_id)'}]}

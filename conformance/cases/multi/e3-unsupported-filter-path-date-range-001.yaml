@@ -1,0 +1,19 @@
+id: e3-unsupported-filter-path-date-range-001
+rules: [E3-3.1a, E3-3.5, E3-3.6]
+model: e3-reachability
+security_context: analyst.json
+query:
+  contract: "menura.query"
+  contract_version: "1.1.0"
+  time_zone: "UTC"
+  query:
+    dimensions: ["orders.status"]
+    metrics: [{"metric": "total_amount", "alias": "total_amount"}]
+    nonportable_extensions:
+      - {"vendor_name": "COMMON", "data": {"namespace": "menura", "version": 1, "date_range": {"dimension": "returns.return_date", "from": "2026-01-01", "to": "2026-01-31"}}}
+expect:
+  outcome: "error"
+  error: "E_UNSUPPORTED_FILTER_PATH"
+  location:
+    document: "query"
+    pointer: "/query/nonportable_extensions/0/data/date_range"

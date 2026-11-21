@@ -10,6 +10,7 @@ mod content;
 mod hashes;
 mod order;
 mod propagation;
+mod row_access_routes;
 
 use menura_contracts::admit_catalog_schema;
 use menura_contracts::types::audit_record::OssieFormat;

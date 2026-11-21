@@ -11,8 +11,8 @@ use std::num::NonZeroU64;
 use menura_contracts::types::common::Grain;
 use menura_e4_plan::{InvariantViolation, PlanError};
 use menura_model::internal_model::{
-    ContextMetric, ContextModifier, DatasetReach, DeclaredAdditivity, DerivedMetric, InternalModel,
-    Metric, NullHandling, PathCount, ReachedDataset, SemiAdditive, SnapshotAggregation,
+    ContextMetric, ContextModifier, DeclaredAdditivity, DerivedMetric, Metric, NullHandling,
+    SemiAdditive, SnapshotAggregation,
 };
 use menura_representations::bound_query::{
     BoundDimension, BoundDimensionKind, BoundMetric, BoundMetricKind, BoundQuery, BoundQueryParts,
@@ -20,7 +20,7 @@ use menura_representations::bound_query::{
 use menura_representations::paths::{Branch, Branches, ComponentKey, JoinTree};
 use support::{
     anyone, branches, build_plan, dimension, field_path, metric, metric_reference, metrics, model,
-    model_with, name, orders, policy, query,
+    model_with, name, orders, query,
 };
 
 fn count_query() -> BoundQuery {
@@ -71,24 +71,6 @@ fn order_count() -> Metric {
         "COUNT(*)",
         menura_expressions::typing::big_integer(),
     )
-}
-
-#[test]
-fn vs_1_policy_propagation_is_an_internal_error() {
-    let mut customers = orders(vec![policy("customer_scope", "TRUE", None, None)]);
-    customers.name = name("CUSTOMERS");
-    let base = model_with(vec![customers, orders(Vec::new())], metrics());
-    let mut parts = base.parts().clone();
-    parts.graph.reachability = vec![DatasetReach {
-        dataset: name("ORDERS"),
-        reached: vec![ReachedDataset {
-            dataset: name("CUSTOMERS"),
-            paths: PathCount::One,
-        }],
-    }];
-    let model = InternalModel::new(parts, base.hash().clone());
-    let result = build_plan(&branches(&[1]), &count_query(), &anyone(), &model);
-    assert_eq!(violation(result), InvariantViolation::Propagation);
 }
 
 #[test]

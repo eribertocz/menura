@@ -10,7 +10,6 @@ use super::{
 };
 use crate::names::{ColumnName, ColumnPrefix};
 use crate::origin::Origin;
-use crate::paths::JoinStep;
 use crate::test_support::{at, in_model, name, reference, true_literal};
 
 fn column(text: &str, logical_type: LogicalType, nullable: bool) -> SchemaColumn {
@@ -189,18 +188,19 @@ fn e4_3_2_e4_3_4_join_and_semi_join_keep_their_relationships() {
     let semi_join = PlanNode::new(
         Operation::SemiJoin {
             input: Box::new(join),
-            path: vec![JoinStep {
-                relationship: name("ORDERS_TO_CUSTOMERS"),
-                from: name("ORDERS"),
-                to: name("CUSTOMERS"),
+            relationship: name("CUSTOMERS_TO_REGIONS"),
+            on: vec![JoinCondition {
+                left: ColumnName::new("ORDERS_TO_CUSTOMERS.region_id"),
+                right: ColumnName::new("region_id"),
             }],
-            predicate: true_literal(),
+            related_all: Box::new(scan("REGIONS")),
+            related_visible: Box::new(scan("REGIONS")),
         },
         region_schema(),
         in_model("/semantic_model/0/datasets/1/custom_extensions/0"),
     );
 
-    assert_eq!(semi_join.inputs().len(), 1);
+    assert_eq!(semi_join.inputs().len(), 3);
     let join = semi_join.inputs().first().copied().expect("one input");
     assert_eq!(join.inputs().len(), 2);
     assert!(matches!(
