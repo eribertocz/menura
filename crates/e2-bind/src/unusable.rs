@@ -2,11 +2,14 @@
 //! element's query error code (E0-4.1). Each row is checked over every named element before the
 //! next row (E2-5.3).
 
-use menura_model::internal_model::{DiagnosticCode, InternalModel};
+use menura_model::internal_model::{DiagnosticCode, InternalModel, RowAccessCut};
 
 use crate::error::{BindCode, BindDiagnostic};
-use crate::model_elements::query_errors;
+use crate::model_elements::{query_errors, row_access_cut};
 use crate::named::NamedElement;
+
+/// The query error code of a dataset whose row policies cannot all be propagated (E0H-5).
+const UNREACHABLE_ROW_ACCESS: &str = "E0H-01";
 
 /// Rows 10, 11 and 12: the metric rules of E0G-2, by the code each records.
 const METRIC_RULE_ROWS: [(&str, BindCode); 3] = [
@@ -33,7 +36,7 @@ pub(crate) fn check_rows_10_to_12a(
                 .any(|recorded| recorded.as_str() == code)
         });
         if let Some(element) = found {
-            return Err(unusable(element, bind_code, code));
+            return Err(unusable(element, bind_code, code, None));
         }
     }
     for element in named {
@@ -42,10 +45,14 @@ pub(crate) fn check_rows_10_to_12a(
             .filter_map(|code| row_12a_rank(code).map(|rank| (rank, code)))
             .min();
         if let Some((_, code)) = first {
+            let cut = (code.as_str() == UNREACHABLE_ROW_ACCESS)
+                .then(|| row_access_cut(model, &element.target))
+                .flatten();
             return Err(unusable(
                 element,
                 BindCode::Unusable(code.clone()),
                 code.as_str(),
+                cut,
             ));
         }
     }
@@ -71,13 +78,28 @@ fn row_12a_rank(code: &DiagnosticCode) -> Option<(u8, &str)> {
     Some((group, text))
 }
 
-/// The diagnostic of `element`, unusable with `code`.
-fn unusable(element: &NamedElement, bind_code: BindCode, code: &str) -> BindDiagnostic {
+/// The diagnostic of `element`, unusable with `code`. For `E0H-01` the message also names the
+/// dataset whose row policies cannot all be applied and the unusable relationship that cuts
+/// them off (E0-4.2a), never a policy.
+fn unusable(
+    element: &NamedElement,
+    bind_code: BindCode,
+    code: &str,
+    cut: Option<&RowAccessCut>,
+) -> BindDiagnostic {
+    let cause = cut.map_or_else(String::new, |cut| {
+        format!(
+            ": the row policies reached from the dataset `{}` cannot be applied, because the \
+             relationship `{}` is unusable",
+            cut.dataset.as_str(),
+            cut.relationship.as_str()
+        )
+    });
     BindDiagnostic::new(
         bind_code,
         format!(
-            "`{}` cannot be used: the model marks it unusable ({code}); see the load warnings \
-             of the model",
+            "`{}` cannot be used: the model marks it unusable ({code}){cause}; see the load \
+             warnings of the model",
             element.written
         ),
         &element.origin,

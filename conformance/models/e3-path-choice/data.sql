@@ -1,0 +1,10 @@
+CREATE TABLE shop.main.orders (order_id INTEGER NOT NULL, ship_day DATE NOT NULL, order_day DATE NOT NULL, customer_id INTEGER NOT NULL, amount DECIMAL(10, 2) NOT NULL);
+INSERT INTO shop.main.orders VALUES (1, DATE '2024-02-02', DATE '2024-01-30', 1, 10.00), (2, DATE '2024-07-01', DATE '2024-06-28', 2, 5.50), (3, DATE '2024-07-03', DATE '2024-07-01', 2, 7.25);
+CREATE TABLE shop.main.calendar (day DATE NOT NULL, month VARCHAR NOT NULL, fiscal_year INTEGER NOT NULL);
+INSERT INTO shop.main.calendar VALUES (DATE '2024-01-30', '2024-01', 2024), (DATE '2024-02-02', '2024-02', 2024), (DATE '2024-06-28', '2024-06', 2024), (DATE '2024-07-01', '2024-07', 2025), (DATE '2024-07-03', '2024-07', 2025);
+CREATE TABLE shop.main.fiscal_years (fiscal_year INTEGER NOT NULL, label VARCHAR NOT NULL);
+INSERT INTO shop.main.fiscal_years VALUES (2024, 'FY2024'), (2025, 'FY2025');
+CREATE TABLE shop.main.customers (customer_id INTEGER NOT NULL, region_id INTEGER NOT NULL);
+INSERT INTO shop.main.customers VALUES (1, 10), (2, 20);
+CREATE TABLE shop.main.regions (region_id INTEGER NOT NULL, region_name VARCHAR NOT NULL);
+INSERT INTO shop.main.regions VALUES (10, 'NORTH'), (20, 'SOUTH');
