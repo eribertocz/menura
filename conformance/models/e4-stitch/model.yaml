@@ -1,0 +1,65 @@
+version: "0.1.1"
+semantic_model:
+  - name: e4_stitch
+    description: 'two facts, sales and budgets, that share the dimension regions'
+    custom_extensions:
+      - vendor_name: COMMON
+        data: '{"namespace": "menura", "version": 1, "security_context": {"roles": ["analyst"], "attributes": []}}'
+    datasets:
+      - name: budgets
+        source: shop.main.budgets
+        primary_key: [budget_id]
+        fields:
+          - name: budget_id
+            expression: {dialects: [{dialect: ANSI_SQL, expression: 'budget_id'}]}
+          - name: region_id
+            expression: {dialects: [{dialect: ANSI_SQL, expression: 'region_id'}]}
+          - name: amount
+            expression: {dialects: [{dialect: ANSI_SQL, expression: 'amount'}]}
+        custom_extensions:
+          - vendor_name: COMMON
+            data: '{"namespace": "menura", "version": 1, "access": {"mode": "roles", "roles": ["analyst"]}}'
+      - name: regions
+        source: shop.main.regions
+        primary_key: [region_id]
+        fields:
+          - name: region_id
+            expression: {dialects: [{dialect: ANSI_SQL, expression: 'region_id'}]}
+          - name: name
+            expression: {dialects: [{dialect: ANSI_SQL, expression: 'name'}]}
+        custom_extensions:
+          - vendor_name: COMMON
+            data: '{"namespace": "menura", "version": 1, "access": {"mode": "roles", "roles": ["analyst"]}}'
+      - name: sales
+        source: shop.main.sales
+        primary_key: [sale_id]
+        fields:
+          - name: sale_id
+            expression: {dialects: [{dialect: ANSI_SQL, expression: 'sale_id'}]}
+          - name: region_id
+            expression: {dialects: [{dialect: ANSI_SQL, expression: 'region_id'}]}
+          - name: amount
+            expression: {dialects: [{dialect: ANSI_SQL, expression: 'amount'}]}
+        custom_extensions:
+          - vendor_name: COMMON
+            data: '{"namespace": "menura", "version": 1, "access": {"mode": "roles", "roles": ["analyst"]}}'
+    relationships:
+      - name: budgets_regions
+        from: budgets
+        to: regions
+        from_columns: [region_id]
+        to_columns: [region_id]
+      - name: sales_regions
+        from: sales
+        to: regions
+        from_columns: [region_id]
+        to_columns: [region_id]
+    metrics:
+      - name: total_sales
+        expression: {dialects: [{dialect: ANSI_SQL, expression: 'SUM(sales.amount)'}]}
+      - name: budget_total
+        expression: {dialects: [{dialect: ANSI_SQL, expression: 'SUM(budgets.amount)'}]}
+      - name: budget_count
+        expression: {dialects: [{dialect: ANSI_SQL, expression: 'COUNT(budgets.budget_id)'}]}
+      - name: sales_minus_budget
+        expression: {dialects: [{dialect: ANSI_SQL, expression: 'SUM(sales.amount) - SUM(budgets.amount)'}]}

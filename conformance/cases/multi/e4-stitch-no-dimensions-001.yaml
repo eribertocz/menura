@@ -1,0 +1,17 @@
+id: e4-stitch-no-dimensions-001
+rules: [E4-5.2]
+model: e4-stitch
+security_context: analyst.json
+oracle: "e4-stitch-no-dimensions-001.oracle.sql"
+query:
+  contract: "menura.query"
+  contract_version: "1.1.0"
+  time_zone: "UTC"
+  query:
+    metrics:
+      - {"metric": "total_sales", "alias": "total_sales"}
+      - {"metric": "budget_count", "alias": "budget_count"}
+expect:
+  outcome: "plan"
+  row_order: "any"
+  rows: "e4-stitch-no-dimensions-001.csv"
