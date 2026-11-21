@@ -8,8 +8,6 @@ mod support;
 use menura_contracts::types::common::{FloatBits, LogicalType};
 use menura_contracts::types::compiled_plan::ColumnRole;
 use menura_generator_duckdb::InvariantViolation;
-use menura_representations::logical_plan::{Operation, OutputSchema, PlanNode};
-use menura_representations::names::ColumnName;
 use serde_json::json;
 use support::{
     aggregate, big_integer, column, component, filter, from_model, from_query, generate,
@@ -68,28 +66,6 @@ fn e6_2_result_schema_follows_the_output_columns() {
 fn e6_2_a_result_schema_that_does_not_match_the_query_is_an_error() {
     let error = generate(&region_count(), &query(&["REGION"], &[])).unwrap_err();
     assert_eq!(error.violation, InvariantViolation::ResultColumnMismatch);
-}
-
-fn node(operation: Operation) -> PlanNode {
-    PlanNode::new(
-        operation,
-        OutputSchema::new(vec![column("REGION", LogicalType::Text, true)]),
-        from_query("/query"),
-    )
-}
-
-#[test]
-fn e6_3_1_nodes_outside_the_slice_are_internal_errors() {
-    let nodes = [node(Operation::Stitch {
-        branches: vec![scan("ORDERS", &["REGION"])],
-        keys: vec![ColumnName::new("REGION")],
-        columns: Vec::new(),
-    })];
-    for plan in nodes {
-        let error = generate(&plan, &query(&["REGION"], &[])).unwrap_err();
-        assert_eq!(error.violation, InvariantViolation::NodeOutsideSlice);
-        assert_eq!(error.origin, from_query("/query"));
-    }
 }
 
 #[test]

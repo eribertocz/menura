@@ -6,7 +6,7 @@ use std::collections::HashMap;
 
 use menura_contracts::types::audit_record::Access;
 use menura_model::expression::Reference;
-use menura_model::internal_model::{FieldPath, InternalModel, NormalizedName};
+use menura_model::internal_model::{DiagnosticCode, FieldPath, InternalModel, NormalizedName};
 use menura_representations::bound_query::{
     AuthorizationDecision, AuthorizedObject, AuthorizedSubgraph, MetricPath,
 };
@@ -15,6 +15,9 @@ use menura_security::{AdmittedSecurityContext, Authorization};
 
 use crate::authorized_query::ResolvedName;
 use crate::names::{identifier_name, reference_names};
+
+/// The query error code E0 records for a relationship it drops (`E0E-01`, `E0E-02`).
+const DROPPED_RELATIONSHIP: &str = "E_NAME_NOT_FOUND";
 
 /// Resolves and authorizes names, and records each decision once, the first time an object
 /// is used (E2-4.7).
@@ -115,8 +118,9 @@ impl<'model> Resolver<'model> {
         }
     }
 
-    /// The relationship a one-part reference names, when it is authorized (E2-4.8): both ends
-    /// are authorized datasets, and every key field it reads is authorized (E2-4.2).
+    /// The relationship a one-part reference names, when it is in the model and authorized
+    /// (E2-4.8): E0 has not dropped it (`E0E-01`, `E0E-02`, E0-4 table), both ends are
+    /// authorized datasets, and every key field it reads is authorized (E2-4.2).
     pub(crate) fn relationship_reference(
         &mut self,
         reference: &QueryReference,
@@ -125,7 +129,10 @@ impl<'model> Resolver<'model> {
         let [name] = names.as_slice() else {
             return None;
         };
-        let relationship = self.model.relationship(name)?;
+        let relationship = self
+            .model
+            .relationship(name)
+            .filter(|found| !is_dropped(&found.query_errors))?;
         let ends = [
             (&relationship.from, &relationship.from_columns),
             (&relationship.to, &relationship.to_columns),
@@ -233,4 +240,12 @@ fn field_path(dataset: &NormalizedName, field: &NormalizedName) -> FieldPath {
         dataset: dataset.clone(),
         field: field.clone(),
     }
+}
+
+/// Whether E0 dropped the relationship whose query errors are `query_errors`: it records
+/// `E_NAME_NOT_FOUND` for a relationship it leaves out of the model (E0-4 table, `W0E-04`).
+fn is_dropped(query_errors: &[DiagnosticCode]) -> bool {
+    query_errors
+        .iter()
+        .any(|code| code.as_str() == DROPPED_RELATIONSHIP)
 }
