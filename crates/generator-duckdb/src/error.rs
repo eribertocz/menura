@@ -44,6 +44,15 @@ pub enum InvariantViolation {
     MissingReferenceTime,
     /// A float literal without a finite value.
     NonFiniteFloat,
+    /// A `Join` without key pairs (E4-3.2).
+    JoinWithoutKeys,
+    /// A `Join` key pair whose two types have no common type (E0F-3.1, E6-4.13).
+    IncompatibleJoinKeys,
+    /// A column of the right side of a left `Join` that the plan marks as not nullable
+    /// (PLN-1).
+    NonNullableJoinedColumn,
+    /// A `Join` column that both inputs produce.
+    AmbiguousColumn,
     /// A `Deduplicate` without identity columns (E4-4.0f).
     EmptyIdentity,
     /// A `SemiJoin` without key equalities (E4-3.4).

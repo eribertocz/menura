@@ -2,33 +2,42 @@
 //! `date_range` predicate (E4-4 step 4, QRY-4.2).
 
 use menura_contracts::types::common::LogicalType;
-use menura_model::expression::{BinaryOperator, DateValue, Expression, Literal};
-use menura_model::internal_model::{Dataset, ValueType};
+use menura_model::expression::{BinaryOperator, DateValue, Expression, Literal, Reference};
+use menura_model::internal_model::{FieldPath, ValueType};
 use menura_representations::bound_query::{BoundDateRange, BoundFilter, BoundQuery};
 use menura_representations::origin::QueryLocation;
+use menura_representations::paths::QueryElement;
 
-use crate::columns::over_scan;
-use crate::dimensions::{at, home_field_column};
+use crate::columns::{column_reference, field_name};
+use crate::dimensions::at;
 use crate::error::{InvariantViolation, PlanError};
+use crate::layout::Layout;
+use crate::rewrite::rewrite;
 
-/// The predicate of the query-filter `Filter` over the `Scan` columns of `home`, with the
+/// The predicate of the query-filter `Filter` over the columns of the `Join` of the branch,
+/// each field read through the join instance its element is bound to (E3-4.2a), with the
 /// element it comes from: the first filter, or the date range. `None` without filters and
 /// date range.
 ///
 /// # Errors
 ///
-/// An internal error for a filter or date range outside `home`, or a date range the plan
-/// cannot write.
+/// An internal error for a filter or date range that reads a field outside its instance, or
+/// a date range the plan cannot write.
 pub(crate) fn query_predicate(
     query: &BoundQuery,
-    home: &Dataset,
+    layout: &Layout<'_>,
 ) -> Result<Option<(Expression, QueryLocation)>, PlanError> {
     let mut terms = Vec::new();
-    for filter in query.filters() {
-        terms.push(filter_term(filter, home).map_err(|violation| at(violation, &filter.origin))?);
+    for (position, filter) in query.filters().iter().enumerate() {
+        terms.push(
+            filter_term(filter, position, layout)
+                .map_err(|violation| at(violation, &filter.origin))?,
+        );
     }
     if let Some(range) = query.date_range() {
-        terms.push(date_range_term(range, home).map_err(|violation| at(violation, &range.origin))?);
+        terms.push(
+            date_range_term(range, layout).map_err(|violation| at(violation, &range.origin))?,
+        );
     }
     let origin = query
         .filters()
@@ -39,11 +48,43 @@ pub(crate) fn query_predicate(
     Ok(predicate.zip(origin.cloned()))
 }
 
-fn filter_term(filter: &BoundFilter, home: &Dataset) -> Result<Expression, InvariantViolation> {
-    if filter.datasets.iter().any(|dataset| dataset != &home.name) {
-        return Err(InvariantViolation::ForeignField);
-    }
-    over_scan(&filter.expression, None)
+/// The filter at `position`, with every reference turned into the reference to the column
+/// of its field, read through the instance the filter is bound to for that field's dataset.
+/// An unqualified reference reads the filter's only dataset.
+fn filter_term(
+    filter: &BoundFilter,
+    position: usize,
+    layout: &Layout<'_>,
+) -> Result<Expression, InvariantViolation> {
+    rewrite(&filter.expression, &mut |node| {
+        let Expression::Reference(reference) = node else {
+            return Ok(None);
+        };
+        let field = filter_field(filter, reference)?;
+        let element = QueryElement::Filter {
+            filter: position,
+            dataset: field.dataset.clone(),
+        };
+        let column = layout.element_column(&element, &field)?;
+        column_reference(column.as_str()).map(Some)
+    })
+}
+
+/// The field `reference` names in `filter`: in the dataset its qualifier names, or in the
+/// filter's only dataset when it has no qualifier.
+fn filter_field(
+    filter: &BoundFilter,
+    reference: &Reference,
+) -> Result<FieldPath, InvariantViolation> {
+    let dataset = match (&reference.qualifier, filter.datasets.as_slice()) {
+        (Some(qualifier), _) => field_name(qualifier),
+        (None, [only]) => only.clone(),
+        (None, _) => return Err(InvariantViolation::ForeignField),
+    };
+    Ok(FieldPath {
+        dataset,
+        field: field_name(&reference.name),
+    })
 }
 
 /// `x >= from AND x <= to` for a date field; `x >= from AND x < to + 1 day` for a timestamp
@@ -51,10 +92,12 @@ fn filter_term(filter: &BoundFilter, home: &Dataset) -> Result<Expression, Invar
 /// is 9999-12-31, a timestamp field has no upper bound (QRY-4.2).
 fn date_range_term(
     range: &BoundDateRange,
-    home: &Dataset,
+    layout: &Layout<'_>,
 ) -> Result<Expression, InvariantViolation> {
-    let column = home_field_column(&range.field, home)?;
-    let field_type = home
+    let element = QueryElement::DateRange;
+    let column = column_reference(layout.element_column(&element, &range.field)?.as_str())?;
+    let field_type = layout
+        .dataset(layout.bound(&element))?
         .field(&range.field.field)
         .and_then(|field| field.typed.as_ref())
         .map(|typed| &typed.value_type);

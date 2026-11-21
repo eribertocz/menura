@@ -45,6 +45,7 @@ pub fn scan_of(dataset: &str, columns: Vec<SchemaColumn>) -> PlanNode {
     PlanNode::new(
         Operation::Scan {
             dataset: NormalizedName::new(dataset),
+            row_identity: None,
         },
         OutputSchema::new(columns),
         from_model("/semantic_model/0/datasets/0"),

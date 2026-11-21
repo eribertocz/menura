@@ -30,7 +30,7 @@ for the target dialect. Priorities, in order: correct, then fast, then readable.
 | E6-4.4 | Every plan node becomes a named common table expression in the order of E6-4.12, so the SQL reads top-down and each step is inspectable. |
 | E6-4.5 | Every metric result is cast to its fixed result type (E0F-5). |
 | E6-4.6 | Every division outside derived metrics, and every division (`/` and `%`) inside a derived metric with `on_division_by_zero: null` (DER-3.1), is generated as `CASE WHEN d = 0 THEN NULL ELSE n / d END` (E0F-6). |
-| E6-4.6a | Inside a derived metric with `on_division_by_zero: error` (DER-3.1), a division (`/` and `%`) is generated as `CASE WHEN d = 0 THEN error('RDER-01: division by zero in metric <name>') ELSE n / d END` (EXT-1), where `<name>` is the normalized name of the derived metric. With either behavior, a NULL denominator gives NULL, and the result is cast to its E0F-5a type. |
+| E6-4.6a | Inside a derived metric with `on_division_by_zero: error` (DER-3.1), a division (`/`, `%` and `MOD`) is generated as `CASE WHEN d = 0 THEN error('RDER-01: division by zero in metric <name>') ELSE n / d END` (EXT-1), where `<name>` is the normalized name of the derived metric. With either behavior, a NULL denominator gives NULL, and the result is cast to its E0F-5a type. |
 | E6-4.7 | Stitching compares keys with `IS NOT DISTINCT FROM`, and missing branch rows are detected with a presence column, never by `COALESCE` of a value that can be NULL (Apache Ossie Layer 3, 5.5). |
 | E6-4.8 | `ORDER BY` always writes `NULLS FIRST` or `NULLS LAST` explicitly. |
 | E6-4.9 | Formatting is fixed: keywords upper case, one clause per line, two-space indentation, no trailing spaces. Identical plans give byte-identical SQL (P3). |

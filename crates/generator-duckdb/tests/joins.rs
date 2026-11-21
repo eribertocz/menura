@@ -7,27 +7,10 @@
 mod support;
 
 use menura_contracts::types::common::LogicalType;
-use menura_representations::logical_plan::{Operation, OutputSchema, PlanNode};
-use menura_representations::names::ColumnName;
 use support::{
-    aggregate, assert_golden, big_integer, column, component, filter, from_model, from_query,
+    aggregate, assert_golden, big_integer, column, component, deduplicate, filter, from_query,
     generate, named, query, scan,
 };
-
-/// The `Deduplicate` of `input` by `group` and `identity`, with the schema of its input.
-fn deduplicate(input: PlanNode, group: &[&str], identity: &[&str]) -> PlanNode {
-    let schema = OutputSchema::new(input.schema().columns().to_vec());
-    let names = |columns: &[&str]| columns.iter().map(|name| ColumnName::new(name)).collect();
-    PlanNode::new(
-        Operation::Deduplicate {
-            input: Box::new(input),
-            group: names(group),
-            identity: names(identity),
-        },
-        schema,
-        from_model("/semantic_model/0/relationships/0"),
-    )
-}
 
 #[test]
 fn e6_4_14_deduplicate_keeps_one_row_per_group_and_identity() {
