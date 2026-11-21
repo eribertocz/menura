@@ -5,6 +5,7 @@
 //! D' added to the current chain, so cycles are cut where they come back.
 
 use menura_contracts::types::catalog::CatalogSchemaDocument;
+use menura_model::expression::Expression;
 use menura_model::internal_model::{Dataset, GraphEdge, InternalModel, NormalizedName};
 use menura_representations::logical_plan::{JoinCondition, Operation, PlanNode};
 use menura_representations::names::{ColumnName, ColumnPrefix};
@@ -13,7 +14,7 @@ use menura_representations::origin::Origin;
 use crate::columns::{column_reference, over_scan, read_fields};
 use crate::error::{InvariantViolation, PlanError};
 use crate::followed::followed_relationships;
-use crate::policy_visits::RowFilters;
+use crate::policy_visits::{RowFilter, RowFilters};
 use crate::rewrite::rewrite;
 use crate::scan::scan;
 
@@ -79,7 +80,7 @@ impl Visibility<'_> {
         chain: &[NormalizedName],
     ) -> Result<Vec<NormalizedName>, PlanError> {
         let mut fields = Vec::new();
-        if let Some(own) = self.filters.of(&dataset.name) {
+        if let Some(own) = self.own_filter(dataset)? {
             let predicate = over_scan(&own.filter, None).map_err(|violation| {
                 PlanError::invariant(violation, &Origin::Model(own.location.clone()))
             })?;
@@ -103,7 +104,7 @@ impl Visibility<'_> {
         chain: &[NormalizedName],
     ) -> Result<PlanNode, PlanError> {
         let mut node = scanned;
-        if let Some(own) = self.filters.of(&dataset.name) {
+        if let Some(own) = self.own_filter(dataset)? {
             let origin = Origin::Model(own.location.clone());
             let predicate = over_scan(&own.filter, None)
                 .and_then(|predicate| prefixed(&predicate, prefix))
@@ -122,6 +123,19 @@ impl Visibility<'_> {
             node = self.semi_join(node, dataset, edge, prefix, chain)?;
         }
         Ok(node)
+    }
+
+    /// The row filter of `dataset`; `None` when it has no policy. A dataset with policies
+    /// whose filter was not computed is an internal error, never a dataset without filter.
+    fn own_filter(&self, dataset: &Dataset) -> Result<Option<&RowFilter>, PlanError> {
+        match self.filters.of(&dataset.name) {
+            Some(own) => Ok(Some(own)),
+            None if dataset.row_policies.is_empty() => Ok(None),
+            None => Err(PlanError::invariant(
+                InvariantViolation::UnvisitedPolicies,
+                &Origin::Model(dataset.location.clone()),
+            )),
+        }
     }
 
     /// The `SemiJoin` of `input`, rows of `dataset`, along `edge`.
@@ -200,14 +214,14 @@ fn column_of(field: &NormalizedName, prefix: Option<&ColumnPrefix>) -> ColumnNam
 
 /// `predicate`, over the unprefixed `Scan` columns, with every column under `prefix`.
 fn prefixed(
-    predicate: &menura_model::expression::Expression,
+    predicate: &Expression,
     prefix: Option<&ColumnPrefix>,
-) -> Result<menura_model::expression::Expression, InvariantViolation> {
+) -> Result<Expression, InvariantViolation> {
     let Some(prefix) = prefix else {
         return Ok(predicate.clone());
     };
     rewrite(predicate, &mut |node| match node {
-        menura_model::expression::Expression::Reference(reference) => column_reference(
+        Expression::Reference(reference) => column_reference(
             column_of(&NormalizedName::new(reference.name.text()), Some(prefix)).as_str(),
         )
         .map(Some),

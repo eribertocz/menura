@@ -74,6 +74,8 @@ pub enum InvariantViolation {
     UnknownRelationship,
     /// A scanned dataset that E0 marks unusable, which E2 rules out (E0-4.2a, E2-5 row 12a).
     UnusableDataset,
+    /// A scanned dataset with row policies whose row filter was not computed (E4-6.9).
+    UnvisitedPolicies,
     /// The home dataset is not in the model.
     UnknownDataset,
     /// A field that is not in the model, or of another dataset than the join instance that
