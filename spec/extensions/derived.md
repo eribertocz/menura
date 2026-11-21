@@ -27,9 +27,9 @@ metrics:
 
 ## DER-3 Schema
 
-| Key | Required | Meaning |
-|---|---|---|
-| `on_division_by_zero` | If the formula divides | `null` (that division yields NULL) or `error` (execution fails with `RDER-01`) |
+| ID | Key | Required | Meaning |
+|---|---|---|---|
+| DER-3.1 | `on_division_by_zero` | If the formula divides | `null` (that division yields NULL) or `error` (execution fails with `RDER-01`) |
 
 ## DER-4 Meaning
 

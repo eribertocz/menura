@@ -27,7 +27,7 @@
 
 - **E0H-2.1** The internal model holds only what E1–E6 and `describe` need. Expression variants other than `ANSI_SQL`, and `custom_extensions` of other vendors, are accepted (E0B-3.5) but are not part of it, so they never affect a hash.
 - **E0H-2.2** Field types come from the admitted catalog schema, so a type change in the catalog schema changes the model hash.
-- **E0H-2.3** The graph holds only usable relationships: it excludes relationships made unusable after E0.e (`E0F-05`, E0-4.2a). E0.h recomputes reachability and the multiple-path pairs over the remaining edges, with the E0.e algorithm. The extension reachability checks (`E0C-16`, `E0C-61`) stay in E0.e over the E0.e graph. A path that disappears this way is reported at query time (E3).
+- **E0H-2.3** The graph holds only usable relationships: it excludes relationships made unusable after E0.e (`E0F-05`, E0-4.2a). E0.h recomputes reachability and the multiple-path pairs over the remaining edges, with the E0.e algorithm. The extension reachability checks (`E0C-16`, `E0C-61`) stay in E0.e over the E0.e graph. A path that disappears this way is reported at query time (E3). A dataset that loses every route to a dataset with `row_access` this way is unusable (`E0H-01`, E0-4.2a).
 
 ## E0H-3 Hashes
 
@@ -51,3 +51,9 @@ report the results in the catalog state.
 | Semi-additive | A semi-additive metric whose snapshots break its declaration | Semi-additive policies (additivity extension) |
 
 - **E0H-4.3** E0 records one check per usable relationship for each of `key_uniqueness` and `orphan_keys`, one `summary` check per summary, one `population` check per population of a usable dataset and one `semi_additive` check per usable semi-additive metric. Each has the `kind`, `target` (the normalized name: of the relationship, of the summary, of the population (unique in the model, POP-4.3), or of the metric; a development-line dataset metric is qualified as `<dataset>.<metric>`), `check_id` and `definition_hash` of CHK-2 and CHK-3, sorted by `check_id`. Their SQL is generated later, as CHK-4.2 states.
+
+## E0H-5 Diagnostics
+
+| Code | Condition |
+|---|---|
+| `E0H-01` | A dataset whose every route to a dataset with `row_access` goes through an unusable relationship (E0-4.2a); the message names the dataset and the relationship |

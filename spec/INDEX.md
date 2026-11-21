@@ -114,14 +114,15 @@ Find a rule ID or a section here, then open only that file at that line.
 | [07-roadmap.md](07-roadmap.md#L27) | 27 | section | 7.1a Gates |
 | [07-roadmap.md](07-roadmap.md#L40) | 40 | section | 7.1c Version slices before 1.0.0 |
 | [07-roadmap.md](07-roadmap.md#L47) | 47 | rule | VS-1 |
-| [07-roadmap.md](07-roadmap.md#L48) | 48 | rule | VS-2 |
-| [07-roadmap.md](07-roadmap.md#L49) | 49 | rule | VS-3 |
-| [07-roadmap.md](07-roadmap.md#L50) | 50 | rule | VS-4 |
-| [07-roadmap.md](07-roadmap.md#L51) | 51 | rule | VS-5 |
-| [07-roadmap.md](07-roadmap.md#L53) | 53 | section | 7.1b What 1.0.0 guarantees |
-| [07-roadmap.md](07-roadmap.md#L65) | 65 | section | 7.2 After the MVP |
-| [07-roadmap.md](07-roadmap.md#L79) | 79 | section | 7.3 Capability scope |
-| [07-roadmap.md](07-roadmap.md#L101) | 101 | section | 7.4 Backlog after the MVP |
+| [07-roadmap.md](07-roadmap.md#L48) | 48 | rule | VS-1b |
+| [07-roadmap.md](07-roadmap.md#L49) | 49 | rule | VS-2 |
+| [07-roadmap.md](07-roadmap.md#L50) | 50 | rule | VS-3 |
+| [07-roadmap.md](07-roadmap.md#L51) | 51 | rule | VS-4 |
+| [07-roadmap.md](07-roadmap.md#L52) | 52 | rule | VS-5 |
+| [07-roadmap.md](07-roadmap.md#L54) | 54 | section | 7.1b What 1.0.0 guarantees |
+| [07-roadmap.md](07-roadmap.md#L66) | 66 | section | 7.2 After the MVP |
+| [07-roadmap.md](07-roadmap.md#L80) | 80 | section | 7.3 Capability scope |
+| [07-roadmap.md](07-roadmap.md#L102) | 102 | section | 7.4 Backlog after the MVP |
 | [08-conformance-suite.md](08-conformance-suite.md#L1) | 1 | section | 8. Conformance suite |
 | [08-conformance-suite.md](08-conformance-suite.md#L5) | 5 | section | CS-1 Layout |
 | [08-conformance-suite.md](08-conformance-suite.md#L21) | 21 | section | CS-2 Case format |
@@ -408,6 +409,7 @@ Find a rule ID or a section here, then open only that file at that line.
 | [extensions/derived.md](extensions/derived.md#L13) | 13 | rule | DER-2.3 |
 | [extensions/derived.md](extensions/derived.md#L14) | 14 | rule | DER-2.4 |
 | [extensions/derived.md](extensions/derived.md#L28) | 28 | section | DER-3 Schema |
+| [extensions/derived.md](extensions/derived.md#L32) | 32 | rule | DER-3.1 |
 | [extensions/derived.md](extensions/derived.md#L34) | 34 | section | DER-4 Meaning |
 | [extensions/derived.md](extensions/derived.md#L38) | 38 | rule | DER-4.1 |
 | [extensions/derived.md](extensions/derived.md#L39) | 39 | rule | DER-4.2 |
@@ -503,7 +505,7 @@ Find a rule ID or a section here, then open only that file at that line.
 | [stages/E0/README.md](stages/E0/README.md#L40) | 40 | rule | E0-4.2 |
 | [stages/E0/README.md](stages/E0/README.md#L41) | 41 | rule | E0-4.2a |
 | [stages/E0/README.md](stages/E0/README.md#L42) | 42 | rule | E0-4.3 |
-| [stages/E0/README.md](stages/E0/README.md#L59) | 59 | rule | E0-4.4 |
+| [stages/E0/README.md](stages/E0/README.md#L60) | 60 | rule | E0-4.4 |
 | [stages/E0/expressions.md](stages/E0/expressions.md#L1) | 1 | section | E0.f Type expressions |
 | [stages/E0/expressions.md](stages/E0/expressions.md#L3) | 3 | section | E0F-1 Scope |
 | [stages/E0/expressions.md](stages/E0/expressions.md#L9) | 9 | section | E0F-2 Language |
@@ -572,6 +574,7 @@ Find a rule ID or a section here, then open only that file at that line.
 | [stages/E0/internal-model.md](stages/E0/internal-model.md#L37) | 37 | rule | E0H-3.4 |
 | [stages/E0/internal-model.md](stages/E0/internal-model.md#L39) | 39 | section | E0H-4 Integrity checks |
 | [stages/E0/internal-model.md](stages/E0/internal-model.md#L53) | 53 | rule | E0H-4.3 |
+| [stages/E0/internal-model.md](stages/E0/internal-model.md#L55) | 55 | section | E0H-5 Diagnostics |
 | [stages/E0/metrics.md](stages/E0/metrics.md#L1) | 1 | section | E0.g Classify metrics |
 | [stages/E0/metrics.md](stages/E0/metrics.md#L3) | 3 | section | E0G-1 Components |
 | [stages/E0/metrics.md](stages/E0/metrics.md#L8) | 8 | rule | E0G-1.1 |
@@ -717,50 +720,76 @@ Find a rule ID or a section here, then open only that file at that line.
 | [stages/E3-paths.md](stages/E3-paths.md#L8) | 8 | section | E3-2 Input and output |
 | [stages/E3-paths.md](stages/E3-paths.md#L15) | 15 | section | E3-3 Paths and reachability |
 | [stages/E3-paths.md](stages/E3-paths.md#L19) | 19 | rule | E3-3.1 |
-| [stages/E3-paths.md](stages/E3-paths.md#L20) | 20 | rule | E3-3.2 |
-| [stages/E3-paths.md](stages/E3-paths.md#L21) | 21 | rule | E3-3.3 |
-| [stages/E3-paths.md](stages/E3-paths.md#L22) | 22 | rule | E3-3.4 |
-| [stages/E3-paths.md](stages/E3-paths.md#L23) | 23 | rule | E3-3.5 |
-| [stages/E3-paths.md](stages/E3-paths.md#L24) | 24 | rule | E3-3.6 |
-| [stages/E3-paths.md](stages/E3-paths.md#L25) | 25 | rule | E3-3.7 |
-| [stages/E3-paths.md](stages/E3-paths.md#L27) | 27 | section | E3-4 Branches |
-| [stages/E3-paths.md](stages/E3-paths.md#L29) | 29 | rule | E3-4.1 |
-| [stages/E3-paths.md](stages/E3-paths.md#L30) | 30 | rule | E3-4.2 |
-| [stages/E3-paths.md](stages/E3-paths.md#L31) | 31 | rule | E3-4.3 |
-| [stages/E3-paths.md](stages/E3-paths.md#L33) | 33 | section | E3-5 Dimension-only queries |
-| [stages/E3-paths.md](stages/E3-paths.md#L35) | 35 | rule | E3-5.1 |
-| [stages/E3-paths.md](stages/E3-paths.md#L36) | 36 | rule | E3-5.2 |
-| [stages/E3-paths.md](stages/E3-paths.md#L37) | 37 | rule | E3-5.3 |
-| [stages/E3-paths.md](stages/E3-paths.md#L39) | 39 | section | E3-6 Diagnostics |
+| [stages/E3-paths.md](stages/E3-paths.md#L20) | 20 | rule | E3-3.1a |
+| [stages/E3-paths.md](stages/E3-paths.md#L21) | 21 | rule | E3-3.2 |
+| [stages/E3-paths.md](stages/E3-paths.md#L22) | 22 | rule | E3-3.3 |
+| [stages/E3-paths.md](stages/E3-paths.md#L23) | 23 | rule | E3-3.4 |
+| [stages/E3-paths.md](stages/E3-paths.md#L24) | 24 | rule | E3-3.5 |
+| [stages/E3-paths.md](stages/E3-paths.md#L25) | 25 | rule | E3-3.6 |
+| [stages/E3-paths.md](stages/E3-paths.md#L26) | 26 | rule | E3-3.7 |
+| [stages/E3-paths.md](stages/E3-paths.md#L28) | 28 | section | E3-4 Branches |
+| [stages/E3-paths.md](stages/E3-paths.md#L30) | 30 | rule | E3-4.1 |
+| [stages/E3-paths.md](stages/E3-paths.md#L31) | 31 | rule | E3-4.2 |
+| [stages/E3-paths.md](stages/E3-paths.md#L32) | 32 | rule | E3-4.2a |
+| [stages/E3-paths.md](stages/E3-paths.md#L33) | 33 | rule | E3-4.3 |
+| [stages/E3-paths.md](stages/E3-paths.md#L35) | 35 | section | E3-5 Dimension-only queries |
+| [stages/E3-paths.md](stages/E3-paths.md#L37) | 37 | rule | E3-5.1 |
+| [stages/E3-paths.md](stages/E3-paths.md#L38) | 38 | rule | E3-5.2 |
+| [stages/E3-paths.md](stages/E3-paths.md#L39) | 39 | rule | E3-5.3 |
+| [stages/E3-paths.md](stages/E3-paths.md#L41) | 41 | section | E3-6 Diagnostics |
 | [stages/E4-plan.md](stages/E4-plan.md#L1) | 1 | section | E4 Build the logical plan |
 | [stages/E4-plan.md](stages/E4-plan.md#L3) | 3 | section | E4-1 Purpose |
 | [stages/E4-plan.md](stages/E4-plan.md#L8) | 8 | section | E4-2 Input and output |
 | [stages/E4-plan.md](stages/E4-plan.md#L15) | 15 | section | E4-3 Plan nodes |
-| [stages/E4-plan.md](stages/E4-plan.md#L31) | 31 | section | E4-4 Branch plan |
-| [stages/E4-plan.md](stages/E4-plan.md#L42) | 42 | rule | E4-4.1 |
-| [stages/E4-plan.md](stages/E4-plan.md#L43) | 43 | rule | E4-4.2 |
-| [stages/E4-plan.md](stages/E4-plan.md#L45) | 45 | section | E4-5 Stitching branches |
-| [stages/E4-plan.md](stages/E4-plan.md#L53) | 53 | rule | E4-5.1 |
-| [stages/E4-plan.md](stages/E4-plan.md#L54) | 54 | rule | E4-5.2 |
-| [stages/E4-plan.md](stages/E4-plan.md#L56) | 56 | section | E4-6 Row policies |
-| [stages/E4-plan.md](stages/E4-plan.md#L60) | 60 | rule | E4-6.1 |
-| [stages/E4-plan.md](stages/E4-plan.md#L61) | 61 | rule | E4-6.2 |
-| [stages/E4-plan.md](stages/E4-plan.md#L62) | 62 | rule | E4-6.3 |
-| [stages/E4-plan.md](stages/E4-plan.md#L63) | 63 | rule | E4-6.4 |
-| [stages/E4-plan.md](stages/E4-plan.md#L64) | 64 | rule | E4-6.5 |
-| [stages/E4-plan.md](stages/E4-plan.md#L65) | 65 | rule | E4-6.6 |
-| [stages/E4-plan.md](stages/E4-plan.md#L66) | 66 | rule | E4-6.7 |
-| [stages/E4-plan.md](stages/E4-plan.md#L67) | 67 | rule | E4-6.8 |
-| [stages/E4-plan.md](stages/E4-plan.md#L68) | 68 | rule | E4-6.9 |
-| [stages/E4-plan.md](stages/E4-plan.md#L69) | 69 | rule | E4-6.9a |
-| [stages/E4-plan.md](stages/E4-plan.md#L70) | 70 | rule | E4-6.9b |
-| [stages/E4-plan.md](stages/E4-plan.md#L71) | 71 | rule | E4-6.10 |
-| [stages/E4-plan.md](stages/E4-plan.md#L73) | 73 | section | E4-7 Additivity |
-| [stages/E4-plan.md](stages/E4-plan.md#L79) | 79 | section | E4-8 Context modifiers |
-| [stages/E4-plan.md](stages/E4-plan.md#L85) | 85 | section | E4-9 Order and limit |
-| [stages/E4-plan.md](stages/E4-plan.md#L87) | 87 | rule | E4-9.1 |
-| [stages/E4-plan.md](stages/E4-plan.md#L88) | 88 | rule | E4-9.2 |
-| [stages/E4-plan.md](stages/E4-plan.md#L90) | 90 | section | E4-10 Diagnostics |
+| [stages/E4-plan.md](stages/E4-plan.md#L19) | 19 | rule | E4-3.1 |
+| [stages/E4-plan.md](stages/E4-plan.md#L20) | 20 | rule | E4-3.2 |
+| [stages/E4-plan.md](stages/E4-plan.md#L21) | 21 | rule | E4-3.3 |
+| [stages/E4-plan.md](stages/E4-plan.md#L22) | 22 | rule | E4-3.4 |
+| [stages/E4-plan.md](stages/E4-plan.md#L23) | 23 | rule | E4-3.5 |
+| [stages/E4-plan.md](stages/E4-plan.md#L24) | 24 | rule | E4-3.6 |
+| [stages/E4-plan.md](stages/E4-plan.md#L25) | 25 | rule | E4-3.7 |
+| [stages/E4-plan.md](stages/E4-plan.md#L26) | 26 | rule | E4-3.8 |
+| [stages/E4-plan.md](stages/E4-plan.md#L27) | 27 | rule | E4-3.9 |
+| [stages/E4-plan.md](stages/E4-plan.md#L28) | 28 | rule | E4-3.10 |
+| [stages/E4-plan.md](stages/E4-plan.md#L30) | 30 | rule | E4-3.11 |
+| [stages/E4-plan.md](stages/E4-plan.md#L32) | 32 | section | E4-4 Branch plan |
+| [stages/E4-plan.md](stages/E4-plan.md#L36) | 36 | rule | E4-4.0a |
+| [stages/E4-plan.md](stages/E4-plan.md#L37) | 37 | rule | E4-4.0b |
+| [stages/E4-plan.md](stages/E4-plan.md#L38) | 38 | rule | E4-4.0c |
+| [stages/E4-plan.md](stages/E4-plan.md#L39) | 39 | rule | E4-4.0d |
+| [stages/E4-plan.md](stages/E4-plan.md#L40) | 40 | rule | E4-4.0e |
+| [stages/E4-plan.md](stages/E4-plan.md#L41) | 41 | rule | E4-4.0f |
+| [stages/E4-plan.md](stages/E4-plan.md#L42) | 42 | rule | E4-4.0g |
+| [stages/E4-plan.md](stages/E4-plan.md#L44) | 44 | rule | E4-4.1 |
+| [stages/E4-plan.md](stages/E4-plan.md#L45) | 45 | rule | E4-4.2 |
+| [stages/E4-plan.md](stages/E4-plan.md#L47) | 47 | section | E4-5 Stitching branches |
+| [stages/E4-plan.md](stages/E4-plan.md#L51) | 51 | rule | E4-5.0a |
+| [stages/E4-plan.md](stages/E4-plan.md#L52) | 52 | rule | E4-5.0b |
+| [stages/E4-plan.md](stages/E4-plan.md#L53) | 53 | rule | E4-5.0c |
+| [stages/E4-plan.md](stages/E4-plan.md#L55) | 55 | rule | E4-5.1 |
+| [stages/E4-plan.md](stages/E4-plan.md#L56) | 56 | rule | E4-5.2 |
+| [stages/E4-plan.md](stages/E4-plan.md#L58) | 58 | section | E4-6 Row policies |
+| [stages/E4-plan.md](stages/E4-plan.md#L62) | 62 | rule | E4-6.1 |
+| [stages/E4-plan.md](stages/E4-plan.md#L63) | 63 | rule | E4-6.2 |
+| [stages/E4-plan.md](stages/E4-plan.md#L64) | 64 | rule | E4-6.3 |
+| [stages/E4-plan.md](stages/E4-plan.md#L65) | 65 | rule | E4-6.4 |
+| [stages/E4-plan.md](stages/E4-plan.md#L66) | 66 | rule | E4-6.5 |
+| [stages/E4-plan.md](stages/E4-plan.md#L67) | 67 | rule | E4-6.5a |
+| [stages/E4-plan.md](stages/E4-plan.md#L68) | 68 | rule | E4-6.5b |
+| [stages/E4-plan.md](stages/E4-plan.md#L69) | 69 | rule | E4-6.5c |
+| [stages/E4-plan.md](stages/E4-plan.md#L70) | 70 | rule | E4-6.6 |
+| [stages/E4-plan.md](stages/E4-plan.md#L71) | 71 | rule | E4-6.7 |
+| [stages/E4-plan.md](stages/E4-plan.md#L72) | 72 | rule | E4-6.8 |
+| [stages/E4-plan.md](stages/E4-plan.md#L73) | 73 | rule | E4-6.9 |
+| [stages/E4-plan.md](stages/E4-plan.md#L74) | 74 | rule | E4-6.9a |
+| [stages/E4-plan.md](stages/E4-plan.md#L75) | 75 | rule | E4-6.9b |
+| [stages/E4-plan.md](stages/E4-plan.md#L76) | 76 | rule | E4-6.10 |
+| [stages/E4-plan.md](stages/E4-plan.md#L78) | 78 | section | E4-7 Additivity |
+| [stages/E4-plan.md](stages/E4-plan.md#L84) | 84 | section | E4-8 Context modifiers |
+| [stages/E4-plan.md](stages/E4-plan.md#L90) | 90 | section | E4-9 Order and limit |
+| [stages/E4-plan.md](stages/E4-plan.md#L92) | 92 | rule | E4-9.1 |
+| [stages/E4-plan.md](stages/E4-plan.md#L93) | 93 | rule | E4-9.2 |
+| [stages/E4-plan.md](stages/E4-plan.md#L95) | 95 | section | E4-10 Diagnostics |
 | [stages/E5-optimize.md](stages/E5-optimize.md#L1) | 1 | section | E5 Optimize |
 | [stages/E5-optimize.md](stages/E5-optimize.md#L3) | 3 | section | E5-1 Purpose |
 | [stages/E5-optimize.md](stages/E5-optimize.md#L9) | 9 | section | E5-2 Input and output |
@@ -792,22 +821,26 @@ Find a rule ID or a section here, then open only that file at that line.
 | [stages/E6-generate.md](stages/E6-generate.md#L30) | 30 | rule | E6-4.4 |
 | [stages/E6-generate.md](stages/E6-generate.md#L31) | 31 | rule | E6-4.5 |
 | [stages/E6-generate.md](stages/E6-generate.md#L32) | 32 | rule | E6-4.6 |
-| [stages/E6-generate.md](stages/E6-generate.md#L33) | 33 | rule | E6-4.7 |
-| [stages/E6-generate.md](stages/E6-generate.md#L34) | 34 | rule | E6-4.8 |
-| [stages/E6-generate.md](stages/E6-generate.md#L35) | 35 | rule | E6-4.9 |
-| [stages/E6-generate.md](stages/E6-generate.md#L36) | 36 | rule | E6-4.10 |
-| [stages/E6-generate.md](stages/E6-generate.md#L37) | 37 | rule | E6-4.11 |
-| [stages/E6-generate.md](stages/E6-generate.md#L39) | 39 | section | E6-5 DuckDB |
-| [stages/E6-generate.md](stages/E6-generate.md#L43) | 43 | rule | E6-5.1 |
-| [stages/E6-generate.md](stages/E6-generate.md#L44) | 44 | rule | E6-5.2 |
-| [stages/E6-generate.md](stages/E6-generate.md#L45) | 45 | rule | E6-5.3 |
-| [stages/E6-generate.md](stages/E6-generate.md#L46) | 46 | rule | E6-5.4 |
-| [stages/E6-generate.md](stages/E6-generate.md#L47) | 47 | rule | E6-5.5 |
-| [stages/E6-generate.md](stages/E6-generate.md#L48) | 48 | rule | E6-5.6 |
-| [stages/E6-generate.md](stages/E6-generate.md#L49) | 49 | rule | E6-5.7 |
-| [stages/E6-generate.md](stages/E6-generate.md#L51) | 51 | section | E6-6 Other outputs |
-| [stages/E6-generate.md](stages/E6-generate.md#L53) | 53 | rule | E6-6.1 |
-| [stages/E6-generate.md](stages/E6-generate.md#L54) | 54 | rule | E6-6.2 |
+| [stages/E6-generate.md](stages/E6-generate.md#L33) | 33 | rule | E6-4.6a |
+| [stages/E6-generate.md](stages/E6-generate.md#L34) | 34 | rule | E6-4.7 |
+| [stages/E6-generate.md](stages/E6-generate.md#L35) | 35 | rule | E6-4.8 |
+| [stages/E6-generate.md](stages/E6-generate.md#L36) | 36 | rule | E6-4.9 |
+| [stages/E6-generate.md](stages/E6-generate.md#L37) | 37 | rule | E6-4.10 |
+| [stages/E6-generate.md](stages/E6-generate.md#L38) | 38 | rule | E6-4.11 |
+| [stages/E6-generate.md](stages/E6-generate.md#L39) | 39 | rule | E6-4.12 |
+| [stages/E6-generate.md](stages/E6-generate.md#L40) | 40 | rule | E6-4.13 |
+| [stages/E6-generate.md](stages/E6-generate.md#L41) | 41 | rule | E6-4.14 |
+| [stages/E6-generate.md](stages/E6-generate.md#L43) | 43 | section | E6-5 DuckDB |
+| [stages/E6-generate.md](stages/E6-generate.md#L47) | 47 | rule | E6-5.1 |
+| [stages/E6-generate.md](stages/E6-generate.md#L48) | 48 | rule | E6-5.2 |
+| [stages/E6-generate.md](stages/E6-generate.md#L49) | 49 | rule | E6-5.3 |
+| [stages/E6-generate.md](stages/E6-generate.md#L50) | 50 | rule | E6-5.4 |
+| [stages/E6-generate.md](stages/E6-generate.md#L51) | 51 | rule | E6-5.5 |
+| [stages/E6-generate.md](stages/E6-generate.md#L52) | 52 | rule | E6-5.6 |
+| [stages/E6-generate.md](stages/E6-generate.md#L53) | 53 | rule | E6-5.7 |
+| [stages/E6-generate.md](stages/E6-generate.md#L55) | 55 | section | E6-6 Other outputs |
+| [stages/E6-generate.md](stages/E6-generate.md#L57) | 57 | rule | E6-6.1 |
+| [stages/E6-generate.md](stages/E6-generate.md#L58) | 58 | rule | E6-6.2 |
 | [stages/README.md](stages/README.md#L1) | 1 | section | Stages |
 | [stages/README.md](stages/README.md#L5) | 5 | section | STG-1 Load |
 | [stages/README.md](stages/README.md#L11) | 11 | section | STG-2 Compile |

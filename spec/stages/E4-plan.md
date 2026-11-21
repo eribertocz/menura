@@ -14,30 +14,32 @@ lowering, with row policies, additivity rules and context modifiers applied.
 
 ## E4-3 Plan nodes
 
-| Node | Meaning |
-|---|---|
-| `Scan(relation)` | Read a catalog relation |
-| `Join(left, right, relationship, kind)` | Join along one relationship; `kind` is `left` unless evidence allows `inner` (set only in E5) |
-| `Filter(input, predicate)` | Keep rows where the predicate is TRUE |
-| `SemiJoin(input, path, predicate)` | Keep rows whose related row along `path` exists and satisfies `predicate` (used for policy propagation) |
-| `Deduplicate(input, group, identity)` | Keep one row per (dimension key tuple, home row identity) pair |
-| `Aggregate(input, keys, components)` | Group and evaluate components |
-| `Stitch(branches, keys)` | Combine branches by dimension keys (E4-5) |
-| `Project(input, expressions)` | Compute output columns |
-| `Sort(input, items)` and `Limit(input, n)` | Order and limit |
+| ID | Node | Meaning |
+|---|---|---|
+| E4-3.1 | `Scan(relation)` | Read a catalog relation. Every `Scan` reads only the visible rows of its dataset (E4-6.5c). |
+| E4-3.2 | `Join(left, right, relationship, kind)` | Join along one relationship; `kind` is `left` unless evidence allows `inner` (set only in E5) |
+| E4-3.3 | `Filter(input, predicate)` | Keep rows where the predicate is TRUE |
+| E4-3.4 | `SemiJoin(input, path, predicate)` | Keep the rows of `input` for which at least one related row exists along `path` and every related row along it satisfies `predicate` (used for policy propagation, E4-6.5a). A row with a NULL foreign key never matches. |
+| E4-3.5 | `Deduplicate(input, group, identity)` | Keep one row per (`group`, `identity`) pair: `group` is the `Aggregate` key values after time-grain truncation, NULLs compared equal, and `identity` is the home row identity (E4-4.0f) |
+| E4-3.6 | `Aggregate(input, keys, components)` | Group and evaluate components |
+| E4-3.7 | `Stitch(branches, keys)` | Combine branches by dimension keys (E4-5) |
+| E4-3.8 | `Project(input, expressions)` | Compute output columns |
+| E4-3.9 | `Sort(input, items)` | Order |
+| E4-3.10 | `Limit(input, n)` | Limit |
 
-Every node carries its output schema (names, logical types, nullability) and its origin.
+- **E4-3.11** Every node carries its output schema (names, logical types, nullability) and its origin. Column names and the order of the inputs of a multi-node plan follow E6-4.12.
 
 ## E4-4 Branch plan
 
 For each branch, in order:
 
-1. `Scan` the home dataset.
-2. Apply the row policies of the home dataset (`Filter`) and of every dataset it reaches (`SemiJoin`, E4-6.5).
-3. `Join` the join tree with `left` joins, in path order.
-4. `Filter` with the query filters, as one conjunction, followed by the `date_range` predicate of QRY-4.2 when the query has one. FALSE and NULL remove the row.
-5. If any join step of the branch could match more than one row per home row, insert `Deduplicate(group, identity)` before aggregation: a home row counts once in **each** group it matches, as Apache Ossie Layer 3 section 4 requires. `identity` is a row identity **synthesized** for the home scan (a row number assigned in the home relation's scan, Apache Ossie Layer 2 section 3.2), so no declared key has to be trusted; results do not depend on the numbering. E4 always inserts the node for such a step; only E5 may remove it, with evidence (E5-3.2).
-6. `Aggregate` by the dimension keys with the branch's components.
+1. **E4-4.0a** `Scan` the home dataset.
+2. **E4-4.0b** Apply the row policies so that the home `Scan` reads its visible rows (E4-6.5): a `Filter` for its own applicable policies, then a `SemiJoin` for each relationship that E4-6.5 follows.
+3. **E4-4.0c** `Join` the join tree with `left` joins, in path order, one `Join` per join instance (E3-4.2a). Each joined `Scan` reads the visible rows of its dataset (E4-6.5c).
+4. **E4-4.0d** `Filter` with the query filters, as one conjunction, followed by the `date_range` predicate of QRY-4.2 when the query has one. FALSE and NULL remove the row.
+5. **E4-4.0e** If the branch has at least one `Join` and at least one metric component, insert `Deduplicate(group, identity)` before its `Aggregate`, whatever keys the model declares: a home row counts once in **each** group it matches, as Apache Ossie Layer 3 section 4 requires. Only E5 may remove it, with evidence (E5-3.2). A dimension-only branch never gets one.
+   **E4-4.0f** `group` is the `Aggregate` key values after time-grain truncation, with NULLs compared equal. `identity` is one row-number column **synthesized** over the home `Scan` (Apache Ossie Layer 2 section 3.2), so no declared key has to be trusted; results do not depend on the numbering.
+6. **E4-4.0g** `Aggregate` by the dimension keys with the branch's components.
 
 - **E4-4.1** Unmatched home rows fall into the NULL group of a dimension. That group is kept, never dropped, so totals always add up; the explanation states when the plan can produce a NULL group and which relationship causes it.
 - **E4-4.2** A branch plan with no `Stitch` and no remaining `Deduplicate` after E5 is a **simple plan**; E6 generates it as one aggregate query over the joins.
@@ -46,9 +48,9 @@ For each branch, in order:
 
 With two or more branches, the plan MUST equal Apache Ossie Layer 3 section 5.5:
 
-1. The keys are the distinct dimension tuples present in at least one branch, NULLs equal.
-2. For each key and branch, a component takes the branch's value if the branch has a row for that key, and its **empty-input value** otherwise (`SUM` → NULL, `COUNT` → 0, as defined by its expression over no rows).
-3. Metrics are evaluated from their components after stitching.
+1. **E4-5.0a** The keys are the distinct dimension tuples present in at least one branch, NULLs equal.
+2. **E4-5.0b** For each key and branch, a component takes the branch's value if the branch has a row for that key, and its **empty-input value** otherwise (`SUM` → NULL, `COUNT` → 0, as defined by its expression over no rows).
+3. **E4-5.0c** Metrics are evaluated from their components after stitching.
 
 - **E4-5.1** A NULL group (a branch row whose key is NULL) and a missing branch row are different: the first supplies values, the second empty-input values.
 - **E4-5.2** Without dimensions, each branch has exactly one row.
@@ -57,15 +59,18 @@ With two or more branches, the plan MUST equal Apache Ossie Layer 3 section 5.5:
 
 | ID | Rule |
 |---|---|
-| E4-6.1 | Row policies are injected here, before E5, as `Filter` nodes directly over the `Scan` of their dataset. No later stage may remove, weaken or move them above an aggregate. |
+| E4-6.1 | Row policies are injected here, before E5, as `Filter` and `SemiJoin` nodes directly over the `Scan` of their dataset, so that every `Scan` reads only the visible rows of its dataset (E4-6.5). No later stage may remove, weaken or move them above an aggregate. |
 | E4-6.2 | **Evaluation.** For a dataset and a user, the row filter is `G AND R`, computed in this order: (1) drop every policy the user is exempt from (`exempt_roles`); (2) `R` is the AND of the remaining policies without `roles` (TRUE if none); (3) `G` is the OR of the conditions of the remaining policies whose `roles` include one of the user's roles. If the dataset has no policy with `roles`, `G` is TRUE. |
 | E4-6.3 | **Exemption.** An exemption removes only that policy. If the user is exempt from **every** role-scoped policy of the dataset, `G` is TRUE. |
 | E4-6.4 | **No grant.** Otherwise, if no remaining role-scoped policy lists one of the user's roles, `G` is the constant `FALSE`: the user sees no rows. Access is denied by a false predicate, never by an error that reveals data exists. |
-| E4-6.5 | **Propagation.** A policy on dataset X also restricts every dataset that reaches X through many-to-one steps, transitively: a row is visible only if its related row in X exists and is visible. A row with a NULL key, or without a match in X, is not visible, because it cannot be proven allowed. |
-| E4-6.6 | **Several relationships to X.** The policy propagates through every relationship that reaches X; the row must be visible through each. |
-| E4-6.7 | **Dimension listing.** Dimension-only queries are governed by the dimension datasets' own access and policies. Policies of metric home datasets do not restrict them. |
+| E4-6.5 | **Visibility.** The visible rows V(D) of a dataset D are defined recursively: the rows of D that pass its own applicable policies (E4-6.2–E4-6.4) and that, for each usable many-to-one relationship from D to a dataset D' that has row policies or reaches one, satisfy E4-6.5a against V(D'). A row that is not visible is removed, never kept with NULL dimensions. |
+| E4-6.5a | **Propagation step.** Along a many-to-one relationship from D to D', a row of D is visible only if at least one related row exists in D' and every related row is in V(D'). A row with a NULL foreign key is never visible, because it cannot be proven allowed (deny by default). |
+| E4-6.5b | **Cycles.** While V(D) is computed, a relationship that leads back to a dataset already on the current chain of relationships is not followed. |
+| E4-6.5c | **Every scan.** Every `Scan` of a plan, home or joined, including the anchor of a dimension-only branch, reads V(D) of its dataset. Joined dimension values from rows that are not visible never appear. |
+| E4-6.6 | **Several relationships.** E4-6.5 applies to each such relationship of D separately, including several relationships to the same dataset: the row must be visible along each. |
+| E4-6.7 | **Dimension listing.** Dimension-only queries are governed by their own datasets' access and policies. "Own" means only that the policies of metric home datasets that are not on the branch do not apply. Propagation (E4-6.5) applies to the anchor, as to every `Scan` (E4-6.5c). |
 | E4-6.8 | **Context modifiers never remove policies.** A modifier that removes a dimension or filter from a metric's context (E4-8) applies only to query filters and dimensions, never to row policies. |
-| E4-6.9 | Attribute values are bound parameters (SEC-3.5). A policy needing an absent attribute fails compilation (`ESEC-02`) only when it is **applicable**: it remains after exemption (E4-6.2 step 1) and either has no `roles` or lists one of the user's roles. A policy the user is exempt from, or one that grants none of the user's roles, never fails. `ESEC-02` is located at `/attributes` of the security context, and its message names only the missing attribute, never the policy, its dataset or its condition (PLN-5.2, SCY-4a.1). Datasets are visited in branch order (E3-4.3), home dataset first, their policies in CON-5 order of their names (E0H-1.4), and each condition's attributes in order of appearance; the first missing attribute is reported. |
+| E4-6.9 | Attribute values are bound parameters (SEC-3.5). A policy needing an absent attribute fails compilation (`ESEC-02`) only when it is **applicable**: it remains after exemption (E4-6.2 step 1) and either has no `roles` or lists one of the user's roles. A policy the user is exempt from, or one that grants none of the user's roles, never fails. `ESEC-02` is located at `/attributes` of the security context, and its message names only the missing attribute, never the policy, its dataset or its condition (PLN-5.2, SCY-4a.1). Branches are visited in branch order (E3-4.3). Within each branch, policies are visited for the home dataset first, then for the other datasets whose policies take part in V(D) of the home dataset (E4-6.5), ordered by the length of their shortest path from the home dataset, then by normalized name; each dataset is visited once per query. Within a dataset, policies are visited in CON-5 order of their names (E0H-1.4), and each condition's attributes in order of appearance; the first missing attribute is reported. |
 | E4-6.9a | **Empty list attribute.** `x IN (USER_ATTRIBUTE('a'))` is FALSE and `x NOT IN (USER_ATTRIBUTE('a'))` is TRUE when `a` is an empty list, whatever `x` is, NULL included, as SQL `= ANY` over an empty set. |
 | E4-6.9b | **Now in a row policy.** An applicable policy (E4-6.9) whose condition uses `CURRENT_DATE`, `CURRENT_TIME` or `CURRENT_TIMESTAMP` needs `reference_time` (QRY-2). Without it, compilation fails with `EQRY-03`, located at `/query`, its message naming neither the policy nor its dataset (SCY-4a.1). Policies are visited as in E4-6.9, after every `ESEC-02` check. |
 | E4-6.10 | Joins added only for propagation never add output columns, and the explanation names the policies without showing any value. |

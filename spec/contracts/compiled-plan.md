@@ -13,7 +13,7 @@
 | `data_source` | Logical source name. The executor maps it to a connection with its own credentials. |
 | `sql` | One SQL statement in the target dialect. |
 | `parameters` | Bound parameter values, by position (`$1`, `$2`, …), each with its logical type, encoded as CON-4 requires. |
-| `result_schema` | Output columns in the query tree's column order (E1-5): dimensions then metrics for the wide-table form, `SELECT` order for the SQL form. Name, role, logical and physical type, nullability. |
+| `result_schema` | Output columns in the query tree's column order (E1-5): dimensions then metrics for the wide-table form, `SELECT` order for the SQL form. Name, role, logical and physical type, nullability. `nullable` is true for every column that comes from the right side of a left `Join`, and for a stitched component unless both its values and its empty-input value are non-NULL. Every other column keeps the nullability of its expression. |
 | `cache_key` | See PLN-3. |
 | `limits` | Suggested `timeout_ms` and `max_rows` (`null` means no limit beyond the query's own). |
 | `lineage` | See PLN-4. |
