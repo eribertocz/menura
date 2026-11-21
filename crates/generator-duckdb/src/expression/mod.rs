@@ -7,6 +7,9 @@ mod comparisons;
 mod conditionals;
 mod current;
 mod dates;
+#[cfg(test)]
+mod derived_division_tests;
+mod division;
 mod functions;
 mod numbers;
 mod operators;
@@ -27,6 +30,7 @@ use crate::error::{GenerateError, InvariantViolation};
 use crate::identifiers::quote;
 use crate::parameters::Parameters;
 use crate::values::{literal_sql, literal_value};
+use division::ZeroDivisor;
 
 /// What every expression of a statement may read: the catalog schema, the model, the security
 /// context and the time settings of the query.
@@ -76,10 +80,13 @@ pub(crate) struct ExpressionWriter<'input, 'statement> {
     columns: Columns<'input>,
     origin: &'input Origin,
     parameters: &'statement mut Parameters,
+    /// What its divisions yield for a zero divisor (E6-4.6, E6-4.6a).
+    zero_divisor: ZeroDivisor<'input>,
 }
 
 impl<'input, 'statement> ExpressionWriter<'input, 'statement> {
-    /// A writer for the node from `origin`, whose references name `columns`.
+    /// A writer for the node from `origin`, whose references name `columns`; its divisions
+    /// yield NULL for a zero divisor (E6-4.6).
     pub(crate) fn new(
         environment: &'input Environment<'input>,
         columns: Columns<'input>,
@@ -92,6 +99,7 @@ impl<'input, 'statement> ExpressionWriter<'input, 'statement> {
             columns,
             origin,
             parameters,
+            zero_divisor: ZeroDivisor::Null,
         }
     }
 

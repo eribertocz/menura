@@ -32,7 +32,7 @@ impl ExpressionWriter<'_, '_> {
     ) -> Result<String, GenerateError> {
         match operator {
             BinaryOperator::Divide => self.division(left, right),
-            BinaryOperator::Modulo => self.modulo(expression, left, right),
+            BinaryOperator::Modulo => self.modulo(expression, left, right, self.zero_divisor),
             BinaryOperator::Add | BinaryOperator::Subtract | BinaryOperator::Multiply => {
                 self.arithmetic(expression, operator, left, right)
             }
@@ -50,9 +50,11 @@ impl ExpressionWriter<'_, '_> {
         }
     }
 
-    /// `n / d` as `CASE WHEN d = 0 THEN NULL ELSE n / d END`, both operands cast to the
-    /// 64-bit float of E0F-5a, so neither `integer_division` nor `inf` can change the result
-    /// (E6-4.6, E6-4.10). The denominator is written first, where it first appears.
+    /// `n / d` as `CASE WHEN d = 0 THEN NULL ELSE n / d END` (E6-4.6), or with the error
+    /// `RDER-01` in place of `NULL` inside a derived metric with `on_division_by_zero: error`
+    /// (E6-4.6a). Both operands are cast to the 64-bit float of E0F-5a, so neither
+    /// `integer_division` nor `inf` can change the result (E6-4.10), and a NULL denominator
+    /// gives NULL. The denominator is written first, where it first appears.
     fn division(
         &mut self,
         numerator: &Expression,
@@ -60,8 +62,9 @@ impl ExpressionWriter<'_, '_> {
     ) -> Result<String, GenerateError> {
         let denominator = format!("CAST({} AS DOUBLE)", self.write(denominator)?);
         let numerator = format!("CAST({} AS DOUBLE)", self.write(numerator)?);
+        let zero = self.zero_divisor.sql();
         Ok(format!(
-            "CASE WHEN {denominator} = 0 THEN NULL ELSE {numerator} / {denominator} END"
+            "CASE WHEN {denominator} = 0 THEN {zero} ELSE {numerator} / {denominator} END"
         ))
     }
 

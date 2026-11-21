@@ -5,6 +5,7 @@ use menura_contracts::types::common::LogicalType;
 use menura_model::expression::{Expression, ScalarFunction};
 
 use super::ExpressionWriter;
+use super::division::ZeroDivisor;
 use crate::error::{GenerateError, InvariantViolation};
 
 /// The digits of a 128-bit integer: rounding or truncating to `10^39` or more gives 0.
@@ -37,7 +38,7 @@ impl ExpressionWriter<'_, '_> {
             ScalarFunction::Truncate => self.rounded(Rounding::Truncate, arguments),
             ScalarFunction::Modulo => {
                 let [dividend, divisor] = self.exactly(arguments)?;
-                self.modulo(expression, dividend, divisor)
+                self.modulo(expression, dividend, divisor, ZeroDivisor::Null)
             }
             ScalarFunction::Power => self.power(arguments),
             ScalarFunction::SquareRoot => self.guarded_double("sqrt", "< 0", arguments),
@@ -54,14 +55,15 @@ impl ExpressionWriter<'_, '_> {
         }
     }
 
-    /// `x % y`, and `MOD(x, y)`: NULL when `y = 0`, the operands widened to `HUGEINT` when the
-    /// result is a 128-bit integer (E0F-5a). The divisor is written first, where it first
-    /// appears.
+    /// `x % y`, and `MOD(x, y)`: `zero` when `y = 0` (E6-4.6, E6-4.6a), NULL when `y` is NULL,
+    /// the operands widened to `HUGEINT` when the result is a 128-bit integer (E0F-5a). The
+    /// divisor is written first, where it first appears.
     pub(super) fn modulo(
         &mut self,
         expression: &Expression,
         dividend: &Expression,
         divisor: &Expression,
+        zero: ZeroDivisor<'_>,
     ) -> Result<String, GenerateError> {
         let huge = self.is_huge_integer(expression);
         let divisor_text = self.operand(divisor)?;
@@ -71,8 +73,9 @@ impl ExpressionWriter<'_, '_> {
         } else {
             format!("{dividend_text} % {divisor_text}")
         };
+        let zero = zero.sql();
         Ok(format!(
-            "CASE WHEN {divisor_text} = 0 THEN NULL ELSE {remainder} END"
+            "CASE WHEN {divisor_text} = 0 THEN {zero} ELSE {remainder} END"
         ))
     }
 
