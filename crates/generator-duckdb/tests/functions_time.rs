@@ -184,7 +184,7 @@ fn e0f_2_3_current_timestamp_is_the_wall_clock_of_the_reference_time() {
     assert!(
         generated
             .sql
-            .contains("CAST($1 AT TIME ZONE $2 AS TIMESTAMP)")
+            .contains("CAST(CAST($1 AS TIMESTAMP WITH TIME ZONE) AT TIME ZONE $2 AS TIMESTAMP)")
     );
     assert_eq!(generated.parameters[0].logical_type, instant());
     assert_eq!(
@@ -197,7 +197,11 @@ fn e0f_2_3_current_timestamp_is_the_wall_clock_of_the_reference_time() {
 #[test]
 fn e0f_2_3_current_time_is_the_time_of_the_reference_time() {
     let generated = model_sql("CURRENT_TIME", LogicalType::Time);
-    assert!(generated.sql.contains("CAST($1 AT TIME ZONE $2 AS TIME)"));
+    assert!(
+        generated
+            .sql
+            .contains("CAST(CAST($1 AS TIMESTAMP WITH TIME ZONE) AT TIME ZONE $2 AS TIME)")
+    );
 }
 
 #[test]

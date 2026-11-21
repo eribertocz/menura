@@ -26,8 +26,9 @@ impl ExpressionWriter<'_, '_> {
         ))
     }
 
-    /// `CAST($r AT TIME ZONE $tz AS <type>)`: the wall clock of the reference instant `$r` in
-    /// the query time zone, as the `timestamp` or `time` of `expression`.
+    /// `CAST(CAST($r AS TIMESTAMP WITH TIME ZONE) AT TIME ZONE $tz AS <type>)`: the wall clock
+    /// of the reference instant `$r` in the query time zone, as the `timestamp` or `time` of
+    /// `expression`. `$r` is cast so that `DuckDB` never chooses its type (E6-4.10).
     pub(super) fn current_instant(
         &mut self,
         expression: &Expression,
@@ -49,6 +50,9 @@ impl ExpressionWriter<'_, '_> {
             Value::String(utc),
         );
         let zone = self.time_zone();
-        self.typed(expression, &format!("{instant} AT TIME ZONE {zone}"))
+        self.typed(
+            expression,
+            &format!("CAST({instant} AS TIMESTAMP WITH TIME ZONE) AT TIME ZONE {zone}"),
+        )
     }
 }
