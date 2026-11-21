@@ -83,3 +83,8 @@ semantic_model:
         custom_extensions:
           - vendor_name: COMMON
             data: '{"namespace": "menura", "version": 1, "derived": {}}'
+      - name: strict_rate_per_budget
+        expression: {dialects: [{dialect: ANSI_SQL, expression: 'AGG(collection_rate) / AGG(budget_total)'}]}
+        custom_extensions:
+          - vendor_name: COMMON
+            data: '{"namespace": "menura", "version": 1, "derived": {"on_division_by_zero": "error"}}'

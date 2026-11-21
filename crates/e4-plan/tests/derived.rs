@@ -12,12 +12,12 @@ use menura_expressions::typing::decimal;
 use menura_model::expression::{
     AggregateCall, BinaryOperator, Expression, IntegerLiteral, Literal, SimpleAggregate,
 };
-use menura_model::internal_model::DeclaredAdditivity;
-use menura_representations::logical_plan::{Operation, PlanNode};
-use support::derived::{changed_model, derived_plan, float, plan_over};
-use support::plan::{column, column_reference, kind, kinds, node};
+use menura_model::internal_model::{DeclaredAdditivity, DivisionByZero, InternalModel};
+use menura_representations::logical_plan::{DerivedFormula, NamedExpression, Operation, PlanNode};
+use support::derived::{changed_model, derived_model, derived_plan, float, plan_over};
+use support::plan::{column, column_names, column_reference, kind, kinds, node};
 use support::stitch::{branch, region, stitch_parts};
-use support::tree;
+use support::{name, tree};
 
 fn binary(operator: BinaryOperator, left: Expression, right: Expression) -> Expression {
     Expression::Binary {
@@ -150,32 +150,143 @@ fn der_5_1_3_the_project_column_has_the_e0f_5a_type_of_the_derived_metric() {
     );
 }
 
-#[test]
-fn der_2_4_a_derived_metric_over_a_derived_metric_inlines_the_inner_formula() {
-    let plan = derived_plan(
+fn named(plan: &PlanNode, output_name: &str) -> NamedExpression {
+    match plan.operation() {
+        Operation::Project { expressions, .. } => expressions
+            .iter()
+            .find(|named| named.name.as_str() == output_name)
+            .cloned()
+            .expect("the column"),
+        _ => panic!("not a Project"),
+    }
+}
+
+fn formula(metric: &str, rule: DivisionByZero) -> Option<DerivedFormula> {
+    Some(DerivedFormula {
+        metric: name(metric),
+        on_division_by_zero: rule,
+    })
+}
+
+fn percent_plan(model: &InternalModel) -> PlanNode {
+    plan_over(
+        model,
         vec![
             branch("ORDERS", &[(0, 0)], true),
             branch("BUDGETS", &[(0, 1)], true),
         ],
         vec![region()],
         &["SALES_TO_BUDGET_PERCENT"],
-    );
+    )
+    .expect("a plan")
+}
 
-    let hundred = Expression::Literal(Literal::Integer(
+fn hundred() -> Expression {
+    Expression::Literal(Literal::Integer(
         IntegerLiteral::new("100").expect("a literal"),
-    ));
+    ))
+}
+
+#[test]
+fn der_2_4_a_derived_input_is_computed_in_a_lower_project() {
+    let plan = percent_plan(&derived_model());
+
+    assert_eq!(kinds(&plan)[..3], ["Project", "Project", "Stitch"]);
+    let lower = plan.inputs()[0];
+    assert_eq!(
+        column_names(lower),
+        [
+            "dimension_1",
+            "metric_1_component_2",
+            "metric_1_component_1",
+            "metric_1_input_1"
+        ]
+    );
+    assert_eq!(
+        named(lower, "metric_1_input_1").expression,
+        ratio("metric_1_component_1", "metric_1_component_2")
+    );
+    assert_eq!(
+        named(lower, "dimension_1").expression,
+        column_reference("dimension_1")
+    );
     assert_eq!(
         metric_expression(&plan, "sales_to_budget_percent"),
         binary(
             BinaryOperator::Multiply,
-            ratio("metric_1_component_1", "metric_1_component_2"),
-            hundred
+            column_reference("metric_1_input_1"),
+            hundred()
         )
+    );
+    assert_eq!(
+        lower.schema().columns()[3],
+        column("metric_1_input_1", float(), true)
     );
 }
 
 #[test]
-fn der_4_2_an_input_with_several_components_is_recomputed_from_them() {
+fn der_3_1_each_formula_carries_the_rule_of_its_own_derived_metric() {
+    let model = changed_model("SALES_TO_BUDGET_PERCENT", |metric| {
+        metric.expression = Some(tree("AGG(sales_to_budget) / 100"));
+        if let Some(derived) = metric.derived.as_mut() {
+            derived.on_division_by_zero = Some(DivisionByZero::Error);
+        }
+    });
+
+    let plan = percent_plan(&model);
+
+    assert_eq!(
+        named(&plan, "sales_to_budget_percent").derived,
+        formula("SALES_TO_BUDGET_PERCENT", DivisionByZero::Error)
+    );
+    let lower = plan.inputs()[0];
+    assert_eq!(
+        named(lower, "metric_1_input_1").derived,
+        formula("SALES_TO_BUDGET", DivisionByZero::Null)
+    );
+    assert_eq!(named(lower, "metric_1_component_1").derived, None);
+}
+
+#[test]
+fn e6_4_6a_the_final_project_names_the_derived_metric_of_a_formula() {
+    let plan = derived_plan(
+        vec![
+            branch("ORDERS", &[(0, 0)], true),
+            branch("BUDGETS", &[(0, 1)], true),
+        ],
+        vec![region()],
+        &["SALES_TO_BUDGET"],
+    );
+
+    assert_eq!(
+        named(&plan, "sales_to_budget").derived,
+        formula("SALES_TO_BUDGET", DivisionByZero::Null)
+    );
+    assert_eq!(named(&plan, "name_0").derived, None);
+}
+
+#[test]
+fn der_3_1_a_derived_metric_without_a_rule_follows_e0f_6_1() {
+    let model = changed_model("SALES_TO_BUDGET", |metric| {
+        metric.derived = None;
+    });
+
+    let plan = plan_over(
+        &model,
+        vec![
+            branch("ORDERS", &[(0, 0)], true),
+            branch("BUDGETS", &[(0, 1)], true),
+        ],
+        vec![region()],
+        &["SALES_TO_BUDGET"],
+    )
+    .expect("a plan");
+
+    assert_eq!(named(&plan, "sales_to_budget").derived, None);
+}
+
+#[test]
+fn der_4_2_an_input_with_several_components_is_recomputed_in_a_lower_project() {
     let plan = derived_plan(
         vec![
             branch("ORDERS", &[(0, 0)], true),
@@ -190,13 +301,12 @@ fn der_4_2_an_input_with_several_components_is_recomputed_from_them() {
         column_reference("metric_1_component_1"),
         column_reference("metric_1_component_2"),
     );
+    let lower = plan.inputs()[0];
+    assert_eq!(named(lower, "metric_1_input_1").expression, gap);
+    assert_eq!(named(lower, "metric_1_input_1").derived, None);
     assert_eq!(
         metric_expression(&plan, "gap_share"),
-        binary(
-            BinaryOperator::Divide,
-            gap,
-            column_reference("metric_1_component_3")
-        )
+        ratio("metric_1_input_1", "metric_1_component_3")
     );
     let (_, _, columns) = stitch_parts(&plan);
     let names: Vec<_> = columns.iter().map(|column| column.name.as_str()).collect();
