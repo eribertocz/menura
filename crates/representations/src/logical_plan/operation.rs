@@ -6,7 +6,6 @@ use menura_model::internal_model::NormalizedName;
 use super::PlanNode;
 use super::items::{AggregateComponent, JoinCondition, JoinKind, NamedExpression, SortItem};
 use crate::names::{ColumnName, ColumnPrefix};
-use crate::paths::JoinStep;
 
 /// What a plan node does (E4-3). Every node of the table is defined.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -39,15 +38,23 @@ pub enum Operation {
         /// The predicate.
         predicate: Expression,
     },
-    /// `SemiJoin(input, path, predicate)`: keep the rows whose related row along `path`
-    /// exists and satisfies `predicate`.
+    /// `SemiJoin`: keep the rows of `input` that are visible along one relationship to D'
+    /// (E4-3.4, E4-6.5a): a row is kept only if it has at least one match in `related_all`,
+    /// and its number of matches in `related_visible` equals its number of matches in
+    /// `related_all`. A NULL key never matches. Its output is the columns of `input`.
     SemiJoin {
-        /// The input.
+        /// The rows of the dataset D.
         input: Box<PlanNode>,
-        /// The steps to the related row, in order.
-        path: Vec<JoinStep>,
-        /// The predicate on the related row.
-        predicate: Expression,
+        /// The relationship of the step from D to D'.
+        relationship: NormalizedName,
+        /// The key equalities: `left` is a column of `input`, `right` the paired column of
+        /// `related_all` and of `related_visible`, in the order written.
+        on: Vec<JoinCondition>,
+        /// The unfiltered `Scan` of D'.
+        related_all: Box<PlanNode>,
+        /// The plan of the visible rows of D': its own `Filter` and `SemiJoin` nodes over a
+        /// `Scan` of D'.
+        related_visible: Box<PlanNode>,
     },
     /// `Deduplicate(input, group, identity)`: keep one row per (`group` values, `identity`)
     /// pair, NULLs compared equal (E4-3.5). Its output is the columns of `input`.

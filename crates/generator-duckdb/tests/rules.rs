@@ -91,8 +91,10 @@ fn e6_3_1_nodes_outside_the_slice_are_internal_errors() {
         }),
         node(Operation::SemiJoin {
             input: input(),
-            path: Vec::new(),
-            predicate: support::parse("TRUE"),
+            relationship: NormalizedName::new("ORDERS_TO_CUSTOMERS"),
+            on: Vec::new(),
+            related_all: input(),
+            related_visible: input(),
         }),
         node(Operation::Deduplicate {
             input: input(),
