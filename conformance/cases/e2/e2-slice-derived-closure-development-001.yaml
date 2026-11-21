@@ -13,6 +13,6 @@ query:
       - {metric: billed, alias: billed}
 load_options: {ossie_format: development}
 expect:
-  outcome: error
-  error: E_NOT_YET_SUPPORTED
-  location: {document: query, pointer: /query/metrics/0}
+  outcome: plan
+  rows: e2-slice-derived-closure-development-001.csv
+  row_order: any

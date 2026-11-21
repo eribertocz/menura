@@ -13,6 +13,7 @@ query:
       - {metric: average_amount, alias: average_amount}
 load_options: {ossie_format: development}
 expect:
-  outcome: error
-  error: E_NOT_YET_SUPPORTED
-  location: {document: query, pointer: /query/metrics/0}
+  outcome: plan
+  rows: e2-slice-derived-development-001.csv
+  row_order: any
+  tolerance: 1.0e-9
