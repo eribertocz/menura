@@ -1,6 +1,7 @@
 id: e0-derived-valid-001
 rules: [DER-2.1, DER-2.2, DER-2.3, DER-2.4, DER-3, DER-5.1.1, DER-5.1.2, DER-5.1.3, DER-5.1.4, DER-5.1.6, E0G-5.1, E0G-5.2, E0G-5.3, E0G-5.4]
 model: e0-derived
+load_options: {grant_authenticated_to_all: true}
 security_context: analyst.json
 query:
   contract: menura.query

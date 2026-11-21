@@ -4,17 +4,18 @@
 use std::fs;
 use std::path::{Path, PathBuf};
 
+use duckdb::Connection;
 use menura_core::LoadOptions;
 
 use crate::case::Case;
 use crate::case_file::read_case;
 use crate::database::prepare_database;
 use crate::error::{RunnerError, RunnerErrorKind};
-use crate::fixture::{ModelFixture, security_context_path};
+use crate::fixture::{ModelFixture, read_bytes, security_context_path};
 use crate::load_options::resolve_load_options;
-pub use crate::load_part::QUERY_PENDING_REASON;
-use crate::load_part::{ModelDocuments, check_load};
+use crate::load_part::{LoadOutcome, ModelDocuments, check_load};
 use crate::ossie::{OSSIE_AREA, check_layout, run_suites};
+use crate::query_part::{QueryInputs, check_query};
 use crate::report::{CaseResult, CaseStatus, Report};
 
 /// Runs every case of `conformance_directory/cases/`, or only those of `area` (CS-4.1).
@@ -25,8 +26,9 @@ use crate::report::{CaseResult, CaseStatus, Report};
 ///
 /// A case whose fixtures cannot be read or whose database cannot be prepared is reported as
 /// failed. Otherwise its load part runs through `core` (CS-2.8): a `load_error` case passes or
-/// fails; any other case fails its load part or is reported as pending, because its query
-/// part needs stages E1 to E6.
+/// fails; any other case fails its load part, or its query part is compiled for its security
+/// context, and a plan is executed on the case's database. A query part whose compilation
+/// returns `E_NOT_YET_SUPPORTED` is reported as pending (VS-4).
 ///
 /// # Errors
 ///
@@ -61,7 +63,7 @@ fn run_cases(
     for area_folder in area_folders(&conformance_directory.join("cases"), area)? {
         for case_path in case_files(&area_folder)? {
             let case = read_case(&case_path)?;
-            let status = run_case(conformance_directory, &case);
+            let status = run_case(conformance_directory, &area_folder, &case);
             results.push(CaseResult {
                 id: case.id,
                 rules: case.rules,
@@ -72,30 +74,57 @@ fn run_cases(
     Ok(results)
 }
 
-fn run_case(conformance_directory: &Path, case: &Case) -> CaseStatus {
+fn run_case(conformance_directory: &Path, case_folder: &Path, case: &Case) -> CaseStatus {
     let model_folder = conformance_directory.join("models").join(&case.model);
-    let prepared = prepare_case(conformance_directory, case).and_then(|options| {
-        ModelDocuments::read(&model_folder).map(|documents| (options, documents))
+    let prepared = prepare_case(conformance_directory, case).and_then(|prepared| {
+        ModelDocuments::read(&model_folder).map(|documents| (prepared, documents))
     });
-    match prepared {
-        Ok((options, documents)) => check_load(case, &documents, &options),
-        Err(error) => CaseStatus::Failed(error.to_string()),
+    let (prepared, documents) = match prepared {
+        Ok(prepared) => prepared,
+        Err(error) => return CaseStatus::Failed(error.to_string()),
+    };
+    match check_load(case, &documents, &prepared.load_options) {
+        LoadOutcome::Checked(status) => status,
+        LoadOutcome::Loaded(handle) => {
+            let Some(security_context) = prepared.security_context.as_deref() else {
+                return CaseStatus::Failed("this outcome requires `security_context`".to_owned());
+            };
+            let inputs = QueryInputs {
+                case_folder,
+                security_context,
+                connection: &prepared.connection,
+            };
+            check_query(case, &handle, &inputs)
+        }
     }
 }
 
-/// Checks the fixtures of `case`, prepares its database and returns the load options its model
-/// is loaded with (CS-2.7).
-fn prepare_case(conformance_directory: &Path, case: &Case) -> Result<LoadOptions, RunnerError> {
+/// What a case runs with once its fixtures are read and its database is prepared.
+struct PreparedCase {
+    /// The load options its model is loaded with (CS-2.7).
+    load_options: LoadOptions,
+    /// Its security context document, as bytes, when it names one.
+    security_context: Option<Vec<u8>>,
+    /// Its fresh database (CS-4.2).
+    connection: Connection,
+}
+
+/// Checks the fixtures of `case`, reads its security context and prepares its database.
+fn prepare_case(conformance_directory: &Path, case: &Case) -> Result<PreparedCase, RunnerError> {
     let model_folder = conformance_directory.join("models").join(&case.model);
     let fixture = ModelFixture::read(&model_folder)?;
-    if let Some(file_name) = &case.security_context {
-        let path = security_context_path(&model_folder, file_name);
-        fs::metadata(&path)
-            .map_err(|error| RunnerError::new(RunnerErrorKind::Unreadable(error), &path))?;
-    }
-    prepare_database(&fixture)
+    let security_context = case
+        .security_context
+        .as_ref()
+        .map(|file_name| read_bytes(&security_context_path(&model_folder, file_name)))
+        .transpose()?;
+    let connection = prepare_database(&fixture)
         .map_err(|error| RunnerError::new(RunnerErrorKind::Database(error), &model_folder))?;
-    Ok(resolve_load_options(case.load_options.as_ref()))
+    Ok(PreparedCase {
+        load_options: resolve_load_options(case.load_options.as_ref()),
+        security_context,
+        connection,
+    })
 }
 
 /// The area folders to run, sorted by name.
@@ -158,7 +187,9 @@ expect: {outcome: load_error, error: E0D-02}
             "model: sample\nload_options: {ossie_format: development}",
         );
         let case = parse_case(&text).unwrap();
-        let options = prepare_case(&conformance_directory(), &case).unwrap();
+        let options = prepare_case(&conformance_directory(), &case)
+            .unwrap()
+            .load_options;
         assert_eq!(options.ossie_format, OssieFormat::Development);
         assert!(!options.grant_authenticated_to_all);
         assert_eq!(options.namespace, "menura");
@@ -167,7 +198,9 @@ expect: {outcome: load_error, error: E0D-02}
     #[test]
     fn cs_2_7_a_case_without_load_options_is_loaded_with_the_defaults() {
         let case = parse_case(LOAD_ERROR_CASE).unwrap();
-        let options = prepare_case(&conformance_directory(), &case).unwrap();
+        let options = prepare_case(&conformance_directory(), &case)
+            .unwrap()
+            .load_options;
         assert_eq!(options, resolve_load_options(None));
     }
 }

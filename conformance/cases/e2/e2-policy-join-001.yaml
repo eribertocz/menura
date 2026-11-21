@@ -1,0 +1,17 @@
+id: e2-policy-join-001
+rules: [VS-2]
+model: slice
+security_context: analyst-north.json
+query:
+  contract: "menura.query"
+  contract_version: "1.1.0"
+  time_zone: "UTC"
+  query:
+    metrics:
+      - {"metric": "total_refund", "alias": "total_refund"}
+expect:
+  outcome: "error"
+  error: "E_NOT_YET_SUPPORTED"
+  location:
+    document: "query"
+    pointer: "/query/metrics/0"

@@ -1,0 +1,15 @@
+id: e1-output-name-001
+rules: [E1-3.1, E1-5.1, E2-3.1]
+model: slice
+security_context: auditor.json
+query:
+  contract: "menura.query"
+  contract_version: "1.1.0"
+  time_zone: "UTC"
+  query:
+    dimensions: ["SALES.Region"]
+    metrics: ["sale_count"]
+expect:
+  outcome: "plan"
+  rows: "e1-output-name-001.csv"
+  row_order: "any"

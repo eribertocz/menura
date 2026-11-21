@@ -1,0 +1,18 @@
+id: e6-current-timestamp-001
+rules: [E6-4.10, QRY-2]
+model: slice
+security_context: auditor.json
+query:
+  contract: "menura.query"
+  contract_version: "1.1.0"
+  reference_time: "2026-02-10T10:00:00Z"
+  time_zone: "Asia/Tokyo"
+  query:
+    dimensions: ["sales.region"]
+    metrics:
+      - {"metric": "sale_count", "alias": "sale_count"}
+    filter: "sales.entered_at < CURRENT_TIMESTAMP"
+expect:
+  outcome: "plan"
+  rows: "e6-current-timestamp-001.csv"
+  row_order: "any"

@@ -1,0 +1,19 @@
+id: e1-envelope-order-001
+rules: [E1-2.1, E1-2.2]
+model: slice
+security_context: auditor.json
+query:
+  contract: "menura.other"
+  contract_version: "1.1.0"
+  time_zone: "UTC"
+  query:
+    dimensions: ["sales.region"]
+    metrics:
+      - {"metric": "sale_count", "alias": "sale_count"}
+  sql: "SELECT 1"
+expect:
+  outcome: "error"
+  error: "EQRY-08"
+  location:
+    document: "query"
+    pointer: "/contract"

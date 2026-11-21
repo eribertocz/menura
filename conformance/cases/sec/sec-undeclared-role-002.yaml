@@ -1,0 +1,16 @@
+id: sec-undeclared-role-002
+rules: [SEC-3.2]
+model: slice
+security_context: analyst-unsorted.json
+query:
+  contract: "menura.query"
+  contract_version: "1.1.0"
+  time_zone: "UTC"
+  query:
+    dimensions: ["sales.region"]
+    metrics:
+      - {"metric": "sale_count", "alias": "sale_count"}
+expect:
+  outcome: "plan"
+  rows: "sec-undeclared-role-002.csv"
+  row_order: "any"

@@ -1,0 +1,18 @@
+id: e2-metric-in-dimensions-001
+rules: [E2-3.3]
+model: slice
+security_context: auditor.json
+query:
+  contract: "menura.query"
+  contract_version: "1.1.0"
+  time_zone: "UTC"
+  query:
+    dimensions: ["total_amount"]
+    metrics:
+      - {"metric": "sale_count", "alias": "sale_count"}
+expect:
+  outcome: "error"
+  error: "E_METRIC_IN_DIMENSIONS"
+  location:
+    document: "query"
+    pointer: "/query/dimensions/0"

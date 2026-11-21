@@ -1,0 +1,16 @@
+id: e4-scalar-attribute-001
+rules: [E4-6.2, E6-4.2]
+model: slice
+security_context: viewer.json
+query:
+  contract: "menura.query"
+  contract_version: "1.1.0"
+  time_zone: "UTC"
+  query:
+    dimensions: ["sales.region"]
+    metrics:
+      - {"metric": "sale_count", "alias": "sale_count"}
+expect:
+  outcome: "plan"
+  rows: "e4-scalar-attribute-001.csv"
+  row_order: "any"

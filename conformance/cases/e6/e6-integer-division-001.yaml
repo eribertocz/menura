@@ -1,0 +1,17 @@
+id: e6-integer-division-001
+rules: [E6-4.6, E6-4.10]
+model: slice
+security_context: auditor.json
+query:
+  contract: "menura.query"
+  contract_version: "1.1.0"
+  time_zone: "UTC"
+  query:
+    dimensions: ["sales.region"]
+    metrics:
+      - {"metric": "team_per_quantity", "alias": "team_per_quantity"}
+expect:
+  outcome: "plan"
+  tolerance: 1e-12
+  rows: "e6-integer-division-001.csv"
+  row_order: "any"

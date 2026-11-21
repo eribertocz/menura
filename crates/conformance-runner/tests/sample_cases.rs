@@ -11,7 +11,6 @@ use std::path::{Path, PathBuf};
 
 use menura_conformance_runner::case::Outcome;
 use menura_conformance_runner::case_file::read_case;
-use menura_conformance_runner::runner::QUERY_PENDING_REASON;
 use menura_conformance_runner::{CaseStatus, RunnerErrorKind, run};
 
 fn conformance_directory() -> PathBuf {
@@ -41,16 +40,18 @@ fn cs_2_sample_cases_cover_every_outcome_kind() {
 }
 
 #[test]
-fn cs_2_8_the_load_error_sample_passes_and_the_other_samples_are_pending() {
+fn cs_2_8_the_samples_pass_except_the_runtime_error_outside_the_slice() {
     let report = run(&conformance_directory(), Some("sample")).unwrap();
     assert_eq!(report.cases.len(), 4);
     for case in &report.cases {
-        let expected = if case.id.as_str() == "sample-load-error-001" {
-            CaseStatus::Passed
+        if case.id.as_str() == "sample-runtime-error-001" {
+            let CaseStatus::Pending(reason) = &case.status else {
+                panic!("{}: {:?}", case.id, case.status);
+            };
+            assert!(reason.contains("E_NOT_YET_SUPPORTED"), "{reason}");
         } else {
-            CaseStatus::Pending(QUERY_PENDING_REASON.to_owned())
-        };
-        assert_eq!(case.status, expected, "{}", case.id);
+            assert_eq!(case.status, CaseStatus::Passed, "{}", case.id);
+        }
     }
     assert!(!report.has_failures());
 }
@@ -77,9 +78,9 @@ fn cs_4_3_report_lists_each_sample_case_under_its_rule() {
     let text = run(&conformance_directory(), Some("sample"))
         .unwrap()
         .render();
-    assert!(text.contains("CS-2.2\n  sample-plan-001 pending"), "{text}");
+    assert!(text.contains("CS-2.2\n  sample-plan-001 passed"), "{text}");
     assert!(
-        text.ends_with("4 cases: 1 passed, 3 pending, 0 failed\n"),
+        text.ends_with("4 cases: 3 passed, 1 pending, 0 failed\n"),
         "{text}"
     );
 }

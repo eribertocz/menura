@@ -1,0 +1,22 @@
+id: e2-precedence-001
+rules: [E2-5]
+model: slice
+security_context: auditor.json
+query:
+  contract: "menura.query"
+  contract_version: "1.1.0"
+  time_zone: "UTC"
+  query:
+    dimensions: ["sales.region"]
+    metrics:
+      - {"metric": "sale_count", "alias": "sale_count"}
+      - "nowhere"
+    filter: "sales.quantity + 1"
+    nonportable_extensions:
+      - {"vendor_name": "COMMON", "data": {"namespace": "menura", "version": 1, "time_grains": [{"dimension": "sales.region", "grain": "day"}]}}
+expect:
+  outcome: "error"
+  error: "E_NAME_NOT_FOUND"
+  location:
+    document: "query"
+    pointer: "/query/metrics/1"

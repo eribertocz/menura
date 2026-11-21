@@ -1,0 +1,18 @@
+id: e6-order-nulls-001
+rules: [E6-4.8, QRY-4.5]
+model: slice
+security_context: manager-open.json
+query:
+  contract: "menura.query"
+  contract_version: "1.1.0"
+  time_zone: "UTC"
+  query:
+    dimensions: ["sales.channel"]
+    metrics:
+      - {"metric": "sale_count", "alias": "sale_count"}
+    nonportable_extensions:
+      - {"vendor_name": "COMMON", "data": {"namespace": "menura", "version": 1, "order_by": [{"output": "channel", "direction": "asc", "nulls": "first"}]}}
+expect:
+  outcome: "plan"
+  row_order: "exact"
+  rows: "e6-order-nulls-001.csv"

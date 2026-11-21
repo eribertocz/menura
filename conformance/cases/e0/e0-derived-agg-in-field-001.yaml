@@ -1,6 +1,7 @@
 id: e0-derived-agg-in-field-001
 rules: [DER-5.1.2, E0F-02, W0F-01]
 model: e0-derived-unusable
+load_options: {grant_authenticated_to_all: true}
 security_context: analyst.json
 query:
   contract: menura.query

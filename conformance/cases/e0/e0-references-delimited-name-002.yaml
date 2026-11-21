@@ -1,5 +1,5 @@
 id: e0-references-delimited-name-002
-rules: [E0D-1.4, E0D-04, W0D-01]
+rules: [E0D-1.4, E0D-04, W0D-01, E2-4.3, E2-4.4]
 model: e0-references-delimited-names
 security_context: analyst.json
 query:
@@ -12,5 +12,6 @@ query:
       - {metric: total_regular, alias: total_regular}
 expect:
   outcome: error
-  error: E0D-04
+  error: E_NAME_NOT_FOUND
+  location: {document: query, pointer: /query/metrics/0}
   warnings: [W0D-01]

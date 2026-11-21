@@ -1,0 +1,18 @@
+id: sec-not-json-001
+rules: [SEC-3.8]
+model: slice
+security_context: not-json.json
+query:
+  contract: "menura.query"
+  contract_version: "1.1.0"
+  time_zone: "UTC"
+  query:
+    dimensions: ["sales.region"]
+    metrics:
+      - {"metric": "sale_count", "alias": "sale_count"}
+expect:
+  outcome: "error"
+  error: "ESEC-01"
+  location:
+    document: "security_context"
+    pointer: ""

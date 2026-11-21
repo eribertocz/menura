@@ -1,0 +1,16 @@
+id: e2-restricted-metric-granted-001
+rules: [E2-4.2, E2-4.3]
+model: slice
+security_context: manager.json
+query:
+  contract: "menura.query"
+  contract_version: "1.1.0"
+  time_zone: "UTC"
+  query:
+    dimensions: ["sales.region"]
+    metrics:
+      - {"metric": "total_cost", "alias": "total_cost"}
+expect:
+  outcome: "plan"
+  rows: "e2-restricted-metric-granted-001.csv"
+  row_order: "any"
