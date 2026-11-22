@@ -12,8 +12,8 @@ mod snapshot_tests;
 mod tests;
 
 pub use items::{
-    AggregateComponent, DerivedFormula, JoinCondition, JoinKind, NamedExpression, SortItem,
-    StitchColumn,
+    AggregateComponent, DerivedFormula, JoinCondition, JoinKind, NamedExpression, Recomposition,
+    SortItem, StitchColumn,
 };
 pub use operation::Operation;
 pub use population::{Membership, PopulationRule};

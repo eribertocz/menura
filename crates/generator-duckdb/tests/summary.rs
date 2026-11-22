@@ -8,12 +8,12 @@
 mod support;
 
 use menura_contracts::types::common::{FloatBits, LogicalType};
-use menura_generator_duckdb::{GeneratedSql, InvariantViolation};
+use menura_generator_duckdb::InvariantViolation;
 use menura_representations::logical_plan::{AggregateComponent, PlanNode, Recomposition};
 use menura_representations::names::ColumnName;
 use support::{
     aggregate, assert_golden, big_integer, column, component, decimal, generate_summary,
-    huge_integer, named, query, summary_scan,
+    huge_integer, named, physical_type, query, summary_generated as generated, summary_scan,
 };
 
 fn double() -> LogicalType {
@@ -50,19 +50,6 @@ fn per_region(
     )
 }
 
-fn generated(plan: &PlanNode, metric: &str) -> GeneratedSql {
-    generate_summary(plan, &query(&["REGION"], &[metric])).expect("SQL")
-}
-
-fn physical_type(generated: &GeneratedSql, name: &str) -> String {
-    generated
-        .result_schema
-        .iter()
-        .find(|column| column.name == name)
-        .map(|column| column.physical_type.clone())
-        .expect("a result column")
-}
-
 fn summary_sum() -> PlanNode {
     per_region(
         "ORDERS_BY_REGION",
@@ -76,7 +63,11 @@ fn summary_count() -> PlanNode {
     per_region(
         "ORDERS_BY_REGION",
         &["REGION", "QUANTITY_COUNT"],
-        recomposed("QUANTITY_COUNT", "SUM(QUANTITY_COUNT)", Recomposition::Count),
+        recomposed(
+            "QUANTITY_COUNT",
+            "SUM(QUANTITY_COUNT)",
+            Recomposition::Count,
+        ),
         big_integer(),
     )
 }
@@ -147,7 +138,12 @@ fn e6_4_15_summary_average_divides_the_recomposed_sum_by_the_recomposed_count() 
 
 /// The same metric per region over the base `ORDERS`.
 fn base(metric: AggregateComponent, result_type: LogicalType) -> PlanNode {
-    per_region("ORDERS", &["REGION", "QUANTITY", "AMOUNT"], metric, result_type)
+    per_region(
+        "ORDERS",
+        &["REGION", "QUANTITY", "AMOUNT"],
+        metric,
+        result_type,
+    )
 }
 
 #[test]
@@ -155,17 +151,26 @@ fn sum_3_8_recomposed_components_have_the_type_of_their_base() {
     let pairs = [
         (
             summary_sum(),
-            base(component("TOTAL_QUANTITY", "SUM(QUANTITY)", None), huge_integer()),
+            base(
+                component("TOTAL_QUANTITY", "SUM(QUANTITY)", None),
+                huge_integer(),
+            ),
             "TOTAL_QUANTITY",
         ),
         (
             summary_count(),
-            base(component("QUANTITY_COUNT", "COUNT(QUANTITY)", None), big_integer()),
+            base(
+                component("QUANTITY_COUNT", "COUNT(QUANTITY)", None),
+                big_integer(),
+            ),
             "QUANTITY_COUNT",
         ),
         (
             summary_maximum(),
-            base(component("LARGEST_AMOUNT", "MAX(AMOUNT)", None), decimal(10, 2)),
+            base(
+                component("LARGEST_AMOUNT", "MAX(AMOUNT)", None),
+                decimal(10, 2),
+            ),
             "LARGEST_AMOUNT",
         ),
         (
@@ -188,7 +193,11 @@ fn e6_4_15_a_count_recomposition_reads_a_sum_of_counts() {
     let plan = per_region(
         "ORDERS_BY_REGION",
         &["REGION", "QUANTITY_COUNT"],
-        recomposed("QUANTITY_COUNT", "COUNT(QUANTITY_COUNT)", Recomposition::Count),
+        recomposed(
+            "QUANTITY_COUNT",
+            "COUNT(QUANTITY_COUNT)",
+            Recomposition::Count,
+        ),
         big_integer(),
     );
     let error = generate_summary(&plan, &query(&["REGION"], &["QUANTITY_COUNT"]))

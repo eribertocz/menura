@@ -17,7 +17,7 @@ use menura_representations::logical_plan::PlanNode;
 
 use super::plan::{column, scan_of};
 use super::stitch::huge_integer;
-use super::{big_integer, decimal, location, parse, security};
+use super::{big_integer, decimal, location, parse, query, security};
 
 /// One dataset: name, `source`, whether it is a summary, and its fields as (name, catalog
 /// column, type).
@@ -153,12 +153,7 @@ pub fn summary_scan(dataset: &str, fields: &[&str]) -> PlanNode {
             let logical_type = shapes()
                 .into_iter()
                 .find(|shape| shape.name == dataset)
-                .and_then(|shape| {
-                    shape
-                        .fields
-                        .into_iter()
-                        .find(|(field, _, _)| field == name)
-                })
+                .and_then(|shape| shape.fields.into_iter().find(|(field, _, _)| field == name))
                 .map(|(_, _, logical_type)| logical_type)
                 .expect("a field of the summary model");
             column(name, logical_type, true)
@@ -168,7 +163,10 @@ pub fn summary_scan(dataset: &str, fields: &[&str]) -> PlanNode {
 }
 
 /// The SQL of `plan` over the summary model, for `query`.
-pub fn generate_summary(plan: &PlanNode, query: &BoundQuery) -> Result<GeneratedSql, GenerateError> {
+pub fn generate_summary(
+    plan: &PlanNode,
+    query: &BoundQuery,
+) -> Result<GeneratedSql, GenerateError> {
     menura_generator_duckdb::generate_sql(
         plan,
         &summary_catalog(),
@@ -176,4 +174,19 @@ pub fn generate_summary(plan: &PlanNode, query: &BoundQuery) -> Result<Generated
         query,
         &security(),
     )
+}
+
+/// The SQL of `plan` over the summary model, for the query of `REGION` then `metric`.
+pub fn summary_generated(plan: &PlanNode, metric: &str) -> GeneratedSql {
+    generate_summary(plan, &query(&["REGION"], &[metric])).expect("SQL")
+}
+
+/// The `physical_type` of the result column `name`.
+pub fn physical_type(generated: &GeneratedSql, name: &str) -> String {
+    generated
+        .result_schema
+        .iter()
+        .find(|column| column.name == name)
+        .map(|column| column.physical_type.clone())
+        .expect("a result column")
 }

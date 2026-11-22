@@ -14,6 +14,7 @@ mod functions;
 mod numbers;
 mod operators;
 mod placeholders;
+mod recomposition;
 mod text;
 mod time;
 
