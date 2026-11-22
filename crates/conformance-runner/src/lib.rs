@@ -38,6 +38,7 @@ mod divergences;
 pub mod error;
 mod execution;
 mod expectation_rules;
+mod explain_part;
 pub mod fixture;
 mod golden_json;
 mod integrity_checks_part;
