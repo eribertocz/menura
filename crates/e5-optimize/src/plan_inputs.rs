@@ -1,6 +1,23 @@
-//! Mutable access to the inputs of a plan operation, for rewrites that replace one input.
+//! Mutable access to the inputs of a plan operation, for rewrites that replace one input or
+//! rebuild a node with new inputs.
 
 use menura_representations::logical_plan::{Operation, PlanNode, SnapshotMissing, SnapshotOver};
+
+/// `node` with each of its inputs replaced by `map(index, input)`, where `index` is the
+/// position of the input in `PlanNode::inputs`. The operation, schema and origin of `node` are
+/// kept.
+pub(crate) fn map_inputs(
+    node: &PlanNode,
+    mut map: impl FnMut(usize, &PlanNode) -> PlanNode,
+) -> PlanNode {
+    let mut operation = node.operation().clone();
+    for index in 0..node.inputs().len() {
+        if let Some(input) = input_mut(&mut operation, index) {
+            *input = map(index, input);
+        }
+    }
+    PlanNode::new(operation, node.schema().clone(), node.origin().clone())
+}
 
 /// The input of `operation` at `index`, in the order of `PlanNode::inputs`, or `None` when
 /// the operation has no input at that index.
