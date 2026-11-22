@@ -60,12 +60,19 @@ pub fn load(
         model,
         catalog_schema,
         warnings,
+        explanation,
     } = load_model(model, catalog_schema, &options.stage_options()).map_err(
         |LoadRejection { errors, warnings }| {
             document(CompileErrorContract::CompileError, errors, warnings)
         },
     )?;
-    let handle = Handle::new(model, catalog_schema, options.clone(), warnings);
+    let handle = Handle::new(
+        model,
+        catalog_schema,
+        options.clone(),
+        warnings,
+        explanation,
+    );
     Ok(match catalog_state {
         Some(state) => with_state(&handle, state),
         None => handle,

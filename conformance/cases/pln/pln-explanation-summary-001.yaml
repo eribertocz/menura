@@ -1,0 +1,18 @@
+id: pln-explanation-summary-001
+rules: [PLN-7.3, E5-2.2, E5-3.8]
+model: e5-summary-selection
+security_context: analyst.json
+query:
+  contract: menura.query
+  contract_version: "1.1.0"
+  time_zone: UTC
+  query:
+    dimensions: [orders.region]
+    metrics:
+      - {metric: total_amount, alias: total_amount}
+    filter: "orders.region = 'SOUTH'"
+expect:
+  outcome: plan
+  rows: "pln-explanation-summary-001.csv"
+  row_order: any
+  explanation: [DEV-4, E5-3.5, E5-3.5, E5-4]

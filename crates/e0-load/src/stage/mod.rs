@@ -10,6 +10,7 @@
 mod analysis;
 mod catalog;
 mod early;
+mod explanation;
 mod findings;
 mod parsing;
 mod report;
@@ -20,6 +21,7 @@ use std::fmt;
 use menura_contracts::types::audit_record::LoadOptions;
 use menura_contracts::types::catalog::CatalogSchemaDocument;
 use menura_contracts::types::compiled_plan::Diagnostic;
+use menura_model::explanation::ExplanationEntry;
 use menura_model::internal_model::InternalModel;
 
 use crate::extensions::summaries::datasets::summary_datasets;
@@ -64,6 +66,8 @@ pub struct LoadedModel {
     /// Every load warning: the catalog schema's `WCAT-05` first (E0-3.2, CON-0.5), then the
     /// warnings of the model document in the order of E0-4.3.
     pub warnings: Vec<Diagnostic>,
+    /// The decisions E0 records in the explanation of every plan (DEV-4, PLN-7.3).
+    pub explanation: Vec<ExplanationEntry>,
 }
 
 /// Stage E0: loads and validates the model document `model` against the catalog schema
@@ -118,6 +122,7 @@ pub fn load_model(
                 model,
                 catalog_schema,
                 warnings,
+                explanation: explanation::explanation(options),
             })
         }
         _ => Err(report.into_rejection()),

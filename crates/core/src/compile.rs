@@ -14,8 +14,9 @@ use menura_generator_duckdb::generate_sql;
 use menura_security::{AdmittedSecurityContext, admit_security_context};
 
 use crate::compile_options::CompileOptions;
+use crate::explanation::assemble;
 use crate::handle::Handle;
-use crate::plan_document::plan_document;
+use crate::plan_document::{PlanOutputs, plan_document};
 use crate::stop::{
     Stop, audit_not_yet_supported, bind_stop, context_not_utf8, path_stop, plan_stop,
     query_not_utf8,
@@ -128,9 +129,16 @@ fn compile_stages(
     warnings.extend(parsed.warnings.iter().map(ParseWarning::diagnostic));
     let model = handle.model();
     let bound = bind(&parsed.tree, model, &context).map_err(bind_stop)?;
+    let mut entries = handle.explanation().to_vec();
+    entries.extend(menura_e2_bind::explanation(&parsed.tree, &bound, &context));
     let branches = resolve_paths(&bound, model).map_err(|error| path_stop(&error))?;
+    entries.extend(menura_e3_paths::explanation(&bound));
     let plan = build_plan(&branches, &bound, &context, model, handle.catalog_schema())
         .map_err(|error| plan_stop(&error))?;
+    entries.extend(
+        menura_e4_plan::explanation(&plan, &branches, &bound, &context, model)
+            .map_err(|error| plan_stop(&error))?,
+    );
     let optimized = optimize(
         &plan,
         &bound,
@@ -139,6 +147,7 @@ fn compile_stages(
         handle.catalog_state(),
         &context,
     );
+    entries.extend_from_slice(optimized.explanation());
     let plan = optimized.into_plan();
     let generated = generate_sql(&plan, handle.catalog_schema(), model, &bound, &context)
         .map_err(|error| InternalError::new("E6", format!("{error:?}")))?;
@@ -149,7 +158,10 @@ fn compile_stages(
         generated,
         &context,
         options,
-        std::mem::take(warnings),
+        PlanOutputs {
+            explanation: assemble(&entries),
+            warnings: std::mem::take(warnings),
+        },
     )?)
 }
 

@@ -14,6 +14,7 @@ mod calendar;
 mod canonical;
 mod elements;
 mod error;
+mod explanation;
 mod model_elements;
 mod named;
 mod names;
@@ -32,6 +33,7 @@ pub use authorized_query::{
 };
 pub use bind::bind;
 pub use error::{BindCode, BindDiagnostic, BindError, InvariantViolation};
+pub use explanation::explanation;
 
 use menura_model::internal_model::{InternalModel, NormalizedName};
 use menura_representations::bound_query::{

@@ -21,6 +21,7 @@ mod catalog_state;
 mod compile;
 mod compile_options;
 mod describe;
+mod explanation;
 mod handle;
 mod integrity_checks;
 mod json;

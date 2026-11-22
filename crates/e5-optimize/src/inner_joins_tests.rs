@@ -22,11 +22,6 @@ use crate::{NodePath, RewriteOutcome, RewriteRecord, RewriteRule, RewriteSubject
 const ORDERS_TO_CUSTOMERS: &str = "ORDERS_TO_CUSTOMERS";
 const CUSTOMERS_TO_REGIONS: &str = "CUSTOMERS_TO_REGIONS";
 const EVIDENCE: &str = "passing `orphan_keys` evidence for the relationship (CAT-7.3)";
-const NOT_NULL: &str =
-    "every `from_columns` column has `nullable: false` in the catalog schema (E5-3.3a (1))";
-const FROM_SIDE: &str =
-    "the `from` side is the home `Scan` or a dataset joined by an `inner` join (E5-3.3a (2))";
-const JOINED_SIDE: &str = "the joined `Scan` reads every row of `to` for this user (E5-3.3a (3))";
 
 /// The integer logical type.
 fn integer() -> LogicalType {
@@ -337,7 +332,10 @@ fn e5_3_3a_a_nullable_from_column_keeps_the_join_left() {
     let (plan, records) = run(&orders_to(customers()), &model, Some(&state()));
 
     assert_eq!(kinds(&plan), [JoinKind::Left]);
-    assert_eq!(records, [record(Vec::new(), Some(NOT_NULL))]);
+    assert!(
+        records.is_empty(),
+        "a join that fails E5-3.3a is not considered (E5-3.8)"
+    );
 }
 
 #[test]
@@ -349,7 +347,10 @@ fn e5_3_3a_a_from_column_that_is_not_a_catalog_column_keeps_the_join_left() {
     let (plan, records) = run(&orders_to(customers()), &model, Some(&state()));
 
     assert_eq!(kinds(&plan), [JoinKind::Left]);
-    assert_eq!(records, [record(Vec::new(), Some(NOT_NULL))]);
+    assert!(
+        records.is_empty(),
+        "a join that fails E5-3.3a is not considered (E5-3.8)"
+    );
 }
 
 #[test]
@@ -359,12 +360,9 @@ fn e5_3_3a_a_from_side_joined_by_a_left_join_keeps_the_join_left() {
     let (plan, records) = run(&plan, &model(), Some(&state()));
 
     assert_eq!(kinds(&plan), [JoinKind::Left, JoinKind::Left]);
-    assert_eq!(
-        records,
-        [
-            record(vec![0], Some(JOINED_SIDE)),
-            record(Vec::new(), Some(FROM_SIDE)),
-        ]
+    assert!(
+        records.is_empty(),
+        "a join that fails E5-3.3a is not considered (E5-3.8)"
     );
 }
 
@@ -383,7 +381,10 @@ fn e5_3_3a_a_filtered_joined_scan_keeps_the_join_left() {
     let (plan, records) = run(&orders_to(filtered(customers())), &model(), Some(&state()));
 
     assert_eq!(kinds(&plan), [JoinKind::Left]);
-    assert_eq!(records, [record(Vec::new(), Some(JOINED_SIDE))]);
+    assert!(
+        records.is_empty(),
+        "a join that fails E5-3.3a is not considered (E5-3.8)"
+    );
 }
 
 #[test]
@@ -393,7 +394,10 @@ fn e5_3_3a_a_joined_scan_of_another_dataset_keeps_the_join_left() {
     let (plan, records) = run(&orders_to(other), &model(), Some(&state()));
 
     assert_eq!(kinds(&plan), [JoinKind::Left]);
-    assert_eq!(records, [record(Vec::new(), Some(JOINED_SIDE))]);
+    assert!(
+        records.is_empty(),
+        "a join that fails E5-3.3a is not considered (E5-3.8)"
+    );
 }
 
 #[test]
