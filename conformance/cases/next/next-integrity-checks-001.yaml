@@ -1,6 +1,0 @@
-id: next-integrity-checks-001
-rules: [CS-2.15]
-model: slice
-expect:
-  outcome: "integrity_checks"
-  document: "next-integrity-checks-001.integrity-checks.json"

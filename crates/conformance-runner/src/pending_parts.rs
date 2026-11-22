@@ -16,17 +16,13 @@ const EXPLAIN_FROM: ContractVersion = ContractVersion {
     patch: 0,
 };
 
-/// The status of a `describe` or `integrity_checks` case whose model loads: `core` has neither
-/// function yet, so the document part is pending (CS-2.15, CS-2.8).
-pub(crate) fn document_part(outcome: Outcome) -> CaseStatus {
-    let function = if outcome == Outcome::Describe {
-        "describe"
-    } else {
-        "integrity_checks"
-    };
-    CaseStatus::Pending(format!(
-        "the document part needs `{function}`, which core does not have yet (CS-2.15, CS-2.8)"
-    ))
+/// The status of a `describe` case whose model loads: `core` has no `describe` yet, so the
+/// document part is pending (CS-2.15, CS-2.8).
+pub(crate) fn describe_part() -> CaseStatus {
+    CaseStatus::Pending(
+        "the document part needs `describe`, which core does not have yet (CS-2.15, CS-2.8)"
+            .to_owned(),
+    )
 }
 
 /// The status of a case whose query part `status` ran: a passed part stays pending when the
@@ -118,11 +114,7 @@ mod tests {
     }
 
     #[test]
-    fn cs_2_15_the_document_part_is_pending() {
-        assert!(is_pending(&document_part(Outcome::Describe), "`describe`"));
-        assert!(is_pending(
-            &document_part(Outcome::IntegrityChecks),
-            "`integrity_checks`"
-        ));
+    fn cs_2_15_the_describe_document_part_is_pending() {
+        assert!(is_pending(&describe_part(), "`describe`"));
     }
 }

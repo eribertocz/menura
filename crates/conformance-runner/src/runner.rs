@@ -8,16 +8,17 @@ use std::path::{Path, PathBuf};
 use duckdb::Connection;
 use menura_core::LoadOptions;
 
-use crate::case::Case;
+use crate::case::{Case, Outcome};
 use crate::case_file::read_case;
 use crate::database::prepare_database;
 use crate::divergences::{DIFFERENTIAL_FOLDER, DIVERGENCES_FILE, Divergences, read_divergences};
 use crate::error::{RunnerError, RunnerErrorKind};
 use crate::fixture::{ModelFixture, read_bytes, security_context_path};
+use crate::integrity_checks_part::integrity_checks_part;
 use crate::load_options::resolve_load_options;
 use crate::load_part::{LoadOutcome, ModelDocuments, check_load};
 use crate::ossie::{OSSIE_AREA, check_layout, run_suites};
-use crate::pending_parts::document_part;
+use crate::pending_parts::describe_part;
 use crate::query_part::{QueryInputs, check_query};
 use crate::report::{CaseResult, CaseStatus, Report};
 
@@ -125,9 +126,10 @@ fn run_case(
     };
     match check_load(case, &documents, &prepared.load_options) {
         LoadOutcome::Checked(status) => status,
-        LoadOutcome::Loaded(_) if case.expect.outcome.returns_document() => {
-            document_part(case.expect.outcome)
+        LoadOutcome::Loaded(handle) if case.expect.outcome == Outcome::IntegrityChecks => {
+            integrity_checks_part(case, &handle, case_folder)
         }
+        LoadOutcome::Loaded(_) if case.expect.outcome.returns_document() => describe_part(),
         LoadOutcome::Loaded(handle) => {
             let Some(security_context) = prepared.security_context.as_deref() else {
                 return CaseStatus::Failed("this outcome requires `security_context`".to_owned());

@@ -26,13 +26,17 @@ fn cs_2_11_cs_2_12_cs_2_14_the_plan_output_cases_pass() {
 }
 
 #[test]
+fn cs_2_15_the_integrity_checks_document_matches_its_golden_file() {
+    let report = run(&conformance_directory(), Some("cs")).unwrap();
+    for case_id in ["cs-integrity-checks-001"] {
+        assert_eq!(status(&report, case_id), &CaseStatus::Passed, "{case_id}");
+    }
+}
+
+#[test]
 fn cs_2_8_cases_that_need_a_missing_core_function_are_pending() {
     let report = run(&conformance_directory(), Some("next")).unwrap();
-    for case_id in [
-        "next-audit-001",
-        "next-describe-001",
-        "next-integrity-checks-001",
-    ] {
+    for case_id in ["next-audit-001", "next-describe-001"] {
         let status = status(&report, case_id);
         assert!(
             matches!(status, CaseStatus::Pending(_)),
