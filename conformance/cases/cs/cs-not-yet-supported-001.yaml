@@ -11,7 +11,7 @@ query:
     dimensions: ["customers.region"]
     metrics:
       - {"metric": "billed", "alias": "billed"}
-      - {"metric": "billed_ytd", "alias": "billed_ytd"}
+      - {"metric": "billed_prior_year", "alias": "billed_prior_year"}
 expect:
   outcome: "error"
   error: "E_NOT_YET_SUPPORTED"

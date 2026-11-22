@@ -1,0 +1,17 @@
+id: ctx-to-date-two-time-keys-001
+rules: [E4-8.6, CTX-3.1, E4-10]
+model: ctx-to-date
+security_context: analyst.json
+query:
+  contract: "menura.query"
+  contract_version: "1.1.0"
+  time_zone: "UTC"
+  sql: "SELECT order_date AS first_day, order_date AS second_day, AGG(sales_ytd) AS sales_ytd FROM ctx_to_date.orders GROUP BY ALL"
+expect:
+  outcome: "error"
+  error: "E4-02"
+  location:
+    document: "query"
+    pointer: "/sql"
+    line: 1
+    column: 59
