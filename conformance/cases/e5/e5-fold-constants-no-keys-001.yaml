@@ -1,0 +1,17 @@
+id: e5-fold-constants-no-keys-001
+rules: [E5-3.6]
+model: e5-fold-constants
+security_context: guest.json
+query:
+  contract: "menura.query"
+  contract_version: "1.1.0"
+  time_zone: "UTC"
+  query:
+    metrics:
+      - {"metric": "order_count", "alias": "order_count"}
+      - {"metric": "total_amount", "alias": "total_amount"}
+expect:
+  outcome: "plan"
+  sql: "e5-fold-constants-no-keys-001.sql"
+  rows: "e5-fold-constants-no-keys-001.csv"
+  row_order: "any"
