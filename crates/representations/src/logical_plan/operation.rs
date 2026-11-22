@@ -9,6 +9,7 @@ use super::items::{
     AggregateComponent, JoinCondition, JoinKind, NamedExpression, SortItem, StitchColumn,
 };
 use super::population::PopulationRule;
+use super::snapshot::SnapshotRule;
 use crate::names::{ColumnName, ColumnPrefix};
 
 /// What a plan node does (E4-3). Every node of the table is defined.
@@ -123,6 +124,18 @@ pub enum Operation {
         period: ColumnName,
         /// When an entity is expected, over the columns of `input`.
         rule: PopulationRule,
+    },
+    /// `Snapshot(input, expected, rule)`: reduce the rows of `input` to one value per (result
+    /// group, entity) under the semi-additive `rule` (E4-3.13, E4-7.1). With a time `over`,
+    /// `expected` is the `Population` output the rule holds. Its output is the `keys` columns
+    /// of `rule`, then its `entity` columns, then its `components` columns, one row per
+    /// (result group, entity) with a value.
+    Snapshot {
+        /// The rows of the branch inside the query: its joins and query filters applied
+        /// (E4-4.0a–E4-4.0d).
+        input: Box<PlanNode>,
+        /// The semi-additive rule, with the expected entities and the other rows it reads.
+        rule: SnapshotRule,
     },
     /// `Sort(input, items)`: order the rows.
     Sort {

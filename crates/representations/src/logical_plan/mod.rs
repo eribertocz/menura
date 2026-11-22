@@ -5,6 +5,9 @@ mod items;
 mod operation;
 mod population;
 mod schema;
+mod snapshot;
+#[cfg(test)]
+mod snapshot_tests;
 #[cfg(test)]
 mod tests;
 
@@ -15,6 +18,7 @@ pub use items::{
 pub use operation::Operation;
 pub use population::{Membership, PopulationRule};
 pub use schema::{OutputSchema, SchemaColumn};
+pub use snapshot::{SnapshotMissing, SnapshotOver, SnapshotRule, TimeSnapshot, UnitKey};
 
 use crate::origin::Origin;
 
@@ -67,7 +71,8 @@ impl PlanNode {
 
     /// The input nodes, in order: none for `Scan`, `left` then `right` for `Join`, `input`,
     /// `related_all` then `related_visible` for `SemiJoin`, `input` then `periods` for
-    /// `Population`, the branches for `Stitch`, and the one input otherwise.
+    /// `Population`, `input` then the plans of its rule for `Snapshot` (`SnapshotRule::inputs`),
+    /// the branches for `Stitch`, and the one input otherwise.
     #[must_use]
     pub fn inputs(&self) -> Vec<&PlanNode> {
         match &self.operation {
@@ -80,6 +85,11 @@ impl PlanNode {
                 ..
             } => vec![input, related_all, related_visible],
             Operation::Population { input, periods, .. } => vec![input, periods],
+            Operation::Snapshot { input, rule } => {
+                let mut inputs = vec![input.as_ref()];
+                inputs.extend(rule.inputs());
+                inputs
+            }
             Operation::Stitch { branches, .. } => branches.iter().collect(),
             Operation::Filter { input, .. }
             | Operation::Deduplicate { input, .. }
