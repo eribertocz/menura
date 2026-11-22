@@ -22,6 +22,7 @@ mod plan;
 mod population;
 mod propagation;
 mod stitch;
+mod summary;
 
 pub use expression::{
     expression_sql, query_with_reference_time, query_without_reference_time, reference_time_query,
@@ -56,6 +57,7 @@ pub use propagation::{
     generate_propagation, orders_scan, policy, propagation_model, scan_fields, scan_typed,
     semi_join, semi_join_on,
 };
+pub use summary::{generate_summary, summary_scan};
 pub use stitch::{
     TWO_METRICS, generated, huge_integer, region_amount, region_quantities, stitch,
     two_branch_columns, two_branches,
