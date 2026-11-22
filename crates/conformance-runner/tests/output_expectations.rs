@@ -31,13 +31,10 @@ fn cs_2_11_cs_2_12_cs_2_14_the_plan_output_cases_pass() {
 #[test]
 fn cs_2_15_the_integrity_checks_document_matches_its_golden_file() {
     let report = run(&conformance_directory(), Some("cs")).unwrap();
-    for case_id in ["cs-integrity-checks-001"] {
-        assert_eq!(
-            status(&report, case_id),
-            Some(&CaseStatus::Passed),
-            "{case_id}"
-        );
-    }
+    assert_eq!(
+        status(&report, "cs-integrity-checks-001"),
+        Some(&CaseStatus::Passed)
+    );
 }
 
 #[test]
