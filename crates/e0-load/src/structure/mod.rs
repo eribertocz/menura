@@ -86,6 +86,13 @@ pub fn validate_structure<'document>(
     })
 }
 
+/// Every rejecting diagnostic of `document` against the schema of `format`, sorted, without the
+/// model selection of E0B-3.2: the structure checks `migrate` runs on a document whose every
+/// model it reads (MIG-3.1). Empty when the structure is valid.
+pub(crate) fn schema_errors(document: &Node, format: OssieFormat) -> Vec<StructureDiagnostic> {
+    sorted(document, schema_diagnostics(document, format))
+}
+
 /// The semantic model at `index`: of `semantic_model` in the release format, or the root, the
 /// one semantic model of the development format (section 4.5).
 fn model_at(document: &Node, format: OssieFormat, index: usize) -> Option<SelectedModel<'_>> {

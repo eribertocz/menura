@@ -11,6 +11,7 @@ use menura_contracts::types::catalog::{CatalogSchemaDocument, CatalogStateDocume
 use menura_contracts::types::compiled_plan::{CompileErrorDocument, CompiledPlanDocument};
 use menura_contracts::types::dependencies::{ModelDependenciesDocument, ModelDiffDocument};
 use menura_contracts::types::descriptions::{IntegrityChecksDocument, ModelDescriptionDocument};
+use menura_contracts::types::migration_report::MigrationReportDocument;
 use menura_contracts::types::query::QueryDocument;
 use menura_contracts::types::security_context::SecurityContextDocument;
 use menura_contracts::{ContractKind, ContractVersion, FORMER_NAMESPACE, NAMESPACE};
@@ -36,6 +37,7 @@ fn round_trip_of(kind: ContractKind, document: &Value) -> Option<Value> {
         ContractKind::IntegrityChecks => round_trip::<IntegrityChecksDocument>(document),
         ContractKind::ModelDependencies => round_trip::<ModelDependenciesDocument>(document),
         ContractKind::ModelDiff => round_trip::<ModelDiffDocument>(document),
+        ContractKind::MigrationReport => round_trip::<MigrationReportDocument>(document),
     }
 }
 

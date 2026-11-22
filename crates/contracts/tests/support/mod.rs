@@ -35,6 +35,7 @@ pub fn examples() -> Vec<Example> {
         example!(IntegrityChecks, "integrity-checks.example.json"),
         example!(ModelDependencies, "model-dependencies.example.json"),
         example!(ModelDiff, "model-diff.example.json"),
+        example!(MigrationReport, "migration-report.example.json"),
     ]
 }
 

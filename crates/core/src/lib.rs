@@ -2,7 +2,7 @@
 //!
 //! The public functions are those of architecture section 3.5 that exist in this version:
 //! [`validate`], [`load`], [`with_state`], [`compile`], [`explain`], [`describe`],
-//! [`integrity_checks`], [`dependencies`] and [`diff`]; [`build_producer`] gives the producer every output of this build
+//! [`integrity_checks`], [`dependencies`], [`diff`] and [`migrate`]; [`build_producer`] gives the producer every output of this build
 //! writes. Their inputs are the contract documents as bytes; their outputs are
 //! contract documents and the immutable [`Handle`] (ARC-5.1).
 //!
@@ -33,19 +33,25 @@ mod json_form;
 mod lineage;
 mod load;
 mod load_options;
+mod migrate;
+mod ordered_text;
 mod passed_document;
 mod plan_document;
 mod producer;
 mod stop;
+mod usage;
 
 pub use compile::{Compilation, CompileResult, compile};
-pub use compile_options::CompileOptions;
+pub use compile_options::{CompileOptions, CompileOptionsError};
 pub use dependencies::{dependencies, diff};
 pub use describe::{DescribeResult, describe};
 pub use explain::explain;
 pub use handle::Handle;
 pub use integrity_checks::integrity_checks;
-pub use json::{OutputError, dependencies_json, diff_json, document_json, plan_json};
+pub use json::{
+    OutputError, audit_record_json, dependencies_json, description_json, diff_json, document_json,
+    integrity_checks_json, migration_report_json, plan_json,
+};
 pub use load::{load, validate, with_state};
 pub use load_options::{LoadOptions, LoadOptionsError};
 pub use menura_contracts::types::audit_record::{AuditRecordDocument, OssieFormat};
@@ -63,5 +69,13 @@ pub use menura_contracts::types::descriptions::{
     AiContext, AmbiguousPath, DescribedDataset, DescribedField, DescribedMetric,
     IntegrityChecksDocument, MetricKind, ModelDescriptionDocument,
 };
+pub use menura_contracts::types::migration_report::{
+    MigrationChange, MigrationReportDocument, MigrationRule,
+};
 pub use menura_model::internal_model::InternalModel;
+pub use migrate::migrate;
 pub use producer::build_producer;
+pub use usage::{
+    Argument, CommandName, UsageError, UsageReason, check_audit_record, parse_compile_options,
+    parse_dialect, parse_load_options,
+};
