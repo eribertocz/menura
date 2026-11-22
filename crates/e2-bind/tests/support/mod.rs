@@ -4,6 +4,7 @@
 
 pub mod model;
 pub mod query;
+pub mod sql;
 
 use menura_e2_bind::{AuthorizedQuery, BindCode, BindError, resolve_and_authorize};
 use menura_representations::query_tree::QueryTree;
