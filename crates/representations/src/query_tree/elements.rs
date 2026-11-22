@@ -2,11 +2,25 @@
 
 use menura_contracts::types::common::Grain;
 use menura_contracts::types::query::{DateBounds, Direction, NullsOrder};
-use menura_model::expression::Expression;
+use menura_model::expression::{Expression, Identifier};
 
 use super::reference::QueryReference;
 use crate::names::OutputName;
 use crate::origin::QueryLocation;
+
+/// SQL form: the one `FROM` relation, `<model>.<dataset> [[AS] alias]`, as written (E1-4
+/// "FROM", QRY-5.1). E2 checks the model name (E1-4.9).
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct QueryRelation {
+    /// The model name, as written.
+    pub model: Identifier,
+    /// The dataset name, as written.
+    pub dataset: Identifier,
+    /// The alias, when written.
+    pub alias: Option<Identifier>,
+    /// Where it is written.
+    pub origin: QueryLocation,
+}
 
 /// A requested dimension.
 #[derive(Debug, Clone, PartialEq, Eq)]
