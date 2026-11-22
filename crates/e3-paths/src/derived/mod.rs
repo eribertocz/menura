@@ -49,6 +49,15 @@ pub(crate) enum ExpansionFailure {
     Cycle,
 }
 
+/// A base component with the metric that is not derived whose expression it belongs to.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub(crate) struct BaseComponent<'model> {
+    /// The base metric.
+    pub(crate) metric: &'model Metric,
+    /// The component.
+    pub(crate) component: &'model Component,
+}
+
 /// The base components of the metric `path` names, in expansion order: for a metric that is
 /// not derived, its own components in written order (E0G-1.1); for a derived metric, the
 /// components of each input in the order its `AGG(…)` terms are written, each input expanded
@@ -60,7 +69,7 @@ pub(crate) enum ExpansionFailure {
 pub(crate) fn base_components<'model>(
     path: &MetricPath,
     model: &'model InternalModel,
-) -> Result<Vec<&'model Component>, ExpansionFailure> {
+) -> Result<Vec<BaseComponent<'model>>, ExpansionFailure> {
     let mut expansion = Expansion {
         model,
         chain: Vec::new(),
@@ -79,7 +88,7 @@ struct Expansion<'model> {
     /// The inputs already expanded.
     expanded: Vec<MetricKey>,
     /// The base components found so far.
-    components: Vec<&'model Component>,
+    components: Vec<BaseComponent<'model>>,
 }
 
 impl Expansion<'_> {
@@ -95,7 +104,12 @@ impl Expansion<'_> {
             .map(metric_inputs)
             .unwrap_or_default();
         if inputs.is_empty() {
-            self.components.extend(classification.components.iter());
+            self.components.extend(
+                classification
+                    .components
+                    .iter()
+                    .map(|component| BaseComponent { metric, component }),
+            );
             return Ok(());
         }
         self.chain.push(key);

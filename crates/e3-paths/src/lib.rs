@@ -22,7 +22,7 @@ pub use violation::InvariantViolation;
 
 use menura_model::internal_model::InternalModel;
 use menura_representations::bound_query::BoundQuery;
-use menura_representations::paths::Branches;
+use menura_representations::paths::{BranchKind, Branches};
 
 use crate::anchor::choose_anchor;
 use crate::metric_reach::check_metric_reach;
@@ -36,9 +36,11 @@ use crate::reachability::AuthorizedGraph;
 /// E3-3.6), through the authorized relationships of the query (E2-4.8) and many-to-one steps
 /// only (E3-3.1). Without metrics, the rows come from an anchor (E3-5.1, E3-5.2).
 ///
-/// With metrics, components with the same home dataset form one branch (E3-4.1). Without
+/// With metrics, components with the same home dataset form one branch, and the components of
+/// each semi-additive metric form their own (E3-4.1). Without
 /// metrics, the query is one branch whose home is the anchor, with no components (E3-5.3).
-/// Branches are ordered by home dataset (E3-4.3), and each join tree holds the paths from its
+/// Branches are ordered by home dataset, then plain before semi-additive, then by metric name
+/// (E3-4.3), and each join tree holds the paths from its
 /// home to every needed dataset, one join instance per distinct path prefix (E3-4.2,
 /// E3-4.2a).
 ///
@@ -61,6 +63,7 @@ pub fn resolve_paths(query: &BoundQuery, model: &InternalModel) -> Result<Branch
     let homes = if needed.metrics.is_empty() {
         vec![BranchHome {
             home: choose_anchor(&needed, &graph)?.clone(),
+            kind: BranchKind::Plain,
             components: Vec::new(),
         }]
     } else {

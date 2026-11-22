@@ -264,6 +264,7 @@ pub(crate) fn dimension(name: &str) -> BoundDimension {
                 field: NormalizedName::new(name),
             },
             time_grain: None,
+            time_grain_origin: None,
         },
         output_name: OutputName::new(name),
         origin: at("/query/dimensions/0"),

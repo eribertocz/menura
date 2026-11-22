@@ -1,6 +1,5 @@
 //! The expected-entity rule a `Population` node applies (E4-3.12, POP-3).
 
-use menura_contracts::types::common::Grain;
 use menura_model::expression::Expression;
 use menura_model::internal_model::PartialPeriod;
 
@@ -33,11 +32,9 @@ pub enum Membership {
         partial_period: PartialPeriod,
     },
     /// `periodic`: an entity is expected in a period if its row for that period exists
-    /// (POP-3.2).
+    /// (POP-3.2). Its grain is the node's `grain`, which E0 requires (ADD-5.1.7).
     Periodic {
         /// The column of the period of the row.
         period: ColumnName,
-        /// The grain of `period`, as the population declares it.
-        grain: Grain,
     },
 }

@@ -43,7 +43,10 @@ fn dimension_key(
     element: &QueryElement,
     layout: &Layout<'_>,
 ) -> Result<Expression, InvariantViolation> {
-    let BoundDimensionKind::Field { field, time_grain } = &dimension.kind else {
+    let BoundDimensionKind::Field {
+        field, time_grain, ..
+    } = &dimension.kind
+    else {
         return Err(InvariantViolation::ExpressionDimension);
     };
     let column = column_reference(layout.element_column(element, field)?.as_str())?;

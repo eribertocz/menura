@@ -1,0 +1,15 @@
+id: pop-population-under-policy-south-001
+rules: [E2-4.9, E4-3.12, POP-3.1, POP-3.3, POP-3.4]
+model: next-population-policy
+security_context: south.json
+query:
+  contract: "menura.query"
+  contract_version: "1.1.0"
+  time_zone: "UTC"
+  query:
+    metrics:
+      - {"metric": "closing_balance", "alias": "closing_balance"}
+expect:
+  outcome: "plan"
+  rows: "pop-population-under-policy-south-001.csv"
+  row_order: "any"

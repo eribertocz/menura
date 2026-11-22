@@ -1,12 +1,12 @@
 //! The components of the metrics of a bound query, read from the internal model.
 
-use menura_model::internal_model::{Component, InternalModel};
+use menura_model::internal_model::InternalModel;
 use menura_representations::bound_query::{BoundMetric, BoundMetricKind};
 
-use crate::derived::{ExpansionFailure, base_components};
+use crate::derived::{BaseComponent, ExpansionFailure, base_components};
 use crate::violation::InvariantViolation;
 
-/// The components of `metric`, at least one: its own in written order (E0G-1.1), or for a
+/// The components of `metric`, each with its base metric, at least one: its own in written order (E0G-1.1), or for a
 /// derived metric those of its inputs, expanded down to base metrics (DER-2.1, DER-2.4).
 ///
 /// # Errors
@@ -19,7 +19,7 @@ use crate::violation::InvariantViolation;
 pub(crate) fn components<'model>(
     metric: &BoundMetric,
     model: &'model InternalModel,
-) -> Result<Vec<&'model Component>, InvariantViolation> {
+) -> Result<Vec<BaseComponent<'model>>, InvariantViolation> {
     let origin = || metric.origin.clone();
     let path = match &metric.kind {
         BoundMetricKind::Reference(path) => path,

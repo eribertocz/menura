@@ -34,28 +34,34 @@ mod nodes;
 mod output;
 mod policy;
 mod policy_visits;
+mod population;
 mod query_filter;
 mod rewrite;
+mod rows;
 mod scan;
 mod slice;
+#[expect(
+    dead_code,
+    reason = "used by the semi-additive branch plan, which follows in this pull request"
+)]
+mod snapshot_grain;
 mod stitch;
 mod typing;
 mod visibility;
 
 pub use error::{InvariantViolation, PlanError};
+pub use population::{PopulationRequest, plan_population};
 
 use menura_contracts::types::catalog::CatalogSchemaDocument;
-use menura_model::expression::Expression;
-use menura_model::internal_model::{InternalModel, NormalizedName};
+use menura_model::internal_model::InternalModel;
 use menura_representations::bound_query::BoundQuery;
-use menura_representations::logical_plan::{AggregateComponent, NamedExpression, PlanNode};
+use menura_representations::logical_plan::PlanNode;
 use menura_representations::origin::Origin;
 use menura_representations::paths::{Branch, Branches};
 use menura_security::AdmittedSecurityContext;
 
-use crate::columns::read_fields;
 use crate::layout::Layout;
-use crate::nodes::{aggregate, component_expression, deduplicate, filter};
+use crate::nodes::aggregate;
 
 /// Builds the logical plan of `query` from its `branches`, for the user of `security`, over
 /// `model` and the admitted `catalog` schema, which gives the type of every source column a
@@ -113,58 +119,26 @@ fn branch_plan(
     let layout = Layout::new(branch, home, model)?;
     let keys = dimensions::dimension_keys(query, &layout)?;
     let components = metrics::branch_components(branch, metrics, home)?;
-    let query_predicate = query_filter::query_predicate(query, &layout)?;
-    let has_reference_time = query.time().reference_time.is_some();
-    let graph = followed::PolicyGraph::new(model);
-    let row_filters =
-        policy_visits::row_filters(home, model, &graph, security, has_reference_time)?;
-
-    let mut read = fields_read(
-        &keys,
-        &components,
-        query_predicate.as_ref().map(|(predicate, _)| predicate),
-    );
-    let visibility = visibility::Visibility {
+    let source = rows::BranchSource {
+        branch,
+        home,
+        layout: &layout,
+        security,
         model,
-        graph: &graph,
-        filters: &row_filters,
         catalog,
+        has_reference_time: query.time().reference_time.is_some(),
     };
-    read.extend(joins::join_reads(&layout));
-    read.extend(visibility.fields(home)?);
-    for instance in layout.instances() {
-        read.extend(visibility.instance_fields(instance.dataset, &instance.prefix)?);
-    }
-    let deduplicated = !branch.join_tree.is_empty() && !components.is_empty();
-    let identity = deduplicated.then(|| layout.identity());
-    let scan = scan::scan(home, &joins::home_reads(&layout, &read), catalog, identity)?;
-    let mut node = visibility.visible_rows(scan, home, None)?;
-    node = joins::join_instances(node, &layout, &read, &visibility)?;
-    if let Some((predicate, location)) = query_predicate {
-        node = filter(node, predicate, Origin::Query(location));
-    }
-    let home_origin = Origin::Model(home.location.clone());
-    if let Some(identity) = identity {
-        node = deduplicate(node, &keys, identity.clone(), home_origin.clone());
-    }
-    aggregate(node, keys, components, &home_origin)
-}
-
-/// The fields the keys, the components and the query predicate read.
-fn fields_read(
-    keys: &[NamedExpression],
-    components: &[AggregateComponent],
-    query_predicate: Option<&Expression>,
-) -> Vec<NormalizedName> {
-    let mut read = Vec::new();
-    for key in keys {
-        read_fields(&key.expression, &mut read);
-    }
-    for component in components {
-        read_fields(&component_expression(component), &mut read);
-    }
-    if let Some(predicate) = query_predicate {
-        read_fields(predicate, &mut read);
-    }
-    read
+    let request = rows::RowsRequest {
+        keys: &keys,
+        components: &components,
+        fields: &[],
+        predicate: query_filter::query_predicate(query, &layout)?,
+    };
+    let node = rows::branch_rows(&source, request)?;
+    aggregate(
+        node,
+        keys,
+        components,
+        &Origin::Model(home.location.clone()),
+    )
 }

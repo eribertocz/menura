@@ -5,7 +5,9 @@ use menura_model::internal_model::{FieldPath, InternalModel};
 use menura_representations::bound_query::{
     BoundDateRange, BoundMetricKind, BoundPath, BoundQueryParts, MetricPath,
 };
-use menura_representations::paths::{Branch, Branches, ComponentKey, JoinTree, QueryElement};
+use menura_representations::paths::{
+    Branch, BranchKind, Branches, ComponentKey, JoinTree, QueryElement,
+};
 
 use crate::test_support::{
     at, bound_metric, connected_model, dataset, dimension, false_literal, filter, metric,
@@ -79,6 +81,7 @@ fn e3_2_the_output_is_the_branches_of_the_bound_query() {
 
     let expected = Branches::new(vec![Branch {
         home: name("ORDERS"),
+        kind: BranchKind::Plain,
         components: vec![key(0, 0)],
         join_tree: JoinTree::default(),
     }])
@@ -309,3 +312,4 @@ fn vs_1_a_metric_without_components_is_an_invariant_violation() {
 
 mod derived;
 mod multi_dataset;
+mod semi_additive;
