@@ -184,6 +184,8 @@ pub enum Dialect {
 /// A compiler stage that takes a decision.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum Step {
+    /// Load.
+    E0,
     /// Parse.
     E1,
     /// Bind.
@@ -202,8 +204,16 @@ pub enum Step {
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct Decision {
+    /// The rule ID that decides it (PLN-7), stable across releases; absent before contract
+    /// version 1.2.0.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub code: Option<String>,
     /// Stage that decided.
     pub step: Step,
+    /// The object decided about, as `<kind>:<name>` (PLN-7.2); absent before contract version
+    /// 1.2.0.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub subject: Option<String>,
     /// What was decided.
     pub decision: String,
     /// Why.
@@ -248,8 +258,8 @@ pub enum CheckStatus {
 
 /// Deserializes a member whose presence matters even when its value is `null`: a present member
 /// becomes `Some`, so `null` round-trips as `null` instead of disappearing.
-pub(crate) fn present<'de, D: Deserializer<'de>>(
+pub(crate) fn present<'de, D: Deserializer<'de>, T: Deserialize<'de>>(
     deserializer: D,
-) -> Result<Option<Value>, D::Error> {
-    Value::deserialize(deserializer).map(Some)
+) -> Result<Option<T>, D::Error> {
+    T::deserialize(deserializer).map(Some)
 }

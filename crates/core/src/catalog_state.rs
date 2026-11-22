@@ -245,5 +245,6 @@ fn warning(code: &str, pointer: &str, message: String) -> Diagnostic {
             line: None,
             column: None,
         }),
+        alternatives: None,
     }
 }

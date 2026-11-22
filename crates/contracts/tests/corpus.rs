@@ -18,7 +18,11 @@ macro_rules! corpus_file {
     ($kind:ident, $name:literal) => {
         CorpusFile {
             kind: ContractKind::$kind,
-            text: include_str!(concat!("corpus/", $name, ".corpus.json")),
+            text: include_str!(concat!(
+                "../../../spec/contracts/corpus/",
+                $name,
+                ".corpus.json"
+            )),
             schema: include_str!(concat!(
                 "../../../spec/contracts/schemas/",
                 $name,
@@ -136,8 +140,16 @@ fn schema_keywords(schema: &Value, found: &mut BTreeSet<String>) {
             "items" | "additionalProperties" | "not" | "if" | "then" | "else" => vec![member],
             _ => Vec::new(),
         };
-        let annotation =
-            ["$schema", "$id", "$defs", "title", "description", "default"].contains(&name.as_str());
+        let annotation = [
+            "$schema",
+            "$id",
+            "$defs",
+            "$comment",
+            "title",
+            "description",
+            "default",
+        ]
+        .contains(&name.as_str());
         if !annotation {
             found.insert(name.clone());
         }

@@ -41,6 +41,7 @@ impl RowFilterError {
                     line: None,
                     column: None,
                 }),
+                alternatives: None,
             }),
             Self::UnparsedCondition { .. } => None,
         }
