@@ -13,8 +13,15 @@
       "object": "dataset:CUSTOMERS",
       "definition_hash": "2222222222222222222222222222222222222222222222222222222222222222",
       "usable": true,
-      "model_inputs": [],
-      "physical_inputs": [],
+      "model_inputs": [
+        "field:CUSTOMERS.REGION"
+      ],
+      "physical_inputs": [
+        {
+          "source": "sales.public.dim_customer",
+          "column": "region"
+        }
+      ],
       "security_policies": [
         "CUSTOMERS.REGION_SCOPE"
       ]
@@ -23,8 +30,27 @@
       "object": "dataset:INVOICES",
       "definition_hash": "3333333333333333333333333333333333333333333333333333333333333333",
       "usable": true,
-      "model_inputs": [],
-      "physical_inputs": [],
+      "model_inputs": [
+        "dataset:CUSTOMERS",
+        "field:CUSTOMERS.CUSTOMER_ID",
+        "field:CUSTOMERS.REGION",
+        "field:INVOICES.CUSTOMER_ID",
+        "relationship:INVOICE_CUSTOMER"
+      ],
+      "physical_inputs": [
+        {
+          "source": "sales.public.dim_customer",
+          "column": "customer_id"
+        },
+        {
+          "source": "sales.public.dim_customer",
+          "column": "region"
+        },
+        {
+          "source": "sales.public.fact_invoice",
+          "column": "customer_id"
+        }
+      ],
       "security_policies": [
         "CUSTOMERS.REGION_SCOPE"
       ]
@@ -39,12 +65,17 @@
         "dataset:CUSTOMERS",
         "dataset:INVOICES",
         "field:CUSTOMERS.CUSTOMER_ID",
+        "field:CUSTOMERS.REGION",
         "field:INVOICES.CUSTOMER_ID"
       ],
       "physical_inputs": [
         {
           "source": "sales.public.dim_customer",
           "column": "customer_id"
+        },
+        {
+          "source": "sales.public.dim_customer",
+          "column": "region"
         },
         {
           "source": "sales.public.fact_invoice",
@@ -60,12 +91,17 @@
       "definition_hash": "5555555555555555555555555555555555555555555555555555555555555555",
       "usable": true,
       "model_inputs": [
-        "dataset:CUSTOMERS"
+        "dataset:CUSTOMERS",
+        "field:CUSTOMERS.REGION"
       ],
       "physical_inputs": [
         {
           "source": "sales.public.dim_customer",
           "column": "customer_id"
+        },
+        {
+          "source": "sales.public.dim_customer",
+          "column": "region"
         }
       ],
       "security_policies": [
@@ -94,12 +130,29 @@
       "definition_hash": "7777777777777777777777777777777777777777777777777777777777777777",
       "usable": true,
       "model_inputs": [
-        "dataset:INVOICES"
+        "dataset:CUSTOMERS",
+        "dataset:INVOICES",
+        "field:CUSTOMERS.CUSTOMER_ID",
+        "field:CUSTOMERS.REGION",
+        "field:INVOICES.CUSTOMER_ID",
+        "relationship:INVOICE_CUSTOMER"
       ],
       "physical_inputs": [
         {
+          "source": "sales.public.dim_customer",
+          "column": "customer_id"
+        },
+        {
+          "source": "sales.public.dim_customer",
+          "column": "region"
+        },
+        {
           "source": "sales.public.fact_invoice",
           "column": "amount"
+        },
+        {
+          "source": "sales.public.fact_invoice",
+          "column": "customer_id"
         }
       ],
       "security_policies": [
@@ -111,9 +164,21 @@
       "definition_hash": "8888888888888888888888888888888888888888888888888888888888888888",
       "usable": true,
       "model_inputs": [
-        "dataset:INVOICES"
+        "dataset:CUSTOMERS",
+        "dataset:INVOICES",
+        "field:CUSTOMERS.CUSTOMER_ID",
+        "field:CUSTOMERS.REGION",
+        "relationship:INVOICE_CUSTOMER"
       ],
       "physical_inputs": [
+        {
+          "source": "sales.public.dim_customer",
+          "column": "customer_id"
+        },
+        {
+          "source": "sales.public.dim_customer",
+          "column": "region"
+        },
         {
           "source": "sales.public.fact_invoice",
           "column": "customer_id"
