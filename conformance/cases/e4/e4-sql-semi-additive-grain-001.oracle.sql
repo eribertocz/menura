@@ -1,5 +1,5 @@
 WITH last_periods AS (
-  SELECT DATE_TRUNC('year', period) AS period_year, MAX(period) AS last_period
+  SELECT CAST(DATE_TRUNC('year', period) AS DATE) AS period_year, MAX(period) AS last_period
   FROM shop.main.balances
   GROUP BY 1
 )
