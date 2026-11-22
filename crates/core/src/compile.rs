@@ -154,7 +154,10 @@ fn compile_stages(
 }
 
 /// Admits the security context `bytes` against the model's declarations (E2-5 row 0a).
-fn admit_context(handle: &Handle, bytes: &[u8]) -> Result<AdmittedSecurityContext, Stop> {
+pub(crate) fn admit_context(
+    handle: &Handle,
+    bytes: &[u8],
+) -> Result<AdmittedSecurityContext, Stop> {
     let text = utf8(bytes).ok_or_else(context_not_utf8)?;
     let declarations = handle.model().parts().security_context.as_ref();
     admit_security_context(text, declarations).map_err(|error| error.diagnostic().into())

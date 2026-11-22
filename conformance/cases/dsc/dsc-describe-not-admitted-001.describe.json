@@ -1,0 +1,46 @@
+{
+  "contract": "menura.compile_error",
+  "contract_version": "1.2.0",
+  "errors": [
+    {
+      "code": "ESEC-01",
+      "location": {
+        "document": "security_context",
+        "pointer": ""
+      },
+      "message": "the required member `subject` is missing"
+    }
+  ],
+  "warnings": [
+    {
+      "code": "W0D-01",
+      "location": {
+        "column": 25,
+        "document": "model",
+        "line": 38,
+        "pointer": "/semantic_model/0/datasets/0/fields/9/expression"
+      },
+      "message": "the field expression reads `discount`, not a column of its catalog relation"
+    },
+    {
+      "code": "W0E-01",
+      "location": {
+        "column": 9,
+        "document": "model",
+        "line": 9,
+        "pointer": "/semantic_model/0/datasets/0"
+      },
+      "message": "there is more than one path from `orders` to `stores`; a query that needs it must name the path"
+    },
+    {
+      "code": "W0F-01",
+      "location": {
+        "column": 25,
+        "document": "model",
+        "line": 36,
+        "pointer": "/semantic_model/0/datasets/0/fields/8/expression"
+      },
+      "message": "the column `payload` has the type `STRUCT(a INTEGER)`, which is unsupported (CAT-4.3)"
+    }
+  ]
+}
