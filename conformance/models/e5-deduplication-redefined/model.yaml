@@ -1,7 +1,7 @@
 version: "0.1.1"
 semantic_model:
   - name: e5_deduplication_redefined
-    description: Orders joined to customers, with key-uniqueness evidence for a former definition of customers.customer_id
+    description: Orders joined to customers, with key-uniqueness evidence for a former source of customers
     custom_extensions:
       - vendor_name: COMMON
         data: '{"namespace": "menura", "version": 1, "security_context": {"roles": ["analyst"], "attributes": []}}'
@@ -20,11 +20,11 @@ semantic_model:
           - vendor_name: COMMON
             data: '{"namespace": "menura", "version": 1, "access": {"mode": "roles", "roles": ["analyst"]}}'
       - name: customers
-        source: shop.main.customers
+        source: shop.main.clients
         primary_key: [customer_id]
         fields:
           - name: customer_id
-            expression: {dialects: [{dialect: ANSI_SQL, expression: "CAST(customer_id AS INTEGER)"}]}
+            expression: {dialects: [{dialect: ANSI_SQL, expression: customer_id}]}
           - name: region
             expression: {dialects: [{dialect: ANSI_SQL, expression: region}]}
         custom_extensions:

@@ -46,7 +46,7 @@
       ]
     },
     {
-      "source": "shop.main.customers",
+      "source": "shop.main.clients",
       "columns": [
         {
           "name": "customer_id",

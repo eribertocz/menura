@@ -19,7 +19,7 @@
       }
     },
     {
-      "source": "shop.main.customers",
+      "source": "shop.main.clients",
       "row_count_estimate": 2,
       "version": {
         "origin": "conformance:catalog",
@@ -35,7 +35,7 @@
       "status": "passed",
       "verified": [
         {
-          "source": "shop.main.customers",
+          "source": "shop.main.clients",
           "version": {
             "origin": "conformance:catalog",
             "snapshot": "customers-2"
