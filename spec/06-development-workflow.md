@@ -39,6 +39,7 @@ Every implementation issue contains:
 4. Executable acceptance criteria: the conformance cases that must pass.
 5. What is explicitly out of scope.
 6. **Depends on** and **Parallel with**: the issues it needs merged first, and those it can run alongside.
+7. **Files:** every file the pull request may change. An issue that adds a workspace crate also lists its registration: the crate's entry in `deny.toml` `[bans].allow`, its layer in `scripts/ci/check_dependency_graph.py` and in `crates/cli/tests/dependency_graph.rs`, and its member line in `Cargo.toml`.
 
 ## 6.5 Pull request checklist
 

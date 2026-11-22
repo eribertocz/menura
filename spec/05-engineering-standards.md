@@ -16,7 +16,7 @@ tool can check them; the rest are checked in review against this chapter.
 ## 5.2 Dependency direction
 
 ```
-contracts  ←  model  ←  expressions  ←  representations  ←  security  ←  e0 … e5  ←  generator-duckdb (e6)  ←  core  ←  wrappers (python, cli, http)
+contracts  ←  model  ←  expressions  ←  representations  ←  security  ←  e0 … e5  ←  generator-duckdb (e6)  ←  core  ←  wrappers (python, cli, mcp, http)
 ```
 
 `expressions` holds the expression parser and its normalization (S10), used by E0, E1 and `security`. `representations` holds the data passed between stages (S9) and depends on `model`, because a bound query and a plan refer to model elements. `security` holds access and row-policy logic (S5) and is used by E0, E2, E4 and E5. `core` orchestrates the stages and calls the generator for plans and integrity checks. The test-tooling crate `conformance-runner` (ARC-5.3) depends on `core` and `contracts`; nothing depends on it.
