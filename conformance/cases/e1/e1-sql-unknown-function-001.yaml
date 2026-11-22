@@ -1,4 +1,4 @@
-id: next-sql-unknown-function-001
+id: e1-sql-unknown-function-001
 rules: [E1-4.12]
 model: slice
 security_context: auditor.json

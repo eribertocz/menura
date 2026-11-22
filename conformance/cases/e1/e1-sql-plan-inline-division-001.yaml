@@ -1,8 +1,8 @@
-id: next-sql-plan-inline-division-001
+id: e1-sql-plan-inline-division-001
 rules: [E1-4.2]
 model: slice
 security_context: auditor.json
-oracle: "next-sql-plan-inline-division-001.oracle.sql"
+oracle: "e1-sql-plan-inline-division-001.oracle.sql"
 query:
   contract: "menura.query"
   contract_version: "1.1.0"
@@ -11,4 +11,4 @@ query:
 expect:
   outcome: "plan"
   row_order: "any"
-  rows: "next-sql-plan-inline-division-001.csv"
+  rows: "e1-sql-plan-inline-division-001.csv"

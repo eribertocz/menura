@@ -1,8 +1,8 @@
-id: next-sql-plan-expression-dimension-001
+id: e1-sql-plan-expression-dimension-001
 rules: [E1-4.1, E1-4.3, QRY-5.1]
 model: slice
 security_context: auditor.json
-oracle: "next-sql-plan-expression-dimension-001.oracle.sql"
+oracle: "e1-sql-plan-expression-dimension-001.oracle.sql"
 query:
   contract: "menura.query"
   contract_version: "1.1.0"
@@ -11,4 +11,4 @@ query:
 expect:
   outcome: "plan"
   row_order: "exact"
-  rows: "next-sql-plan-expression-dimension-001.csv"
+  rows: "e1-sql-plan-expression-dimension-001.csv"

@@ -1,4 +1,4 @@
-id: next-sql-split-snapshot-001
+id: e4-sql-split-snapshot-001
 rules: [E4-7.8]
 model: next-semi-additive
 security_context: analyst.json

@@ -1,4 +1,4 @@
-id: next-sql-bind-001
+id: qry-sql-bind-001
 rules: [QRY-5.1, QRY-5.2, DEV-8, E2-3.3]
 model: slice
 security_context: auditor.json
@@ -10,4 +10,4 @@ query:
 expect:
   outcome: "plan"
   row_order: "exact"
-  rows: "next-sql-bind-001.csv"
+  rows: "qry-sql-bind-001.csv"

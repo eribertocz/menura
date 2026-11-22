@@ -1,4 +1,4 @@
-id: next-sql-unknown-dataset-001
+id: qry-sql-unknown-dataset-001
 rules: [QRY-5.1]
 model: slice
 security_context: auditor.json

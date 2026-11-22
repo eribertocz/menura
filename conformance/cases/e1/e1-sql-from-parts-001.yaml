@@ -1,4 +1,4 @@
-id: next-sql-from-parts-001
+id: e1-sql-from-parts-001
 rules: [E1-4.11, QRY-5.1]
 model: slice
 security_context: auditor.json

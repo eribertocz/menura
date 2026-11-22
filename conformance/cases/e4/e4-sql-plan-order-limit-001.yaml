@@ -1,8 +1,8 @@
-id: next-sql-plan-order-limit-001
+id: e4-sql-plan-order-limit-001
 rules: [E4-9.1, E1-4.3]
 model: slice
 security_context: auditor.json
-oracle: "next-sql-plan-order-limit-001.oracle.sql"
+oracle: "e4-sql-plan-order-limit-001.oracle.sql"
 query:
   contract: "menura.query"
   contract_version: "1.1.0"
@@ -11,4 +11,4 @@ query:
 expect:
   outcome: "plan"
   row_order: "exact"
-  rows: "next-sql-plan-order-limit-001.csv"
+  rows: "e4-sql-plan-order-limit-001.csv"

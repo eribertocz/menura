@@ -1,4 +1,4 @@
-id: next-sql-join-001
+id: e1-sql-join-001
 rules: [E1-4, QRY-5.3]
 model: slice
 security_context: auditor.json
