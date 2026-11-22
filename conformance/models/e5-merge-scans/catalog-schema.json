@@ -106,37 +106,6 @@
           "nullable": true
         }
       ]
-    },
-    {
-      "source": "shop.main.stock",
-      "columns": [
-        {
-          "name": "warehouse",
-          "logical_type": {
-            "kind": "text"
-          },
-          "physical_type": "VARCHAR",
-          "nullable": false
-        },
-        {
-          "name": "product",
-          "logical_type": {
-            "kind": "text"
-          },
-          "physical_type": "VARCHAR",
-          "nullable": false
-        },
-        {
-          "name": "quantity",
-          "logical_type": {
-            "kind": "integer",
-            "bits": 32,
-            "signed": true
-          },
-          "physical_type": "INTEGER",
-          "nullable": false
-        }
-      ]
     }
   ]
 }

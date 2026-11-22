@@ -4,4 +4,3 @@ CREATE TABLE shop.main.customers (customer_id INTEGER NOT NULL, category VARCHAR
 INSERT INTO shop.main.customers VALUES (1, 'A'), (2, 'B'), (3, 'A'), (6, 'C');
 CREATE TABLE shop.main.members (customer_id INTEGER NOT NULL, valid_from DATE NOT NULL, valid_to DATE);
 INSERT INTO shop.main.members VALUES (1, DATE '2026-01-01', NULL), (2, DATE '2026-01-01', NULL), (3, DATE '2026-01-01', NULL), (7, DATE '2026-01-01', NULL);
-CREATE TABLE shop.main.stock (warehouse VARCHAR NOT NULL, product VARCHAR NOT NULL, quantity INTEGER NOT NULL);
