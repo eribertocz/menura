@@ -41,6 +41,7 @@ mod expectation_rules;
 mod explain_part;
 pub mod fixture;
 mod golden_json;
+mod integrity_checks_part;
 pub mod load_options;
 mod load_part;
 pub mod ossie;

@@ -1,0 +1,6 @@
+id: chk-relationship-checks-001
+rules: [CHK-2, CHK-2.2, CHK-2.4, CHK-2.5, CHK-2.6, CHK-3, CHK-4.2, CHK-6.1, CHK-6.2, CHK-7.1, E0H-4.3]
+model: chk-relationships
+expect:
+  outcome: "integrity_checks"
+  document: "chk-relationship-checks-001.document.json"

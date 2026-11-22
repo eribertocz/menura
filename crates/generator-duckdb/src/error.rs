@@ -42,6 +42,9 @@ pub enum InvariantViolation {
     /// `CURRENT_DATE`, `CURRENT_TIME` or `CURRENT_TIMESTAMP` in a query without a reference
     /// time (`EQRY-03` is E1's to report, E0F-2.3).
     MissingReferenceTime,
+    /// A time-zone conversion in a statement generated without query time settings, such as
+    /// an integrity check (E6-5.2).
+    MissingTimeZone,
     /// A float literal without a finite value.
     NonFiniteFloat,
     /// A `Join` without key pairs (E4-3.2).
