@@ -11,16 +11,19 @@
 mod additivity_error;
 mod body;
 mod check;
+mod check_types;
 mod day;
 mod deduplicate;
 mod error;
 mod expression;
+mod full_join;
 mod identifiers;
 mod instant;
 mod join;
 mod join_keys;
 mod output;
 mod parameters;
+mod period_range;
 mod periods;
 mod population;
 mod result_schema;
@@ -34,10 +37,11 @@ mod types;
 mod values;
 
 pub use check::{
-    CheckInputs, GeneratedCheckParameter, GeneratedCheckSql, PeriodicCheck, SnapshotCheck,
-    SnapshotTime, ValidityCheck, generate_check_sql, generate_periodic_check_sql,
-    generate_snapshot_check_sql, generate_validity_check_sql,
+    CheckInputs, GeneratedCheckSql, PeriodicCheck, SnapshotCheck, SnapshotTime, ValidityCheck,
+    generate_check_sql, generate_periodic_check_sql, generate_snapshot_check_sql,
+    generate_validity_check_sql,
 };
+pub use check_types::check_column_type;
 pub use error::{GenerateError, InvariantViolation};
 pub use output::GeneratedSql;
 
@@ -74,7 +78,6 @@ pub fn generate_sql(
         model,
         security: Some(security),
         time: Some(query.time()),
-        time_zone_slot: false,
     };
     let mut writer = StepWriter::new(&environment);
     let written = writer.write(plan)?;

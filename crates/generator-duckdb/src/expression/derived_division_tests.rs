@@ -88,7 +88,6 @@ fn written(
         model: &model,
         security: Some(&security),
         time: Some(&time),
-        time_zone_slot: false,
     };
     let schema = input_schema();
     let mut parameters = Parameters::default();

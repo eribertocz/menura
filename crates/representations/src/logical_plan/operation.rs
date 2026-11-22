@@ -149,6 +149,32 @@ pub enum Operation {
         /// The semi-additive rule, with the expected entities and the other rows it reads.
         rule: SnapshotRule,
     },
+    /// `PeriodRange(input, coverage)`: keep the rows of `input` whose coverage day, the day of
+    /// the `coverage` column (POP-3.5), is on or after the first day of the bound `period_from`
+    /// and on or before the last day of the bound `period_to` (CHK-7.4). A row whose coverage
+    /// day is NULL is not kept. Built only for the integrity checks and build queries of
+    /// summaries; its output is the columns of `input`.
+    PeriodRange {
+        /// The input.
+        input: Box<PlanNode>,
+        /// The column of `input` whose day is compared with the bound periods.
+        coverage: ColumnName,
+    },
+    /// `FullJoin(left, right, on)`: a full outer join whose equalities compare with
+    /// `IS NOT DISTINCT FROM`, so that NULL values match (CHK-6.6). Built only for the
+    /// integrity checks of summaries. Its output is the columns of `left`, then those of
+    /// `right`, all nullable.
+    FullJoin {
+        /// The left input.
+        left: Box<PlanNode>,
+        /// The right input.
+        right: Box<PlanNode>,
+        /// The equalities, in order: `left` names a column of `left`, `right` a column of the
+        /// output that holds a column of `right`, under `right_prefix`.
+        on: Vec<JoinCondition>,
+        /// The prefix of every column of `right` (E6-4.12).
+        right_prefix: ColumnPrefix,
+    },
     /// `Sort(input, items)`: order the rows.
     Sort {
         /// The input.

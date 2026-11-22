@@ -3,15 +3,22 @@
 use std::collections::BTreeMap;
 
 use menura_contracts::types::common::{LogicalType, Parameter};
+use menura_contracts::types::descriptions::{
+    Binding, BoundParameter, CheckParameter, TextLogicalType,
+};
 use menura_representations::origin::Origin;
 use serde_json::Value;
 
 /// A value bound once and referenced wherever it appears: the query time zone, the reference
-/// date and time, or an attribute.
+/// date and time, an attribute, or a slot of a check.
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
 pub(crate) enum SharedValue {
-    /// The query `time_zone` (E6-5.2).
+    /// The query `time_zone` (E6-5.2), or the `time_zone` slot of a check (CHK-7.3).
     TimeZone,
+    /// The `period_from` slot of a summary check or build query (CHK-7.4).
+    PeriodFrom,
+    /// The `period_to` slot of a summary check or build query (CHK-7.4).
+    PeriodTo,
     /// The reference date, the value of `CURRENT_DATE` (E0F-2.3).
     ReferenceDate,
     /// The reference time as an instant, read by `CURRENT_TIME` and `CURRENT_TIMESTAMP`.
@@ -34,6 +41,7 @@ type Occurrence = (Element, usize);
 #[derive(Debug, Default)]
 pub(crate) struct Parameters {
     bound: Vec<Parameter>,
+    slots: Vec<BoundParameter>,
     shared: BTreeMap<SharedValue, u64>,
     occurrences: BTreeMap<Occurrence, u64>,
     node_element: Option<Element>,
@@ -65,6 +73,27 @@ impl Parameters {
         }
         self.shared.insert(shared, self.next_position());
         self.bind_new(logical_type, value)
+    }
+
+    /// The placeholder of the slot `binding`, a `text` value the pipeline binds at run time
+    /// (CHK-7.1, CHK-7.2): a new position at its first appearance, reused afterwards.
+    pub(crate) fn bind_slot(&mut self, binding: Binding) -> String {
+        let shared = match binding {
+            Binding::TimeZone => SharedValue::TimeZone,
+            Binding::PeriodFrom => SharedValue::PeriodFrom,
+            Binding::PeriodTo => SharedValue::PeriodTo,
+        };
+        if let Some(position) = self.shared.get(&shared) {
+            return placeholder(*position);
+        }
+        let position = self.next_position();
+        self.shared.insert(shared, position);
+        self.slots.push(BoundParameter {
+            position,
+            logical_type: TextLogicalType,
+            binding,
+        });
+        placeholder(position)
     }
 
     /// Starts the literals of a node that comes from `origin`: the next literal bound with
@@ -106,18 +135,28 @@ impl Parameters {
         self.bind_new(logical_type, value)
     }
 
-    /// The position of `shared`, when the statement binds it.
-    pub(crate) fn shared_position(&self, shared: &SharedValue) -> Option<u64> {
-        self.shared.get(shared).copied()
-    }
-
-    /// The parameters, by position.
+    /// The parameters with a value, by position. A query binds no slot.
     pub(crate) fn into_list(self) -> Vec<Parameter> {
         self.bound
     }
 
+    /// Every parameter of an integrity check, fixed values and slots, by position (CHK-7.1).
+    pub(crate) fn into_check_list(self) -> Vec<CheckParameter> {
+        let mut parameters: Vec<CheckParameter> = self
+            .bound
+            .into_iter()
+            .map(CheckParameter::Fixed)
+            .chain(self.slots.into_iter().map(CheckParameter::Bound))
+            .collect();
+        parameters.sort_by_key(|parameter| match parameter {
+            CheckParameter::Fixed(fixed) => fixed.position,
+            CheckParameter::Bound(slot) => slot.position,
+        });
+        parameters
+    }
+
     fn next_position(&self) -> u64 {
-        u64::try_from(self.bound.len()).map_or(u64::MAX, |count| count + 1)
+        u64::try_from(self.bound.len() + self.slots.len()).map_or(u64::MAX, |count| count + 1)
     }
 }
 

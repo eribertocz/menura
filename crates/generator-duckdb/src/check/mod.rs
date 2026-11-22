@@ -10,15 +10,14 @@ mod sql;
 mod validity;
 
 use menura_contracts::types::catalog::CatalogSchemaDocument;
-use menura_contracts::types::common::Parameter;
+use menura_contracts::types::descriptions::CheckParameter;
 use menura_model::internal_model::InternalModel;
-use menura_representations::logical_plan::PlanNode;
+use menura_representations::logical_plan::{Operation, PlanNode};
 
 use crate::body::{SelectBody, statement};
-use crate::error::GenerateError;
+use crate::error::{GenerateError, InvariantViolation};
 use crate::expression::Environment;
-use crate::parameters::SharedValue;
-use crate::steps::{StepWriter, pass_through};
+use crate::steps::{StepWriter, error, pass_through};
 
 pub use shapes::{PeriodicCheck, SnapshotCheck, SnapshotTime, ValidityCheck};
 
@@ -27,21 +26,9 @@ pub use shapes::{PeriodicCheck, SnapshotCheck, SnapshotTime, ValidityCheck};
 pub struct GeneratedCheckSql {
     /// One read-only statement (E6-4.1) that returns one row per violation (CHK-2.1).
     pub sql: String,
-    /// The parameters by position (`$1`, `$2`, …), in order of first appearance in `sql`
-    /// (E6-4.2).
-    pub parameters: Vec<GeneratedCheckParameter>,
-}
-
-/// One parameter of a check statement (CHK-7.1).
-#[derive(Debug, Clone, PartialEq)]
-pub enum GeneratedCheckParameter {
-    /// A value the compiler fixed.
-    Fixed(Parameter),
-    /// The `time_zone` slot at `position`, which the pipeline fills (CHK-7.3).
-    TimeZone {
-        /// Its position, from 1.
-        position: u64,
-    },
+    /// Its parameters by position (`$1`, `$2`, …), in order of first appearance in `sql`
+    /// (E6-4.2): each a value the compiler fixed or a slot the pipeline binds (CHK-7.1).
+    pub parameters: Vec<CheckParameter>,
 }
 
 /// What a check statement may read: the catalog schema and the model.
@@ -60,13 +47,15 @@ pub struct CheckInputs<'input> {
 /// # Errors
 ///
 /// A [`GenerateError`] when the plan breaks the contract of the generator, or when it needs a
-/// value only a query has: a security attribute, the reference time or the query time zone.
+/// value only a query has: a security attribute or the reference time. The time zone of a
+/// check is its `time_zone` slot (CHK-7.3), and the bounds of a `PeriodRange` its
+/// `period_from` and `period_to` slots (CHK-7.4).
 pub fn generate_check_sql(
     plan: &PlanNode,
     catalog: &CatalogSchemaDocument,
     model: &InternalModel,
 ) -> Result<GeneratedCheckSql, GenerateError> {
-    let environment = environment(CheckInputs { catalog, model }, false);
+    let environment = environment(CheckInputs { catalog, model });
     let mut writer = StepWriter::new(&environment);
     let written = writer.write(plan)?;
     let last = SelectBody {
@@ -88,7 +77,7 @@ pub fn generate_validity_check_sql(
     check: &ValidityCheck<'_>,
     inputs: CheckInputs<'_>,
 ) -> Result<GeneratedCheckSql, GenerateError> {
-    let environment = environment(inputs, true);
+    let environment = environment(inputs);
     let mut writer = StepWriter::new(&environment);
     let last = writer.validity_check(check)?;
     Ok(finish(writer, &last))
@@ -104,7 +93,7 @@ pub fn generate_periodic_check_sql(
     check: &PeriodicCheck<'_>,
     inputs: CheckInputs<'_>,
 ) -> Result<GeneratedCheckSql, GenerateError> {
-    let environment = environment(inputs, true);
+    let environment = environment(inputs);
     let mut writer = StepWriter::new(&environment);
     let last = writer.periodic_check(check)?;
     Ok(finish(writer, &last))
@@ -121,39 +110,51 @@ pub fn generate_snapshot_check_sql(
     check: &SnapshotCheck<'_>,
     inputs: CheckInputs<'_>,
 ) -> Result<GeneratedCheckSql, GenerateError> {
-    let environment = environment(inputs, true);
+    let environment = environment(inputs);
     let mut writer = StepWriter::new(&environment);
     let last = writer.snapshot_check(check)?;
     Ok(finish(writer, &last))
 }
 
-fn environment(inputs: CheckInputs<'_>, time_zone_slot: bool) -> Environment<'_> {
+/// The environment of a check: no security context and no query time settings.
+fn environment(inputs: CheckInputs<'_>) -> Environment<'_> {
     Environment {
         catalog: inputs.catalog,
         model: inputs.model,
         security: None,
         time: None,
-        time_zone_slot,
     }
 }
 
 /// The statement of `writer`'s steps and `last`, with its parameters.
 fn finish(writer: StepWriter<'_>, last: &SelectBody) -> GeneratedCheckSql {
-    let sql = statement(&writer.steps, last);
-    let time_zone = writer.parameters.shared_position(&SharedValue::TimeZone);
-    let parameters = writer
-        .parameters
-        .into_list()
-        .into_iter()
-        .map(|parameter| {
-            if Some(parameter.position) == time_zone {
-                GeneratedCheckParameter::TimeZone {
-                    position: parameter.position,
-                }
-            } else {
-                GeneratedCheckParameter::Fixed(parameter)
+    GeneratedCheckSql {
+        sql: statement(&writer.steps, last),
+        parameters: writer.parameters.into_check_list(),
+    }
+}
+
+impl<'input> StepWriter<'input> {
+    /// The body and kind of a node that only integrity checks have: `PeriodRange` and
+    /// `FullJoin` (CHK-6.6, CHK-7.4).
+    pub(crate) fn check_step(
+        &mut self,
+        node: &'input PlanNode,
+    ) -> Result<(SelectBody, &'static str), GenerateError> {
+        match node.operation() {
+            Operation::PeriodRange { input, coverage } => {
+                Ok((self.period_range(node, input, coverage)?, "periodrange"))
             }
-        })
-        .collect();
-    GeneratedCheckSql { sql, parameters }
+            Operation::FullJoin {
+                left,
+                right,
+                on,
+                right_prefix,
+            } => Ok((
+                self.full_join(node, (left, right), on, right_prefix)?,
+                "fulljoin",
+            )),
+            _ => Err(error(InvariantViolation::NodeOutsideSlice, node)),
+        }
+    }
 }
