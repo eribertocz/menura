@@ -13,8 +13,11 @@ use menura_representations::names::{ColumnName, ColumnPrefix};
 use menura_representations::origin::Origin;
 use serde_json::{Value, json};
 
+use crate::context::RewriteContext;
+use crate::evidence::Evidence;
+use crate::rewrites::PIPELINE;
 use crate::test_support::{CURRENT_HASH, anyone, empty_query, shop_model, shop_schema};
-use crate::{NodePath, RewriteOutcome, RewriteRecord, RewriteRule, RewriteSubject, optimize};
+use crate::{NodePath, RewriteOutcome, RewriteRecord, RewriteRule, RewriteSubject};
 
 const ORDERS_TO_CUSTOMERS: &str = "ORDERS_TO_CUSTOMERS";
 const CUSTOMERS_TO_REGIONS: &str = "CUSTOMERS_TO_REGIONS";
@@ -257,27 +260,32 @@ fn then_regions(chain: PlanNode) -> PlanNode {
     )
 }
 
-/// The plan and records of E5 for `plan`, with `model` and `state`.
+/// The plan and records of the inner-join rewrite alone for `plan`, with `model` and `state`.
+/// The test plans read no joined column, so the earlier removal of unused joins (E5-3.1) would
+/// remove their joins.
 fn run(
     plan: &PlanNode,
     model: &InternalModel,
     state: Option<&CatalogStateDocument>,
 ) -> (PlanNode, Vec<RewriteRecord>) {
-    let optimized = optimize(
-        plan,
-        &empty_query(),
+    let query = empty_query();
+    let schema = shop_schema();
+    let security = anyone();
+    let context = RewriteContext {
+        query: &query,
         model,
-        &shop_schema(),
-        state,
-        &anyone(),
-    );
-    let records = optimized
-        .records()
+        schema: &schema,
+        evidence: Evidence::new(model, state),
+        security: &security,
+    };
+    let mut records = Vec::new();
+    let plan = PIPELINE
         .iter()
-        .filter(|record| record.rule == RewriteRule::InnerJoins)
-        .cloned()
-        .collect();
-    (optimized.into_plan(), records)
+        .filter(|(rule, _)| *rule == RewriteRule::InnerJoins)
+        .fold(plan.clone(), |plan, (_, rewrite)| {
+            rewrite(plan, &context, &mut records)
+        });
+    (plan, records)
 }
 
 /// The kinds of the joins of `plan`, in path order.
