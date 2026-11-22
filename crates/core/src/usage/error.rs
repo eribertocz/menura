@@ -37,6 +37,11 @@ pub enum UsageReason {
     AuditWithoutRecord,
     /// `audit_record` without `audit: true` (ARC-5.7).
     RecordWithoutAudit,
+    /// The value of a document or a name is not a string: an MCP member of the wrong type or
+    /// `null` (ARC-6.7). The CLI's values are always text, so it never gives this reason.
+    NotAString,
+    /// The arguments of an MCP tool call are not an object (ARC-6.7).
+    ArgumentsNotAnObject,
 }
 
 impl UsageError {
@@ -80,6 +85,8 @@ impl UsageError {
                 "`{}` needs the compile option `audit: true`",
                 spell(Argument::AuditRecord)
             ),
+            UsageReason::NotAString => format!("{name} is not a string"),
+            UsageReason::ArgumentsNotAnObject => "the arguments are not an object".to_owned(),
         }
     }
 }
@@ -91,3 +98,16 @@ impl fmt::Display for UsageError {
 }
 
 impl std::error::Error for UsageError {}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn arc_6_7_a_value_that_is_not_a_string_and_arguments_that_are_not_an_object() {
+        let error = UsageError::new(Some(Argument::SecurityContext), UsageReason::NotAString);
+        assert_eq!(error.to_string(), "`security_context` is not a string");
+        let error = UsageError::new(None, UsageReason::ArgumentsNotAnObject);
+        assert_eq!(error.to_string(), "the arguments are not an object");
+    }
+}
