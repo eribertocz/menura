@@ -2,7 +2,9 @@
 
 use std::fmt;
 
-use menura_contracts::types::compiled_plan::{Diagnostic, DiagnosticLocation, InputDocument};
+use menura_contracts::types::compiled_plan::{
+    Alternatives, Diagnostic, DiagnosticLocation, InputDocument,
+};
 use menura_expressions::typing::TypingCode;
 use menura_model::internal_model::DiagnosticCode;
 use menura_representations::origin::QueryLocation;
@@ -113,6 +115,9 @@ pub struct BindDiagnostic {
     pub message: String,
     /// The element of the query document it is located at.
     pub location: QueryLocation,
+    /// For `E_NAME_NOT_FOUND`, the names the user may write instead, in order (PLN-5.4);
+    /// empty for every other code and when there are none.
+    pub alternatives: Vec<String>,
 }
 
 impl BindDiagnostic {
@@ -122,6 +127,15 @@ impl BindDiagnostic {
             code,
             message,
             location: location.clone(),
+            alternatives: Vec::new(),
+        }
+    }
+
+    /// The same diagnostic carrying `alternatives` (PLN-5.4).
+    pub(crate) fn with_alternatives(self, alternatives: Vec<String>) -> Self {
+        Self {
+            alternatives,
+            ..self
         }
     }
 
@@ -138,7 +152,8 @@ impl BindDiagnostic {
                 line: position.and_then(|position| u64::try_from(position.line()).ok()),
                 column: position.and_then(|position| u64::try_from(position.column()).ok()),
             }),
-            alternatives: None,
+            alternatives: (!self.alternatives.is_empty())
+                .then(|| Box::new(Alternatives(self.alternatives.clone()))),
         }
     }
 }

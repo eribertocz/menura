@@ -16,7 +16,19 @@ pub(crate) fn matches_pattern(pattern: &str, text: &str) -> Option<bool> {
         "^([0-9]{4}|[0-9]{4}-Q[1-4]|[0-9]{4}-(0[1-9]|1[0-2])|[0-9]{4}-W(0[1-9]|[1-4][0-9]|5[0-3])|[0-9]{4}-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01]))$" => {
             is_period_shape(text)
         }
-        "^(field|metric|dataset):.+$" => is_alternative(text),
+        "^(field|metric|dataset):.+$" => is_prefixed(text, &["field", "metric", "dataset"]),
+        "^(dataset|field|metric|relationship):.+$" => {
+            is_prefixed(text, &["dataset", "field", "metric", "relationship"])
+        }
+        "^(dataset|relationship|field|metric|policy):.+$" => is_prefixed(
+            text,
+            &["dataset", "relationship", "field", "metric", "policy"],
+        ),
+        "^dataset:.+$" => is_prefixed(text, &["dataset"]),
+        "^relationship:.+$" => is_prefixed(text, &["relationship"]),
+        "^field:.+$" => is_prefixed(text, &["field"]),
+        "^metric:.+$" => is_prefixed(text, &["metric"]),
+        "^policy:.+$" => is_prefixed(text, &["policy"]),
         "^menura\\.[a-z][a-z_]*$" => is_menura_contract_name(text),
         "^(/([^~/]|~[01])*)+$" => is_non_empty_json_pointer(text),
         "^1\\.[01]\\." => text.starts_with("1.0.") || text.starts_with("1.1."),
@@ -35,12 +47,13 @@ pub(crate) fn matches_format(format: &str, text: &str) -> Option<bool> {
     }
 }
 
-/// `field:`, `metric:` or `dataset:` followed by at least one character, none of them a line
-/// terminator: the regular expression `.` does not match one (ECMA-262).
-fn is_alternative(text: &str) -> bool {
-    let rest = ["field:", "metric:", "dataset:"]
-        .iter()
-        .find_map(|prefix| text.strip_prefix(prefix));
+/// One of `kinds`, then `:`, then at least one character, none of them a line terminator: the
+/// regular expression `.` does not match one (ECMA-262).
+fn is_prefixed(text: &str, kinds: &[&str]) -> bool {
+    let rest = kinds.iter().find_map(|kind| {
+        text.strip_prefix(kind)
+            .and_then(|rest| rest.strip_prefix(':'))
+    });
     rest.is_some_and(|rest| {
         !rest.is_empty()
             && !rest

@@ -78,3 +78,18 @@ pub(crate) fn written_identifier(identifier: &Identifier) -> String {
 fn delimited(text: &str) -> String {
     format!("\"{}\"", text.replace('"', "\"\""))
 }
+
+/// The normalized names of the parts of the expression reference `reference` (E0D-1.1).
+pub(crate) fn expression_reference_names(reference: &Reference) -> Vec<NormalizedName> {
+    let name = identifier_name(&reference.name);
+    match &reference.qualifier {
+        Some(qualifier) => vec![identifier_name(qualifier), name],
+        None => vec![name],
+    }
+}
+
+/// Normalized names joined with `.`, as PLN-5.4 step 3 compares a reference.
+pub(crate) fn joined_names(names: &[NormalizedName]) -> String {
+    let parts: Vec<&str> = names.iter().map(NormalizedName::as_str).collect();
+    parts.join(".")
+}
