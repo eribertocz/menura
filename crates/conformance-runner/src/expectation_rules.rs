@@ -1,10 +1,12 @@
-//! The rules of CS-2.11 to CS-2.15 on which outcomes allow which output expectations.
+//! The rules of CS-2.11 to CS-2.15, CS-2.17 and CS-2.18 on which outcomes allow which output
+//! expectations and compile options.
 
 use crate::case::{Case, Outcome};
 use crate::error::RunnerErrorKind;
 
 /// Checks that every output expectation of `case` is allowed with its outcome, and that a
-/// `describe` or `integrity_checks` case names its golden `document` (CS-2.11 to CS-2.15).
+/// `describe` or `integrity_checks` case names its golden `document` (CS-2.11 to CS-2.15,
+/// CS-2.17, CS-2.18).
 ///
 /// # Errors
 ///
@@ -12,6 +14,16 @@ use crate::error::RunnerErrorKind;
 /// allow, or [`RunnerErrorKind::MissingDocument`].
 pub(crate) fn check_output_expectations(case: &Case) -> Result<(), RunnerErrorKind> {
     let outcome = case.expect.outcome;
+    if outcome != Outcome::Error {
+        refuse_present(&[(
+            "alternatives",
+            "CS-2.17",
+            case.expect.alternatives.is_some(),
+        )])?;
+    }
+    if !matches!(outcome, Outcome::Plan | Outcome::Error) {
+        refuse_present(&[("compile_options", "CS-2.18", case.compile_options.is_some())])?;
+    }
     if outcome.returns_document() {
         return check_document_case(case);
     }
@@ -169,6 +181,75 @@ expect:
             &format!("  error: E2-01\n  cache_key: \"{HASH}\"\n"),
         );
         assert_eq!(refused(&text), Some(("cache_key", "CS-2.14")));
+    }
+
+    #[test]
+    fn cs_2_17_reads_the_alternatives_of_an_error_case() {
+        let text = with_outcome(
+            "error",
+            "  error: E_NAME_NOT_FOUND\n  alternatives: [\"metric:BILLED\"]\n",
+        );
+        let expect = parse_case(&text).unwrap().expect;
+        assert_eq!(expect.alternatives, Some(vec!["metric:BILLED".to_owned()]));
+    }
+
+    #[test]
+    fn cs_2_17_alternatives_are_allowed_only_with_an_error() {
+        let plan = PLAN_CASE.replace(
+            "  rows: expected.csv\n",
+            "  rows: expected.csv\n  alternatives: []\n",
+        );
+        assert_eq!(refused(&plan), Some(("alternatives", "CS-2.17")));
+        let runtime = with_outcome("runtime_error", "  error: RADD-01\n  alternatives: []\n");
+        assert_eq!(refused(&runtime), Some(("alternatives", "CS-2.17")));
+        let describe = "id: cs-unit-001\nrules: [CS-2.17]\nmodel: slice\n\
+                        security_context: auditor.json\n\
+                        expect: {outcome: describe, document: d.json, alternatives: []}\n";
+        assert_eq!(refused(describe), Some(("alternatives", "CS-2.17")));
+    }
+
+    #[test]
+    fn cs_2_18_reads_an_actor() {
+        let text = PLAN_CASE.replace("expect:\n", "compile_options: {actor: agent-7}\nexpect:\n");
+        let options = parse_case(&text).unwrap().compile_options.unwrap();
+        assert_eq!(options.actor.as_deref(), Some("agent-7"));
+    }
+
+    #[test]
+    fn cs_2_18_an_actor_that_is_not_a_string_is_refused() {
+        let text = PLAN_CASE.replace(
+            "expect:\n",
+            "compile_options: {actor: {id: agent-7}}\nexpect:\n",
+        );
+        assert!(matches!(
+            parse_case(&text),
+            Err(RunnerErrorKind::Malformed(_))
+        ));
+    }
+
+    #[test]
+    fn cs_2_18_compile_options_hold_only_actor() {
+        let text = PLAN_CASE.replace("expect:\n", "compile_options: {audit: true}\nexpect:\n");
+        assert!(matches!(
+            parse_case(&text),
+            Err(RunnerErrorKind::Malformed(_))
+        ));
+    }
+
+    #[test]
+    fn cs_2_18_compile_options_are_allowed_only_with_an_error_or_a_plan() {
+        let options = "compile_options: {actor: agent-7}\n";
+        let error = with_outcome("error", "  error: E2-01\n")
+            .replace("expect:\n", &format!("{options}expect:\n"));
+        assert_eq!(refused(&error), None);
+        let runtime = with_outcome("runtime_error", "  error: RADD-01\n")
+            .replace("expect:\n", &format!("{options}expect:\n"));
+        assert_eq!(refused(&runtime), Some(("compile_options", "CS-2.18")));
+        let describe = format!(
+            "id: cs-unit-001\nrules: [CS-2.18]\nmodel: slice\nsecurity_context: auditor.json\n\
+             {options}expect: {{outcome: describe, document: d.json}}\n"
+        );
+        assert_eq!(refused(&describe), Some(("compile_options", "CS-2.18")));
     }
 
     #[test]
