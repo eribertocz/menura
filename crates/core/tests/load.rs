@@ -23,6 +23,9 @@ const MONTHLY_BUILT_FROM_DAYS: &str = include_str!(
 const MONTHLY_BUILT_FROM_WEEKS: &str = include_str!(
     "../../../conformance/models/cat-state-summary-built-from-weeks-001/catalog-state.json"
 );
+const MONTHLY_BUILD_AND_CHECK_GRAINS: &str = include_str!(
+    "../../../conformance/models/cat-state-summary-build-grains-001/catalog-state.json"
+);
 
 /// A field of `orders` whose column the catalog schema does not describe (`W0D-01`).
 fn sample_with_missing_column() -> String {
@@ -182,26 +185,25 @@ fn cat_8_8_load_checks_the_summary_builds_of_its_catalog_state() {
 }
 
 /// The handle of the month summary model with the catalog state `state`.
-fn monthly_handle(state: &str) -> Handle {
+fn monthly_handle(state: &str) -> Result<Handle, CompileErrorDocument> {
     load(
         MONTHLY_MODEL.as_bytes(),
         MONTHLY_CATALOG.as_bytes(),
         Some(state.as_bytes()),
         &LoadOptions::default(),
     )
-    .unwrap()
 }
 
 #[test]
 fn cat_8_8_a_month_summary_built_from_day_periods_is_admitted() {
-    let handle = monthly_handle(MONTHLY_BUILT_FROM_DAYS);
+    let handle = monthly_handle(MONTHLY_BUILT_FROM_DAYS).unwrap();
     assert!(handle.catalog_state().is_some());
     assert!(warning_codes(&handle).is_empty());
 }
 
 #[test]
 fn cat_8_8_a_month_summary_built_from_week_periods_is_ignored_with_wcat_03() {
-    let handle = monthly_handle(MONTHLY_BUILT_FROM_WEEKS);
+    let handle = monthly_handle(MONTHLY_BUILT_FROM_WEEKS).unwrap();
     assert!(handle.catalog_state().is_none());
     assert_eq!(warning_codes(&handle), ["WCAT-03"]);
     let location = handle.warnings().next().unwrap().location.clone().unwrap();
@@ -209,6 +211,18 @@ fn cat_8_8_a_month_summary_built_from_week_periods_is_ignored_with_wcat_03() {
     assert_eq!(
         location.pointer,
         "/relations/1/aggregate_build/built_from/0/period"
+    );
+}
+
+#[test]
+fn cat_8_6_a_build_and_a_check_of_different_grains_are_ignored_with_wcat_03() {
+    let handle = monthly_handle(MONTHLY_BUILD_AND_CHECK_GRAINS).unwrap();
+    assert!(handle.catalog_state().is_none());
+    assert_eq!(warning_codes(&handle), ["WCAT-03"]);
+    let location = handle.warnings().next().unwrap().location.clone().unwrap();
+    assert_eq!(
+        location.pointer,
+        "/relations/1/aggregate_build/integrity_check/verified/0/period"
     );
 }
 
@@ -221,7 +235,7 @@ fn cat_8_8_a_month_summary_with_day_coverage_is_ignored_with_wcat_03() {
           "to": "2026-11-02""#,
     );
     assert_ne!(state, MONTHLY_BUILT_FROM_DAYS);
-    let handle = monthly_handle(&state);
+    let handle = monthly_handle(&state).unwrap();
     assert_eq!(warning_codes(&handle), ["WCAT-03"]);
     let location = handle.warnings().next().unwrap().location.clone().unwrap();
     assert_eq!(
