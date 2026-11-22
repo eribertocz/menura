@@ -24,6 +24,8 @@ mod rows;
 mod slice;
 mod unusable;
 mod walk;
+#[cfg(test)]
+mod walk_tests;
 
 pub use authorized_query::{
     AuthorizedDateRange, AuthorizedQuery, AuthorizedTimeGrain, ResolvedName,
@@ -55,7 +57,8 @@ use rows::{check_rows_4_to_9, filter_datasets};
 /// a row the first element in query order (E2-5.3): `E_NAME_NOT_FOUND` for a name that is
 /// unknown or unauthorized, both reported alike (E2-4.4); `E_METRIC_IN_DIMENSIONS`;
 /// `E_FIELD_IN_METRICS`; `E_AGGREGATE_IN_WHERE`; `E_CROSS_DATASET_FILTER`; `E_NAME_COLLISION`.
-/// [`BindError::Invariant`] when the tree breaks the contract of E1.
+/// [`BindError::Invariant`] when the tree breaks the contract of E1, or when an element is
+/// left unbound ([`InvariantViolation::UnboundElement`]).
 pub fn resolve_and_authorize(
     tree: &QueryTree,
     model: &InternalModel,
@@ -66,18 +69,19 @@ pub fn resolve_and_authorize(
     check_rows_4_to_9(&elements)?;
     let named = named_elements(tree, &elements);
     let (authorization, subgraph) = resolver.finish();
-    Ok(assemble(elements, named, authorization, subgraph))
+    assemble(elements, named, authorization, subgraph)
 }
 
-/// The authorized query of `elements`, which passed rows 3 to 9. In the SQL form, every
-/// expression is written with the model elements its references resolved to
+/// The authorized query of `elements`, which passed rows 3 to 9, or
+/// [`InvariantViolation::UnboundElement`] when one of them is left unbound. In the SQL form,
+/// every expression is written with the model elements its references resolved to
 /// ([`canonical::canonical`]).
 fn assemble(
     elements: ResolvedElements<'_>,
     named: Vec<NamedElement>,
     authorization: Vec<AuthorizationDecision>,
     subgraph: AuthorizedSubgraph,
-) -> AuthorizedQuery {
+) -> Result<AuthorizedQuery, BindError> {
     let relation = elements
         .relation
         .as_ref()
@@ -85,21 +89,25 @@ fn assemble(
     let filters = elements
         .filters
         .iter()
-        .map(|filter| BoundFilter {
-            expression: match relation {
-                Some(_) => canonical(&filter.filter.expression, &filter.targets),
+        .map(|filter| {
+            let expression = match relation {
+                Some(_) => canonical(&filter.filter.expression, &filter.targets)
+                    .ok_or_else(|| unbound(&filter.filter.origin))?,
                 None => filter.filter.expression.clone(),
-            },
-            datasets: filter_datasets(filter),
-            origin: filter.filter.origin.clone(),
+            };
+            Ok(BoundFilter {
+                expression,
+                datasets: filter_datasets(filter),
+                origin: filter.filter.origin.clone(),
+            })
         })
-        .collect();
+        .collect::<Result<_, BindError>>()?;
     let columns = elements
         .columns
         .iter()
-        .filter_map(|column| bound_column(column, relation))
-        .collect();
-    AuthorizedQuery {
+        .map(|column| bound_column(column, relation).ok_or_else(|| unbound(column.origin)))
+        .collect::<Result<_, BindError>>()?;
+    Ok(AuthorizedQuery {
         columns: Columns::in_select_order(columns),
         filters,
         time_grains: elements.time_grains,
@@ -108,11 +116,17 @@ fn assemble(
         authorization,
         subgraph,
         named,
-    }
+    })
+}
+
+/// The invariant error of an element rows 3 to 5 left unbound, at `origin`.
+fn unbound(origin: &menura_representations::origin::QueryLocation) -> BindError {
+    BindError::invariant(InvariantViolation::UnboundElement, origin)
 }
 
 /// The bound column of `column`; rows 4 and 5 made every dimension read fields only and every
 /// metric read metrics only. `relation` is the dataset of the SQL form's `FROM` relation.
+/// Returns `None` when that does not hold: [`InvariantViolation::UnboundElement`].
 fn bound_column(
     column: &ResolvedColumn<'_>,
     relation: Option<&NormalizedName>,
@@ -149,7 +163,7 @@ fn dimension_kind(
         },
         (Some(expression), reads) => Some(BoundDimensionKind::Expression {
             dataset: relation?.clone(),
-            expression: canonical(expression, &targets(reads)),
+            expression: canonical(expression, &targets(reads))?,
         }),
         (None, _) => None,
     }
@@ -165,7 +179,7 @@ fn metric_kind(column: &ResolvedColumn<'_>) -> Option<BoundMetricKind> {
         (Some(expression), reads) => Some(BoundMetricKind::Inline(canonical(
             expression,
             &targets(reads),
-        ))),
+        )?)),
         (None, _) => None,
     }
 }

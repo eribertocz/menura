@@ -2,7 +2,8 @@
 //! through it (E1-4 "FROM", QRY-5.2, DEV-8).
 
 use menura_model::expression::Reference;
-use menura_model::internal_model::NormalizedName;
+use menura_model::internal_model::{FieldPath, NormalizedName};
+use menura_representations::bound_query::MetricPath;
 use menura_representations::query_tree::{QueryReference, QueryRelation};
 
 use super::Resolver;
@@ -91,8 +92,9 @@ impl Resolver<'_> {
     }
 
     /// The member `member` of `relation`, unqualified or qualified by `qualifier`: a field of
-    /// its dataset, then a dataset metric of it, then a metric of the semantic model whose home
-    /// dataset is that dataset alone (QRY-5.2, DEV-8). Any other metric is not exposed.
+    /// its dataset, then a dataset metric of it, then a metric of the semantic model exposed on
+    /// it (QRY-5.2, DEV-8). Each is taken only when the user may use it, so a name the user may
+    /// not see never hides another (E2-4.4).
     fn relation_member(
         &mut self,
         relation: &RelationScope,
@@ -103,23 +105,45 @@ impl Resolver<'_> {
             return None;
         }
         let dataset = self.model.dataset(&relation.dataset)?;
-        let is_dataset_member = dataset.field(member).is_some()
-            || dataset.metrics.iter().any(|metric| &metric.name == member);
-        if is_dataset_member {
-            return self.member(&relation.dataset, member);
+        let is_field = dataset.field(member).is_some();
+        let is_dataset_metric = dataset.metrics.iter().any(|metric| &metric.name == member);
+        if is_field {
+            let path = FieldPath {
+                dataset: relation.dataset.clone(),
+                field: member.clone(),
+            };
+            if self.field(&path) {
+                return Some(ResolvedName::Field(path));
+            }
         }
-        let exposed = self
-            .model
-            .metric(member)?
-            .classification
-            .as_ref()
-            .is_some_and(|classification| {
-                classification.home_datasets.as_slice() == std::slice::from_ref(&relation.dataset)
-            });
-        if exposed {
-            self.semantic_metric(member)
-        } else {
-            None
+        if is_dataset_metric {
+            let path = MetricPath::Dataset {
+                dataset: relation.dataset.clone(),
+                metric: member.clone(),
+            };
+            if self.metric(&path) {
+                return Some(ResolvedName::Metric(path));
+            }
         }
+        if self.is_exposed(relation, member) {
+            return self.semantic_metric(member);
+        }
+        None
+    }
+
+    /// Whether the metric of the semantic model `name` is exposed on `relation`: its home
+    /// dataset is the relation's dataset alone (DEV-8). A metric E0 could not classify is
+    /// exposed when E0 marked it unusable, so that row 12a reports it as in the wide-table
+    /// form (P5).
+    fn is_exposed(&self, relation: &RelationScope, name: &NormalizedName) -> bool {
+        self.model
+            .metric(name)
+            .is_some_and(|metric| match &metric.classification {
+                Some(classification) => {
+                    classification.home_datasets.as_slice()
+                        == std::slice::from_ref(&relation.dataset)
+                }
+                None => !metric.query_errors.is_empty(),
+            })
     }
 }
