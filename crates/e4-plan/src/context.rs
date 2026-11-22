@@ -7,8 +7,10 @@
 
 use std::collections::BTreeSet;
 
+use menura_contracts::types::common::Grain;
 use menura_model::internal_model::{
-    ContextModifier, FieldPath, Metric, NormalizedName, RemovedDimensions, SourceLocation,
+    ContextModifier, FieldPath, InternalModel, Metric, NormalizedName, RemovedDimensions,
+    SourceLocation,
 };
 use menura_representations::bound_query::{
     BoundDimension, BoundDimensionKind, BoundMetric, BoundMetricKind, BoundQuery, BoundQueryParts,
@@ -20,6 +22,7 @@ use menura_representations::origin::QueryLocation;
 use menura_representations::paths::Branches;
 
 use crate::error::InvariantViolation;
+use crate::to_date::{ToDatePlan, to_date_plan};
 
 /// One context query of a query (E4-8.2).
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -36,6 +39,10 @@ pub struct ContextQuery {
     /// The positions, among the query's dimensions, of the dimensions it keeps, in order:
     /// its dimension `i` is the query dimension `kept[i]` (E4-8.3).
     kept: Vec<usize>,
+    /// For `period_to_date`, the time key of its branches (E4-8.5, E4-8.6).
+    to_date: Option<TimeKey>,
+    /// Where the query metric that reads the first context metric is written.
+    reader: QueryLocation,
 }
 
 impl ContextQuery {
@@ -96,6 +103,17 @@ impl ContextQuery {
     pub(crate) fn modifier_type(&self) -> &'static str {
         match self.key.modifier {
             NormalizedModifier::ShareOfTotal(_) => "share_of_total",
+            NormalizedModifier::PeriodToDate { .. } => "period_to_date",
+        }
+    }
+
+    /// For `period_to_date`, the `ToDate` of its branches, or `Err` with the location of
+    /// `E4-02` (E4-8.6); `Ok(None)` for another modifier.
+    pub(crate) fn to_date(&self) -> Result<Option<&ToDatePlan>, &QueryLocation> {
+        match &self.to_date {
+            None => Ok(None),
+            Some(TimeKey::Found(plan)) => Ok(Some(plan)),
+            Some(TimeKey::Missing) => Err(&self.reader),
         }
     }
 
@@ -105,6 +123,15 @@ impl ContextQuery {
             MetricPath::SemanticModel(name) | MetricPath::Dataset { metric: name, .. } => name,
         }
     }
+}
+
+/// The time key of a `period_to_date` context query (E4-8.6).
+#[derive(Debug, Clone, PartialEq, Eq)]
+enum TimeKey {
+    /// The query has it: the branches repeat their rows by this `ToDate`.
+    Found(ToDatePlan),
+    /// The query lacks it: `E4-02` at the query metric that reads the context metric.
+    Missing,
 }
 
 /// A context query with the branches E3 resolved for it.
@@ -131,20 +158,29 @@ enum NormalizedModifier {
     /// values that take out the same query dimensions, `all` and a list of every query
     /// dimension included, compare equal (E4-8.2, CTX-3a.5).
     ShareOfTotal(Vec<usize>),
+    /// `period_to_date`: its time dimension and grain.
+    PeriodToDate {
+        /// The time dimension.
+        time_dimension: FieldPath,
+        /// The grain of the period.
+        grain: Grain,
+    },
 }
 
 /// The context queries of one query, in the order of E4-8.8, as the expansion of its metrics
 /// finds them.
 pub(crate) struct ContextRegistry<'query> {
     query: &'query BoundQuery,
+    model: &'query InternalModel,
     found: Vec<ContextQuery>,
 }
 
 impl<'query> ContextRegistry<'query> {
-    /// A registry with no context query yet, for the metrics of `query`.
-    pub(crate) fn new(query: &'query BoundQuery) -> Self {
+    /// A registry with no context query yet, for the metrics of `query` over `model`.
+    pub(crate) fn new(query: &'query BoundQuery, model: &'query InternalModel) -> Self {
         Self {
             query,
+            model,
             found: Vec::new(),
         }
     }
@@ -176,7 +212,14 @@ impl<'query> ContextRegistry<'query> {
             ContextModifier::ShareOfTotal(removed) => {
                 NormalizedModifier::ShareOfTotal(self.kept(removed))
             }
-            ContextModifier::PeriodToDate { .. } | ContextModifier::PriorPeriod { .. } => {
+            ContextModifier::PeriodToDate {
+                time_dimension,
+                grain,
+            } => NormalizedModifier::PeriodToDate {
+                time_dimension: time_dimension.clone(),
+                grain: *grain,
+            },
+            ContextModifier::PriorPeriod { .. } => {
                 return Err(InvariantViolation::ContextMetric);
             }
         };
@@ -184,14 +227,30 @@ impl<'query> ContextRegistry<'query> {
         if let Some(position) = self.found.iter().position(|found| found.key == key) {
             return Ok(position);
         }
-        let NormalizedModifier::ShareOfTotal(kept) = key.modifier.clone();
-        let query = self.context_query(&key.base, &kept, origin);
+        let all: Vec<usize> = (0..self.query.columns().dimensions().count()).collect();
+        let (kept, to_date, without_range) = match &key.modifier {
+            NormalizedModifier::ShareOfTotal(kept) => (kept.clone(), None, None),
+            NormalizedModifier::PeriodToDate {
+                time_dimension,
+                grain,
+            } => (
+                all,
+                Some(
+                    to_date_plan(self.query, self.model, time_dimension, *grain)
+                        .map_or(TimeKey::Missing, TimeKey::Found),
+                ),
+                Some(time_dimension),
+            ),
+        };
+        let query = self.context_query(&key.base, &kept, without_range, origin);
         self.found.push(ContextQuery {
             query,
-            key,
             metric: metric.name.clone(),
             location: metric.location.clone(),
             kept,
+            to_date,
+            reader: origin.clone(),
+            key,
         });
         Ok(self.found.len() - 1)
     }
@@ -216,13 +275,15 @@ impl<'query> ContextRegistry<'query> {
     }
 
     /// The bound query of a context query over `base` that keeps the query dimensions at
-    /// `kept`: the query's filters, `date_range`, `paths` and authorization unchanged, no
-    /// `order_by` and no `limit` (E4-8.2, E4-8.3). Its metric is written where the query
-    /// metric that reads the context metric is, at `origin`.
+    /// `kept`: the query's filters, `paths` and authorization unchanged, no `order_by` and no
+    /// `limit`, and its `date_range` unless it is on `without_range` (E4-8.2, E4-8.3,
+    /// E4-8.5). Its metric is written where the query metric that reads the context metric
+    /// is, at `origin`.
     fn context_query(
         &self,
         base: &MetricPath,
         kept: &[usize],
+        without_range: Option<&FieldPath>,
         origin: &QueryLocation,
     ) -> BoundQuery {
         let dimensions: Vec<BoundDimension> = self
@@ -240,7 +301,11 @@ impl<'query> ContextRegistry<'query> {
         };
         let parts = BoundQueryParts {
             filters: self.query.filters().to_vec(),
-            date_range: self.query.date_range().cloned(),
+            date_range: self
+                .query
+                .date_range()
+                .filter(|range| Some(&range.field) != without_range)
+                .cloned(),
             paths: self.query.paths().to_vec(),
             order: Vec::new(),
             limit: None,

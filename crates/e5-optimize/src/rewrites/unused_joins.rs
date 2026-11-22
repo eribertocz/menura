@@ -4,7 +4,7 @@ use menura_representations::logical_plan::{LookupKey, Operation, OutputSchema, P
 
 use crate::column_reads::{ColumnNames, add_operation_reads};
 use crate::context::RewriteContext;
-use crate::plan_inputs::map_inputs;
+use crate::plan_inputs::{input_mut, map_inputs};
 use crate::record::{NodePath, RewriteOutcome, RewriteRecord, RewriteRule, RewriteSubject};
 
 /// Applies the rewrite to `plan` and adds a record of every `Join` it removed to `records`.
@@ -68,6 +68,7 @@ fn visit(
         }
         Operation::Filter { input, .. }
         | Operation::SemiJoin { input, .. }
+        | Operation::ToDate { input, .. }
         | Operation::Aggregate { input, .. }
         | Operation::Project { input, .. }
         | Operation::Sort { input, .. }
@@ -153,7 +154,7 @@ fn has_join(node: &PlanNode) -> bool {
 }
 
 /// `node` without the columns `removed`: in its schema and in the schemas of its chain of
-/// `Filter`, `SemiJoin` and `Join` inputs down to the home `Scan`, whose `row_identity` goes
+/// `Filter`, `SemiJoin`, `ToDate` and `Join` inputs down to the home `Scan`, whose `row_identity` goes
 /// when it is removed (E4-4.0f).
 fn without_columns(node: &PlanNode, removed: &ColumnNames) -> PlanNode {
     let schema = OutputSchema::new(
@@ -176,6 +177,7 @@ fn without_columns(node: &PlanNode, removed: &ColumnNames) -> PlanNode {
         },
         Operation::Filter { input, .. }
         | Operation::SemiJoin { input, .. }
+        | Operation::ToDate { input, .. }
         | Operation::Join { left: input, .. } => {
             replace_input(node.operation(), without_columns(input, removed))
         }
@@ -193,6 +195,11 @@ fn rebuild(node: &PlanNode, input: PlanNode) -> PlanNode {
         | Operation::SemiJoin { input, .. }
         | Operation::Deduplicate { input, .. } => Some(column_names(&[input])),
         Operation::Join { left, right, .. } => Some(column_names(&[left, right])),
+        Operation::ToDate { input, period, .. } => {
+            let mut available = column_names(&[input]);
+            available.insert(period.as_str().to_owned());
+            Some(available)
+        }
         _ => None,
     };
     let schema = match available {
@@ -251,6 +258,13 @@ fn replace_input(operation: &Operation, input: PlanNode) -> Operation {
             items: items.clone(),
         },
         Operation::Limit { rows, .. } => Operation::Limit { input, rows: *rows },
+        Operation::ToDate { .. } => {
+            let mut operation = operation.clone();
+            if let Some(slot) = input_mut(&mut operation, 0) {
+                *slot = *input;
+            }
+            operation
+        }
         Operation::Scan { .. }
         | Operation::Periods { .. }
         | Operation::Population { .. }

@@ -4,6 +4,7 @@ use std::collections::BTreeSet;
 
 use menura_model::expression::{AggregateCall, Expression};
 use menura_representations::logical_plan::{AggregateComponent, LookupKey, Operation};
+use menura_representations::names::ColumnName;
 
 /// The names of plan columns, as text.
 pub(crate) type ColumnNames = BTreeSet<String>;
@@ -19,17 +20,17 @@ pub(crate) fn add_operation_reads(operation: &Operation, columns: &mut ColumnNam
             columns.extend(on.iter().map(|pair| pair.left.as_str().to_owned()));
         }
         Operation::Filter { predicate, .. } => add_expression_reads(predicate, columns),
-        Operation::PeriodRange { coverage, .. } => {
-            columns.insert(coverage.as_str().to_owned());
+        Operation::PeriodRange {
+            coverage: column, ..
+        }
+        | Operation::ToDate {
+            dimension: column, ..
+        } => {
+            columns.insert(column.as_str().to_owned());
         }
         Operation::Deduplicate {
             group, identity, ..
-        } => {
-            for expression in group {
-                add_expression_reads(expression, columns);
-            }
-            columns.extend(identity.iter().map(|name| name.as_str().to_owned()));
-        }
+        } => add_deduplicate_reads(group, identity, columns),
         Operation::Aggregate {
             keys, components, ..
         } => {
@@ -60,6 +61,14 @@ pub(crate) fn add_operation_reads(operation: &Operation, columns: &mut ColumnNam
         | Operation::Snapshot { .. }
         | Operation::Limit { .. } => {}
     }
+}
+
+/// Adds the columns a `Deduplicate` reads, its `group` and its `identity`, to `columns`.
+fn add_deduplicate_reads(group: &[Expression], identity: &[ColumnName], columns: &mut ColumnNames) {
+    for expression in group {
+        add_expression_reads(expression, columns);
+    }
+    columns.extend(identity.iter().map(|name| name.as_str().to_owned()));
 }
 
 /// Adds the columns `component` reads, in its call and its filter, to `columns`.

@@ -34,6 +34,7 @@ mod snapshot;
 mod source_columns;
 mod steps;
 mod stitch;
+mod to_date;
 mod types;
 mod values;
 

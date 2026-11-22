@@ -17,7 +17,9 @@
 
 use menura_contracts::types::common::LogicalType;
 use menura_model::expression::{BinaryOperator, Expression, Reference};
-use menura_model::internal_model::{Component, InternalModel, Metric, NormalizedName, ValueType};
+use menura_model::internal_model::{
+    Component, ContextModifier, InternalModel, Metric, NormalizedName, ValueType,
+};
 use menura_representations::bound_query::MetricPath;
 use menura_representations::logical_plan::DerivedFormula;
 use menura_representations::names::ColumnName;
@@ -254,7 +256,7 @@ impl<'model, 'site, 'query> Expansion<'model, 'site, 'query> {
     /// `expression`, from the base at the result rows (E4-8.1) and the base in its context
     /// query, whose components a `Lookup` attaches (E4-8.7). A `share_of_total` divides the
     /// first by the second, a 64-bit float that is NULL when either is NULL or the divisor is
-    /// zero (E4-8.3, CTX-3.4, E6-4.6).
+    /// zero (E4-8.3, CTX-3.4, E6-4.6); a `period_to_date` is the second (E4-8.5).
     fn context(
         &mut self,
         metric: &Metric,
@@ -273,6 +275,13 @@ impl<'model, 'site, 'query> Expansion<'model, 'site, 'query> {
             .register(metric, base.path(), self.contexts.origin)?;
         let at_result = self.input(base.clone())?;
         let in_context = self.in_context(base, index)?;
+        let is_share = metric
+            .context
+            .as_ref()
+            .is_some_and(|context| matches!(context.modifier, ContextModifier::ShareOfTotal(_)));
+        if !is_share {
+            return Ok(in_context);
+        }
         Ok(Value {
             expression: Expression::Binary {
                 operator: BinaryOperator::Divide,

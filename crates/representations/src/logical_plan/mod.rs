@@ -11,6 +11,7 @@ mod snapshot;
 mod snapshot_tests;
 #[cfg(test)]
 mod tests;
+mod to_date;
 
 pub use items::{
     AggregateComponent, DerivedFormula, JoinCondition, JoinKind, NamedExpression, Recomposition,
@@ -21,6 +22,7 @@ pub use operation::Operation;
 pub use population::{Membership, PopulationRule};
 pub use schema::{OutputSchema, SchemaColumn};
 pub use snapshot::{SnapshotMissing, SnapshotOver, SnapshotRule, TimeSnapshot, UnitKey};
+pub use to_date::{ToDateGrains, ToDateRange};
 
 use crate::origin::Origin;
 
@@ -99,6 +101,7 @@ impl PlanNode {
             Operation::Lookup { result, value, .. } => vec![result, value],
             Operation::Filter { input, .. }
             | Operation::Deduplicate { input, .. }
+            | Operation::ToDate { input, .. }
             | Operation::Aggregate { input, .. }
             | Operation::Project { input, .. }
             | Operation::PeriodRange { input, .. }

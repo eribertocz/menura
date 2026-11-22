@@ -60,6 +60,7 @@ pub(crate) fn input_mut(operation: &mut Operation, index: usize) -> Option<&mut 
         },
         Operation::Filter { input, .. }
         | Operation::Deduplicate { input, .. }
+        | Operation::ToDate { input, .. }
         | Operation::Aggregate { input, .. }
         | Operation::Project { input, .. }
         | Operation::PeriodRange { input, .. }

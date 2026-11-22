@@ -52,7 +52,7 @@ impl<'input> StepWriter<'input> {
     }
 
     /// The typed parameter of the query date `date` (E6-4.2a, E6-4.2c).
-    fn date_parameter(&mut self, date: DateValue) -> String {
+    pub(crate) fn date_parameter(&mut self, date: DateValue) -> String {
         let placeholder = self
             .parameters
             .bind(LogicalType::Date, Value::String(date_text(date)));
