@@ -38,6 +38,7 @@ impl Sources<'_> {
                 Ok(lineage)
             }
             Operation::SemiJoin { .. } => self.semi_join(node, prefix),
+            Operation::ToDate { .. } => self.repeated_to_date(node, prefix),
             Operation::Deduplicate { input, .. }
             | Operation::Sort { input, .. }
             | Operation::Limit { input, .. } => self.node(input, None),
@@ -68,6 +69,32 @@ impl Sources<'_> {
                 "a compiled plan holds an operation of the integrity checks",
             )),
         }
+    }
+
+    /// The lineage of the `ToDate` `node`: its period comes from the time value it reads
+    /// (E4-3.15).
+    fn repeated_to_date(
+        &self,
+        node: &PlanNode,
+        prefix: Option<&ColumnPrefix>,
+    ) -> Result<NodeLineage, InternalError> {
+        let Operation::ToDate {
+            input,
+            dimension,
+            period,
+            ..
+        } = node.operation()
+        else {
+            return Err(InternalError::new(
+                "core",
+                "a to-date lineage over another node",
+            ));
+        };
+        let mut lineage = self.node(input, prefix)?;
+        let read = lineage.provenance_of([dimension.as_str()]);
+        lineage.read_in_every_branch(&read);
+        lineage.columns.insert(period.as_str().to_owned(), read);
+        Ok(lineage)
     }
 
     /// The lineage of the `Lookup` `node`.

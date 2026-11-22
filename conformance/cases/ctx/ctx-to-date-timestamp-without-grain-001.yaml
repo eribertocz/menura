@@ -1,0 +1,18 @@
+id: ctx-to-date-timestamp-without-grain-001
+rules: [E4-8.6, CTX-3.1, CTX-3a.1, E4-10, E2-5]
+model: ctx-to-date
+security_context: analyst.json
+query:
+  contract: "menura.query"
+  contract_version: "1.1.0"
+  time_zone: "UTC"
+  query:
+    dimensions: ["orders.placed_at"]
+    metrics:
+      - {"metric": "sales_placed_ytd", "alias": "sales_placed_ytd"}
+expect:
+  outcome: "error"
+  error: "E4-02"
+  location:
+    document: "query"
+    pointer: "/query/metrics/0"

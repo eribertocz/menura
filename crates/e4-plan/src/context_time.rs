@@ -6,10 +6,8 @@ use menura_contracts::types::common::{Grain, LogicalType};
 use menura_model::expression::{DateUnit, Expression};
 use menura_model::internal_model::{FieldPath, InternalModel, ValueType};
 use menura_representations::bound_query::{BoundDimensionKind, BoundQuery};
-use menura_representations::origin::QueryLocation;
 
 use crate::columns::field_name;
-use crate::error::PlanError;
 
 /// The time key of a query for a context modifier (E4-8.6).
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -21,21 +19,16 @@ pub(crate) struct QueryTime {
     pub(crate) grain: Grain,
 }
 
-/// The time key of `query` for a modifier on `time_dimension` at `grain` (E4-8.6).
-///
-/// # Errors
-///
-/// [`PlanError::ContextTime`] (`E4-02`) at `reader`, the query metric that reads the context
-/// metric, when no query dimension or more than one has the field `time_dimension`, when it is
-/// a `timestamp` without a time grain, or when its grain is coarser than `grain`.
+/// The time key of `query` for a modifier on `time_dimension` at `grain` (E4-8.6). `None`,
+/// which is `E4-02` at the query metric that reads the context metric, when no query dimension
+/// or more than one reads `time_dimension`, when it is a `timestamp` without a time grain, or
+/// when its grain is coarser than `grain`.
 pub(crate) fn query_time(
     query: &BoundQuery,
     model: &InternalModel,
     time_dimension: &FieldPath,
     grain: Grain,
-    reader: &QueryLocation,
-) -> Result<QueryTime, PlanError> {
-    let fail = || PlanError::ContextTime(reader.clone());
+) -> Option<QueryTime> {
     let mut found = query
         .columns()
         .dimensions()
@@ -44,17 +37,14 @@ pub(crate) fn query_time(
             time_key(&dimension.kind, time_dimension).map(|key| (position, key))
         });
     let (Some((position, key)), None) = (found.next(), found.next()) else {
-        return Err(fail());
+        return None;
     };
     let query_grain = match key {
         TimeKey::Grain(Some(time_grain)) => time_grain,
         TimeKey::Grain(None) if is_date(model, time_dimension) => Grain::Day,
-        TimeKey::Grain(None) | TimeKey::FinerThanDay => return Err(fail()),
+        TimeKey::Grain(None) | TimeKey::FinerThanDay => return None,
     };
-    if rank(query_grain) > rank(grain) {
-        return Err(fail());
-    }
-    Ok(QueryTime {
+    (rank(query_grain) <= rank(grain)).then_some(QueryTime {
         position,
         grain: query_grain,
     })

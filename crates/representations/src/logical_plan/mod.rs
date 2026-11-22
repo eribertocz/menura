@@ -13,6 +13,7 @@ mod snapshot;
 mod snapshot_tests;
 #[cfg(test)]
 mod tests;
+mod to_date;
 
 pub use items::{
     AggregateComponent, DerivedFormula, JoinCondition, JoinKind, NamedExpression, Recomposition,
@@ -24,6 +25,7 @@ pub use population::{Membership, PopulationRule};
 pub use schema::{OutputSchema, SchemaColumn};
 pub use shift::{PeriodShift, ShiftedRange};
 pub use snapshot::{SnapshotMissing, SnapshotOver, SnapshotRule, TimeSnapshot, UnitKey};
+pub use to_date::{ToDateGrains, ToDateRange};
 
 use crate::origin::Origin;
 
@@ -103,6 +105,7 @@ impl PlanNode {
             Operation::Filter { input, .. }
             | Operation::ShiftedFilter { input, .. }
             | Operation::Deduplicate { input, .. }
+            | Operation::ToDate { input, .. }
             | Operation::Aggregate { input, .. }
             | Operation::Project { input, .. }
             | Operation::PeriodRange { input, .. }

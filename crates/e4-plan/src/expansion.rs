@@ -256,9 +256,8 @@ impl<'model, 'site, 'query> Expansion<'model, 'site, 'query> {
     /// `expression`, from the base at the result rows (E4-8.1) and the base in its context
     /// query, whose components a `Lookup` attaches (E4-8.7). A `share_of_total` divides the
     /// first by the second, a 64-bit float that is NULL when either is NULL or the divisor is
-    /// zero (E4-8.3, CTX-3.4, E6-4.6). A `prior_period` is the base evaluated from the
-    /// components attached for the shifted period (E4-8.4); the base still takes part in the
-    /// result rows (E4-8.1).
+    /// zero (E4-8.3, CTX-3.4, E6-4.6); a `period_to_date` and a `prior_period` are the second
+    /// (E4-8.4, E4-8.5).
     fn context(
         &mut self,
         metric: &Metric,
@@ -277,14 +276,12 @@ impl<'model, 'site, 'query> Expansion<'model, 'site, 'query> {
             .register(metric, base.path(), self.contexts.origin)?;
         let at_result = self.input(base.clone())?;
         let in_context = self.in_context(base, index)?;
-        if !matches!(
-            metric.context.as_ref().map(|context| &context.modifier),
-            Some(ContextModifier::ShareOfTotal(_))
-        ) {
-            return Ok(Value {
-                expression: in_context.expression,
-                reads: at_result.reads.max(in_context.reads),
-            });
+        let is_share = metric
+            .context
+            .as_ref()
+            .is_some_and(|context| matches!(context.modifier, ContextModifier::ShareOfTotal(_)));
+        if !is_share {
+            return Ok(in_context);
         }
         Ok(Value {
             expression: Expression::Binary {

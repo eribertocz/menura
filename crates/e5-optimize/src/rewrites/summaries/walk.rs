@@ -10,12 +10,14 @@ use crate::record::RewriteRecord;
 
 /// `node` with each branch `Aggregate` below its `Limit`, `Sort`, `Project` and `Stitch` nodes
 /// replaced by the branch that reads its selected summary; `None` when no branch reads one.
+/// A branch with a `ToDate` is not considered (E4-8.9).
 pub(super) fn select_in_branches(
     node: &PlanNode,
     context: &RewriteContext<'_>,
     records: &mut Vec<RewriteRecord>,
 ) -> Option<PlanNode> {
     let operation = match node.operation() {
+        Operation::Aggregate { input, .. } if has_to_date(input) => return None,
         Operation::Aggregate { .. } => return select(node, context, records),
         Operation::Limit { input, rows } => Operation::Limit {
             input: Box::new(select_in_branches(input, context, records)?),
@@ -70,6 +72,12 @@ fn selected_lookup(
             .and_then(Option::take)
             .unwrap_or_else(|| input.clone())
     }))
+}
+
+/// Whether the rows of a branch, `node`, are repeated by a `ToDate` (E4-8.5).
+fn has_to_date(node: &PlanNode) -> bool {
+    matches!(node.operation(), Operation::ToDate { .. })
+        || node.inputs().into_iter().any(has_to_date)
 }
 
 /// `branches` with each one rewritten by [`select_in_branches`]; `None` when none is.

@@ -1,0 +1,20 @@
+id: ctx-to-date-year-by-week-001
+rules: [E4-8.5, E4-8.6, E4-8.7, E4-3.15, CTX-3a.1, CTX-3a.4, E6-4.14]
+model: ctx-to-date
+security_context: analyst.json
+query:
+  contract: "menura.query"
+  contract_version: "1.1.0"
+  time_zone: "UTC"
+  query:
+    dimensions: ["orders.order_date"]
+    metrics:
+      - {"metric": "sales", "alias": "sales"}
+      - {"metric": "sales_ytd", "alias": "sales_ytd"}
+    nonportable_extensions:
+      - {"vendor_name": "COMMON", "data": {"namespace": "menura", "version": 1, "time_grains": [{"dimension": "orders.order_date", "grain": "week"}]}}
+expect:
+  outcome: "plan"
+  sql: "ctx-to-date-year-by-week-001.sql"
+  row_order: "any"
+  rows: "ctx-to-date-year-by-week-001.csv"

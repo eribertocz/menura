@@ -73,6 +73,7 @@ fn kind_of(operation: &Operation) -> &'static str {
         Operation::Snapshot { .. } => "Snapshot",
         Operation::Stitch { .. } => "Stitch",
         Operation::Lookup { .. } => "Lookup",
+        Operation::ToDate { .. } => "ToDate",
         Operation::Project { .. } => "Project",
         Operation::Sort { .. } => "Sort",
         Operation::Limit { .. } => "Limit",

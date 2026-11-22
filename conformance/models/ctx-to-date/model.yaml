@@ -1,0 +1,74 @@
+version: "0.1.1"
+semantic_model:
+  - name: ctx_to_date
+    description: 'period_to_date context metrics (CTX-3a.1, CTX-3a.4, E4-8.5, E4-8.6): year, quarter and month to date over a date, a distinct count base, and a timestamp time dimension; one order has no date, and the ISO week 2026-W01 starts on 2025-12-29'
+    custom_extensions:
+      - vendor_name: COMMON
+        data: '{"namespace": "menura", "version": 1, "security_context": {"roles": ["analyst"], "attributes": []}}'
+    datasets:
+      - name: orders
+        source: shop.main.orders
+        primary_key: [order_id]
+        fields:
+          - name: order_id
+            expression: {dialects: [{dialect: ANSI_SQL, expression: order_id}]}
+          - name: customer_id
+            expression: {dialects: [{dialect: ANSI_SQL, expression: customer_id}]}
+          - name: order_date
+            expression: {dialects: [{dialect: ANSI_SQL, expression: order_date}]}
+            dimension: {is_time: true}
+          - name: placed_at
+            expression: {dialects: [{dialect: ANSI_SQL, expression: placed_at}]}
+            dimension: {is_time: true}
+          - name: amount
+            expression: {dialects: [{dialect: ANSI_SQL, expression: amount}]}
+        custom_extensions:
+          - vendor_name: COMMON
+            data: '{"namespace": "menura", "version": 1, "access": {"mode": "roles", "roles": ["analyst"]}}'
+      - name: customers
+        source: shop.main.customers
+        primary_key: [customer_id]
+        fields:
+          - name: customer_id
+            expression: {dialects: [{dialect: ANSI_SQL, expression: customer_id}]}
+          - name: region
+            expression: {dialects: [{dialect: ANSI_SQL, expression: region}]}
+        custom_extensions:
+          - vendor_name: COMMON
+            data: '{"namespace": "menura", "version": 1, "access": {"mode": "roles", "roles": ["analyst"]}}'
+    relationships:
+      - name: orders_customers
+        from: orders
+        to: customers
+        from_columns: [customer_id]
+        to_columns: [customer_id]
+    metrics:
+      - name: sales
+        expression: {dialects: [{dialect: ANSI_SQL, expression: 'SUM(orders.amount)'}]}
+      - name: buyers
+        expression: {dialects: [{dialect: ANSI_SQL, expression: 'COUNT(DISTINCT orders.customer_id)'}]}
+      - name: sales_ytd
+        expression: {dialects: [{dialect: ANSI_SQL, expression: 'AGG(sales)'}]}
+        custom_extensions:
+          - vendor_name: COMMON
+            data: '{"namespace": "menura", "version": 1, "context": {"base": "sales", "modifier": {"type": "period_to_date", "time_dimension": "orders.order_date", "grain": "year"}}}'
+      - name: sales_qtd
+        expression: {dialects: [{dialect: ANSI_SQL, expression: 'AGG(sales)'}]}
+        custom_extensions:
+          - vendor_name: COMMON
+            data: '{"namespace": "menura", "version": 1, "context": {"base": "sales", "modifier": {"type": "period_to_date", "time_dimension": "orders.order_date", "grain": "quarter"}}}'
+      - name: sales_mtd
+        expression: {dialects: [{dialect: ANSI_SQL, expression: 'AGG(sales)'}]}
+        custom_extensions:
+          - vendor_name: COMMON
+            data: '{"namespace": "menura", "version": 1, "context": {"base": "sales", "modifier": {"type": "period_to_date", "time_dimension": "orders.order_date", "grain": "month"}}}'
+      - name: buyers_ytd
+        expression: {dialects: [{dialect: ANSI_SQL, expression: 'AGG(buyers)'}]}
+        custom_extensions:
+          - vendor_name: COMMON
+            data: '{"namespace": "menura", "version": 1, "context": {"base": "buyers", "modifier": {"type": "period_to_date", "time_dimension": "orders.order_date", "grain": "year"}}}'
+      - name: sales_placed_ytd
+        expression: {dialects: [{dialect: ANSI_SQL, expression: 'AGG(sales)'}]}
+        custom_extensions:
+          - vendor_name: COMMON
+            data: '{"namespace": "menura", "version": 1, "context": {"base": "sales", "modifier": {"type": "period_to_date", "time_dimension": "orders.placed_at", "grain": "year"}}}'

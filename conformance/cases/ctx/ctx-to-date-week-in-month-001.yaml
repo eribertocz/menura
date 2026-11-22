@@ -1,0 +1,20 @@
+id: ctx-to-date-week-in-month-001
+rules: [E4-8.6, CTX-3.1, CTX-3a.1, E4-10, E2-5]
+model: ctx-to-date
+security_context: analyst.json
+query:
+  contract: "menura.query"
+  contract_version: "1.1.0"
+  time_zone: "UTC"
+  query:
+    dimensions: ["orders.order_date"]
+    metrics:
+      - {"metric": "sales_mtd", "alias": "sales_mtd"}
+    nonportable_extensions:
+      - {"vendor_name": "COMMON", "data": {"namespace": "menura", "version": 1, "time_grains": [{"dimension": "orders.order_date", "grain": "week"}]}}
+expect:
+  outcome: "error"
+  error: "E4-02"
+  location:
+    document: "query"
+    pointer: "/query/metrics/0"

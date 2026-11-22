@@ -17,21 +17,20 @@ use crate::authorized_query::{AuthorizedQuery, ResolvedName};
 use crate::error::BindError;
 use crate::resolve_and_authorize;
 use crate::row_12b::{Row12bBindings, check_row_12b, resolve_date_range};
-use crate::slice::check_slice;
 use crate::unusable::check_rows_10_to_12a;
 
 /// Binds `tree` to `model` for the user of `context`: rows 3 to 9 of E2-5
-/// ([`resolve_and_authorize`]), then rows 10 to 12c, and builds the bound query.
+/// ([`resolve_and_authorize`]), then rows 10 to 12b, and builds the bound query. Row 12c never
+/// applies: every query of the contracts is in the 0.8.0 slice (VS-1f).
 ///
 /// # Errors
 ///
-/// [`BindError::Diagnostic`] with the first error in the order of E2-5 rows 3 to 12c, and
+/// [`BindError::Diagnostic`] with the first error in the order of E2-5 rows 3 to 12b, and
 /// within a row the first element in query order (E2-5.3): the errors of
 /// [`resolve_and_authorize`]; then the query error code of a named element marked unusable in
 /// E0 (rows 10 to 12a); then the E0.f code of a filter that does not type or is not boolean
 /// (`E0F-03` to `E0F-08`), `E2-01`, `EQRY-09`, `EQRY-10`, `EQRY-11`, `EQRY-12`,
-/// `EQRY-03`, `E_INVALID_QUERY` and `EQRY-04` (row 12b); then `E_NOT_YET_SUPPORTED` for the
-/// first element outside the 0.7.0 slice (row 12c, VS-1e). [`BindError::Invariant`] when the
+/// `EQRY-03`, `E_INVALID_QUERY` and `EQRY-04` (row 12b). [`BindError::Invariant`] when the
 /// tree breaks the contract of E1.
 pub fn bind(
     tree: &QueryTree,
@@ -42,11 +41,10 @@ pub fn bind(
     let reference_date = tree.time().reference_date;
     check_rows_10_to_12a(model, &query.named)?;
     let bindings = check_row_12b(model, tree, &query, reference_date)?;
-    check_slice(model, &query.named)?;
     assemble(tree, query, bindings, reference_date)
 }
 
-/// The bound query of `query`, which passed rows 3 to 12c.
+/// The bound query of `query`, which passed rows 3 to 12b.
 fn assemble(
     tree: &QueryTree,
     query: AuthorizedQuery,

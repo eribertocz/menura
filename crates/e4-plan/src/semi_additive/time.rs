@@ -183,6 +183,7 @@ fn carried_rows(branch: &SemiAdditiveBranch<'_>) -> Result<PlanNode, PlanError> 
             fields: &snapshot_fields(branch.declaration),
             predicate,
             replaced_home: None,
+            to_date: None,
         },
     )
 }
@@ -206,6 +207,7 @@ fn added_rows(branch: &SemiAdditiveBranch<'_>, expected: &PlanNode) -> Result<Pl
             fields: &snapshot_fields(branch.declaration),
             predicate: query_predicate(branch.query, source.layout, branch.range_shift)?,
             replaced_home: Some(&replaced),
+            to_date: None,
         },
     )
 }

@@ -9,7 +9,7 @@ use menura_expressions::typing::TypingCode;
 use menura_model::internal_model::DiagnosticCode;
 use menura_representations::origin::QueryLocation;
 
-/// The codes rows 3 to 12c of E2-5 report.
+/// The codes rows 3 to 12b of E2-5 report.
 ///
 /// Row 7, `E_WINDOW_IN_WHERE`, has no code here: the expression language rejects a window
 /// function as `E0F-02` (E0F-2.4), which E1 reports at row 1, so no query tree holds one.
@@ -59,9 +59,6 @@ pub enum BindCode {
     InvalidQuery,
     /// `EQRY-04`: a `limit` without an `order_by` over every dimension (QRY-4.6).
     LimitWithoutTotalOrder,
-    /// `E_NOT_YET_SUPPORTED`: the query needs a capability outside the version's slice
-    /// (row 12c, VS-1, VS-2).
-    NotYetSupported,
 }
 
 impl BindCode {
@@ -93,7 +90,6 @@ impl BindCode {
             Self::MissingReferenceTime => "EQRY-03",
             Self::InvalidQuery => "E_INVALID_QUERY",
             Self::LimitWithoutTotalOrder => "EQRY-04",
-            Self::NotYetSupported => "E_NOT_YET_SUPPORTED",
         }
     }
 }

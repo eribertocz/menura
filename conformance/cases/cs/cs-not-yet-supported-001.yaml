@@ -1,5 +1,5 @@
 id: cs-not-yet-supported-001
-rules: [CS-2.8, VS-2, VS-4, E2-5.4, E2-5.4a, VS-1c, VS-3]
+rules: [CS-2.8, VS-2, VS-4, E2-5.4, E2-5.4a, VS-1c, VS-3, VS-1f, E4-02]
 model: e0-context
 load_options: {grant_authenticated_to_all: true}
 security_context: analyst.json
@@ -11,10 +11,10 @@ query:
     dimensions: ["customers.region"]
     metrics:
       - {"metric": "billed", "alias": "billed"}
-      - {"metric": "billed_ytd", "alias": "billed_ytd"}
+      - {"metric": "billed_prior_year", "alias": "billed_prior_year"}
 expect:
   outcome: "error"
-  error: "E_NOT_YET_SUPPORTED"
+  error: "E4-02"
   location:
     document: "query"
     pointer: "/query/metrics/1"
