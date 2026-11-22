@@ -2,6 +2,7 @@
 //! authorized as soon as it resolves (E2-4). A name that does not resolve and one that is not
 //! authorized give the same answer, `None` (E2-4.4).
 
+mod candidates;
 mod relation;
 
 use std::collections::HashMap;
