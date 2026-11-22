@@ -38,7 +38,7 @@ fn cs_2_8_cases_that_need_a_missing_core_function_are_pending() {
     ] {
         let status = status(&report, case_id);
         assert!(
-            matches!(status, CaseStatus::Pending(_)),
+            matches!(status, Some(CaseStatus::Pending(_))),
             "{case_id}: {status:?}"
         );
     }
