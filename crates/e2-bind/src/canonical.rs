@@ -11,16 +11,19 @@ use crate::walk::for_each_reference_mut;
 /// `expression` with its references, in written order, replaced by `targets`, which row 3
 /// resolved them to in that order: a field as `"DATASET"."FIELD"`, a dataset metric as
 /// `"DATASET"."METRIC"`, and a metric of the semantic model as `"METRIC"`, each with its
-/// normalized name.
-pub(crate) fn canonical(expression: &Expression, targets: &[ResolvedName]) -> Expression {
+/// normalized name. Returns `None` when `targets` does not hold one target per reference.
+pub(crate) fn canonical(expression: &Expression, targets: &[ResolvedName]) -> Option<Expression> {
     let mut rewritten = expression.clone();
     let mut targets = targets.iter();
-    for_each_reference_mut(&mut rewritten, &mut |reference| {
-        if let Some(written) = targets.next().and_then(target_reference) {
-            *reference = written;
-        }
+    let mut complete = true;
+    for_each_reference_mut(&mut rewritten, &mut |reference| match targets
+        .next()
+        .and_then(target_reference)
+    {
+        Some(written) => *reference = written,
+        None => complete = false,
     });
-    rewritten
+    (complete && targets.next().is_none()).then_some(rewritten)
 }
 
 /// The reference that names `target`.

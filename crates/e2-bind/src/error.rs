@@ -168,6 +168,9 @@ pub enum InvariantViolation {
     /// A date range whose bounds cannot be resolved to dates: a bound that is not a date,
     /// or a target that rows 3 to 12b left without a time field or a reference time.
     UnresolvableDateRange,
+    /// An element that rows 3 to 5 left without the model elements its column or expression
+    /// needs, such as a dimension that resolved to no field. This is a defect of E2 itself.
+    UnboundElement,
 }
 
 impl BindError {
