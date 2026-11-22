@@ -203,7 +203,6 @@ fn pop_3_2_periodic_reads_the_period_of_each_row() {
         rule(&node).membership,
         Membership::Periodic {
             period: ColumnName::new("PERIOD"),
-            grain: Grain::Month,
         }
     );
     assert_eq!(

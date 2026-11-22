@@ -129,9 +129,8 @@ fn population_rule(population: &Population) -> Result<PopulationRule, InvariantV
             valid_to: column(valid_to),
             partial_period: *partial_period,
         },
-        PopulationMode::Periodic { period, grain } => Membership::Periodic {
+        PopulationMode::Periodic { period, .. } => Membership::Periodic {
             period: column(period),
-            grain: *grain,
         },
     };
     let required_when = population
