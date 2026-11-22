@@ -400,3 +400,22 @@ fn pop_3_7_missing_error_ignores_population_rows_without_an_entity() {
     let sql = sql_of(rule);
     assert!(sql.contains("WHERE \"menura_row\".\"CUSTOMER_ID\" IS NOT NULL"));
 }
+
+#[test]
+fn add_4_3_an_entity_without_a_known_value_contributes_nothing() {
+    let rule = Rule {
+        missing: Missing::CarryForward(StaleHandling::Error),
+        ..BASE
+    };
+    let sql = sql_of(rule);
+    let carry = sql
+        .split("_carry\" AS (")
+        .nth(1)
+        .and_then(|rest| rest.split("\n  ),").next())
+        .expect("a carry step");
+    assert!(
+        carry.contains("\n    JOIN \"menura_10_carried\" AS \"menura_fill\""),
+        "a missing pair without an earlier value gives no row, so no RADD-04"
+    );
+    assert!(!carry.contains("LEFT JOIN"));
+}
