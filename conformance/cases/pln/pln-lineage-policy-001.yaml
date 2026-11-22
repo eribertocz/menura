@@ -1,0 +1,19 @@
+id: pln-lineage-policy-001
+rules: [PLN-4.2, PLN-4.5, PLN-4.7]
+model: pln-lineage
+security_context: analyst.json
+query:
+  contract: menura.query
+  contract_version: "1.1.0"
+  time_zone: UTC
+  query:
+    dimensions: [stores.region]
+    metrics:
+      - {metric: total_amount, alias: total_amount}
+    filter: "customers.segment = 'RETAIL'"
+expect:
+  outcome: plan
+  sql: pln-lineage-policy-001.sql
+  rows: pln-lineage-policy-001.csv
+  row_order: any
+  lineage: pln-lineage-policy-001.lineage.json
