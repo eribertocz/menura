@@ -1,6 +1,7 @@
 # Checks of spec/09-continuous-integration.md CI-1 that run on every pull request and every
 # push to main (WF-8.0): format, lint, unsafe, test, dependencies, dependency-graph, conformance,
-# ossie-suites, rule-coverage, index and examples. Every job is named exactly as its check in CI-1.
+# ossie-suites, rule-coverage, index, examples and benchmarks. Every job is named exactly as its
+# check in CI-1.
 #
 # Tool versions are pinned so that the same commit always gets the same verdict.
 name: ci
@@ -196,3 +197,28 @@ jobs:
       # The Rust evaluator checks the same corpus in the `test` job (crates/contracts/tests/corpus.rs).
       - name: Validate the contract corpus with the reference implementation
         run: '"$RUNNER_TEMP/venv/bin/python" -I scripts/check_contract_corpus.py'
+
+  benchmarks:
+    name: benchmarks
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the commit
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+      - name: Install the Rust toolchain
+        run: |
+          rustup toolchain install "$RUST_TOOLCHAIN" --profile minimal
+          rustup default "$RUST_TOOLCHAIN"
+      - name: Install Valgrind (R7)
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes --no-install-recommends valgrind
+      - name: Test the benchmarks (R1–R7)
+        run: cargo test --locked -p menura-benchmarks
+      - name: Build the benchmarks
+        run: cargo build --locked --release -p menura-benchmarks
+      - name: Measure load and compile wall-clock times (R1, R2, R6)
+        run: target/release/menura-benchmarks wall-clock
+      - name: Count instructions, check the sweep and the baseline (R3, R7)
+        run: target/release/menura-benchmarks instructions benchmarks/baseline.json
