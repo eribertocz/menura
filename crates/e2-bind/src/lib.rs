@@ -74,6 +74,24 @@ pub fn resolve_and_authorize(
     assemble(elements, named, authorization, subgraph)
 }
 
+/// Every authorization decision E2 takes on `tree` against `model` for the user of `context`,
+/// in the order it takes them (E2-4.7): each object at its first authorization, up to the
+/// first name that does not resolve or is not authorized, when there is one. Names are
+/// authorized only at row 3 (E2-4), so when [`bind`] fails at a later row, these are the
+/// decisions of the whole query, the same as [`BoundQuery::authorization`] on success.
+///
+/// [`BoundQuery::authorization`]: menura_representations::bound_query::BoundQuery::authorization
+#[must_use]
+pub fn authorization_decisions(
+    tree: &QueryTree,
+    model: &InternalModel,
+    context: &AdmittedSecurityContext,
+) -> Vec<AuthorizationDecision> {
+    let mut resolver = Resolver::new(model, context);
+    let _resolved = resolve_elements(tree, &mut resolver);
+    resolver.finish().0
+}
+
 /// The authorized query of `elements`, which passed rows 3 to 9, or
 /// [`InvariantViolation::UnboundElement`] when one of them is left unbound. In the SQL form,
 /// every expression is written with the model elements its references resolved to

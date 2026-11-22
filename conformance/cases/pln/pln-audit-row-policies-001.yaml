@@ -1,0 +1,19 @@
+id: pln-audit-row-policies-001
+rules: [CS-2.13, VS-1e, PLN-6, PLN-6.1, PLN-6.5, PLN-6.6]
+model: slice
+security_context: analyst-north.json
+query:
+  contract: "menura.query"
+  contract_version: "1.1.0"
+  time_zone: "UTC"
+  query:
+    dimensions: ["sales.region"]
+    metrics:
+      - {"metric": "total_amount", "alias": "total_amount"}
+      - {"metric": "total_quantity", "alias": "total_quantity"}
+      - {"metric": "sale_count", "alias": "sale_count"}
+expect:
+  outcome: "plan"
+  rows: "pln-audit-row-policies-001.csv"
+  row_order: "any"
+  audit: "pln-audit-row-policies-001.audit.json"

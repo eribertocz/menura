@@ -68,7 +68,8 @@ fn pln_8_1_explain_keeps_the_compile_options_written_to_the_plan() {
         amount_by_region().as_bytes(),
         analyst().as_bytes(),
         &options,
-    );
+    )
+    .result;
     let document = explain_with(&handle, &amount_by_region(), &analyst(), &options);
     assert_eq!(plan(document), explained(plan(compiled)));
 }
@@ -95,6 +96,7 @@ fn pln_8_3_explain_ignores_the_audit_option() {
     let handle = handle();
     let audited = CompileOptions {
         audit: true,
+        actor: Some("agent:report".to_owned()),
         ..CompileOptions::default()
     };
     let with_audit = plan(explain_with(

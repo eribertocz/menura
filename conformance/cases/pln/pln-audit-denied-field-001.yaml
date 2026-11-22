@@ -1,0 +1,15 @@
+id: pln-audit-denied-field-001
+rules: [CS-2.13, VS-1e, PLN-6, PLN-6.5, E2-4.7]
+model: slice
+security_context: analyst-north.json
+query:
+  contract: "menura.query"
+  contract_version: "1.1.0"
+  time_zone: "UTC"
+  query:
+    dimensions: ["sales.region", "sales.cost"]
+expect:
+  outcome: "error"
+  error: "E_NAME_NOT_FOUND"
+  location: {document: "query", pointer: "/query/dimensions/1"}
+  audit: "pln-audit-denied-field-001.audit.json"

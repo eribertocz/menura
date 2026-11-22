@@ -1,0 +1,67 @@
+{
+  "authorization": [
+    {
+      "decision": "granted",
+      "object": "dataset:SALES",
+      "rule": "access:roles"
+    },
+    {
+      "decision": "granted",
+      "object": "field:SALES.REGION",
+      "rule": "no_field_restriction"
+    },
+    {
+      "decision": "granted",
+      "object": "metric:TOTAL_AMOUNT",
+      "rule": "metric_components"
+    },
+    {
+      "decision": "granted",
+      "object": "metric:TOTAL_QUANTITY",
+      "rule": "metric_components"
+    },
+    {
+      "decision": "granted",
+      "object": "metric:SALE_COUNT",
+      "rule": "metric_components"
+    }
+  ],
+  "compile_options": {
+    "dialect": "duckdb"
+  },
+  "contract": "menura.audit_record",
+  "contract_version": "1.2.0",
+  "contract_versions": {
+    "catalog_schema": "1.1.0",
+    "model": "0.1.1",
+    "query": "1.1.0",
+    "security_context": "1.1.0"
+  },
+  "decisions": [
+    {
+      "code": "DEV-4",
+      "decision": "datasets without access are inaccessible",
+      "reason": "grant_authenticated_to_all is false",
+      "step": "E0",
+      "subject": "load_option:grant_authenticated_to_all"
+    }
+  ],
+  "inputs": {
+    "catalog_schema": "91880f14f5c474326dab7ce0edce1f6aa5df9eeb70a96352bb07a1c48c54bb22",
+    "catalog_state": null,
+    "model": "ce65d82cd8213f1180a7ee76fe057a1b0c5600978b01a910b267de57e6232fbe",
+    "query": "2efeb78aae42408e183e0bf7e3e1e37d25c306a3dcd787d1f476f849373ada54",
+    "security_fingerprint": "a6c4ed4133971642b8c3042444accfc487cf4dba852e3e3849bceb8d31acafff"
+  },
+  "load_options": {
+    "data_source": "conformance:slice",
+    "grant_authenticated_to_all": false,
+    "namespace": "menura",
+    "ossie_format": "release"
+  },
+  "outcome": {
+    "plan_hash": "7d1f4315fd6de86850eb21909202273772c81654ca107d5e06ba872a1d86f79b"
+  },
+  "row_policies": [],
+  "subject": "auditor"
+}

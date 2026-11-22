@@ -8,8 +8,9 @@ use menura_contracts::types::compiled_plan::{
 use menura_e0_load::{LoadRejection, LoadedModel, load_model};
 
 use crate::catalog_state;
-use crate::handle::Handle;
+use crate::handle::{Handle, LoadedParts};
 use crate::load_options::LoadOptions;
+use crate::passed_document::PassedDocument;
 
 /// Validates the model document `model` against the catalog schema document `catalog_schema`
 /// and returns the validation report (PLN-5.3): the compile error document with `contract`
@@ -56,6 +57,7 @@ pub fn load(
     catalog_state: Option<&[u8]>,
     options: &LoadOptions,
 ) -> Result<Handle, CompileErrorDocument> {
+    let passed_schema = PassedDocument::of(catalog_schema);
     let LoadedModel {
         model,
         catalog_schema,
@@ -66,13 +68,14 @@ pub fn load(
             document(CompileErrorContract::CompileError, errors, warnings)
         },
     )?;
-    let handle = Handle::new(
+    let handle = Handle::new(LoadedParts {
         model,
         catalog_schema,
-        options.clone(),
+        passed_schema,
+        options: options.clone(),
         warnings,
         explanation,
-    );
+    });
     Ok(match catalog_state {
         Some(state) => with_state(&handle, state),
         None => handle,
@@ -87,7 +90,7 @@ pub fn load(
 #[must_use]
 pub fn with_state(handle: &Handle, catalog_state: &[u8]) -> Handle {
     let state = catalog_state::admit(catalog_state, handle.catalog_schema(), handle.model());
-    handle.with_catalog_state(state)
+    handle.with_catalog_state(state, PassedDocument::of(catalog_state))
 }
 
 /// A compile error document or validation report (PLN-5).

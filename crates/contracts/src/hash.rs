@@ -77,6 +77,25 @@ pub fn hash_value(value: &Value) -> Sha256Hash {
     hash_bytes(canonical_json(value).as_bytes())
 }
 
+/// Hashes an input document as passed (PLN-6.3): SHA-256 of the RFC 8785 canonical JSON of
+/// `bytes` when they are a JSON document, or of the raw bytes otherwise.
+///
+/// # Example
+///
+/// ```
+/// use menura_contracts::{document_hash, hash_value};
+///
+/// assert_eq!(document_hash(b"{ }"), hash_value(&serde_json::json!({})));
+/// assert_ne!(document_hash(b"{"), hash_value(&serde_json::json!({})));
+/// ```
+#[must_use]
+pub fn document_hash(bytes: &[u8]) -> Sha256Hash {
+    match serde_json::from_slice::<Value>(bytes) {
+        Ok(value) => hash_value(&value),
+        Err(_) => hash_bytes(bytes),
+    }
+}
+
 /// SHA-256 of raw bytes, as 64 lowercase hex digits.
 pub(crate) fn hash_bytes(bytes: &[u8]) -> Sha256Hash {
     let digest = Sha256::digest(bytes);
@@ -106,7 +125,7 @@ pub(crate) fn is_lowercase_hex(text: &str, minimum: usize, maximum: usize) -> bo
 
 #[cfg(test)]
 mod tests {
-    use super::{Sha256Hash, hash_bytes};
+    use super::{Sha256Hash, document_hash, hash_bytes};
 
     /// FIPS 180-2 test vectors.
     #[test]
@@ -119,6 +138,20 @@ mod tests {
             hash_bytes(b"abc").as_str(),
             "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad"
         );
+    }
+
+    #[test]
+    fn pln_6_3_a_json_document_is_hashed_as_canonical_json() {
+        assert_eq!(
+            document_hash(br#"{"b": 1, "a": [true]}"#),
+            hash_bytes(br#"{"a":[true],"b":1}"#)
+        );
+    }
+
+    #[test]
+    fn pln_6_3_a_document_that_is_not_json_is_hashed_as_raw_bytes() {
+        assert_eq!(document_hash(b"not json"), hash_bytes(b"not json"));
+        assert_eq!(document_hash(&[0xff, 0xfe]), hash_bytes(&[0xff, 0xfe]));
     }
 
     #[test]

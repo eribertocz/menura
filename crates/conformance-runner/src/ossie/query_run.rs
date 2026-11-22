@@ -49,7 +49,8 @@ pub(crate) fn query_mismatch(
         prepared.query.to_string().as_bytes(),
         prepared.security_context.to_string().as_bytes(),
         &CompileOptions::default(),
-    );
+    )
+    .result;
     match (&prepared.expected, result) {
         (ExpectedResult::Error(code), CompileResult::Error(error)) => {
             let first = error.errors.first();

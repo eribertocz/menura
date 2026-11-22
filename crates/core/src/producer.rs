@@ -1,4 +1,4 @@
-//! The `producer` of a compiled plan (PLN-1, VS-5, E6-5.5).
+//! The `producer` of a compiled plan and of an audit record (PLN-1, PLN-6, E6-5.5).
 
 use menura_contracts::ContractVersion;
 use menura_contracts::types::common::Producer;
@@ -37,6 +37,20 @@ pub(crate) fn producer() -> Result<Producer, InternalError> {
     })
 }
 
+/// The producer of this build, as every compiled plan and audit record writes it (PLN-1,
+/// E6-5.5); `None` only when the workspace version is not `MAJOR.MINOR.PATCH`.
+///
+/// # Example
+///
+/// ```
+/// let producer = menura_core::build_producer().unwrap();
+/// assert_eq!(producer.ossie_normative, "0.1.1");
+/// ```
+#[must_use]
+pub fn build_producer() -> Option<Producer> {
+    producer().ok()
+}
+
 #[cfg(test)]
 mod tests {
     use super::{OSSIE_NORMATIVE, OSSIE_TRACKED_COMMIT};
@@ -49,12 +63,12 @@ mod tests {
     }
 
     #[test]
-    fn vs_5_the_tracked_commit_is_the_one_upstream_json_records() {
+    fn pln_1_the_tracked_commit_is_the_one_upstream_json_records() {
         assert_eq!(OSSIE_TRACKED_COMMIT, upstream("tracked_commit"));
     }
 
     #[test]
-    fn vs_5_the_normative_release_is_the_one_upstream_json_records() {
+    fn pln_1_the_normative_release_is_the_one_upstream_json_records() {
         let release = upstream("recorded_release");
         let version = release.strip_prefix("osi-").unwrap();
         let version = version.split('-').next().unwrap();
