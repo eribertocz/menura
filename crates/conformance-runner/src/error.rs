@@ -45,8 +45,8 @@ pub enum RunnerErrorKind {
     RepeatedDivergence(String),
     /// An entry of the reviewed file of divergences names no differential case (CS-4.8).
     UnknownDivergence(String),
-    /// An output expectation is given with an outcome that does not allow it (CS-2.11 to
-    /// CS-2.15).
+    /// An output expectation or `compile_options` is given with an outcome that does not allow
+    /// it (CS-2.11 to CS-2.15, CS-2.17, CS-2.18).
     ExpectationNotAllowed {
         /// The member of the case, such as `lineage`.
         member: &'static str,

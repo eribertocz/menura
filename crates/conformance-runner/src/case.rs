@@ -76,6 +76,8 @@ pub struct Case {
     pub query: Option<serde_json::Value>,
     /// The load options the case loads its model with, or `None` for all defaults (CS-2.7).
     pub load_options: Option<CaseLoadOptions>,
+    /// The compile options the case sets, or `None` for all defaults (CS-2.18).
+    pub compile_options: Option<CaseCompileOptions>,
     /// The oracle of a differential case: a reference SQL file next to the case, whose rows the
     /// rows of the plan are also compared with (CS-4.8). Its presence makes the case
     /// differential.
@@ -99,6 +101,15 @@ pub struct CaseLoadOptions {
     pub grant_authenticated_to_all: Option<bool>,
 }
 
+/// The compile options a case sets (CS-2.18): only `actor`. Every other compile option keeps its
+/// default, except `audit` (CS-2.13, CS-2.16).
+#[derive(Debug, Clone, Default, PartialEq, Eq, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct CaseCompileOptions {
+    /// The delegated actor, any JSON value, passed to `compile` and `explain` (PLN-6.8).
+    pub actor: Option<serde_json::Value>,
+}
+
 /// The expected result of a case (CS-2 `expect`).
 #[derive(Debug, Clone, PartialEq, Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -107,6 +118,9 @@ pub struct Expectation {
     pub outcome: Outcome,
     /// The first error code (E2-5.2), or the runtime code for `runtime_error` (CS-2.5).
     pub error: Option<String>,
+    /// The `alternatives` of the first diagnostic, in order; an empty list asserts that the
+    /// diagnostic has none (CS-2.17).
+    pub alternatives: Option<Vec<String>>,
     /// Load warnings that must be reported, by code.
     #[serde(default)]
     pub warnings: Vec<String>,

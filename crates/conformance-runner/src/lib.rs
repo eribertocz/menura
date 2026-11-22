@@ -23,12 +23,14 @@
     reason = "A2: like the command-line wrapper, the conformance runner reads files and runs DuckDB"
 )]
 
+mod alternatives_check;
 mod audit_check;
 mod calendar;
 mod canonical_json;
 pub mod case;
 pub mod case_file;
 mod cells;
+mod compile_options;
 mod csv_rows;
 pub mod database;
 mod describe_part;
