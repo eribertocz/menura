@@ -1,0 +1,55 @@
+version: "0.1.1"
+semantic_model:
+  - name: e5_summary_exclusions
+    description: 'Summaries excluded by a float argument (SUM-3.2) and by a zoned timestamp a measure reads (SUM-3.2a)'
+    custom_extensions:
+      - vendor_name: COMMON
+        data: '{"namespace": "menura", "version": 1, "security_context": {"roles": ["analyst"], "attributes": []}}'
+    datasets:
+      - name: orders
+        source: shop.main.orders
+        primary_key: [order_id]
+        fields:
+          - name: order_id
+            expression: {dialects: [{dialect: ANSI_SQL, expression: 'order_id'}]}
+          - name: order_date
+            expression: {dialects: [{dialect: ANSI_SQL, expression: 'order_date'}]}
+            dimension: {is_time: true}
+          - name: price
+            expression: {dialects: [{dialect: ANSI_SQL, expression: 'price'}]}
+          - name: created_at
+            expression: {dialects: [{dialect: ANSI_SQL, expression: 'created_at'}]}
+        custom_extensions:
+          - vendor_name: COMMON
+            data: '{"namespace": "menura", "version": 1, "access": {"mode": "roles", "roles": ["analyst"]}}'
+      - name: orders_price_by_month
+        source: shop.main.orders_price_by_month
+        primary_key: [order_month]
+        fields:
+          - name: order_month
+            expression: {dialects: [{dialect: ANSI_SQL, expression: 'order_month'}]}
+          - name: price_sum
+            expression: {dialects: [{dialect: ANSI_SQL, expression: 'price_sum'}]}
+          - name: order_count
+            expression: {dialects: [{dialect: ANSI_SQL, expression: 'order_count'}]}
+        custom_extensions:
+          - vendor_name: COMMON
+            data: '{"namespace": "menura", "version": 1, "access": {"mode": "internal"}, "aggregate": {"of": "orders", "dimensions": [{"field": "order_month", "base": "order_date", "grain": "month"}], "measures": [{"field": "price_sum", "base_aggregate": "SUM(orders.price)"}, {"field": "order_count", "base_aggregate": "COUNT(orders.order_id)"}], "coverage_field": "order_month"}}'
+      - name: orders_created_by_month
+        source: shop.main.orders_created_by_month
+        primary_key: [order_month]
+        fields:
+          - name: order_month
+            expression: {dialects: [{dialect: ANSI_SQL, expression: 'order_month'}]}
+          - name: created_count
+            expression: {dialects: [{dialect: ANSI_SQL, expression: 'created_count'}]}
+          - name: order_count
+            expression: {dialects: [{dialect: ANSI_SQL, expression: 'order_count'}]}
+        custom_extensions:
+          - vendor_name: COMMON
+            data: '{"namespace": "menura", "version": 1, "access": {"mode": "internal"}, "aggregate": {"of": "orders", "dimensions": [{"field": "order_month", "base": "order_date", "grain": "month"}], "measures": [{"field": "created_count", "base_aggregate": "COUNT(orders.created_at)"}, {"field": "order_count", "base_aggregate": "COUNT(orders.order_id)"}], "coverage_field": "order_month"}}'
+    metrics:
+      - name: total_price
+        expression: {dialects: [{dialect: ANSI_SQL, expression: 'SUM(orders.price)'}]}
+      - name: order_count
+        expression: {dialects: [{dialect: ANSI_SQL, expression: 'COUNT(orders.order_id)'}]}
