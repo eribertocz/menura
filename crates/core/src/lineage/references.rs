@@ -6,7 +6,7 @@ use menura_model::internal_model::NormalizedName;
 use menura_representations::logical_plan::{AggregateComponent, Recomposition};
 
 /// Every reference `expression` makes, `AGG(…)` references included, in written order.
-pub(super) fn references(expression: &Expression) -> Vec<&Reference> {
+pub(crate) fn references(expression: &Expression) -> Vec<&Reference> {
     let mut found = Vec::new();
     add_references(expression, &mut found);
     found
@@ -39,8 +39,20 @@ pub(super) fn columns_read(expression: &Expression) -> Vec<&str> {
         .collect()
 }
 
+/// The column and field references `expression` makes anywhere, `AGG(…)` references
+/// excluded, in written order.
+pub(crate) fn plain_references(expression: &Expression) -> Vec<&Reference> {
+    let mut found = Vec::new();
+    visit(expression, &mut |current| {
+        if let Expression::Reference(reference) = current {
+            found.push(reference);
+        }
+    });
+    found
+}
+
 /// The references `AGG(…)` makes anywhere in `expression`, in written order.
-pub(super) fn aggregated_references(expression: &Expression) -> Vec<&Reference> {
+pub(crate) fn aggregated_references(expression: &Expression) -> Vec<&Reference> {
     let mut found = Vec::new();
     visit(expression, &mut |current| {
         if let Expression::MetricAggregate(reference) = current {
@@ -151,7 +163,7 @@ fn operands(expression: &Expression) -> Vec<&Expression> {
 
 /// The normalized name of `identifier` (E0D-1.1): a regular identifier in upper case, a
 /// delimited one as written.
-pub(super) fn normalized_name(identifier: &Identifier) -> NormalizedName {
+pub(crate) fn normalized_name(identifier: &Identifier) -> NormalizedName {
     if identifier.is_delimited() {
         NormalizedName::new(identifier.text())
     } else {

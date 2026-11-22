@@ -46,7 +46,7 @@ fn is_applicable(policy: &RowPolicy, context: &AdmittedSecurityContext) -> bool 
 
 /// The normalized name of the declared policy name `name` (E0D-1.4, E0D-1.1): a delimited
 /// name without its quotes, `""` standing for `"`, and any other name in upper case.
-fn normalized_policy_name(name: &str) -> String {
+pub(crate) fn normalized_policy_name(name: &str) -> String {
     match name
         .strip_prefix('"')
         .and_then(|rest| rest.strip_suffix('"'))
