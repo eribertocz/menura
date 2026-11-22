@@ -28,6 +28,16 @@ impl Suite {
         }
     }
 
+    /// Whether the suite blocks the build (OSS-2.3): from 0.7.0 the Layer 3 suite does
+    /// (OSS-2.4b), and the Layer 2 suite does not until the coverage it tests is implemented.
+    #[must_use]
+    pub fn blocks(self) -> bool {
+        match self {
+            Self::WideTable => true,
+            Self::Query => false,
+        }
+    }
+
     /// The rule IDs a case of this suite is reported under (CS-4.3): the rule that says how the
     /// runner runs it, and OSS-2.3, which requires the suites to pass.
     #[must_use]
@@ -108,6 +118,12 @@ fn folder_name(folder: &Path) -> Result<String, RunnerError> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn oss_2_4b_only_the_layer_3_suite_blocks() {
+        assert!(Suite::WideTable.blocks());
+        assert!(!Suite::Query.blocks());
+    }
 
     #[test]
     fn cs_4_3_case_keys_name_the_suite_and_the_folder() {

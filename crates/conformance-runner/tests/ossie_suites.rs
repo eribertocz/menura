@@ -71,10 +71,11 @@ fn cs_4_6_the_query_cases_the_slice_compiles_pass() {
 }
 
 #[test]
-fn oss_2_4_every_other_case_is_reported_pending() {
+fn oss_2_4_every_other_query_case_is_reported_pending() {
     let report = ossie_report().unwrap();
     for case in &report.cases {
-        if PASSING_QUERY_CASES.contains(&case.id.as_str()) {
+        let id = case.id.as_str();
+        if PASSING_QUERY_CASES.contains(&id) || id.starts_with("wide_table/") {
             continue;
         }
         assert!(
@@ -84,6 +85,41 @@ fn oss_2_4_every_other_case_is_reported_pending() {
             case.status
         );
     }
+}
+
+#[test]
+fn oss_2_4b_every_layer_3_case_is_run_and_compared() {
+    let report = ossie_report().unwrap();
+    let wide_table: Vec<_> = report
+        .cases
+        .iter()
+        .filter(|case| case.id.as_str().starts_with("wide_table/"))
+        .collect();
+    assert_eq!(wide_table.len(), case_folders("wide_table"));
+    for case in wide_table {
+        match &case.status {
+            CaseStatus::Passed => {}
+            CaseStatus::Pending(reason) => assert!(
+                reason.contains("(OSS-2.4): "),
+                "{} is pending without a comparison: {reason}",
+                case.id
+            ),
+            CaseStatus::Failed(reason) => panic!("{} fails: {reason}", case.id),
+        }
+    }
+}
+
+#[test]
+fn oss_2_4a_the_layer_3_cases_that_pass_are_no_longer_listed() {
+    let report = ossie_report().unwrap();
+    assert!(
+        report
+            .cases
+            .iter()
+            .filter(|case| case.id.as_str().starts_with("wide_table/"))
+            .any(|case| case.status == CaseStatus::Passed),
+        "no Layer 3 case passes"
+    );
 }
 
 #[test]
