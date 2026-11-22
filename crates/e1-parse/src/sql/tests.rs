@@ -302,3 +302,21 @@ fn e1_4_is_distinct_from_in_where_starts_no_clause() {
     let tree = tree("SELECT AGG(m) AS m FROM slice.sales WHERE channel IS NOT DISTINCT FROM 'web'");
     assert_eq!(tree.filters().len(), 1);
 }
+
+#[test]
+fn e1_4_5_broken_structure_does_not_parse() {
+    for sql in [
+        "SELECT AGG(m) AS m FROM slice.sales /* not closed",
+        "SELECT AGG(m) AS m FROM slice.\"sales",
+        "SELECT AGG(m)) AS m FROM slice.sales",
+        "SELECT (AGG(m) AS m FROM slice.sales",
+        "SELECT region, AGG(m) AS m FROM slice.sales GROUP BY ALL, region",
+        "SELECT region, AGG(m) AS m FROM slice.sales GROUP region",
+        "SELECT region, AGG(m) AS m FROM slice.sales GROUP BY 1 ORDER BY region NULLS",
+        "SELECT region, , AGG(m) AS m FROM slice.sales GROUP BY 1",
+        "SELECT AGG(m) AS m FROM slice.sales AS",
+        "SELECT AGG(m) AS m FROM slice.sales s t",
+    ] {
+        assert_eqry_05(sql);
+    }
+}
