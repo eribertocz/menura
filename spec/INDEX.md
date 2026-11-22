@@ -120,14 +120,15 @@ Find a rule ID or a section here, then open only that file at that line.
 | [07-roadmap.md](07-roadmap.md#L49) | 49 | rule | VS-1c |
 | [07-roadmap.md](07-roadmap.md#L50) | 50 | rule | VS-1d |
 | [07-roadmap.md](07-roadmap.md#L51) | 51 | rule | VS-1e |
-| [07-roadmap.md](07-roadmap.md#L52) | 52 | rule | VS-2 |
-| [07-roadmap.md](07-roadmap.md#L53) | 53 | rule | VS-3 |
-| [07-roadmap.md](07-roadmap.md#L54) | 54 | rule | VS-4 |
-| [07-roadmap.md](07-roadmap.md#L55) | 55 | rule | VS-5 |
-| [07-roadmap.md](07-roadmap.md#L57) | 57 | section | 7.1b What 1.0.0 guarantees |
-| [07-roadmap.md](07-roadmap.md#L69) | 69 | section | 7.2 After the MVP |
-| [07-roadmap.md](07-roadmap.md#L83) | 83 | section | 7.3 Capability scope |
-| [07-roadmap.md](07-roadmap.md#L105) | 105 | section | 7.4 Backlog after the MVP |
+| [07-roadmap.md](07-roadmap.md#L52) | 52 | rule | VS-1f |
+| [07-roadmap.md](07-roadmap.md#L53) | 53 | rule | VS-2 |
+| [07-roadmap.md](07-roadmap.md#L54) | 54 | rule | VS-3 |
+| [07-roadmap.md](07-roadmap.md#L55) | 55 | rule | VS-4 |
+| [07-roadmap.md](07-roadmap.md#L56) | 56 | rule | VS-5 |
+| [07-roadmap.md](07-roadmap.md#L58) | 58 | section | 7.1b What 1.0.0 guarantees |
+| [07-roadmap.md](07-roadmap.md#L70) | 70 | section | 7.2 After the MVP |
+| [07-roadmap.md](07-roadmap.md#L84) | 84 | section | 7.3 Capability scope |
+| [07-roadmap.md](07-roadmap.md#L106) | 106 | section | 7.4 Backlog after the MVP |
 | [08-conformance-suite.md](08-conformance-suite.md#L1) | 1 | section | 8. Conformance suite |
 | [08-conformance-suite.md](08-conformance-suite.md#L5) | 5 | section | CS-1 Layout |
 | [08-conformance-suite.md](08-conformance-suite.md#L22) | 22 | section | CS-2 Case format |
@@ -295,11 +296,11 @@ Find a rule ID or a section here, then open only that file at that line.
 | [contracts/compiled-plan.md](contracts/compiled-plan.md#L129) | 129 | rule | PLN-7.1 |
 | [contracts/compiled-plan.md](contracts/compiled-plan.md#L130) | 130 | rule | PLN-7.2 |
 | [contracts/compiled-plan.md](contracts/compiled-plan.md#L131) | 131 | rule | PLN-7.3 |
-| [contracts/compiled-plan.md](contracts/compiled-plan.md#L146) | 146 | rule | PLN-7.4 |
-| [contracts/compiled-plan.md](contracts/compiled-plan.md#L148) | 148 | section | PLN-8 Explain |
-| [contracts/compiled-plan.md](contracts/compiled-plan.md#L150) | 150 | rule | PLN-8.1 |
-| [contracts/compiled-plan.md](contracts/compiled-plan.md#L151) | 151 | rule | PLN-8.2 |
-| [contracts/compiled-plan.md](contracts/compiled-plan.md#L152) | 152 | rule | PLN-8.3 |
+| [contracts/compiled-plan.md](contracts/compiled-plan.md#L147) | 147 | rule | PLN-7.4 |
+| [contracts/compiled-plan.md](contracts/compiled-plan.md#L149) | 149 | section | PLN-8 Explain |
+| [contracts/compiled-plan.md](contracts/compiled-plan.md#L151) | 151 | rule | PLN-8.1 |
+| [contracts/compiled-plan.md](contracts/compiled-plan.md#L152) | 152 | rule | PLN-8.2 |
+| [contracts/compiled-plan.md](contracts/compiled-plan.md#L153) | 153 | rule | PLN-8.3 |
 | [contracts/integrity-checks.md](contracts/integrity-checks.md#L1) | 1 | section | Contract: integrity checks |
 | [contracts/integrity-checks.md](contracts/integrity-checks.md#L5) | 5 | section | CHK-1 Purpose |
 | [contracts/integrity-checks.md](contracts/integrity-checks.md#L10) | 10 | section | CHK-2 Document |
@@ -493,14 +494,14 @@ Find a rule ID or a section here, then open only that file at that line.
 | [extensions/context.md](extensions/context.md#L37) | 37 | section | CTX-3a Definitions |
 | [extensions/context.md](extensions/context.md#L49) | 49 | section | CTX-4 Examples |
 | [extensions/context.md](extensions/context.md#L57) | 57 | section | CTX-5 Validation |
-| [extensions/context.md](extensions/context.md#L68) | 68 | section | CTX-5.1 Validation details |
-| [extensions/context.md](extensions/context.md#L72) | 72 | rule | CTX-5.1.1 |
-| [extensions/context.md](extensions/context.md#L73) | 73 | rule | CTX-5.1.2 |
-| [extensions/context.md](extensions/context.md#L74) | 74 | rule | CTX-5.1.3 |
-| [extensions/context.md](extensions/context.md#L75) | 75 | rule | CTX-5.1.4 |
-| [extensions/context.md](extensions/context.md#L76) | 76 | rule | CTX-5.1.5 |
-| [extensions/context.md](extensions/context.md#L77) | 77 | rule | CTX-5.1.6 |
-| [extensions/context.md](extensions/context.md#L78) | 78 | rule | CTX-5.1.7 |
+| [extensions/context.md](extensions/context.md#L69) | 69 | section | CTX-5.1 Validation details |
+| [extensions/context.md](extensions/context.md#L73) | 73 | rule | CTX-5.1.1 |
+| [extensions/context.md](extensions/context.md#L74) | 74 | rule | CTX-5.1.2 |
+| [extensions/context.md](extensions/context.md#L75) | 75 | rule | CTX-5.1.3 |
+| [extensions/context.md](extensions/context.md#L76) | 76 | rule | CTX-5.1.4 |
+| [extensions/context.md](extensions/context.md#L77) | 77 | rule | CTX-5.1.5 |
+| [extensions/context.md](extensions/context.md#L78) | 78 | rule | CTX-5.1.6 |
+| [extensions/context.md](extensions/context.md#L79) | 79 | rule | CTX-5.1.7 |
 | [extensions/derived.md](extensions/derived.md#L1) | 1 | section | Extension: derived metrics |
 | [extensions/derived.md](extensions/derived.md#L5) | 5 | section | DER-1 Purpose |
 | [extensions/derived.md](extensions/derived.md#L9) | 9 | section | DER-2 Formula |
@@ -868,54 +869,65 @@ Find a rule ID or a section here, then open only that file at that line.
 | [stages/E4-plan.md](stages/E4-plan.md#L29) | 29 | rule | E4-3.12 |
 | [stages/E4-plan.md](stages/E4-plan.md#L30) | 30 | rule | E4-3.13 |
 | [stages/E4-plan.md](stages/E4-plan.md#L31) | 31 | rule | E4-3.14 |
-| [stages/E4-plan.md](stages/E4-plan.md#L33) | 33 | rule | E4-3.11 |
-| [stages/E4-plan.md](stages/E4-plan.md#L35) | 35 | section | E4-4 Branch plan |
-| [stages/E4-plan.md](stages/E4-plan.md#L39) | 39 | rule | E4-4.0a |
-| [stages/E4-plan.md](stages/E4-plan.md#L40) | 40 | rule | E4-4.0b |
-| [stages/E4-plan.md](stages/E4-plan.md#L41) | 41 | rule | E4-4.0c |
-| [stages/E4-plan.md](stages/E4-plan.md#L42) | 42 | rule | E4-4.0d |
-| [stages/E4-plan.md](stages/E4-plan.md#L43) | 43 | rule | E4-4.0e |
-| [stages/E4-plan.md](stages/E4-plan.md#L44) | 44 | rule | E4-4.0f |
-| [stages/E4-plan.md](stages/E4-plan.md#L45) | 45 | rule | E4-4.0g |
-| [stages/E4-plan.md](stages/E4-plan.md#L47) | 47 | rule | E4-4.1 |
-| [stages/E4-plan.md](stages/E4-plan.md#L48) | 48 | rule | E4-4.2 |
-| [stages/E4-plan.md](stages/E4-plan.md#L50) | 50 | section | E4-5 Stitching branches |
-| [stages/E4-plan.md](stages/E4-plan.md#L54) | 54 | rule | E4-5.0a |
-| [stages/E4-plan.md](stages/E4-plan.md#L55) | 55 | rule | E4-5.0b |
-| [stages/E4-plan.md](stages/E4-plan.md#L56) | 56 | rule | E4-5.0c |
-| [stages/E4-plan.md](stages/E4-plan.md#L58) | 58 | rule | E4-5.1 |
-| [stages/E4-plan.md](stages/E4-plan.md#L59) | 59 | rule | E4-5.2 |
-| [stages/E4-plan.md](stages/E4-plan.md#L61) | 61 | section | E4-6 Row policies |
-| [stages/E4-plan.md](stages/E4-plan.md#L65) | 65 | rule | E4-6.1 |
-| [stages/E4-plan.md](stages/E4-plan.md#L66) | 66 | rule | E4-6.2 |
-| [stages/E4-plan.md](stages/E4-plan.md#L67) | 67 | rule | E4-6.3 |
-| [stages/E4-plan.md](stages/E4-plan.md#L68) | 68 | rule | E4-6.4 |
-| [stages/E4-plan.md](stages/E4-plan.md#L69) | 69 | rule | E4-6.5 |
-| [stages/E4-plan.md](stages/E4-plan.md#L70) | 70 | rule | E4-6.5a |
-| [stages/E4-plan.md](stages/E4-plan.md#L71) | 71 | rule | E4-6.5b |
-| [stages/E4-plan.md](stages/E4-plan.md#L72) | 72 | rule | E4-6.5c |
-| [stages/E4-plan.md](stages/E4-plan.md#L73) | 73 | rule | E4-6.6 |
-| [stages/E4-plan.md](stages/E4-plan.md#L74) | 74 | rule | E4-6.7 |
-| [stages/E4-plan.md](stages/E4-plan.md#L75) | 75 | rule | E4-6.8 |
-| [stages/E4-plan.md](stages/E4-plan.md#L76) | 76 | rule | E4-6.9 |
-| [stages/E4-plan.md](stages/E4-plan.md#L77) | 77 | rule | E4-6.9a |
-| [stages/E4-plan.md](stages/E4-plan.md#L78) | 78 | rule | E4-6.9b |
-| [stages/E4-plan.md](stages/E4-plan.md#L79) | 79 | rule | E4-6.10 |
-| [stages/E4-plan.md](stages/E4-plan.md#L81) | 81 | section | E4-7 Additivity |
-| [stages/E4-plan.md](stages/E4-plan.md#L89) | 89 | rule | E4-7.1 |
-| [stages/E4-plan.md](stages/E4-plan.md#L90) | 90 | rule | E4-7.2 |
-| [stages/E4-plan.md](stages/E4-plan.md#L91) | 91 | rule | E4-7.3 |
-| [stages/E4-plan.md](stages/E4-plan.md#L92) | 92 | rule | E4-7.4 |
-| [stages/E4-plan.md](stages/E4-plan.md#L93) | 93 | rule | E4-7.5 |
-| [stages/E4-plan.md](stages/E4-plan.md#L94) | 94 | rule | E4-7.6 |
-| [stages/E4-plan.md](stages/E4-plan.md#L95) | 95 | rule | E4-7.7 |
-| [stages/E4-plan.md](stages/E4-plan.md#L96) | 96 | rule | E4-7.8 |
-| [stages/E4-plan.md](stages/E4-plan.md#L97) | 97 | rule | E4-7.9 |
-| [stages/E4-plan.md](stages/E4-plan.md#L99) | 99 | section | E4-8 Context modifiers |
-| [stages/E4-plan.md](stages/E4-plan.md#L105) | 105 | section | E4-9 Order and limit |
-| [stages/E4-plan.md](stages/E4-plan.md#L107) | 107 | rule | E4-9.1 |
-| [stages/E4-plan.md](stages/E4-plan.md#L108) | 108 | rule | E4-9.2 |
-| [stages/E4-plan.md](stages/E4-plan.md#L110) | 110 | section | E4-10 Diagnostics |
+| [stages/E4-plan.md](stages/E4-plan.md#L32) | 32 | rule | E4-3.15 |
+| [stages/E4-plan.md](stages/E4-plan.md#L33) | 33 | rule | E4-3.16 |
+| [stages/E4-plan.md](stages/E4-plan.md#L35) | 35 | rule | E4-3.11 |
+| [stages/E4-plan.md](stages/E4-plan.md#L37) | 37 | section | E4-4 Branch plan |
+| [stages/E4-plan.md](stages/E4-plan.md#L41) | 41 | rule | E4-4.0a |
+| [stages/E4-plan.md](stages/E4-plan.md#L42) | 42 | rule | E4-4.0b |
+| [stages/E4-plan.md](stages/E4-plan.md#L43) | 43 | rule | E4-4.0c |
+| [stages/E4-plan.md](stages/E4-plan.md#L44) | 44 | rule | E4-4.0d |
+| [stages/E4-plan.md](stages/E4-plan.md#L45) | 45 | rule | E4-4.0e |
+| [stages/E4-plan.md](stages/E4-plan.md#L46) | 46 | rule | E4-4.0f |
+| [stages/E4-plan.md](stages/E4-plan.md#L47) | 47 | rule | E4-4.0g |
+| [stages/E4-plan.md](stages/E4-plan.md#L49) | 49 | rule | E4-4.1 |
+| [stages/E4-plan.md](stages/E4-plan.md#L50) | 50 | rule | E4-4.2 |
+| [stages/E4-plan.md](stages/E4-plan.md#L52) | 52 | section | E4-5 Stitching branches |
+| [stages/E4-plan.md](stages/E4-plan.md#L56) | 56 | rule | E4-5.0a |
+| [stages/E4-plan.md](stages/E4-plan.md#L57) | 57 | rule | E4-5.0b |
+| [stages/E4-plan.md](stages/E4-plan.md#L58) | 58 | rule | E4-5.0c |
+| [stages/E4-plan.md](stages/E4-plan.md#L60) | 60 | rule | E4-5.1 |
+| [stages/E4-plan.md](stages/E4-plan.md#L61) | 61 | rule | E4-5.2 |
+| [stages/E4-plan.md](stages/E4-plan.md#L63) | 63 | section | E4-6 Row policies |
+| [stages/E4-plan.md](stages/E4-plan.md#L67) | 67 | rule | E4-6.1 |
+| [stages/E4-plan.md](stages/E4-plan.md#L68) | 68 | rule | E4-6.2 |
+| [stages/E4-plan.md](stages/E4-plan.md#L69) | 69 | rule | E4-6.3 |
+| [stages/E4-plan.md](stages/E4-plan.md#L70) | 70 | rule | E4-6.4 |
+| [stages/E4-plan.md](stages/E4-plan.md#L71) | 71 | rule | E4-6.5 |
+| [stages/E4-plan.md](stages/E4-plan.md#L72) | 72 | rule | E4-6.5a |
+| [stages/E4-plan.md](stages/E4-plan.md#L73) | 73 | rule | E4-6.5b |
+| [stages/E4-plan.md](stages/E4-plan.md#L74) | 74 | rule | E4-6.5c |
+| [stages/E4-plan.md](stages/E4-plan.md#L75) | 75 | rule | E4-6.6 |
+| [stages/E4-plan.md](stages/E4-plan.md#L76) | 76 | rule | E4-6.7 |
+| [stages/E4-plan.md](stages/E4-plan.md#L77) | 77 | rule | E4-6.8 |
+| [stages/E4-plan.md](stages/E4-plan.md#L78) | 78 | rule | E4-6.9 |
+| [stages/E4-plan.md](stages/E4-plan.md#L79) | 79 | rule | E4-6.9a |
+| [stages/E4-plan.md](stages/E4-plan.md#L80) | 80 | rule | E4-6.9b |
+| [stages/E4-plan.md](stages/E4-plan.md#L81) | 81 | rule | E4-6.10 |
+| [stages/E4-plan.md](stages/E4-plan.md#L83) | 83 | section | E4-7 Additivity |
+| [stages/E4-plan.md](stages/E4-plan.md#L91) | 91 | rule | E4-7.1 |
+| [stages/E4-plan.md](stages/E4-plan.md#L92) | 92 | rule | E4-7.2 |
+| [stages/E4-plan.md](stages/E4-plan.md#L93) | 93 | rule | E4-7.3 |
+| [stages/E4-plan.md](stages/E4-plan.md#L94) | 94 | rule | E4-7.4 |
+| [stages/E4-plan.md](stages/E4-plan.md#L95) | 95 | rule | E4-7.5 |
+| [stages/E4-plan.md](stages/E4-plan.md#L96) | 96 | rule | E4-7.6 |
+| [stages/E4-plan.md](stages/E4-plan.md#L97) | 97 | rule | E4-7.7 |
+| [stages/E4-plan.md](stages/E4-plan.md#L98) | 98 | rule | E4-7.8 |
+| [stages/E4-plan.md](stages/E4-plan.md#L99) | 99 | rule | E4-7.9 |
+| [stages/E4-plan.md](stages/E4-plan.md#L101) | 101 | section | E4-8 Context modifiers |
+| [stages/E4-plan.md](stages/E4-plan.md#L109) | 109 | rule | E4-8.1 |
+| [stages/E4-plan.md](stages/E4-plan.md#L110) | 110 | rule | E4-8.2 |
+| [stages/E4-plan.md](stages/E4-plan.md#L111) | 111 | rule | E4-8.3 |
+| [stages/E4-plan.md](stages/E4-plan.md#L112) | 112 | rule | E4-8.4 |
+| [stages/E4-plan.md](stages/E4-plan.md#L113) | 113 | rule | E4-8.5 |
+| [stages/E4-plan.md](stages/E4-plan.md#L114) | 114 | rule | E4-8.6 |
+| [stages/E4-plan.md](stages/E4-plan.md#L115) | 115 | rule | E4-8.7 |
+| [stages/E4-plan.md](stages/E4-plan.md#L116) | 116 | rule | E4-8.8 |
+| [stages/E4-plan.md](stages/E4-plan.md#L117) | 117 | rule | E4-8.9 |
+| [stages/E4-plan.md](stages/E4-plan.md#L119) | 119 | section | E4-9 Order and limit |
+| [stages/E4-plan.md](stages/E4-plan.md#L121) | 121 | rule | E4-9.1 |
+| [stages/E4-plan.md](stages/E4-plan.md#L122) | 122 | rule | E4-9.2 |
+| [stages/E4-plan.md](stages/E4-plan.md#L124) | 124 | section | E4-10 Diagnostics |
 | [stages/E5-optimize.md](stages/E5-optimize.md#L1) | 1 | section | E5 Optimize |
 | [stages/E5-optimize.md](stages/E5-optimize.md#L3) | 3 | section | E5-1 Purpose |
 | [stages/E5-optimize.md](stages/E5-optimize.md#L9) | 9 | section | E5-2 Input and output |

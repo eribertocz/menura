@@ -139,6 +139,7 @@ Each entry of `explanation` records one decision:
 | `E3` | `E3-3.3` | `path:<from>-><to>` | For each `paths` entry the query names and E3 accepts, in query order. |
 | `E4` | `E4-4.0e` | `dataset:<home>` | A branch gets a `Deduplicate`, in branch order (E3-4.3). |
 | `E4` | `E4-4.1` | `relationship:<name>` | A `left` join can produce a NULL group, in branch order, then path order. |
+| `E4` | `E4-8.2` | `metric:<name>` | For each context query, in the order of E4-8.8, at the first context metric that needs it; `reason` names the modifier type and the base, never a value. |
 | `E4` | `E4-6.10` | `policy:<dataset>.<policy>` | A policy is propagated (E4-6.5), in the visit order of E4-6.9; `reason` names the datasets it reaches. |
 | `E5` | `E5-3.1` to `E5-3.6` | As E5-3.8 states | A rewrite is applied, or considered and rejected (E5-3.8), in the order E5 runs the rewrites (E5-4 item 4), then branch order, then path order. |
 | `E5` | `E5-4` | `summary:<name>` | A branch uses the summary; `decision` is `requires authorized executor` (E5-4 item 5, SUM-4.2). |
