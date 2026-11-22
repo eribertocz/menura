@@ -42,10 +42,10 @@ pub struct ParsedQuery {
 ///
 /// The first error, in this order (E2-5 rows 0b to 2): not JSON (`E_INVALID_QUERY`), `EQRY-08`,
 /// `EQRY-01`, `EQRY-02`, `EQRY-06`, the JSON Schema with the range of `reference_time`
-/// (`E_INVALID_QUERY`, QRY-2), the filter text
-/// (`E0F-01`, `E0F-02`) and `E_EMPTY_AGGREGATION_QUERY` for the wide-table form, or the SQL
-/// text (`EQRY-05`, `E0F-02`, `EQRY-13`, E1-4.11) for the SQL form. An error after the JSON Schema carries the `WQRY-01` warnings
-/// of the query (E1-2.4), which E1 reports for every query that passes the schema.
+/// (`E_INVALID_QUERY`, QRY-2), then the filter text (`E0F-01`, `E0F-02`) and
+/// `E_EMPTY_AGGREGATION_QUERY` for the wide-table form, or the SQL text (`EQRY-05`, `E0F-02`,
+/// `EQRY-13`, E1-4.11) for the SQL form. An error after the JSON Schema carries the `WQRY-01`
+/// warnings of the query (E1-2.4), which E1 reports for every query that passes the schema.
 pub fn parse_query(text: &str) -> Result<ParsedQuery, ParseError> {
     let contract = IncomingContract::Query;
     let document = contract.parse_json(text)?;
