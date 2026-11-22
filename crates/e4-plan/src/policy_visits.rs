@@ -2,7 +2,7 @@
 //! dataset, checked in the visit order of E4-6.9: `ESEC-02` over every dataset first, then
 //! `EQRY-03` (E4-6.9b, E2-5 row 18).
 
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 
 use menura_model::expression::Expression;
 use menura_model::internal_model::{Dataset, InternalModel, NormalizedName, SourceLocation};
@@ -67,12 +67,11 @@ pub(crate) fn row_filters_from<'model>(
     context: &AdmittedSecurityContext,
     has_reference_time: bool,
 ) -> Result<RowFilters, PlanError> {
-    let mut visited: Vec<&NormalizedName> = Vec::new();
+    let mut visited: BTreeSet<&NormalizedName> = BTreeSet::new();
     let mut order = Vec::new();
     for root in roots {
         for dataset in visit_order(root, model, graph) {
-            if !visited.contains(&&dataset.name) {
-                visited.push(&dataset.name);
+            if visited.insert(&dataset.name) {
                 order.push(dataset);
             }
         }

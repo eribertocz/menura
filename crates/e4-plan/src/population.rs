@@ -66,29 +66,9 @@ pub fn plan_population(
         return Err(fail(InvariantViolation::UnusableDataset));
     }
     let rule = population_rule(population).map_err(fail)?;
-    let graph = PolicyGraph::new(model);
-    let home = model
-        .dataset(request.home)
-        .ok_or_else(|| fail(InvariantViolation::UnknownDataset))?;
-    let filters = row_filters_from(
-        &[home, dataset],
-        model,
-        &graph,
-        security,
-        request.has_reference_time,
+    let visible = visible_rows(
+        &request, dataset, population, &rule, security, model, catalog,
     )?;
-    let visibility = Visibility {
-        model,
-        graph: &graph,
-        filters: &filters,
-        catalog,
-    };
-    let mut read: Vec<NormalizedName> = population.named_fields().into_iter().cloned().collect();
-    if let Some(required_when) = &rule.required_when {
-        read_fields(required_when, &mut read);
-    }
-    read.extend(visibility.fields(dataset)?);
-    let visible = visibility.visible_rows(scan(dataset, &read, catalog, None)?, dataset, None)?;
     let schema = output_schema(&visible, &rule, &request.periods, &request.period).map_err(fail)?;
     let PopulationRequest {
         grain,
@@ -109,6 +89,47 @@ pub fn plan_population(
         schema,
         origin,
     ))
+}
+
+/// The visible rows V(D) of `dataset` that `population` reads: its `Scan` of the population
+/// fields, the fields of `required_when` and the fields its visibility needs, under its
+/// row-policy `Filter` and `SemiJoin` nodes (E4-6.5, E2-4.9). The row filters are computed in
+/// the E4-6.9 visit order: the home dataset of `request` first, then `dataset`.
+fn visible_rows(
+    request: &PopulationRequest<'_>,
+    dataset: &Dataset,
+    population: &Population,
+    rule: &PopulationRule,
+    security: &AdmittedSecurityContext,
+    model: &InternalModel,
+    catalog: &CatalogSchemaDocument,
+) -> Result<PlanNode, PlanError> {
+    let home = model.dataset(request.home).ok_or_else(|| {
+        PlanError::invariant(
+            InvariantViolation::UnknownDataset,
+            &Origin::Model(population.location.clone()),
+        )
+    })?;
+    let graph = PolicyGraph::new(model);
+    let filters = row_filters_from(
+        &[home, dataset],
+        model,
+        &graph,
+        security,
+        request.has_reference_time,
+    )?;
+    let visibility = Visibility {
+        model,
+        graph: &graph,
+        filters: &filters,
+        catalog,
+    };
+    let mut read: Vec<NormalizedName> = population.named_fields().into_iter().cloned().collect();
+    if let Some(required_when) = &rule.required_when {
+        read_fields(required_when, &mut read);
+    }
+    read.extend(visibility.fields(dataset)?);
+    visibility.visible_rows(scan(dataset, &read, catalog, None)?, dataset, None)
 }
 
 /// The dataset that declares the population `name`, and the population.
