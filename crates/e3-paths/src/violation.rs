@@ -25,11 +25,6 @@ pub enum InvariantViolation {
         /// Where the entry is written.
         origin: QueryLocation,
     },
-    /// An inline metric, which only the SQL form writes (0.5.0).
-    InlineMetric {
-        /// Where the metric is written.
-        origin: QueryLocation,
-    },
     /// A metric that the model does not have, or that E0.g did not classify (E2-5 row 12a).
     UnclassifiedMetric {
         /// Where the metric is written.
@@ -71,9 +66,6 @@ impl fmt::Display for InvariantViolation {
             ),
             Self::BrokenPathChain { origin } => {
                 write!(formatter, "the path at {} does not chain", origin.pointer())
-            }
-            Self::InlineMetric { origin } => {
-                write!(formatter, "inline metric at {}", origin.pointer())
             }
             Self::UnclassifiedMetric { origin } => {
                 write!(formatter, "unclassified metric at {}", origin.pointer())
