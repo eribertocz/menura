@@ -1,6 +1,6 @@
 {
   "contract": "menura.compiled_plan",
-  "contract_version": "1.1.0",
+  "contract_version": "1.2.0",
   "producer": {
     "compiler_version": "1.0.0",
     "ossie_normative": "0.1.1",
@@ -116,25 +116,30 @@
     {
       "output": "region",
       "model_inputs": [
-        "customers.region"
+        "field:customers.region",
+        "relationship:invoices_customer"
       ],
       "physical_inputs": [
         {
           "source": "sales.public.dim_customer",
+          "column": "customer_id"
+        },
+        {
+          "source": "sales.public.dim_customer",
           "column": "region"
-        }
-      ],
-      "summary": null,
-      "security_policies": [
-        "region_scope"
-      ]
-    },
-    {
-      "output": "invoice_date",
-      "model_inputs": [
-        "invoices.invoice_date"
-      ],
-      "physical_inputs": [
+        },
+        {
+          "source": "sales.public.dim_customer",
+          "column": "segment"
+        },
+        {
+          "source": "sales.public.fact_invoice",
+          "column": "amount"
+        },
+        {
+          "source": "sales.public.fact_invoice",
+          "column": "customer_id"
+        },
         {
           "source": "sales.public.fact_invoice",
           "column": "invoice_date"
@@ -142,51 +147,132 @@
       ],
       "summary": null,
       "security_policies": [
-        "region_scope"
+        "customers.region_scope"
+      ]
+    },
+    {
+      "output": "invoice_date",
+      "model_inputs": [
+        "field:invoices.invoice_date"
+      ],
+      "physical_inputs": [
+        {
+          "source": "sales.public.dim_customer",
+          "column": "customer_id"
+        },
+        {
+          "source": "sales.public.dim_customer",
+          "column": "region"
+        },
+        {
+          "source": "sales.public.dim_customer",
+          "column": "segment"
+        },
+        {
+          "source": "sales.public.fact_invoice",
+          "column": "amount"
+        },
+        {
+          "source": "sales.public.fact_invoice",
+          "column": "customer_id"
+        },
+        {
+          "source": "sales.public.fact_invoice",
+          "column": "invoice_date"
+        }
+      ],
+      "summary": null,
+      "security_policies": [
+        "customers.region_scope"
       ]
     },
     {
       "output": "billed",
       "model_inputs": [
-        "billed"
+        "field:invoices.amount",
+        "metric:billed"
       ],
       "physical_inputs": [
         {
+          "source": "sales.public.dim_customer",
+          "column": "customer_id"
+        },
+        {
+          "source": "sales.public.dim_customer",
+          "column": "region"
+        },
+        {
+          "source": "sales.public.dim_customer",
+          "column": "segment"
+        },
+        {
           "source": "sales.public.fact_invoice",
           "column": "amount"
+        },
+        {
+          "source": "sales.public.fact_invoice",
+          "column": "customer_id"
+        },
+        {
+          "source": "sales.public.fact_invoice",
+          "column": "invoice_date"
         }
       ],
       "summary": null,
       "security_policies": [
-        "region_scope"
+        "customers.region_scope"
       ]
     }
   ],
   "explanation": [
     {
-      "step": "E1",
-      "decision": "relative range: last 12 months including the current one",
-      "reason": "reference_time 2026-11-15 in America/La_Paz gives 2025-12-01 to 2026-11-30"
+      "code": "DEV-4",
+      "step": "E0",
+      "subject": "load_option:grant_authenticated_to_all",
+      "decision": "datasets without access are inaccessible",
+      "reason": "grant_authenticated_to_all is false"
     },
     {
-      "step": "E3",
-      "decision": "invoices -> customers via invoices_customer",
-      "reason": "only path"
+      "code": "QRY-4.2",
+      "step": "E2",
+      "subject": "field:invoices.invoice_date",
+      "decision": "relative range resolved to an absolute range",
+      "reason": "12 months including the current one, from reference_time in time_zone; bounds bound as $1 and $2"
     },
     {
+      "code": "E4-4.0e",
       "step": "E4",
-      "decision": "row policy region_scope applied to customers and propagated to invoices",
-      "reason": "user role analyst"
-    },
-    {
-      "step": "E4",
+      "subject": "dataset:invoices",
       "decision": "deduplication by (group, row identity)",
-      "reason": "no key_uniqueness evidence for invoices_customer"
+      "reason": "the branch joins customers and computes metric components"
     },
     {
+      "code": "E4-4.1",
+      "step": "E4",
+      "subject": "relationship:invoices_customer",
+      "decision": "the plan can produce a NULL group for customers.region",
+      "reason": "left join: an invoice without a visible customer falls into the NULL group"
+    },
+    {
+      "code": "E4-6.10",
+      "step": "E4",
+      "subject": "policy:customers.region_scope",
+      "decision": "row policy propagated",
+      "reason": "applies to role analyst; propagated to invoices through invoices_customer"
+    },
+    {
+      "code": "E5-3.2",
       "step": "E5",
-      "decision": "summary invoices_by_month not used",
-      "reason": "the range 2025-12 to 2026-11 is outside its coverage 2026-09 to 2026-10"
+      "subject": "dataset:invoices",
+      "decision": "rejected",
+      "reason": "no passing key_uniqueness evidence for invoices_customer (E5-3.2a)"
+    },
+    {
+      "code": "E5-3.5",
+      "step": "E5",
+      "subject": "summary:invoices_by_month",
+      "decision": "rejected",
+      "reason": "the branch keeps its Deduplicate (SUM-3.2)"
     }
   ],
   "warnings": []

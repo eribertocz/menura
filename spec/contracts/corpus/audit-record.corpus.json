@@ -287,6 +287,175 @@
           "value": "1.0"
         }
       ]
+    },
+    {
+      "name": "security context not admitted (PLN-6.4)",
+      "valid": true,
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/subject",
+          "value": null
+        },
+        {
+          "op": "replace",
+          "path": "/inputs/security_fingerprint",
+          "value": null
+        },
+        {
+          "op": "replace",
+          "path": "/outcome",
+          "value": {
+            "error_codes": [
+              "ESEC-01"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "no actor, compile options or data source (1.1.0)",
+      "valid": true,
+      "patch": [
+        {
+          "op": "remove",
+          "path": "/actor"
+        },
+        {
+          "op": "remove",
+          "path": "/compile_options"
+        },
+        {
+          "op": "remove",
+          "path": "/load_options/data_source"
+        },
+        {
+          "op": "remove",
+          "path": "/decisions/0/code"
+        },
+        {
+          "op": "remove",
+          "path": "/decisions/0/subject"
+        },
+        {
+          "op": "replace",
+          "path": "/decisions/0/step",
+          "value": "E2"
+        }
+      ]
+    },
+    {
+      "name": "short security fingerprint",
+      "valid": false,
+      "keywords": [
+        "oneOf",
+        "pattern"
+      ],
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/inputs/security_fingerprint",
+          "value": "cc"
+        }
+      ]
+    },
+    {
+      "name": "numeric subject",
+      "valid": false,
+      "keywords": [
+        "type"
+      ],
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/subject",
+          "value": 7
+        }
+      ]
+    },
+    {
+      "name": "another compile dialect",
+      "valid": false,
+      "keywords": [
+        "enum"
+      ],
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/compile_options/dialect",
+          "value": "postgres"
+        }
+      ]
+    },
+    {
+      "name": "compile options without dialect",
+      "valid": false,
+      "keywords": [
+        "required"
+      ],
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/compile_options",
+          "value": {}
+        }
+      ]
+    },
+    {
+      "name": "empty data source",
+      "valid": false,
+      "keywords": [
+        "minLength"
+      ],
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/load_options/data_source",
+          "value": ""
+        }
+      ]
+    },
+    {
+      "name": "numeric actor",
+      "valid": false,
+      "keywords": [
+        "type"
+      ],
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/actor",
+          "value": 1
+        }
+      ]
+    },
+    {
+      "name": "empty decision code",
+      "valid": false,
+      "keywords": [
+        "minLength"
+      ],
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/decisions/0/code",
+          "value": ""
+        }
+      ]
+    },
+    {
+      "name": "empty decision subject",
+      "valid": false,
+      "keywords": [
+        "minLength"
+      ],
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/decisions/0/subject",
+          "value": ""
+        }
+      ]
     }
   ]
 }

@@ -1,14 +1,17 @@
 {
   "contract": "menura.compile_error",
-  "contract_version": "1.1.0",
+  "contract_version": "1.2.0",
   "errors": [
     {
       "code": "E_NAME_NOT_FOUND",
-      "message": "'revenue' does not name a metric you can query. Use 'describe' to list the available metrics.",
+      "message": "'biled' does not name a metric you can query. Use 'describe' to list the available metrics.",
       "location": {
         "document": "query",
         "pointer": "/query/metrics/0"
-      }
+      },
+      "alternatives": [
+        "metric:billed"
+      ]
     }
   ],
   "warnings": []

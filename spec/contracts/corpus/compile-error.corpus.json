@@ -246,6 +246,117 @@
           ]
         }
       ]
+    },
+    {
+      "name": "five alternatives",
+      "valid": true,
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/errors/0/alternatives",
+          "value": [
+            "dataset:a",
+            "field:a.b",
+            "metric:a",
+            "metric:b",
+            "metric:c"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "no alternatives",
+      "valid": true,
+      "patch": [
+        {
+          "op": "remove",
+          "path": "/errors/0/alternatives"
+        }
+      ]
+    },
+    {
+      "name": "alternative of 257 code points",
+      "valid": false,
+      "keywords": [
+        "maxLength",
+        "items"
+      ],
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/errors/0/alternatives",
+          "value": [
+            "metric:xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "alternative of another kind",
+      "valid": false,
+      "keywords": [
+        "pattern"
+      ],
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/errors/0/alternatives",
+          "value": [
+            "column:billed"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "alternative without a name",
+      "valid": false,
+      "keywords": [
+        "pattern"
+      ],
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/errors/0/alternatives",
+          "value": [
+            "metric:"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "six alternatives",
+      "valid": false,
+      "keywords": [
+        "maxItems"
+      ],
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/errors/0/alternatives",
+          "value": [
+            "metric:a",
+            "metric:b",
+            "metric:c",
+            "metric:d",
+            "metric:e",
+            "metric:f"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "empty alternatives",
+      "valid": false,
+      "keywords": [
+        "minItems"
+      ],
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/errors/0/alternatives",
+          "value": []
+        }
+      ]
     }
   ]
 }

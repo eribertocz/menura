@@ -397,6 +397,183 @@
           "value": "semantic_compiler.plan"
         }
       ]
+    },
+    {
+      "name": "explanation entry without code or subject (1.1.0)",
+      "valid": true,
+      "patch": [
+        {
+          "op": "remove",
+          "path": "/explanation/0/code"
+        },
+        {
+          "op": "remove",
+          "path": "/explanation/0/subject"
+        },
+        {
+          "op": "replace",
+          "path": "/explanation/0/step",
+          "value": "E1"
+        }
+      ]
+    },
+    {
+      "name": "warning with alternatives",
+      "valid": true,
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/warnings",
+          "value": [
+            {
+              "code": "W0D-01",
+              "message": "m",
+              "location": null,
+              "alternatives": [
+                "field:invoices.amount"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "empty explanation code",
+      "valid": false,
+      "keywords": [
+        "minLength"
+      ],
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/explanation/0/code",
+          "value": ""
+        }
+      ]
+    },
+    {
+      "name": "empty explanation subject",
+      "valid": false,
+      "keywords": [
+        "minLength"
+      ],
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/explanation/0/subject",
+          "value": ""
+        }
+      ]
+    },
+    {
+      "name": "unknown explanation step",
+      "valid": false,
+      "keywords": [
+        "enum"
+      ],
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/explanation/0/step",
+          "value": "E7"
+        }
+      ]
+    },
+    {
+      "name": "warning alternative of 257 code points",
+      "valid": false,
+      "keywords": [
+        "maxLength",
+        "items"
+      ],
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/warnings",
+          "value": [
+            {
+              "code": "W0D-01",
+              "message": "m",
+              "location": null,
+              "alternatives": [
+                "metric:xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "warning alternative of another kind",
+      "valid": false,
+      "keywords": [
+        "pattern"
+      ],
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/warnings",
+          "value": [
+            {
+              "code": "W0D-01",
+              "message": "m",
+              "location": null,
+              "alternatives": [
+                "relationship:x"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "warning with six alternatives",
+      "valid": false,
+      "keywords": [
+        "maxItems"
+      ],
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/warnings",
+          "value": [
+            {
+              "code": "W0D-01",
+              "message": "m",
+              "location": null,
+              "alternatives": [
+                "metric:a",
+                "metric:b",
+                "metric:c",
+                "metric:d",
+                "metric:e",
+                "metric:f"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "warning with empty alternatives",
+      "valid": false,
+      "keywords": [
+        "minItems"
+      ],
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/warnings",
+          "value": [
+            {
+              "code": "W0D-01",
+              "message": "m",
+              "location": null,
+              "alternatives": []
+            }
+          ]
+        }
+      ]
     }
   ]
 }

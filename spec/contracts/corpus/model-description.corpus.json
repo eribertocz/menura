@@ -65,9 +65,14 @@
       ]
     },
     {
-      "name": "null ai_context and labels",
+      "name": "null ai_context and labels in version 1.1.0",
       "valid": true,
       "patch": [
+        {
+          "op": "replace",
+          "path": "/contract_version",
+          "value": "1.1.0"
+        },
         {
           "op": "add",
           "path": "/metrics/0/ai_context",
@@ -280,6 +285,307 @@
           "op": "replace",
           "path": "/metrics/0/logical_type",
           "value": "text"
+        }
+      ]
+    },
+    {
+      "name": "null ai_context in version 1.2.0 (DSC-3.6)",
+      "valid": false,
+      "keywords": [
+        "allOf",
+        "if",
+        "else",
+        "$ref",
+        "type"
+      ],
+      "patch": [
+        {
+          "op": "add",
+          "path": "/metrics/0/ai_context",
+          "value": null
+        }
+      ]
+    },
+    {
+      "name": "dataset ai_context without provenance (DSC-3.6)",
+      "valid": false,
+      "keywords": [
+        "required"
+      ],
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/datasets/0/ai_context",
+          "value": {
+            "value": "x"
+          }
+        }
+      ]
+    },
+    {
+      "name": "unknown ai_context member",
+      "valid": false,
+      "keywords": [
+        "additionalProperties"
+      ],
+      "patch": [
+        {
+          "op": "add",
+          "path": "/datasets/0/ai_context/extra",
+          "value": 1
+        }
+      ]
+    },
+    {
+      "name": "unknown trust label",
+      "valid": false,
+      "keywords": [
+        "enum"
+      ],
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/datasets/0/ai_context/trust",
+          "value": "trusted"
+        }
+      ]
+    },
+    {
+      "name": "relative ai_context pointer",
+      "valid": false,
+      "keywords": [
+        "pattern"
+      ],
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/datasets/0/ai_context/source/pointer",
+          "value": "datasets/1"
+        }
+      ]
+    },
+    {
+      "name": "short ai_context model hash",
+      "valid": false,
+      "keywords": [
+        "pattern"
+      ],
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/datasets/0/ai_context/source/model_hash",
+          "value": "11"
+        }
+      ]
+    },
+    {
+      "name": "metric label",
+      "valid": true,
+      "patch": [
+        {
+          "op": "add",
+          "path": "/metrics/0/label",
+          "value": "Average invoice"
+        }
+      ]
+    },
+    {
+      "name": "numeric metric label",
+      "valid": false,
+      "keywords": [
+        "type"
+      ],
+      "patch": [
+        {
+          "op": "add",
+          "path": "/metrics/0/label",
+          "value": 1
+        }
+      ]
+    },
+    {
+      "name": "no capabilities (1.1.0)",
+      "valid": true,
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/contract_version",
+          "value": "1.1.0"
+        },
+        {
+          "op": "remove",
+          "path": "/capabilities"
+        },
+        {
+          "op": "replace",
+          "path": "/datasets/0/ai_context",
+          "value": "raw"
+        }
+      ]
+    },
+    {
+      "name": "capabilities without limits",
+      "valid": false,
+      "keywords": [
+        "required"
+      ],
+      "patch": [
+        {
+          "op": "remove",
+          "path": "/capabilities/limits"
+        }
+      ]
+    },
+    {
+      "name": "former contract name in capabilities",
+      "valid": false,
+      "keywords": [
+        "pattern"
+      ],
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/capabilities/contracts/0/contract",
+          "value": "semantic_compiler.audit_record"
+        }
+      ]
+    },
+    {
+      "name": "duplicate dialects",
+      "valid": false,
+      "keywords": [
+        "uniqueItems"
+      ],
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/capabilities/dialects",
+          "value": [
+            "duckdb",
+            "duckdb"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "unknown query form",
+      "valid": false,
+      "keywords": [
+        "enum"
+      ],
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/capabilities/query_forms",
+          "value": [
+            "graphql"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "unknown function",
+      "valid": false,
+      "keywords": [
+        "enum"
+      ],
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/capabilities/functions",
+          "value": [
+            "execute"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "extension without versions",
+      "valid": false,
+      "keywords": [
+        "minItems"
+      ],
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/capabilities/extensions/0/versions",
+          "value": []
+        }
+      ]
+    },
+    {
+      "name": "extension version 0",
+      "valid": false,
+      "keywords": [
+        "minimum"
+      ],
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/capabilities/extensions/0/versions",
+          "value": [
+            0
+          ]
+        }
+      ]
+    },
+    {
+      "name": "unknown ossie format",
+      "valid": false,
+      "keywords": [
+        "enum"
+      ],
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/capabilities/ossie/formats",
+          "value": [
+            "draft"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "short ossie tracked commit",
+      "valid": false,
+      "keywords": [
+        "pattern"
+      ],
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/capabilities/ossie/tracked_commit",
+          "value": "aa5"
+        }
+      ]
+    },
+    {
+      "name": "limit 0",
+      "valid": false,
+      "keywords": [
+        "minimum"
+      ],
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/capabilities/limits/max_identifier_length",
+          "value": 0
+        }
+      ]
+    },
+    {
+      "name": "empty dialect",
+      "valid": false,
+      "keywords": [
+        "minLength"
+      ],
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/capabilities/dialects",
+          "value": [
+            ""
+          ]
         }
       ]
     }
