@@ -2,7 +2,7 @@
 //! `E4-02`, and the `ToDate` node of each of its branches (E4-3.15).
 
 use menura_contracts::types::common::{Grain, LogicalType};
-use menura_model::expression::Expression;
+use menura_model::expression::{DateUnit, Expression};
 use menura_model::internal_model::{FieldPath, InternalModel, ValueType};
 use menura_representations::bound_query::{BoundDimensionKind, BoundQuery};
 use menura_representations::logical_plan::{
@@ -12,7 +12,7 @@ use menura_representations::names::ColumnName;
 use menura_representations::origin::Origin;
 use menura_representations::paths::QueryElement;
 
-use crate::columns::column_reference;
+use crate::columns::{column_reference, field_name};
 use crate::dimensions::grain_unit;
 use crate::error::InvariantViolation;
 use crate::layout::Layout;
@@ -27,6 +27,9 @@ pub(crate) struct ToDatePlan {
     position: usize,
     /// Its field, the `time_dimension` of the modifier.
     field: FieldPath,
+    /// Whether its key truncates the field to the query grain: a `time_grains` grain, or
+    /// `DATE_TRUNC` in the SQL form.
+    truncated: bool,
     /// The query grain and the `grain` of the modifier.
     grains: ToDateGrains,
     /// The query `date_range`, when it is on `time_dimension`.
@@ -43,21 +46,21 @@ pub(crate) fn to_date_plan(
     time_dimension: &FieldPath,
     grain: Grain,
 ) -> Option<ToDatePlan> {
-    let mut matching = query.columns().dimensions().enumerate().filter_map(
-        |(position, dimension)| match &dimension.kind {
-            BoundDimensionKind::Field {
-                field, time_grain, ..
-            } if field == time_dimension => Some((position, *time_grain)),
-            _ => None,
-        },
-    );
+    let mut matching =
+        query
+            .columns()
+            .dimensions()
+            .enumerate()
+            .filter_map(|(position, dimension)| {
+                dimension_grain(&dimension.kind, time_dimension).map(|grain| (position, grain))
+            });
     let (Some((position, time_grain)), None) = (matching.next(), matching.next()) else {
         return None;
     };
     let query_grain = match (time_grain, field_type(model, time_dimension)) {
-        (Some(time_grain), _) => time_grain,
-        (None, Some(LogicalType::Date)) => Grain::Day,
-        (None, _) => return None,
+        (KeyGrain::Truncated(time_grain), _) => time_grain,
+        (KeyGrain::Plain, Some(LogicalType::Date)) => Grain::Day,
+        (KeyGrain::Plain, _) => return None,
     };
     let nests = rank(query_grain) <= rank(grain)
         && !(query_grain == Grain::Week && matches!(grain, Grain::Month | Grain::Quarter));
@@ -73,6 +76,7 @@ pub(crate) fn to_date_plan(
         });
     Some(ToDatePlan {
         position,
+        truncated: matches!(time_grain, KeyGrain::Truncated(_)),
         field: time_dimension.clone(),
         grains: ToDateGrains {
             query: query_grain,
@@ -116,12 +120,13 @@ impl ToDatePlan {
             .get_mut(self.position)
             .ok_or(InvariantViolation::ForeignField)?;
         let column = column_reference(period.as_str())?;
-        key.expression = match key.expression {
-            Expression::DateTrunc { .. } => Expression::DateTrunc {
+        key.expression = if self.truncated {
+            Expression::DateTrunc {
                 unit: grain_unit(self.grains.query),
                 operand: Box::new(column),
-            },
-            _ => column,
+            }
+        } else {
+            column
         };
         Ok(ToDateStep {
             dimension,
@@ -168,6 +173,61 @@ impl ToDateStep {
             OutputSchema::new(columns),
             origin,
         ))
+    }
+}
+
+/// How a query dimension reads the time field (E4-8.6).
+#[derive(Debug, Clone, Copy)]
+enum KeyGrain {
+    /// The field without a time grain.
+    Plain,
+    /// The field truncated to a grain.
+    Truncated(Grain),
+}
+
+/// The time grain of a query dimension of kind `kind` that reads `time_dimension`: the field
+/// at its `time_grains` grain or, in the SQL form, `DATE_TRUNC('<grain>', field)` (E4-8.6, as
+/// E4-7.8 counts it); `None` for any other dimension.
+fn dimension_grain(kind: &BoundDimensionKind, time_dimension: &FieldPath) -> Option<KeyGrain> {
+    match kind {
+        BoundDimensionKind::Field {
+            field, time_grain, ..
+        } => (field == time_dimension)
+            .then_some(time_grain.map_or(KeyGrain::Plain, KeyGrain::Truncated)),
+        BoundDimensionKind::Expression {
+            dataset,
+            expression,
+        } => {
+            let Expression::DateTrunc { unit, operand } = expression else {
+                return None;
+            };
+            let Expression::Reference(reference) = operand.as_ref() else {
+                return None;
+            };
+            let field = FieldPath {
+                dataset: reference
+                    .qualifier
+                    .as_ref()
+                    .map_or_else(|| dataset.clone(), field_name),
+                field: field_name(&reference.name),
+            };
+            (&field == time_dimension)
+                .then(|| unit_grain(*unit))
+                .flatten()
+                .map(KeyGrain::Truncated)
+        }
+    }
+}
+
+/// The grain of a `DATE_TRUNC` unit; `None` for a unit finer than a day.
+fn unit_grain(unit: DateUnit) -> Option<Grain> {
+    match unit {
+        DateUnit::Day => Some(Grain::Day),
+        DateUnit::Week => Some(Grain::Week),
+        DateUnit::Month => Some(Grain::Month),
+        DateUnit::Quarter => Some(Grain::Quarter),
+        DateUnit::Year => Some(Grain::Year),
+        DateUnit::Hour | DateUnit::Minute | DateUnit::Second => None,
     }
 }
 
