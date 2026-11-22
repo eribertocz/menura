@@ -103,6 +103,10 @@ pub enum InvariantViolation {
     AdditivityMetric,
     /// A semi-additive metric with an expected population (POP).
     PopulationMetric,
+    /// A population that no dataset of the model declares (POP-2).
+    UnknownPopulation,
+    /// A unit of periods that does not output the period column it is read by (E4-3.12).
+    UnknownPeriodColumn,
     /// A context metric (CTX).
     ContextMetric,
     /// A home dataset whose `source` the catalog schema does not describe.
