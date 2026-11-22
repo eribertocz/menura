@@ -277,10 +277,10 @@ fn rejected(steps: &[usize]) -> RewriteRecord {
 }
 
 /// Asserts that the rewrite keeps `plan`, its one `Join` being at `steps`.
-fn assert_kept(plan: PlanNode, steps: &[usize]) {
+fn assert_kept(plan: &PlanNode, steps: &[usize]) {
     let (rewritten, records) = run(plan.clone());
 
-    assert_eq!(rewritten, plan);
+    assert_eq!(&rewritten, plan);
     assert_eq!(records, vec![rejected(steps)]);
 }
 
@@ -351,7 +351,7 @@ fn e5_3_1a_a_join_read_by_a_query_filter_is_kept() {
         &["AMOUNT"],
     );
 
-    assert_kept(plan, &[0, 0, 0]);
+    assert_kept(&plan, &[0, 0, 0]);
 }
 
 #[test]
@@ -367,7 +367,7 @@ fn e5_3_1a_a_join_read_only_by_the_date_range_predicate_is_kept() {
         &["AMOUNT"],
     );
 
-    assert_kept(plan, &[0, 0, 0]);
+    assert_kept(&plan, &[0, 0, 0]);
 }
 
 #[test]
@@ -375,7 +375,7 @@ fn e5_3_1a_a_join_read_by_an_aggregate_key_is_kept() {
     let key = format!("{CUSTOMERS}SEGMENT");
     let plan = metric_branch(join_customers(home_scan(true)), &[&key]);
 
-    assert_kept(plan, &[0, 0]);
+    assert_kept(&plan, &[0, 0]);
 }
 
 #[test]
@@ -387,7 +387,7 @@ fn e5_3_1a_a_join_read_by_a_component_is_kept() {
         vec![component],
     );
 
-    assert_kept(plan, &[0, 0]);
+    assert_kept(&plan, &[0, 0]);
 }
 
 #[test]
@@ -407,7 +407,7 @@ fn e5_3_1a_a_join_read_by_an_order_by_column_is_kept() {
         origin(),
     );
 
-    assert_kept(plan, &[0, 0, 0]);
+    assert_kept(&plan, &[0, 0, 0]);
 }
 
 #[test]

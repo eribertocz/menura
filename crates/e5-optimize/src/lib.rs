@@ -7,6 +7,7 @@
 
 #![forbid(unsafe_code)]
 
+mod column_reads;
 mod context;
 mod evidence;
 mod record;
