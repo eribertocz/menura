@@ -1,10 +1,14 @@
 //! The command line of `menura` (ARC-5.5, ARC-5.10), parsed into the command to run. Parsing
-//! reads no file: it only decides which command runs, and with which paths.
+//! reads no file: it only decides which command runs, and with which paths. Which arguments a
+//! command takes, and the errors of a command line, come from `core`; this module reads the
+//! `--flag <value>` syntax and spells each argument as its flag.
 
 use std::ffi::OsString;
 use std::path::PathBuf;
 
-use menura_core::Dialect;
+use std::collections::BTreeMap;
+
+use menura_core::{Argument, CommandName, Dialect, UsageReason, parse_dialect};
 
 use crate::files::{
     CompileFiles, DescribeFiles, DiffFiles, HandleFiles, IntegrityChecksFiles, MigrateFiles,
@@ -34,214 +38,154 @@ pub(crate) enum Command {
     Diff(DiffFiles),
 }
 
-/// A command line that is not the syntax of ARC-5.5.
+/// A command line that cannot run, with its message (ARC-5.4).
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(crate) struct UsageError(pub(crate) String);
+
+impl From<menura_core::UsageError> for UsageError {
+    fn from(error: menura_core::UsageError) -> Self {
+        Self(error.message(flag))
+    }
+}
+
+/// The flag of `argument`: `--` and its neutral name, `-` for `_`.
+pub(crate) fn flag(argument: Argument) -> String {
+    format!("--{}", argument.name().replace('_', "-"))
+}
+
+/// The command-line name of `command`: its neutral name, `-` for `_`.
+fn command_word(command: CommandName) -> String {
+    command.name().replace('_', "-")
+}
+
+/// The values of a command line, by argument.
+type Given = BTreeMap<Argument, OsString>;
 
 /// Parses the arguments after the program name. `--help` anywhere asks for the usage text.
 pub(crate) fn parse(arguments: &[OsString]) -> Result<Command, UsageError> {
     if arguments.iter().any(|argument| argument == "--help") {
         return Ok(Command::Help);
     }
-    let Some((command, flags)) = arguments.split_first() else {
+    let Some((word, flags)) = arguments.split_first() else {
         return Err(UsageError("no command given".to_owned()));
     };
-    match command.to_str() {
-        Some("validate") => parse_model_files(flags).map(Command::Validate),
-        Some("compile") => parse_compile_files(flags, true).map(Command::Compile),
-        Some("explain") => parse_compile_files(flags, false).map(Command::Explain),
-        Some("describe") => parse_describe_files(flags).map(Command::Describe),
-        Some("integrity-checks") => {
-            parse_integrity_checks_files(flags).map(Command::IntegrityChecks)
-        }
-        Some("dependencies") => parse_model_files(flags).map(Command::Dependencies),
-        Some("migrate") => parse_migrate_files(flags).map(Command::Migrate),
-        Some("diff") => parse_diff_files(flags).map(Command::Diff),
-        _ => Err(UsageError(format!(
-            "unknown command `{}`",
-            command.to_string_lossy()
-        ))),
-    }
+    let text = word.to_string_lossy();
+    let command = CommandName::ALL
+        .into_iter()
+        .find(|command| command_word(*command) == text)
+        .ok_or_else(|| {
+            menura_core::UsageError::new(None, UsageReason::UnknownCommand(text.into_owned()))
+        })?;
+    let mut given = parse_flags(command, flags)?;
+    let present: Vec<Argument> = given.keys().copied().collect();
+    command.check_required(&present)?;
+    Ok(build(command, &mut given)?)
 }
 
-/// Parses the flags of `validate` and `dependencies` (ARC-5.5, ARC-5.6).
-fn parse_model_files(flags: &[OsString]) -> Result<ModelFiles, UsageError> {
-    let [model, catalog_schema, load_options] =
-        parse_flags(flags, ["--model", "--catalog-schema", "--load-options"])?;
-    Ok(ModelFiles {
-        model: required(model, "--model")?,
-        catalog_schema: required(catalog_schema, "--catalog-schema")?,
-        load_options,
-    })
-}
-
-/// Parses the flags of `compile`, with `--audit-record` when `audit_record` is true, or of
-/// `explain`, which refuses it as an unknown flag (ARC-5.7).
-fn parse_compile_files(flags: &[OsString], audit_record: bool) -> Result<CompileFiles, UsageError> {
-    const COMPILE: [&str; 8] = [
-        "--model",
-        "--catalog-schema",
-        "--query",
-        "--security-context",
-        "--catalog-state",
-        "--load-options",
-        "--compile-options",
-        "--audit-record",
-    ];
-    let names = if audit_record {
-        &COMPILE[..]
-    } else {
-        &COMPILE[..COMPILE.len() - 1]
-    };
-    let mut paths = parse_flag_list(flags, names)?.into_iter();
-    let mut next = || paths.next().flatten();
-    let (model, catalog_schema, query, security_context) = (next(), next(), next(), next());
-    let (catalog_state, load_options, compile_options, audit_record) =
-        (next(), next(), next(), next());
-    Ok(CompileFiles {
-        handle: HandleFiles {
-            model: required(model, "--model")?,
-            catalog_schema: required(catalog_schema, "--catalog-schema")?,
-            catalog_state,
-            load_options,
-        },
-        query: required(query, "--query")?,
-        security_context: required(security_context, "--security-context")?,
-        compile_options,
-        audit_record,
-    })
-}
-
-/// Parses the flags of `describe` (ARC-5.8).
-fn parse_describe_files(flags: &[OsString]) -> Result<DescribeFiles, UsageError> {
-    let [
-        model,
-        catalog_schema,
-        security_context,
-        catalog_state,
-        load_options,
-    ] = parse_flags(
-        flags,
-        [
-            "--model",
-            "--catalog-schema",
-            "--security-context",
-            "--catalog-state",
-            "--load-options",
-        ],
-    )?;
-    Ok(DescribeFiles {
-        handle: HandleFiles {
-            model: required(model, "--model")?,
-            catalog_schema: required(catalog_schema, "--catalog-schema")?,
-            catalog_state,
-            load_options,
-        },
-        security_context: required(security_context, "--security-context")?,
-    })
-}
-
-/// Parses the flags of `integrity-checks`: `--dialect` is `duckdb`, its default (ARC-5.8).
-fn parse_integrity_checks_files(flags: &[OsString]) -> Result<IntegrityChecksFiles, UsageError> {
-    let [model, catalog_schema, load_options, dialect] = parse_flags(
-        flags,
-        ["--model", "--catalog-schema", "--load-options", "--dialect"],
-    )?;
-    let dialect = match dialect {
-        None => Dialect::Duckdb,
-        Some(name) if name.as_os_str() == "duckdb" => Dialect::Duckdb,
-        Some(name) => {
-            return Err(UsageError(format!(
-                "unknown dialect `{}`; the dialect is `duckdb`",
-                name.display()
-            )));
-        }
-    };
-    Ok(IntegrityChecksFiles {
-        model: ModelFiles {
-            model: required(model, "--model")?,
-            catalog_schema: required(catalog_schema, "--catalog-schema")?,
-            load_options,
-        },
-        dialect,
-    })
-}
-
-/// Parses the flags of `migrate`, which reads no catalog file (ARC-5.9).
-fn parse_migrate_files(flags: &[OsString]) -> Result<MigrateFiles, UsageError> {
-    let [model, load_options] = parse_flags(flags, ["--model", "--load-options"])?;
-    Ok(MigrateFiles {
-        model: required(model, "--model")?,
-        load_options,
-    })
-}
-
-/// Parses the flags of `diff` (ARC-5.6).
-fn parse_diff_files(flags: &[OsString]) -> Result<DiffFiles, UsageError> {
-    let [
-        old_model,
-        old_catalog_schema,
-        new_model,
-        new_catalog_schema,
-        load_options,
-    ] = parse_flags(
-        flags,
-        [
-            "--old-model",
-            "--old-catalog-schema",
-            "--new-model",
-            "--new-catalog-schema",
-            "--load-options",
-        ],
-    )?;
-    Ok(DiffFiles {
-        old_model: required(old_model, "--old-model")?,
-        old_catalog_schema: required(old_catalog_schema, "--old-catalog-schema")?,
-        new_model: required(new_model, "--new-model")?,
-        new_catalog_schema: required(new_catalog_schema, "--new-catalog-schema")?,
-        load_options,
-    })
-}
-
-/// The path of each flag of `names`, in that order: each flag at most once, in any order, each
-/// followed by its path (ARC-5.5).
-fn parse_flags<const COUNT: usize>(
-    flags: &[OsString],
-    names: [&str; COUNT],
-) -> Result<[Option<PathBuf>; COUNT], UsageError> {
-    let mut paths = parse_flag_list(flags, &names)?.into_iter();
-    Ok(std::array::from_fn(|_| paths.next().flatten()))
-}
-
-/// The path of each flag of `names`, in that order, as [`parse_flags`] reads them.
-fn parse_flag_list(flags: &[OsString], names: &[&str]) -> Result<Vec<Option<PathBuf>>, UsageError> {
-    let mut paths: Vec<Option<PathBuf>> = vec![None; names.len()];
+/// The value of each flag of `flags`: each flag at most once, in any order, each followed by
+/// its value, and only the flags `command` takes (ARC-5.5).
+fn parse_flags(command: CommandName, flags: &[OsString]) -> Result<Given, menura_core::UsageError> {
+    let mut given = Given::new();
     let mut remaining = flags.iter();
-    while let Some(flag) = remaining.next() {
-        let text = flag.to_string_lossy();
-        let Some(index) = names.iter().position(|name| *name == text) else {
-            return Err(UsageError(if text.starts_with("--") {
-                format!("unknown flag `{text}`")
-            } else {
-                format!("unexpected argument `{text}`")
-            }));
+    while let Some(word) = remaining.next() {
+        let text = word.to_string_lossy();
+        let argument = text
+            .strip_prefix("--")
+            .filter(|name| !name.contains('_'))
+            .and_then(|name| command.argument(&name.replace('-', "_")).ok())
+            .ok_or_else(|| {
+                menura_core::UsageError::new(None, UsageReason::UnknownArgument(text.to_string()))
+            })?;
+        let Some(value) = remaining.next() else {
+            return Err(menura_core::UsageError::new(
+                Some(argument),
+                UsageReason::MissingValue,
+            ));
         };
-        let Some(path) = remaining.next() else {
-            return Err(UsageError(format!("`{text}` needs a path")));
-        };
-        let slot = paths
-            .get_mut(index)
-            .ok_or_else(|| UsageError(format!("unknown flag `{text}`")))?;
-        if slot.replace(PathBuf::from(path)).is_some() {
-            return Err(UsageError(format!("`{text}` is given more than once")));
+        if given.insert(argument, value.clone()).is_some() {
+            return Err(menura_core::UsageError::new(
+                Some(argument),
+                UsageReason::Repeated,
+            ));
         }
     }
-    Ok(paths)
+    Ok(given)
 }
 
-/// The path of the required flag `name`.
-fn required(path: Option<PathBuf>, name: &str) -> Result<PathBuf, UsageError> {
-    path.ok_or_else(|| UsageError(format!("`{name}` is required")))
+/// The path given for `argument`, taken out of `given`.
+fn path(given: &mut Given, argument: Argument) -> Option<PathBuf> {
+    given.remove(&argument).map(PathBuf::from)
+}
+
+/// The path of the required `argument`; [`CommandName::check_required`] already found it.
+fn required(given: &mut Given, argument: Argument) -> Result<PathBuf, menura_core::UsageError> {
+    path(given, argument)
+        .ok_or_else(|| menura_core::UsageError::new(Some(argument), UsageReason::Missing))
+}
+
+/// The command `command` with the values of `given`.
+fn build(command: CommandName, given: &mut Given) -> Result<Command, menura_core::UsageError> {
+    Ok(match command {
+        CommandName::Validate => Command::Validate(model_files(given)?),
+        CommandName::Dependencies => Command::Dependencies(model_files(given)?),
+        CommandName::Compile => Command::Compile(compile_files(given)?),
+        CommandName::Explain => Command::Explain(compile_files(given)?),
+        CommandName::Describe => Command::Describe(DescribeFiles {
+            handle: handle_files(given)?,
+            security_context: required(given, Argument::SecurityContext)?,
+        }),
+        CommandName::IntegrityChecks => {
+            let dialect = match given.remove(&Argument::Dialect) {
+                Some(name) => parse_dialect(&name.to_string_lossy())?,
+                None => Dialect::Duckdb,
+            };
+            Command::IntegrityChecks(IntegrityChecksFiles {
+                model: model_files(given)?,
+                dialect,
+            })
+        }
+        CommandName::Migrate => Command::Migrate(MigrateFiles {
+            model: required(given, Argument::Model)?,
+            load_options: path(given, Argument::LoadOptions),
+        }),
+        CommandName::Diff => Command::Diff(DiffFiles {
+            old_model: required(given, Argument::OldModel)?,
+            old_catalog_schema: required(given, Argument::OldCatalogSchema)?,
+            new_model: required(given, Argument::NewModel)?,
+            new_catalog_schema: required(given, Argument::NewCatalogSchema)?,
+            load_options: path(given, Argument::LoadOptions),
+        }),
+    })
+}
+
+/// The files of `validate`, `dependencies` and `integrity-checks`.
+fn model_files(given: &mut Given) -> Result<ModelFiles, menura_core::UsageError> {
+    Ok(ModelFiles {
+        model: required(given, Argument::Model)?,
+        catalog_schema: required(given, Argument::CatalogSchema)?,
+        load_options: path(given, Argument::LoadOptions),
+    })
+}
+
+/// The files that load a handle.
+fn handle_files(given: &mut Given) -> Result<HandleFiles, menura_core::UsageError> {
+    Ok(HandleFiles {
+        model: required(given, Argument::Model)?,
+        catalog_schema: required(given, Argument::CatalogSchema)?,
+        catalog_state: path(given, Argument::CatalogState),
+        load_options: path(given, Argument::LoadOptions),
+    })
+}
+
+/// The files of `compile` and `explain`; only `compile` takes `--audit-record` (ARC-5.7).
+fn compile_files(given: &mut Given) -> Result<CompileFiles, menura_core::UsageError> {
+    Ok(CompileFiles {
+        handle: handle_files(given)?,
+        query: required(given, Argument::Query)?,
+        security_context: required(given, Argument::SecurityContext)?,
+        compile_options: path(given, Argument::CompileOptions),
+        audit_record: path(given, Argument::AuditRecord),
+    })
 }
 
 #[cfg(test)]

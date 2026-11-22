@@ -8,8 +8,8 @@ use super::{Loaded, load_handle, read, write_document, write_error};
 use crate::arguments::UsageError;
 use crate::files::CompileFiles;
 use menura_core::{
-    AuditRecordDocument, CompileOptions, CompileResult, audit_record_json, compile, explain,
-    plan_json,
+    AuditRecordDocument, CompileOptions, CompileResult, audit_record_json, check_audit_record,
+    compile, explain, parse_compile_options, plan_json,
 };
 
 /// Runs `compile`: writes the audit record to `--audit-record` with `audit: true`, then the
@@ -18,19 +18,7 @@ use menura_core::{
 /// be written exits `2` with nothing on standard output (ARC-5.7).
 pub(super) fn run_compile(files: &CompileFiles) -> Result<ExitCode, UsageError> {
     let options = compile_options(files.compile_options.as_deref())?;
-    match (options.audit, &files.audit_record) {
-        (true, None) => {
-            return Err(UsageError(
-                "the compile option `audit: true` needs `--audit-record`".to_owned(),
-            ));
-        }
-        (false, Some(_)) => {
-            return Err(UsageError(
-                "`--audit-record` needs the compile option `audit: true`".to_owned(),
-            ));
-        }
-        _ => {}
-    }
+    check_audit_record(&options, files.audit_record.is_some())?;
     let (query, security_context) = (read(&files.query)?, read(&files.security_context)?);
     let handle = match load_handle(&files.handle)? {
         Loaded::Handle(handle) => handle,
@@ -59,9 +47,7 @@ pub(super) fn run_explain(files: &CompileFiles) -> Result<ExitCode, UsageError> 
 /// (ARC-5.7).
 fn compile_options(path: Option<&Path>) -> Result<CompileOptions, UsageError> {
     match path {
-        Some(path) => CompileOptions::from_json(&read(path)?).map_err(|error| {
-            UsageError(format!("the compile options `{}`: {error}", path.display()))
-        }),
+        Some(path) => Ok(parse_compile_options(&read(path)?)?),
         None => Ok(CompileOptions::default()),
     }
 }

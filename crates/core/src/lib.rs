@@ -38,6 +38,7 @@ mod passed_document;
 mod plan_document;
 mod producer;
 mod stop;
+mod usage;
 
 pub use compile::{Compilation, CompileResult, compile};
 pub use compile_options::{CompileOptions, CompileOptionsError};
@@ -73,3 +74,7 @@ pub use menura_contracts::types::migration_report::{
 pub use menura_model::internal_model::InternalModel;
 pub use migrate::migrate;
 pub use producer::build_producer;
+pub use usage::{
+    Argument, CommandName, UsageError, UsageReason, check_audit_record, parse_compile_options,
+    parse_dialect, parse_load_options,
+};

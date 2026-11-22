@@ -21,7 +21,9 @@ use std::process::ExitCode;
 use crate::arguments::{Command, UsageError, parse};
 use crate::files::HandleFiles;
 use crate::usage::USAGE;
-use menura_core::{CompileErrorDocument, Handle, LoadOptions, OutputError, document_json, load};
+use menura_core::{
+    CompileErrorDocument, Handle, LoadOptions, OutputError, document_json, load, parse_load_options,
+};
 
 /// The exit status of a command that cannot run (ARC-5.4).
 const CANNOT_RUN: u8 = 2;
@@ -50,8 +52,7 @@ pub(crate) fn run() -> ExitCode {
 /// The load options of the file at `path`, or the defaults when no file is given (ARC-5.5).
 fn load_options(path: Option<&Path>) -> Result<LoadOptions, UsageError> {
     match path {
-        Some(path) => LoadOptions::from_json(&read(path)?)
-            .map_err(|error| UsageError(format!("the load options `{}`: {error}", path.display()))),
+        Some(path) => Ok(parse_load_options(&read(path)?)?),
         None => Ok(LoadOptions::default()),
     }
 }
