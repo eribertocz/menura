@@ -1,0 +1,119 @@
+version: "0.1.1"
+semantic_model:
+  - name: dsc_describe
+    description: 'orders reach stores directly, through pickup stores (keys restricted to admin) and through customers; suppliers are for admin only; orders_monthly is a summary'
+    custom_extensions:
+      - vendor_name: COMMON
+        data: '{"namespace": "menura", "version": 1, "security_context": {"roles": ["admin", "analyst"], "attributes": []}}'
+    datasets:
+      - name: orders
+        source: shop.main.orders
+        description: One row per order
+        ai_context: 'One row per order; amount is the order total.'
+        primary_key: [order_id]
+        fields:
+          - name: order_id
+            expression: {dialects: [{dialect: ANSI_SQL, expression: 'order_id'}]}
+          - name: order_day
+            label: Order day
+            description: The day the order was placed
+            expression: {dialects: [{dialect: ANSI_SQL, expression: 'order_day'}]}
+            dimension: {is_time: true}
+          - name: shipped_at
+            expression: {dialects: [{dialect: ANSI_SQL, expression: 'shipped_at'}]}
+          - name: customer_id
+            expression: {dialects: [{dialect: ANSI_SQL, expression: 'customer_id'}]}
+          - name: store_id
+            expression: {dialects: [{dialect: ANSI_SQL, expression: 'store_id'}]}
+          - name: pickup_store_id
+            expression: {dialects: [{dialect: ANSI_SQL, expression: 'pickup_store_id'}]}
+          - name: amount
+            expression: {dialects: [{dialect: ANSI_SQL, expression: 'amount'}]}
+            ai_context: {synonyms: [revenue, order total], rank: 1}
+          - name: margin
+            expression: {dialects: [{dialect: ANSI_SQL, expression: 'margin'}]}
+          - name: payload
+            expression: {dialects: [{dialect: ANSI_SQL, expression: 'payload'}]}
+          - name: discount
+            expression: {dialects: [{dialect: ANSI_SQL, expression: 'discount'}]}
+        custom_extensions:
+          - vendor_name: COMMON
+            data: '{"namespace": "menura", "version": 1, "access": {"mode": "roles", "roles": ["admin", "analyst"], "fields": [{"names": ["margin", "pickup_store_id"], "roles": ["admin"]}]}}'
+      - name: customers
+        source: shop.main.customers
+        primary_key: [customer_id]
+        fields:
+          - name: customer_id
+            expression: {dialects: [{dialect: ANSI_SQL, expression: 'customer_id'}]}
+          - name: store_id
+            expression: {dialects: [{dialect: ANSI_SQL, expression: 'store_id'}]}
+          - name: segment
+            expression: {dialects: [{dialect: ANSI_SQL, expression: 'segment'}]}
+        custom_extensions:
+          - vendor_name: COMMON
+            data: '{"namespace": "menura", "version": 1, "access": {"mode": "roles", "roles": ["admin", "analyst"]}}'
+      - name: stores
+        source: shop.main.stores
+        primary_key: [store_id]
+        fields:
+          - name: store_id
+            expression: {dialects: [{dialect: ANSI_SQL, expression: 'store_id'}]}
+          - name: city
+            expression: {dialects: [{dialect: ANSI_SQL, expression: 'city'}]}
+        custom_extensions:
+          - vendor_name: COMMON
+            data: '{"namespace": "menura", "version": 1, "access": {"mode": "roles", "roles": ["admin", "analyst"]}}'
+      - name: suppliers
+        source: shop.main.suppliers
+        primary_key: [supplier_id]
+        fields:
+          - name: supplier_id
+            expression: {dialects: [{dialect: ANSI_SQL, expression: 'supplier_id'}]}
+        custom_extensions:
+          - vendor_name: COMMON
+            data: '{"namespace": "menura", "version": 1, "access": {"mode": "roles", "roles": ["admin"]}}'
+      - name: orders_monthly
+        source: shop.main.orders_monthly
+        primary_key: [order_month]
+        fields:
+          - name: order_month
+            expression: {dialects: [{dialect: ANSI_SQL, expression: 'order_month'}]}
+          - name: total_amount
+            expression: {dialects: [{dialect: ANSI_SQL, expression: 'total_amount'}]}
+        custom_extensions:
+          - vendor_name: COMMON
+            data: '{"namespace": "menura", "version": 1, "access": {"mode": "internal"}, "aggregate": {"of": "orders", "dimensions": [{"field": "order_month", "base": "order_day", "grain": "month"}], "measures": [{"field": "total_amount", "base_aggregate": "SUM(orders.amount)"}], "coverage_field": "order_month"}}'
+    relationships:
+      - name: orders_stores
+        from: orders
+        to: stores
+        from_columns: [store_id]
+        to_columns: [store_id]
+      - name: orders_pickup_stores
+        from: orders
+        to: stores
+        from_columns: [pickup_store_id]
+        to_columns: [store_id]
+      - name: orders_customers
+        from: orders
+        to: customers
+        from_columns: [customer_id]
+        to_columns: [customer_id]
+      - name: customers_stores
+        from: customers
+        to: stores
+        from_columns: [store_id]
+        to_columns: [store_id]
+    metrics:
+      - name: total_amount
+        description: The sum of the order amounts
+        ai_context: Use for revenue questions.
+        expression: {dialects: [{dialect: ANSI_SQL, expression: 'SUM(orders.amount)'}]}
+      - name: total_margin
+        expression: {dialects: [{dialect: ANSI_SQL, expression: 'SUM(orders.margin)'}]}
+      - name: store_count
+        expression: {dialects: [{dialect: ANSI_SQL, expression: 'COUNT(stores.store_id)'}]}
+      - name: supplier_count
+        expression: {dialects: [{dialect: ANSI_SQL, expression: 'COUNT(suppliers.supplier_id)'}]}
+      - name: total_discount
+        expression: {dialects: [{dialect: ANSI_SQL, expression: 'SUM(orders.discount)'}]}

@@ -1,0 +1,199 @@
+{
+  "contract": "menura.catalog_schema",
+  "contract_version": "1.1.0",
+  "document_id": {
+    "origin": "conformance:dsc-describe",
+    "snapshot": "dsc-describe-001"
+  },
+  "engine": {
+    "name": "duckdb",
+    "version": "2.0.0"
+  },
+  "relations": [
+    {
+      "source": "shop.main.customers",
+      "columns": [
+        {
+          "name": "customer_id",
+          "logical_type": {
+            "kind": "integer",
+            "bits": 32,
+            "signed": true
+          },
+          "physical_type": "INTEGER",
+          "nullable": false
+        },
+        {
+          "name": "segment",
+          "logical_type": {
+            "kind": "text"
+          },
+          "physical_type": "VARCHAR",
+          "nullable": false
+        },
+        {
+          "name": "store_id",
+          "logical_type": {
+            "kind": "integer",
+            "bits": 32,
+            "signed": true
+          },
+          "physical_type": "INTEGER",
+          "nullable": false
+        }
+      ]
+    },
+    {
+      "source": "shop.main.orders",
+      "columns": [
+        {
+          "name": "amount",
+          "logical_type": {
+            "kind": "decimal",
+            "precision": 18,
+            "scale": 2
+          },
+          "physical_type": "DECIMAL(18,2)",
+          "nullable": false
+        },
+        {
+          "name": "customer_id",
+          "logical_type": {
+            "kind": "integer",
+            "bits": 32,
+            "signed": true
+          },
+          "physical_type": "INTEGER",
+          "nullable": false
+        },
+        {
+          "name": "margin",
+          "logical_type": {
+            "kind": "decimal",
+            "precision": 18,
+            "scale": 2
+          },
+          "physical_type": "DECIMAL(18,2)",
+          "nullable": false
+        },
+        {
+          "name": "order_day",
+          "logical_type": {
+            "kind": "date"
+          },
+          "physical_type": "DATE",
+          "nullable": false
+        },
+        {
+          "name": "order_id",
+          "logical_type": {
+            "kind": "integer",
+            "bits": 32,
+            "signed": true
+          },
+          "physical_type": "INTEGER",
+          "nullable": false
+        },
+        {
+          "name": "payload",
+          "logical_type": {
+            "kind": "unsupported"
+          },
+          "physical_type": "STRUCT(a INTEGER)",
+          "nullable": true
+        },
+        {
+          "name": "pickup_store_id",
+          "logical_type": {
+            "kind": "integer",
+            "bits": 32,
+            "signed": true
+          },
+          "physical_type": "INTEGER",
+          "nullable": false
+        },
+        {
+          "name": "shipped_at",
+          "logical_type": {
+            "kind": "timestamp",
+            "precision": "us",
+            "with_time_zone": false
+          },
+          "physical_type": "TIMESTAMP",
+          "nullable": false
+        },
+        {
+          "name": "store_id",
+          "logical_type": {
+            "kind": "integer",
+            "bits": 32,
+            "signed": true
+          },
+          "physical_type": "INTEGER",
+          "nullable": false
+        }
+      ]
+    },
+    {
+      "source": "shop.main.orders_monthly",
+      "columns": [
+        {
+          "name": "order_month",
+          "logical_type": {
+            "kind": "date"
+          },
+          "physical_type": "DATE",
+          "nullable": false
+        },
+        {
+          "name": "total_amount",
+          "logical_type": {
+            "kind": "decimal",
+            "precision": 38,
+            "scale": 2
+          },
+          "physical_type": "DECIMAL(38,2)",
+          "nullable": false
+        }
+      ]
+    },
+    {
+      "source": "shop.main.stores",
+      "columns": [
+        {
+          "name": "city",
+          "logical_type": {
+            "kind": "text"
+          },
+          "physical_type": "VARCHAR",
+          "nullable": false
+        },
+        {
+          "name": "store_id",
+          "logical_type": {
+            "kind": "integer",
+            "bits": 32,
+            "signed": true
+          },
+          "physical_type": "INTEGER",
+          "nullable": false
+        }
+      ]
+    },
+    {
+      "source": "shop.main.suppliers",
+      "columns": [
+        {
+          "name": "supplier_id",
+          "logical_type": {
+            "kind": "integer",
+            "bits": 32,
+            "signed": true
+          },
+          "physical_type": "INTEGER",
+          "nullable": false
+        }
+      ]
+    }
+  ]
+}

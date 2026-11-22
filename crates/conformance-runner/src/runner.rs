@@ -8,9 +8,10 @@ use std::path::{Path, PathBuf};
 use duckdb::Connection;
 use menura_core::LoadOptions;
 
-use crate::case::Case;
+use crate::case::{Case, Outcome};
 use crate::case_file::read_case;
 use crate::database::prepare_database;
+use crate::describe_part::check_describe;
 use crate::divergences::{DIFFERENTIAL_FOLDER, DIVERGENCES_FILE, Divergences, read_divergences};
 use crate::error::{RunnerError, RunnerErrorKind};
 use crate::fixture::{ModelFixture, read_bytes, security_context_path};
@@ -125,13 +126,16 @@ fn run_case(
     };
     match check_load(case, &documents, &prepared.load_options) {
         LoadOutcome::Checked(status) => status,
-        LoadOutcome::Loaded(_) if case.expect.outcome.returns_document() => {
+        LoadOutcome::Loaded(_) if case.expect.outcome == Outcome::IntegrityChecks => {
             document_part(case.expect.outcome)
         }
         LoadOutcome::Loaded(handle) => {
             let Some(security_context) = prepared.security_context.as_deref() else {
                 return CaseStatus::Failed("this outcome requires `security_context`".to_owned());
             };
+            if case.expect.outcome == Outcome::Describe {
+                return check_describe(case, &handle, security_context, case_folder);
+            }
             let inputs = QueryInputs {
                 case_folder,
                 security_context,

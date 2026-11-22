@@ -1,0 +1,7 @@
+id: dsc-describe-not-admitted-001
+rules: [DSC-3.12]
+model: dsc-describe
+security_context: not-admitted.json
+expect:
+  outcome: "describe"
+  document: "dsc-describe-not-admitted-001.describe.json"
