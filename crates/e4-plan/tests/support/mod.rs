@@ -9,6 +9,7 @@ pub mod derived;
 pub mod join_plan;
 pub mod joins;
 pub mod plan;
+pub mod population;
 pub mod propagation;
 pub mod stitch;
 
