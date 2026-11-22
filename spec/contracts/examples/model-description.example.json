@@ -5,7 +5,7 @@
   "security_fingerprint": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
   "datasets": [
     {
-      "name": "customers",
+      "name": "CUSTOMERS",
       "ai_context": {
         "value": "One row per customer; region is the sales region.",
         "source": {
@@ -16,7 +16,7 @@
       },
       "fields": [
         {
-          "reference": "customers.customer_id",
+          "reference": "CUSTOMERS.CUSTOMER_ID",
           "logical_type": {
             "kind": "integer",
             "bits": 32,
@@ -26,7 +26,7 @@
           "time_grains": []
         },
         {
-          "reference": "customers.region",
+          "reference": "CUSTOMERS.REGION",
           "logical_type": {
             "kind": "text"
           },
@@ -34,7 +34,7 @@
           "time_grains": []
         },
         {
-          "reference": "customers.segment",
+          "reference": "CUSTOMERS.SEGMENT",
           "logical_type": {
             "kind": "text"
           },
@@ -44,10 +44,10 @@
       ]
     },
     {
-      "name": "invoices",
+      "name": "INVOICES",
       "fields": [
         {
-          "reference": "invoices.amount",
+          "reference": "INVOICES.AMOUNT",
           "logical_type": {
             "kind": "decimal",
             "precision": 18,
@@ -70,7 +70,7 @@
           }
         },
         {
-          "reference": "invoices.area_id",
+          "reference": "INVOICES.AREA_ID",
           "logical_type": {
             "kind": "integer",
             "bits": 32,
@@ -80,7 +80,7 @@
           "time_grains": []
         },
         {
-          "reference": "invoices.category_id",
+          "reference": "INVOICES.CATEGORY_ID",
           "logical_type": {
             "kind": "integer",
             "bits": 32,
@@ -90,7 +90,7 @@
           "time_grains": []
         },
         {
-          "reference": "invoices.customer_id",
+          "reference": "INVOICES.CUSTOMER_ID",
           "logical_type": {
             "kind": "integer",
             "bits": 32,
@@ -100,7 +100,7 @@
           "time_grains": []
         },
         {
-          "reference": "invoices.invoice_date",
+          "reference": "INVOICES.INVOICE_DATE",
           "logical_type": {
             "kind": "date"
           },
@@ -114,7 +114,7 @@
           ]
         },
         {
-          "reference": "invoices.invoice_id",
+          "reference": "INVOICES.INVOICE_ID",
           "logical_type": {
             "kind": "integer",
             "bits": 64,
@@ -124,7 +124,7 @@
           "time_grains": []
         },
         {
-          "reference": "invoices.status",
+          "reference": "INVOICES.STATUS",
           "logical_type": {
             "kind": "text"
           },
@@ -136,19 +136,19 @@
   ],
   "metrics": [
     {
-      "reference": "average_invoice",
+      "reference": "AVERAGE_INVOICE",
       "logical_type": {
         "kind": "float",
         "bits": 64
       },
       "kind": "derived",
       "reachable_datasets": [
-        "customers",
-        "invoices"
+        "CUSTOMERS",
+        "INVOICES"
       ]
     },
     {
-      "reference": "billed",
+      "reference": "BILLED",
       "logical_type": {
         "kind": "decimal",
         "precision": 38,
@@ -156,12 +156,12 @@
       },
       "kind": "base",
       "reachable_datasets": [
-        "customers",
-        "invoices"
+        "CUSTOMERS",
+        "INVOICES"
       ]
     },
     {
-      "reference": "billed_ytd",
+      "reference": "BILLED_YTD",
       "logical_type": {
         "kind": "decimal",
         "precision": 38,
@@ -169,12 +169,12 @@
       },
       "kind": "context",
       "reachable_datasets": [
-        "customers",
-        "invoices"
+        "CUSTOMERS",
+        "INVOICES"
       ]
     },
     {
-      "reference": "invoice_count",
+      "reference": "INVOICE_COUNT",
       "logical_type": {
         "kind": "integer",
         "bits": 64,
@@ -182,8 +182,8 @@
       },
       "kind": "base",
       "reachable_datasets": [
-        "customers",
-        "invoices"
+        "CUSTOMERS",
+        "INVOICES"
       ]
     }
   ],
