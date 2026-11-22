@@ -40,7 +40,7 @@ impl ExpressionWriter<'_, '_> {
 
     /// The query time zone, a `text` parameter: `CAST($tz AS VARCHAR)`. `text` always has a
     /// `DuckDB` name, so it is written here without the fallible lookup.
-    pub(super) fn time_zone(&mut self) -> String {
+    pub(crate) fn time_zone(&mut self) -> String {
         let name = self.environment.time.time_zone.as_str().to_owned();
         let placeholder = self.parameters.bind_shared(
             SharedValue::TimeZone,
@@ -62,7 +62,7 @@ impl ExpressionWriter<'_, '_> {
 
     /// The logical type of `expression`, typed in the scope of the input columns and the
     /// declared attributes.
-    pub(super) fn type_of(&self, expression: &Expression) -> Result<LogicalType, GenerateError> {
+    pub(crate) fn type_of(&self, expression: &Expression) -> Result<LogicalType, GenerateError> {
         let resolve = |reference: &Reference| self.column_type(reference);
         let attributes = |name: &str| -> Outcome<Typed> {
             let declared = self

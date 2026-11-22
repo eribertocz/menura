@@ -9,6 +9,7 @@
 
 mod additivity_error;
 mod body;
+mod day;
 mod deduplicate;
 mod error;
 mod expression;

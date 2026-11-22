@@ -7,12 +7,12 @@ use menura_representations::logical_plan::{Membership, PlanNode};
 use menura_representations::names::ColumnName;
 
 use super::ROW;
+use crate::day::grain_name;
 use crate::error::{GenerateError, InvariantViolation};
 use crate::identifiers::quote;
-use crate::parameters::SharedValue;
 use crate::steps::{StepWriter, error};
 
-impl StepWriter<'_> {
+impl<'input> StepWriter<'input> {
     /// The condition under which the row covers `period`, the start of a period at `grain`.
     ///
     /// `validity` reads inclusive days, a NULL `valid_to` being open-ended and a NULL
@@ -22,8 +22,8 @@ impl StepWriter<'_> {
     /// belongs to its day in the query time zone (E6-5.2).
     pub(super) fn covers(
         &mut self,
-        node: &PlanNode,
-        input: &PlanNode,
+        node: &'input PlanNode,
+        input: &'input PlanNode,
         membership: &Membership,
         period: &str,
         grain: Grain,
@@ -58,38 +58,16 @@ impl StepWriter<'_> {
         }
     }
 
-    /// The day of the column `name` of the row: a `date` as it is, a `timestamp` cast to its
-    /// date, a `timestamp with time zone` converted to the query time zone first (E6-5.2).
+    /// The day of the column `name` of the row (POP-3.5).
     fn day_of(
         &mut self,
-        node: &PlanNode,
-        input: &PlanNode,
+        node: &'input PlanNode,
+        input: &'input PlanNode,
         name: &ColumnName,
     ) -> Result<String, GenerateError> {
         let value = format!("{ROW}.{}", quote(name.as_str()));
-        match column_type(node, input, name)? {
-            LogicalType::Date => Ok(value),
-            LogicalType::Timestamp {
-                with_time_zone: true,
-                ..
-            } => {
-                let zone = self.time_zone();
-                Ok(format!("CAST({value} AT TIME ZONE {zone} AS DATE)"))
-            }
-            LogicalType::Timestamp { .. } => Ok(format!("CAST({value} AS DATE)")),
-            _ => Err(error(InvariantViolation::UnsupportedType, node)),
-        }
-    }
-
-    /// The query time zone, as a typed parameter (E6-4.2c).
-    fn time_zone(&mut self) -> String {
-        let name = self.environment.time.time_zone.as_str().to_owned();
-        let placeholder = self.parameters.bind_shared(
-            SharedValue::TimeZone,
-            LogicalType::Text,
-            serde_json::Value::String(name),
-        );
-        format!("CAST({placeholder} AS VARCHAR)")
+        let logical_type = column_type(node, input, name)?;
+        self.day_sql(node, input, &value, logical_type)
     }
 }
 
@@ -118,15 +96,4 @@ fn last_day(period: &str, grain: Grain) -> String {
         Grain::Year => "1 YEAR",
     };
     format!("CAST({period} + INTERVAL {length} - INTERVAL 1 DAY AS DATE)")
-}
-
-/// The `date_trunc` name of `grain` (E6-5.2).
-pub(crate) fn grain_name(grain: Grain) -> &'static str {
-    match grain {
-        Grain::Day => "day",
-        Grain::Week => "week",
-        Grain::Month => "month",
-        Grain::Quarter => "quarter",
-        Grain::Year => "year",
-    }
 }
