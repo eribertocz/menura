@@ -693,9 +693,11 @@ Find a rule ID or a section here, then open only that file at that line.
 | [stages/E1-parse.md](stages/E1-parse.md#L46) | 46 | rule | E1-4.8 |
 | [stages/E1-parse.md](stages/E1-parse.md#L47) | 47 | rule | E1-4.9 |
 | [stages/E1-parse.md](stages/E1-parse.md#L48) | 48 | rule | E1-4.10 |
-| [stages/E1-parse.md](stages/E1-parse.md#L50) | 50 | section | E1-5 Query tree |
-| [stages/E1-parse.md](stages/E1-parse.md#L64) | 64 | rule | E1-5.1 |
-| [stages/E1-parse.md](stages/E1-parse.md#L66) | 66 | section | E1-6 Diagnostics |
+| [stages/E1-parse.md](stages/E1-parse.md#L49) | 49 | rule | E1-4.11 |
+| [stages/E1-parse.md](stages/E1-parse.md#L50) | 50 | rule | E1-4.12 |
+| [stages/E1-parse.md](stages/E1-parse.md#L52) | 52 | section | E1-5 Query tree |
+| [stages/E1-parse.md](stages/E1-parse.md#L66) | 66 | rule | E1-5.1 |
+| [stages/E1-parse.md](stages/E1-parse.md#L68) | 68 | section | E1-6 Diagnostics |
 | [stages/E2-bind.md](stages/E2-bind.md#L1) | 1 | section | E2 Bind and authorize |
 | [stages/E2-bind.md](stages/E2-bind.md#L3) | 3 | section | E2-1 Purpose |
 | [stages/E2-bind.md](stages/E2-bind.md#L8) | 8 | section | E2-2 Input and output |
