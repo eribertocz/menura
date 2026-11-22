@@ -1,0 +1,89 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://menura.invalid/spec/contracts/model-diff/1.0.0",
+  "title": "Model diff",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "contract",
+    "contract_version",
+    "producer",
+    "old_model_hash",
+    "new_model_hash",
+    "changes"
+  ],
+  "properties": {
+    "contract": {
+      "const": "menura.model_diff"
+    },
+    "contract_version": {
+      "type": "string",
+      "pattern": "^(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)$"
+    },
+    "producer": {
+      "type": "object",
+      "required": [
+        "compiler_version",
+        "ossie_normative",
+        "ossie_tracked_commit",
+        "tzdata_version"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "compiler_version": {
+          "$ref": "#/$defs/semver"
+        },
+        "ossie_normative": {
+          "type": "string",
+          "minLength": 1
+        },
+        "ossie_tracked_commit": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{7,40}$"
+        },
+        "tzdata_version": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "old_model_hash": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "new_model_hash": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "changes": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "object",
+          "change"
+        ],
+        "properties": {
+          "object": {
+            "type": "string",
+            "pattern": "^(dataset|relationship|field|metric|policy):.+$"
+          },
+          "change": {
+            "enum": [
+              "added",
+              "removed",
+              "changed"
+            ]
+          }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "semver": {
+      "type": "string",
+      "pattern": "^(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)$"
+    }
+  }
+}
