@@ -360,9 +360,10 @@ Find a rule ID or a section here, then open only that file at that line.
 | [contracts/migration-report.md](contracts/migration-report.md#L21) | 21 | rule | MIG-3.1 |
 | [contracts/migration-report.md](contracts/migration-report.md#L22) | 22 | rule | MIG-3.2 |
 | [contracts/migration-report.md](contracts/migration-report.md#L26) | 26 | rule | MIG-3.3 |
-| [contracts/migration-report.md](contracts/migration-report.md#L27) | 27 | rule | MIG-3.4 |
-| [contracts/migration-report.md](contracts/migration-report.md#L28) | 28 | rule | MIG-3.5 |
-| [contracts/migration-report.md](contracts/migration-report.md#L29) | 29 | rule | MIG-3.6 |
+| [contracts/migration-report.md](contracts/migration-report.md#L27) | 27 | rule | MIG-3.3a |
+| [contracts/migration-report.md](contracts/migration-report.md#L28) | 28 | rule | MIG-3.4 |
+| [contracts/migration-report.md](contracts/migration-report.md#L29) | 29 | rule | MIG-3.5 |
+| [contracts/migration-report.md](contracts/migration-report.md#L30) | 30 | rule | MIG-3.6 |
 | [contracts/model-dependencies.md](contracts/model-dependencies.md#L1) | 1 | section | Contract: model dependencies and model diff |
 | [contracts/model-dependencies.md](contracts/model-dependencies.md#L5) | 5 | section | DEP-1 Purpose |
 | [contracts/model-dependencies.md](contracts/model-dependencies.md#L14) | 14 | section | DEP-2 Content |
