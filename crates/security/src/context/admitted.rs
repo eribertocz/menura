@@ -78,6 +78,7 @@ impl AdmittedSecurityContext {
                     line: None,
                     column: None,
                 }),
+                alternatives: None,
             }
         })
     }

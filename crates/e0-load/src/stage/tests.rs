@@ -71,6 +71,7 @@ fn options() -> LoadOptions {
         ossie_format: OssieFormat::Release,
         namespace: "menura".to_owned(),
         model_name: None,
+        data_source: None,
     }
 }
 

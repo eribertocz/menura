@@ -11,7 +11,7 @@ use std::fmt;
 
 use serde_json::Value;
 
-use crate::contract::ContractKind;
+use crate::contract::{ContractKind, ContractVersion};
 use evaluator::Evaluator;
 
 /// A place where a document does not satisfy its JSON Schema.
@@ -107,6 +107,17 @@ pub(crate) fn schema_text(kind: ContractKind) -> &'static str {
             include_str!("../../../../spec/contracts/schemas/integrity-checks.schema.json")
         }
     }
+}
+
+/// The contract version of the embedded schema of `kind`: the last segment of its `$id`, which
+/// each schema keeps stable per contract version (CON-0.3). `None` when the schema has no `$id`
+/// ending in a semantic version.
+pub(crate) fn schema_version(kind: ContractKind) -> Option<ContractVersion> {
+    let text = schema_text(kind);
+    let after_key = &text[text.find("\"$id\"")? + "\"$id\"".len()..];
+    let after_colon = after_key.trim_start().strip_prefix(':')?.trim_start();
+    let identifier = after_colon.strip_prefix('"')?.split('"').next()?;
+    ContractVersion::parse(identifier.rsplit('/').next()?)
 }
 
 /// Validates `document` against the JSON Schema of `kind` (JSON Schema 2020-12, with `format`

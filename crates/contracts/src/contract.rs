@@ -6,6 +6,7 @@ use std::fmt;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
+use crate::schema::schema_version;
 use crate::schema::strings::is_semantic_version;
 
 /// The namespace of every contract name and of the compiler's extension entries (CON-0.5,
@@ -121,22 +122,32 @@ impl ContractKind {
         document.get("contract").and_then(Value::as_str) == Some(self.former_contract_name())
     }
 
-    /// The latest contract version this crate implements.
+    /// The latest version of this contract the crate implements: the version of its embedded
+    /// JSON Schema, read from the schema's `$id` (CON-0.3), so a schema bump needs no code
+    /// change. A schema without a versioned `$id` gives `0.0.0`, which accepts no document; a
+    /// test rules it out for every contract.
+    ///
+    /// ```
+    /// use menura_contracts::ContractKind;
+    ///
+    /// assert_eq!(ContractKind::Query.latest_version().major, 1);
+    /// ```
     #[must_use]
     pub fn latest_version(self) -> ContractVersion {
-        ContractVersion {
-            major: 1,
-            minor: 1,
+        schema_version(self).unwrap_or(ContractVersion {
+            major: 0,
+            minor: 0,
             patch: 0,
-        }
+        })
     }
 
     /// Whether `version` is accepted (CAT-3.2): its major version is the known one and its minor
-    /// version is at most the latest known minor version.
+    /// version is at most the latest known minor version. Nothing is accepted when the embedded
+    /// schema has no versioned `$id`.
     #[must_use]
     pub fn accepts_version(self, version: ContractVersion) -> bool {
-        let latest = self.latest_version();
-        version.major == latest.major && version.minor <= latest.minor
+        schema_version(self)
+            .is_some_and(|latest| version.major == latest.major && version.minor <= latest.minor)
     }
 
     /// Whether `document` names this contract, with its name or its former name (CON-0.5),

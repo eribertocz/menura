@@ -29,6 +29,7 @@ impl Stop {
                     error.stage, error.message
                 ),
                 location: None,
+                alternatives: None,
             },
         }
     }
@@ -81,6 +82,7 @@ pub(crate) fn audit_not_yet_supported() -> Diagnostic {
                   without `audit`"
             .to_owned(),
         location: None,
+        alternatives: None,
     }
 }
 
@@ -109,6 +111,7 @@ fn not_utf8(code: &str, document: InputDocument, name: &str) -> Stop {
             line: None,
             column: None,
         }),
+        alternatives: None,
     }
     .into()
 }

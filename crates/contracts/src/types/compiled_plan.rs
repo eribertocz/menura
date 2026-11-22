@@ -188,7 +188,17 @@ pub struct Diagnostic {
     pub message: String,
     /// Where the problem is, or `null`.
     pub location: Option<DiagnosticLocation>,
+    /// For `E_NAME_NOT_FOUND`, the names the user may write instead (PLN-5.4); absent when
+    /// there are none. Boxed, because it is rare and diagnostics travel in `Err` values.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub alternatives: Option<Box<Alternatives>>,
 }
+
+/// The names a user may write instead of an unknown one (PLN-5.4), each `field:`, `metric:` or
+/// `dataset:` followed by the name, at most five.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(transparent)]
+pub struct Alternatives(pub Vec<String>);
 
 /// An input document of `load` or `compile`.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]

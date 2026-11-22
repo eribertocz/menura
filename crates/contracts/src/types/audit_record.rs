@@ -4,7 +4,7 @@ use std::collections::BTreeMap;
 
 use serde::{Deserialize, Serialize};
 
-use super::common::{Decision, Producer};
+use super::common::{Decision, Dialect, Producer};
 use crate::contract::ContractVersion;
 use crate::hash::Sha256Hash;
 
@@ -27,8 +27,8 @@ pub struct AuditRecordDocument {
     pub contract: AuditRecordContract,
     /// Contract version.
     pub contract_version: ContractVersion,
-    /// Subject of the security context.
-    pub subject: String,
+    /// Subject of the security context, or `null` when the context was not admitted (PLN-6.4).
+    pub subject: Option<String>,
     /// Input hashes.
     pub inputs: AuditInputs,
     /// Producer versions.
@@ -43,8 +43,15 @@ pub struct AuditRecordDocument {
     pub decisions: Vec<Decision>,
     /// Load options.
     pub load_options: LoadOptions,
+    /// The compile options that shape the plan (PLN-6.7); absent before contract version 1.2.0.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub compile_options: Option<CompileOptions>,
     /// Version of every input contract, by input name.
     pub contract_versions: BTreeMap<String, String>,
+    /// The delegated actor the host passed as a compile option, written unchanged (PLN-6.8);
+    /// absent when the option is not passed.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub actor: Option<String>,
 }
 
 /// Hashes of the inputs.
@@ -59,8 +66,8 @@ pub struct AuditInputs {
     pub catalog_state: Option<Sha256Hash>,
     /// Query hash.
     pub query: Sha256Hash,
-    /// Security context fingerprint.
-    pub security_fingerprint: Sha256Hash,
+    /// Security context fingerprint, or `null` when the context was not admitted (PLN-6.4).
+    pub security_fingerprint: Option<Sha256Hash>,
 }
 
 /// The outcome of the compilation.
@@ -134,4 +141,16 @@ pub struct LoadOptions {
     /// Model selected, when the document has several.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub model_name: Option<String>,
+    /// The logical source name written in every plan (PLN-6.7); absent before contract version
+    /// 1.2.0.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub data_source: Option<String>,
+}
+
+/// The compile options that shape the plan (PLN-6.7).
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct CompileOptions {
+    /// Target dialect.
+    pub dialect: Dialect,
 }

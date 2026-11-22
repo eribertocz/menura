@@ -113,6 +113,7 @@ impl ParseError {
                 line,
                 column,
             }),
+            alternatives: None,
         }
     }
 }
@@ -178,6 +179,7 @@ impl ParseWarning {
                 line: None,
                 column: None,
             }),
+            alternatives: None,
         }
     }
 }

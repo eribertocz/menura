@@ -4,6 +4,7 @@
 //! makes exclusive are enums, so a decoded document cannot be in a state its schema forbids.
 
 pub mod audit_record;
+pub mod capabilities;
 pub mod catalog;
 pub mod common;
 pub mod compiled_plan;

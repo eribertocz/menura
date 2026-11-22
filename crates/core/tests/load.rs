@@ -99,7 +99,10 @@ fn pln_5_3_validate_returns_a_validation_report_with_empty_errors() {
         &LoadOptions::default(),
     );
     assert_eq!(report.contract, CompileErrorContract::ValidationReport);
-    assert_eq!(report.contract_version.to_string(), "1.1.0");
+    assert_eq!(
+        report.contract_version,
+        menura_contracts::ContractKind::CompileError.latest_version()
+    );
     assert!(report.errors.is_empty());
     let codes: Vec<&str> = report.warnings.iter().map(|w| w.code.as_str()).collect();
     assert_eq!(codes, ["W0D-01"]);
