@@ -87,6 +87,33 @@ fn der_2_1_a_derived_metric_is_expanded_into_the_components_of_its_inputs() {
 }
 
 #[test]
+fn e1_4_2_an_inline_metric_is_expanded_into_the_components_of_its_agg_terms() {
+    let model = sorted_model(
+        vec![dataset("RETURNS", vec![metric("REVENUE", &["RETURNS"])])],
+        vec![
+            metric("BILLED", &["INVOICES"]),
+            metric("COLLECTED", &["INVOICES"]),
+        ],
+    );
+    let formula = divided(
+        divided(agg(None, "COLLECTED"), agg(None, "BILLED")),
+        divided(agg(Some("RETURNS"), "REVENUE"), agg(None, "COLLECTED")),
+    );
+    let inline = bound_metric(BoundMetricKind::Inline(formula), 0);
+    let query = query(Vec::new(), vec![inline], BoundQueryParts::default());
+
+    let branches = resolve_paths(&query, &model).expect("two branches");
+
+    assert_eq!(
+        branch_components(&branches),
+        [
+            ("INVOICES", &[key(0, 0), key(0, 1)][..]),
+            ("RETURNS", &[key(0, 2)][..])
+        ]
+    );
+}
+
+#[test]
 fn der_4_3_inputs_from_different_home_datasets_are_separate_branches() {
     let model = sorted_model(
         Vec::new(),

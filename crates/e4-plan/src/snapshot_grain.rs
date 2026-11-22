@@ -84,7 +84,10 @@ fn splits(dimension: &BoundDimensionKind, axis: &SnapshotAxis<'_>) -> bool {
 }
 
 /// The grain at which `dimension` reads the `over` of `axis`; `None` when it does not read it.
-fn over_grain(dimension: &BoundDimensionKind, axis: &SnapshotAxis<'_>) -> Option<OverGrain> {
+pub(crate) fn over_grain(
+    dimension: &BoundDimensionKind,
+    axis: &SnapshotAxis<'_>,
+) -> Option<OverGrain> {
     match dimension {
         BoundDimensionKind::Field {
             field, time_grain, ..

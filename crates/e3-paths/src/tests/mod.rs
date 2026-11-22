@@ -241,14 +241,14 @@ fn vs_1_a_query_without_metrics_and_dimensions_is_an_invariant_violation() {
 }
 
 #[test]
-fn vs_1_an_inline_metric_is_an_invariant_violation() {
+fn vs_1_an_inline_metric_without_agg_terms_is_an_invariant_violation() {
     let model = model(Vec::new(), Vec::new());
     let inline = bound_metric(BoundMetricKind::Inline(false_literal()), 0);
     let query = query(Vec::new(), vec![inline], BoundQueryParts::default());
 
     assert_eq!(
         resolve_paths(&query, &model),
-        violation(InvariantViolation::InlineMetric {
+        violation(InvariantViolation::MetricWithoutComponents {
             origin: at("/query/metrics/0"),
         })
     );

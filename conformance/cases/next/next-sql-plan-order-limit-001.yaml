@@ -1,0 +1,14 @@
+id: next-sql-plan-order-limit-001
+rules: [E4-9.1, E1-4.3]
+model: slice
+security_context: auditor.json
+oracle: "next-sql-plan-order-limit-001.oracle.sql"
+query:
+  contract: "menura.query"
+  contract_version: "1.1.0"
+  time_zone: "UTC"
+  sql: "SELECT AGG(sale_count) AS n, region FROM slice.sales GROUP BY region ORDER BY 2 DESC LIMIT 2"
+expect:
+  outcome: "plan"
+  row_order: "exact"
+  rows: "next-sql-plan-order-limit-001.csv"

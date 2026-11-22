@@ -11,9 +11,7 @@ use std::num::NonZeroU64;
 use menura_contracts::types::common::Grain;
 use menura_e4_plan::{InvariantViolation, PlanError};
 use menura_model::internal_model::{ContextMetric, ContextModifier, DeclaredAdditivity, Metric};
-use menura_representations::bound_query::{
-    BoundDimension, BoundDimensionKind, BoundMetric, BoundMetricKind, BoundQuery, BoundQueryParts,
-};
+use menura_representations::bound_query::{BoundDimensionKind, BoundQuery, BoundQueryParts};
 use menura_representations::paths::{Branch, BranchKind, Branches, ComponentKey, JoinTree};
 use support::{
     anyone, branches, build_plan, dimension, field_path, metric, metric_reference, metrics, model,
@@ -91,31 +89,6 @@ fn vs_1_a_context_metric_is_an_internal_error() {
         },
     });
     assert_eq!(plan_with_metric(context), InvariantViolation::ContextMetric);
-}
-
-#[test]
-fn vs_1_an_inline_metric_is_an_internal_error() {
-    let inline = BoundMetric {
-        kind: BoundMetricKind::Inline(support::tree("AGG(order_count)")),
-        ..metric_reference("ORDER_COUNT", 0)
-    };
-    let bound = query(Vec::new(), vec![inline], BoundQueryParts::default());
-    let result = build_plan(&branches(&[1]), &bound, &anyone(), &model(Vec::new()));
-    assert_eq!(violation(result), InvariantViolation::InlineMetric);
-}
-
-#[test]
-fn vs_1_an_expression_dimension_is_an_internal_error() {
-    let expression = BoundDimension {
-        kind: BoundDimensionKind::Expression {
-            dataset: name("ORDERS"),
-            expression: support::tree("UPPER(region)"),
-        },
-        ..dimension("REGION", None, 0)
-    };
-    let bound = query(vec![expression], Vec::new(), BoundQueryParts::default());
-    let result = build_plan(&branches(&[]), &bound, &anyone(), &model(Vec::new()));
-    assert_eq!(violation(result), InvariantViolation::ExpressionDimension);
 }
 
 #[test]

@@ -24,6 +24,12 @@ pub(crate) fn component_column(metric: usize, component: usize) -> ColumnName {
     ))
 }
 
+/// The column of the value of the metric `metric`, from 0, computed below the `Project` of the
+/// inline metrics of the SQL form, which reads it.
+pub(crate) fn metric_value_column(metric: usize) -> ColumnName {
+    ColumnName::new(&format!("metric_{}", metric + 1))
+}
+
 /// The column of the input `input` of the metric `metric`, both from 0: the value of an input
 /// of a derived metric, computed below the final `Project` (DER-3.1).
 pub(crate) fn input_column(metric: usize, input: usize) -> ColumnName {

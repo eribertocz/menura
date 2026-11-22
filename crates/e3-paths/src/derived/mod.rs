@@ -4,7 +4,7 @@
 mod formula;
 
 use menura_contracts::normalize_unquoted_identifier;
-use menura_model::expression::{Identifier, Reference};
+use menura_model::expression::{Expression, Identifier, Reference};
 use menura_model::internal_model::{Component, InternalModel, Metric, NormalizedName};
 use menura_representations::bound_query::MetricPath;
 
@@ -70,13 +70,24 @@ pub(crate) fn base_components<'model>(
     path: &MetricPath,
     model: &'model InternalModel,
 ) -> Result<Vec<BaseComponent<'model>>, ExpansionFailure> {
-    let mut expansion = Expansion {
-        model,
-        chain: Vec::new(),
-        expanded: Vec::new(),
-        components: Vec::new(),
-    };
+    let mut expansion = Expansion::new(model);
     expansion.expand(MetricKey::of_path(path))?;
+    Ok(expansion.components)
+}
+
+/// The base components of the inline metric `formula` of the SQL form, which expands as a
+/// derived metric with that formula would (E1-4.2, DER-2.4): the components of each `AGG(…)`
+/// term in written order, each metric expanded once.
+///
+/// # Errors
+///
+/// An [`ExpansionFailure`] for a metric E2 and E0 never let through.
+pub(crate) fn inline_components<'model>(
+    formula: &Expression,
+    model: &'model InternalModel,
+) -> Result<Vec<BaseComponent<'model>>, ExpansionFailure> {
+    let mut expansion = Expansion::new(model);
+    expansion.expand_inputs(&metric_inputs(formula))?;
     Ok(expansion.components)
 }
 
@@ -91,7 +102,16 @@ struct Expansion<'model> {
     components: Vec<BaseComponent<'model>>,
 }
 
-impl Expansion<'_> {
+impl<'model> Expansion<'model> {
+    fn new(model: &'model InternalModel) -> Self {
+        Self {
+            model,
+            chain: Vec::new(),
+            expanded: Vec::new(),
+            components: Vec::new(),
+        }
+    }
+
     fn expand(&mut self, key: MetricKey) -> Result<(), ExpansionFailure> {
         let metric = find(&key, self.model).ok_or(ExpansionFailure::UnknownMetric)?;
         let classification = metric
@@ -113,6 +133,13 @@ impl Expansion<'_> {
             return Ok(());
         }
         self.chain.push(key);
+        self.expand_inputs(&inputs)?;
+        self.chain.pop();
+        Ok(())
+    }
+
+    /// Expands the metrics of the `AGG(…)` terms `inputs`, in order, each once.
+    fn expand_inputs(&mut self, inputs: &[&Reference]) -> Result<(), ExpansionFailure> {
         for input in inputs {
             let input = MetricKey::of_term(input);
             if self.chain.contains(&input) {
@@ -124,7 +151,6 @@ impl Expansion<'_> {
             self.expand(input.clone())?;
             self.expanded.push(input);
         }
-        self.chain.pop();
         Ok(())
     }
 }

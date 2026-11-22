@@ -4,13 +4,13 @@
 use menura_contracts::types::common::{Grain, LogicalType};
 use menura_model::expression::Expression;
 use menura_model::internal_model::{Dataset, FieldPath, NormalizedName, SemiAdditive, ValueType};
-use menura_representations::bound_query::{BoundDimensionKind, BoundQuery};
+use menura_representations::bound_query::BoundQuery;
 use menura_representations::logical_plan::{NamedExpression, UnitKey};
 use menura_representations::names::ColumnName;
 
 use crate::columns::{column_reference, dimension_column};
 use crate::error::InvariantViolation;
-use crate::snapshot_grain::OverGrain;
+use crate::snapshot_grain::{OverGrain, SnapshotAxis, over_grain};
 
 #[cfg(test)]
 #[path = "rule_tests.rs"]
@@ -85,7 +85,8 @@ pub(crate) fn over_type<'model>(
 }
 
 /// The result key that bounds each unit of periods: the first dimension of `query` that reads
-/// `over`, with its query grain, when it is not finer than `snapshot_grain` (ADD-4.7, E4-7.8).
+/// `over`, with its query grain (in the SQL form, `DATE_TRUNC('<grain>', over)` counts as that
+/// grain), when it is not finer than `snapshot_grain` (ADD-4.7, E4-7.8).
 /// `None` when the query does not group by `over`, which makes the whole range one unit
 /// (ADD-4.10); a finer grain is `E4-03`, reported after the row policies (E2-5 row 19).
 pub(crate) fn unit_key(
@@ -94,16 +95,16 @@ pub(crate) fn unit_key(
     over_type: &LogicalType,
     snapshot_grain: Grain,
 ) -> Option<UnitKey> {
+    let axis = SnapshotAxis {
+        over,
+        over_type,
+        snapshot_grain,
+    };
     query
         .columns()
         .dimensions()
         .enumerate()
-        .find_map(|(position, dimension)| match &dimension.kind {
-            BoundDimensionKind::Field {
-                field, time_grain, ..
-            } if field == over => Some((position, OverGrain::of(*time_grain, over_type)?)),
-            BoundDimensionKind::Field { .. } | BoundDimensionKind::Expression { .. } => None,
-        })
+        .find_map(|(position, dimension)| Some((position, over_grain(&dimension.kind, &axis)?)))
         .and_then(|(position, grain)| match grain {
             OverGrain::Grain(grain) if !OverGrain::Grain(grain).is_finer_than(snapshot_grain) => {
                 Some(UnitKey {

@@ -20,10 +20,15 @@ pub(crate) enum SharedValue {
     Attribute(String),
 }
 
-/// One literal occurrence of the query: the JSON Pointer of the query element a node comes
-/// from, and the position of the literal among the literals of that node, from 0. Every copy of
-/// a query element in the plan, in another branch or node, has the same occurrences (E6-4.2).
-type Occurrence = (String, usize);
+/// The query element a node comes from: its JSON Pointer and, for an element of a text such as
+/// the SQL of the SQL form, whose elements all share the pointer `/sql`, its line and column in
+/// that text.
+type Element = (String, Option<(usize, usize)>);
+
+/// One literal occurrence of the query: the query element a node comes from, and the position
+/// of the literal among the literals of that node, from 0. Every copy of a query element in the
+/// plan, in another branch or node, has the same occurrences (E6-4.2).
+type Occurrence = (Element, usize);
 
 /// The parameters of a statement being written.
 #[derive(Debug, Default)]
@@ -31,7 +36,7 @@ pub(crate) struct Parameters {
     bound: Vec<Parameter>,
     shared: BTreeMap<SharedValue, u64>,
     occurrences: BTreeMap<Occurrence, u64>,
-    node_pointer: Option<String>,
+    node_element: Option<Element>,
     node_literals: usize,
 }
 
@@ -65,8 +70,13 @@ impl Parameters {
     /// Starts the literals of a node that comes from `origin`: the next literal bound with
     /// [`Parameters::bind`] is its first.
     pub(crate) fn start_node(&mut self, origin: &Origin) {
-        self.node_pointer = match origin {
-            Origin::Query(location) => Some(location.pointer().to_owned()),
+        self.node_element = match origin {
+            Origin::Query(location) => Some((
+                location.pointer().to_owned(),
+                location
+                    .position()
+                    .map(|position| (position.line(), position.column())),
+            )),
             Origin::Model(_) => None,
         };
         self.node_literals = 0;
@@ -78,10 +88,10 @@ impl Parameters {
     pub(crate) fn bind(&mut self, logical_type: LogicalType, value: Value) -> String {
         let ordinal = self.node_literals;
         self.node_literals += 1;
-        let Some(pointer) = self.node_pointer.clone() else {
+        let Some(element) = self.node_element.clone() else {
             return self.bind_new(logical_type, value);
         };
-        let occurrence = (pointer, ordinal);
+        let occurrence = (element, ordinal);
         if let Some(position) = self.occurrences.get(&occurrence).copied() {
             let same = self.bound.iter().any(|parameter| {
                 parameter.position == position

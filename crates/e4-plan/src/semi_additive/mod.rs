@@ -16,6 +16,7 @@ use menura_representations::logical_plan::{
 use menura_representations::origin::Origin;
 
 use crate::columns::column_reference;
+use crate::dimensions::ComputedDimensions;
 use crate::error::{InvariantViolation, PlanError};
 use crate::nodes::{aggregate, component_expression};
 use crate::query_filter::query_predicate;
@@ -36,6 +37,8 @@ pub(crate) struct SemiAdditiveBranch<'input> {
     pub(crate) declaration: &'input SemiAdditive,
     /// The `Aggregate` keys of the branch.
     pub(crate) keys: Vec<NamedExpression>,
+    /// The expression dimensions the keys read, when the query has any.
+    pub(crate) computed: Option<ComputedDimensions>,
     /// Its components.
     pub(crate) components: Vec<AggregateComponent>,
 }
@@ -65,6 +68,7 @@ pub(crate) fn semi_additive_plan(branch: &SemiAdditiveBranch<'_>) -> Result<Plan
         &branch.source,
         RowsRequest {
             keys: &branch.keys,
+            computed: branch.computed.as_ref(),
             components: &branch.components,
             fields: &rule::snapshot_fields(declaration),
             predicate: query_predicate(branch.query, branch.source.layout)?,

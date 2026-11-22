@@ -13,6 +13,7 @@ use crate::columns::{column_reference, dimension_column};
 use crate::dimensions::at;
 use crate::error::{InvariantViolation, PlanError};
 use crate::metrics::MetricOutput;
+use crate::typing::typed_column;
 
 /// The `Project` of the output columns of `query`, in output order (E1-5), named with their
 /// output names (E1-5.1): each dimension reads its Aggregate key, each metric is evaluated
@@ -47,11 +48,7 @@ pub(crate) fn project(
                         &origin,
                     ));
                 };
-                columns.push(SchemaColumn {
-                    name: metric.name.clone(),
-                    logical_type: metric.logical_type,
-                    nullable: metric.nullable,
-                });
+                columns.push(metric_column(&metric, &aggregate, &origin)?);
                 expressions.push(NamedExpression {
                     name: metric.name,
                     expression: metric.expression,
@@ -68,6 +65,24 @@ pub(crate) fn project(
         OutputSchema::new(columns),
         origin,
     ))
+}
+
+/// The output column of `metric`: with the type E0.f gave its metric, or for an inline metric
+/// the type of its expression over the columns of `input`.
+fn metric_column(
+    metric: &MetricOutput,
+    input: &PlanNode,
+    origin: &Origin,
+) -> Result<SchemaColumn, PlanError> {
+    match &metric.result_type {
+        Some(result_type) => Ok(SchemaColumn {
+            name: metric.name.clone(),
+            logical_type: result_type.logical_type.clone(),
+            nullable: result_type.nullable,
+        }),
+        None => typed_column(metric.name.clone(), &metric.expression, input.schema())
+            .map_err(|violation| PlanError::invariant(violation, origin)),
+    }
 }
 
 /// The output column of the dimension at `position` among the dimensions: it reads the

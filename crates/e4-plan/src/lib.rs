@@ -27,6 +27,7 @@ mod dimensions;
 mod error;
 mod expansion;
 mod followed;
+mod inline_output;
 mod joins;
 mod layout;
 mod metrics;
@@ -103,7 +104,16 @@ pub fn build_plan(
         &metrics::input_columns(&metrics),
         &project_origin,
     )?;
-    let projected = output::project(query, with_inputs, outputs, project_origin)?;
+    let projected = match inline_output::first_inline_metric(query) {
+        Some(inline) => inline_output::project(
+            query,
+            with_inputs,
+            outputs,
+            &project_origin,
+            Origin::Query(inline.clone()),
+        )?,
+        None => output::project(query, with_inputs, outputs, project_origin)?,
+    };
     output::order_and_limit(query, projected)
 }
 
@@ -118,7 +128,7 @@ fn branch_plan(
 ) -> Result<PlanNode, PlanError> {
     let home = slice::home_dataset(branch, model)?;
     let layout = Layout::new(branch, home, model)?;
-    let keys = dimensions::dimension_keys(query, &layout)?;
+    let dimensions::BranchKeys { keys, computed } = dimensions::dimension_keys(query, &layout)?;
     let components = metrics::branch_components(branch, metrics, home)?;
     let source = rows::BranchSource {
         branch,
@@ -137,11 +147,13 @@ fn branch_plan(
             metric,
             declaration,
             keys,
+            computed,
             components,
         });
     }
     let request = rows::RowsRequest {
         keys: &keys,
+        computed: computed.as_ref(),
         components: &components,
         fields: &[],
         predicate: query_filter::query_predicate(query, &layout)?,

@@ -1,4 +1,5 @@
-//! The `Filter`, `Deduplicate` and `Aggregate` nodes of a branch (E4-4).
+//! The `Filter`, `Deduplicate` and `Aggregate` nodes of a branch (E4-4), and the `Project`
+//! of its expression dimensions.
 
 use menura_model::expression::Expression;
 use menura_representations::logical_plan::{
@@ -7,6 +8,8 @@ use menura_representations::logical_plan::{
 use menura_representations::names::ColumnName;
 use menura_representations::origin::Origin;
 
+use crate::columns::column_reference;
+use crate::dimensions::{ComputedDimensions, at};
 use crate::error::PlanError;
 use crate::typing::typed_column;
 
@@ -21,6 +24,48 @@ pub(crate) fn filter(input: PlanNode, predicate: Expression, origin: Origin) -> 
         schema,
         origin,
     )
+}
+
+/// The `Project` of `input` that passes every column of `input` through, in order, then
+/// computes the expression dimensions of `computed`. Its origin is the query, so the literals
+/// written in those dimensions are bound parameters (E6-4.2).
+///
+/// # Errors
+///
+/// An internal error for a column with an empty name, or a dimension the plan cannot type.
+pub(crate) fn compute_dimensions(
+    input: PlanNode,
+    computed: &ComputedDimensions,
+) -> Result<PlanNode, PlanError> {
+    let fail = |violation| at(violation, &computed.origin);
+    let mut expressions = Vec::new();
+    let mut columns = input.schema().columns().to_vec();
+    for column in input.schema().columns() {
+        expressions.push(NamedExpression {
+            name: column.name.clone(),
+            expression: column_reference(column.name.as_str()).map_err(fail)?,
+            derived: None,
+        });
+    }
+    for dimension in &computed.expressions {
+        columns.push(
+            typed_column(
+                dimension.name.clone(),
+                &dimension.expression,
+                input.schema(),
+            )
+            .map_err(fail)?,
+        );
+        expressions.push(dimension.clone());
+    }
+    Ok(PlanNode::new(
+        Operation::Project {
+            input: Box::new(input),
+            expressions,
+        },
+        OutputSchema::new(columns),
+        Origin::Query(computed.origin.clone()),
+    ))
 }
 
 /// The `Deduplicate` of `input` that keeps one row per (`keys` values, `identity`) pair

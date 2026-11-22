@@ -35,6 +35,8 @@ pub(crate) struct Layout<'model> {
     branch: &'model Branch,
     instances: Vec<PlacedInstance<'model>>,
     identity: ColumnName,
+    /// The columns of the home `Scan` and of the `Scan` of every instance, and the identity.
+    taken: BTreeSet<String>,
 }
 
 impl<'model> Layout<'model> {
@@ -56,6 +58,7 @@ impl<'model> Layout<'model> {
             branch,
             instances: Vec::new(),
             identity: ColumnName::new(IDENTITY),
+            taken: BTreeSet::new(),
         };
         let mut taken: BTreeSet<String> = home
             .fields
@@ -71,7 +74,21 @@ impl<'model> Layout<'model> {
             identity.push('.');
         }
         layout.identity = ColumnName::new(&identity);
+        taken.insert(identity);
+        layout.taken = taken;
         Ok(layout)
+    }
+
+    /// The name of a column that the plan synthesizes from `base`, which starts with the
+    /// `menura.` prefix: `base` followed by as many `.` as make it differ from every column of
+    /// the branch (E6-4.12). A source column never collides with it: its prefix is
+    /// `menura.source.`.
+    pub(crate) fn synthesized(&self, base: &str) -> ColumnName {
+        let mut name = String::from(base);
+        while self.taken.contains(&name) {
+            name.push('.');
+        }
+        ColumnName::new(&name)
     }
 
     /// The instance `instance`, placed after the instances before it, with a prefix none of

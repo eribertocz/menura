@@ -131,6 +131,38 @@ pub(crate) fn expand<'model>(
     })
 }
 
+/// The inline metric `formula` of the SQL form, expanded at `position` among the metrics of
+/// the query as a derived metric with that formula would be (E1-4.2): each `AGG(…)` term is an
+/// input, and its divisions follow the rule of every expression that is not a derived metric,
+/// division by zero yields NULL (E0F-6.1, DEV-6).
+///
+/// # Errors
+///
+/// As [`expand`] for the metrics of its `AGG(…)` terms.
+pub(crate) fn expand_inline<'model>(
+    formula: &Expression,
+    position: usize,
+    model: &'model InternalModel,
+    check: &impl Fn(&Metric) -> Result<(), InvariantViolation>,
+) -> Result<ExpandedMetric<'model>, InvariantViolation> {
+    let mut expansion = Expansion {
+        model,
+        position,
+        check,
+        chain: Vec::new(),
+        expanded: Vec::new(),
+        components: Vec::new(),
+        inputs: Vec::new(),
+    };
+    let value = expansion.formula(formula)?;
+    Ok(ExpandedMetric {
+        components: expansion.components,
+        inputs: expansion.inputs,
+        expression: value.expression,
+        derived: None,
+    })
+}
+
 /// The value of a metric: its expression, and the highest level of the input columns it
 /// reads, if any.
 #[derive(Clone)]
@@ -174,6 +206,14 @@ where
             });
         }
         self.chain.push(key);
+        let value = self.formula(expression)?;
+        self.chain.pop();
+        Ok(value)
+    }
+
+    /// The value of the derived formula `expression`, with each `AGG(…)` term replaced by the
+    /// value of its input.
+    fn formula(&mut self, expression: &Expression) -> Result<Value, InvariantViolation> {
         let mut reads = None;
         let formula = rewrite(expression, &mut |node| match node {
             Expression::MetricAggregate(reference) => {
@@ -183,7 +223,6 @@ where
             }
             _ => Ok(None),
         })?;
-        self.chain.pop();
         Ok(Value {
             expression: formula,
             reads,
