@@ -44,12 +44,21 @@ fn lineage_mismatch(
 /// (CS-2.12).
 fn explanation_mismatch(expect: &Expectation, plan: &CompiledPlanDocument) -> Option<String> {
     let expected = expect.explanation.as_ref()?;
-    let actual: Vec<&str> = plan
+    let actual: Vec<Option<&str>> = plan
         .explanation
         .iter()
-        .map(|entry| entry.code.as_deref().unwrap_or("(no code)"))
+        .map(|entry| entry.code.as_deref())
         .collect();
-    (actual != *expected).then(|| {
+    let matches = actual.len() == expected.len()
+        && actual
+            .iter()
+            .zip(expected)
+            .all(|(code, expected)| *code == Some(expected.as_str()));
+    (!matches).then(|| {
+        let actual: Vec<&str> = actual
+            .iter()
+            .map(|code| code.unwrap_or("(no code)"))
+            .collect();
         format!(
             "the explanation codes are [{}], expected [{}]",
             actual.join(", "),
@@ -176,6 +185,14 @@ mod tests {
         plan.explanation = vec![entry(None)];
         let reason = plan_outputs_mismatch(&expect, &plan, &case_folder()).unwrap();
         assert!(reason.contains("(no code)"), "{reason}");
+    }
+
+    #[test]
+    fn cs_2_12_an_entry_without_code_never_matches() {
+        let mut plan = plan();
+        plan.explanation = vec![entry(None)];
+        let expect = expectation("  explanation: [\"(no code)\"]\n");
+        assert!(plan_outputs_mismatch(&expect, &plan, &case_folder()).is_some());
     }
 
     #[test]

@@ -80,19 +80,19 @@ fn regenerate_case(
             )
         })
         .collect();
-    let golden_files: Vec<&String> = [&expect.sql, &expect.lineage]
-        .into_iter()
-        .flatten()
-        .collect();
-    if golden_files.is_empty() || expect.outcome != Outcome::Plan {
+    let has_plan = matches!(expect.outcome, Outcome::Plan | Outcome::RuntimeError);
+    let lineage = expect
+        .lineage
+        .as_ref()
+        .filter(|_| expect.outcome == Outcome::Plan);
+    let sql = expect.sql.as_ref().filter(|_| has_plan);
+    let golden_files: Vec<&String> = [sql, lineage].into_iter().flatten().collect();
+    if golden_files.is_empty() {
         return Ok(regenerations);
     }
     match plan_outputs(conformance_directory, case)? {
         Ok(outputs) => {
-            for (file_name, text) in [
-                (&expect.sql, outputs.sql),
-                (&expect.lineage, outputs.lineage),
-            ] {
+            for (file_name, text) in [(sql, outputs.sql), (lineage, outputs.lineage)] {
                 if let Some(file_name) = file_name {
                     regenerations.push(write_golden(&case_folder.join(file_name), &text)?);
                 }
@@ -200,6 +200,29 @@ mod tests {
                 folder.join("d.json"),
                 "core does not produce this output yet (CS-2.8)".to_owned()
             )]
+        );
+    }
+
+    #[test]
+    fn cs_2_10a_the_sql_of_a_runtime_error_case_is_regenerated() {
+        let original = conformance_directory().join("cases/cs/cs-golden-sql-001.sql");
+        let folder = std::env::temp_dir().join("menura-cs-2-10a-runtime-error");
+        fs::create_dir_all(&folder).unwrap();
+        let text =
+            fs::read_to_string(conformance_directory().join("cases/cs/cs-golden-sql-001.yaml"))
+                .unwrap();
+        let mut case = crate::case_file::parse_case(&text).unwrap();
+        case.expect.outcome = Outcome::RuntimeError;
+        case.expect.error = Some("RADD-01".to_owned());
+        let regenerations = regenerate_case(&conformance_directory(), &folder, &case).unwrap();
+        let file_name = case.expect.sql.clone().unwrap();
+        assert_eq!(
+            regenerations,
+            vec![Regeneration::Written(folder.join(&file_name))]
+        );
+        assert_eq!(
+            fs::read_to_string(folder.join(&file_name)).unwrap(),
+            fs::read_to_string(original).unwrap()
         );
     }
 
