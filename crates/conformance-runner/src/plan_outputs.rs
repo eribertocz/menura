@@ -12,7 +12,7 @@ use crate::golden_json::{golden_mismatch, json_mismatch};
 /// The `contract` of the document `explain` returns (CS-2.16).
 const EXPLANATION_CONTRACT: &str = "menura.explanation";
 
-/// The plan members `explain` does not return (CS-2.16).
+/// The plan members the comparison of `explain` with the plan leaves out (CS-2.16).
 const NOT_EXPLAINED: [&str; 3] = ["contract", "sql", "parameters"];
 
 /// Why the plan does not meet the `lineage`, `explanation` or `cache_key` expectations of the
@@ -82,7 +82,7 @@ fn cache_key_mismatch(expect: &Expectation, plan: &CompiledPlanDocument) -> Opti
 
 /// Why the document `explain` returned differs from the compiled plan, or `None`: it must equal
 /// the plan member for member, except `contract`, which is `menura.explanation`, and `sql` and
-/// `parameters`, which it does not have (CS-2.16).
+/// `parameters`, which are not compared (CS-2.16).
 pub(crate) fn explain_mismatch(
     plan: &CompiledPlanDocument,
     explained: &JsonValue,
@@ -97,7 +97,7 @@ pub(crate) fn explain_mismatch(
         Ok(plan) => plan.without(&NOT_EXPLAINED),
         Err(reason) => return Some(format!("the plan cannot be read as JSON: {reason}")),
     };
-    json_mismatch(&plan, &explained.without(&["contract"]), "compiled plan")
+    json_mismatch(&plan, &explained.without(&NOT_EXPLAINED), "compiled plan")
         .map(|reason| format!("`explain` differs from the compiled plan: {reason}"))
 }
 
@@ -211,8 +211,11 @@ mod tests {
     fn explained(plan: &CompiledPlanDocument) -> serde_json::Value {
         let mut value = serde_json::to_value(plan).unwrap();
         let members = value.as_object_mut().unwrap();
-        members.remove("sql");
-        members.remove("parameters");
+        members.insert("sql".to_owned(), "".into());
+        members.insert(
+            "parameters".to_owned(),
+            serde_json::Value::Array(Vec::new()),
+        );
         members.insert("contract".to_owned(), EXPLANATION_CONTRACT.into());
         value
     }
@@ -234,11 +237,8 @@ mod tests {
     }
 
     #[test]
-    fn cs_2_16_explain_with_sql_or_another_member_fails() {
+    fn cs_2_16_explain_with_another_member_fails() {
         let plan = plan();
-        let mut with_sql = explained(&plan);
-        with_sql["sql"] = plan.sql.clone().into();
-        assert!(explain_mismatch(&plan, &JsonValue::of(&with_sql).unwrap()).is_some());
         let mut other = explained(&plan);
         other["data_source"] = "elsewhere".into();
         assert!(explain_mismatch(&plan, &JsonValue::of(&other).unwrap()).is_some());

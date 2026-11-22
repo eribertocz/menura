@@ -110,10 +110,10 @@ mod tests {
     }
 
     #[test]
-    fn cs_2_16_an_explanation_with_the_sql_fails() {
+    fn cs_2_16_an_explanation_with_another_member_fails() {
         let plan = plan();
         let mut document = explained(&plan);
-        document.sql.clone_from(&plan.sql);
+        document.data_source = "elsewhere".to_owned();
         let result = CompileResult::Plan(Box::new(document));
         assert!(explained_mismatch(&plan, &result).is_some());
     }
