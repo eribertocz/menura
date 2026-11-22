@@ -46,6 +46,9 @@ pub(crate) struct Environment<'input> {
     /// The query `time_zone` (E6-5.2) and its reference time (E0F-2.3); `None` for a
     /// statement that is not a query, such as an integrity check.
     pub(crate) time: Option<&'input QueryTime>,
+    /// Whether, without `time`, the time zone is a slot the pipeline fills at run time (the
+    /// `time_zone` binding of an integrity check, CHK-7.3) rather than an error.
+    pub(crate) time_zone_slot: bool,
 }
 
 /// Whether the literals of a node are query values or model constants (E6-4.2, E6-4.11).

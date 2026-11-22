@@ -39,24 +39,22 @@ impl ExpressionWriter<'_, '_> {
     }
 
     /// The query time zone, a `text` parameter: `CAST($tz AS VARCHAR)`. `text` always has a
-    /// `DuckDB` name, so it is written here without the fallible lookup.
+    /// `DuckDB` name, so it is written here without the fallible lookup. In a statement with a
+    /// time-zone slot the parameter has no value: the pipeline binds it (CHK-7.3).
     ///
     /// # Errors
     ///
-    /// [`InvariantViolation::MissingTimeZone`] in a statement without query time settings.
+    /// [`InvariantViolation::MissingTimeZone`] in a statement without query time settings and
+    /// without a time-zone slot.
     pub(crate) fn time_zone(&mut self) -> Result<String, GenerateError> {
-        let name = self
-            .environment
-            .time
-            .ok_or_else(|| self.error(InvariantViolation::MissingTimeZone))?
-            .time_zone
-            .as_str()
-            .to_owned();
-        let placeholder = self.parameters.bind_shared(
-            SharedValue::TimeZone,
-            LogicalType::Text,
-            serde_json::Value::String(name),
-        );
+        let value = match self.environment.time {
+            Some(time) => serde_json::Value::String(time.time_zone.as_str().to_owned()),
+            None if self.environment.time_zone_slot => serde_json::Value::Null,
+            None => return Err(self.error(InvariantViolation::MissingTimeZone)),
+        };
+        let placeholder =
+            self.parameters
+                .bind_shared(SharedValue::TimeZone, LogicalType::Text, value);
         Ok(cast(&placeholder, "VARCHAR"))
     }
 

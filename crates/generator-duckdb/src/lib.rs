@@ -33,7 +33,11 @@ mod stitch;
 mod types;
 mod values;
 
-pub use check::{GeneratedCheckSql, generate_check_sql};
+pub use check::{
+    CheckInputs, GeneratedCheckParameter, GeneratedCheckSql, PeriodicCheck, SnapshotCheck,
+    SnapshotTime, ValidityCheck, generate_check_sql, generate_periodic_check_sql,
+    generate_snapshot_check_sql, generate_validity_check_sql,
+};
 pub use error::{GenerateError, InvariantViolation};
 pub use output::GeneratedSql;
 
@@ -70,6 +74,7 @@ pub fn generate_sql(
         model,
         security: Some(security),
         time: Some(query.time()),
+        time_zone_slot: false,
     };
     let mut writer = StepWriter::new(&environment);
     let written = writer.write(plan)?;

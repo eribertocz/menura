@@ -106,6 +106,11 @@ impl Parameters {
         self.bind_new(logical_type, value)
     }
 
+    /// The position of `shared`, when the statement binds it.
+    pub(crate) fn shared_position(&self, shared: &SharedValue) -> Option<u64> {
+        self.shared.get(shared).copied()
+    }
+
     /// The parameters, by position.
     pub(crate) fn into_list(self) -> Vec<Parameter> {
         self.bound

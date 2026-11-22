@@ -20,7 +20,7 @@ impl<'input> StepWriter<'input> {
     /// day, `period_end` the last day (POP-3.1). `periodic` needs the row's period, truncated
     /// to `grain`, to be `period`; a NULL period never matches (POP-3.2). A `timestamp` value
     /// belongs to its day in the query time zone (E6-5.2).
-    pub(super) fn covers(
+    pub(crate) fn covers(
         &mut self,
         node: &'input PlanNode,
         input: &'input PlanNode,
@@ -72,7 +72,7 @@ impl<'input> StepWriter<'input> {
 }
 
 /// The type of the column `name` of `input`.
-pub(super) fn column_type<'plan>(
+pub(crate) fn column_type<'plan>(
     node: &PlanNode,
     input: &'plan PlanNode,
     name: &ColumnName,
