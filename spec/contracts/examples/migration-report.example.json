@@ -1,0 +1,51 @@
+{
+  "contract": "menura.migration_report",
+  "contract_version": "1.0.0",
+  "producer": {
+    "compiler_version": "0.9.0",
+    "ossie_normative": "0.1.1",
+    "ossie_tracked_commit": "0123456789abcdef0123456789abcdef01234567",
+    "tzdata_version": "2026a"
+  },
+  "changes": [
+    {
+      "pointer": "/semantic_model/0/metrics/0/custom_extensions/0/data/namespace",
+      "rule": "MIG-3.2a",
+      "from": "semantic_compiler",
+      "to": "menura"
+    }
+  ],
+  "model": {
+    "version": "0.1.1",
+    "semantic_model": [
+      {
+        "name": "sales",
+        "datasets": [],
+        "metrics": [
+          {
+            "name": "billed",
+            "expression": {
+              "dialects": [
+                {
+                  "dialect": "ANSI_SQL",
+                  "expression": "SUM(invoices.amount)"
+                }
+              ]
+            },
+            "custom_extensions": [
+              {
+                "vendor_name": "COMMON",
+                "data": {
+                  "namespace": "menura",
+                  "additivity": {
+                    "type": "additive"
+                  }
+                }
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -1,0 +1,136 @@
+{
+  "schema": "migration-report",
+  "example": "migration-report.example.json",
+  "cases": [
+    {
+      "name": "published example",
+      "valid": true,
+      "patch": []
+    },
+    {
+      "name": "no changes",
+      "valid": true,
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/changes",
+          "value": []
+        }
+      ]
+    },
+    {
+      "name": "wrong contract",
+      "valid": false,
+      "keywords": [
+        "const",
+        "properties"
+      ],
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/contract",
+          "value": "menura.model_diff"
+        }
+      ]
+    },
+    {
+      "name": "unknown rule",
+      "valid": false,
+      "keywords": [
+        "enum",
+        "items"
+      ],
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/changes/0/rule",
+          "value": "MIG-9"
+        }
+      ]
+    },
+    {
+      "name": "pointer without a slash",
+      "valid": false,
+      "keywords": [
+        "pattern"
+      ],
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/changes/0/pointer",
+          "value": "semantic_model"
+        }
+      ]
+    },
+    {
+      "name": "empty from",
+      "valid": false,
+      "keywords": [
+        "minLength"
+      ],
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/changes/0/from",
+          "value": ""
+        }
+      ]
+    },
+    {
+      "name": "change without to",
+      "valid": false,
+      "keywords": [
+        "required"
+      ],
+      "patch": [
+        {
+          "op": "remove",
+          "path": "/changes/0/to"
+        }
+      ]
+    },
+    {
+      "name": "change with an unknown member",
+      "valid": false,
+      "keywords": [
+        "additionalProperties"
+      ],
+      "patch": [
+        {
+          "op": "add",
+          "path": "/changes/0/x",
+          "value": 1
+        }
+      ]
+    },
+    {
+      "name": "model is not an object",
+      "valid": false,
+      "keywords": [
+        "type"
+      ],
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/model",
+          "value": []
+        }
+      ]
+    },
+    {
+      "name": "compiler version not semver",
+      "valid": false,
+      "keywords": [
+        "$ref",
+        "pattern"
+      ],
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/producer/compiler_version",
+          "value": "0.9"
+        }
+      ]
+    }
+  ]
+}
