@@ -1,0 +1,56 @@
+version: "0.1.1"
+semantic_model:
+  - name: chk_relationships
+    description: 'Invoices, customers and stores: the key_uniqueness and orphan_keys checks of each relationship (CHK-6.1, CHK-6.2); customers has a row policy that no check applies (CHK-2.2), and invoices_store reads a source column that is not a field (E0D-3.1)'
+    custom_extensions:
+      - vendor_name: COMMON
+        data: '{"namespace": "menura", "version": 1, "security_context": {"roles": ["analyst"], "attributes": []}}'
+    datasets:
+      - name: invoices
+        source: shop.main.invoices
+        primary_key: [invoice_id]
+        fields:
+          - name: invoice_id
+            expression: {dialects: [{dialect: ANSI_SQL, expression: invoice_id}]}
+          - name: customer_id
+            expression: {dialects: [{dialect: ANSI_SQL, expression: customer_id}]}
+          - name: amount
+            expression: {dialects: [{dialect: ANSI_SQL, expression: amount}]}
+        custom_extensions:
+          - vendor_name: COMMON
+            data: '{"namespace": "menura", "version": 1, "access": {"mode": "roles", "roles": ["analyst"]}}'
+      - name: customers
+        source: shop.main.customers
+        fields:
+          - name: customer_id
+            expression: {dialects: [{dialect: ANSI_SQL, expression: customer_id}]}
+          - name: region
+            expression: {dialects: [{dialect: ANSI_SQL, expression: region}]}
+        custom_extensions:
+          - vendor_name: COMMON
+            data: '{"namespace": "menura", "version": 1, "access": {"mode": "roles", "roles": ["analyst"]}, "row_access": [{"name": "north_only", "condition": "region = ''NORTH''", "roles": ["analyst"]}]}'
+      - name: stores
+        source: shop.main.stores
+        primary_key: [store_code]
+        fields:
+          - name: store_code
+            expression: {dialects: [{dialect: ANSI_SQL, expression: store_code}]}
+          - name: city
+            expression: {dialects: [{dialect: ANSI_SQL, expression: city}]}
+        custom_extensions:
+          - vendor_name: COMMON
+            data: '{"namespace": "menura", "version": 1, "access": {"mode": "roles", "roles": ["analyst"]}}'
+    relationships:
+      - name: invoices_customer
+        from: invoices
+        to: customers
+        from_columns: [customer_id]
+        to_columns: [customer_id]
+      - name: invoices_store
+        from: invoices
+        to: stores
+        from_columns: [store_code]
+        to_columns: [store_code]
+    metrics:
+      - name: total_amount
+        expression: {dialects: [{dialect: ANSI_SQL, expression: SUM(invoices.amount)}]}

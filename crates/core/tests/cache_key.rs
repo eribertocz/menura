@@ -248,3 +248,38 @@ fn pln_3_3_a_summary_read_lists_the_versions_of_its_built_from() {
         ])
     );
 }
+
+#[test]
+fn pln_3_3a_a_date_range_prunes_no_period() {
+    let handle = support::handle_with(
+        SUMMARY_MODEL,
+        SUMMARY_SCHEMA,
+        Some(SUMMARY_STATE),
+        &menura_core::LoadOptions::default(),
+    );
+    let one_day = query(
+        r#"{"dimensions": ["orders.order_id"], "metrics": ["total_amount"],
+            "nonportable_extensions": [{"vendor_name": "COMMON", "data": {"namespace": "menura",
+              "version": 1, "date_range": {"dimension": "orders.order_date",
+              "from": "2026-10-05", "to": "2026-10-06"}}}]}"#,
+    );
+    let compiled = plan(compile_default(
+        &handle,
+        &one_day,
+        &context("summaries-analyst", &["analyst"], "{}"),
+    ));
+    assert!(compiled.sql.contains(r#""shop"."main"."orders""#));
+    let version = |period: &str| {
+        json!({"source": "shop.main.orders", "period": period,
+               "version": {"origin": "conformance:catalog", "snapshot": format!("orders-{period}")}})
+    };
+    assert_eq!(
+        data_versions(&compiled),
+        json!([
+            version("2026-10-05"),
+            version("2026-10-20"),
+            version("2026-11-01"),
+            version("2026-11-02")
+        ])
+    );
+}

@@ -17,7 +17,7 @@ impl ExpressionWriter<'_, '_> {
         let date = self
             .environment
             .time
-            .reference_date
+            .and_then(|time| time.reference_date)
             .ok_or_else(|| self.error(InvariantViolation::MissingReferenceTime))?;
         self.shared_parameter(
             SharedValue::ReferenceDate,
@@ -37,8 +37,7 @@ impl ExpressionWriter<'_, '_> {
         let reference = self
             .environment
             .time
-            .reference_time
-            .as_ref()
+            .and_then(|time| time.reference_time.as_ref())
             .ok_or_else(missing)?;
         let utc = utc_text(reference).ok_or_else(missing)?;
         let instant = self.shared_parameter(
@@ -49,7 +48,7 @@ impl ExpressionWriter<'_, '_> {
             },
             Value::String(utc),
         )?;
-        let zone = self.time_zone();
+        let zone = self.time_zone()?;
         self.typed(expression, &format!("{instant} AT TIME ZONE {zone}"))
     }
 }

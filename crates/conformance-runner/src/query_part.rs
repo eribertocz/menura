@@ -8,7 +8,7 @@ use std::path::Path;
 use duckdb::Connection;
 use menura_core::{
     AuditRecordDocument, Compilation, CompileErrorDocument, CompileOptions, CompileResult,
-    CompiledPlanDocument, Diagnostic, Handle, build_producer, compile,
+    CompiledPlanDocument, Diagnostic, Handle, build_producer, compile, explain,
 };
 
 use crate::audit_check::audit_mismatch;
@@ -18,8 +18,8 @@ use crate::diagnostic_check::{Part, describe, location_mismatch, missing_warning
 use crate::differential::check_differential;
 use crate::divergences::Divergences;
 use crate::execution::{ExecutionFailure, execute_plan};
+use crate::explain_part::{explained_mismatch, runs_explain};
 use crate::fixture::read_text;
-use crate::pending_parts::with_pending_parts;
 use crate::plan_outputs::plan_outputs_mismatch;
 use crate::report::CaseStatus;
 use crate::row_comparison::{Comparison, rows_mismatch};
@@ -39,14 +39,14 @@ pub(crate) struct QueryInputs<'inputs> {
     pub(crate) divergences: &'inputs Divergences,
 }
 
-/// Compiles the query of `case` over `handle` and compares the result with its expectation. A
-/// part that needs a `core` function this build lacks leaves the case pending (CS-2.8).
+/// Compiles the query of `case` over `handle` and compares the result with its expectation.
 pub(crate) fn check_query(case: &Case, handle: &Handle, inputs: &QueryInputs<'_>) -> CaseStatus {
-    with_pending_parts(case, compare_query(case, handle, inputs))
+    compare_query(case, handle, inputs)
 }
 
 /// Compiles the query of `case`, with `audit: true` when the case expects an audit record
-/// (CS-2.13), and compares the result with its expectation.
+/// (CS-2.13), and compares the result with its expectation. A passed `outcome: plan` case also
+/// runs `explain` from 0.7.0, whose document must match the plan (CS-2.16).
 fn compare_query(case: &Case, handle: &Handle, inputs: &QueryInputs<'_>) -> CaseStatus {
     let Some(query) = &case.query else {
         return CaseStatus::Failed("this outcome requires `query`".to_owned());
@@ -89,10 +89,32 @@ fn compare_query(case: &Case, handle: &Handle, inputs: &QueryInputs<'_>) -> Case
         )),
         (_, CompileResult::Plan(plan)) => {
             match check_audit(case, audit.as_deref(), inputs.case_folder) {
-                CaseStatus::Passed => check_plan(case, &plan, inputs, || compile_query().result),
+                CaseStatus::Passed => check_plan_and_explain(
+                    case,
+                    &plan,
+                    inputs,
+                    || compile_query().result,
+                    || explain(handle, &query, inputs.security_context, &options),
+                ),
                 status => status,
             }
         }
+    }
+}
+
+/// Checks a compiled plan with [`check_plan`]; a passed `outcome: plan` case also runs
+/// `explain` from 0.7.0, whose document must match the plan (CS-2.16).
+fn check_plan_and_explain(
+    case: &Case,
+    plan: &CompiledPlanDocument,
+    inputs: &QueryInputs<'_>,
+    compile_again: impl FnOnce() -> CompileResult,
+    explain_query: impl FnOnce() -> CompileResult,
+) -> CaseStatus {
+    match check_plan(case, plan, inputs, compile_again) {
+        CaseStatus::Passed if runs_explain(case) => explained_mismatch(plan, &explain_query())
+            .map_or(CaseStatus::Passed, CaseStatus::Failed),
+        status => status,
     }
 }
 
@@ -483,6 +505,26 @@ mod tests {
     fn cs_4_8_a_differential_case_without_its_oracle_fails() {
         let text = differential_case("cs-unit-001", "cs-unit-no-oracle-001.oracle.sql");
         assert_fails(status(&text), "cs-unit-no-oracle-001.oracle.sql");
+    }
+
+    #[test]
+    fn cs_2_16_explain_matches_the_compiled_plan_of_a_plan_case() {
+        let model_folder = conformance_directory().join("models/slice");
+        let documents = ModelDocuments::read(&model_folder).unwrap();
+        let case = parse_case(&case_text(BY_REGION, "{outcome: plan, rows: e.csv}")).unwrap();
+        let LoadOutcome::Loaded(handle) =
+            check_load(&case, &documents, &resolve_load_options(None))
+        else {
+            panic!("the slice model loads");
+        };
+        let context = read_bytes(&security_context_path(&model_folder, "auditor.json")).unwrap();
+        let query = serde_json::to_vec(case.query.as_ref().unwrap()).unwrap();
+        let options = CompileOptions::default();
+        let CompileResult::Plan(plan) = compile(&handle, &query, &context, &options).result else {
+            panic!("the query compiles");
+        };
+        let explained = explain(&handle, &query, &context, &options);
+        assert_eq!(explained_mismatch(&plan, &explained), None);
     }
 
     #[test]
