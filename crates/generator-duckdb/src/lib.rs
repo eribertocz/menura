@@ -65,8 +65,8 @@ pub fn generate_sql(
     let environment = Environment {
         catalog,
         model,
-        security,
-        time: query.time(),
+        security: Some(security),
+        time: Some(query.time()),
     };
     let mut writer = StepWriter::new(&environment);
     let written = writer.write(plan)?;

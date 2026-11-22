@@ -86,8 +86,8 @@ fn written(
     let environment = Environment {
         catalog: &catalog,
         model: &model,
-        security: &security,
-        time: &time,
+        security: Some(&security),
+        time: Some(&time),
     };
     let schema = input_schema();
     let mut parameters = Parameters::default();

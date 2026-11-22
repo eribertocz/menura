@@ -40,10 +40,12 @@ pub(crate) struct Environment<'input> {
     pub(crate) catalog: &'input CatalogSchemaDocument,
     /// The internal model, for attribute declarations.
     pub(crate) model: &'input InternalModel,
-    /// The admitted security context, for attribute values.
-    pub(crate) security: &'input AdmittedSecurityContext,
-    /// The query `time_zone` (E6-5.2) and its reference time (E0F-2.3).
-    pub(crate) time: &'input QueryTime,
+    /// The admitted security context, for attribute values; `None` for a statement that no
+    /// user runs, such as an integrity check (CHK-2.2).
+    pub(crate) security: Option<&'input AdmittedSecurityContext>,
+    /// The query `time_zone` (E6-5.2) and its reference time (E0F-2.3); `None` for a
+    /// statement that is not a query, such as an integrity check.
+    pub(crate) time: Option<&'input QueryTime>,
 }
 
 /// Whether the literals of a node are query values or model constants (E6-4.2, E6-4.11).
