@@ -46,6 +46,10 @@
         "version": "1.2.0"
       },
       {
+        "contract": "menura.migration_report",
+        "version": "1.0.0"
+      },
+      {
         "contract": "menura.model_dependencies",
         "version": "1.0.0"
       },
