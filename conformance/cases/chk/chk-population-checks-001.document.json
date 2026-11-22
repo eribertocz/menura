@@ -1,0 +1,72 @@
+{
+  "checks": [
+    {
+      "check_id": "population:MEMBERS",
+      "definition_hash": "9c4a8a6abfac2dd70052567b61fe6c24678b2a57fd13369584c99d77c127518f",
+      "kind": "population",
+      "parameters": [],
+      "sources": [
+        "shop.main.memberships"
+      ],
+      "sql": "WITH\n  \"menura_1_scan\" AS (\n    SELECT\n      \"customer_id\" AS \"CUSTOMER_ID\",\n      \"valid_from\" AS \"VALID_FROM\",\n      \"valid_to\" AS \"VALID_TO\"\n    FROM \"shop\".\"main\".\"memberships\"\n  ),\n  \"menura_2_days\" AS (\n    SELECT\n      \"CUSTOMER_ID\",\n      \"VALID_FROM\",\n      \"VALID_TO\",\n      \"VALID_FROM\" AS \"menura.from_day\",\n      \"VALID_TO\" AS \"menura.to_day\",\n      row_number() OVER () AS \"menura.row\"\n    FROM \"menura_1_scan\"\n  ),\n  \"menura_3_overlaps\" AS (\n    SELECT\n      \"menura_row\".\"menura.row\" AS \"menura.row\"\n    FROM \"menura_2_days\" AS \"menura_row\"\n    JOIN \"menura_2_days\" AS \"menura_other\" ON \"menura_row\".\"menura.row\" <> \"menura_other\".\"menura.row\" AND \"menura_row\".\"CUSTOMER_ID\" IS NOT NULL AND \"menura_row\".\"CUSTOMER_ID\" = \"menura_other\".\"CUSTOMER_ID\" AND \"menura_row\".\"menura.from_day\" IS NOT NULL AND (\"menura_row\".\"menura.to_day\" IS NULL OR \"menura_row\".\"menura.from_day\" <= \"menura_row\".\"menura.to_day\") AND \"menura_other\".\"menura.from_day\" IS NOT NULL AND (\"menura_other\".\"menura.to_day\" IS NULL OR \"menura_other\".\"menura.from_day\" <= \"menura_other\".\"menura.to_day\") AND (\"menura_other\".\"menura.to_day\" IS NULL OR \"menura_row\".\"menura.from_day\" <= \"menura_other\".\"menura.to_day\") AND (\"menura_row\".\"menura.to_day\" IS NULL OR \"menura_other\".\"menura.from_day\" <= \"menura_row\".\"menura.to_day\")\n    GROUP BY 1\n  )\nSELECT\n  \"CUSTOMER_ID\" AS \"CUSTOMER_ID\",\n  \"VALID_FROM\" AS \"VALID_FROM\",\n  \"VALID_TO\" AS \"VALID_TO\",\n  'invalid_interval' AS \"violation\"\nFROM \"menura_2_days\"\nWHERE \"menura.from_day\" IS NOT NULL AND \"menura.to_day\" IS NOT NULL AND \"menura.from_day\" > \"menura.to_day\"\nUNION ALL\nSELECT\n  \"CUSTOMER_ID\" AS \"CUSTOMER_ID\",\n  \"VALID_FROM\" AS \"VALID_FROM\",\n  \"VALID_TO\" AS \"VALID_TO\",\n  'overlap' AS \"violation\"\nFROM \"menura_2_days\"\nWHERE \"menura.row\" IN (SELECT \"menura.row\" FROM \"menura_3_overlaps\")",
+      "target": "MEMBERS"
+    },
+    {
+      "check_id": "population:MONTHLY_ROSTER",
+      "definition_hash": "adfff77cb187e1c7bd193fa88908a9fce6ecdf767b1a49220d20a4c7308cde0f",
+      "kind": "population",
+      "parameters": [],
+      "sources": [
+        "shop.main.roster"
+      ],
+      "sql": "WITH\n  \"menura_1_scan\" AS (\n    SELECT\n      \"customer_id\" AS \"CUSTOMER_ID\",\n      \"period_at\" AS \"PERIOD_AT\"\n    FROM \"shop\".\"main\".\"roster\"\n  ),\n  \"menura_2_periods\" AS (\n    SELECT\n      \"CUSTOMER_ID\",\n      \"PERIOD_AT\",\n      CAST(date_trunc('month', \"PERIOD_AT\") AS DATE) AS \"menura.period\"\n    FROM \"menura_1_scan\"\n  )\nSELECT\n  \"CUSTOMER_ID\" AS \"CUSTOMER_ID\",\n  \"menura.period\" AS \"PERIOD_AT\",\n  CAST(COUNT(*) AS BIGINT) AS \"row_count\"\nFROM \"menura_2_periods\"\nWHERE \"CUSTOMER_ID\" IS NOT NULL AND \"PERIOD_AT\" IS NOT NULL\nGROUP BY 1, 2\nHAVING COUNT(*) > 1",
+      "target": "MONTHLY_ROSTER"
+    },
+    {
+      "check_id": "population:STAMPED_MEMBERS",
+      "definition_hash": "10f0160a52529f058047cd70e5e237a3776bbdf8e4611bb88da602a68b348915",
+      "kind": "population",
+      "parameters": [
+        {
+          "binding": "time_zone",
+          "logical_type": {
+            "kind": "text"
+          },
+          "position": 1
+        }
+      ],
+      "sources": [
+        "shop.main.stamped_memberships"
+      ],
+      "sql": "WITH\n  \"menura_1_scan\" AS (\n    SELECT\n      \"customer_id\" AS \"CUSTOMER_ID\",\n      \"valid_from\" AS \"VALID_FROM\",\n      \"valid_to\" AS \"VALID_TO\"\n    FROM \"shop\".\"main\".\"stamped_memberships\"\n  ),\n  \"menura_2_days\" AS (\n    SELECT\n      \"CUSTOMER_ID\",\n      \"VALID_FROM\",\n      \"VALID_TO\",\n      CAST((\"VALID_FROM\") AT TIME ZONE CAST($1 AS VARCHAR) AS DATE) AS \"menura.from_day\",\n      CAST((\"VALID_TO\") AT TIME ZONE CAST($1 AS VARCHAR) AS DATE) AS \"menura.to_day\",\n      row_number() OVER () AS \"menura.row\"\n    FROM \"menura_1_scan\"\n  ),\n  \"menura_3_overlaps\" AS (\n    SELECT\n      \"menura_row\".\"menura.row\" AS \"menura.row\"\n    FROM \"menura_2_days\" AS \"menura_row\"\n    JOIN \"menura_2_days\" AS \"menura_other\" ON \"menura_row\".\"menura.row\" <> \"menura_other\".\"menura.row\" AND \"menura_row\".\"CUSTOMER_ID\" IS NOT NULL AND \"menura_row\".\"CUSTOMER_ID\" = \"menura_other\".\"CUSTOMER_ID\" AND \"menura_row\".\"menura.from_day\" IS NOT NULL AND (\"menura_row\".\"menura.to_day\" IS NULL OR \"menura_row\".\"menura.from_day\" <= \"menura_row\".\"menura.to_day\") AND \"menura_other\".\"menura.from_day\" IS NOT NULL AND (\"menura_other\".\"menura.to_day\" IS NULL OR \"menura_other\".\"menura.from_day\" <= \"menura_other\".\"menura.to_day\") AND (\"menura_other\".\"menura.to_day\" IS NULL OR \"menura_row\".\"menura.from_day\" <= \"menura_other\".\"menura.to_day\") AND (\"menura_row\".\"menura.to_day\" IS NULL OR \"menura_other\".\"menura.from_day\" <= \"menura_row\".\"menura.to_day\")\n    GROUP BY 1\n  )\nSELECT\n  \"CUSTOMER_ID\" AS \"CUSTOMER_ID\",\n  \"VALID_FROM\" AS \"VALID_FROM\",\n  \"VALID_TO\" AS \"VALID_TO\",\n  'invalid_interval' AS \"violation\"\nFROM \"menura_2_days\"\nWHERE \"menura.from_day\" IS NOT NULL AND \"menura.to_day\" IS NOT NULL AND \"menura.from_day\" > \"menura.to_day\"\nUNION ALL\nSELECT\n  \"CUSTOMER_ID\" AS \"CUSTOMER_ID\",\n  \"VALID_FROM\" AS \"VALID_FROM\",\n  \"VALID_TO\" AS \"VALID_TO\",\n  'overlap' AS \"violation\"\nFROM \"menura_2_days\"\nWHERE \"menura.row\" IN (SELECT \"menura.row\" FROM \"menura_3_overlaps\")",
+      "target": "STAMPED_MEMBERS"
+    },
+    {
+      "check_id": "semi_additive:ROSTER_BALANCE",
+      "definition_hash": "9bc7adc7f0fb13fb5238df10493d50f9b1a15b3423a620647f7e993729088b41",
+      "kind": "semi_additive",
+      "parameters": [],
+      "sources": [
+        "shop.main.balances",
+        "shop.main.roster"
+      ],
+      "sql": "WITH\n  \"menura_1_scan\" AS (\n    SELECT\n      \"customer_id\" AS \"CUSTOMER_ID\",\n      \"period\" AS \"PERIOD\"\n    FROM \"shop\".\"main\".\"balances\"\n  ),\n  \"menura_2_snapshots\" AS (\n    SELECT\n      \"CUSTOMER_ID\",\n      CAST(date_trunc('month', \"PERIOD\") AS DATE) AS \"menura.period\"\n    FROM \"menura_1_scan\"\n    WHERE \"CUSTOMER_ID\" IS NOT NULL AND \"PERIOD\" IS NOT NULL\n  ),\n  \"menura_3_seen\" AS (\n    SELECT\n      \"CUSTOMER_ID\",\n      \"menura.period\" AS \"menura.period\"\n    FROM \"menura_2_snapshots\"\n    GROUP BY 1, 2\n  ),\n  \"menura_4_bounds\" AS (\n    SELECT\n      MIN(\"menura.period\") AS \"menura.first\",\n      MAX(\"menura.period\") AS \"menura.last\"\n    FROM \"menura_2_snapshots\"\n  ),\n  \"menura_5_starts\" AS (\n    SELECT\n      unnest(generate_series(CAST(\"menura.first\" AS TIMESTAMP), CAST(\"menura.last\" AS TIMESTAMP), INTERVAL 1 MONTH)) AS \"menura.start\"\n    FROM \"menura_4_bounds\"\n  ),\n  \"menura_6_series\" AS (\n    SELECT\n      CAST(\"menura.start\" AS DATE) AS \"menura.period\"\n    FROM \"menura_5_starts\"\n  ),\n  \"menura_7_scan\" AS (\n    SELECT\n      \"customer_id\" AS \"CUSTOMER_ID\",\n      \"period_at\" AS \"PERIOD_AT\"\n    FROM \"shop\".\"main\".\"roster\"\n  ),\n  \"menura_8_expected\" AS (\n    SELECT\n      \"menura_row\".\"CUSTOMER_ID\" AS \"CUSTOMER_ID\",\n      \"menura_period\".\"menura.period\" AS \"menura.period\"\n    FROM \"menura_7_scan\" AS \"menura_row\"\n    JOIN \"menura_6_series\" AS \"menura_period\" ON CAST(date_trunc('month', \"menura_row\".\"PERIOD_AT\") AS DATE) = \"menura_period\".\"menura.period\"\n    WHERE \"menura_row\".\"CUSTOMER_ID\" IS NOT NULL\n    GROUP BY 1, 2\n  )\nSELECT\n  \"CUSTOMER_ID\" AS \"CUSTOMER_ID\",\n  \"menura.period\" AS \"PERIOD\",\n  'duplicate_snapshot' AS \"violation\"\nFROM \"menura_2_snapshots\"\nGROUP BY 1, 2\nHAVING COUNT(*) > 1\nUNION ALL\nSELECT\n  CAST(NULL AS INTEGER) AS \"CUSTOMER_ID\",\n  \"menura.period\" AS \"PERIOD\",\n  'gap' AS \"violation\"\nFROM \"menura_6_series\"\nWHERE \"menura.period\" NOT IN (SELECT \"menura.period\" FROM \"menura_3_seen\")\nUNION ALL\nSELECT\n  \"menura_expected\".\"CUSTOMER_ID\" AS \"CUSTOMER_ID\",\n  \"menura_expected\".\"menura.period\" AS \"PERIOD\",\n  'missing_entity' AS \"violation\"\nFROM \"menura_8_expected\" AS \"menura_expected\"\nLEFT JOIN \"menura_3_seen\" AS \"menura_seen\" ON \"menura_expected\".\"CUSTOMER_ID\" = \"menura_seen\".\"CUSTOMER_ID\" AND \"menura_expected\".\"menura.period\" = \"menura_seen\".\"menura.period\"\nWHERE \"menura_seen\".\"menura.period\" IS NULL\nUNION ALL\nSELECT\n  \"menura_seen\".\"CUSTOMER_ID\" AS \"CUSTOMER_ID\",\n  \"menura_seen\".\"menura.period\" AS \"PERIOD\",\n  'unexpected_entity' AS \"violation\"\nFROM \"menura_3_seen\" AS \"menura_seen\"\nLEFT JOIN \"menura_8_expected\" AS \"menura_expected\" ON \"menura_seen\".\"CUSTOMER_ID\" = \"menura_expected\".\"CUSTOMER_ID\" AND \"menura_seen\".\"menura.period\" = \"menura_expected\".\"menura.period\"\nWHERE \"menura_expected\".\"menura.period\" IS NULL",
+      "target": "ROSTER_BALANCE"
+    },
+    {
+      "check_id": "semi_additive:SNAPSHOT_BALANCE",
+      "definition_hash": "5ebdf26f5353d470c938ca957298e0a3b1bf392aabf6acf0d1dde9adc59b4c2e",
+      "kind": "semi_additive",
+      "parameters": [],
+      "sources": [
+        "shop.main.balances"
+      ],
+      "sql": "WITH\n  \"menura_1_scan\" AS (\n    SELECT\n      \"customer_id\" AS \"CUSTOMER_ID\",\n      \"snapshot\" AS \"SNAPSHOT\"\n    FROM \"shop\".\"main\".\"balances\"\n  ),\n  \"menura_2_snapshots\" AS (\n    SELECT\n      \"CUSTOMER_ID\",\n      \"SNAPSHOT\" AS \"menura.period\"\n    FROM \"menura_1_scan\"\n    WHERE \"CUSTOMER_ID\" IS NOT NULL AND \"SNAPSHOT\" IS NOT NULL\n  )\nSELECT\n  \"CUSTOMER_ID\" AS \"CUSTOMER_ID\",\n  \"menura.period\" AS \"SNAPSHOT\",\n  'duplicate_snapshot' AS \"violation\"\nFROM \"menura_2_snapshots\"\nGROUP BY 1, 2\nHAVING COUNT(*) > 1",
+      "target": "SNAPSHOT_BALANCE"
+    }
+  ],
+  "contract": "menura.integrity_checks",
+  "contract_version": "1.2.0",
+  "dialect": "duckdb",
+  "model_hash": "f4c3d33cf8e08ae2d7e813b4db3f7cee658452f0e06a2de05274b35fdafe316a"
+}

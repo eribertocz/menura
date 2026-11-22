@@ -1,0 +1,6 @@
+id: chk-population-checks-001
+rules: [CHK-2, CHK-2.4, CHK-2.5, CHK-2.6, CHK-3, CHK-4.2, CHK-6.3, CHK-6.4, CHK-6.5, CHK-7.1, CHK-7.3, POP-5, ADD-6, E0H-4.3]
+model: chk-populations
+expect:
+  outcome: "integrity_checks"
+  document: "chk-population-checks-001.document.json"
