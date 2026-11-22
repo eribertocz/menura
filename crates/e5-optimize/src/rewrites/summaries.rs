@@ -1,5 +1,12 @@
 //! E5-3.5, E5-3.5a, E5-4: selects a summary for each branch and reads it instead of the home dataset.
 
+mod freshness;
+#[cfg(test)]
+mod freshness_tests;
+mod period;
+#[cfg(test)]
+mod period_tests;
+
 use menura_representations::logical_plan::PlanNode;
 
 use crate::context::RewriteContext;
