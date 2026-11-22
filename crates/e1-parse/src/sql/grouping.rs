@@ -1,5 +1,5 @@
-//! `GROUP BY`: exactly the non-aggregated `SELECT` items, by expression, name or position, or
-//! `ALL` (E1-4 "GROUP BY", E1-4.7).
+//! `GROUP BY`: exactly the non-aggregated `SELECT` items, by expression or position, or `ALL`
+//! (E1-4 "GROUP BY", E1-4.7, E1-4.11).
 
 use std::ops::Range;
 
@@ -9,8 +9,7 @@ use super::expression::{SqlExpression, parse_expression};
 use super::items::{ItemKind, SelectItem, comparison_name};
 use super::lexer::Token;
 use super::numbers::integer_literal;
-use super::position::{outside_subset, unparsable};
-use crate::error::ParseError;
+use super::position::{Failure, outside_subset, unparsable};
 
 /// The `GROUP BY` clause as written.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -37,25 +36,37 @@ pub(super) enum GroupEntry {
     Expression(SqlExpression),
 }
 
-/// The `SELECT` items, in order, with their kinds.
-pub(super) type Items = [(SelectItem, ItemKind)];
+/// A `SELECT` item with its kind and its comparison key (E1-4.11).
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub(super) struct CheckedItem {
+    /// The item as written.
+    pub(super) item: SelectItem,
+    /// Its kind.
+    pub(super) kind: ItemKind,
+    /// The tree its expression is compared by.
+    pub(super) key: Option<Expression>,
+}
+
+/// The `SELECT` items, in order.
+pub(super) type Items = [CheckedItem];
 
 /// Checks that `grouping` lists exactly the non-aggregated items of `items`.
 ///
 /// # Errors
 ///
-/// `EQRY-05`, in this order: the first entry that is a position outside the items (E1-4.7) or
-/// of an aggregated item, or that names no non-aggregated item; then the first non-aggregated
+/// In this order: the first entry that has an E1-4.12 failure, or (`EQRY-05`) is a position
+/// outside the items (E1-4.7) or of an aggregated item, or writes no non-aggregated item; then the first non-aggregated
 /// item that no entry lists (E1-4.7).
 pub(super) fn check_grouping(
     sql: &str,
     grouping: &Grouping,
     items: &Items,
-) -> Result<(), ParseError> {
+    key: &dyn Fn(&SqlExpression) -> Option<Expression>,
+) -> Result<(), Failure> {
     let mut grouped = vec![matches!(grouping, Grouping::All); items.len()];
     if let Grouping::Entries(entries) = grouping {
         for entry in entries {
-            let index = grouped_item(sql, entry, items)?;
+            let index = grouped_item(sql, entry, items, key)?;
             if let Some(flag) = grouped.get_mut(index) {
                 *flag = true;
             }
@@ -64,9 +75,9 @@ pub(super) fn check_grouping(
     let ungrouped = items
         .iter()
         .zip(&grouped)
-        .find(|((_, kind), grouped)| !kind.is_aggregated() && !**grouped);
+        .find(|(checked, grouped)| !checked.kind.is_aggregated() && !**grouped);
     match ungrouped {
-        Some(((item, _), _)) => Err(outside_subset(
+        Some((CheckedItem { item, .. }, _)) => Err(outside_subset(
             sql,
             item.expression.start,
             &format!(
@@ -79,7 +90,12 @@ pub(super) fn check_grouping(
 }
 
 /// The index of the non-aggregated item that `entry` lists.
-fn grouped_item(sql: &str, entry: &GroupEntry, items: &Items) -> Result<usize, ParseError> {
+fn grouped_item(
+    sql: &str,
+    entry: &GroupEntry,
+    items: &Items,
+    key: &dyn Fn(&SqlExpression) -> Option<Expression>,
+) -> Result<usize, Failure> {
     match entry {
         GroupEntry::Position { position, offset } => {
             let index = usize::try_from(*position)
@@ -98,7 +114,7 @@ fn grouped_item(sql: &str, entry: &GroupEntry, items: &Items) -> Result<usize, P
             };
             if items
                 .get(index)
-                .is_some_and(|(_, kind)| kind.is_aggregated())
+                .is_some_and(|checked| checked.kind.is_aggregated())
             {
                 return Err(outside_subset(
                     sql,
@@ -109,7 +125,8 @@ fn grouped_item(sql: &str, entry: &GroupEntry, items: &Items) -> Result<usize, P
             Ok(index)
         }
         GroupEntry::Expression(expression) => {
-            non_aggregated_match(expression, items).ok_or_else(|| {
+            expression.tree()?;
+            non_aggregated_match(key(expression).as_ref(), items).ok_or_else(|| {
                 outside_subset(
                     sql,
                     expression.start,
@@ -123,18 +140,18 @@ fn grouped_item(sql: &str, entry: &GroupEntry, items: &Items) -> Result<usize, P
     }
 }
 
-/// The index of the non-aggregated item that `expression` writes, compared as parsed trees
-/// with regular identifiers in upper case (E0D-1.1). Never by output name (E1-4.11).
-pub(super) fn non_aggregated_match(expression: &SqlExpression, items: &Items) -> Option<usize> {
-    expression.key.as_ref()?;
+/// The index of the non-aggregated item whose comparison key is `key` (E1-4.11). Never by
+/// output name.
+pub(super) fn non_aggregated_match(key: Option<&Expression>, items: &Items) -> Option<usize> {
+    let key = key?;
     items
         .iter()
-        .position(|(item, kind)| !kind.is_aggregated() && item.expression.key == expression.key)
+        .position(|checked| !checked.kind.is_aggregated() && checked.key.as_ref() == Some(key))
 }
 
 /// The name of an expression that is one unqualified identifier, as E0D-1.1 compares it.
 pub(super) fn bare_name(expression: &SqlExpression) -> Option<String> {
-    match &expression.tree {
+    match expression.tree().ok()? {
         Expression::Reference(reference) if reference.qualifier.is_none() => {
             Some(comparison_name(&reference.name))
         }
@@ -146,12 +163,14 @@ pub(super) fn bare_name(expression: &SqlExpression) -> Option<String> {
 ///
 /// # Errors
 ///
-/// `EQRY-05` when an entry does not parse, or `ALL` is written with other entries.
+/// `EQRY-05` when an entry does not parse, or `ALL` is written with other entries. The text
+/// is read up to byte `end`.
 pub(super) fn grouping(
     sql: &str,
     tokens: &[Token],
     entries: Option<Vec<Range<usize>>>,
-) -> Result<Grouping, ParseError> {
+    end: usize,
+) -> Result<Grouping, Failure> {
     let Some(entries) = entries else {
         return Ok(Grouping::None);
     };
@@ -175,7 +194,7 @@ pub(super) fn grouping(
             }
             Ok(match integer_literal(sql, tokens, range.clone()) {
                 Some(position) => GroupEntry::Position { position, offset },
-                None => GroupEntry::Expression(parse_expression(sql, tokens, range)?),
+                None => GroupEntry::Expression(parse_expression(sql, tokens, range, end)?),
             })
         })
         .collect::<Result<_, _>>()

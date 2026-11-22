@@ -28,6 +28,7 @@ lowering, with row policies, additivity rules and context modifiers applied.
 | E4-3.10 | `Limit(input, n)` | Limit |
 | E4-3.12 | `Population(dataset, population, grain, periods)` | Output the expected (entity, period) pairs of `population` (POP-3) at `grain` over `periods`, the query's unit of periods (ADD-4.7). It reads V(D) of `dataset` (E4-6.5, E2-4.9). |
 | E4-3.13 | `Snapshot(input, expected, rule)` | Reduce the rows of `input` to one value per (result group, entity) under the semi-additive `rule` (ADD-3.2, E4-7), `expected` being the output of a `Population` |
+| E4-3.14 | `Periods(from, to, grain)` | One row per period start at `grain`, from the period of `from` to the period of `to`, both included, truncated as POP-3.5 states; the unit of periods of a semi-additive branch with a `date_range` on `over` (E4-7.6) |
 
 - **E4-3.11** Every node carries its output schema (names, logical types, nullability) and its origin. Column names and the order of the inputs of a multi-node plan follow E6-4.12.
 
@@ -90,7 +91,7 @@ Semi-additive metrics (balances, inventory) are planned as defined by the
 | E4-7.3 | **Periods with data.** The periods with data (ADD-4.7) are the periods of the home rows that pass the row policies and the query filters, for any entity, rows with a NULL value included. |
 | E4-7.4 | **Date range.** The query `date_range` bounds the unit only when its dimension is `over`; otherwise it is a query filter like any other. |
 | E4-7.5 | **Carry-forward read.** The read that finds carried values keeps the row policies and the other query filters, and drops only the `date_range` predicate on `over`. |
-| E4-7.6 | **Rows that do not exist.** A carried row keeps the fields of the row it carries. A row added for `missing: zero` has its `entity` fields from the population and NULL for every other home field; it joins like a home row and can fall into the NULL group (E4-4.1). Query filters apply after these rows are added. |
+| E4-7.6 | **Rows that do not exist.** A carried row keeps the fields of the row it carries. A row added for `missing: zero` has its `entity` fields from the population, its `over` field set to the first instant of its expected period, and NULL for every other home field; it joins like a home row and can fall into the NULL group (E4-4.1). Query filters apply after these rows are added. The periods of a unit are every `snapshot_grain` period of the queried range (ADD-4.7): with a `date_range` on `over`, every period inside it, whether it has data or not; without one, the periods with data (E4-7.3). |
 | E4-7.7 | **Missing under `per_entity`.** With `selection: per_entity`, an entity is missing when it is expected in the last (or first, per `aggregation`) period of the unit and has no row in the unit. |
 | E4-7.8 | **Grain of a plain `over`.** A query dimension `over` without a time grain has grain `day` for a `date` and the source precision for a `timestamp` (ADD-4.9). In the SQL form, `DATE_TRUNC('<grain>', over)` counts as that grain. `E4-03` is located at the `time_grains` entry, else at the dimension, else at the SQL `SELECT` item. |
 | E4-7.9 | **Non-additive.** Before summaries (0.6.0), a non-additive metric plans exactly as its deduced additivity. |

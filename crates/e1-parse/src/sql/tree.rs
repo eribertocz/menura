@@ -9,8 +9,7 @@ use menura_representations::query_tree::{
 
 use super::grouping::Items;
 use super::items::{ItemKind, output_identifier};
-use super::position::{location, unparsable};
-use crate::error::ParseError;
+use super::position::{Failure, location, unparsable};
 
 /// The output columns of `items`, in `SELECT` order.
 ///
@@ -20,14 +19,15 @@ use crate::error::ParseError;
 pub(super) fn columns(
     sql: &str,
     items: &Items,
-) -> Result<Vec<OutputColumn<QueryDimension, QueryMetric>>, ParseError> {
+) -> Result<Vec<OutputColumn<QueryDimension, QueryMetric>>, Failure> {
     items
         .iter()
-        .map(|(item, kind)| {
+        .map(|checked| {
+            let (item, kind) = (&checked.item, &checked.kind);
             let output_name =
                 OutputName::new(output_identifier(item, kind).map_or("", Identifier::text));
             let origin = location(sql, item.expression.start);
-            let tree = item.expression.tree.clone();
+            let tree = item.expression.tree()?.clone();
             let to_query_reference = |reference: &Reference| {
                 query_reference(reference)
                     .ok_or_else(|| unparsable(sql, item.expression.start, "expected a reference"))

@@ -4,21 +4,22 @@ use menura_model::expression::Identifier;
 use menura_representations::query_tree::QueryRelation;
 
 use super::clauses::Clause;
+use super::clauses::next_offset;
 use super::lexer::{Token, TokenKind};
-use super::position::{location, outside_subset, unparsable};
-use crate::error::ParseError;
+use super::position::{Failure, location, outside_subset, unparsable};
 
 /// Reads the relation of the `FROM` clause.
 ///
 /// # Errors
 ///
 /// `EQRY-05` for a second relation, a parenthesized relation, a name that is not
-/// `<model>.<dataset>`, or text after the alias.
+/// `<model>.<dataset>`, or text after the alias. The text is read up to byte `end`.
 pub(super) fn relation(
     sql: &str,
     tokens: &[Token],
     clause: &Clause,
-) -> Result<QueryRelation, ParseError> {
+    end: usize,
+) -> Result<QueryRelation, Failure> {
     let slice = tokens.get(clause.tokens.clone()).unwrap_or_default();
     if let Some(comma) = slice.iter().find(|token| token.is_symbol(',')) {
         return Err(outside_subset(
@@ -35,7 +36,8 @@ pub(super) fn relation(
         ));
     }
     let (model, dataset, name_length) = relation_name(sql, slice)?;
-    let alias = relation_alias(sql, slice.get(name_length..).unwrap_or_default())?;
+    let after = next_offset(tokens, clause.tokens.end, end);
+    let alias = relation_alias(sql, slice.get(name_length..).unwrap_or_default(), after)?;
     Ok(QueryRelation {
         model,
         dataset,
@@ -45,10 +47,7 @@ pub(super) fn relation(
 }
 
 /// The model and dataset names that `slice` starts with, and the number of their tokens.
-fn relation_name(
-    sql: &str,
-    slice: &[Token],
-) -> Result<(Identifier, Identifier, usize), ParseError> {
+fn relation_name(sql: &str, slice: &[Token]) -> Result<(Identifier, Identifier, usize), Failure> {
     let mut parts = Vec::new();
     let mut index = 0;
     while let Some(part) = slice.get(index).and_then(|token| identifier(sql, token)) {
@@ -70,14 +69,15 @@ fn relation_name(
     Ok((model, dataset, index))
 }
 
-/// The alias of the tokens `rest` after the relation name: `[[AS] alias]`.
-fn relation_alias(sql: &str, rest: &[Token]) -> Result<Option<Identifier>, ParseError> {
+/// The alias of the tokens `rest` after the relation name, `[[AS] alias]`; `after` is the
+/// offset where the clause ends.
+fn relation_alias(sql: &str, rest: &[Token], after: usize) -> Result<Option<Identifier>, Failure> {
     let rest = match rest {
-        [keyword, after @ ..] if keyword.is_keyword(sql, "AS") => {
-            if after.is_empty() {
-                return Err(unparsable(sql, sql.len(), "expected an alias after AS"));
+        [keyword, names @ ..] if keyword.is_keyword(sql, "AS") => {
+            if names.is_empty() {
+                return Err(unparsable(sql, after, "expected an alias after AS"));
             }
-            after
+            names
         }
         _ => rest,
     };

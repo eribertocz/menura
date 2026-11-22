@@ -7,10 +7,9 @@ use menura_model::expression::{Expression, Identifier, Reference};
 
 use super::expression::{SqlExpression, parse_expression};
 use super::lexer::Token;
-use super::position::{missing_alias, outside_subset, unparsable};
+use super::position::{Failure, missing_alias, outside_subset, unparsable};
 use super::relation::identifier;
 use super::shape::contents;
-use crate::error::ParseError;
 
 /// A `SELECT` item as written.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -51,27 +50,29 @@ pub(super) fn select_item(
     sql: &str,
     tokens: &[Token],
     range: Range<usize>,
-) -> Result<SelectItem, ParseError> {
+    end: usize,
+) -> Result<SelectItem, Failure> {
     let slice = tokens.get(range.clone()).unwrap_or_default();
     if let [only] = slice
         && only.is_symbol('*')
     {
         return Err(outside_subset(sql, only.start, "SELECT *"));
     }
-    let (expression_range, alias) = match slice {
+    let (expression_range, alias_token) = match slice {
         [.., keyword, name] if slice.len() >= 3 && keyword.is_keyword(sql, "AS") => {
-            (range.start..range.end - 2, Some(alias(sql, name)?))
+            (range.start..range.end - 2, Some(name))
         }
         _ => (range, None),
     };
+    let expression = parse_expression(sql, tokens, expression_range, end)?;
     Ok(SelectItem {
-        expression: parse_expression(sql, tokens, expression_range)?,
-        alias,
+        expression,
+        alias: alias_token.map(|token| alias(sql, token)).transpose()?,
     })
 }
 
 /// The identifier `token` written after `AS`.
-fn alias(sql: &str, token: &Token) -> Result<Identifier, ParseError> {
+fn alias(sql: &str, token: &Token) -> Result<Identifier, Failure> {
     identifier(sql, token).ok_or_else(|| unparsable(sql, token.start, "expected an alias after AS"))
 }
 
@@ -79,12 +80,14 @@ fn alias(sql: &str, token: &Token) -> Result<Identifier, ParseError> {
 ///
 /// # Errors
 ///
-/// `EQRY-05` for an aggregate function or `USER_ATTRIBUTE`, or an item that mixes field
+/// The E1-4.12 failure of its expression; `EQRY-05` for an aggregate function or
+/// `USER_ATTRIBUTE`, or an item that mixes field
 /// references with `AGG(…)` terms (E1-4.8); then `EQRY-13` for an item that is not a plain
 /// field reference and has no alias.
-pub(super) fn item_kind(sql: &str, item: &SelectItem) -> Result<ItemKind, ParseError> {
+pub(super) fn item_kind(sql: &str, item: &SelectItem) -> Result<ItemKind, Failure> {
     let expression = &item.expression;
-    let found = contents(&expression.tree);
+    let tree = expression.tree()?;
+    let found = contents(tree);
     if let Some(construct) = found.unsupported {
         return Err(outside_subset(sql, expression.start, construct));
     }
@@ -98,7 +101,7 @@ pub(super) fn item_kind(sql: &str, item: &SelectItem) -> Result<ItemKind, ParseE
             ),
         ));
     }
-    let kind = match (&expression.tree, found.metric_aggregate) {
+    let kind = match (tree, found.metric_aggregate) {
         (Expression::MetricAggregate(reference), _) => ItemKind::Metric(reference.clone()),
         (_, true) => ItemKind::MetricExpression,
         (Expression::Reference(reference), false) => ItemKind::Field(reference.clone()),

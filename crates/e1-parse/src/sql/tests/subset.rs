@@ -1,60 +1,12 @@
-//! Unit tests of the SQL form (E1-4), named after their rule IDs.
+//! The subset and the query tree (E1-4, E1-4.3 to E1-4.10, E1-5, `EQRY-13`).
 
 use menura_contracts::types::query::{Direction, NullsOrder};
 use menura_model::expression::Identifier;
 use menura_representations::columns::OutputColumn;
-use menura_representations::query_tree::{
-    QueryDimensionKind, QueryMetricKind, QueryReference, QueryTree, ReferencePart,
-};
-use menura_representations::time::{QueryTime, TimeZoneName};
+use menura_representations::query_tree::{QueryDimensionKind, QueryMetricKind, QueryReference};
 
-use super::clauses::statement;
-use super::lexer::tokenize;
-use super::relation::relation;
-use super::sql_tree;
-use crate::error::{ParseError, ParseErrorCode};
-
-fn time() -> QueryTime {
-    QueryTime {
-        time_zone: TimeZoneName::new("UTC"),
-        reference_time: None,
-        reference_date: None,
-    }
-}
-
-fn tree(sql: &str) -> QueryTree {
-    match sql_tree(sql, time()) {
-        Ok(tree) => tree,
-        Err(error) => panic!("`{sql}` should parse: {error}"),
-    }
-}
-
-fn error(sql: &str) -> ParseError {
-    match sql_tree(sql, time()) {
-        Ok(_) => panic!("`{sql}` should be rejected"),
-        Err(error) => error,
-    }
-}
-
-fn assert_eqry_05(sql: &str) {
-    let error = error(sql);
-    assert_eq!(error.code, ParseErrorCode::Eqry05, "`{sql}`: {error}");
-    assert_eq!(error.pointer, "/sql", "`{sql}`");
-}
-
-fn output_names(tree: &QueryTree) -> Vec<String> {
-    tree.columns()
-        .iter()
-        .map(|column| match column {
-            OutputColumn::Dimension(dimension) => dimension.output_name.as_str().to_owned(),
-            OutputColumn::Metric(metric) => metric.output_name.as_str().to_owned(),
-        })
-        .collect()
-}
-
-fn regular(text: &str) -> ReferencePart {
-    ReferencePart::Regular(text.to_owned())
-}
+use super::{assert_eqry_05, error, output_names, regular, tree};
+use crate::error::ParseErrorCode;
 
 #[test]
 fn e1_4_parses_the_subset_into_the_query_tree() {
@@ -286,9 +238,8 @@ fn e1_4_reads_the_from_relation_with_or_without_as() {
         ("SELECT AGG(m) AS m FROM slice.\"Sales\" s", Some("s")),
         ("SELECT AGG(m) AS m FROM slice.\"Sales\"", None),
     ] {
-        let tokens = tokenize(sql).unwrap_or_else(|_| unreachable!());
-        let statement = statement(sql, &tokens).unwrap_or_else(|_| unreachable!());
-        let relation = relation(sql, &tokens, &statement.from).unwrap_or_else(|_| unreachable!());
+        let tree = tree(sql);
+        let relation = tree.relation().unwrap_or_else(|| unreachable!());
         assert_eq!(relation.model.text(), "slice");
         assert_eq!(relation.dataset.text(), "Sales");
         assert!(relation.dataset.is_delimited());
@@ -318,70 +269,4 @@ fn e1_4_5_broken_structure_does_not_parse() {
     ] {
         assert_eqry_05(sql);
     }
-}
-
-#[test]
-fn e1_4_11_group_by_never_names_an_output() {
-    assert_eqry_05("SELECT UPPER(region) AS r, AGG(m) AS m FROM slice.sales GROUP BY r");
-}
-
-#[test]
-fn e1_4_11_reports_the_first_failure_in_order() {
-    let error = |sql: &str| {
-        let error = error(sql);
-        (error.code, error.message)
-    };
-    let (code, message) = error("SELECT SUM(amount) AS a, AGG(m) FROM slice.sales");
-    assert_eq!(code, ParseErrorCode::Eqry05, "{message}");
-    assert!(message.contains("aggregate function"), "{message}");
-    let (code, message) = error("SELECT region, AGG(m) FROM slice.sales GROUP BY 5");
-    assert_eq!(code, ParseErrorCode::Eqry13, "{message}");
-    let (code, message) = error("SELECT region FROM slice.sales WHERE AGG(m) > 1");
-    assert!(message.contains("no AGG"), "{code}: {message}");
-    let (code, message) = error("SELECT region, AGG(m) AS m FROM slice.sales WHERE AGG(m) > 1");
-    assert!(message.contains("WHERE"), "{code}: {message}");
-    let (code, message) =
-        error("SELECT region, AGG(m) AS m FROM slice.sales GROUP BY 1 ORDER BY channel LIMIT 0");
-    assert!(message.contains("ORDER BY"), "{code}: {message}");
-    let (code, message) =
-        error("SELECT region, AGG(m) AS m FROM slice.sales GROUP BY 1 ORDER BY 1 LIMIT 0");
-    assert!(message.contains("LIMIT"), "{code}: {message}");
-}
-
-#[test]
-fn e1_4_12_a_parsed_but_invalid_expression_keeps_its_wide_table_code() {
-    for sql in [
-        "SELECT RANDOM() AS r, AGG(m) AS m FROM slice.sales GROUP BY 1",
-        "SELECT AGG(m) AS m FROM slice.sales WHERE region = RANDOM()",
-    ] {
-        let error = error(sql);
-        assert_eq!(error.code, ParseErrorCode::E0f02, "`{sql}`: {error}");
-        assert_eq!(error.pointer, "/sql");
-    }
-}
-
-#[test]
-fn e1_5_the_tree_carries_the_from_relation() {
-    let tree = tree("SELECT AGG(m) AS m\nFROM slice.\"Sales\" AS s");
-    let relation = tree.relation();
-    assert_eq!(
-        relation.map(|relation| relation.model.text()),
-        Some("slice")
-    );
-    assert_eq!(
-        relation.map(|relation| relation.dataset.text()),
-        Some("Sales")
-    );
-    assert_eq!(
-        relation
-            .and_then(|relation| relation.alias.as_ref())
-            .map(Identifier::text),
-        Some("s")
-    );
-    assert_eq!(
-        relation
-            .and_then(|relation| relation.origin.position())
-            .map(|position| (position.line(), position.column())),
-        Some((2, 6))
-    );
 }
