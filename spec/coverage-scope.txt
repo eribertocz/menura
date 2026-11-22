@@ -59,3 +59,8 @@ spec/07-roadmap.md VS-1e
 spec/contracts/compiled-plan.md PLN-3.3 PLN-3.3a PLN-4.1 PLN-4.2 PLN-4.3 PLN-4.4 PLN-4.5 PLN-4.6 PLN-4.7 PLN-4.8 PLN-4.9 PLN-6.1 PLN-6.2 PLN-6.3 PLN-6.3a PLN-6.4 PLN-6.5 PLN-6.6 PLN-6.7 PLN-7.1 PLN-7.2 PLN-7.3 PLN-7.4 PLN-8.1
 spec/contracts/model-description.md DSC-3.1 DSC-3.2 DSC-3.2a DSC-3.3 DSC-3.4 DSC-3.5 DSC-3.6 DSC-3.7 DSC-3.8 DSC-3.9 DSC-3.10 DSC-3.11 DSC-3.12 DSC-4.1 DSC-4.2 DSC-4.3 DSC-4.4 DSC-4.5
 spec/contracts/integrity-checks.md CHK-2.2 CHK-2.3 CHK-2.4 CHK-2.5 CHK-2.6 CHK-3.1 CHK-4.1 CHK-4.2 CHK-5.1 CHK-5.2 CHK-5.3 CHK-5.4 CHK-5.5 CHK-5.6 CHK-6.1 CHK-6.2 CHK-6.3 CHK-6.4 CHK-6.5 CHK-6.5a CHK-6.6 CHK-7.1 CHK-7.2 CHK-7.3 CHK-7.4
+# 0.8.0 gate (rules of the slice VS-1f; DEP-* and ARC-5.6 are covered by the core and cli tests named after them, because the case format has no dependencies or diff outcome)
+spec/07-roadmap.md VS-1f
+spec/extensions/context.md CTX-3.1 CTX-3.2 CTX-3.3 CTX-3.4 CTX-3.5 CTX-3.6 CTX-3.7 CTX-5.1.1 CTX-5.1.2 CTX-5.1.3 CTX-5.1.4 CTX-5.1.5 CTX-5.1.6 CTX-5.1.7
+spec/stages/E4-plan.md E4-3.15 E4-3.16 E4-8.1 E4-8.2 E4-8.3 E4-8.4 E4-8.5 E4-8.6 E4-8.7 E4-8.8 E4-8.9
+spec/contracts/compiled-plan.md PLN-5.4 PLN-5.4a PLN-6.8 PLN-8.2 PLN-8.3
