@@ -1,6 +1,6 @@
 //! Unit tests of summary freshness, conditions 1 to 3 of CAT-7.2.
 
-use menura_model::expression::{Expression, Literal};
+use menura_model::expression::{Expression, Identifier, Literal, Reference};
 use serde_json::json;
 
 use super::freshness::FailedCondition;
@@ -110,4 +110,22 @@ fn cat_7_2_condition_3_fails_when_built_from_has_another_grain() {
     build(&mut state)["built_from"] = versions(&["2026-09", "2026-10"]);
     let result = freshness(&Fixture::new(), state, "UTC", None);
     assert_eq!(result, Err(FailedCondition::BuiltFrom));
+}
+
+#[test]
+fn cat_7_2_condition_1_finds_a_lower_case_column_from_the_name_e0_stores() {
+    let mut fixture = Fixture::new();
+    fixture.order_date = field("ORDER_DATE", stored_reference("ORDER_DATE"), date_type());
+    fixture.column_name = "order_date";
+    let mut state = fresh_state();
+    base(&mut state)["partitions"]["column"] = json!("order_date");
+    assert_eq!(freshness(&fixture, state, "UTC", None), Ok(()));
+}
+
+/// The reference to `name` as E0 stores it: the delimited identifier of its normalized text.
+fn stored_reference(name: &str) -> Expression {
+    Expression::Reference(Reference {
+        qualifier: None,
+        name: Identifier::delimited(name).expect("a delimited identifier"),
+    })
 }

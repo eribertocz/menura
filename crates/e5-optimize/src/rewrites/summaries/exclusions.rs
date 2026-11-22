@@ -1,5 +1,6 @@
 //! SUM-3.2 and SUM-3.2a: the branches and summaries that never use summaries.
 
+use menura_contracts::normalize_unquoted_identifier;
 use menura_contracts::types::catalog::CatalogSchemaDocument;
 use menura_contracts::types::common::LogicalType;
 use menura_expressions::typing::{Aggregates, Stop, Typed, TypingScope, type_expression};
@@ -168,13 +169,18 @@ impl FieldReader<'_> {
     }
 
     /// Whether the catalog column `reference` names in the relation of the base is a
-    /// `timestamp` with time zone.
+    /// `timestamp` with time zone. E0 stores the reference as the delimited identifier of its
+    /// normalized text, so the column is the one whose normalized name equals it (CAT-8.2).
     fn is_zoned_column(&self, reference: &Reference) -> bool {
         self.catalog
             .relations
             .iter()
             .filter(|relation| relation.source == self.base.source)
             .flat_map(|relation| relation.columns.iter())
-            .any(|column| column.name == reference.name.text() && is_zoned(&column.logical_type))
+            .any(|column| {
+                normalize_unquoted_identifier(&column.name)
+                    == normalize_unquoted_identifier(reference.name.text())
+                    && is_zoned(&column.logical_type)
+            })
     }
 }

@@ -1,14 +1,6 @@
 //! Summary freshness (CAT-7.2, SUM-3.7): whether the catalog state proves that a summary holds
 //! the rows its base relation would give, and otherwise the first condition that fails.
 
-#![cfg_attr(
-    not(test),
-    expect(
-        dead_code,
-        reason = "called by the summary rewrite (#396) and selection (#397), filled in by their own issues"
-    )
-)]
-
 use std::collections::{BTreeMap, BTreeSet};
 
 use menura_contracts::normalize_unquoted_identifier;
@@ -154,14 +146,12 @@ fn plain_column(expression: Option<&Expression>) -> Option<&Identifier> {
     }
 }
 
-/// Whether `identifier` names the catalog column `column` (E0D-1.5): a delimited identifier
-/// by its exact text, a regular one after normalization as an unquoted identifier (E0D-1.1).
+/// Whether `identifier` names the catalog column `column`. E0 has already resolved the
+/// reference (E0D-1.5) and stores it as the delimited identifier of its normalized text, so the
+/// column is the one whose name, normalized as E0D-1.1, equals that text (CAT-8.2 makes it
+/// unique).
 fn names_column(identifier: &Identifier, column: &str) -> bool {
-    if identifier.is_delimited() {
-        identifier.text() == column
-    } else {
-        normalize_unquoted_identifier(identifier.text()) == normalize_unquoted_identifier(column)
-    }
+    normalize_unquoted_identifier(identifier.text()) == normalize_unquoted_identifier(column)
 }
 
 /// The column `name` of the relation `source` in the catalog schema.
