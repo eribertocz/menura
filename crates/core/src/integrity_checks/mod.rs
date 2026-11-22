@@ -107,11 +107,17 @@ fn generated_check(
             key_uniqueness_plan(relationship, model, catalog)?,
             vec![&relationship.to],
         ),
-        _ => (
+        CheckKind::OrphanKeys => (
             ContractCheckKind::OrphanKeys,
             orphan_keys_plan(relationship, model, catalog)?,
             vec![&relationship.from, &relationship.to],
         ),
+        other => {
+            return Err(InternalError::new(
+                STAGE,
+                format!("checks of kind {} are not generated yet", other.as_str()),
+            ));
+        }
     };
     let (sql, parameters) = generated_sql(handle, dialect, &plan)?;
     Ok(IntegrityCheck {
