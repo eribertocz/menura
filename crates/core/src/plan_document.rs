@@ -1,4 +1,4 @@
-//! The compiled plan document (PLN-1), with its lineage (PLN-4) and the outputs of VS-5.
+//! The compiled plan document (PLN-1), with its lineage (PLN-4) and its explanation (PLN-7).
 
 use menura_contracts::ContractKind;
 use menura_contracts::types::common::Decision;
@@ -85,7 +85,7 @@ pub(crate) fn plan_document(
 }
 
 /// The `data_source` load option, or the catalog schema's `document_id.origin`.
-fn data_source(handle: &Handle) -> String {
+pub(crate) fn data_source(handle: &Handle) -> String {
     handle
         .load_options()
         .data_source

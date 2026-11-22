@@ -13,7 +13,9 @@ use menura_representations::bound_query::{AuthorizedObject, MetricPath};
 use menura_representations::query_tree::QueryTreeParts;
 
 use support::model::name;
-use support::query::{column, dimension, equals_text, filter, metric, path, time_grain, tree};
+use support::query::{
+    column, dimension, equals_text, filter, metric, path, time_grain, tree, user,
+};
 use support::{diagnostic, first_error, run};
 
 const ANALYST: &[&str] = &["analyst"];
@@ -365,4 +367,51 @@ fn e2_4_1_a_time_grain_field_is_authorized() {
             "/query/nonportable_extensions/0/data/time_grains/0".to_owned()
         )
     );
+}
+
+#[test]
+fn e2_4_7_the_decisions_before_a_denied_name_are_recorded_with_the_denial() {
+    let query = tree(
+        vec![
+            dimension(0, "orders.region"),
+            dimension(1, "orders.unit_cost"),
+        ],
+        vec![metric(0, "revenue")],
+        QueryTreeParts::default(),
+    );
+    let decisions =
+        menura_e2_bind::authorization_decisions(&query, &support::model::model(), &user(ANALYST));
+    let recorded: Vec<(&AuthorizedObject, Access)> = decisions
+        .iter()
+        .map(|decision| (&decision.object, decision.access))
+        .collect();
+    let expected = [
+        (AuthorizedObject::Dataset(name("ORDERS")), Access::Granted),
+        (
+            AuthorizedObject::Field(field("ORDERS", "REGION")),
+            Access::Granted,
+        ),
+        (
+            AuthorizedObject::Field(field("ORDERS", "UNIT_COST")),
+            Access::Denied,
+        ),
+    ];
+    let expected: Vec<(&AuthorizedObject, Access)> = expected
+        .iter()
+        .map(|(object, access)| (object, *access))
+        .collect();
+    assert_eq!(recorded, expected);
+}
+
+#[test]
+fn e2_4_7_the_decisions_of_an_authorized_query_are_those_of_its_bound_query() {
+    let query = tree(
+        vec![dimension(0, "orders.region")],
+        vec![metric(0, "revenue")],
+        QueryTreeParts::default(),
+    );
+    let decisions =
+        menura_e2_bind::authorization_decisions(&query, &support::model::model(), &user(ANALYST));
+    let authorized = run(&query, ANALYST).expect("authorized");
+    assert_eq!(decisions, authorized.authorization());
 }

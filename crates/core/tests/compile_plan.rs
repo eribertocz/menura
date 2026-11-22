@@ -1,4 +1,4 @@
-//! The compiled plan of `compile` with the outputs of VS-5: PLN-1, PLN-2.4, E6-5.5, E6-6.1 and
+//! The compiled plan of `compile`: PLN-1, PLN-2.4, E6-5.5, E6-6.1 and
 //! the compile options of architecture section 3.5.
 
 mod support;
@@ -36,7 +36,7 @@ fn pln_1_the_plan_is_a_compiled_plan() {
 }
 
 #[test]
-fn vs_5_producer_names_the_compiler_ossie_and_tzdata_versions() {
+fn pln_1_producer_names_the_compiler_ossie_and_tzdata_versions() {
     let producer = compiled().producer;
     assert_eq!(
         producer.compiler_version.to_string(),
@@ -57,18 +57,18 @@ fn e6_5_5_producer_declares_the_time_zone_database_version() {
 }
 
 #[test]
-fn vs_5_dialect_is_duckdb() {
+fn pln_1_dialect_is_duckdb() {
     let json: serde_json::Value = serde_json::from_str(&plan_json(&compiled()).unwrap()).unwrap();
     assert_eq!(json["dialect"], "duckdb");
 }
 
 #[test]
-fn vs_5_data_source_defaults_to_the_catalog_schema_origin() {
+fn pln_1_data_source_defaults_to_the_catalog_schema_origin() {
     assert_eq!(compiled().data_source, "warehouse:shop");
 }
 
 #[test]
-fn vs_5_data_source_comes_from_the_load_option() {
+fn pln_1_data_source_comes_from_the_load_option() {
     let options = LoadOptions {
         data_source: Some("warehouse:gold".to_owned()),
         ..LoadOptions::default()
@@ -96,14 +96,14 @@ fn e6_6_1_sql_parameters_and_result_schema_come_from_e6() {
 }
 
 #[test]
-fn vs_5_limits_default_to_30000_ms_and_no_row_limit() {
+fn pln_1_limits_default_to_30000_ms_and_no_row_limit() {
     let limits = compiled().limits;
     assert_eq!(limits.timeout_ms, 30000);
     assert_eq!(limits.max_rows, None);
 }
 
 #[test]
-fn vs_5_limits_come_from_the_compile_options() {
+fn pln_1_limits_come_from_the_compile_options() {
     let options = CompileOptions {
         timeout_ms: NonZeroU64::new(5000).unwrap(),
         max_rows: NonZeroU64::new(100),
@@ -114,19 +114,20 @@ fn vs_5_limits_come_from_the_compile_options() {
         amount_by_region().as_bytes(),
         analyst().as_bytes(),
         &options,
-    );
+    )
+    .result;
     let limits = plan(result).limits;
     assert_eq!(limits.timeout_ms, 5000);
     assert_eq!(limits.max_rows, Some(100));
 }
 
 #[test]
-fn vs_5_the_default_dialect_option_is_duckdb() {
+fn pln_1_the_default_dialect_option_is_duckdb() {
     assert_eq!(CompileOptions::default().dialect, Dialect::Duckdb);
 }
 
 #[test]
-fn vs_5_a_plan_without_former_names_has_no_warnings() {
+fn pln_1_a_plan_without_former_names_has_no_warnings() {
     assert!(compiled().warnings.is_empty());
 }
 

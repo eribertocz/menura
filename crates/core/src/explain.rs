@@ -48,9 +48,10 @@ pub fn explain(
 ) -> CompileResult {
     let without_audit = CompileOptions {
         audit: false,
-        ..*options
+        actor: None,
+        ..options.clone()
     };
-    match compile(handle, query, security_context, &without_audit) {
+    match compile(handle, query, security_context, &without_audit).result {
         CompileResult::Plan(mut plan) => {
             plan.contract = CompiledPlanContract::Explanation;
             plan.sql = String::new();

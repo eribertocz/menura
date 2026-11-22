@@ -1,7 +1,7 @@
-id: next-audit-001
-rules: [CS-2.13]
+id: pln-audit-denied-001
+rules: [CS-2.13, VS-1e, PLN-6, PLN-6.5, PLN-6.6, E2-4.7]
 model: slice
-security_context: auditor.json
+security_context: outsider.json
 query:
   contract: "menura.query"
   contract_version: "1.1.0"
@@ -13,7 +13,7 @@ query:
       - {"metric": "total_quantity", "alias": "total_quantity"}
       - {"metric": "sale_count", "alias": "sale_count"}
 expect:
-  outcome: "plan"
-  rows: "next-audit-001.csv"
-  row_order: "any"
-  audit: "next-audit-001.audit.json"
+  outcome: "error"
+  error: "E_NAME_NOT_FOUND"
+  location: {document: "query", pointer: "/query/dimensions/0"}
+  audit: "pln-audit-denied-001.audit.json"

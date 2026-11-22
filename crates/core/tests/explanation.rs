@@ -85,7 +85,9 @@ fn explanation(handle: &Handle, query: &str, context: &str) -> Vec<Decision> {
         query.as_bytes(),
         context.as_bytes(),
         &CompileOptions::default(),
-    ) {
+    )
+    .result
+    {
         CompileResult::Plan(plan) => plan.explanation,
         CompileResult::Error(error) => panic!("the query does not compile: {error:?}"),
     }

@@ -77,6 +77,7 @@ pub fn compile_default(handle: &Handle, query: &str, context: &str) -> CompileRe
         context.as_bytes(),
         &CompileOptions::default(),
     )
+    .result
 }
 
 /// The compiled plan of `result`; fails the test otherwise.

@@ -6,6 +6,7 @@ use std::path::{Path, PathBuf};
 
 use menura_core::{CompileOptions, CompileResult, compile};
 
+use crate::audit_check::PRODUCER;
 use crate::canonical_json::JsonValue;
 use crate::case::{Case, CaseId, Outcome};
 use crate::case_file::read_case;
@@ -27,8 +28,10 @@ pub enum Regeneration {
 /// Regenerates the golden files of the cases `case_ids`, and of no other case (CS-2.10a).
 ///
 /// For an `outcome: plan` case, `sql` is written as the plan's SQL text and `lineage` in stored
-/// form. A golden file whose output `core` cannot produce yet (`audit`, `document`), or a case
-/// whose query does not compile, is reported as not written.
+/// form; for an `outcome: plan` or `outcome: error` case, `audit` is written as the audit record
+/// without its `producer`, in stored form (CS-2.13). A golden file whose output `core` cannot
+/// produce yet (`document`), or that the compilation did not produce, is reported as not
+/// written.
 ///
 /// # Errors
 ///
@@ -70,9 +73,9 @@ fn regenerate_case(
     case: &Case,
 ) -> Result<Vec<Regeneration>, RunnerError> {
     let expect = &case.expect;
-    let mut regenerations: Vec<Regeneration> = [&expect.audit, &expect.document]
-        .into_iter()
-        .flatten()
+    let mut regenerations: Vec<Regeneration> = expect
+        .document
+        .iter()
         .map(|file_name| {
             Regeneration::NotWritten(
                 case_folder.join(file_name),
@@ -86,16 +89,28 @@ fn regenerate_case(
         .as_ref()
         .filter(|_| expect.outcome == Outcome::Plan);
     let sql = expect.sql.as_ref().filter(|_| has_plan);
-    let golden_files: Vec<&String> = [sql, lineage].into_iter().flatten().collect();
+    let audit = expect
+        .audit
+        .as_ref()
+        .filter(|_| matches!(expect.outcome, Outcome::Plan | Outcome::Error));
+    let golden_files: Vec<&String> = [sql, lineage, audit].into_iter().flatten().collect();
     if golden_files.is_empty() {
         return Ok(regenerations);
     }
-    match plan_outputs(conformance_directory, case)? {
+    match case_outputs(conformance_directory, case)? {
         Ok(outputs) => {
-            for (file_name, text) in [(sql, outputs.sql), (lineage, outputs.lineage)] {
-                if let Some(file_name) = file_name {
-                    regenerations.push(write_golden(&case_folder.join(file_name), &text)?);
-                }
+            for (file_name, text) in [
+                (sql, outputs.sql),
+                (lineage, outputs.lineage),
+                (audit, outputs.audit),
+            ] {
+                let Some(file_name) = file_name else {
+                    continue;
+                };
+                regenerations.push(match text {
+                    Ok(text) => write_golden(&case_folder.join(file_name), &text)?,
+                    Err(reason) => Regeneration::NotWritten(case_folder.join(file_name), reason),
+                });
             }
         }
         Err(reason) => regenerations.extend(golden_files.into_iter().map(|file_name| {
@@ -105,20 +120,22 @@ fn regenerate_case(
     Ok(regenerations)
 }
 
-/// The produced text of the golden files of a plan.
-struct PlanOutputs {
+/// The produced text of each golden file of a case, or why it was not produced.
+struct CaseOutputs {
     /// The plan's SQL text, unchanged.
-    sql: String,
+    sql: Result<String, String>,
     /// The plan's `lineage` in stored form.
-    lineage: String,
+    lineage: Result<String, String>,
+    /// The audit record without its `producer`, in stored form (CS-2.13).
+    audit: Result<String, String>,
 }
 
-/// Loads the model of `case` and compiles its query; the inner error says why no plan was
-/// produced.
-fn plan_outputs(
+/// Loads the model of `case` and compiles its query, with `audit: true` when the case expects
+/// an audit record; the inner error says why nothing was compiled.
+fn case_outputs(
     conformance_directory: &Path,
     case: &Case,
-) -> Result<Result<PlanOutputs, String>, RunnerError> {
+) -> Result<Result<CaseOutputs, String>, RunnerError> {
     let model_folder = conformance_directory.join("models").join(&case.model);
     let documents = ModelDocuments::read(&model_folder)?;
     let options = resolve_load_options(case.load_options.as_ref());
@@ -138,12 +155,25 @@ fn plan_outputs(
         audit: case.expect.audit.is_some(),
         ..CompileOptions::default()
     };
-    let CompileResult::Plan(plan) = compile(&handle, &query, &security_context, &options) else {
-        return Ok(Err("the query does not compile".to_owned()));
+    let compilation = compile(&handle, &query, &security_context, &options);
+    let audit = match &compilation.audit {
+        Some(record) => {
+            JsonValue::of(record.as_ref()).map(|record| record.without(&[PRODUCER]).stored_form())
+        }
+        None => Err("the compilation returned no audit record".to_owned()),
     };
-    Ok(JsonValue::of(&plan.lineage).map(|lineage| PlanOutputs {
-        sql: plan.sql.clone(),
-        lineage: lineage.stored_form(),
+    let CompileResult::Plan(plan) = compilation.result else {
+        let reason = || Err("the query does not compile".to_owned());
+        return Ok(Ok(CaseOutputs {
+            sql: reason(),
+            lineage: reason(),
+            audit,
+        }));
+    };
+    Ok(Ok(CaseOutputs {
+        sql: Ok(plan.sql.clone()),
+        lineage: JsonValue::of(&plan.lineage).map(|lineage| lineage.stored_form()),
+        audit,
     }))
 }
 
@@ -230,11 +260,13 @@ mod tests {
     fn cs_2_10a_the_produced_outputs_are_in_stored_form() {
         let case =
             read_case(&conformance_directory().join("cases/cs/cs-lineage-001.yaml")).unwrap();
-        let outputs = plan_outputs(&conformance_directory(), &case)
+        let outputs = case_outputs(&conformance_directory(), &case)
             .unwrap()
             .unwrap();
-        let lineage = JsonValue::parse(&outputs.lineage).unwrap();
-        assert_eq!(lineage.stored_form(), outputs.lineage);
-        assert!(outputs.sql.starts_with("SELECT") || outputs.sql.starts_with("WITH"));
+        let stored = outputs.lineage.unwrap();
+        let lineage = JsonValue::parse(&stored).unwrap();
+        assert_eq!(lineage.stored_form(), stored);
+        let sql = outputs.sql.unwrap();
+        assert!(sql.starts_with("SELECT") || sql.starts_with("WITH"));
     }
 }

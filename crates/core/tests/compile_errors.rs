@@ -1,5 +1,5 @@
 //! `compile` errors: the order across stages of E2-5 (rows 0a to 18), the compile error
-//! document of PLN-5 and PLN-5.1, SEC-3.1, SEC-3.9, and `audit: true` (VS-2, VS-5).
+//! document of PLN-5 and PLN-5.1, SEC-3.1 and SEC-3.9.
 
 mod support;
 
@@ -38,7 +38,8 @@ fn e2_5_row_0a_a_security_context_that_is_not_utf_8_is_esec_01_at_the_empty_poin
         amount_by_region().as_bytes(),
         b"{\"subject\": \"\xff\"}",
         &CompileOptions::default(),
-    );
+    )
+    .result;
     let document = error(result);
     assert_eq!(document.errors[0].code, "ESEC-01");
     let location = document.errors[0].location.as_ref().unwrap();
@@ -82,7 +83,8 @@ fn e2_5_row_0b_a_query_that_is_not_utf_8_is_e_invalid_query_at_the_empty_pointer
         b"{\"time_zone\": \"\xff\"}",
         analyst().as_bytes(),
         &CompileOptions::default(),
-    );
+    )
+    .result;
     let document = error(result);
     assert_eq!(document.errors[0].code, "E_INVALID_QUERY");
     let location = document.errors[0].location.as_ref().unwrap();
@@ -248,38 +250,6 @@ fn pln_5_1_an_error_of_the_security_context_keeps_only_the_load_warnings() {
         warning_locations(&document.warnings),
         former_name_warnings()[..2].to_vec()
     );
-}
-
-#[test]
-fn vs_5_audit_is_not_yet_supported() {
-    let options = CompileOptions {
-        audit: true,
-        ..CompileOptions::default()
-    };
-    let result = compile(
-        &handle(),
-        amount_by_region().as_bytes(),
-        analyst().as_bytes(),
-        &options,
-    );
-    let document = error(result);
-    assert_eq!(document.errors[0].code, "E_NOT_YET_SUPPORTED");
-    assert!(document.errors[0].message.contains("audit record"));
-    assert!(document.errors[0].message.contains("0.7.0"));
-}
-
-#[test]
-fn vs_5_audit_is_checked_before_the_inputs() {
-    let options = CompileOptions {
-        audit: true,
-        ..CompileOptions::default()
-    };
-    let document = error(compile(&handle(), b"{", b"{", &options));
-    assert_eq!(document.errors.len(), 1);
-    assert_eq!(document.errors[0].code, "E_NOT_YET_SUPPORTED");
-    assert!(document.errors[0].message.contains("audit record"));
-    assert!(document.errors[0].message.contains("0.7.0"));
-    assert_eq!(document.errors[0].location, None);
 }
 
 /// The warnings of the compile error of the former-name `query` text, and its first code.

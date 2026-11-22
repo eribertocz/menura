@@ -7,10 +7,11 @@ use std::path::Path;
 
 use duckdb::Connection;
 use menura_core::{
-    CompileErrorDocument, CompileOptions, CompileResult, CompiledPlanDocument, Diagnostic, Handle,
-    compile, explain,
+    AuditRecordDocument, Compilation, CompileErrorDocument, CompileOptions, CompileResult,
+    CompiledPlanDocument, Diagnostic, Handle, build_producer, compile, explain,
 };
 
+use crate::audit_check::audit_mismatch;
 use crate::case::{Case, Expectation, Outcome};
 use crate::csv_rows::parse_csv;
 use crate::diagnostic_check::{Part, describe, location_mismatch, missing_warnings};
@@ -19,7 +20,6 @@ use crate::divergences::Divergences;
 use crate::execution::{ExecutionFailure, execute_plan};
 use crate::explain_part::{explained_mismatch, runs_explain};
 use crate::fixture::read_text;
-use crate::pending_parts::with_pending_parts;
 use crate::plan_outputs::plan_outputs_mismatch;
 use crate::report::CaseStatus;
 use crate::row_comparison::{Comparison, rows_mismatch};
@@ -39,10 +39,9 @@ pub(crate) struct QueryInputs<'inputs> {
     pub(crate) divergences: &'inputs Divergences,
 }
 
-/// Compiles the query of `case` over `handle` and compares the result with its expectation. A
-/// part that needs a `core` function this build lacks leaves the case pending (CS-2.8).
+/// Compiles the query of `case` over `handle` and compares the result with its expectation.
 pub(crate) fn check_query(case: &Case, handle: &Handle, inputs: &QueryInputs<'_>) -> CaseStatus {
-    with_pending_parts(case, compare_query(case, handle, inputs))
+    compare_query(case, handle, inputs)
 }
 
 /// Compiles the query of `case`, with `audit: true` when the case expects an audit record
@@ -58,7 +57,7 @@ fn compare_query(case: &Case, handle: &Handle, inputs: &QueryInputs<'_>) -> Case
     };
     let options = compile_options(case);
     let compile_query = || compile(handle, &query, inputs.security_context, &options);
-    let result = compile_query();
+    let Compilation { result, audit } = compile_query();
     if let Some(reason) = missing_warnings(&case.expect.warnings, warnings_of(&result), Part::Query)
     {
         return CaseStatus::Failed(reason);
@@ -73,7 +72,9 @@ fn compare_query(case: &Case, handle: &Handle, inputs: &QueryInputs<'_>) -> Case
                 describe(error.errors.first())
             ))
         }
-        (Outcome::Error, CompileResult::Error(error)) => check_error(&case.expect, &error),
+        (Outcome::Error, CompileResult::Error(error)) => {
+            check_error_and_audit(case, &error, audit.as_deref(), inputs.case_folder)
+        }
         (Outcome::Error, CompileResult::Plan(_)) => CaseStatus::Failed(format!(
             "the query compiles, but the case expects the error {}",
             case.expect.error.as_deref().unwrap_or("none")
@@ -85,16 +86,70 @@ fn compare_query(case: &Case, handle: &Handle, inputs: &QueryInputs<'_>) -> Case
             "the query does not compile: {}",
             describe(error.errors.first())
         )),
-        (_, CompileResult::Plan(plan)) => {
-            let explain_query = || explain(handle, &query, inputs.security_context, &options);
-            match check_plan(case, &plan, inputs, compile_query) {
-                CaseStatus::Passed if runs_explain(case) => {
-                    explained_mismatch(&plan, &explain_query())
-                        .map_or(CaseStatus::Passed, CaseStatus::Failed)
-                }
-                status => status,
-            }
-        }
+        (_, CompileResult::Plan(plan)) => check_plan_and_explain(
+            case,
+            &plan,
+            audit.as_deref(),
+            inputs,
+            || compile_query().result,
+            || explain(handle, &query, inputs.security_context, &options),
+        ),
+    }
+}
+
+/// Checks the audit record of a compiled plan (CS-2.13), then the plan with [`check_plan`]; a
+/// passed `outcome: plan` case also runs `explain` from 0.7.0, whose document must match the
+/// plan (CS-2.16).
+fn check_plan_and_explain(
+    case: &Case,
+    plan: &CompiledPlanDocument,
+    audit: Option<&AuditRecordDocument>,
+    inputs: &QueryInputs<'_>,
+    compile_again: impl FnOnce() -> CompileResult,
+    explain_query: impl FnOnce() -> CompileResult,
+) -> CaseStatus {
+    let audited = check_audit(case, audit, inputs.case_folder);
+    if audited != CaseStatus::Passed {
+        return audited;
+    }
+    match check_plan(case, plan, inputs, compile_again) {
+        CaseStatus::Passed if runs_explain(case) => explained_mismatch(plan, &explain_query())
+            .map_or(CaseStatus::Passed, CaseStatus::Failed),
+        status => status,
+    }
+}
+
+/// Compares the compile error of an `error` case with its expectation (CS-2.9), then its audit
+/// record (CS-2.13).
+fn check_error_and_audit(
+    case: &Case,
+    error: &CompileErrorDocument,
+    audit: Option<&AuditRecordDocument>,
+    case_folder: &Path,
+) -> CaseStatus {
+    match check_error(&case.expect, error) {
+        CaseStatus::Passed => check_audit(case, audit, case_folder),
+        failed => failed,
+    }
+}
+
+/// Compares the audit record with the case's `audit` golden file, when it gives one
+/// (CS-2.13): the record's `producer` must be the build's, and the rest must equal the file.
+fn check_audit(case: &Case, audit: Option<&AuditRecordDocument>, case_folder: &Path) -> CaseStatus {
+    let Some(file_name) = case.expect.audit.as_deref() else {
+        return CaseStatus::Passed;
+    };
+    let Some(record) = audit else {
+        return CaseStatus::Failed(
+            "`compile` with `audit: true` returned no audit record".to_owned(),
+        );
+    };
+    let Some(producer) = build_producer() else {
+        return CaseStatus::Failed("the producer of the build cannot be written".to_owned());
+    };
+    match audit_mismatch(record, &producer, case_folder, file_name) {
+        Some(reason) => CaseStatus::Failed(reason),
+        None => CaseStatus::Passed,
     }
 }
 
@@ -282,7 +337,7 @@ mod tests {
     }
 
     /// Runs the query part of a case of the `e0-context` model, whose `billed_share` is a
-    /// context metric, a capability outside the 0.6.0 slice (VS-1d).
+    /// context metric, a capability outside the 0.7.0 slice (VS-1e).
     fn context_status(case_text: &str) -> CaseStatus {
         status_in_model("e0-context", case_text, &Divergences::default())
     }
@@ -331,7 +386,7 @@ mod tests {
         )
     }
 
-    /// `billed_share` is a context metric, which is outside the 0.6.0 slice (VS-1d).
+    /// `billed_share` is a context metric, which is outside the 0.7.0 slice (VS-1e).
     const OUTSIDE_THE_SLICE: &str = "{metrics: [billed, billed_share]}";
 
     const BY_REGION: &str = "{dimensions: [sales.region], metrics: [total_amount, total_quantity, \
@@ -480,7 +535,7 @@ mod tests {
         let context = read_bytes(&security_context_path(&model_folder, "auditor.json")).unwrap();
         let query = serde_json::to_vec(case.query.as_ref().unwrap()).unwrap();
         let options = CompileOptions::default();
-        let CompileResult::Plan(plan) = compile(&handle, &query, &context, &options) else {
+        let CompileResult::Plan(plan) = compile(&handle, &query, &context, &options).result else {
             panic!("the query compiles");
         };
         let explained = explain(&handle, &query, &context, &options);

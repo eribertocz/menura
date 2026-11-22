@@ -69,6 +69,32 @@ pub(crate) fn lineage(
         .collect()
 }
 
+/// Every row policy applied to the rows of `plan`, the final optimized plan, propagated
+/// policies included, written and ordered as in PLN-4.7 (PLN-6.6): those of every branch.
+///
+/// # Errors
+///
+/// An [`InternalError`] when the plan names an element its inputs do not have.
+pub(crate) fn row_policies(
+    plan: &PlanNode,
+    inputs: LineageInputs<'_>,
+) -> Result<Vec<String>, InternalError> {
+    let sources = Sources {
+        model: inputs.model,
+        catalog: inputs.catalog,
+    };
+    let root = sources.node(plan, None)?;
+    let mut reads = root.shared;
+    for branch in root.branches {
+        reads.absorb(branch);
+    }
+    Ok(applied_policies(
+        &reads.datasets,
+        inputs.model,
+        inputs.context,
+    ))
+}
+
 /// The lineage entry of the output column `name`, the query column `output`, over the
 /// lineage `root` of the final plan node.
 fn entry(

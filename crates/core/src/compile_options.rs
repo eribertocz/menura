@@ -22,8 +22,9 @@ const DEFAULT_TIMEOUT_MS: NonZeroU64 = match NonZeroU64::new(30_000) {
 /// assert_eq!(options.timeout_ms.get(), 30000);
 /// assert_eq!(options.max_rows, None);
 /// assert!(!options.audit);
+/// assert_eq!(options.actor, None);
 /// ```
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct CompileOptions {
     /// The target dialect; `duckdb` by default.
     pub dialect: Dialect,
@@ -31,9 +32,12 @@ pub struct CompileOptions {
     pub timeout_ms: NonZeroU64,
     /// Written to `limits.max_rows`; `None` (no limit beyond the query's own) by default.
     pub max_rows: Option<NonZeroU64>,
-    /// Also return the audit record; `false` by default. Before 0.7.0, `true` is
-    /// `E_NOT_YET_SUPPORTED` (VS-5).
+    /// Also return the audit record (PLN-6), with the compiled plan or with the compile error;
+    /// `false` by default.
     pub audit: bool,
+    /// The delegated actor, authenticated by the host: invocation metadata written unchanged
+    /// only in the audit record, outside every hash (PLN-6.8); absent by default.
+    pub actor: Option<String>,
 }
 
 impl Default for CompileOptions {
@@ -43,6 +47,7 @@ impl Default for CompileOptions {
             timeout_ms: DEFAULT_TIMEOUT_MS,
             max_rows: None,
             audit: false,
+            actor: None,
         }
     }
 }

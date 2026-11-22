@@ -1,26 +1,32 @@
 //! The public function `compile` (architecture section 3.5): the stages in the order of E2-5,
-//! and the compiled plan or compile error it returns (PLN-1, PLN-5).
+//! and the compiled plan or compile error it returns (PLN-1, PLN-5), with the audit record when
+//! it is asked for (PLN-6).
 
 use menura_contracts::ContractKind;
+use menura_contracts::types::audit_record::AuditRecordDocument;
 use menura_contracts::types::compiled_plan::{
     CompileErrorContract, CompileErrorDocument, CompiledPlanDocument, Diagnostic,
 };
 use menura_e1_parse::{ParseWarning, parse_query};
-use menura_e2_bind::bind;
+use menura_e2_bind::{authorization_decisions, bind};
 use menura_e3_paths::resolve_paths;
 use menura_e4_plan::build_plan;
 use menura_e5_optimize::optimize;
 use menura_generator_duckdb::generate_sql;
+use menura_model::explanation::ExplanationEntry;
+use menura_model::internal_model::InternalModel;
+use menura_representations::bound_query::{AuthorizationDecision, BoundQuery};
+use menura_representations::query_tree::QueryTree;
 use menura_security::{AdmittedSecurityContext, admit_security_context};
 
+use crate::audit::{AuditFacts, audit_record, error_outcome, plan_outcome};
 use crate::compile_options::CompileOptions;
 use crate::explanation::assemble;
 use crate::handle::Handle;
+use crate::lineage::{LineageInputs, row_policies};
+use crate::passed_document::PassedDocument;
 use crate::plan_document::{PlanOutputs, plan_document};
-use crate::stop::{
-    Stop, audit_not_yet_supported, bind_stop, context_not_utf8, path_stop, plan_stop,
-    query_not_utf8,
-};
+use crate::stop::{Stop, bind_stop, context_not_utf8, path_stop, plan_stop, query_not_utf8};
 
 /// What `compile` returns: a compiled plan or a compile error (PLN-1, PLN-5).
 #[derive(Debug, Clone, PartialEq)]
@@ -29,6 +35,17 @@ pub enum CompileResult {
     Plan(Box<CompiledPlanDocument>),
     /// The compile error (PLN-5).
     Error(CompileErrorDocument),
+}
+
+/// What one call of `compile` returns: the compiled plan or the compile error, and, with
+/// `audit: true`, the audit record of the same compilation (architecture section 3.5, VS-1e).
+#[derive(Debug, Clone, PartialEq)]
+pub struct Compilation {
+    /// The compiled plan or the compile error; the same with `audit: true` as with
+    /// `audit: false` (VS-1e).
+    pub result: CompileResult,
+    /// The audit record (PLN-6) with `audit: true`, `None` with `audit: false`.
+    pub audit: Option<Box<AuditRecordDocument>>,
 }
 
 /// A defect of the compiler: the stage that found it and what it found. `compile` reports it
@@ -51,6 +68,16 @@ impl InternalError {
     }
 }
 
+/// What the stages recorded for the audit record before they stopped (PLN-6.5, PLN-6.6).
+struct Trace {
+    /// Every authorization decision of E2, in order (E2-4.7).
+    authorization: Vec<AuthorizationDecision>,
+    /// The explanation entries of every stage that completed, E0's first.
+    entries: Vec<ExplanationEntry>,
+    /// Every row policy applied to the final plan.
+    row_policies: Vec<String>,
+}
+
 /// Compiles the query document `query` for the user of the security context document
 /// `security_context`, over the model of `handle`, with `options` (architecture section 3.5).
 ///
@@ -61,13 +88,17 @@ impl InternalError {
 /// The warnings, of the plan or of the error, are the handle's load warnings, then the
 /// security context's `WQRY-01` (SEC-3.9), then the query's (CON-0.5).
 ///
+/// With `audit: true`, the result also carries the audit record of the compilation (PLN-6),
+/// with the plan hash or the error codes as its outcome; the plan or the error is the same as
+/// with `audit: false` (VS-1e). The `actor` option is written only in the audit record
+/// (PLN-6.8).
+///
 /// # Errors
 ///
 /// [`CompileResult::Error`], the compile error document (PLN-5) with the first error and the
-/// warnings gathered before it: `E_NOT_YET_SUPPORTED` for `audit: true` (VS-5); `ESEC-01` or
-/// `ESEC-03` for the security context (SEC-3.8, SEC-3.1); then the errors of E1, E2, E3 and E4, in
-/// the order of E2-5; `E_INTERNAL`, without location, for a defect of the compiler
-/// (PLN-5.1a).
+/// warnings gathered before it: `ESEC-01` or `ESEC-03` for the security context (SEC-3.8,
+/// SEC-3.1); then the errors of E1, E2, E3 and E4, in the order of E2-5; `E_INTERNAL`, without
+/// location, for a defect of the compiler (PLN-5.1a).
 ///
 /// # Example
 ///
@@ -81,11 +112,13 @@ impl InternalError {
 ///     "time_zone": "UTC", "query": {"dimensions": ["orders.region"]}}"#;
 /// let context = br#"{"contract": "menura.security_context", "contract_version": "1.1.0",
 ///     "subject": "user-1", "roles": ["admin"], "attributes": {}}"#;
-/// let CompileResult::Plan(plan) = compile(&handle, query, context, &CompileOptions::default())
-/// else {
+/// let options = CompileOptions { audit: true, ..CompileOptions::default() };
+/// let compilation = compile(&handle, query, context, &options);
+/// let CompileResult::Plan(plan) = compilation.result else {
 ///     panic!("the query compiles");
 /// };
 /// assert!(plan.sql.starts_with("WITH"));
+/// assert_eq!(compilation.audit.unwrap().subject.as_deref(), Some("user-1"));
 /// ```
 #[must_use]
 pub fn compile(
@@ -93,32 +126,115 @@ pub fn compile(
     query: &[u8],
     security_context: &[u8],
     options: &CompileOptions,
-) -> CompileResult {
+) -> Compilation {
     let mut warnings: Vec<Diagnostic> = handle.warnings().cloned().collect();
-    match compile_stages(handle, query, security_context, options, &mut warnings) {
+    let mut trace = Trace {
+        authorization: Vec::new(),
+        entries: handle.explanation().to_vec(),
+        row_policies: Vec::new(),
+    };
+    let context = admit_context(handle, security_context);
+    let outcome = match &context {
+        Ok(context) => {
+            warnings.extend(context.former_name_warning());
+            compile_stages(handle, query, context, options, &mut warnings, &mut trace)
+        }
+        Err(stop) => Err(stop.clone()),
+    };
+    let result = match outcome {
         Ok(plan) => CompileResult::Plan(Box::new(plan)),
-        Err(stop) => CompileResult::Error(CompileErrorDocument {
-            contract: CompileErrorContract::CompileError,
-            contract_version: ContractKind::CompileError.latest_version(),
-            errors: vec![stop.into_diagnostic()],
-            warnings,
-        }),
+        Err(stop) => CompileResult::Error(error_document(stop, warnings)),
+    };
+    if !options.audit {
+        return Compilation {
+            result,
+            audit: None,
+        };
+    }
+    let documents = PassedInputs {
+        query: PassedDocument::of(query),
+        security_context: PassedDocument::of(security_context),
+    };
+    with_audit(
+        handle,
+        options,
+        result,
+        context.as_ref().ok(),
+        &documents,
+        trace,
+    )
+}
+
+/// The query and the security context documents as passed (PLN-6.3).
+struct PassedInputs {
+    query: PassedDocument,
+    security_context: PassedDocument,
+}
+
+/// The compilation of `result` with its audit record (PLN-6). When the record cannot be
+/// written, the result is `E_INTERNAL` (PLN-5.1a), without record.
+fn with_audit(
+    handle: &Handle,
+    options: &CompileOptions,
+    result: CompileResult,
+    context: Option<&AdmittedSecurityContext>,
+    documents: &PassedInputs,
+    trace: Trace,
+) -> Compilation {
+    let outcome = match &result {
+        CompileResult::Plan(plan) => plan_outcome(plan.cache_key.plan_hash.clone()),
+        CompileResult::Error(error) => error_outcome(
+            error
+                .errors
+                .iter()
+                .map(|diagnostic| diagnostic.code.clone())
+                .collect(),
+        ),
+    };
+    let facts = AuditFacts {
+        query: &documents.query,
+        security_context: &documents.security_context,
+        context,
+        outcome,
+        authorization: &trace.authorization,
+        row_policies: trace.row_policies,
+        decisions: assemble(&trace.entries),
+    };
+    match audit_record(handle, options, facts) {
+        Ok(record) => Compilation {
+            result,
+            audit: Some(Box::new(record)),
+        },
+        Err(error) => Compilation {
+            result: CompileResult::Error(error_document(
+                error.into(),
+                handle.warnings().cloned().collect(),
+            )),
+            audit: None,
+        },
     }
 }
 
-/// Runs the stages, adding the warnings of each to `warnings`, and builds the plan.
+/// The compile error document of `stop`, with `warnings`.
+fn error_document(stop: Stop, warnings: Vec<Diagnostic>) -> CompileErrorDocument {
+    CompileErrorDocument {
+        contract: CompileErrorContract::CompileError,
+        contract_version: ContractKind::CompileError.latest_version(),
+        errors: vec![stop.into_diagnostic()],
+        warnings,
+    }
+}
+
+/// Runs the stages after the security context is admitted, adding the warnings of each to
+/// `warnings` and what the audit record needs to `trace`, and builds the plan.
 fn compile_stages(
     handle: &Handle,
     query: &[u8],
-    security_context: &[u8],
+    context: &AdmittedSecurityContext,
     options: &CompileOptions,
     warnings: &mut Vec<Diagnostic>,
+    trace: &mut Trace,
 ) -> Result<CompiledPlanDocument, Stop> {
-    if options.audit {
-        return Err(audit_not_yet_supported().into());
-    }
-    let context = admit_context(handle, security_context)?;
-    warnings.extend(context.former_name_warning());
     let parsed = match parse_query(utf8(query).ok_or_else(query_not_utf8)?) {
         Ok(parsed) => parsed,
         Err(error) => {
@@ -128,15 +244,13 @@ fn compile_stages(
     };
     warnings.extend(parsed.warnings.iter().map(ParseWarning::diagnostic));
     let model = handle.model();
-    let bound = bind(&parsed.tree, model, &context).map_err(bind_stop)?;
-    let mut entries = handle.explanation().to_vec();
-    entries.extend(menura_e2_bind::explanation(&parsed.tree, &bound, &context));
+    let bound = bind_tree(&parsed.tree, model, context, options, trace)?;
     let branches = resolve_paths(&bound, model).map_err(|error| path_stop(&error))?;
-    entries.extend(menura_e3_paths::explanation(&bound));
-    let plan = build_plan(&branches, &bound, &context, model, handle.catalog_schema())
+    trace.entries.extend(menura_e3_paths::explanation(&bound));
+    let plan = build_plan(&branches, &bound, context, model, handle.catalog_schema())
         .map_err(|error| plan_stop(&error))?;
-    entries.extend(
-        menura_e4_plan::explanation(&plan, &branches, &bound, &context, model)
+    trace.entries.extend(
+        menura_e4_plan::explanation(&plan, &branches, &bound, context, model)
             .map_err(|error| plan_stop(&error))?,
     );
     let optimized = optimize(
@@ -145,24 +259,57 @@ fn compile_stages(
         model,
         handle.catalog_schema(),
         handle.catalog_state(),
-        &context,
+        context,
     );
-    entries.extend_from_slice(optimized.explanation());
+    trace.entries.extend_from_slice(optimized.explanation());
     let plan = optimized.into_plan();
-    let generated = generate_sql(&plan, handle.catalog_schema(), model, &bound, &context)
+    let generated = generate_sql(&plan, handle.catalog_schema(), model, &bound, context)
         .map_err(|error| InternalError::new("E6", format!("{error:?}")))?;
+    let lineage_inputs = LineageInputs {
+        model,
+        catalog: handle.catalog_schema(),
+        context,
+    };
+    if options.audit {
+        trace.row_policies = row_policies(&plan, lineage_inputs)?;
+    }
     Ok(plan_document(
         handle,
         &plan,
         &bound,
         generated,
-        &context,
+        context,
         options,
         PlanOutputs {
-            explanation: assemble(&entries),
+            explanation: assemble(&trace.entries),
             warnings: std::mem::take(warnings),
         },
     )?)
+}
+
+/// Binds `tree` (E2), recording its authorization decisions, also when it fails, and its
+/// explanation entries in `trace`.
+fn bind_tree(
+    tree: &QueryTree,
+    model: &InternalModel,
+    context: &AdmittedSecurityContext,
+    options: &CompileOptions,
+    trace: &mut Trace,
+) -> Result<BoundQuery, Stop> {
+    let bound = match bind(tree, model, context) {
+        Ok(bound) => bound,
+        Err(error) => {
+            if options.audit {
+                trace.authorization = authorization_decisions(tree, model, context);
+            }
+            return Err(bind_stop(error));
+        }
+    };
+    trace.authorization = bound.authorization().to_vec();
+    trace
+        .entries
+        .extend(menura_e2_bind::explanation(tree, &bound, context));
+    Ok(bound)
 }
 
 /// Admits the security context `bytes` against the model's declarations (E2-5 row 0a).
