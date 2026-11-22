@@ -11,14 +11,16 @@ use menura_core::{
     CompiledPlanDocument, Diagnostic, Handle, build_producer, compile, explain,
 };
 
+use crate::alternatives_check::alternatives_mismatch;
 use crate::audit_check::audit_mismatch;
 use crate::case::{Case, Expectation, Outcome};
+use crate::compile_options::{compile_options, explain_options};
 use crate::csv_rows::parse_csv;
 use crate::diagnostic_check::{Part, describe, location_mismatch, missing_warnings};
 use crate::differential::check_differential;
 use crate::divergences::Divergences;
 use crate::execution::{ExecutionFailure, execute_plan};
-use crate::explain_part::{explained_mismatch, runs_explain};
+use crate::explain_part::{explained_error_mismatch, explained_mismatch, runs_explain};
 use crate::fixture::read_text;
 use crate::plan_outputs::plan_outputs_mismatch;
 use crate::report::CaseStatus;
@@ -44,37 +46,34 @@ pub(crate) fn check_query(case: &Case, handle: &Handle, inputs: &QueryInputs<'_>
     compare_query(case, handle, inputs)
 }
 
-/// Compiles the query of `case`, with `audit: true` when the case expects an audit record
-/// (CS-2.13), and compares the result with its expectation. A passed `outcome: plan` case also
-/// runs `explain` from 0.7.0, whose document must match the plan (CS-2.16).
+/// Compiles the query of `case` with its compile options (CS-2.13, CS-2.18), and compares the
+/// result with its expectation. A passed `outcome: plan` case also runs `explain` from 0.7.0,
+/// whose document must match the plan, and a passed `outcome: error` case from 0.8.0, which must
+/// return the identical compile error (CS-2.16).
 fn compare_query(case: &Case, handle: &Handle, inputs: &QueryInputs<'_>) -> CaseStatus {
-    let Some(query) = &case.query else {
-        return CaseStatus::Failed("this outcome requires `query`".to_owned());
+    let (query, options) = match query_and_options(case) {
+        Ok(prepared) => prepared,
+        Err(reason) => return CaseStatus::Failed(reason),
     };
-    let query = match serde_json::to_vec(query) {
-        Ok(query) => query,
-        Err(error) => return CaseStatus::Failed(format!("the query is not JSON: {error}")),
-    };
-    let options = compile_options(case);
     let compile_query = || compile(handle, &query, inputs.security_context, &options);
+    let explain_with = explain_options(&options);
+    let explain_query = || explain(handle, &query, inputs.security_context, &explain_with);
     let Compilation { result, audit } = compile_query();
     if let Some(reason) = missing_warnings(&case.expect.warnings, warnings_of(&result), Part::Query)
     {
         return CaseStatus::Failed(reason);
     }
+    if let Some(pending) = pending_status(&case.expect, &result) {
+        return pending;
+    }
     match (case.expect.outcome, result) {
-        (_, CompileResult::Error(error))
-            if first_code(&error) == Some(NOT_YET_SUPPORTED)
-                && !expects_not_yet_supported(&case.expect) =>
-        {
-            CaseStatus::Pending(format!(
-                "the query part needs a capability outside this version's slice (VS-4): {}",
-                describe(error.errors.first())
-            ))
-        }
-        (Outcome::Error, CompileResult::Error(error)) => {
-            check_error_and_audit(case, &error, audit.as_deref(), inputs.case_folder)
-        }
+        (Outcome::Error, CompileResult::Error(error)) => check_error_and_explain(
+            case,
+            &error,
+            audit.as_deref(),
+            inputs.case_folder,
+            explain_query,
+        ),
         (Outcome::Error, CompileResult::Plan(_)) => CaseStatus::Failed(format!(
             "the query compiles, but the case expects the error {}",
             case.expect.error.as_deref().unwrap_or("none")
@@ -92,8 +91,55 @@ fn compare_query(case: &Case, handle: &Handle, inputs: &QueryInputs<'_>) -> Case
             audit.as_deref(),
             inputs,
             || compile_query().result,
-            || explain(handle, &query, inputs.security_context, &options),
+            explain_query,
         ),
+    }
+}
+
+/// The pending status of a compilation that returns `E_NOT_YET_SUPPORTED` when the case does
+/// not expect that error (VS-4), or `None`.
+fn pending_status(expect: &Expectation, result: &CompileResult) -> Option<CaseStatus> {
+    let CompileResult::Error(error) = result else {
+        return None;
+    };
+    (first_code(error) == Some(NOT_YET_SUPPORTED) && !expects_not_yet_supported(expect)).then(
+        || {
+            CaseStatus::Pending(format!(
+                "the query part needs a capability outside this version's slice (VS-4): {}",
+                describe(error.errors.first())
+            ))
+        },
+    )
+}
+
+/// The query document of `case` as JSON bytes, and the options it is compiled with (CS-2.13,
+/// CS-2.18), or why the case cannot be compiled.
+fn query_and_options(case: &Case) -> Result<(Vec<u8>, CompileOptions), String> {
+    let query = case
+        .query
+        .as_ref()
+        .ok_or_else(|| "this outcome requires `query`".to_owned())?;
+    let query =
+        serde_json::to_vec(query).map_err(|error| format!("the query is not JSON: {error}"))?;
+    Ok((query, compile_options(case)))
+}
+
+/// Checks the compile error of an `error` case with [`check_error_and_audit`]; a passed case
+/// also runs `explain` from 0.8.0, which must return the identical compile error (CS-2.16,
+/// PLN-8.2).
+fn check_error_and_explain(
+    case: &Case,
+    error: &CompileErrorDocument,
+    audit: Option<&AuditRecordDocument>,
+    case_folder: &Path,
+    explain_query: impl FnOnce() -> CompileResult,
+) -> CaseStatus {
+    match check_error_and_audit(case, error, audit, case_folder) {
+        CaseStatus::Passed if runs_explain(case) => {
+            explained_error_mismatch(error, &explain_query())
+                .map_or(CaseStatus::Passed, CaseStatus::Failed)
+        }
+        status => status,
     }
 }
 
@@ -119,8 +165,8 @@ fn check_plan_and_explain(
     }
 }
 
-/// Compares the compile error of an `error` case with its expectation (CS-2.9), then its audit
-/// record (CS-2.13).
+/// Compares the compile error of an `error` case with its expectation (CS-2.9, CS-2.17), then
+/// its audit record (CS-2.13).
 fn check_error_and_audit(
     case: &Case,
     error: &CompileErrorDocument,
@@ -174,15 +220,6 @@ fn check_plan(
     }
 }
 
-/// The compile options of a case: `audit: true` only when it expects an audit record
-/// (CS-2.13).
-fn compile_options(case: &Case) -> CompileOptions {
-    CompileOptions {
-        audit: case.expect.audit.is_some(),
-        ..CompileOptions::default()
-    }
-}
-
 /// Whether the case itself expects `E_NOT_YET_SUPPORTED`, so that the error is compared, not
 /// left pending (VS-4).
 fn expects_not_yet_supported(expect: &Expectation) -> bool {
@@ -203,8 +240,9 @@ fn first_code(error: &CompileErrorDocument) -> Option<&str> {
         .map(|diagnostic| diagnostic.code.as_str())
 }
 
-/// Compares a compile error with the expectation of an `error` case: the first code, and its
-/// location when the case gives one (CS-2.9).
+/// Compares a compile error with the expectation of an `error` case: the first code, its
+/// location when the case gives one (CS-2.9), and its alternatives when the case gives them
+/// (CS-2.17).
 fn check_error(expect: &Expectation, error: &CompileErrorDocument) -> CaseStatus {
     let first = error.errors.first();
     if first_code(error) != expect.error.as_deref() {
@@ -215,11 +253,17 @@ fn check_error(expect: &Expectation, error: &CompileErrorDocument) -> CaseStatus
         ));
     }
     let reported = first.and_then(|diagnostic| diagnostic.location.as_ref());
-    match expect
+    let mismatch = expect
         .location
         .as_ref()
         .and_then(|expected| location_mismatch(expected, reported, Part::Query))
-    {
+        .or_else(|| {
+            expect
+                .alternatives
+                .as_deref()
+                .and_then(|expected| alternatives_mismatch(expected, first))
+        });
+    match mismatch {
         Some(reason) => CaseStatus::Failed(reason),
         None => CaseStatus::Passed,
     }
