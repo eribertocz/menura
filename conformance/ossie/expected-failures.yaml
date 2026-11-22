@@ -10,11 +10,12 @@
 # ossie-update skill changes this file (CS-3.2).
 
 wide_table/a15_unconnected_filter_false:
-  reason: not implemented
+  reason: generated SQL has an empty SELECT list (DuckDB rejects it)
   fixed_in: "0.7.0"
+  issue: "#449"
 wide_table/e08_window_in_filter:
-  reason: window functions are outside the expression language until 1.2.0 (spec/07-roadmap.md), so the filter is rejected as E0F-02
-  fixed_in: "1.2.0"
+  reason: window functions in model expressions (E0F-2.4) are not supported (spec/07-roadmap.md F6)
+  fixed_in: "1.x"
 query/a04_having_on_unselected_measure:
   reason: not implemented
   fixed_in: "1.x"
