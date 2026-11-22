@@ -77,6 +77,9 @@ impl<'input> StepWriter<'input> {
     }
 
     /// The step of every row with its `valid_from` day, its `valid_to` day and its row number.
+    /// The step is read three times and may be computed each time, so the rows are numbered
+    /// in the order of every scanned column: only equal rows, which are interchangeable, can
+    /// swap numbers between two readings.
     fn days_step(
         &mut self,
         rows: &'input PlanNode,
@@ -93,7 +96,15 @@ impl<'input> StepWriter<'input> {
             let day = self.day_sql(rows, rows, &column(None, field.as_str()), logical_type)?;
             items.push(aliased(&day, name));
         }
-        items.push(aliased("row_number() OVER ()", &columns.row));
+        let order = column_names(rows)
+            .iter()
+            .map(|name| column(None, name.as_str()))
+            .collect::<Vec<_>>()
+            .join(", ");
+        items.push(aliased(
+            &format!("row_number() OVER (ORDER BY {order})"),
+            &columns.row,
+        ));
         let body = SelectBody {
             items,
             from: written.to_owned(),
