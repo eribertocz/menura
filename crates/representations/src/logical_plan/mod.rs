@@ -3,6 +3,7 @@
 
 mod items;
 mod operation;
+mod population;
 mod schema;
 #[cfg(test)]
 mod tests;
@@ -12,6 +13,7 @@ pub use items::{
     StitchColumn,
 };
 pub use operation::Operation;
+pub use population::{Membership, PopulationRule};
 pub use schema::{OutputSchema, SchemaColumn};
 
 use crate::origin::Origin;
@@ -64,8 +66,8 @@ impl PlanNode {
     }
 
     /// The input nodes, in order: none for `Scan`, `left` then `right` for `Join`, `input`,
-    /// `related_all` then `related_visible` for `SemiJoin`, the branches for `Stitch`, and the
-    /// one input otherwise.
+    /// `related_all` then `related_visible` for `SemiJoin`, `input` then `periods` for
+    /// `Population`, the branches for `Stitch`, and the one input otherwise.
     #[must_use]
     pub fn inputs(&self) -> Vec<&PlanNode> {
         match &self.operation {
@@ -77,6 +79,7 @@ impl PlanNode {
                 related_visible,
                 ..
             } => vec![input, related_all, related_visible],
+            Operation::Population { input, periods, .. } => vec![input, periods],
             Operation::Stitch { branches, .. } => branches.iter().collect(),
             Operation::Filter { input, .. }
             | Operation::Deduplicate { input, .. }

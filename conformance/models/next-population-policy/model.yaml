@@ -1,0 +1,43 @@
+version: "0.1.1"
+semantic_model:
+  - name: population_policy
+    description: 'A population read under a row policy: opposite users expect opposite entities'
+    custom_extensions:
+      - vendor_name: COMMON
+        data: '{"namespace": "menura", "version": 1, "security_context": {"roles": ["analyst"], "attributes": [{"name": "regions", "type": "list<text>"}]}}'
+    datasets:
+      - name: balances
+        source: shop.main.balances
+        primary_key: [customer_id, period]
+        fields:
+          - name: customer_id
+            expression: {dialects: [{dialect: ANSI_SQL, expression: 'customer_id'}]}
+          - name: period
+            expression: {dialects: [{dialect: ANSI_SQL, expression: 'period'}]}
+          - name: balance
+            expression: {dialects: [{dialect: ANSI_SQL, expression: 'balance'}]}
+        custom_extensions:
+          - vendor_name: COMMON
+            data: '{"namespace": "menura", "version": 1, "access": {"mode": "roles", "roles": ["analyst"]}}'
+      - name: members
+        source: shop.main.members
+        fields:
+          - name: customer_id
+            expression: {dialects: [{dialect: ANSI_SQL, expression: 'customer_id'}]}
+          - name: region
+            expression: {dialects: [{dialect: ANSI_SQL, expression: 'region'}]}
+          - name: billable
+            expression: {dialects: [{dialect: ANSI_SQL, expression: 'billable'}]}
+          - name: valid_from
+            expression: {dialects: [{dialect: ANSI_SQL, expression: 'valid_from'}]}
+          - name: valid_to
+            expression: {dialects: [{dialect: ANSI_SQL, expression: 'valid_to'}]}
+        custom_extensions:
+          - vendor_name: COMMON
+            data: '{"namespace": "menura", "version": 1, "access": {"mode": "roles", "roles": ["analyst"]}, "row_access": [{"name": "members_region_scope", "condition": "region IN (USER_ATTRIBUTE(''regions''))", "roles": ["analyst"]}], "populations": [{"name": "active_members", "mode": "validity", "entity": ["customer_id"], "valid_from": "valid_from", "valid_to": "valid_to", "partial_period": "any_day", "required_when": "billable"}]}'
+    metrics:
+      - name: closing_balance
+        expression: {dialects: [{dialect: ANSI_SQL, expression: 'SUM(balances.balance)'}]}
+        custom_extensions:
+          - vendor_name: COMMON
+            data: '{"namespace": "menura", "version": 1, "additivity": {"type": "semi_additive", "over": "balances.period", "entity": ["balances.customer_id"], "aggregation": "last", "selection": "global_period", "snapshot_grain": "month", "population": "active_members", "missing": "exclude", "unexpected": "exclude", "nulls": "keep"}}'

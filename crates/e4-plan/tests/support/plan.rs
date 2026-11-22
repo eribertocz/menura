@@ -14,6 +14,7 @@ pub fn kind(node: &PlanNode) -> &'static str {
         Operation::SemiJoin { .. } => "SemiJoin",
         Operation::Deduplicate { .. } => "Deduplicate",
         Operation::Aggregate { .. } => "Aggregate",
+        Operation::Population { .. } => "Population",
         Operation::Stitch { .. } => "Stitch",
         Operation::Project { .. } => "Project",
         Operation::Sort { .. } => "Sort",
