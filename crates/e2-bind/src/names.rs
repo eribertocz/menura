@@ -55,16 +55,22 @@ pub(crate) fn written_reference(reference: &QueryReference) -> String {
 
 /// The expression reference `reference` as written, for a message.
 pub(crate) fn written_expression_reference(reference: &Reference) -> String {
-    let written = |identifier: &Identifier| {
-        if identifier.is_delimited() {
-            delimited(identifier.text())
-        } else {
-            identifier.text().to_owned()
-        }
-    };
     match &reference.qualifier {
-        Some(qualifier) => format!("{}.{}", written(qualifier), written(&reference.name)),
-        None => written(&reference.name),
+        Some(qualifier) => format!(
+            "{}.{}",
+            written_identifier(qualifier),
+            written_identifier(&reference.name)
+        ),
+        None => written_identifier(&reference.name),
+    }
+}
+
+/// The identifier `identifier` as written, for a message.
+pub(crate) fn written_identifier(identifier: &Identifier) -> String {
+    if identifier.is_delimited() {
+        delimited(identifier.text())
+    } else {
+        identifier.text().to_owned()
     }
 }
 

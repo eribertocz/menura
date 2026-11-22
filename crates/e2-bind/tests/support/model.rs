@@ -310,3 +310,13 @@ pub fn add_row_policy(parts: &mut ModelParts, dataset: &str) {
         },
     }];
 }
+
+/// Adds to `parts` the metric `metric` of the semantic model, `SUM(dataset.field)`, whose
+/// home dataset is `dataset`.
+pub fn add_semantic_metric(parts: &mut ModelParts, metric_name: &str, dataset: &str, field: &str) {
+    let expression = sum(Some(&dataset.to_lowercase()), &field.to_lowercase());
+    parts.metrics.push(metric(metric_name, expression, dataset));
+    parts
+        .metrics
+        .sort_by(|left, right| left.name.cmp(&right.name));
+}

@@ -160,14 +160,17 @@ pub enum BindError {
 /// How a query tree breaks the contract of E1.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum InvariantViolation {
-    /// An element of the SQL form: an expression dimension or an inline metric. E1 stops the
-    /// SQL form before 0.5.0 (E1-2.2, VS-2).
+    /// An element of the SQL form, an expression dimension or an inline metric, in a tree of
+    /// the wide-table form, which has no `FROM` relation to read it through (E1-5).
     SqlFormElement,
     /// A path without relationships (QRY-4.3).
     PathWithoutRelationship,
     /// A date range whose bounds cannot be resolved to dates: a bound that is not a date,
     /// or a target that rows 3 to 12b left without a time field or a reference time.
     UnresolvableDateRange,
+    /// An element that rows 3 to 5 left without the model elements its column or expression
+    /// needs, such as a dimension that resolved to no field. This is a defect of E2 itself.
+    UnboundElement,
 }
 
 impl BindError {

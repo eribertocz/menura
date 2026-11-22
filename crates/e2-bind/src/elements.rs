@@ -1,5 +1,6 @@
-//! Row 3 of E2-5 over every element of the query, in query order (E2-5.3): the dimensions and
-//! metrics, the filters, the time grains, the date range, then the paths.
+//! Row 3 of E2-5 over every element of the query, in query order (E2-5.3): the `FROM` relation
+//! of the SQL form, the dimensions and metrics, the filters, the time grains, the date range,
+//! then the paths.
 
 use menura_model::expression::{Expression, Reference};
 use menura_representations::bound_query::BoundPath;
@@ -8,13 +9,13 @@ use menura_representations::names::OutputName;
 use menura_representations::origin::QueryLocation;
 use menura_representations::query_tree::{
     QueryDateRange, QueryDimension, QueryDimensionKind, QueryFilter, QueryMetric, QueryMetricKind,
-    QueryPath, QueryReference, QueryTree, TimeGrainChoice,
+    QueryPath, QueryReference, QueryRelation, QueryTree, TimeGrainChoice,
 };
 
 use crate::authorized_query::{AuthorizedDateRange, AuthorizedTimeGrain, ResolvedName};
 use crate::error::{BindCode, BindDiagnostic, BindError, InvariantViolation};
-use crate::names::{written_expression_reference, written_reference};
-use crate::resolver::Resolver;
+use crate::names::{written_expression_reference, written_identifier, written_reference};
+use crate::resolver::{NameScope, RelationScope, Resolver};
 use crate::walk::nodes;
 
 /// Whether an output column is a dimension or a metric.
@@ -26,12 +27,24 @@ pub(crate) enum ColumnRole {
     Metric,
 }
 
-/// An output column whose reference is resolved and authorized.
+/// One name an element reads, resolved and authorized.
+#[derive(Debug, Clone)]
+pub(crate) struct ResolvedRead {
+    /// The name as written, for messages.
+    pub(crate) written: String,
+    /// The model element it names.
+    pub(crate) target: ResolvedName,
+}
+
+/// An output column whose names are resolved and authorized.
 #[derive(Debug, Clone)]
 pub(crate) struct ResolvedColumn<'tree> {
     pub(crate) role: ColumnRole,
-    pub(crate) reference: &'tree QueryReference,
-    pub(crate) target: ResolvedName,
+    /// SQL form: the expression of an expression dimension or of an inline metric; `None`
+    /// for a column that is one reference.
+    pub(crate) expression: Option<&'tree Expression>,
+    /// The names it reads, in written order: one for a reference.
+    pub(crate) reads: Vec<ResolvedRead>,
     pub(crate) output_name: &'tree OutputName,
     pub(crate) origin: &'tree QueryLocation,
 }
@@ -46,6 +59,8 @@ pub(crate) struct ResolvedFilter<'tree> {
 /// Every element of the query after row 3.
 #[derive(Debug, Clone)]
 pub(crate) struct ResolvedElements<'tree> {
+    /// SQL form: the `FROM` relation; `None` for the wide-table form.
+    pub(crate) relation: Option<ResolvedRelation<'tree>>,
     pub(crate) columns: Vec<ResolvedColumn<'tree>>,
     pub(crate) filters: Vec<ResolvedFilter<'tree>>,
     pub(crate) time_grains: Vec<AuthorizedTimeGrain>,
@@ -53,22 +68,38 @@ pub(crate) struct ResolvedElements<'tree> {
     pub(crate) paths: Vec<BoundPath>,
 }
 
-/// Row 3 over every element of `tree`, in query order: the first name that does not resolve
-/// or is not authorized is `E_NAME_NOT_FOUND`, located at its element.
+/// SQL form: the `FROM` relation, resolved and authorized.
+#[derive(Debug, Clone)]
+pub(crate) struct ResolvedRelation<'tree> {
+    pub(crate) scope: RelationScope,
+    pub(crate) relation: &'tree QueryRelation,
+}
+
+/// Row 3 over every element of `tree`, in query order (E2-5.3): the `FROM` relation of the
+/// SQL form, the columns, the filters, the time grains, the date range, then the paths. The
+/// first name that does not resolve or is not authorized is `E_NAME_NOT_FOUND`, located at its
+/// element.
 pub(crate) fn resolve_elements<'tree>(
     tree: &'tree QueryTree,
     resolver: &mut Resolver<'_>,
 ) -> Result<ResolvedElements<'tree>, BindError> {
+    let relation = match tree.relation() {
+        Some(relation) => Some(resolve_relation(relation, resolver)?),
+        None => None,
+    };
+    let scope = relation.as_ref().map_or(NameScope::Model, |resolved| {
+        NameScope::Relation(&resolved.scope)
+    });
     let mut columns = Vec::new();
     for column in tree.columns().iter() {
         columns.push(match column {
-            OutputColumn::Dimension(dimension) => resolve_dimension(dimension, resolver)?,
-            OutputColumn::Metric(metric) => resolve_metric(metric, resolver)?,
+            OutputColumn::Dimension(dimension) => resolve_dimension(dimension, scope, resolver)?,
+            OutputColumn::Metric(metric) => resolve_metric(metric, scope, resolver)?,
         });
     }
     let mut filters = Vec::new();
     for filter in tree.filters() {
-        filters.push(resolve_filter(filter, resolver)?);
+        filters.push(resolve_filter(filter, scope, resolver)?);
     }
     let mut time_grains = Vec::new();
     for grain in tree.time_grains() {
@@ -83,6 +114,7 @@ pub(crate) fn resolve_elements<'tree>(
         paths.push(resolve_path(path, resolver)?);
     }
     Ok(ResolvedElements {
+        relation,
         columns,
         filters,
         time_grains,
@@ -91,20 +123,42 @@ pub(crate) fn resolve_elements<'tree>(
     })
 }
 
+/// The `FROM` relation: its model is the model and its dataset an authorized dataset
+/// (QRY-5.1, E1-4.9).
+fn resolve_relation<'tree>(
+    relation: &'tree QueryRelation,
+    resolver: &mut Resolver<'_>,
+) -> Result<ResolvedRelation<'tree>, BindError> {
+    let scope = resolver.relation(relation).ok_or_else(|| {
+        let written = format!(
+            "{}.{}",
+            written_identifier(&relation.model),
+            written_identifier(&relation.dataset)
+        );
+        not_found(&written, "dataset", &relation.origin)
+    })?;
+    Ok(ResolvedRelation { scope, relation })
+}
+
 fn resolve_dimension<'tree>(
     dimension: &'tree QueryDimension,
+    scope: NameScope<'_>,
     resolver: &mut Resolver<'_>,
 ) -> Result<ResolvedColumn<'tree>, BindError> {
-    let QueryDimensionKind::Field { reference } = &dimension.kind else {
-        return Err(BindError::invariant(
-            InvariantViolation::SqlFormElement,
-            &dimension.origin,
-        ));
+    let (expression, reads) = match &dimension.kind {
+        QueryDimensionKind::Field { reference } => (
+            None,
+            vec![resolve_read(reference, scope, &dimension.origin, resolver)?],
+        ),
+        QueryDimensionKind::Expression(expression) => (
+            Some(expression),
+            expression_reads(expression, scope, &dimension.origin, resolver)?,
+        ),
     };
     Ok(ResolvedColumn {
         role: ColumnRole::Dimension,
-        reference,
-        target: resolve(reference, &dimension.origin, resolver)?,
+        expression,
+        reads,
         output_name: &dimension.output_name,
         origin: &dimension.origin,
     })
@@ -112,26 +166,71 @@ fn resolve_dimension<'tree>(
 
 fn resolve_metric<'tree>(
     metric: &'tree QueryMetric,
+    scope: NameScope<'_>,
     resolver: &mut Resolver<'_>,
 ) -> Result<ResolvedColumn<'tree>, BindError> {
-    let QueryMetricKind::Reference(reference) = &metric.kind else {
-        return Err(BindError::invariant(
-            InvariantViolation::SqlFormElement,
-            &metric.origin,
-        ));
+    let (expression, reads) = match &metric.kind {
+        QueryMetricKind::Reference(reference) => (
+            None,
+            vec![resolve_read(reference, scope, &metric.origin, resolver)?],
+        ),
+        QueryMetricKind::Inline(expression) => (
+            Some(expression),
+            expression_reads(expression, scope, &metric.origin, resolver)?,
+        ),
     };
     Ok(ResolvedColumn {
         role: ColumnRole::Metric,
-        reference,
-        target: resolve(reference, &metric.origin, resolver)?,
+        expression,
+        reads,
         output_name: &metric.output_name,
         origin: &metric.origin,
     })
 }
 
+/// The column reference `reference`, resolved in `scope`.
+fn resolve_read(
+    reference: &QueryReference,
+    scope: NameScope<'_>,
+    origin: &QueryLocation,
+    resolver: &mut Resolver<'_>,
+) -> Result<ResolvedRead, BindError> {
+    let written = written_reference(reference);
+    let target = resolver
+        .scoped_reference(scope, reference)
+        .ok_or_else(|| not_found(&written, "field or metric", origin))?;
+    Ok(ResolvedRead { written, target })
+}
+
+/// SQL form: the references of a column expression, in the order they appear in its text
+/// (E2-5.3). The wide-table form has no column expressions (E1-5).
+fn expression_reads(
+    expression: &Expression,
+    scope: NameScope<'_>,
+    origin: &QueryLocation,
+    resolver: &mut Resolver<'_>,
+) -> Result<Vec<ResolvedRead>, BindError> {
+    if matches!(scope, NameScope::Model) {
+        return Err(BindError::invariant(
+            InvariantViolation::SqlFormElement,
+            origin,
+        ));
+    }
+    let mut reads = Vec::new();
+    for reference in nodes(expression).into_iter().filter_map(reference_of) {
+        let written = written_expression_reference(reference);
+        let target = resolver
+            .scoped_expression_reference(scope, reference)
+            .ok_or_else(|| not_found(&written, "field or metric", origin))?;
+        reads.push(ResolvedRead { written, target });
+    }
+    Ok(reads)
+}
+
 /// The references of a filter, in the order they appear in its text (E2-5.3).
 fn resolve_filter<'tree>(
     filter: &'tree QueryFilter,
+    scope: NameScope<'_>,
     resolver: &mut Resolver<'_>,
 ) -> Result<ResolvedFilter<'tree>, BindError> {
     let mut targets = Vec::new();
@@ -139,13 +238,15 @@ fn resolve_filter<'tree>(
         .into_iter()
         .filter_map(reference_of)
     {
-        let target = resolver.expression_reference(reference).ok_or_else(|| {
-            not_found(
-                &written_expression_reference(reference),
-                "field or metric",
-                &filter.origin,
-            )
-        })?;
+        let target = resolver
+            .scoped_expression_reference(scope, reference)
+            .ok_or_else(|| {
+                not_found(
+                    &written_expression_reference(reference),
+                    "field or metric",
+                    &filter.origin,
+                )
+            })?;
         targets.push(target);
     }
     Ok(ResolvedFilter { filter, targets })

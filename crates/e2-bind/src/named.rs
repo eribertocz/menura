@@ -7,7 +7,7 @@ use menura_representations::query_tree::{QueryPath, QueryReference, QueryTree};
 
 use crate::authorized_query::ResolvedName;
 use crate::elements::{ResolvedElements, reference_of};
-use crate::names::{written_expression_reference, written_reference};
+use crate::names::{written_expression_reference, written_identifier, written_reference};
 use crate::walk::nodes;
 
 /// A model element a query names.
@@ -15,7 +15,7 @@ use crate::walk::nodes;
 pub(crate) enum NamedTarget {
     /// A field or a metric.
     Member(ResolvedName),
-    /// A dataset of a path.
+    /// A dataset of a path, or of the SQL form's `FROM` relation.
     Dataset(NormalizedName),
     /// A relationship of a path.
     Relationship(NormalizedName),
@@ -33,23 +33,27 @@ pub(crate) struct NamedElement {
 }
 
 /// Every name of `tree` with the element it resolved to in `elements`, in query order: the
-/// columns, each filter's references in written order, the time grains, the date range, then
-/// each path's `from`, `to` and relationships.
+/// dataset of the SQL form's `FROM` relation, each column's names in written order, each
+/// filter's references in written order, the time grains, the date range, then each path's
+/// `from`, `to` and relationships.
 pub(crate) fn named_elements(
     tree: &QueryTree,
     elements: &ResolvedElements<'_>,
 ) -> Vec<NamedElement> {
     let mut named: Vec<NamedElement> = elements
-        .columns
+        .relation
         .iter()
-        .map(|column| {
-            member(
-                &column.target,
-                written_reference(column.reference),
-                column.origin,
-            )
+        .map(|resolved| NamedElement {
+            target: NamedTarget::Dataset(resolved.scope.dataset().clone()),
+            written: written_identifier(&resolved.relation.dataset),
+            origin: resolved.relation.origin.clone(),
         })
         .collect();
+    for column in &elements.columns {
+        for read in &column.reads {
+            named.push(member(&read.target, read.written.clone(), column.origin));
+        }
+    }
     for filter in &elements.filters {
         let references = nodes(&filter.filter.expression)
             .into_iter()
