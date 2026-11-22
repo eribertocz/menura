@@ -28,6 +28,7 @@ mod explanation;
 mod handle;
 mod integrity_checks;
 mod json;
+mod json_form;
 mod lineage;
 mod load;
 mod load_options;
