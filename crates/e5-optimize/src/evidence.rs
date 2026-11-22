@@ -26,8 +26,9 @@ impl<'a> Evidence<'a> {
     /// Whether the state holds evidence of the check of `kind` for the relationship `target`
     /// (CAT-7.3): a result whose `status` is `passed`, whose `definition_hash` is the current
     /// one (E0H-4.3), and whose `verified` lists exactly the current versions of the relations
-    /// of the relationship's `from` and `to` datasets. Only `key_uniqueness` and `orphan_keys`
-    /// are evidence for E5; every other kind has none.
+    /// the check reads (its CHK-2 `sources`): the `to` relation for `key_uniqueness`, the `from`
+    /// and `to` relations for `orphan_keys`. Only those two kinds are evidence for E5; every
+    /// other kind has none.
     #[cfg_attr(
         not(test),
         expect(
@@ -45,7 +46,7 @@ impl<'a> Evidence<'a> {
         let Some(current) = self.current_check(kind, target) else {
             return false;
         };
-        let Some(sources) = self.relationship_sources(target) else {
+        let Some(sources) = self.check_sources(kind, target) else {
             return false;
         };
         state.checks.iter().flatten().any(|result| {
@@ -65,12 +66,16 @@ impl<'a> Evidence<'a> {
             .find(|check| check.kind == kind && check.target == target.as_str())
     }
 
-    /// The relations of the `from` and `to` datasets of the relationship `name`.
-    fn relationship_sources(&self, name: &NormalizedName) -> Option<BTreeSet<&'a str>> {
+    /// The relations the relationship check of `kind` for `name` reads (CHK-2 `sources`):
+    /// those of the `to` dataset, and also of the `from` dataset for `orphan_keys`.
+    fn check_sources(&self, kind: CheckKind, name: &NormalizedName) -> Option<BTreeSet<&'a str>> {
         let relationship = self.model.relationship(name)?;
-        let from = self.model.dataset(&relationship.from)?;
         let to = self.model.dataset(&relationship.to)?;
-        Some(BTreeSet::from([from.source.as_str(), to.source.as_str()]))
+        let mut sources = BTreeSet::from([to.source.as_str()]);
+        if kind == CheckKind::OrphanKeys {
+            sources.insert(self.model.dataset(&relationship.from)?.source.as_str());
+        }
+        Some(sources)
     }
 }
 
