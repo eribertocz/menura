@@ -122,12 +122,14 @@ fn rewrite_chain(
     for join in &joins {
         let decided = match join.kind {
             JoinKind::Inner => JoinKind::Inner,
-            JoinKind::Left => {
-                let outcome = decide(join, &sides, context);
-                let decided = outcome.map_or(JoinKind::Left, |()| JoinKind::Inner);
-                records.push(record(&join.path, outcome));
-                decided
-            }
+            JoinKind::Left => match decide(join, &sides, context) {
+                Some(outcome) => {
+                    let decided = outcome.map_or(JoinKind::Left, |()| JoinKind::Inner);
+                    records.push(record(&join.path, outcome));
+                    decided
+                }
+                None => JoinKind::Left,
+            },
         };
         sides.push(Side {
             columns: columns(join.right),
@@ -198,17 +200,13 @@ fn record(path: &[usize], outcome: Result<(), FailedCondition>) -> RewriteRecord
     }
 }
 
-/// A condition of E5-3.3 or E5-3.3a, in the order they are checked.
+/// The condition that rejects a considered `left` join (E5-3.8): the evidence of E5-3.3. The
+/// conditions of E5-3.3a are its structural precondition: a join that fails one of them is not
+/// considered.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 enum FailedCondition {
     /// E5-3.3: no passing `orphan_keys` evidence.
     Evidence,
-    /// E5-3.3a (1): a `from_columns` column can be NULL.
-    NotNull,
-    /// E5-3.3a (2): the `from` side may have lost rows.
-    FromSide,
-    /// E5-3.3a (3): the joined side may not read every row of `to`.
-    JoinedSide,
 }
 
 impl FailedCondition {
@@ -216,48 +214,33 @@ impl FailedCondition {
     fn text(self) -> &'static str {
         match self {
             Self::Evidence => "passing `orphan_keys` evidence for the relationship (CAT-7.3)",
-            Self::NotNull => {
-                "every `from_columns` column has `nullable: false` in the catalog schema \
-                 (E5-3.3a (1))"
-            }
-            Self::FromSide => {
-                "the `from` side is the home `Scan` or a dataset joined by an `inner` join \
-                 (E5-3.3a (2))"
-            }
-            Self::JoinedSide => {
-                "the joined `Scan` reads every row of `to` for this user (E5-3.3a (3))"
-            }
         }
     }
 }
 
 /// Whether the `left` join `join`, after the `sides` of the chain before it, may become
-/// `inner`: the first failed condition otherwise.
+/// `inner`: `None` when a condition of E5-3.3a fails, so the rewrite is not considered
+/// (E5-3.8); otherwise applied, or rejected without `orphan_keys` evidence.
 fn decide(
     join: &ChainJoin<'_>,
     sides: &[Side<'_>],
     context: &RewriteContext<'_>,
-) -> Result<(), FailedCondition> {
-    if !context
+) -> Option<Result<(), FailedCondition>> {
+    let relationship = context.model.relationship(join.relationship)?;
+    let structural = from_columns_are_not_null(relationship, context)
+        && from_side_reads_every_row(join.on, sides)
+        && is_bare_scan_of(join.right, &relationship.to);
+    if !structural {
+        return None;
+    }
+    if context
         .evidence
         .holds(CheckKind::OrphanKeys, join.relationship)
     {
-        return Err(FailedCondition::Evidence);
+        Some(Ok(()))
+    } else {
+        Some(Err(FailedCondition::Evidence))
     }
-    let relationship = context
-        .model
-        .relationship(join.relationship)
-        .ok_or(FailedCondition::Evidence)?;
-    if !from_columns_are_not_null(relationship, context) {
-        return Err(FailedCondition::NotNull);
-    }
-    if !from_side_reads_every_row(join.on, sides) {
-        return Err(FailedCondition::FromSide);
-    }
-    if !is_bare_scan_of(join.right, &relationship.to) {
-        return Err(FailedCondition::JoinedSide);
-    }
-    Ok(())
 }
 
 /// Whether every `from_columns` field of `relationship` is a catalog column of its `from`

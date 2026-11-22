@@ -266,23 +266,13 @@ fn applied(steps: &[usize]) -> RewriteRecord {
     }
 }
 
-/// The record of E5-3.1 for the node at `steps`, rejected because the join is used.
-fn rejected(steps: &[usize]) -> RewriteRecord {
-    RewriteRecord {
-        rule: RewriteRule::RemoveUnusedJoins,
-        subject: RewriteSubject::Node(NodePath::new(steps.to_vec())),
-        outcome: RewriteOutcome::Rejected {
-            failed_condition: super::unused_joins::USED_JOIN.to_owned(),
-        },
-    }
-}
-
-/// Asserts that the rewrite keeps `plan`, its one `Join` being at `steps`.
+/// Asserts that the rewrite keeps `plan`, its one `Join` being at `steps`, and records
+/// nothing: a used join is not considered (E5-3.8).
 fn assert_kept(plan: &PlanNode, steps: &[usize]) {
     let (rewritten, records) = run(plan.clone());
 
     assert_eq!(&rewritten, plan);
-    assert_eq!(records, vec![rejected(steps)]);
+    assert!(records.is_empty(), "the join at {steps:?} is recorded");
 }
 
 #[test]
@@ -314,7 +304,7 @@ fn e5_3_1_one_unused_join_is_removed_and_the_used_one_is_kept() {
     let (rewritten, records) = run(plan);
 
     assert_eq!(rewritten, expected);
-    assert_eq!(records, vec![rejected(&[0, 0]), applied(&[0, 0, 0])]);
+    assert_eq!(records, vec![applied(&[0, 0, 0])]);
 }
 
 #[test]
@@ -337,7 +327,7 @@ fn e5_3_1a_a_join_read_only_by_the_condition_of_another_join_is_kept() {
     let (rewritten, records) = run(plan.clone());
 
     assert_eq!(rewritten, plan);
-    assert_eq!(records, vec![rejected(&[0, 0]), rejected(&[0, 0, 0])]);
+    assert!(records.is_empty());
 }
 
 #[test]

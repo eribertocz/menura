@@ -6,11 +6,10 @@ use crate::column_reads::{ColumnNames, add_operation_reads};
 use crate::context::RewriteContext;
 use crate::record::{NodePath, RewriteOutcome, RewriteRecord, RewriteRule, RewriteSubject};
 
-/// The failed condition of a used join (E5-3.1a).
-pub(super) const USED_JOIN: &str = "a later node reads a column of its joined dataset";
-
-/// Applies the rewrite to `plan` and adds a record of every `Join` it considered to `records`,
-/// the last `Join` of a chain first (E5-3.1a, E5-3.8). It needs no catalog state.
+/// Applies the rewrite to `plan` and adds a record of every `Join` it removed to `records`,
+/// the last `Join` of a chain first (E5-3.1a). A used `Join` is not recorded: the rewrite is
+/// considered only for an unused one, and is then never rejected (E5-3.8). It needs no
+/// catalog state.
 ///
 /// The joins under a `Snapshot` are not considered: the rows it reads besides its input are
 /// joined like its input (E4-7.5, E4-7.6), so they must keep the same columns.
@@ -85,7 +84,6 @@ fn visit_join(
     records: &mut Vec<RewriteRecord>,
 ) -> PlanNode {
     if is_read(right, later_reads) {
-        records.push(record(path, used()));
         let left = visit(left, &child(path, 0), reads, records);
         rebuild(node, left)
     } else {
@@ -269,13 +267,6 @@ fn child(path: &[usize], position: usize) -> Vec<usize> {
     let mut steps = path.to_vec();
     steps.push(position);
     steps
-}
-
-/// The outcome of a used join.
-fn used() -> RewriteOutcome {
-    RewriteOutcome::Rejected {
-        failed_condition: USED_JOIN.to_owned(),
-    }
 }
 
 /// The record of E5-3.1 for the `Join` at `path` with `outcome`.

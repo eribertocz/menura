@@ -7,6 +7,7 @@ use menura_representations::logical_plan::{
 use menura_representations::names::ColumnName;
 
 use crate::context::RewriteContext;
+use crate::plan_inputs::home_dataset;
 use crate::record::{NodePath, RewriteOutcome, RewriteRecord, RewriteRule, RewriteSubject};
 
 #[path = "merge_scans_rows.rs"]
@@ -115,7 +116,8 @@ fn merge_stitch(
 }
 
 /// For each branch, the position in the merged `Stitch` of the branch it ends up in, and a
-/// record for each branch after the first.
+/// record for each branch whose home dataset an earlier branch also reads: the rewrite is
+/// considered only for branches with the same home `Scan` (E5-3.8).
 fn merge_targets(
     branches: &[PlanNode],
     path: &[usize],
@@ -132,7 +134,11 @@ fn merge_targets(
                     .position(|first| identical_except_components(first, branch, model))
             })
             .flatten();
-        if position > 0 {
+        let home = home_dataset(branch);
+        let shares_home = branches[..position]
+            .iter()
+            .any(|earlier_branch| home.is_some() && home_dataset(earlier_branch) == home);
+        if shares_home {
             let outcome = match (mergeable, earlier) {
                 (false, _) => rejected(SEMI_ADDITIVE),
                 (true, None) => rejected(NOT_IDENTICAL),
