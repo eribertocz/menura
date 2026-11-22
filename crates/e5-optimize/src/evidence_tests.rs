@@ -45,31 +45,35 @@ fn current_verified() -> Value {
 
 /// A check result of `check` for the test relationship.
 fn result(check: &str, hash: &str, status: &str, verified: Value) -> Value {
-    json!({
+    let mut result = json!({
         "target": RELATIONSHIP,
         "check": check,
         "definition_hash": hash,
-        "status": status,
-        "verified": verified
-    })
+        "status": status
+    });
+    result["verified"] = verified;
+    result
 }
 
 /// The state with `relations` and `checks`.
 fn state(relations: Value, checks: Value) -> CatalogStateDocument {
-    serde_json::from_value(json!({
+    let mut state = json!({
         "contract": "menura.catalog_state",
         "contract_version": "1.1.0",
         "document_id": token("state-1"),
-        "schema_document_id": token("schema-1"),
-        "relations": relations,
-        "checks": checks
-    }))
-    .expect("a well-formed catalog state")
+        "schema_document_id": token("schema-1")
+    });
+    state["relations"] = relations;
+    state["checks"] = checks;
+    serde_json::from_value(state).expect("a well-formed catalog state")
 }
 
 /// The state with both relations and the one check result `check`.
 fn state_with(check: Value) -> CatalogStateDocument {
-    state(json!([partitioned_orders(), customers()]), json!([check]))
+    state(
+        json!([partitioned_orders(), customers()]),
+        Value::Array(vec![check]),
+    )
 }
 
 /// Whether `state` holds evidence of `kind` for the test relationship.

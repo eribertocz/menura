@@ -9,6 +9,7 @@ use menura_e1_parse::{ParseWarning, parse_query};
 use menura_e2_bind::bind;
 use menura_e3_paths::resolve_paths;
 use menura_e4_plan::build_plan;
+use menura_e5_optimize::optimize;
 use menura_generator_duckdb::generate_sql;
 use menura_security::{AdmittedSecurityContext, admit_security_context};
 
@@ -53,8 +54,8 @@ impl InternalError {
 /// `security_context`, over the model of `handle`, with `options` (architecture section 3.5).
 ///
 /// The stages run in the order of E2-5: the security context is admitted against the model
-/// (row 0a), then E1, E2, E3, E4 and E6; E5 is not part of 0.3.0, so the plan of E4 goes to
-/// E6 unchanged. The first error stops compilation.
+/// (row 0a), then E1, E2, E3, E4, E5 and E6. E5 reads the handle's catalog state, if any
+/// (E5-2.1), and E6 generates the optimized plan. The first error stops compilation.
 ///
 /// The warnings, of the plan or of the error, are the handle's load warnings, then the
 /// security context's `WQRY-01` (SEC-3.9), then the query's (CON-0.5).
@@ -130,6 +131,15 @@ fn compile_stages(
     let branches = resolve_paths(&bound, model).map_err(|error| path_stop(&error))?;
     let plan = build_plan(&branches, &bound, &context, model, handle.catalog_schema())
         .map_err(|error| plan_stop(&error))?;
+    let optimized = optimize(
+        &plan,
+        &bound,
+        model,
+        handle.catalog_schema(),
+        handle.catalog_state(),
+        &context,
+    );
+    let plan = optimized.into_plan();
     let generated = generate_sql(&plan, handle.catalog_schema(), model, &bound, &context)
         .map_err(|error| InternalError::new("E6", format!("{error:?}")))?;
     Ok(plan_document(
