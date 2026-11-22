@@ -2,7 +2,7 @@
 //! context metrics in E0.c, E0.d, E0.e, E0.f and E0.g.
 
 /// The model document of every `e0-context*` conformance model, by name.
-const MODELS: [(&str, &str); 15] = [
+const MODELS: [(&str, &str); 18] = [
     (
         "e0-context",
         include_str!("../../../../../conformance/models/e0-context/model.yaml"),
@@ -64,6 +64,18 @@ const MODELS: [(&str, &str); 15] = [
         include_str!(
             "../../../../../conformance/models/e0-context-development-dataset-metric-001/model.yaml"
         ),
+    ),
+    (
+        "e0-context-nested-002",
+        include_str!("../../../../../conformance/models/e0-context-nested-002/model.yaml"),
+    ),
+    (
+        "e0-context-semi-additive-001",
+        include_str!("../../../../../conformance/models/e0-context-semi-additive-001/model.yaml"),
+    ),
+    (
+        "e0-context-semi-additive-002",
+        include_str!("../../../../../conformance/models/e0-context-semi-additive-002/model.yaml"),
     ),
 ];
 
