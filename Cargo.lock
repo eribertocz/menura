@@ -918,7 +918,11 @@ dependencies = [
 name = "menura-e5-optimize"
 version = "0.5.0"
 dependencies = [
+ "menura-contracts",
+ "menura-model",
+ "menura-representations",
  "menura-security",
+ "serde_json",
 ]
 
 [[package]]
