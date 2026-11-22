@@ -4,6 +4,7 @@
 
 use std::fmt;
 
+use menura_contracts::Sha256Hash;
 use menura_contracts::types::audit_record::OssieFormat;
 use menura_contracts::types::compiled_plan::InputDocument;
 use serde::Deserialize;
@@ -119,6 +120,16 @@ pub struct Expectation {
     pub row_order: Option<RowOrder>,
     /// Relative tolerance for float columns.
     pub tolerance: Option<f64>,
+    /// Golden JSON file of the plan's `lineage` (CS-2.11).
+    pub lineage: Option<String>,
+    /// The `code` of every entry of the plan's `explanation`, in order (CS-2.12).
+    pub explanation: Option<Vec<String>>,
+    /// Golden JSON file of the audit record, without its `producer` (CS-2.13).
+    pub audit: Option<String>,
+    /// The plan's `cache_key.key` (CS-2.14).
+    pub cache_key: Option<Sha256Hash>,
+    /// Golden JSON file of the `describe` or `integrity_checks` output document (CS-2.15).
+    pub document: Option<String>,
 }
 
 /// The expected location of the first error (CS-2 `expect.location`, CS-2.9).
@@ -147,13 +158,23 @@ pub enum Outcome {
     Plan,
     /// The generated SQL fails at execution with a runtime code.
     RuntimeError,
+    /// `describe` returns the model description of the security context (CS-2.15).
+    Describe,
+    /// `integrity_checks` returns the integrity checks for the dialect `duckdb` (CS-2.15).
+    IntegrityChecks,
 }
 
 impl Outcome {
-    /// Whether the case must name a security context (CS-2).
+    /// Whether the case must name a security context (CS-2, CS-2.15).
     #[must_use]
     pub fn needs_security_context(self) -> bool {
-        !matches!(self, Self::LoadError)
+        !matches!(self, Self::LoadError | Self::IntegrityChecks)
+    }
+
+    /// Whether the outcome returns an output document compared with `document` (CS-2.15).
+    #[must_use]
+    pub fn returns_document(self) -> bool {
+        matches!(self, Self::Describe | Self::IntegrityChecks)
     }
 }
 
