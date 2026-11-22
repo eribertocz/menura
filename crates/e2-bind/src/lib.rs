@@ -8,6 +8,7 @@
 
 #![forbid(unsafe_code)]
 
+mod alternatives;
 mod authorized_query;
 mod bind;
 mod calendar;
@@ -18,6 +19,7 @@ mod explanation;
 mod model_elements;
 mod named;
 mod names;
+mod not_found;
 mod read_metrics;
 mod resolver;
 mod row_12b;

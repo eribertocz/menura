@@ -1,0 +1,17 @@
+id: pln-alternatives-order-001
+rules: [CS-2.17, PLN-5.4]
+model: slice
+security_context: auditor.json
+query:
+  contract: "menura.query"
+  contract_version: "1.1.0"
+  time_zone: "UTC"
+  query:
+    dimensions: ["sales.sale_at"]
+    metrics:
+      - {"metric": "sale_count", "alias": "sale_count"}
+expect:
+  outcome: "error"
+  error: "E_NAME_NOT_FOUND"
+  location: {document: "query", pointer: "/query/dimensions/0"}
+  alternatives: ["field:SALES.SALE_DATE", "field:SALES.SALE_ID", "field:SALES.SOLD_AT"]

@@ -39,6 +39,26 @@ pub(crate) enum NameScope<'scope> {
     Relation(&'scope RelationScope),
 }
 
+impl NameScope<'_> {
+    /// The normalized names of a field reference as PLN-5.4 compares it: in the SQL form, a
+    /// bare column, or one qualified by the relation's name or alias, becomes
+    /// `<relation dataset>.<column>`, the reference it resolves to (E1-4 "FROM"). Any other
+    /// reference is compared as written.
+    pub(crate) fn field_names(self, mut names: Vec<NormalizedName>) -> Vec<NormalizedName> {
+        let Self::Relation(relation) = self else {
+            return names;
+        };
+        match names.as_mut_slice() {
+            [column] => vec![relation.dataset.clone(), column.clone()],
+            [qualifier, _] if relation.admits(qualifier) => {
+                *qualifier = relation.dataset.clone();
+                names
+            }
+            _ => names,
+        }
+    }
+}
+
 impl Resolver<'_> {
     /// The scope of `relation`, when its model is the model and its dataset exists and is
     /// authorized (QRY-5.1, E1-4.9). Names compare under E0D-1 (E2-3.1).
