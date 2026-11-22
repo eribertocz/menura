@@ -11,29 +11,23 @@ use menura_representations::names::ColumnName;
 
 /// Whether `first` and `other` are equal except for the columns their home `Scan` projects:
 /// the same dataset and row identity, the same row-policy nodes, the same `Join` nodes in the
-/// same order, the same query filter and the same `Deduplicate`.
-pub(super) fn same_rows(first: &PlanNode, other: &PlanNode) -> bool {
+/// same order, the same query filter and the same `Deduplicate`. A plan whose home dataset `model` does not have never reads the same rows as another, so it
+/// is never merged.
+pub(super) fn same_rows(first: &PlanNode, other: &PlanNode, model: &InternalModel) -> bool {
     if first.origin() != other.origin() {
         return false;
     }
     match (first.operation(), other.operation()) {
-        (
-            Operation::Scan {
-                dataset,
-                row_identity,
-            },
-            Operation::Scan {
-                dataset: other_dataset,
-                row_identity: other_identity,
-            },
-        ) => dataset == other_dataset && row_identity == other_identity,
+        (Operation::Scan { .. }, Operation::Scan { .. }) => {
+            first.operation() == other.operation() && known_home(first, model)
+        }
         (
             Operation::Filter { input, predicate },
             Operation::Filter {
                 input: other_input,
                 predicate: other_predicate,
             },
-        ) => predicate == other_predicate && same_rows(input, other_input),
+        ) => predicate == other_predicate && same_rows(input, other_input, model),
         (
             Operation::Deduplicate {
                 input,
@@ -45,7 +39,11 @@ pub(super) fn same_rows(first: &PlanNode, other: &PlanNode) -> bool {
                 group: other_group,
                 identity: other_identity,
             },
-        ) => group == other_group && identity == other_identity && same_rows(input, other_input),
+        ) => {
+            group == other_group
+                && identity == other_identity
+                && same_rows(input, other_input, model)
+        }
         (
             Operation::Join { left, .. },
             Operation::Join {
@@ -57,7 +55,15 @@ pub(super) fn same_rows(first: &PlanNode, other: &PlanNode) -> bool {
             Operation::SemiJoin {
                 input: other_left, ..
             },
-        ) => same_except_first_input(first, other) && same_rows(left, other_left),
+        ) => same_except_first_input(first, other) && same_rows(left, other_left, model),
+        _ => false,
+    }
+}
+
+/// Whether the dataset of the `Scan` `scan` is one of `model`.
+fn known_home(scan: &PlanNode, model: &InternalModel) -> bool {
+    match scan.operation() {
+        Operation::Scan { dataset, .. } => model.dataset(dataset).is_some(),
         _ => false,
     }
 }
@@ -128,16 +134,14 @@ pub(super) fn with_columns_of(
         row_identity,
     } = first.operation()
     {
-        let fields: Vec<NormalizedName> = model
-            .dataset(dataset)
-            .map(|found| {
-                found
-                    .fields
-                    .iter()
-                    .map(|field| field.name.clone())
-                    .collect()
-            })
-            .unwrap_or_default();
+        let Some(found) = model.dataset(dataset) else {
+            return first.clone();
+        };
+        let fields: Vec<NormalizedName> = found
+            .fields
+            .iter()
+            .map(|field| field.name.clone())
+            .collect();
         let columns = scan_columns(
             first.schema(),
             other.schema(),

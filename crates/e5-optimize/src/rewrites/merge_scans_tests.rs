@@ -464,3 +464,57 @@ fn e5_3_4a_the_merged_home_scan_lists_fields_in_field_order_then_sources_then_id
         ]
     );
 }
+
+#[test]
+fn e5_3_4a_a_kept_branch_after_a_merged_one_moves_to_the_next_position() {
+    let plan = stitched(vec![
+        branch(scan("ORDERS"), &["metric_1_component_1"]),
+        branch(scan("ORDERS"), &["metric_2_component_1"]),
+        branch(join(scan("ORDERS")), &["metric_3_component_1"]),
+    ]);
+
+    let (plan, records) = merged(plan);
+
+    let Operation::Stitch {
+        branches, columns, ..
+    } = below_project(&plan).operation()
+    else {
+        panic!("not a stitch: {plan:?}");
+    };
+    let expected_branches = [
+        branch(
+            scan("ORDERS"),
+            &["metric_1_component_1", "metric_2_component_1"],
+        ),
+        branch(join(scan("ORDERS")), &["metric_3_component_1"]),
+    ];
+    assert_eq!(branches, &expected_branches);
+    assert_eq!(
+        branch_positions(columns),
+        [
+            ("metric_1_component_1", 0),
+            ("metric_2_component_1", 0),
+            ("metric_3_component_1", 1),
+        ]
+    );
+    assert_eq!(
+        records,
+        [
+            record(1, RewriteOutcome::Applied),
+            rejected(2, NOT_IDENTICAL)
+        ]
+    );
+}
+
+#[test]
+fn e5_3_4a_branches_over_a_dataset_the_model_does_not_have_are_kept_apart() {
+    let plan = stitched(vec![
+        branch(scan("RETURNS"), &["metric_1_component_1"]),
+        branch(scan("RETURNS"), &["metric_2_component_1"]),
+    ]);
+
+    let (rewritten, records) = merged(plan.clone());
+
+    assert_eq!(rewritten, plan);
+    assert_eq!(records, [rejected(1, NOT_IDENTICAL)]);
+}

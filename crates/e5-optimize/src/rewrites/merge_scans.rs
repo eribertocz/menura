@@ -80,7 +80,7 @@ fn merge_stitch(
     model: &InternalModel,
     records: &mut Vec<RewriteRecord>,
 ) -> PlanNode {
-    let targets = merge_targets(&branches, path, records);
+    let targets = merge_targets(&branches, path, model, records);
     let mut merged: Vec<PlanNode> = Vec::new();
     for (branch, target) in branches.into_iter().zip(&targets) {
         match merged.get_mut(*target) {
@@ -119,6 +119,7 @@ fn merge_stitch(
 fn merge_targets(
     branches: &[PlanNode],
     path: &[usize],
+    model: &InternalModel,
     records: &mut Vec<RewriteRecord>,
 ) -> Vec<usize> {
     let mut targets: Vec<usize> = Vec::with_capacity(branches.len());
@@ -128,7 +129,7 @@ fn merge_targets(
         let earlier = mergeable
             .then(|| {
                 kept.iter()
-                    .position(|first| identical_except_components(first, branch))
+                    .position(|first| identical_except_components(first, branch, model))
             })
             .flatten();
         if position > 0 {
@@ -179,10 +180,10 @@ fn aggregate_parts(branch: &PlanNode) -> Option<(&PlanNode, &[NamedExpression])>
 /// with an `Aggregate` with the same keys over plans that read the same rows: the same home
 /// `Scan`, whatever columns it projects, row-policy nodes, `Join` nodes in order, query filter
 /// and `Deduplicate`.
-fn identical_except_components(first: &PlanNode, other: &PlanNode) -> bool {
+fn identical_except_components(first: &PlanNode, other: &PlanNode, model: &InternalModel) -> bool {
     match (aggregate_parts(first), aggregate_parts(other)) {
         (Some((input, keys)), Some((other_input, other_keys))) => {
-            keys == other_keys && rows::same_rows(input, other_input)
+            keys == other_keys && rows::same_rows(input, other_input, model)
         }
         _ => false,
     }
