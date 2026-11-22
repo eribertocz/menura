@@ -2,6 +2,10 @@
 
 mod freshness;
 #[cfg(test)]
+mod freshness_build_tests;
+#[cfg(test)]
+mod freshness_fixture;
+#[cfg(test)]
 mod freshness_tests;
 mod period;
 #[cfg(test)]
