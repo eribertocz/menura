@@ -5,14 +5,15 @@ use std::path::Path;
 
 use crate::case::{Case, Outcome};
 use crate::error::{RunnerError, RunnerErrorKind};
+use crate::expectation_rules::check_output_expectations;
 
 /// Reads and validates the case file at `path`.
 ///
 /// # Errors
 ///
 /// Returns a [`RunnerError`] when the file cannot be read or parsed, when its name differs from
-/// its `id` (CS-1), or when it breaks CS-2.1, CS-2.2, or the security context or error code
-/// requirement of CS-2.
+/// its `id` (CS-1), or when it breaks CS-2.1, CS-2.2, CS-2.11 to CS-2.15, or the security
+/// context or error code requirement of CS-2.
 pub fn read_case(path: &Path) -> Result<Case, RunnerError> {
     let text = fs::read_to_string(path)
         .map_err(|error| RunnerError::new(RunnerErrorKind::Unreadable(error), path))?;
@@ -50,7 +51,7 @@ fn check_case(case: &Case) -> Result<(), RunnerErrorKind> {
     if needs_error && case.expect.error.as_deref().is_none_or(str::is_empty) {
         return Err(RunnerErrorKind::MissingErrorCode);
     }
-    Ok(())
+    check_output_expectations(case)
 }
 
 fn check_file_name(case: &Case, path: &Path) -> Result<(), RunnerErrorKind> {
