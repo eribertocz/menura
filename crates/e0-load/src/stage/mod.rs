@@ -91,6 +91,7 @@ pub struct LoadedModel {
 ///     ossie_format: OssieFormat::Release,
 ///     namespace: "menura".to_owned(),
 ///     model_name: None,
+///     data_source: None,
 /// };
 /// let rejection = load_model(b"version: \"0.1.1\"", b"{}", &options).unwrap_err();
 /// assert_eq!(rejection.errors[0].code, "ECAT-02");

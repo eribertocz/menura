@@ -16,6 +16,10 @@ pub(crate) fn matches_pattern(pattern: &str, text: &str) -> Option<bool> {
         "^([0-9]{4}|[0-9]{4}-Q[1-4]|[0-9]{4}-(0[1-9]|1[0-2])|[0-9]{4}-W(0[1-9]|[1-4][0-9]|5[0-3])|[0-9]{4}-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01]))$" => {
             is_period_shape(text)
         }
+        "^(field|metric|dataset):.+$" => is_alternative(text),
+        "^menura\\.[a-z][a-z_]*$" => is_menura_contract_name(text),
+        "^(/([^~/]|~[01])*)+$" => is_non_empty_json_pointer(text),
+        "^1\\.[01]\\." => text.starts_with("1.0.") || text.starts_with("1.1."),
         _ => return None,
     };
     Some(matched)
@@ -29,6 +33,47 @@ pub(crate) fn matches_format(format: &str, text: &str) -> Option<bool> {
         "date-time" => Some(is_date_time(text)),
         _ => None,
     }
+}
+
+/// `field:`, `metric:` or `dataset:` followed by at least one character, none of them a line
+/// terminator: the regular expression `.` does not match one (ECMA-262).
+fn is_alternative(text: &str) -> bool {
+    let rest = ["field:", "metric:", "dataset:"]
+        .iter()
+        .find_map(|prefix| text.strip_prefix(prefix));
+    rest.is_some_and(|rest| {
+        !rest.is_empty()
+            && !rest
+                .chars()
+                .any(|character| matches!(character, '\n' | '\r' | '\u{2028}' | '\u{2029}'))
+    })
+}
+
+/// `menura.` followed by a lowercase ASCII letter, then lowercase ASCII letters and `_`.
+fn is_menura_contract_name(text: &str) -> bool {
+    let Some(local_name) = text.strip_prefix("menura.") else {
+        return false;
+    };
+    let mut characters = local_name.chars();
+    characters
+        .next()
+        .is_some_and(|first| first.is_ascii_lowercase())
+        && characters.all(|character| character.is_ascii_lowercase() || character == '_')
+}
+
+/// A non-empty JSON Pointer (RFC 6901): one or more `/`-prefixed reference tokens, where `~`
+/// appears only as `~0` or `~1`.
+fn is_non_empty_json_pointer(text: &str) -> bool {
+    if !text.starts_with('/') {
+        return false;
+    }
+    let mut characters = text.chars();
+    while let Some(character) = characters.next() {
+        if character == '~' && !matches!(characters.next(), Some('0' | '1')) {
+            return false;
+        }
+    }
+    true
 }
 
 fn is_diagnostic_code(text: &str) -> bool {
@@ -202,6 +247,42 @@ mod tests {
         assert_eq!(matches_pattern(code, "E"), Some(false));
         assert_eq!(matches_pattern(code, "Xabc"), Some(false));
         assert_eq!(matches_pattern("^unknown$", "x"), None);
+    }
+
+    #[test]
+    fn alternative_contract_name_pointer_and_version_prefix_patterns() {
+        let alternative = "^(field|metric|dataset):.+$";
+        assert_eq!(matches_pattern(alternative, "metric:billed"), Some(true));
+        assert_eq!(matches_pattern(alternative, "dataset:a b"), Some(true));
+        assert_eq!(matches_pattern(alternative, "metric:"), Some(false));
+        assert_eq!(matches_pattern(alternative, "metric:a\nb"), Some(false));
+        assert_eq!(matches_pattern(alternative, "column:a"), Some(false));
+        let contract = "^menura\\.[a-z][a-z_]*$";
+        assert_eq!(
+            matches_pattern(contract, "menura.compiled_plan"),
+            Some(true)
+        );
+        assert_eq!(matches_pattern(contract, "menura._plan"), Some(false));
+        assert_eq!(matches_pattern(contract, "menura.Plan"), Some(false));
+        assert_eq!(
+            matches_pattern(contract, "semantic_compiler.query"),
+            Some(false)
+        );
+        let pointer = "^(/([^~/]|~[01])*)+$";
+        assert_eq!(
+            matches_pattern(pointer, "/datasets/0/ai_context"),
+            Some(true)
+        );
+        assert_eq!(matches_pattern(pointer, "/a~0b/~1/"), Some(true));
+        assert_eq!(matches_pattern(pointer, ""), Some(false));
+        assert_eq!(matches_pattern(pointer, "a/b"), Some(false));
+        assert_eq!(matches_pattern(pointer, "/a~2"), Some(false));
+        assert_eq!(matches_pattern(pointer, "/a~"), Some(false));
+        let prefix = "^1\\.[01]\\.";
+        assert_eq!(matches_pattern(prefix, "1.1.0"), Some(true));
+        assert_eq!(matches_pattern(prefix, "1.0.7"), Some(true));
+        assert_eq!(matches_pattern(prefix, "1.2.0"), Some(false));
+        assert_eq!(matches_pattern(prefix, "1.10.0"), Some(false));
     }
 
     #[test]

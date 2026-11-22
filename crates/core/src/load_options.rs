@@ -119,6 +119,7 @@ impl LoadOptions {
             ossie_format: self.ossie_format,
             namespace: self.namespace.clone(),
             model_name: self.model_name.clone(),
+            data_source: None,
         }
     }
 }

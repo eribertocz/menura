@@ -120,6 +120,7 @@ mod tests {
             code: code.to_owned(),
             message: String::new(),
             location: None,
+            alternatives: None,
         };
         let reported = [warning("W0F-01")];
         let expected = ["W0F-01".to_owned(), "W0F-01".to_owned()];
