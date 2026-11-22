@@ -1,7 +1,8 @@
-//! SUM-3.2: the components that non-additive and semi-additive metrics of the query read.
+//! SUM-3.2: the components that metrics of the query declared non-additive or semi-additive
+//! read.
 
 use menura_model::expression::{Expression, Reference};
-use menura_model::internal_model::{Additivity, InternalModel, Metric, NormalizedName};
+use menura_model::internal_model::{InternalModel, Metric, NormalizedName};
 use menura_representations::bound_query::{BoundMetricKind, BoundQuery, MetricPath};
 use menura_representations::columns::OutputColumn;
 
@@ -10,7 +11,7 @@ use super::equivalence::{ScanAggregate, over_scan};
 use super::expression_map::{any_node, field_name};
 
 /// Whether a component of the branch is, after normalization, a component that a
-/// non-additive or semi-additive metric of the query reads, directly or through the inputs of
+/// metric of the query declared non-additive or semi-additive reads, directly or through the inputs of
 /// a derived metric, even if an additive metric reads it too (SUM-3.2, E4-7.9).
 pub(super) fn reads_restricted_metric(
     shape: &BranchShape<'_>,
@@ -124,11 +125,9 @@ fn visit<'model>(
     }
 }
 
-/// Whether `metric` is declared or deduced non-additive or semi-additive (E4-7.9, ADD-3).
+/// Whether `metric` is declared `non_additive` or `semi_additive` (SUM-3.2, ADD-3). A metric
+/// only deduced non-additive, such as one with an `AVG` component, is not: its components
+/// recompose (SUM-3.1), and holistic ones match no summary measure.
 fn is_restricted(metric: &Metric) -> bool {
     metric.declared_additivity.is_some()
-        || metric
-            .classification
-            .as_ref()
-            .is_some_and(|classification| classification.additivity != Additivity::Additive)
 }

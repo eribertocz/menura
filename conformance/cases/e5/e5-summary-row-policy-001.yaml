@@ -1,0 +1,21 @@
+id: e5-summary-row-policy-001
+rules: [E5-4, E5-3.7, SUM-3.6]
+model: e5-summary-selection
+security_context: north.json
+query:
+  contract: menura.query
+  contract_version: "1.1.0"
+  time_zone: UTC
+  query:
+    dimensions: [orders.order_date]
+    metrics:
+      - {metric: total_amount, alias: total_amount}
+      - {metric: order_count, alias: order_count}
+    nonportable_extensions:
+      - {"vendor_name": "COMMON", "data": {"namespace": "menura", "version": 1, "time_grains": [{"dimension": "orders.order_date", "grain": "month"}]}}
+expect:
+  outcome: plan
+  sql: e5-summary-row-policy-001.sql
+  rows: e5-summary-row-policy-001.csv
+  row_order: any
+oracle: e5-summary-row-policy-001.oracle.sql

@@ -117,3 +117,31 @@ fn e5_3_7_a_row_policy_filter_is_kept() {
 
     assert_eq!(optimized.into_plan(), plan);
 }
+
+/// An optimized `filtered_scan` whose only record considers a summary with `outcome`.
+fn with_summary_record(outcome: crate::RewriteOutcome) -> crate::OptimizedPlan {
+    crate::OptimizedPlan {
+        plan: filtered_scan(),
+        records: vec![crate::RewriteRecord {
+            rule: RewriteRule::UseSummary,
+            subject: crate::RewriteSubject::Summary(
+                menura_model::internal_model::NormalizedName::new("ORDERS_MONTHLY"),
+            ),
+            outcome,
+        }],
+    }
+}
+
+#[test]
+fn sum_4_2_a_plan_that_uses_a_summary_requires_the_authorized_executor() {
+    let optimized = with_summary_record(crate::RewriteOutcome::Applied);
+    assert!(optimized.requires_authorized_executor());
+}
+
+#[test]
+fn sum_4_2_a_plan_whose_summaries_were_all_rejected_needs_no_authorized_executor() {
+    let optimized = with_summary_record(crate::RewriteOutcome::Rejected {
+        failed_condition: "SUM-3.2".to_owned(),
+    });
+    assert!(!optimized.requires_authorized_executor());
+}

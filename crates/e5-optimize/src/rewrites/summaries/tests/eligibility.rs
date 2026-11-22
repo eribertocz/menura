@@ -302,3 +302,33 @@ fn sum_3_2a_a_zoned_timestamp_as_the_plain_column_of_a_time_dimension_is_eligibl
     );
     assert_eq!(failed(&eligibility), None);
 }
+
+#[test]
+fn sum_3_2a_a_zoned_catalog_column_named_as_e0_stores_it_is_found_in_a_lower_case_catalog() {
+    let summary = with_dimension("CREATED_DAY", "CREATED_DAY");
+    let eligibility = checked_with(
+        &by_region_and_month(visible_orders()),
+        &summary,
+        |parts| {
+            let orders = parts
+                .datasets
+                .iter_mut()
+                .find(|dataset| dataset.name.as_str() == ORDERS)
+                .expect("the ORDERS dataset");
+            orders
+                .fields
+                .retain(|field| field.name.as_str() != "CREATED_AT");
+            let created_day = orders
+                .fields
+                .iter_mut()
+                .find(|field| field.name.as_str() == "CREATED_DAY")
+                .expect("the CREATED_DAY field");
+            created_day.expression = Some(cast(column("CREATED_AT"), CastTarget::Date));
+        },
+        &query(),
+    );
+    assert_eq!(
+        failed(&eligibility),
+        Some(SummaryCondition::QueryDependentValues)
+    );
+}

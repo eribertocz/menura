@@ -1,91 +1,17 @@
 //! E5-3.5, E5-3.5a, E5-4: selects a summary for each branch and reads it instead of the home
 //! dataset.
 //!
-//! [`eligibility`] checks the conditions of SUM-3 that need no catalog state, and
-//! [`summary_branch`] builds the branch that reads an eligible summary (E5-3.5a). The
-//! selection of E5-4 calls both; until it does, the rewrite leaves the plan unchanged.
+//! [`eligibility`] checks the conditions of SUM-3 that need no catalog state, `freshness` the
+//! conditions of CAT-7.2, and [`summary_branch`] builds the branch that reads an eligible
+//! summary (E5-3.5a). `selection` chooses among the valid summaries of each branch (E5-4).
 
-#[cfg_attr(
-    not(test),
-    expect(
-        dead_code,
-        reason = "called by the summary selection of E5-4 (#397), which is not written yet"
-    )
-)]
 mod branch;
-#[cfg_attr(
-    not(test),
-    expect(
-        dead_code,
-        reason = "called by the summary selection of E5-4 (#397), which is not written yet"
-    )
-)]
 mod calendar;
-#[cfg_attr(
-    not(test),
-    expect(
-        dead_code,
-        reason = "called by the summary selection of E5-4 (#397), which is not written yet"
-    )
-)]
 pub(crate) mod condition;
-#[cfg_attr(
-    not(test),
-    expect(
-        dead_code,
-        reason = "called by the summary selection of E5-4 (#397), which is not written yet"
-    )
-)]
 pub(crate) mod eligibility;
-#[cfg_attr(
-    not(test),
-    expect(
-        dead_code,
-        reason = "called by the summary selection of E5-4 (#397), which is not written yet"
-    )
-)]
 mod equivalence;
-#[cfg_attr(
-    not(test),
-    expect(
-        dead_code,
-        reason = "called by the summary selection of E5-4 (#397), which is not written yet"
-    )
-)]
 mod exclusions;
-#[cfg_attr(
-    not(test),
-    expect(
-        dead_code,
-        reason = "called by the summary selection of E5-4 (#397), which is not written yet"
-    )
-)]
 mod expression_map;
-#[cfg_attr(
-    not(test),
-    expect(
-        dead_code,
-        reason = "called by the summary selection of E5-4 (#397), which is not written yet"
-    )
-)]
-mod reads;
-#[cfg_attr(
-    not(test),
-    expect(
-        dead_code,
-        reason = "called by the summary selection of E5-4 (#397), which is not written yet"
-    )
-)]
-mod restricted;
-#[cfg_attr(
-    not(test),
-    expect(
-        dead_code,
-        reason = "called by the summary selection of E5-4 (#397), which is not written yet"
-    )
-)]
-pub(crate) mod summary_branch;
-
 mod freshness;
 #[cfg(test)]
 mod freshness_build_tests;
@@ -96,6 +22,12 @@ mod freshness_tests;
 mod period;
 #[cfg(test)]
 mod period_tests;
+mod reads;
+mod restricted;
+mod selection;
+pub(crate) mod summary_branch;
+mod walk;
+
 #[cfg(test)]
 mod tests;
 
@@ -104,13 +36,12 @@ use menura_representations::logical_plan::PlanNode;
 use crate::context::RewriteContext;
 use crate::record::RewriteRecord;
 
-/// Applies the rewrite to `plan` and adds a record of every case it considered to `records`.
-/// Summary selection (E5-4) is not yet implemented: returns `plan` unchanged and records
-/// nothing.
+/// Applies the rewrite to `plan`: each branch reads the summary E5-4 selects for it, if any.
+/// Adds a record of every summary considered for a branch to `records`.
 pub(super) fn rewrite(
     plan: PlanNode,
-    _context: &RewriteContext<'_>,
-    _records: &mut Vec<RewriteRecord>,
+    context: &RewriteContext<'_>,
+    records: &mut Vec<RewriteRecord>,
 ) -> PlanNode {
-    plan
+    walk::select_in_branches(&plan, context, records).unwrap_or(plan)
 }

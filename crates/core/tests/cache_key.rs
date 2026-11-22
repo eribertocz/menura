@@ -206,3 +206,45 @@ fn pln_1_a_plan_with_data_versions_and_warnings_validates_against_its_schema() {
     menura_contracts::validate_structure(menura_contracts::ContractKind::CompiledPlan, &json)
         .unwrap();
 }
+
+/// The conformance model of two summaries of `orders` with equal row count estimates, whose
+/// state selects `orders_by_month` for a query by month.
+const SUMMARY_MODEL: &str = include_str!("../../../conformance/models/e5-summary-tie/model.yaml");
+const SUMMARY_SCHEMA: &str =
+    include_str!("../../../conformance/models/e5-summary-tie/catalog-schema.json");
+const SUMMARY_STATE: &str =
+    include_str!("../../../conformance/models/e5-summary-tie/catalog-state.json");
+
+#[test]
+fn pln_3_3_a_summary_read_lists_the_versions_of_its_built_from() {
+    let handle = support::handle_with(
+        SUMMARY_MODEL,
+        SUMMARY_SCHEMA,
+        Some(SUMMARY_STATE),
+        &menura_core::LoadOptions::default(),
+    );
+    let by_month = query(
+        r#"{"dimensions": ["orders.order_date"], "metrics": ["total_amount"],
+            "nonportable_extensions": [{"vendor_name": "COMMON", "data": {"namespace": "menura",
+              "version": 1, "time_grains": [{"dimension": "orders.order_date", "grain": "month"}]}}]}"#,
+    );
+    let compiled = plan(compile_default(
+        &handle,
+        &by_month,
+        &context("summaries-analyst", &["analyst"], "{}"),
+    ));
+    assert!(compiled.sql.contains(r#""shop"."main"."orders_by_month""#));
+    let version = |period: &str| {
+        json!({"source": "shop.main.orders_by_month", "period": period,
+               "version": {"origin": "conformance:catalog", "snapshot": format!("orders-{period}")}})
+    };
+    assert_eq!(
+        data_versions(&compiled),
+        json!([
+            version("2026-10-05"),
+            version("2026-10-20"),
+            version("2026-11-01"),
+            version("2026-11-02")
+        ])
+    );
+}

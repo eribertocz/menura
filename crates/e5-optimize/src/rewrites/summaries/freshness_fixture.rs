@@ -109,6 +109,8 @@ pub(super) struct Fixture {
     pub(super) coverage_grain: Grain,
     pub(super) nullable: bool,
     pub(super) column_type: Value,
+    /// The catalog name of the column `ORDER_DATE` reads.
+    pub(super) column_name: &'static str,
 }
 
 impl Fixture {
@@ -121,6 +123,7 @@ impl Fixture {
             coverage_grain: Grain::Month,
             nullable: false,
             column_type: date_type(),
+            column_name: "ORDER_DATE",
         }
     }
 
@@ -179,7 +182,7 @@ impl Fixture {
             "engine": {"name": "duckdb", "version": "2.0.0"},
             "relations": [
                 {"source": "shop.main.orders", "columns": [
-                    column("ORDER_DATE", &self.column_type, self.nullable),
+                    column(self.column_name, &self.column_type, self.nullable),
                     column("SHIPPED_DATE", &date_type(), false)
                 ]},
                 {"source": "shop.main.orders_by_month", "columns": [

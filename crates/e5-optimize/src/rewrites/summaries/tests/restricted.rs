@@ -109,3 +109,12 @@ fn sum_3_2_a_component_read_first_unrestricted_then_through_a_non_additive_input
         Some(SummaryCondition::Exclusions)
     );
 }
+
+#[test]
+fn sum_3_2_a_metric_deduced_non_additive_without_a_declaration_is_not_excluded() {
+    let mut deduced = metric("AMOUNT_AVERAGE", true, &[], false);
+    if let Some(classification) = deduced.classification.as_mut() {
+        classification.additivity = Additivity::NonAdditive;
+    }
+    assert_eq!(with_metrics(vec![deduced], Some("AMOUNT_AVERAGE")), None);
+}
