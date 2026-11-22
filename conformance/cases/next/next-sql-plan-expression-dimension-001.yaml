@@ -1,0 +1,14 @@
+id: next-sql-plan-expression-dimension-001
+rules: [E1-4.1, E1-4.3, QRY-5.1]
+model: slice
+security_context: auditor.json
+oracle: "next-sql-plan-expression-dimension-001.oracle.sql"
+query:
+  contract: "menura.query"
+  contract_version: "1.1.0"
+  time_zone: "UTC"
+  sql: "SELECT CASE WHEN s.channel = 'web' THEN 'online' ELSE 'offline' END AS kind, AGG(s.total_amount) AS amount FROM slice.sales AS s WHERE s.quantity > 0 GROUP BY 1 ORDER BY kind"
+expect:
+  outcome: "plan"
+  row_order: "exact"
+  rows: "next-sql-plan-expression-dimension-001.csv"
