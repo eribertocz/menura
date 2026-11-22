@@ -7,7 +7,7 @@ use menura_representations::logical_plan::{Membership, PlanNode};
 use menura_representations::names::ColumnName;
 
 use super::ROW;
-use crate::day::grain_name;
+use crate::day::{grain_interval, grain_name};
 use crate::error::{GenerateError, InvariantViolation};
 use crate::identifiers::quote;
 use crate::steps::{StepWriter, error};
@@ -88,12 +88,11 @@ pub(super) fn column_type<'plan>(
 
 /// The last day of the period at `grain` that starts on `period`.
 fn last_day(period: &str, grain: Grain) -> String {
-    let length = match grain {
-        Grain::Day => return period.to_owned(),
-        Grain::Week => "7 DAY",
-        Grain::Month => "1 MONTH",
-        Grain::Quarter => "3 MONTH",
-        Grain::Year => "1 YEAR",
-    };
-    format!("CAST({period} + INTERVAL {length} - INTERVAL 1 DAY AS DATE)")
+    if grain == Grain::Day {
+        return period.to_owned();
+    }
+    format!(
+        "CAST({period} + {} - INTERVAL 1 DAY AS DATE)",
+        grain_interval(grain)
+    )
 }

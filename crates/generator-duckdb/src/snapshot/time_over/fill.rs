@@ -1,7 +1,6 @@
 //! The values of missing pairs (ADD-4.3, E4-7.5, E4-7.6): 0 from the `added` rows under
 //! `missing: zero`, or the latest earlier value of the entity under `carry_forward`.
 
-use menura_contracts::types::common::LogicalType;
 use menura_model::internal_model::StaleHandling;
 use menura_representations::logical_plan::{PlanNode, SnapshotMissing};
 
@@ -9,7 +8,6 @@ use super::frame::{Frame, PERIOD, STALE, equalities, qualified, truncated};
 use crate::body::SelectBody;
 use crate::day::grain_name;
 use crate::error::{GenerateError, InvariantViolation};
-use crate::expression::Columns;
 use crate::steps::{StepWriter, column_type, error};
 
 /// The alias of a missing pair.
@@ -140,8 +138,7 @@ impl<'input> StepWriter<'input> {
         Ok(items)
     }
 
-    /// `start`, a `date`, as a value of the key column `key` of the node: a date, or the
-    /// midnight that starts it, in the query time zone for `timestamp with time zone`.
+    /// `start`, a `date`, as a value of the key column `key` of the node.
     fn unit_value(
         &mut self,
         frame: &Frame<'input>,
@@ -156,21 +153,7 @@ impl<'input> StepWriter<'input> {
             .find(|column| column.name.as_str() == key)
             .map(|column| column.logical_type.clone())
             .ok_or_else(|| error(InvariantViolation::UnknownColumn, node))?;
-        let physical = column_type(node, key)?;
-        match logical_type {
-            LogicalType::Date => Ok(start.to_owned()),
-            LogicalType::Timestamp {
-                with_time_zone: true,
-                ..
-            } => {
-                let zone = self.writer(node, Columns::Input(node.schema())).time_zone();
-                Ok(format!(
-                    "CAST(CAST({start} AS TIMESTAMP) AT TIME ZONE {zone} AS {physical})"
-                ))
-            }
-            LogicalType::Timestamp { .. } => Ok(format!("CAST({start} AS {physical})")),
-            _ => Err(error(InvariantViolation::UnsupportedType, node)),
-        }
+        self.start_sql(node, start, &logical_type)
     }
 }
 
