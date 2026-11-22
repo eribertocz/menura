@@ -54,7 +54,7 @@ impl<'input> StepWriter<'input> {
             None => input.name,
         };
         let period = format!("{PERIOD}.{}", quote(inputs.period.as_str()));
-        let covered = membership::covers(
+        let covered = self.covers(
             node,
             inputs.input,
             &inputs.rule.membership,

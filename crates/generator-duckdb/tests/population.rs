@@ -107,3 +107,24 @@ fn e4_3_12_an_entity_column_outside_the_input_is_an_invariant_violation() {
     let error = generate_population(&plan).expect_err("an unknown column");
     assert_eq!(error.violation, InvariantViolation::UnknownColumn);
 }
+
+#[test]
+fn pop_3_5_timestamps_belong_to_their_day_in_the_query_time_zone() {
+    let plan = population(
+        population_scan("CUSTOMERS", &["CUSTOMER_ID", "ACTIVE_FROM", "ACTIVE_TO"]),
+        "CUSTOMERS",
+        Membership::Validity {
+            valid_from: ColumnName::new("ACTIVE_FROM"),
+            valid_to: ColumnName::new("ACTIVE_TO"),
+            partial_period: PartialPeriod::AnyDay,
+        },
+        None,
+        Grain::Week,
+    );
+    let generated = generate_population(&plan).expect("SQL");
+    assert_golden(
+        &generated.sql,
+        include_str!("golden/pop_3_5_population_timestamps.sql"),
+    );
+    assert_eq!(generated.parameters.len(), 1, "one time-zone parameter");
+}

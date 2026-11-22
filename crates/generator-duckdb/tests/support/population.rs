@@ -7,7 +7,7 @@ use menura_contracts::Sha256Hash;
 use menura_contracts::types::catalog::{
     CatalogSchemaContract, CatalogSchemaDocument, Column, Engine, RelationSchema,
 };
-use menura_contracts::types::common::{Grain, LogicalType, Token};
+use menura_contracts::types::common::{Grain, LogicalType, TimestampPrecision, Token};
 use menura_generator_duckdb::{GenerateError, GeneratedSql};
 use menura_model::internal_model::{
     Dataset, Descriptions, Field, InternalModel, ModelParts, NormalizedName, PartialPeriod,
@@ -18,7 +18,7 @@ use menura_representations::logical_plan::{
 };
 use menura_representations::names::ColumnName;
 
-use super::{big_integer, from_model, location, parse, query, security};
+use super::{big_integer, from_model, instant, location, parse, query, security};
 
 /// One dataset: name, `source`, and its fields as (name, catalog column, type).
 type Shape = (
@@ -26,6 +26,14 @@ type Shape = (
     &'static str,
     Vec<(&'static str, &'static str, LogicalType)>,
 );
+
+/// A timestamp without time zone.
+fn local_timestamp() -> LogicalType {
+    LogicalType::Timestamp {
+        precision: TimestampPrecision::Us,
+        with_time_zone: false,
+    }
+}
 
 /// The datasets, sorted by name as the model keeps them.
 fn shapes() -> Vec<Shape> {
@@ -38,6 +46,8 @@ fn shapes() -> Vec<Shape> {
                 ("VALID_FROM", "valid_from", LogicalType::Date),
                 ("VALID_TO", "valid_to", LogicalType::Date),
                 ("IS_BILLABLE", "is_billable", LogicalType::Boolean),
+                ("ACTIVE_FROM", "active_from", instant()),
+                ("ACTIVE_TO", "active_to", local_timestamp()),
             ],
         ),
         (

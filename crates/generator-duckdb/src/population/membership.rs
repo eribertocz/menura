@@ -1,5 +1,5 @@
 //! When an entity is expected in a period (POP-3.1, POP-3.2): the join condition between a row
-//! of the population's input and a period, for `date` columns.
+//! of the population's input and a period.
 
 use menura_contracts::types::common::{Grain, LogicalType};
 use menura_model::internal_model::PartialPeriod;
@@ -9,47 +9,87 @@ use menura_representations::names::ColumnName;
 use super::ROW;
 use crate::error::{GenerateError, InvariantViolation};
 use crate::identifiers::quote;
-use crate::steps::error;
+use crate::parameters::SharedValue;
+use crate::steps::{StepWriter, error};
 
-/// The condition under which the row covers `period`, the start of a period at `grain`.
-///
-/// `validity` reads inclusive days, a NULL `valid_to` being open-ended: `any_day` needs one day
-/// of the period, `full_period` every day, `period_end` the last day (POP-3.1). `periodic`
-/// needs the row's period, truncated to `grain`, to be `period` (POP-3.2).
-pub(super) fn covers(
-    node: &PlanNode,
-    input: &PlanNode,
-    membership: &Membership,
-    period: &str,
-    grain: Grain,
-) -> Result<String, GenerateError> {
-    match membership {
-        Membership::Validity {
-            valid_from,
-            valid_to,
-            partial_period,
-        } => {
-            let from = date_column(node, input, valid_from)?;
-            let to = date_column(node, input, valid_to)?;
-            let last = last_day(period, grain);
-            let (from_bound, to_bound) = match partial_period {
-                PartialPeriod::AnyDay => (last.as_str(), period),
-                PartialPeriod::FullPeriod => (period, last.as_str()),
-                PartialPeriod::PeriodEnd => (last.as_str(), last.as_str()),
-            };
-            Ok(format!(
-                "{from} <= {from_bound} AND ({to} IS NULL OR {to} >= {to_bound})"
-            ))
+impl StepWriter<'_> {
+    /// The condition under which the row covers `period`, the start of a period at `grain`.
+    ///
+    /// `validity` reads inclusive days, a NULL `valid_to` being open-ended and a NULL
+    /// `valid_from` never matching: `any_day` needs one day of the period, `full_period` every
+    /// day, `period_end` the last day (POP-3.1). `periodic` needs the row's period, truncated
+    /// to `grain`, to be `period`; a NULL period never matches (POP-3.2). A `timestamp` value
+    /// belongs to its day in the query time zone (E6-5.2).
+    pub(super) fn covers(
+        &mut self,
+        node: &PlanNode,
+        input: &PlanNode,
+        membership: &Membership,
+        period: &str,
+        grain: Grain,
+    ) -> Result<String, GenerateError> {
+        match membership {
+            Membership::Validity {
+                valid_from,
+                valid_to,
+                partial_period,
+            } => {
+                let from = self.day_of(node, input, valid_from)?;
+                let to = self.day_of(node, input, valid_to)?;
+                let last = last_day(period, grain);
+                let (from_bound, to_bound) = match partial_period {
+                    PartialPeriod::AnyDay => (last.as_str(), period),
+                    PartialPeriod::FullPeriod => (period, last.as_str()),
+                    PartialPeriod::PeriodEnd => (last.as_str(), last.as_str()),
+                };
+                Ok(format!(
+                    "{from} <= {from_bound} AND ({to} IS NULL OR {to} >= {to_bound})"
+                ))
+            }
+            Membership::Periodic {
+                period: row_period, ..
+            } => {
+                let row_period = self.day_of(node, input, row_period)?;
+                Ok(format!(
+                    "CAST(date_trunc('{}', {row_period}) AS DATE) = {period}",
+                    grain_name(grain)
+                ))
+            }
         }
-        Membership::Periodic {
-            period: row_period, ..
-        } => {
-            let row_period = date_column(node, input, row_period)?;
-            Ok(format!(
-                "CAST(date_trunc('{}', {row_period}) AS DATE) = {period}",
-                grain_name(grain)
-            ))
+    }
+
+    /// The day of the column `name` of the row: a `date` as it is, a `timestamp` cast to its
+    /// date, a `timestamp with time zone` converted to the query time zone first (E6-5.2).
+    fn day_of(
+        &mut self,
+        node: &PlanNode,
+        input: &PlanNode,
+        name: &ColumnName,
+    ) -> Result<String, GenerateError> {
+        let value = format!("{ROW}.{}", quote(name.as_str()));
+        match column_type(node, input, name)? {
+            LogicalType::Date => Ok(value),
+            LogicalType::Timestamp {
+                with_time_zone: true,
+                ..
+            } => {
+                let zone = self.time_zone();
+                Ok(format!("CAST({value} AT TIME ZONE {zone} AS DATE)"))
+            }
+            LogicalType::Timestamp { .. } => Ok(format!("CAST({value} AS DATE)")),
+            _ => Err(error(InvariantViolation::UnsupportedType, node)),
         }
+    }
+
+    /// The query time zone, as a typed parameter (E6-4.2c).
+    fn time_zone(&mut self) -> String {
+        let name = self.environment.time.time_zone.as_str().to_owned();
+        let placeholder = self.parameters.bind_shared(
+            SharedValue::TimeZone,
+            LogicalType::Text,
+            serde_json::Value::String(name),
+        );
+        format!("CAST({placeholder} AS VARCHAR)")
     }
 }
 
@@ -68,18 +108,6 @@ pub(super) fn column_type<'plan>(
         .ok_or_else(|| error(InvariantViolation::UnknownColumn, node))
 }
 
-/// The column `name` of the row, which must be a `date`.
-fn date_column(
-    node: &PlanNode,
-    input: &PlanNode,
-    name: &ColumnName,
-) -> Result<String, GenerateError> {
-    match column_type(node, input, name)? {
-        LogicalType::Date => Ok(format!("{ROW}.{}", quote(name.as_str()))),
-        _ => Err(error(InvariantViolation::UnsupportedType, node)),
-    }
-}
-
 /// The last day of the period at `grain` that starts on `period`.
 fn last_day(period: &str, grain: Grain) -> String {
     let length = match grain {
@@ -93,7 +121,7 @@ fn last_day(period: &str, grain: Grain) -> String {
 }
 
 /// The `date_trunc` name of `grain` (E6-5.2).
-fn grain_name(grain: Grain) -> &'static str {
+pub(crate) fn grain_name(grain: Grain) -> &'static str {
     match grain {
         Grain::Day => "day",
         Grain::Week => "week",
