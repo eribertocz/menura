@@ -356,3 +356,22 @@ fn arc_5_4_help_lists_every_command() {
         assert!(text.contains(&format!("menura {command} ")), "{command}");
     }
 }
+
+#[test]
+fn arc_5_9_a_number_without_a_json_form_exits_1_with_emig_01() {
+    let model = scratch_file(
+        "migrate_emig",
+        "model.yaml",
+        b"version: 0.3.0.dev0\nname: m\ndatasets:\n  - name: d\n    source: s.t\n    nonportable_extensions:\n      - vendor_name: COMMON\n        data: {limit: .nan}\n",
+    )
+    .unwrap();
+    let options = scratch_file(
+        "migrate_emig",
+        "options.json",
+        br#"{"ossie_format": "development"}"#,
+    )
+    .unwrap();
+    let output = run(&["migrate", "--model", &model, "--load-options", &options]);
+    assert_eq!(output.status.code(), Some(1));
+    assert_eq!(document(&output)["errors"][0]["code"], "EMIG-01");
+}

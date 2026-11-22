@@ -34,6 +34,7 @@ mod lineage;
 mod load;
 mod load_options;
 mod migrate;
+mod ordered_text;
 mod passed_document;
 mod plan_document;
 mod producer;

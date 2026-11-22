@@ -28,9 +28,9 @@ pub enum OrderedJson {
     Null,
     /// `true` or `false`.
     Boolean(bool),
-    /// An integer, written with its exact digits.
-    Integer(i128),
-    /// A finite number that is not an integer of the range of [`OrderedJson::Integer`].
+    /// An integer of any size, kept as its exact digits.
+    Integer(JsonInteger),
+    /// A finite number that is not an integer.
     Float(f64),
     /// A string.
     String(String),
@@ -38,6 +38,45 @@ pub enum OrderedJson {
     Array(Vec<OrderedJson>),
     /// An object.
     Object(OrderedObject),
+}
+
+/// An integer of any size, kept as its canonical decimal digits: an optional `-`, then digits
+/// without leading zeros; zero is `0`, never negative.
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub struct JsonInteger(String);
+
+impl JsonInteger {
+    /// The integer written `text`, when `text` is canonical decimal digits.
+    ///
+    /// ```
+    /// use menura_contracts::types::ordered_json::JsonInteger;
+    ///
+    /// let big = JsonInteger::parse("-123456789012345678901234567890123456789012").unwrap();
+    /// assert_eq!(big.as_str(), "-123456789012345678901234567890123456789012");
+    /// assert!(JsonInteger::parse("012").is_none());
+    /// assert!(JsonInteger::parse("-0").is_none());
+    /// ```
+    #[must_use]
+    pub fn parse(text: &str) -> Option<Self> {
+        let digits = text.strip_prefix('-').unwrap_or(text);
+        let canonical = !digits.is_empty()
+            && digits.bytes().all(|byte| byte.is_ascii_digit())
+            && (digits == "0" || !digits.starts_with('0'))
+            && !(digits == "0" && text.starts_with('-'));
+        canonical.then(|| Self(text.to_owned()))
+    }
+
+    /// The digits, with a leading `-` when the integer is negative.
+    #[must_use]
+    pub fn as_str(&self) -> &str {
+        &self.0
+    }
+}
+
+impl From<i128> for JsonInteger {
+    fn from(value: i128) -> Self {
+        Self(value.to_string())
+    }
 }
 
 /// A JSON object whose members keep their order.
@@ -79,7 +118,15 @@ impl Serialize for OrderedJson {
         match self {
             Self::Null => serializer.serialize_unit(),
             Self::Boolean(value) => serializer.serialize_bool(*value),
-            Self::Integer(value) => serializer.serialize_i128(*value),
+            // A serializer writes numbers of at most 128 bits; the exact text of a larger one
+            // has its own writer in `menura-core`.
+            Self::Integer(value) => match value.as_str().parse::<i128>() {
+                Ok(number) => serializer.serialize_i128(number),
+                Err(_) => Err(serde::ser::Error::custom(format!(
+                    "the integer {} has more than 128 bits",
+                    value.as_str()
+                ))),
+            },
             Self::Float(value) => serializer.serialize_f64(*value),
             Self::String(text) => serializer.serialize_str(text),
             Self::Array(items) => {
@@ -146,15 +193,15 @@ impl<'de> Visitor<'de> for OrderedJsonVisitor {
     }
 
     fn visit_i64<E: de::Error>(self, value: i64) -> Result<OrderedJson, E> {
-        Ok(OrderedJson::Integer(i128::from(value)))
+        Ok(OrderedJson::Integer(JsonInteger::from(i128::from(value))))
     }
 
     fn visit_u64<E: de::Error>(self, value: u64) -> Result<OrderedJson, E> {
-        Ok(OrderedJson::Integer(i128::from(value)))
+        Ok(OrderedJson::Integer(JsonInteger::from(i128::from(value))))
     }
 
     fn visit_i128<E: de::Error>(self, value: i128) -> Result<OrderedJson, E> {
-        Ok(OrderedJson::Integer(value))
+        Ok(OrderedJson::Integer(JsonInteger::from(value)))
     }
 
     fn visit_f64<E: de::Error>(self, value: f64) -> Result<OrderedJson, E> {
@@ -199,11 +246,13 @@ mod tests {
 
     #[test]
     fn integers_beyond_64_bits_are_written_with_their_digits() {
-        let value = OrderedJson::Integer(-170_141_183_460_469_231_731_687_303_715_884_105_728);
+        let value = OrderedJson::Integer(JsonInteger::from(i128::MIN));
         assert_eq!(
             serde_json::to_string(&value).unwrap(),
             "-170141183460469231731687303715884105728"
         );
+        let larger = OrderedJson::Integer(JsonInteger::parse("1".repeat(40).as_str()).unwrap());
+        assert!(serde_json::to_string(&larger).is_err());
     }
 
     #[test]

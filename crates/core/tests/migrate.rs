@@ -251,3 +251,52 @@ fn mig_3_6_the_same_document_and_options_give_the_same_report() {
         .collect();
     assert_eq!(pretty[0], pretty[1]);
 }
+
+/// A development-format model whose `orders` entry has `data` written `data`.
+fn development(data: &str) -> String {
+    format!(
+        "version: 0.3.0.dev0\nname: shop\ndatasets:\n  - name: orders\n    source: shop.main.orders\n    nonportable_extensions:\n      - vendor_name: COMMON\n        data: {data}\n"
+    )
+}
+
+fn development_options() -> LoadOptions {
+    LoadOptions {
+        ossie_format: OssieFormat::Development,
+        ..LoadOptions::default()
+    }
+}
+
+#[test]
+fn mig_3_3_integers_of_any_size_are_written_with_their_exact_digits() {
+    let digits = "123456789012345678901234567890123456789012345";
+    let model = development(&format!("{{namespace: other, size: {digits}, small: -7}}"));
+    let report = report(&model, &development_options());
+    let text = migration_report_json(&report).unwrap();
+    assert!(text.contains(&format!("\"size\": {digits},")), "{text}");
+    assert!(text.contains("\"small\": -7"), "{text}");
+}
+
+#[test]
+fn mig_3_3_a_number_without_a_json_form_is_refused_with_emig_01() {
+    let model = development("{namespace: semantic_compiler, version: 1, limit: .inf}");
+    let error = migrate(model.as_bytes(), &development_options()).unwrap_err();
+    assert_eq!(error.errors.len(), 1);
+    assert_eq!(error.errors[0].code, "EMIG-01");
+    assert_eq!(
+        error.errors[0].location.as_ref().unwrap().pointer,
+        "/datasets/0/nonportable_extensions/0/data/limit"
+    );
+    assert!(error.warnings.is_empty());
+}
+
+#[test]
+fn mig_3_3_the_report_text_keeps_the_member_order_of_the_model() {
+    let text = migration_report_json(&report(&release(FORMER), &LoadOptions::default())).unwrap();
+    let model = text.find("\"model\"").unwrap();
+    assert!(text.find("\"contract\"").unwrap() < text.find("\"changes\"").unwrap());
+    assert!(
+        text[model..].find("\"version\"").unwrap()
+            < text[model..].find("\"semantic_model\"").unwrap()
+    );
+    assert!(text.find("\"pointer\"").unwrap() < text.find("\"rule\"").unwrap());
+}
