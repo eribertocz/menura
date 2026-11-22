@@ -224,6 +224,7 @@ fn sum(argument: &str) -> AggregateComponent {
             argument: Box::new(reference(argument)),
         },
         filter: None,
+        recomposition: None,
     }
 }
 
