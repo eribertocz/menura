@@ -62,6 +62,7 @@ allow = [
     "menura-core",
     "menura-cli",
     "menura-conformance-runner",
+    "menura-benchmarks",
     # Contracts (#5): JSON (de)serialization and the SHA-256 of CON-2, with their dependencies.
     "serde",
     "serde_core",

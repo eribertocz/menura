@@ -50,7 +50,9 @@ fn r3_doubling_at_most_doubles_the_cost_plus_ten_percent() {
     let sweep = sweep_query(&shape, 64);
     let text = String::from_utf8(sweep.document).unwrap();
     assert_eq!(count_text(&text, r#"{"metric": "#), 64);
-    assert_eq!(count_text(&text, "_attribute_"), 64);
+    assert_eq!(count_text(&text, "\"star_030.star_030_attribute_"), 64);
+    let small = String::from_utf8_lossy(&sweep_query(&shape, 1).document).into_owned();
+    assert!(small.contains("\"star_030.star_030_attribute_01\""));
 }
 
 #[test]

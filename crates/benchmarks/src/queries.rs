@@ -232,17 +232,14 @@ fn structure_queries(shape: &ModelShape) -> Vec<BenchmarkQuery> {
     ]
 }
 
-/// The sweep query of R3 with `items` dimensions and `items` metrics: dimensions taken across
-/// the star datasets in turn, metrics from the base metrics and then the derived metrics.
+/// The sweep query of R3 with `items` dimensions and `items` metrics. The joined datasets
+/// stay the same for every item count: every dimension is an attribute of the last star
+/// dataset, and every metric has `sales` as its home dataset (base metrics, then derived
+/// metrics). Only the number of items grows.
 #[must_use]
 pub fn sweep_query(shape: &ModelShape, items: usize) -> BenchmarkQuery {
-    let dimensions: Vec<String> = (0..items)
-        .map(|index| {
-            star(
-                index % shape.star_datasets + 1,
-                index / shape.star_datasets + 1,
-            )
-        })
+    let dimensions: Vec<String> = (1..=items)
+        .map(|attribute| star(shape.star_datasets, attribute))
         .collect();
     let metrics: Vec<String> = (0..items)
         .map(|index| {

@@ -82,16 +82,25 @@ fn fixed_fields(shape: &ModelShape) -> usize {
     sales + others + keys
 }
 
+/// The attributes of the sweep dataset, the last star dataset: one per dimension of the
+/// largest R3 sweep query, so that every sweep query reads the same joined dataset.
+pub(crate) const SWEEP_ATTRIBUTES: usize = 64;
+
 /// The attribute count of each star dataset, then of each chain dataset, so that the model
-/// has exactly `total_fields` fields; the first datasets take the remainder.
+/// has exactly `total_fields` fields: the sweep dataset has [`SWEEP_ATTRIBUTES`], the others
+/// share the rest, and the first of them take the remainder.
 fn attribute_counts(shape: &ModelShape) -> Vec<usize> {
-    let datasets = shape.datasets() - OTHER_DATASETS;
-    let attributes = shape.total_fields.saturating_sub(fixed_fields(shape));
-    let each = attributes / datasets;
-    let remainder = attributes % datasets;
-    (0..datasets)
+    let others = shape.datasets() - OTHER_DATASETS - 1;
+    let attributes = shape
+        .total_fields
+        .saturating_sub(fixed_fields(shape) + SWEEP_ATTRIBUTES);
+    let each = attributes / others;
+    let remainder = attributes % others;
+    let mut counts: Vec<usize> = (0..others)
         .map(|index| each + usize::from(index < remainder))
-        .collect()
+        .collect();
+    counts.insert(shape.star_datasets - 1, SWEEP_ATTRIBUTES);
+    counts
 }
 
 fn roles_access() -> &'static str {
