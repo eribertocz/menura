@@ -54,10 +54,7 @@ pub(crate) fn time_snapshot(
     };
     let source = &branch.source;
     let over_type = over_type(declaration, source.home).map_err(fail)?;
-    let periods = match branch.query.date_range() {
-        Some(range) if range.field == declaration.over => periods_of_range(range, grain, over_type),
-        _ => periods_with_data(input.clone(), period.clone(), &origin)?,
-    };
+    let periods = unit_of_periods(branch, input, &period, grain, over_type)?;
     let expected = plan_population(
         PopulationRequest {
             home: &source.home.name,
@@ -79,6 +76,23 @@ pub(crate) fn time_snapshot(
         expected: Box::new(expected),
         unexpected,
     })
+}
+
+/// The unit of periods of the query (ADD-4.7, E4-7.6): every period of a `date_range` on
+/// `over`, else the periods with data of `input`, whose period is `period`.
+fn unit_of_periods(
+    branch: &SemiAdditiveBranch<'_>,
+    input: &PlanNode,
+    period: &Expression,
+    grain: Grain,
+    over_type: &LogicalType,
+) -> Result<PlanNode, PlanError> {
+    match branch.query.date_range() {
+        Some(range) if range.field == branch.declaration.over => {
+            Ok(periods_of_range(range, grain, over_type))
+        }
+        _ => periods_with_data(input.clone(), period.clone(), &branch.origin()),
+    }
 }
 
 /// The unit of periods of a `date_range` on `over`: every period of `grain` inside it, with
@@ -177,6 +191,33 @@ fn added_rows(branch: &SemiAdditiveBranch<'_>, expected: &PlanNode) -> Result<Pl
     )
 }
 
+/// The value of the home column `column` in a row added for the expected pair whose entity
+/// columns are `entity` and whose period column is `period` (E4-7.6).
+fn added_value(
+    column: &SchemaColumn,
+    declaration: &SemiAdditive,
+    period: &SchemaColumn,
+    entity: &[SchemaColumn],
+) -> Result<Expression, InvariantViolation> {
+    let name = NormalizedName::new(column.name.as_str());
+    if name == declaration.over.field {
+        return column_reference(period.name.as_str());
+    }
+    match declaration
+        .entity
+        .iter()
+        .position(|field| field.field == name)
+    {
+        Some(position) => {
+            let paired = entity
+                .get(position)
+                .ok_or(InvariantViolation::ForeignField)?;
+            column_reference(paired.name.as_str())
+        }
+        None => Ok(Expression::Literal(Literal::Null)),
+    }
+}
+
 /// The `Project` of the expected pairs into home rows with the columns of `home_schema`: each
 /// entity field from the population, `over` from the expected period, and NULL for every other
 /// home field (E4-7.6).
@@ -190,32 +231,13 @@ fn expected_as_home_rows(
     let (period, entity) = expected_columns
         .split_last()
         .ok_or(InvariantViolation::UnknownPeriodColumn)?;
-    let value_of = |column: &SchemaColumn| -> Result<Expression, InvariantViolation> {
-        let name = NormalizedName::new(column.name.as_str());
-        if name == declaration.over.field {
-            return column_reference(period.name.as_str());
-        }
-        match declaration
-            .entity
-            .iter()
-            .position(|field| field.field == name)
-        {
-            Some(position) => {
-                let paired = entity
-                    .get(position)
-                    .ok_or(InvariantViolation::ForeignField)?;
-                column_reference(paired.name.as_str())
-            }
-            None => Ok(Expression::Literal(Literal::Null)),
-        }
-    };
     let expressions = home_schema
         .columns()
         .iter()
         .map(|column| {
             Ok(NamedExpression {
                 name: column.name.clone(),
-                expression: value_of(column)?,
+                expression: added_value(column, declaration, period, entity)?,
                 derived: None,
             })
         })
