@@ -1,5 +1,6 @@
 //! The operations of plan nodes (E4-3 table).
 
+use menura_contracts::types::common::Grain;
 use menura_model::expression::Expression;
 use menura_model::internal_model::NormalizedName;
 
@@ -7,6 +8,7 @@ use super::PlanNode;
 use super::items::{
     AggregateComponent, JoinCondition, JoinKind, NamedExpression, SortItem, StitchColumn,
 };
+use super::population::PopulationRule;
 use crate::names::{ColumnName, ColumnPrefix};
 
 /// What a plan node does (E4-3). Every node of the table is defined.
@@ -100,6 +102,27 @@ pub enum Operation {
         input: Box<PlanNode>,
         /// The output columns, in order, each with its expression.
         expressions: Vec<NamedExpression>,
+    },
+    /// `Population(dataset, population, grain, periods)`: the expected (entity, period) pairs
+    /// of `population` at `grain` over `periods` (E4-3.12, POP-3), one row per pair. Its
+    /// output is the `entity` columns of `rule`, then `period`.
+    Population {
+        /// The visible rows V(D) of `dataset`: its `Scan` under its own row-policy `Filter`
+        /// and `SemiJoin` nodes (E4-6.5, E2-4.9).
+        input: Box<PlanNode>,
+        /// The dataset that declares the population.
+        dataset: NormalizedName,
+        /// The population.
+        population: NormalizedName,
+        /// The grain of the periods: the `snapshot_grain` of the metric (POP-3.1).
+        grain: Grain,
+        /// The query's unit of periods (ADD-4.7): one row per period, each the start of a
+        /// period at `grain`.
+        periods: Box<PlanNode>,
+        /// The column of `periods` that holds the period.
+        period: ColumnName,
+        /// When an entity is expected, over the columns of `input`.
+        rule: PopulationRule,
     },
     /// `Sort(input, items)`: order the rows.
     Sort {
