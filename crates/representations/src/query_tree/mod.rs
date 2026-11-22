@@ -7,7 +7,7 @@ mod tests;
 
 pub use elements::{
     QueryDateRange, QueryDimension, QueryDimensionKind, QueryFilter, QueryLimit, QueryMetric,
-    QueryMetricKind, QueryOrderItem, QueryPath, TimeGrainChoice,
+    QueryMetricKind, QueryOrderItem, QueryPath, QueryRelation, TimeGrainChoice,
 };
 pub use reference::{QueryReference, ReferencePart};
 
@@ -35,6 +35,7 @@ pub struct QueryTreeParts {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct QueryTree {
     columns: Columns<QueryDimension, QueryMetric>,
+    relation: Option<QueryRelation>,
     time: QueryTime,
     parts: QueryTreeParts,
 }
@@ -51,20 +52,24 @@ impl QueryTree {
     ) -> Self {
         Self {
             columns: Columns::dimensions_then_metrics(dimensions, metrics),
+            relation: None,
             time,
             parts,
         }
     }
 
-    /// The tree of a SQL-form query: its columns are in `SELECT` order (E1-5 "Column order").
+    /// The tree of a SQL-form query over `relation`: its columns are in `SELECT` order (E1-5
+    /// "Column order").
     #[must_use]
     pub fn in_select_order(
+        relation: QueryRelation,
         columns: Vec<OutputColumn<QueryDimension, QueryMetric>>,
         time: QueryTime,
         parts: QueryTreeParts,
     ) -> Self {
         Self {
             columns: Columns::in_select_order(columns),
+            relation: Some(relation),
             time,
             parts,
         }
@@ -74,6 +79,12 @@ impl QueryTree {
     #[must_use]
     pub fn columns(&self) -> &Columns<QueryDimension, QueryMetric> {
         &self.columns
+    }
+
+    /// SQL form: the `FROM` relation; `None` for the wide-table form.
+    #[must_use]
+    pub fn relation(&self) -> Option<&QueryRelation> {
+        self.relation.as_ref()
     }
 
     /// The time zone and the reference time.
