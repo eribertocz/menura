@@ -66,6 +66,9 @@ pub enum InvariantViolation {
     SnapshotOutsideRule,
     /// A final node whose columns do not match the output columns of the query (E1-5).
     ResultColumnMismatch,
+    /// A recomposed component whose call is not the one its recomposition reads, or that has a
+    /// filter (SUM-3.1).
+    MalformedRecomposition,
 }
 
 /// The error of E6: what is broken, and the origin of the plan node where it is.

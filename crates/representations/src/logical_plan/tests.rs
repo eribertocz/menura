@@ -104,6 +104,7 @@ fn filtered_count() -> PlanNode {
                 name: ColumnName::new("order_count"),
                 call: AggregateCall::CountRows,
                 filter: None,
+                recomposition: None,
             }],
         },
         aggregate_schema(),
@@ -218,6 +219,27 @@ fn e4_3_2_e4_3_4_join_and_semi_join_keep_their_relationships() {
     ));
 }
 
+/// The `Aggregate` of `input` that sums `orders.amount` with a filter.
+fn filtered_total(input: PlanNode) -> PlanNode {
+    PlanNode::new(
+        Operation::Aggregate {
+            input: Box::new(input),
+            keys: Vec::new(),
+            components: vec![AggregateComponent {
+                name: ColumnName::new("total"),
+                call: AggregateCall::Simple {
+                    function: SimpleAggregate::Sum,
+                    argument: Box::new(field("orders", "amount")),
+                },
+                filter: Some(true_literal()),
+                recomposition: None,
+            }],
+        },
+        region_schema(),
+        query_origin(),
+    )
+}
+
 #[test]
 fn e4_3_5_e4_3_7_deduplicate_and_stitch_keep_their_keys() {
     let deduplicate = PlanNode::new(
@@ -229,27 +251,9 @@ fn e4_3_5_e4_3_7_deduplicate_and_stitch_keep_their_keys() {
         region_schema(),
         query_origin(),
     );
-    let aggregate = |input: PlanNode| {
-        PlanNode::new(
-            Operation::Aggregate {
-                input: Box::new(input),
-                keys: Vec::new(),
-                components: vec![AggregateComponent {
-                    name: ColumnName::new("total"),
-                    call: AggregateCall::Simple {
-                        function: SimpleAggregate::Sum,
-                        argument: Box::new(field("orders", "amount")),
-                    },
-                    filter: Some(true_literal()),
-                }],
-            },
-            region_schema(),
-            query_origin(),
-        )
-    };
     let stitch = PlanNode::new(
         Operation::Stitch {
-            branches: vec![aggregate(deduplicate), aggregate(scan("RETURNS"))],
+            branches: vec![filtered_total(deduplicate), filtered_total(scan("RETURNS"))],
             keys: vec![ColumnName::new("region")],
             columns: vec![StitchColumn {
                 name: ColumnName::new("amount"),
