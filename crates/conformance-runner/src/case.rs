@@ -106,8 +106,9 @@ pub struct CaseLoadOptions {
 #[derive(Debug, Clone, Default, PartialEq, Eq, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct CaseCompileOptions {
-    /// The delegated actor, any JSON value, passed to `compile` and `explain` (PLN-6.8).
-    pub actor: Option<serde_json::Value>,
+    /// The delegated actor, a string, passed to `compile` and `explain` (PLN-6.8). Any other
+    /// value makes the case file malformed.
+    pub actor: Option<String>,
 }
 
 /// The expected result of a case (CS-2 `expect`).

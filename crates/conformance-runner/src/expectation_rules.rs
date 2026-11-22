@@ -209,13 +209,22 @@ expect:
     }
 
     #[test]
-    fn cs_2_18_reads_an_actor_of_any_json_value() {
+    fn cs_2_18_reads_an_actor() {
+        let text = PLAN_CASE.replace("expect:\n", "compile_options: {actor: agent-7}\nexpect:\n");
+        let options = parse_case(&text).unwrap().compile_options.unwrap();
+        assert_eq!(options.actor.as_deref(), Some("agent-7"));
+    }
+
+    #[test]
+    fn cs_2_18_an_actor_that_is_not_a_string_is_refused() {
         let text = PLAN_CASE.replace(
             "expect:\n",
             "compile_options: {actor: {id: agent-7}}\nexpect:\n",
         );
-        let options = parse_case(&text).unwrap().compile_options.unwrap();
-        assert_eq!(options.actor, Some(serde_json::json!({"id": "agent-7"})));
+        assert!(matches!(
+            parse_case(&text),
+            Err(RunnerErrorKind::Malformed(_))
+        ));
     }
 
     #[test]

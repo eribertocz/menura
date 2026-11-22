@@ -121,7 +121,7 @@ fn query_and_options(case: &Case) -> Result<(Vec<u8>, CompileOptions), String> {
         .ok_or_else(|| "this outcome requires `query`".to_owned())?;
     let query =
         serde_json::to_vec(query).map_err(|error| format!("the query is not JSON: {error}"))?;
-    Ok((query, compile_options(case)?))
+    Ok((query, compile_options(case)))
 }
 
 /// Checks the compile error of an `error` case with [`check_error_and_audit`]; a passed case
