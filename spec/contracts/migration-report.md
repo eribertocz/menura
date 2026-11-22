@@ -24,6 +24,7 @@ reads only the model: no catalog schema, state, query or security context.
   - When the `namespace` load option is `semantic_compiler`, no entry is rewritten (CON-0.5).
   A deprecated extension that a later Apache Ossie release replaces adds a rewrite here, in the release that deprecates it (OSS-3.1).
 - **MIG-3.3** **Nothing else changes.** `model` is the document tree that E0.a produces (anchors and aliases expanded, E0A-2.4; dates as text, E0A-2.8), as a JSON value, with only the rewrites of MIG-3.2 applied. Members keep the order they were read in, every model is kept, and the format is not converted. Pointers refer to that tree, so an alias expanded in several places gives one change per place.
+- **MIG-3.3a** **Numbers.** `model` writes every integer with its exact digits, whatever its size, and every other number as read. A document holding a number that has no JSON form (`.inf`, `-.inf` or `.nan` in YAML) is refused with the compile error `EMIG-01` ("a number of the model has no JSON form"), located at that value, and gives no report.
 - **MIG-3.4** **Order.** `changes` is ordered by `pointer` in document order. A document with no deprecated form gives `changes: []` and `model` equal to the tree as read.
 - **MIG-3.5** **Idempotent.** Migrating the `model` of a report gives `changes: []`.
 - **MIG-3.6** **Determinism.** The same document and load options give the same report, byte for byte after canonical JSON (P3).
