@@ -39,3 +39,12 @@ spec/stages/E3-paths.md E3-3.1 E3-3.1a E3-3.2 E3-3.3 E3-3.4 E3-3.5 E3-3.6 E3-3.7
 spec/stages/E4-plan.md E4-3.1 E4-3.2 E4-3.3 E4-3.4 E4-3.5 E4-3.6 E4-3.7 E4-3.8 E4-3.9 E4-3.10 E4-3.11 E4-4.0a E4-4.0b E4-4.0c E4-4.0d E4-4.0e E4-4.0f E4-4.0g E4-4.1 E4-5.0a E4-5.0b E4-5.0c E4-5.1 E4-5.2 E4-6.5 E4-6.5a E4-6.5b E4-6.5c E4-6.6 E4-6.10
 spec/stages/E6-generate.md E6-4.6a E6-4.7 E6-4.12 E6-4.13 E6-4.14
 spec/extensions/derived.md DER-2.1 DER-2.2 DER-2.3 DER-2.4 DER-3.1 DER-4.1 DER-4.2 DER-4.3 DER-5.1.1 DER-5.1.2 DER-5.1.3 DER-5.1.4 DER-5.1.5 DER-5.1.6
+# 0.5.0 gate (rules of the slice VS-1c)
+spec/07-roadmap.md VS-1c
+spec/stages/E1-parse.md E1-4.1 E1-4.2 E1-4.3 E1-4.4 E1-4.5 E1-4.6 E1-4.7 E1-4.8 E1-4.9 E1-4.10 E1-4.11 E1-4.12
+spec/stages/E2-bind.md E2-4.9
+spec/stages/E4-plan.md E4-3.12 E4-3.13 E4-3.14 E4-7.1 E4-7.2 E4-7.3 E4-7.4 E4-7.5 E4-7.6 E4-7.7 E4-7.8 E4-7.9
+spec/stages/E6-generate.md E6-4.6b
+spec/contracts/query.md QRY-5.1 QRY-5.2 QRY-5.3
+spec/extensions/additivity.md
+spec/extensions/population.md
