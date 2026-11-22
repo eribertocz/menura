@@ -173,10 +173,10 @@ Find a rule ID or a section here, then open only that file at that line.
 | [08-conformance-suite.md](08-conformance-suite.md#L99) | 99 | rule | CS-5.4 |
 | [09-continuous-integration.md](09-continuous-integration.md#L1) | 1 | section | 9. Continuous integration |
 | [09-continuous-integration.md](09-continuous-integration.md#L6) | 6 | section | CI-1 On every pull request and every push to `main` |
-| [09-continuous-integration.md](09-continuous-integration.md#L30) | 30 | section | CI-2 Scheduled |
-| [09-continuous-integration.md](09-continuous-integration.md#L37) | 37 | section | CI-3 Rules |
-| [09-continuous-integration.md](09-continuous-integration.md#L39) | 39 | rule | CI-3.1 |
-| [09-continuous-integration.md](09-continuous-integration.md#L40) | 40 | rule | CI-3.2 |
+| [09-continuous-integration.md](09-continuous-integration.md#L31) | 31 | section | CI-2 Scheduled |
+| [09-continuous-integration.md](09-continuous-integration.md#L38) | 38 | section | CI-3 Rules |
+| [09-continuous-integration.md](09-continuous-integration.md#L40) | 40 | rule | CI-3.1 |
+| [09-continuous-integration.md](09-continuous-integration.md#L41) | 41 | rule | CI-3.2 |
 | [README.md](README.md#L1) | 1 | section | Menura — Specification |
 | [README.md](README.md#L9) | 9 | section | Reading order |
 | [README.md](README.md#L28) | 28 | section | Conventions |
@@ -195,15 +195,24 @@ Find a rule ID or a section here, then open only that file at that line.
 | [architecture/README.md](architecture/README.md#L101) | 101 | section | 3.6 Delivery forms |
 | [architecture/README.md](architecture/README.md#L115) | 115 | rule | ARC-6.1 |
 | [architecture/README.md](architecture/README.md#L116) | 116 | rule | ARC-6.2 |
-| [architecture/README.md](architecture/README.md#L118) | 118 | section | 3.7 Integration |
-| [architecture/README.md](architecture/README.md#L126) | 126 | section | 3.8 Boundary enforcement (from the first commit) |
-| [architecture/README.md](architecture/README.md#L133) | 133 | rule | A1 |
-| [architecture/README.md](architecture/README.md#L134) | 134 | rule | A2 |
-| [architecture/README.md](architecture/README.md#L135) | 135 | rule | A3 |
-| [architecture/README.md](architecture/README.md#L136) | 136 | rule | A4 |
-| [architecture/README.md](architecture/README.md#L137) | 137 | rule | A5 |
-| [architecture/README.md](architecture/README.md#L138) | 138 | rule | A6 |
-| [architecture/README.md](architecture/README.md#L143) | 143 | section | 3.9 Lineage and audit |
+| [architecture/README.md](architecture/README.md#L118) | 118 | section | 3.6.1 Python package |
+| [architecture/README.md](architecture/README.md#L120) | 120 | rule | ARC-6.3 |
+| [architecture/README.md](architecture/README.md#L121) | 121 | rule | ARC-6.4 |
+| [architecture/README.md](architecture/README.md#L126) | 126 | rule | ARC-6.5 |
+| [architecture/README.md](architecture/README.md#L128) | 128 | section | 3.6.2 MCP server |
+| [architecture/README.md](architecture/README.md#L130) | 130 | rule | ARC-6.6 |
+| [architecture/README.md](architecture/README.md#L131) | 131 | rule | ARC-6.7 |
+| [architecture/README.md](architecture/README.md#L132) | 132 | rule | ARC-6.8 |
+| [architecture/README.md](architecture/README.md#L133) | 133 | rule | ARC-6.9 |
+| [architecture/README.md](architecture/README.md#L135) | 135 | section | 3.7 Integration |
+| [architecture/README.md](architecture/README.md#L143) | 143 | section | 3.8 Boundary enforcement (from the first commit) |
+| [architecture/README.md](architecture/README.md#L150) | 150 | rule | A1 |
+| [architecture/README.md](architecture/README.md#L151) | 151 | rule | A2 |
+| [architecture/README.md](architecture/README.md#L152) | 152 | rule | A3 |
+| [architecture/README.md](architecture/README.md#L153) | 153 | rule | A4 |
+| [architecture/README.md](architecture/README.md#L154) | 154 | rule | A5 |
+| [architecture/README.md](architecture/README.md#L155) | 155 | rule | A6 |
+| [architecture/README.md](architecture/README.md#L160) | 160 | section | 3.9 Lineage and audit |
 | [contracts/README.md](contracts/README.md#L1) | 1 | section | Contracts |
 | [contracts/README.md](contracts/README.md#L21) | 21 | section | Public contracts |
 | [contracts/README.md](contracts/README.md#L23) | 23 | rule | CON-0.1 |

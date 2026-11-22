@@ -115,6 +115,23 @@ The public functions are those of section 3.5.
 - **ARC-6.1** `menura-mcp` is a crate of this repository, a wrapper like `cli`, released with every Menura version from 0.9.0. It speaks MCP over standard input and output only, opens no network connection and has no logic of its own. Each public function of section 3.5 and each CLI command has exactly one equivalent MCP tool, which takes the same inputs, applies the same validations and returns the same documents, errors and warnings. Like `cli`, it is exempt from A2 only for standard input and output.
 - **ARC-6.2** **Audience boundary.** `menura-mcp` and the CLI serve modelers and developers (authoring), and may show the whole compiled plan, SQL, parameters and policy conditions included. End users and their agents never call Menura directly. They query through the platform's semantic service (Accipiter, an external module), which shows them the explanation without SQL, parameters or policy conditions. Menura's contracts give that service what it needs, and the boundary is enforced by the service and by deployment, not by the core (P2).
 
+### 3.6.1 Python package
+
+- **ARC-6.3** The Python package is the crate `python` of this repository, built with PyO3 as one `abi3` wheel per platform for CPython 3.10 and later. Its import name is `menura`. It depends only on `core` (A4) and has no logic of its own: each call converts its arguments, calls `core` and returns its documents. Wheels are built and tested in CI; publishing them is a maintainer step.
+- **ARC-6.4** **API.** Documents go in as `bytes` or `str` (a `str` is encoded as UTF-8) and come out as `str`, the JSON text the CLI writes for the same call (ARC-5.4). Options are `dict` objects, read as the CLI reads its option files (ARC-5.5).
+  - Module functions: `validate(model, catalog_schema, load_options=None)`, `migrate(model, load_options=None)`, `diff(old_dependencies, new_dependencies)`.
+  - `Handle.load(model, catalog_schema, catalog_state=None, load_options=None)` returns an immutable `Handle`, whose `warnings` is the JSON array of its load warnings; it raises `menura.CompileError` when the model does not load, with the compile error document as `document`.
+  - `Handle` methods: `with_state(catalog_state)`, `compile(query, security_context, compile_options=None)`, `explain(query, security_context, compile_options=None)`, `describe(security_context)`, `integrity_checks(dialect="duckdb")` and `dependencies()`. `compile` returns a `Compilation` with `document` (the plan or the compile error), `is_error`, and `audit_record` (`None` unless `audit` is true); a compile error is returned, never raised.
+  - An unknown option, an option of the wrong type or a `bytes` document that is not UTF-8 where the CLI requires it raises `ValueError`, the CLI's usage error.
+- **ARC-6.5** A `Handle` may be shared between threads; calls release the global interpreter lock while `core` runs.
+
+### 3.6.2 MCP server
+
+- **ARC-6.6** **Transport.** `menura-mcp` is a binary that speaks MCP over standard input and output (ARC-6.1), revision `2025-06-18`, pinned per release. It writes nothing but protocol messages to standard output and opens no file or network connection: every document arrives as an argument.
+- **ARC-6.7** **Tools.** One tool per CLI command, with the command's name (`-` written `_`): `validate`, `compile`, `explain`, `describe`, `integrity_checks`, `dependencies`, `diff` and `migrate`. `load` and `with_state` have no tool: every tool loads its model, as the CLI does. Each tool's input schema is an object whose members are the command's flags without `--`, `-` written `_` (`model`, `catalog_schema`, `catalog_state`, `query`, `security_context`, `load_options`, `compile_options`, `dialect`, `old_model`, …): documents as strings holding the file's text, options as objects. `compile` with `audit: true` needs no `audit_record` member.
+- **ARC-6.8** **Results.** A tool returns the document the CLI writes, as one text content item, and `isError: true` exactly when the CLI would exit `1`. `compile` with `audit: true` adds the audit record as a second text content item. A call the CLI would refuse with a usage error (exit `2`) is a JSON-RPC error `-32602` whose message is the usage message.
+- **ARC-6.9** **Parity.** For every conformance case, the documents of the MCP tools equal those of the CLI and of `core`, byte for byte (`conformance-wrappers`, CI-1). Tool names, input schemas and descriptions are listed in the crate's documentation; changing one follows section 3.3.
+
 ## 3.7 Integration
 
 - **In-process:** the host imports the modules as libraries. This is the recommended mode.
