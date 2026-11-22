@@ -6,7 +6,9 @@
 #![forbid(unsafe_code)]
 
 mod arguments;
+mod files;
 mod run;
+mod usage;
 
 use std::process::ExitCode;
 

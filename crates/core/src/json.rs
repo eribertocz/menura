@@ -2,8 +2,11 @@
 
 use std::fmt;
 
+use menura_contracts::types::audit_record::AuditRecordDocument;
 use menura_contracts::types::compiled_plan::{CompileErrorDocument, CompiledPlanDocument};
 use menura_contracts::types::dependencies::{ModelDependenciesDocument, ModelDiffDocument};
+use menura_contracts::types::descriptions::{IntegrityChecksDocument, ModelDescriptionDocument};
+use menura_contracts::types::migration_report::MigrationReportDocument;
 
 /// An output document could not be written as JSON.
 #[derive(Debug)]
@@ -66,5 +69,42 @@ pub fn dependencies_json(document: &ModelDependenciesDocument) -> Result<String,
 ///
 /// An [`OutputError`] when the document cannot be serialized.
 pub fn diff_json(document: &ModelDiffDocument) -> Result<String, OutputError> {
+    serde_json::to_string_pretty(document).map_err(OutputError)
+}
+
+/// The JSON text of a migration report, indented with two spaces; the model keeps its member
+/// order (MIG-3.3).
+///
+/// # Errors
+///
+/// An [`OutputError`] when the document cannot be serialized.
+pub fn migration_report_json(document: &MigrationReportDocument) -> Result<String, OutputError> {
+    serde_json::to_string_pretty(document).map_err(OutputError)
+}
+
+/// The JSON text of a model description, indented with two spaces.
+///
+/// # Errors
+///
+/// An [`OutputError`] when the document cannot be serialized.
+pub fn description_json(document: &ModelDescriptionDocument) -> Result<String, OutputError> {
+    serde_json::to_string_pretty(document).map_err(OutputError)
+}
+
+/// The JSON text of an integrity-check document, indented with two spaces.
+///
+/// # Errors
+///
+/// An [`OutputError`] when the document cannot be serialized.
+pub fn integrity_checks_json(document: &IntegrityChecksDocument) -> Result<String, OutputError> {
+    serde_json::to_string_pretty(document).map_err(OutputError)
+}
+
+/// The JSON text of an audit record, indented with two spaces.
+///
+/// # Errors
+///
+/// An [`OutputError`] when the document cannot be serialized.
+pub fn audit_record_json(document: &AuditRecordDocument) -> Result<String, OutputError> {
     serde_json::to_string_pretty(document).map_err(OutputError)
 }

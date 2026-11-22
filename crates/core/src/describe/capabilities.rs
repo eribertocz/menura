@@ -114,7 +114,7 @@ mod tests {
             .map(|entry| entry.contract.as_str())
             .collect();
         assert!(contracts.windows(2).all(|pair| pair[0] < pair[1]));
-        assert_eq!(contracts.len(), 13);
+        assert_eq!(contracts.len(), 14);
         assert!(EXTENSIONS.windows(2).all(|pair| pair[0] < pair[1]));
     }
 

@@ -1,32 +1,15 @@
-//! The command line of `menura` (ARC-5.5), parsed into the command to run. Parsing
+//! The command line of `menura` (ARC-5.5, ARC-5.10), parsed into the command to run. Parsing
 //! reads no file: it only decides which command runs, and with which paths.
 
 use std::ffi::OsString;
 use std::path::PathBuf;
 
-/// The usage text `--help` writes and every usage error repeats.
-pub(crate) const USAGE: &str =
-    "usage: menura validate --model <path> --catalog-schema <path> [--load-options <path>]
-       menura dependencies --model <path> --catalog-schema <path> [--load-options <path>]
-       menura diff --old-model <path> --old-catalog-schema <path> --new-model <path>
-                   --new-catalog-schema <path> [--load-options <path>]
+use menura_core::Dialect;
 
-`validate` validates an Apache Ossie model against a catalog schema and writes the validation
-report. `dependencies` loads the model and writes its model-dependency document. `diff` loads
-both models with the same load options, old first, and writes the diff of their dependencies.
-Each writes its document as JSON on standard output. Exit status: 0 for a document without
-errors, 1 for a report with errors or a compile error, 2 when the command cannot run.
-
-  --model <path>               the model document (YAML or JSON)
-  --catalog-schema <path>      the catalog schema document (JSON)
-  --old-model <path>           `diff`: the old model document
-  --old-catalog-schema <path>  `diff`: the catalog schema of the old model
-  --new-model <path>           `diff`: the new model document
-  --new-catalog-schema <path>  `diff`: the catalog schema of the new model
-  --load-options <path>        a JSON object with load options; an omitted option takes its
-                               default
-  --help                       writes this text and exits 0
-";
+use crate::files::{
+    CompileFiles, DescribeFiles, DiffFiles, HandleFiles, IntegrityChecksFiles, MigrateFiles,
+    ModelFiles,
+};
 
 /// The command a command line asks for.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -35,36 +18,20 @@ pub(crate) enum Command {
     Help,
     /// `validate` with its files.
     Validate(ModelFiles),
+    /// `compile` with its files (ARC-5.7).
+    Compile(CompileFiles),
+    /// `explain` with its files (ARC-5.7).
+    Explain(CompileFiles),
+    /// `describe` with its files (ARC-5.8).
+    Describe(DescribeFiles),
+    /// `integrity-checks` with its files and dialect (ARC-5.8).
+    IntegrityChecks(IntegrityChecksFiles),
     /// `dependencies` with its files (ARC-5.6).
     Dependencies(ModelFiles),
+    /// `migrate` with its files (ARC-5.9).
+    Migrate(MigrateFiles),
     /// `diff` with its files (ARC-5.6).
     Diff(DiffFiles),
-}
-
-/// The files of `validate` and `dependencies`.
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub(crate) struct ModelFiles {
-    /// `--model`.
-    pub(crate) model: PathBuf,
-    /// `--catalog-schema`.
-    pub(crate) catalog_schema: PathBuf,
-    /// `--load-options`, when given.
-    pub(crate) load_options: Option<PathBuf>,
-}
-
-/// The files of `diff`.
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub(crate) struct DiffFiles {
-    /// `--old-model`.
-    pub(crate) old_model: PathBuf,
-    /// `--old-catalog-schema`.
-    pub(crate) old_catalog_schema: PathBuf,
-    /// `--new-model`.
-    pub(crate) new_model: PathBuf,
-    /// `--new-catalog-schema`.
-    pub(crate) new_catalog_schema: PathBuf,
-    /// `--load-options`, when given.
-    pub(crate) load_options: Option<PathBuf>,
 }
 
 /// A command line that is not the syntax of ARC-5.5.
@@ -81,7 +48,14 @@ pub(crate) fn parse(arguments: &[OsString]) -> Result<Command, UsageError> {
     };
     match command.to_str() {
         Some("validate") => parse_model_files(flags).map(Command::Validate),
+        Some("compile") => parse_compile_files(flags, true).map(Command::Compile),
+        Some("explain") => parse_compile_files(flags, false).map(Command::Explain),
+        Some("describe") => parse_describe_files(flags).map(Command::Describe),
+        Some("integrity-checks") => {
+            parse_integrity_checks_files(flags).map(Command::IntegrityChecks)
+        }
         Some("dependencies") => parse_model_files(flags).map(Command::Dependencies),
+        Some("migrate") => parse_migrate_files(flags).map(Command::Migrate),
         Some("diff") => parse_diff_files(flags).map(Command::Diff),
         _ => Err(UsageError(format!(
             "unknown command `{}`",
@@ -97,6 +71,107 @@ fn parse_model_files(flags: &[OsString]) -> Result<ModelFiles, UsageError> {
     Ok(ModelFiles {
         model: required(model, "--model")?,
         catalog_schema: required(catalog_schema, "--catalog-schema")?,
+        load_options,
+    })
+}
+
+/// Parses the flags of `compile`, with `--audit-record` when `audit_record` is true, or of
+/// `explain`, which refuses it as an unknown flag (ARC-5.7).
+fn parse_compile_files(flags: &[OsString], audit_record: bool) -> Result<CompileFiles, UsageError> {
+    const COMPILE: [&str; 8] = [
+        "--model",
+        "--catalog-schema",
+        "--query",
+        "--security-context",
+        "--catalog-state",
+        "--load-options",
+        "--compile-options",
+        "--audit-record",
+    ];
+    let names = if audit_record {
+        &COMPILE[..]
+    } else {
+        &COMPILE[..COMPILE.len() - 1]
+    };
+    let mut paths = parse_flag_list(flags, names)?.into_iter();
+    let mut next = || paths.next().flatten();
+    let (model, catalog_schema, query, security_context) = (next(), next(), next(), next());
+    let (catalog_state, load_options, compile_options, audit_record) =
+        (next(), next(), next(), next());
+    Ok(CompileFiles {
+        handle: HandleFiles {
+            model: required(model, "--model")?,
+            catalog_schema: required(catalog_schema, "--catalog-schema")?,
+            catalog_state,
+            load_options,
+        },
+        query: required(query, "--query")?,
+        security_context: required(security_context, "--security-context")?,
+        compile_options,
+        audit_record,
+    })
+}
+
+/// Parses the flags of `describe` (ARC-5.8).
+fn parse_describe_files(flags: &[OsString]) -> Result<DescribeFiles, UsageError> {
+    let [
+        model,
+        catalog_schema,
+        security_context,
+        catalog_state,
+        load_options,
+    ] = parse_flags(
+        flags,
+        [
+            "--model",
+            "--catalog-schema",
+            "--security-context",
+            "--catalog-state",
+            "--load-options",
+        ],
+    )?;
+    Ok(DescribeFiles {
+        handle: HandleFiles {
+            model: required(model, "--model")?,
+            catalog_schema: required(catalog_schema, "--catalog-schema")?,
+            catalog_state,
+            load_options,
+        },
+        security_context: required(security_context, "--security-context")?,
+    })
+}
+
+/// Parses the flags of `integrity-checks`: `--dialect` is `duckdb`, its default (ARC-5.8).
+fn parse_integrity_checks_files(flags: &[OsString]) -> Result<IntegrityChecksFiles, UsageError> {
+    let [model, catalog_schema, load_options, dialect] = parse_flags(
+        flags,
+        ["--model", "--catalog-schema", "--load-options", "--dialect"],
+    )?;
+    let dialect = match dialect {
+        None => Dialect::Duckdb,
+        Some(name) if name.as_os_str() == "duckdb" => Dialect::Duckdb,
+        Some(name) => {
+            return Err(UsageError(format!(
+                "unknown dialect `{}`; the dialect is `duckdb`",
+                name.display()
+            )));
+        }
+    };
+    Ok(IntegrityChecksFiles {
+        model: ModelFiles {
+            model: required(model, "--model")?,
+            catalog_schema: required(catalog_schema, "--catalog-schema")?,
+            load_options,
+        },
+        dialect,
+    })
+}
+
+/// Parses the flags of `migrate`, which reads no catalog file (ARC-5.9).
+fn parse_migrate_files(flags: &[OsString]) -> Result<MigrateFiles, UsageError> {
+    let [model, load_options] = parse_flags(flags, ["--model", "--load-options"])?;
+    Ok(MigrateFiles {
+        model: required(model, "--model")?,
         load_options,
     })
 }
@@ -134,7 +209,13 @@ fn parse_flags<const COUNT: usize>(
     flags: &[OsString],
     names: [&str; COUNT],
 ) -> Result<[Option<PathBuf>; COUNT], UsageError> {
-    let mut paths: [Option<PathBuf>; COUNT] = std::array::from_fn(|_| None);
+    let mut paths = parse_flag_list(flags, &names)?.into_iter();
+    Ok(std::array::from_fn(|_| paths.next().flatten()))
+}
+
+/// The path of each flag of `names`, in that order, as [`parse_flags`] reads them.
+fn parse_flag_list(flags: &[OsString], names: &[&str]) -> Result<Vec<Option<PathBuf>>, UsageError> {
+    let mut paths: Vec<Option<PathBuf>> = vec![None; names.len()];
     let mut remaining = flags.iter();
     while let Some(flag) = remaining.next() {
         let text = flag.to_string_lossy();
@@ -164,127 +245,4 @@ fn required(path: Option<PathBuf>, name: &str) -> Result<PathBuf, UsageError> {
 }
 
 #[cfg(test)]
-mod tests {
-    use super::*;
-
-    fn arguments(text: &[&str]) -> Vec<OsString> {
-        text.iter().map(OsString::from).collect()
-    }
-
-    #[test]
-    fn arc_5_5_validate_reads_its_three_flags_in_any_order() {
-        let command = parse(&arguments(&[
-            "validate",
-            "--load-options",
-            "o.json",
-            "--catalog-schema",
-            "c.json",
-            "--model",
-            "m.yaml",
-        ]))
-        .unwrap();
-        assert_eq!(
-            command,
-            Command::Validate(ModelFiles {
-                model: PathBuf::from("m.yaml"),
-                catalog_schema: PathBuf::from("c.json"),
-                load_options: Some(PathBuf::from("o.json")),
-            })
-        );
-    }
-
-    #[test]
-    fn arc_5_5_the_load_options_flag_is_optional() {
-        let Command::Validate(files) = parse(&arguments(&[
-            "validate",
-            "--model",
-            "m.yaml",
-            "--catalog-schema",
-            "c.json",
-        ]))
-        .unwrap() else {
-            panic!("validate");
-        };
-        assert_eq!(files.load_options, None);
-    }
-
-    #[test]
-    fn arc_5_6_diff_reads_its_five_flags_in_any_order() {
-        let command = parse(&arguments(&[
-            "diff",
-            "--new-catalog-schema",
-            "nc.json",
-            "--old-model",
-            "o.yaml",
-            "--new-model",
-            "n.yaml",
-            "--old-catalog-schema",
-            "oc.json",
-        ]))
-        .unwrap();
-        assert_eq!(
-            command,
-            Command::Diff(DiffFiles {
-                old_model: PathBuf::from("o.yaml"),
-                old_catalog_schema: PathBuf::from("oc.json"),
-                new_model: PathBuf::from("n.yaml"),
-                new_catalog_schema: PathBuf::from("nc.json"),
-                load_options: None,
-            })
-        );
-    }
-
-    #[test]
-    fn arc_5_6_dependencies_takes_the_flags_of_validate() {
-        let command = parse(&arguments(&[
-            "dependencies",
-            "--model",
-            "m.yaml",
-            "--catalog-schema",
-            "c.json",
-        ]))
-        .unwrap();
-        assert!(matches!(command, Command::Dependencies(_)));
-        assert!(parse(&arguments(&["dependencies", "--old-model", "m"])).is_err());
-    }
-
-    #[test]
-    fn arc_5_5_help_wins_over_every_other_argument() {
-        assert_eq!(
-            parse(&arguments(&["validate", "--x", "--help"])),
-            Ok(Command::Help)
-        );
-    }
-
-    #[test]
-    fn arc_5_5_a_command_line_outside_the_syntax_is_a_usage_error() {
-        for line in [
-            &[][..],
-            &["describe"][..],
-            &["validate", "--model", "m.yaml"][..],
-            &[
-                "validate",
-                "--model",
-                "m",
-                "--model",
-                "m",
-                "--catalog-schema",
-                "c",
-            ][..],
-            &[
-                "validate",
-                "--model",
-                "m",
-                "--catalog-schema",
-                "c",
-                "--dialect",
-                "d",
-            ][..],
-            &["validate", "--model", "m", "--catalog-schema", "c", "x"][..],
-            &["validate", "--model", "m", "--catalog-schema"][..],
-            &["validate", "--model=m", "--catalog-schema", "c"][..],
-        ] {
-            assert!(parse(&arguments(line)).is_err(), "{line:?}");
-        }
-    }
-}
+mod tests;
