@@ -141,6 +141,7 @@ impl AdmissionError {
                 line,
                 column,
             }),
+            alternatives: None,
         }
     }
 }

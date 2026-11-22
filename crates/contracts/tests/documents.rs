@@ -246,7 +246,9 @@ fn dsc_2_model_description_schema() {
         &with(document.clone(), "/metrics/0/kind", json!("ratio")),
         "/metrics/0/kind",
     );
-    let context = adding(document, "/metrics/0", "ai_context", Value::Null);
+    // Before 1.2.0, `ai_context` is any JSON value, `null` included (DSC-3.6).
+    let previous = with(document, "/contract_version", json!("1.1.0"));
+    let context = adding(previous, "/metrics/0", "ai_context", Value::Null);
     assert_valid(kind, &context);
     assert_eq!(
         round_trip::<ModelDescriptionDocument>(&context),

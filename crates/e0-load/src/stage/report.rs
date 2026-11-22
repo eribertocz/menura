@@ -55,6 +55,7 @@ impl Report {
                 error.location.line,
                 error.location.column,
             )),
+            alternatives: None,
         });
     }
 
@@ -84,6 +85,7 @@ impl Report {
                 location.line,
                 location.column,
             )),
+            alternatives: None,
         };
         if rejects {
             self.errors.push(diagnostic);

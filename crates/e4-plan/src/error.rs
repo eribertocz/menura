@@ -55,6 +55,7 @@ impl PlanError {
                     line: None,
                     column: None,
                 }),
+                alternatives: None,
             }),
             Self::SplitSnapshot(location) => {
                 let position = location.position();
@@ -67,6 +68,7 @@ impl PlanError {
                         line: position.and_then(|position| u64::try_from(position.line()).ok()),
                         column: position.and_then(|position| u64::try_from(position.column()).ok()),
                     }),
+                    alternatives: None,
                 })
             }
             Self::Invariant { .. } => None,

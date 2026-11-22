@@ -44,5 +44,6 @@ fn not_utf8() -> Diagnostic {
             line: None,
             column: None,
         }),
+        alternatives: None,
     }
 }

@@ -121,12 +121,29 @@ impl ContractKind {
         document.get("contract").and_then(Value::as_str) == Some(self.former_contract_name())
     }
 
-    /// The latest contract version this crate implements.
+    /// The latest version of this contract the crate implements (architecture section 3.3):
+    /// 1.2.0 for the compiled plan, the compile error, the audit record, the model description
+    /// and the integrity checks, 1.1.0 for the other contracts.
+    ///
+    /// ```
+    /// use menura_contracts::ContractKind;
+    ///
+    /// assert_eq!(ContractKind::CompiledPlan.latest_version().to_string(), "1.2.0");
+    /// assert_eq!(ContractKind::Query.latest_version().to_string(), "1.1.0");
+    /// ```
     #[must_use]
     pub fn latest_version(self) -> ContractVersion {
+        let minor = match self {
+            Self::CompiledPlan
+            | Self::CompileError
+            | Self::AuditRecord
+            | Self::ModelDescription
+            | Self::IntegrityChecks => 2,
+            Self::CatalogSchema | Self::CatalogState | Self::Query | Self::SecurityContext => 1,
+        };
         ContractVersion {
             major: 1,
-            minor: 1,
+            minor,
             patch: 0,
         }
     }

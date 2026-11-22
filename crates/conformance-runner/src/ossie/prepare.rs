@@ -143,6 +143,7 @@ fn load_options() -> LoadOptions {
         ossie_format: OssieFormat::Development,
         namespace: DEFAULT_NAMESPACE.to_owned(),
         model_name: None,
+        data_source: None,
     }
 }
 

@@ -136,8 +136,16 @@ fn schema_keywords(schema: &Value, found: &mut BTreeSet<String>) {
             "items" | "additionalProperties" | "not" | "if" | "then" | "else" => vec![member],
             _ => Vec::new(),
         };
-        let annotation =
-            ["$schema", "$id", "$defs", "title", "description", "default"].contains(&name.as_str());
+        let annotation = [
+            "$schema",
+            "$id",
+            "$defs",
+            "$comment",
+            "title",
+            "description",
+            "default",
+        ]
+        .contains(&name.as_str());
         if !annotation {
             found.insert(name.clone());
         }
