@@ -1,0 +1,17 @@
+id: pop-period-end-001
+rules: [POP-3.5, POP-3.7, POP-3.1]
+model: pop-expected-entities
+security_context: analyst.json
+query:
+  contract: "menura.query"
+  contract_version: "1.1.0"
+  time_zone: "Asia/Tokyo"
+  query:
+    metrics:
+      - {"metric": "period_end_balance", "alias": "period_end_balance"}
+    nonportable_extensions:
+      - {"vendor_name": "COMMON", "data": {"namespace": "menura", "version": 1, "date_range": {"dimension": "balances.period", "from": "2026-03-01", "to": "2026-03-31"}}}
+expect:
+  outcome: "plan"
+  rows: "pop-period-end-001.csv"
+  row_order: "any"
