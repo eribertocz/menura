@@ -41,11 +41,15 @@ pub enum ContractKind {
     ModelDescription,
     /// `menura.integrity_checks` (out).
     IntegrityChecks,
+    /// `menura.model_dependencies` (out).
+    ModelDependencies,
+    /// `menura.model_diff` (out).
+    ModelDiff,
 }
 
 impl ContractKind {
     /// Every contract, in the order of the contracts table.
-    pub const ALL: [Self; 9] = [
+    pub const ALL: [Self; 11] = [
         Self::CatalogSchema,
         Self::CatalogState,
         Self::Query,
@@ -55,6 +59,8 @@ impl ContractKind {
         Self::AuditRecord,
         Self::ModelDescription,
         Self::IntegrityChecks,
+        Self::ModelDependencies,
+        Self::ModelDiff,
     ];
 
     /// The part of the contract name after the namespace, such as `catalog_schema`.
@@ -70,6 +76,8 @@ impl ContractKind {
             Self::AuditRecord => "audit_record",
             Self::ModelDescription => "model_description",
             Self::IntegrityChecks => "integrity_checks",
+            Self::ModelDependencies => "model_dependencies",
+            Self::ModelDiff => "model_diff",
         }
     }
 
@@ -86,6 +94,8 @@ impl ContractKind {
             Self::AuditRecord => "menura.audit_record",
             Self::ModelDescription => "menura.model_description",
             Self::IntegrityChecks => "menura.integrity_checks",
+            Self::ModelDependencies => "menura.model_dependencies",
+            Self::ModelDiff => "menura.model_diff",
         }
     }
 
@@ -103,6 +113,8 @@ impl ContractKind {
             Self::AuditRecord => "semantic_compiler.audit_record",
             Self::ModelDescription => "semantic_compiler.model_description",
             Self::IntegrityChecks => "semantic_compiler.integrity_checks",
+            Self::ModelDependencies => "semantic_compiler.model_dependencies",
+            Self::ModelDiff => "semantic_compiler.model_diff",
         }
     }
 

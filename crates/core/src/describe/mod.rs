@@ -6,7 +6,7 @@ mod capabilities;
 mod datasets;
 mod graph;
 mod listing;
-mod metrics;
+pub(crate) mod metrics;
 mod steps;
 
 use menura_contracts::ContractKind;

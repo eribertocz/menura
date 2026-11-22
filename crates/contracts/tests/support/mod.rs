@@ -33,6 +33,8 @@ pub fn examples() -> Vec<Example> {
         example!(AuditRecord, "audit-record.example.json"),
         example!(ModelDescription, "model-description.example.json"),
         example!(IntegrityChecks, "integrity-checks.example.json"),
+        example!(ModelDependencies, "model-dependencies.example.json"),
+        example!(ModelDiff, "model-diff.example.json"),
     ]
 }
 
