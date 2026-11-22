@@ -1,0 +1,14 @@
+id: ctx-to-date-sql-date-trunc-001
+rules: [E4-8.5, E4-8.6, E4-3.15, CTX-3a.1, E4-7.8]
+model: ctx-to-date
+security_context: analyst.json
+query:
+  contract: "menura.query"
+  contract_version: "1.1.0"
+  time_zone: "UTC"
+  sql: "SELECT DATE_TRUNC('month', order_date) AS order_month, AGG(sales) AS sales, AGG(sales_ytd) AS sales_ytd FROM ctx_to_date.orders GROUP BY ALL"
+expect:
+  outcome: "plan"
+  sql: "ctx-to-date-sql-date-trunc-001.sql"
+  row_order: "any"
+  rows: "ctx-to-date-sql-date-trunc-001.csv"

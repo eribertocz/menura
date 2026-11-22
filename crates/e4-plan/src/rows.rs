@@ -16,6 +16,7 @@ use crate::dimensions::ComputedDimensions;
 use crate::error::PlanError;
 use crate::layout::Layout;
 use crate::nodes::{component_expression, compute_dimensions, deduplicate, filter};
+use crate::to_date::ToDateStep;
 use crate::{followed, joins, policy_visits, scan, visibility};
 
 /// Where the rows of a branch are read from.
@@ -52,6 +53,9 @@ pub(crate) struct RowsRequest<'request> {
     /// the rows read: the rows added for `missing: zero` (E4-7.6). `None` reads the home
     /// rows.
     pub(crate) replaced_home: Option<&'request ReplacedHome<'request>>,
+    /// The `ToDate` of a branch of a `period_to_date` context query, which follows the query
+    /// filters and precedes the `Deduplicate`, whose group then reads its period (E4-8.5).
+    pub(crate) to_date: Option<&'request ToDateStep>,
 }
 
 /// Builds the rows that take the place of the home rows, with the given home columns.
@@ -59,7 +63,8 @@ pub(crate) type ReplacedHome<'build> =
     dyn Fn(&[NormalizedName]) -> Result<PlanNode, PlanError> + 'build;
 
 /// The rows of the branch of `source` for `request`: its visible home rows, joined along its
-/// join tree, filtered by the predicate, with its expression dimensions computed, then
+/// join tree, filtered by the predicate, with its expression dimensions computed, repeated by
+/// its `ToDate` when it has one, then
 /// deduplicated per (key values, home row) when the
 /// branch joins and has components (E4-4.0a to E4-4.0f). Replaced home rows are joined and
 /// filtered the same way, and never deduplicated: they have no home row identity.
@@ -107,9 +112,17 @@ pub(crate) fn branch_rows(
     if let Some(computed) = request.computed {
         node = compute_dimensions(node, computed)?;
     }
+    let mut group = request.keys;
+    if let Some(step) = request.to_date {
+        let origin = Origin::Model(home.location.clone());
+        node = step
+            .node(node, origin.clone())
+            .map_err(|violation| PlanError::invariant(violation, &origin))?;
+        group = &step.keys;
+    }
     if let Some(identity) = identity {
         let origin = Origin::Model(home.location.clone());
-        node = deduplicate(node, request.keys, identity.clone(), origin);
+        node = deduplicate(node, group, identity.clone(), origin);
     }
     Ok(node)
 }

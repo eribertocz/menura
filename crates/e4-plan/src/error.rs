@@ -1,4 +1,4 @@
-//! The errors of E4: `ESEC-02`, `EQRY-03`, and the internal errors of an input the stages
+//! The errors of E4: `ESEC-02`, `EQRY-03`, `E4-02`, `E4-03`, and the internal errors of an input the stages
 //! before E4 never produce.
 
 use std::fmt;
@@ -10,6 +10,11 @@ use menura_security::RowFilterError;
 /// The message of `EQRY-03` in E4: it names neither the policy nor its dataset (SCY-4a.1).
 const MISSING_REFERENCE_TIME: &str =
     "the query needs `reference_time` to apply the security rules; add it to the query";
+
+/// The message of `E4-02` (E4-8.6).
+const MISSING_TIME_KEY: &str = "this metric is evaluated over a period of its time dimension; \
+    group by that time dimension once, at a grain equal to or finer than the period's, with a \
+    time grain for a timestamp, and not by week for a month or a quarter";
 
 /// The message of `E4-03` (ADD-4.9).
 const SPLIT_SNAPSHOT: &str = "this grain is finer than the `snapshot_grain` of a semi-additive \
@@ -25,6 +30,9 @@ pub enum PlanError {
     /// `reference_time` (E4-6.9b, QRY-2). It carries nothing about the policy, so that no
     /// message can name it (SCY-4a.1).
     MissingReferenceTime,
+    /// `E4-02`: a context modifier needs a time key the query does not have (E4-8.6,
+    /// CTX-3.1, E2-5 row 19), located at the query metric that reads the context metric.
+    MissingTimeKey(QueryLocation),
     /// `E4-03`: the query groups by the `over` field of a semi-additive metric at a grain
     /// finer than its `snapshot_grain` (ADD-4.9, E4-7.8, E2-5 row 19), located at the
     /// `time_grains` entry, else the dimension, else the SQL `SELECT` item.
@@ -57,19 +65,11 @@ impl PlanError {
                 }),
                 alternatives: None,
             }),
+            Self::MissingTimeKey(location) => {
+                Some(query_diagnostic("E4-02", MISSING_TIME_KEY, location))
+            }
             Self::SplitSnapshot(location) => {
-                let position = location.position();
-                Some(Diagnostic {
-                    code: "E4-03".to_owned(),
-                    message: SPLIT_SNAPSHOT.to_owned(),
-                    location: Some(DiagnosticLocation {
-                        document: InputDocument::Query,
-                        pointer: location.pointer().to_owned(),
-                        line: position.and_then(|position| u64::try_from(position.line()).ok()),
-                        column: position.and_then(|position| u64::try_from(position.column()).ok()),
-                    }),
-                    alternatives: None,
-                })
+                Some(query_diagnostic("E4-03", SPLIT_SNAPSHOT, location))
             }
             Self::Invariant { .. } => None,
         }
@@ -81,6 +81,22 @@ impl PlanError {
             violation,
             origin: origin.clone(),
         }
+    }
+}
+
+/// The diagnostic `code` with `message`, located at the query element `location`.
+fn query_diagnostic(code: &str, message: &str, location: &QueryLocation) -> Diagnostic {
+    let position = location.position();
+    Diagnostic {
+        code: code.to_owned(),
+        message: message.to_owned(),
+        location: Some(DiagnosticLocation {
+            document: InputDocument::Query,
+            pointer: location.pointer().to_owned(),
+            line: position.and_then(|position| u64::try_from(position.line()).ok()),
+            column: position.and_then(|position| u64::try_from(position.column()).ok()),
+        }),
+        alternatives: None,
     }
 }
 
@@ -122,8 +138,9 @@ pub enum InvariantViolation {
     UnknownPopulation,
     /// A unit of periods that does not output the period column it is read by (E4-3.12).
     UnknownPeriodColumn,
-    /// A context metric whose modifier E4 does not plan yet (`prior_period`, `period_to_date`),
-    /// or one that the base of another context metric reads (`E0C-64`).
+    /// A context metric whose modifier E4 does not plan yet (`prior_period`), or one that the
+    /// base of another context metric reads (`E0C-64`); or a semi-additive branch in a
+    /// `period_to_date` context query (`E0C-65`).
     ContextMetric,
     /// Context queries other than those the query's context metrics need, in the order of
     /// E4-8.8 (E4-8.2).
@@ -148,6 +165,13 @@ impl fmt::Display for PlanError {
         match self {
             Self::MissingAttribute(error) => error.fmt(formatter),
             Self::MissingReferenceTime => write!(formatter, "EQRY-03: {MISSING_REFERENCE_TIME}"),
+            Self::MissingTimeKey(location) => {
+                write!(
+                    formatter,
+                    "E4-02: {MISSING_TIME_KEY} at {}",
+                    location.pointer()
+                )
+            }
             Self::SplitSnapshot(location) => {
                 write!(
                     formatter,

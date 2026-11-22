@@ -1,0 +1,19 @@
+id: ctx-to-date-no-date-range-001
+rules: [E4-8.5, CTX-3a.4, CTX-3a.1]
+model: ctx-to-date
+security_context: analyst.json
+query:
+  contract: "menura.query"
+  contract_version: "1.1.0"
+  time_zone: "UTC"
+  query:
+    dimensions: ["orders.order_date"]
+    metrics:
+      - {"metric": "sales_qtd", "alias": "sales_qtd"}
+    filter: "orders.amount > 5"
+    nonportable_extensions:
+      - {"vendor_name": "COMMON", "data": {"namespace": "menura", "version": 1, "time_grains": [{"dimension": "orders.order_date", "grain": "month"}]}}
+expect:
+  outcome: "plan"
+  row_order: "any"
+  rows: "ctx-to-date-no-date-range-001.csv"

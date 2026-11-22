@@ -359,6 +359,9 @@ mod tests {
     use std::path::PathBuf;
 
     use super::*;
+    use menura_contracts::ContractVersion;
+    use menura_core::{CompileErrorContract, DiagnosticLocation, InputDocument};
+
     use crate::case_file::parse_case;
     use crate::database::prepare_database;
     use crate::divergences::parse_divergences;
@@ -378,12 +381,6 @@ mod tests {
     /// Runs the query part of a case with the given classified divergences.
     fn status_with(case_text: &str, divergences: &Divergences) -> CaseStatus {
         status_in_model("slice", case_text, divergences)
-    }
-
-    /// Runs the query part of a case of the `e0-context` model, whose `billed_ytd` is a
-    /// context metric, a capability outside the 0.7.0 slice (VS-1e).
-    fn context_status(case_text: &str) -> CaseStatus {
-        status_in_model("e0-context", case_text, &Divergences::default())
     }
 
     /// Runs the query part of a case of the model `model`; the files the case names are under
@@ -421,18 +418,6 @@ mod tests {
         )
     }
 
-    fn context_case_text(query: &str, expect: &str) -> String {
-        format!(
-            "id: cs-unit-002\nrules: [VS-4]\nmodel: e0-context\n\
-             load_options: {{grant_authenticated_to_all: true}}\nsecurity_context: analyst.json\n\
-             query: {{contract: menura.query, contract_version: \"1.1.0\", time_zone: UTC, \
-             query: {query}}}\nexpect: {expect}\n"
-        )
-    }
-
-    /// `billed_ytd` is a `period_to_date` context metric, which is outside the slice (VS-1e).
-    const OUTSIDE_THE_SLICE: &str = "{metrics: [billed, billed_ytd]}";
-
     const BY_REGION: &str = "{dimensions: [sales.region], metrics: [total_amount, total_quantity, \
                              sale_count]}";
 
@@ -449,38 +434,67 @@ mod tests {
         assert_eq!(status(&case_text(BY_REGION, expect)), CaseStatus::Passed);
     }
 
+    /// The compile error `E_NOT_YET_SUPPORTED` at `/query/metrics/1`, built directly: from
+    /// 0.8.0 no query of the suite is outside the slice (VS-1f), so none can produce it.
+    fn not_yet_supported() -> CompileErrorDocument {
+        CompileErrorDocument {
+            contract: CompileErrorContract::CompileError,
+            contract_version: ContractVersion::parse("1.1.0").unwrap(),
+            errors: vec![Diagnostic {
+                code: NOT_YET_SUPPORTED.to_owned(),
+                message: "this query needs a capability outside the slice".to_owned(),
+                location: Some(DiagnosticLocation {
+                    document: InputDocument::Query,
+                    pointer: "/query/metrics/1".to_owned(),
+                    line: None,
+                    column: None,
+                }),
+                alternatives: None,
+            }],
+            warnings: Vec::new(),
+        }
+    }
+
+    fn unit_case(expect: &str) -> Case {
+        parse_case(&case_text(BY_REGION, expect)).unwrap()
+    }
+
     #[test]
     fn vs_4_a_query_outside_the_slice_is_pending_whatever_the_expectation() {
-        let status = context_status(&context_case_text(
-            OUTSIDE_THE_SLICE,
+        let result = CompileResult::Error(not_yet_supported());
+        for expect in [
             "{outcome: plan, rows: cs-plan-rows-001.csv}",
-        ));
-        let CaseStatus::Pending(reason) = status else {
-            panic!("the case is pending: {status:?}");
-        };
-        assert!(reason.contains(NOT_YET_SUPPORTED), "{reason}");
+            "{outcome: error, error: E_NAME_NOT_FOUND}",
+        ] {
+            let status = pending_status(&unit_case(expect).expect, &result);
+            let Some(CaseStatus::Pending(reason)) = status else {
+                panic!("the case is pending: {status:?}");
+            };
+            assert!(reason.contains(NOT_YET_SUPPORTED), "{reason}");
+        }
     }
 
     #[test]
     fn vs_4_a_case_that_expects_not_yet_supported_compares_it() {
         let expect = |pointer: &str| {
-            format!(
+            unit_case(&format!(
                 "{{outcome: error, error: E_NOT_YET_SUPPORTED, location: {{document: query, \
                  pointer: {pointer}}}}}"
-            )
+            ))
         };
+        let error = not_yet_supported();
+        let folder = conformance_directory().join("cases/cs");
+        let expected = expect("/query/metrics/1");
         assert_eq!(
-            context_status(&context_case_text(
-                OUTSIDE_THE_SLICE,
-                &expect("/query/metrics/1")
-            )),
+            pending_status(&expected.expect, &CompileResult::Error(error.clone())),
+            None
+        );
+        assert_eq!(
+            check_error_and_audit(&expected, &error, None, &folder),
             CaseStatus::Passed
         );
         assert_fails(
-            context_status(&context_case_text(
-                OUTSIDE_THE_SLICE,
-                &expect("/query/metrics/0"),
-            )),
+            check_error_and_audit(&expect("/query/metrics/0"), &error, None, &folder),
             "location",
         );
     }

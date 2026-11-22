@@ -73,6 +73,7 @@ pub(crate) fn semi_additive_plan(branch: &SemiAdditiveBranch<'_>) -> Result<Plan
             fields: &rule::snapshot_fields(declaration),
             predicate: query_predicate(branch.query, branch.source.layout)?,
             replaced_home: None,
+            to_date: None,
         },
     )?;
     let over = match declaration.snapshot_grain {

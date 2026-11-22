@@ -274,6 +274,28 @@ fn vs_1f_a_share_of_total_metric_is_in_the_slice() {
     assert_in_the_slice(&query, &model);
 }
 
+#[test]
+fn vs_1f_a_period_to_date_metric_is_in_the_slice() {
+    let model = model_with(|parts| {
+        semantic_metric(parts, "COST").context = Some(ContextMetric {
+            base: name("REVENUE"),
+            modifier: ContextModifier::PeriodToDate {
+                time_dimension: FieldPath {
+                    dataset: name("ORDERS"),
+                    field: name("ORDER_DATE"),
+                },
+                grain: Grain::Year,
+            },
+        });
+    });
+    let query = tree(
+        vec![dimension(0, "orders.region")],
+        vec![metric(0, "cost")],
+        QueryTreeParts::default(),
+    );
+    assert_in_the_slice(&query, &model);
+}
+
 /// Makes COST a context metric over REVENUE.
 fn cost_as_a_context_metric(parts: &mut ModelParts) {
     semantic_metric(parts, "COST").context = Some(ContextMetric {

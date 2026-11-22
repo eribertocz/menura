@@ -79,7 +79,7 @@ pub(crate) fn planned_metrics_with_contexts<'input>(
     query: &'input BoundQuery,
     model: &'input InternalModel,
 ) -> Result<(Vec<PlannedMetric<'input>>, Vec<ContextQuery>), PlanError> {
-    let mut registry = ContextRegistry::new(query);
+    let mut registry = ContextRegistry::new(query, model);
     let metrics = query
         .columns()
         .metrics()

@@ -1,0 +1,20 @@
+id: ctx-to-date-distinct-count-001
+rules: [E4-8.5, E4-4.0e, E4-4.0f, E4-3.15, CTX-3a.1, CTX-3a.4]
+model: ctx-to-date
+security_context: analyst.json
+query:
+  contract: "menura.query"
+  contract_version: "1.1.0"
+  time_zone: "UTC"
+  query:
+    dimensions: ["orders.order_date", "customers.region"]
+    metrics:
+      - {"metric": "buyers", "alias": "buyers"}
+      - {"metric": "buyers_ytd", "alias": "buyers_ytd"}
+    nonportable_extensions:
+      - {"vendor_name": "COMMON", "data": {"namespace": "menura", "version": 1, "time_grains": [{"dimension": "orders.order_date", "grain": "month"}]}}
+expect:
+  outcome: "plan"
+  sql: "ctx-to-date-distinct-count-001.sql"
+  row_order: "any"
+  rows: "ctx-to-date-distinct-count-001.csv"

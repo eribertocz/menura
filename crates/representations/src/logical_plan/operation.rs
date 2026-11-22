@@ -11,6 +11,7 @@ use super::items::{
 use super::lookup::{LookupColumn, LookupKey};
 use super::population::PopulationRule;
 use super::snapshot::SnapshotRule;
+use super::to_date::{ToDateGrains, ToDateRange};
 use crate::names::{ColumnName, ColumnPrefix};
 
 /// What a plan node does (E4-3). Every node of the table is defined.
@@ -76,6 +77,24 @@ pub enum Operation {
         group: Vec<Expression>,
         /// The columns that identify a home row: the synthesized row identity (E4-4.0f).
         identity: Vec<ColumnName>,
+    },
+    /// `ToDate(input, dimension, grain, range)`: repeat each row of `input` once for each
+    /// query-grain period t, from the period p of its time value onwards, that lies in the same
+    /// `to_date` period as p (E4-3.15, E4-8.5); a row whose time value is NULL is removed.
+    /// Its output is the columns of `input`, then `period`, which holds the first instant of
+    /// t, of the type of `dimension`.
+    ToDate {
+        /// The input: the rows of a branch after its query filters (E4-4.0d).
+        input: Box<PlanNode>,
+        /// The column of `input` that holds the time value.
+        dimension: ColumnName,
+        /// The query grain and the `grain` of the modifier.
+        grains: ToDateGrains,
+        /// The query `date_range` on the time dimension, when the query has one: only the
+        /// periods t that overlap it are kept.
+        range: Option<ToDateRange>,
+        /// The column that holds t.
+        period: ColumnName,
     },
     /// `Aggregate(input, keys, components)`: group and evaluate components.
     Aggregate {
