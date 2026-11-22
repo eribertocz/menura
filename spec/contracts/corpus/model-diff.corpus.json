@@ -1,0 +1,54 @@
+{
+  "schema": "model-diff",
+  "example": "model-diff.example.json",
+  "cases": [
+    {
+      "name": "published example",
+      "valid": true,
+      "patch": []
+    },
+    {
+      "name": "no changes",
+      "valid": true,
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/changes",
+          "value": []
+        }
+      ]
+    },
+    {
+      "name": "unknown change",
+      "valid": false,
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/changes/0/change",
+          "value": "renamed"
+        }
+      ]
+    },
+    {
+      "name": "object without kind",
+      "valid": false,
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/changes/0/object",
+          "value": "BILLED"
+        }
+      ]
+    },
+    {
+      "name": "missing new model hash",
+      "valid": false,
+      "patch": [
+        {
+          "op": "remove",
+          "path": "/new_model_hash"
+        }
+      ]
+    }
+  ]
+}

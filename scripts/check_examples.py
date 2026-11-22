@@ -19,6 +19,8 @@ PAIRS = {
     "compiled-plan": "compiled-plan",
     "integrity-checks": "integrity-checks",
     "model-description": "model-description",
+    "model-dependencies": "model-dependencies",
+    "model-diff": "model-diff",
     "query.json-form": "query",
     "query.sql-form": "query",
     "security-context": "security-context",

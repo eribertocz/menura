@@ -16,6 +16,13 @@ examples in `examples/`, all checked in CI.
 | Model description | `menura.model_description` | Out | [model-description.md](model-description.md) |
 | Integrity checks | `menura.integrity_checks` | Out | [integrity-checks.md](integrity-checks.md) |
 
+Planned for 0.8.0, specified but not produced yet; they join the table above when the compiler produces them:
+
+| Producing function | `contract` value | Direction | Chapter |
+|---|---|---|---|
+| `dependencies` | `menura.model_dependencies` | Out | [model-dependencies.md](model-dependencies.md) |
+| `diff` | `menura.model_diff` | Out | [model-dependencies.md](model-dependencies.md) |
+
 ## Public contracts
 
 - **CON-0.1** Every contract listed above is **public**: it is the only interface other modules may rely on. Anything not in a contract (internal types, plan nodes, crate APIs other than the public functions) is private and may change at any time.

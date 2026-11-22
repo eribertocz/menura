@@ -132,43 +132,45 @@ Find a rule ID or a section here, then open only that file at that line.
 | [08-conformance-suite.md](08-conformance-suite.md#L1) | 1 | section | 8. Conformance suite |
 | [08-conformance-suite.md](08-conformance-suite.md#L5) | 5 | section | CS-1 Layout |
 | [08-conformance-suite.md](08-conformance-suite.md#L22) | 22 | section | CS-2 Case format |
-| [08-conformance-suite.md](08-conformance-suite.md#L50) | 50 | rule | CS-2.1 |
-| [08-conformance-suite.md](08-conformance-suite.md#L51) | 51 | rule | CS-2.2 |
-| [08-conformance-suite.md](08-conformance-suite.md#L52) | 52 | rule | CS-2.3 |
-| [08-conformance-suite.md](08-conformance-suite.md#L53) | 53 | rule | CS-2.4 |
-| [08-conformance-suite.md](08-conformance-suite.md#L54) | 54 | rule | CS-2.4a |
-| [08-conformance-suite.md](08-conformance-suite.md#L55) | 55 | rule | CS-2.4b |
-| [08-conformance-suite.md](08-conformance-suite.md#L56) | 56 | rule | CS-2.4c |
-| [08-conformance-suite.md](08-conformance-suite.md#L57) | 57 | rule | CS-2.5 |
-| [08-conformance-suite.md](08-conformance-suite.md#L58) | 58 | rule | CS-2.6 |
-| [08-conformance-suite.md](08-conformance-suite.md#L59) | 59 | rule | CS-2.7 |
-| [08-conformance-suite.md](08-conformance-suite.md#L60) | 60 | rule | CS-2.9 |
-| [08-conformance-suite.md](08-conformance-suite.md#L61) | 61 | rule | CS-2.10 |
-| [08-conformance-suite.md](08-conformance-suite.md#L62) | 62 | rule | CS-2.10a |
-| [08-conformance-suite.md](08-conformance-suite.md#L63) | 63 | rule | CS-2.11 |
-| [08-conformance-suite.md](08-conformance-suite.md#L64) | 64 | rule | CS-2.12 |
-| [08-conformance-suite.md](08-conformance-suite.md#L65) | 65 | rule | CS-2.13 |
-| [08-conformance-suite.md](08-conformance-suite.md#L66) | 66 | rule | CS-2.14 |
-| [08-conformance-suite.md](08-conformance-suite.md#L67) | 67 | rule | CS-2.15 |
-| [08-conformance-suite.md](08-conformance-suite.md#L68) | 68 | rule | CS-2.16 |
-| [08-conformance-suite.md](08-conformance-suite.md#L69) | 69 | rule | CS-2.8 |
-| [08-conformance-suite.md](08-conformance-suite.md#L71) | 71 | section | CS-3 Apache Ossie suites |
-| [08-conformance-suite.md](08-conformance-suite.md#L73) | 73 | rule | CS-3.1 |
-| [08-conformance-suite.md](08-conformance-suite.md#L74) | 74 | rule | CS-3.2 |
-| [08-conformance-suite.md](08-conformance-suite.md#L76) | 76 | section | CS-4 Running |
-| [08-conformance-suite.md](08-conformance-suite.md#L78) | 78 | rule | CS-4.1 |
-| [08-conformance-suite.md](08-conformance-suite.md#L79) | 79 | rule | CS-4.2 |
-| [08-conformance-suite.md](08-conformance-suite.md#L80) | 80 | rule | CS-4.3 |
-| [08-conformance-suite.md](08-conformance-suite.md#L81) | 81 | rule | CS-4.4 |
-| [08-conformance-suite.md](08-conformance-suite.md#L82) | 82 | rule | CS-4.5 |
-| [08-conformance-suite.md](08-conformance-suite.md#L83) | 83 | rule | CS-4.6 |
-| [08-conformance-suite.md](08-conformance-suite.md#L84) | 84 | rule | CS-4.7 |
-| [08-conformance-suite.md](08-conformance-suite.md#L85) | 85 | rule | CS-4.8 |
-| [08-conformance-suite.md](08-conformance-suite.md#L87) | 87 | section | CS-5 Producer suite |
-| [08-conformance-suite.md](08-conformance-suite.md#L92) | 92 | rule | CS-5.1 |
-| [08-conformance-suite.md](08-conformance-suite.md#L93) | 93 | rule | CS-5.2 |
-| [08-conformance-suite.md](08-conformance-suite.md#L94) | 94 | rule | CS-5.3 |
-| [08-conformance-suite.md](08-conformance-suite.md#L95) | 95 | rule | CS-5.4 |
+| [08-conformance-suite.md](08-conformance-suite.md#L52) | 52 | rule | CS-2.1 |
+| [08-conformance-suite.md](08-conformance-suite.md#L53) | 53 | rule | CS-2.2 |
+| [08-conformance-suite.md](08-conformance-suite.md#L54) | 54 | rule | CS-2.3 |
+| [08-conformance-suite.md](08-conformance-suite.md#L55) | 55 | rule | CS-2.4 |
+| [08-conformance-suite.md](08-conformance-suite.md#L56) | 56 | rule | CS-2.4a |
+| [08-conformance-suite.md](08-conformance-suite.md#L57) | 57 | rule | CS-2.4b |
+| [08-conformance-suite.md](08-conformance-suite.md#L58) | 58 | rule | CS-2.4c |
+| [08-conformance-suite.md](08-conformance-suite.md#L59) | 59 | rule | CS-2.5 |
+| [08-conformance-suite.md](08-conformance-suite.md#L60) | 60 | rule | CS-2.6 |
+| [08-conformance-suite.md](08-conformance-suite.md#L61) | 61 | rule | CS-2.7 |
+| [08-conformance-suite.md](08-conformance-suite.md#L62) | 62 | rule | CS-2.9 |
+| [08-conformance-suite.md](08-conformance-suite.md#L63) | 63 | rule | CS-2.10 |
+| [08-conformance-suite.md](08-conformance-suite.md#L64) | 64 | rule | CS-2.10a |
+| [08-conformance-suite.md](08-conformance-suite.md#L65) | 65 | rule | CS-2.11 |
+| [08-conformance-suite.md](08-conformance-suite.md#L66) | 66 | rule | CS-2.12 |
+| [08-conformance-suite.md](08-conformance-suite.md#L67) | 67 | rule | CS-2.13 |
+| [08-conformance-suite.md](08-conformance-suite.md#L68) | 68 | rule | CS-2.14 |
+| [08-conformance-suite.md](08-conformance-suite.md#L69) | 69 | rule | CS-2.15 |
+| [08-conformance-suite.md](08-conformance-suite.md#L70) | 70 | rule | CS-2.16 |
+| [08-conformance-suite.md](08-conformance-suite.md#L71) | 71 | rule | CS-2.17 |
+| [08-conformance-suite.md](08-conformance-suite.md#L72) | 72 | rule | CS-2.18 |
+| [08-conformance-suite.md](08-conformance-suite.md#L73) | 73 | rule | CS-2.8 |
+| [08-conformance-suite.md](08-conformance-suite.md#L75) | 75 | section | CS-3 Apache Ossie suites |
+| [08-conformance-suite.md](08-conformance-suite.md#L77) | 77 | rule | CS-3.1 |
+| [08-conformance-suite.md](08-conformance-suite.md#L78) | 78 | rule | CS-3.2 |
+| [08-conformance-suite.md](08-conformance-suite.md#L80) | 80 | section | CS-4 Running |
+| [08-conformance-suite.md](08-conformance-suite.md#L82) | 82 | rule | CS-4.1 |
+| [08-conformance-suite.md](08-conformance-suite.md#L83) | 83 | rule | CS-4.2 |
+| [08-conformance-suite.md](08-conformance-suite.md#L84) | 84 | rule | CS-4.3 |
+| [08-conformance-suite.md](08-conformance-suite.md#L85) | 85 | rule | CS-4.4 |
+| [08-conformance-suite.md](08-conformance-suite.md#L86) | 86 | rule | CS-4.5 |
+| [08-conformance-suite.md](08-conformance-suite.md#L87) | 87 | rule | CS-4.6 |
+| [08-conformance-suite.md](08-conformance-suite.md#L88) | 88 | rule | CS-4.7 |
+| [08-conformance-suite.md](08-conformance-suite.md#L89) | 89 | rule | CS-4.8 |
+| [08-conformance-suite.md](08-conformance-suite.md#L91) | 91 | section | CS-5 Producer suite |
+| [08-conformance-suite.md](08-conformance-suite.md#L96) | 96 | rule | CS-5.1 |
+| [08-conformance-suite.md](08-conformance-suite.md#L97) | 97 | rule | CS-5.2 |
+| [08-conformance-suite.md](08-conformance-suite.md#L98) | 98 | rule | CS-5.3 |
+| [08-conformance-suite.md](08-conformance-suite.md#L99) | 99 | rule | CS-5.4 |
 | [09-continuous-integration.md](09-continuous-integration.md#L1) | 1 | section | 9. Continuous integration |
 | [09-continuous-integration.md](09-continuous-integration.md#L6) | 6 | section | CI-1 On every pull request and every push to `main` |
 | [09-continuous-integration.md](09-continuous-integration.md#L30) | 30 | section | CI-2 Scheduled |
@@ -184,36 +186,37 @@ Find a rule ID or a section here, then open only that file at that line.
 | [architecture/README.md](architecture/README.md#L38) | 38 | section | 3.3 Contract evolution |
 | [architecture/README.md](architecture/README.md#L47) | 47 | section | 3.4 Compiled plan |
 | [architecture/README.md](architecture/README.md#L60) | 60 | section | 3.5 Public functions |
-| [architecture/README.md](architecture/README.md#L91) | 91 | rule | ARC-5.1 |
-| [architecture/README.md](architecture/README.md#L92) | 92 | rule | ARC-5.2 |
-| [architecture/README.md](architecture/README.md#L94) | 94 | rule | ARC-5.3 |
-| [architecture/README.md](architecture/README.md#L95) | 95 | rule | ARC-5.4 |
-| [architecture/README.md](architecture/README.md#L96) | 96 | rule | ARC-5.5 |
-| [architecture/README.md](architecture/README.md#L98) | 98 | section | 3.6 Delivery forms |
-| [architecture/README.md](architecture/README.md#L112) | 112 | rule | ARC-6.1 |
-| [architecture/README.md](architecture/README.md#L113) | 113 | rule | ARC-6.2 |
-| [architecture/README.md](architecture/README.md#L115) | 115 | section | 3.7 Integration |
-| [architecture/README.md](architecture/README.md#L123) | 123 | section | 3.8 Boundary enforcement (from the first commit) |
-| [architecture/README.md](architecture/README.md#L130) | 130 | rule | A1 |
-| [architecture/README.md](architecture/README.md#L131) | 131 | rule | A2 |
-| [architecture/README.md](architecture/README.md#L132) | 132 | rule | A3 |
-| [architecture/README.md](architecture/README.md#L133) | 133 | rule | A4 |
-| [architecture/README.md](architecture/README.md#L134) | 134 | rule | A5 |
-| [architecture/README.md](architecture/README.md#L135) | 135 | rule | A6 |
-| [architecture/README.md](architecture/README.md#L140) | 140 | section | 3.9 Lineage and audit |
+| [architecture/README.md](architecture/README.md#L93) | 93 | rule | ARC-5.1 |
+| [architecture/README.md](architecture/README.md#L94) | 94 | rule | ARC-5.2 |
+| [architecture/README.md](architecture/README.md#L96) | 96 | rule | ARC-5.3 |
+| [architecture/README.md](architecture/README.md#L97) | 97 | rule | ARC-5.4 |
+| [architecture/README.md](architecture/README.md#L98) | 98 | rule | ARC-5.5 |
+| [architecture/README.md](architecture/README.md#L99) | 99 | rule | ARC-5.6 |
+| [architecture/README.md](architecture/README.md#L101) | 101 | section | 3.6 Delivery forms |
+| [architecture/README.md](architecture/README.md#L115) | 115 | rule | ARC-6.1 |
+| [architecture/README.md](architecture/README.md#L116) | 116 | rule | ARC-6.2 |
+| [architecture/README.md](architecture/README.md#L118) | 118 | section | 3.7 Integration |
+| [architecture/README.md](architecture/README.md#L126) | 126 | section | 3.8 Boundary enforcement (from the first commit) |
+| [architecture/README.md](architecture/README.md#L133) | 133 | rule | A1 |
+| [architecture/README.md](architecture/README.md#L134) | 134 | rule | A2 |
+| [architecture/README.md](architecture/README.md#L135) | 135 | rule | A3 |
+| [architecture/README.md](architecture/README.md#L136) | 136 | rule | A4 |
+| [architecture/README.md](architecture/README.md#L137) | 137 | rule | A5 |
+| [architecture/README.md](architecture/README.md#L138) | 138 | rule | A6 |
+| [architecture/README.md](architecture/README.md#L143) | 143 | section | 3.9 Lineage and audit |
 | [contracts/README.md](contracts/README.md#L1) | 1 | section | Contracts |
-| [contracts/README.md](contracts/README.md#L19) | 19 | section | Public contracts |
-| [contracts/README.md](contracts/README.md#L21) | 21 | rule | CON-0.1 |
-| [contracts/README.md](contracts/README.md#L22) | 22 | rule | CON-0.2 |
-| [contracts/README.md](contracts/README.md#L23) | 23 | rule | CON-0.3 |
-| [contracts/README.md](contracts/README.md#L24) | 24 | rule | CON-0.4 |
-| [contracts/README.md](contracts/README.md#L25) | 25 | rule | CON-0.5 |
-| [contracts/README.md](contracts/README.md#L30) | 30 | section | Shared rules |
-| [contracts/README.md](contracts/README.md#L32) | 32 | rule | CON-1 |
-| [contracts/README.md](contracts/README.md#L33) | 33 | rule | CON-2 |
-| [contracts/README.md](contracts/README.md#L34) | 34 | rule | CON-3 |
-| [contracts/README.md](contracts/README.md#L35) | 35 | rule | CON-4 |
-| [contracts/README.md](contracts/README.md#L36) | 36 | rule | CON-5 |
+| [contracts/README.md](contracts/README.md#L26) | 26 | section | Public contracts |
+| [contracts/README.md](contracts/README.md#L28) | 28 | rule | CON-0.1 |
+| [contracts/README.md](contracts/README.md#L29) | 29 | rule | CON-0.2 |
+| [contracts/README.md](contracts/README.md#L30) | 30 | rule | CON-0.3 |
+| [contracts/README.md](contracts/README.md#L31) | 31 | rule | CON-0.4 |
+| [contracts/README.md](contracts/README.md#L32) | 32 | rule | CON-0.5 |
+| [contracts/README.md](contracts/README.md#L37) | 37 | section | Shared rules |
+| [contracts/README.md](contracts/README.md#L39) | 39 | rule | CON-1 |
+| [contracts/README.md](contracts/README.md#L40) | 40 | rule | CON-2 |
+| [contracts/README.md](contracts/README.md#L41) | 41 | rule | CON-3 |
+| [contracts/README.md](contracts/README.md#L42) | 42 | rule | CON-4 |
+| [contracts/README.md](contracts/README.md#L43) | 43 | rule | CON-5 |
 | [contracts/catalog.md](contracts/catalog.md#L1) | 1 | section | Contract: catalog |
 | [contracts/catalog.md](contracts/catalog.md#L5) | 5 | section | CAT-1 Purpose |
 | [contracts/catalog.md](contracts/catalog.md#L10) | 10 | section | CAT-2 Two documents |
@@ -335,6 +338,25 @@ Find a rule ID or a section here, then open only that file at that line.
 | [contracts/integrity-checks.md](contracts/integrity-checks.md#L84) | 84 | rule | CHK-7.2 |
 | [contracts/integrity-checks.md](contracts/integrity-checks.md#L85) | 85 | rule | CHK-7.3 |
 | [contracts/integrity-checks.md](contracts/integrity-checks.md#L86) | 86 | rule | CHK-7.4 |
+| [contracts/model-dependencies.md](contracts/model-dependencies.md#L1) | 1 | section | Contract: model dependencies and model diff |
+| [contracts/model-dependencies.md](contracts/model-dependencies.md#L5) | 5 | section | DEP-1 Purpose |
+| [contracts/model-dependencies.md](contracts/model-dependencies.md#L14) | 14 | section | DEP-2 Content |
+| [contracts/model-dependencies.md](contracts/model-dependencies.md#L45) | 45 | section | DEP-3 Rules |
+| [contracts/model-dependencies.md](contracts/model-dependencies.md#L47) | 47 | rule | DEP-3.1 |
+| [contracts/model-dependencies.md](contracts/model-dependencies.md#L48) | 48 | rule | DEP-3.2 |
+| [contracts/model-dependencies.md](contracts/model-dependencies.md#L49) | 49 | rule | DEP-3.3 |
+| [contracts/model-dependencies.md](contracts/model-dependencies.md#L50) | 50 | rule | DEP-3.4 |
+| [contracts/model-dependencies.md](contracts/model-dependencies.md#L51) | 51 | rule | DEP-3.5 |
+| [contracts/model-dependencies.md](contracts/model-dependencies.md#L52) | 52 | rule | DEP-3.6 |
+| [contracts/model-dependencies.md](contracts/model-dependencies.md#L53) | 53 | rule | DEP-3.7 |
+| [contracts/model-dependencies.md](contracts/model-dependencies.md#L54) | 54 | rule | DEP-3.8 |
+| [contracts/model-dependencies.md](contracts/model-dependencies.md#L55) | 55 | rule | DEP-3.9 |
+| [contracts/model-dependencies.md](contracts/model-dependencies.md#L56) | 56 | rule | DEP-3.10 |
+| [contracts/model-dependencies.md](contracts/model-dependencies.md#L58) | 58 | section | DEP-4 Diff |
+| [contracts/model-dependencies.md](contracts/model-dependencies.md#L60) | 60 | rule | DEP-4.1 |
+| [contracts/model-dependencies.md](contracts/model-dependencies.md#L61) | 61 | rule | DEP-4.2 |
+| [contracts/model-dependencies.md](contracts/model-dependencies.md#L62) | 62 | rule | DEP-4.3 |
+| [contracts/model-dependencies.md](contracts/model-dependencies.md#L63) | 63 | rule | DEP-4.4 |
 | [contracts/model-description.md](contracts/model-description.md#L1) | 1 | section | Contract: model description |
 | [contracts/model-description.md](contracts/model-description.md#L5) | 5 | section | DSC-1 Purpose |
 | [contracts/model-description.md](contracts/model-description.md#L11) | 11 | section | DSC-2 Content |
