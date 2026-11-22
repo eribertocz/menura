@@ -81,7 +81,7 @@ WITH
   "menura_11_zero" AS (
     SELECT
       "menura_fill"."BRANCH",
-      CAST(date_trunc('year', "menura_fill"."menura.period") AS DATE) AS "BALANCE_YEAR",
+      "menura_fill"."BALANCE_YEAR",
       "menura_fill"."CUSTOMER_ID",
       "menura_fill"."menura.period",
       CAST(0 AS DECIMAL(38,2)) AS "BALANCE"

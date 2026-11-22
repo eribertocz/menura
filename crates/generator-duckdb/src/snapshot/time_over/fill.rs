@@ -31,7 +31,7 @@ impl<'input> StepWriter<'input> {
             SnapshotMissing::Zero { added } => {
                 let rows = self.added_rows(frame, added, extra)?;
                 let rows = self.push_step("added", rows);
-                let body = self.zero_values(frame, missing, &rows)?;
+                let body = zero_values(frame, missing, &rows)?;
                 Ok(self.push_step("zero", body))
             }
             SnapshotMissing::CarryForward {
@@ -119,8 +119,8 @@ impl<'input> StepWriter<'input> {
         })
     }
 
-    /// The keys of a filling row, `menura_fill`, except the unit key, which is that of the
-    /// period of `pair`, the alias of the missing pair or of the added row (ADD-4.7).
+    /// The keys of a carried row, `menura_fill`, except the unit key, which is that of the
+    /// period of `pair`, the alias of the missing pair (ADD-4.7).
     fn pair_keys(
         &mut self,
         frame: &Frame<'input>,
@@ -172,32 +172,28 @@ impl<'input> StepWriter<'input> {
             _ => Err(error(InvariantViolation::UnsupportedType, node)),
         }
     }
+}
 
-    /// The value 0 of each component for the `added` rows of the missing pairs (E4-7.6), with
-    /// the keys of the row but the unit key of its period (ADD-4.7).
-    fn zero_values(
-        &mut self,
-        frame: &Frame<'input>,
-        missing: &str,
-        added: &str,
-    ) -> Result<SelectBody, GenerateError> {
-        let mut items = self.pair_keys(frame, FILL)?;
-        items.extend(qualified(FILL, &frame.entity));
-        items.push(format!("{FILL}.{PERIOD}"));
-        for component in &frame.rule.components {
-            let result_type = column_type(frame.node, component.name.as_str())?;
-            items.push(format!(
-                "CAST(0 AS {result_type}) AS {}",
-                crate::identifiers::quote(component.name.as_str())
-            ));
-        }
-        let entity = equalities(FILL, &frame.entity, MISSING, &frame.entity);
-        Ok(SelectBody {
-            items,
-            from: format!("{added} AS {FILL}"),
-            clauses: vec![format!(
-                "JOIN {missing} AS {MISSING} ON {entity} AND {FILL}.{PERIOD} = {MISSING}.{PERIOD}"
-            )],
-        })
+/// The value 0 of each component for the `added` rows of the missing pairs (E4-7.6). An
+/// added row's `over` is the first instant of its period, so its keys, the unit key
+/// included, are those of that period.
+fn zero_values(frame: &Frame<'_>, missing: &str, added: &str) -> Result<SelectBody, GenerateError> {
+    let mut items = qualified(FILL, &frame.keys);
+    items.extend(qualified(FILL, &frame.entity));
+    items.push(format!("{FILL}.{PERIOD}"));
+    for component in &frame.rule.components {
+        let result_type = column_type(frame.node, component.name.as_str())?;
+        items.push(format!(
+            "CAST(0 AS {result_type}) AS {}",
+            crate::identifiers::quote(component.name.as_str())
+        ));
     }
+    let entity = equalities(FILL, &frame.entity, MISSING, &frame.entity);
+    Ok(SelectBody {
+        items,
+        from: format!("{added} AS {FILL}"),
+        clauses: vec![format!(
+            "JOIN {missing} AS {MISSING} ON {entity} AND {FILL}.{PERIOD} = {MISSING}.{PERIOD}"
+        )],
+    })
 }

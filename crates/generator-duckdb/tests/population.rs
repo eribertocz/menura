@@ -65,7 +65,6 @@ fn e4_3_12_periodic() {
         "STATEMENTS",
         Membership::Periodic {
             period: ColumnName::new("STATEMENT_MONTH"),
-            grain: Grain::Month,
         },
         None,
         Grain::Month,
