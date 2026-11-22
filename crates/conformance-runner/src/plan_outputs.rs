@@ -141,15 +141,18 @@ mod tests {
     fn cs_2_11_the_lineage_matches_its_golden_file() {
         let mut plan = plan();
         plan.lineage.clear();
-        let expect = expectation("  lineage: cs-lineage-001.lineage.json\n");
+        let expect = expectation("  lineage: cs-unit-lineage-001.lineage.json\n");
         assert_eq!(plan_outputs_mismatch(&expect, &plan, &case_folder()), None);
     }
 
     #[test]
     fn cs_2_11_a_different_lineage_fails() {
-        let expect = expectation("  lineage: cs-lineage-001.lineage.json\n");
+        let expect = expectation("  lineage: cs-unit-lineage-001.lineage.json\n");
         let reason = plan_outputs_mismatch(&expect, &plan(), &case_folder()).unwrap();
-        assert!(reason.contains("cs-lineage-001.lineage.json"), "{reason}");
+        assert!(
+            reason.contains("cs-unit-lineage-001.lineage.json"),
+            "{reason}"
+        );
     }
 
     #[test]
