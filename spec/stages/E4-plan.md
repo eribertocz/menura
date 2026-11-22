@@ -29,6 +29,8 @@ lowering, with row policies, additivity rules and context modifiers applied.
 | E4-3.12 | `Population(dataset, population, grain, periods)` | Output the expected (entity, period) pairs of `population` (POP-3) at `grain` over `periods`, the query's unit of periods (ADD-4.7). It reads V(D) of `dataset` (E4-6.5, E2-4.9). |
 | E4-3.13 | `Snapshot(input, expected, rule)` | Reduce the rows of `input` to one value per (result group, entity) under the semi-additive `rule` (ADD-3.2, E4-7), `expected` being the output of a `Population` |
 | E4-3.14 | `Periods(from, to, grain)` | One row per period start at `grain`, from the period of `from` to the period of `to`, both included, truncated as POP-3.5 states; the unit of periods of a semi-additive branch with a `date_range` on `over` (E4-7.6) |
+| E4-3.15 | `ToDate(input, dimension, grain, range)` | Repeat each row of `input` once for each query-grain period of `dimension` whose to-date interval contains the row (E4-8.5) |
+| E4-3.16 | `Lookup(result, value, mapping)` | Attach to each row of `result` the components of the row of `value` that `mapping` selects, or their empty-input values (E4-8.7) |
 
 - **E4-3.11** Every node carries its output schema (names, logical types, nullability) and its origin. Column names and the order of the inputs of a multi-node plan follow E6-4.12.
 
@@ -45,7 +47,7 @@ For each branch, in order:
 6. **E4-4.0g** `Aggregate` by the dimension keys with the branch's components.
 
 - **E4-4.1** Unmatched home rows fall into the NULL group of a dimension. That group is kept, never dropped, so totals always add up; the explanation states when the plan can produce a NULL group and which relationship causes it.
-- **E4-4.2** A branch plan with no `Stitch` and no remaining `Deduplicate` after E5 is a **simple plan**; E6 generates it as one aggregate query over the joins.
+- **E4-4.2** A branch plan with no `Stitch`, no `Lookup` and no remaining `Deduplicate` after E5 is a **simple plan**; E6 generates it as one aggregate query over the joins.
 
 ## E4-5 Stitching branches
 
@@ -98,9 +100,21 @@ Semi-additive metrics (balances, inventory) are planned as defined by the
 
 ## E4-8 Context modifiers
 
-Period-to-date, prior-period and percent-of-total metrics are planned as defined by the
-[context extension](../extensions/context.md). Each modified metric becomes an additional
-branch with its own grain and filters, stitched by the query keys.
+A context metric C with base B (CTX-2.1) is planned from the query itself: B is evaluated
+at the result rows, and once more in a modified context, the **context query** of C. The
+[context extension](../extensions/context.md) defines the values; this section defines the plan.
+
+| ID | Rule |
+|---|---|
+| E4-8.1 | **Result rows.** The query is planned as if it also selected B: B's components join the query's branches (E3) like those of any query metric. They supply B's value at each result row and their keys take part in stitching (E4-5.0a). B is an output column only if the query selects it. So the result rows of a context metric are those of its base without the modifier (CTX-3a.1, CTX-3a.4). |
+| E4-8.2 | **Context query.** The context query Q<sub>C</sub> of C is the bound query with B as its only metric, without `order_by` or `limit`, changed as E4-8.3 to E4-8.5 state for C's modifier. It is planned by E3, E4 and E5 like a query, with its own branches, and is never stitched with the query's branches: it is read only through a `Lookup` (E4-8.7). Every branch of Q<sub>C</sub> reads the visible rows of its datasets (E4-6.5, E4-6.8). Two context metrics with the same base and the same modifier share one context query. |
+| E4-8.3 | **`share_of_total`.** Q<sub>C</sub> has the query's dimensions without the `remove` fields (none with `remove: "all"`), and the `time_grains` of the dimensions it keeps. Filters and the `date_range` are unchanged (CTX-3.3). The mapping matches each kept dimension. C's value is B at the result row divided by B in Q<sub>C</sub>, as a 64-bit float; it is NULL when either is NULL or the divisor is zero (CTX-3.4). |
+| E4-8.4 | **`prior_period`.** Q<sub>C</sub> has the query's dimensions and `time_grains`. A `date_range` on `time_dimension` is replaced by its shift: each bound moves back `offset` units of `grain` as CTX-3a.2 moves a day. Every other filter, and a `date_range` on another dimension, is unchanged (CTX-3.2). The mapping matches every dimension other than `time_dimension`, and matches the time key of Q<sub>C</sub> with the result row's time key shifted as CTX-3a.2 states. C's value is B evaluated from the matched components. |
+| E4-8.5 | **`period_to_date`.** Q<sub>C</sub> has the query's dimensions and `time_grains`, and no `date_range` when the query's `date_range` is on `time_dimension`; every other filter is unchanged (CTX-3a.1). In each branch of Q<sub>C</sub>, a `ToDate` follows the query filters (E4-4.0d) and precedes the `Deduplicate` and the `Aggregate`. A row whose time value x lies in the query-grain period p is repeated once for each query-grain period t from p onwards whose start lies in the same `grain` period as x, with t as its time key; a row with a NULL time value is removed. When the query's `date_range` is on `time_dimension`, only the periods t that overlap it are kept. The `Deduplicate` group includes t, so a home row counts once for each t (E4-4.0f). The mapping matches every dimension. C's value is B evaluated from the matched components. |
+| E4-8.6 | **Query grain.** For E4-8.4 and E4-8.5, the time key is the query dimension that names `time_dimension`, at its `time_grains` grain, or at grain `day` for a `date` field without one. A `timestamp` without a time grain, a missing time dimension, or a grain coarser than `grain` is `E4-02` (CTX-3.1), located at the query metric that reads C. The order of grains is `day`, `week`, `month`, `quarter`, `year`, each finer than the next. |
+| E4-8.7 | **Lookup.** After the query's `Stitch` (or its single branch), one `Lookup` per context query, in the order of E4-8.8, attaches the components of B from Q<sub>C</sub>. Each result row matches at most one row of Q<sub>C</sub>, keys compared with NULLs equal (E4-5.0a). A row with no match takes the empty-input value of each component (E4-5.0b), and so does a row whose time key is NULL under E4-8.4 and E4-8.5. A `Lookup` never adds or removes a result row. Metric values are then evaluated as E4-5.0c states. |
+| E4-8.8 | **Order.** Context queries are ordered by the first context metric that needs each, in the order of the query's metrics, a context metric read through a derived metric taking the place of that derived metric. Their branches follow the query's branches in branch order (E3-4.3), each context query's branches in its own E3-4.3 order. |
+| E4-8.9 | **Summaries.** E5-3.5 is not considered for a branch of Q<sub>C</sub> with a `ToDate`. Every other branch of a context query uses a summary under the same conditions as a query branch, its own range being the one E4-8.3 to E4-8.5 give it (CTX-3.6). |
 
 ## E4-9 Order and limit
 
@@ -113,5 +127,5 @@ branch with its own grain and filters, stitched by the query keys.
 |---|---|
 | `ESEC-02` | An applicable row policy needs an absent attribute |
 | `EQRY-03` | An applicable row policy needs `reference_time` and the query has none (E4-6.9b) |
-| `E4-02` | A context modifier needs a time dimension the query lacks, or at a coarser grain |
+| `E4-02` | A context modifier needs a time dimension the query lacks, at a coarser grain, or a `timestamp` without a time grain (E4-8.6) |
 | `E4-03` | Query grain of a semi-additive `over` finer than its `snapshot_grain` (ADD-4.9, E4-7.8); located at the `time_grains` entry, else the dimension, else the SQL `SELECT` item |
