@@ -305,6 +305,14 @@ fn e5_3_4a_branches_that_differ_in_their_keys_are_kept_apart() {
     assert_eq!(records, [rejected(1, NOT_IDENTICAL)]);
 }
 
+/// The name and branch position of each `Stitch` column.
+fn branch_positions(columns: &[StitchColumn]) -> Vec<(&str, usize)> {
+    columns
+        .iter()
+        .map(|column| (column.name.as_str(), column.branch))
+        .collect()
+}
+
 #[test]
 fn e5_3_4a_two_of_three_branches_merge_at_the_position_of_the_first() {
     let plan = stitched(vec![
@@ -337,12 +345,8 @@ fn e5_3_4a_two_of_three_branches_merge_at_the_position_of_the_first() {
         branch(join(scan("ORDERS")), &["metric_2_component_1"]),
     ];
     assert_eq!(branches, &expected_branches);
-    let positions: Vec<(&str, usize)> = columns
-        .iter()
-        .map(|column| (column.name.as_str(), column.branch))
-        .collect();
     assert_eq!(
-        positions,
+        branch_positions(columns),
         [
             ("metric_1_component_1", 0),
             ("metric_2_component_1", 1),
