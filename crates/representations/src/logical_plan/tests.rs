@@ -67,6 +67,7 @@ fn kind_of(operation: &Operation) -> &'static str {
         Operation::Deduplicate { .. } => "Deduplicate",
         Operation::Aggregate { .. } => "Aggregate",
         Operation::Population { .. } => "Population",
+        Operation::Periods { .. } => "Periods",
         Operation::Snapshot { .. } => "Snapshot",
         Operation::Stitch { .. } => "Stitch",
         Operation::Project { .. } => "Project",

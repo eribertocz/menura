@@ -153,3 +153,26 @@ fn e4_3_13_a_non_time_over_reads_only_its_input() {
         Operation::Snapshot { rule, .. } if rule.metric == name("BALANCE")
     ));
 }
+
+#[test]
+fn e4_3_14_periods_reads_no_input() {
+    let from = menura_model::expression::DateValue::new(2026, 1, 1).expect("a date");
+    let to = menura_model::expression::DateValue::new(2026, 4, 30).expect("a date");
+    let periods = node(
+        Operation::Periods {
+            from,
+            to,
+            grain: Grain::Month,
+        },
+        &["period"],
+    );
+
+    assert!(periods.inputs().is_empty());
+    assert!(matches!(
+        periods.operation(),
+        Operation::Periods {
+            grain: Grain::Month,
+            ..
+        }
+    ));
+}

@@ -1,0 +1,19 @@
+id: add-stitch-additive-001
+rules: [E3-4.1, E3-4.3, E4-7.9]
+model: next-semi-additive
+security_context: analyst.json
+query:
+  contract: "menura.query"
+  contract_version: "1.1.0"
+  time_zone: "UTC"
+  query:
+    dimensions: ["customers.category"]
+    metrics:
+      - {"metric": "last_global", "alias": "last_global"}
+      - {"metric": "total_paid", "alias": "total_paid"}
+    nonportable_extensions:
+      - {"vendor_name": "COMMON", "data": {"namespace": "menura", "version": 1, "date_range": {"dimension": "balances.period", "from": "2026-01-01", "to": "2026-04-30"}}}
+expect:
+  outcome: "plan"
+  rows: "add-stitch-additive-001.csv"
+  row_order: "any"

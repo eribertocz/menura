@@ -1,0 +1,18 @@
+id: add-missing-zero-001
+rules: [ADD-4.3, E4-7.6, ADD-4.6, ADD-4.7]
+model: next-semi-additive
+security_context: analyst.json
+query:
+  contract: "menura.query"
+  contract_version: "1.1.0"
+  time_zone: "UTC"
+  query:
+    dimensions: ["customers.category"]
+    metrics:
+      - {"metric": "zero_minimum", "alias": "zero_minimum"}
+    nonportable_extensions:
+      - {"vendor_name": "COMMON", "data": {"namespace": "menura", "version": 1, "date_range": {"dimension": "balances.period", "from": "2026-01-01", "to": "2026-04-30"}}}
+expect:
+  outcome: "plan"
+  rows: "add-missing-zero-001.csv"
+  row_order: "any"
