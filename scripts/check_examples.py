@@ -21,6 +21,7 @@ PAIRS = {
     "model-description": "model-description",
     "model-dependencies": "model-dependencies",
     "model-diff": "model-diff",
+    "migration-report": "migration-report",
     "query.json-form": "query",
     "query.sql-form": "query",
     "security-context": "security-context",
