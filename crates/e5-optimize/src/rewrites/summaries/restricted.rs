@@ -95,14 +95,16 @@ fn visit<'model>(
     metric: &'model Metric,
     read_by_restricted: bool,
     model: &'model InternalModel,
-    visited: &mut Vec<&'model NormalizedName>,
+    visited: &mut Vec<(&'model NormalizedName, bool)>,
     found: &mut Vec<(NormalizedName, ScanAggregate)>,
 ) {
-    if visited.contains(&&metric.name) {
+    let restricted = read_by_restricted || is_restricted(metric);
+    // A metric reached once unrestricted and once through a restricted metric is visited
+    // both ways, so that its components are marked.
+    if visited.contains(&(&metric.name, restricted)) {
         return;
     }
-    visited.push(&metric.name);
-    let restricted = read_by_restricted || is_restricted(metric);
+    visited.push((&metric.name, restricted));
     let Some(classification) = &metric.classification else {
         return;
     };

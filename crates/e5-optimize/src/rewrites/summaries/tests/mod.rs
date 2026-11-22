@@ -5,6 +5,7 @@ mod eligibility;
 mod expressions;
 mod grain;
 mod plans;
+mod restricted;
 mod summary_branch;
 
 pub(super) use plans::{
