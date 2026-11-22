@@ -16,13 +16,16 @@ use menura_security::AdmittedSecurityContext;
 use crate::columns::{over_scan, read_fields};
 use crate::error::{InvariantViolation, PlanError};
 use crate::followed::PolicyGraph;
-use crate::policy_visits::row_filters;
+use crate::policy_visits::row_filters_from;
 use crate::scan::scan;
 use crate::visibility::Visibility;
 
 /// What the expected pairs of one population are planned from.
 #[derive(Debug, Clone)]
 pub struct PopulationRequest<'request> {
+    /// The home dataset of the branch whose metric uses the population: its row policies are
+    /// visited first (E4-6.9).
+    pub home: &'request NormalizedName,
     /// The population, by normalized name.
     pub population: &'request NormalizedName,
     /// The grain of the periods: the `snapshot_grain` of the metric that uses it (POP-3.1).
@@ -42,14 +45,16 @@ pub struct PopulationRequest<'request> {
 ///
 /// # Errors
 ///
-/// [`PlanError::MissingAttribute`] (`ESEC-02`) when an applicable row policy of the rows the
-/// population reads needs an attribute `security` does not provide, then
+/// [`PlanError::MissingAttribute`] (`ESEC-02`) when an applicable row policy needs an
+/// attribute `security` does not provide, visiting the policies of the visible rows of the
+/// home dataset, then those of the population dataset, then those of its own visible rows,
+/// each dataset once (E4-6.9); then
 /// [`PlanError::MissingReferenceTime`] (`EQRY-03`) when one reads the current date or time
-/// and the query has no `reference_time`; [`PlanError::Invariant`] for a population the
-/// model does not have, a dataset E0 marks unusable, or a `period` column that `periods` does
-/// not output.
+/// and the query has no `reference_time`, in the same order (E4-6.9b);
+/// [`PlanError::Invariant`] for a population or home dataset the model does not have, a
+/// dataset E0 marks unusable, or a `period` column that `periods` does not output.
 pub fn plan_population(
-    request: &PopulationRequest<'_>,
+    request: PopulationRequest<'_>,
     security: &AdmittedSecurityContext,
     model: &InternalModel,
     catalog: &CatalogSchemaDocument,
@@ -62,7 +67,16 @@ pub fn plan_population(
     }
     let rule = population_rule(population).map_err(fail)?;
     let graph = PolicyGraph::new(model);
-    let filters = row_filters(dataset, model, &graph, security, request.has_reference_time)?;
+    let home = model
+        .dataset(request.home)
+        .ok_or_else(|| fail(InvariantViolation::UnknownDataset))?;
+    let filters = row_filters_from(
+        &[home, dataset],
+        model,
+        &graph,
+        security,
+        request.has_reference_time,
+    )?;
     let visibility = Visibility {
         model,
         graph: &graph,
@@ -76,14 +90,20 @@ pub fn plan_population(
     read.extend(visibility.fields(dataset)?);
     let visible = visibility.visible_rows(scan(dataset, &read, catalog, None)?, dataset, None)?;
     let schema = output_schema(&visible, &rule, &request.periods, &request.period).map_err(fail)?;
+    let PopulationRequest {
+        grain,
+        periods,
+        period,
+        ..
+    } = request;
     Ok(PlanNode::new(
         Operation::Population {
             input: Box::new(visible),
             dataset: dataset.name.clone(),
             population: population.name.clone(),
-            grain: request.grain,
-            periods: Box::new(request.periods.clone()),
-            period: request.period.clone(),
+            grain,
+            periods: Box::new(periods),
+            period,
             rule,
         },
         schema,

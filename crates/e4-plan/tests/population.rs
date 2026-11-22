@@ -8,133 +8,19 @@
 mod support;
 
 use menura_contracts::types::common::{Grain, LogicalType};
-use menura_e4_plan::{PlanError, PopulationRequest, plan_population};
+use menura_e4_plan::PlanError;
 use menura_expressions::typing::big_integer;
-use menura_model::internal_model::{
-    Dataset, InternalModel, PartialPeriod, Population, PopulationMode, RoleName, RowPolicy,
-};
-use menura_representations::logical_plan::{
-    Membership, Operation, OutputSchema, PlanNode, PopulationRule,
-};
+use menura_model::internal_model::{PartialPeriod, RoleName, RowPolicy};
+use menura_representations::logical_plan::{Membership, Operation};
 use menura_representations::names::ColumnName;
 use menura_representations::origin::Origin;
-use menura_security::AdmittedSecurityContext;
 use support::plan::{column, column_names, column_reference, kind, kinds, predicate};
+use support::population::{
+    POPULATION_POINTER, active, model_of, periodic, periods, plan, population, rule, subscriptions,
+    team_policy, validity, visible_input,
+};
 use support::propagation::{linked_model, outline, semi_join_relationships, stores};
-use support::{anyone, catalog, field, located, metrics, model_with, name, orders, tree, user};
-
-const POPULATION_POINTER: &str = "/semantic_model/0/datasets/1/custom_extensions/0/data";
-
-fn subscriptions(populations: Vec<Population>, policies: Vec<RowPolicy>) -> Dataset {
-    let mut dataset = orders(policies);
-    dataset.name = name("SUBSCRIPTIONS");
-    dataset.source = "main.subscriptions".to_owned();
-    dataset.fields = [
-        ("CUSTOMER_ID", big_integer(), false),
-        ("IS_BILLABLE", LogicalType::Boolean, true),
-        ("PERIOD", LogicalType::Date, false),
-        ("PLAN", LogicalType::Text, true),
-        ("STORE_ID", big_integer(), true),
-        ("TEAM", LogicalType::Text, true),
-        ("VALID_FROM", LogicalType::Date, false),
-        ("VALID_TO", LogicalType::Date, true),
-    ]
-    .into_iter()
-    .map(|(field_name, logical_type, nullable)| field(field_name, logical_type, nullable))
-    .collect();
-    dataset.populations = populations;
-    dataset.location = located("/semantic_model/0/datasets/1");
-    dataset
-}
-
-fn population(
-    population_name: &str,
-    mode: PopulationMode,
-    required_when: Option<&str>,
-) -> Population {
-    Population {
-        name: name(population_name),
-        entity: vec![name("CUSTOMER_ID"), name("PLAN")],
-        mode,
-        required_when: required_when.map(tree),
-        location: located(POPULATION_POINTER),
-    }
-}
-
-fn validity(partial_period: PartialPeriod) -> PopulationMode {
-    PopulationMode::Validity {
-        valid_from: name("VALID_FROM"),
-        valid_to: name("VALID_TO"),
-        partial_period,
-    }
-}
-
-fn periodic() -> PopulationMode {
-    PopulationMode::Periodic {
-        period: name("PERIOD"),
-        grain: Grain::Month,
-    }
-}
-
-fn active(required_when: Option<&str>) -> Population {
-    population("ACTIVE", validity(PartialPeriod::PeriodEnd), required_when)
-}
-
-fn team_policy() -> RowPolicy {
-    RowPolicy {
-        name: "team_scope".to_owned(),
-        condition: Some(tree("team = USER_ATTRIBUTE('team')")),
-        roles: None,
-        exempt_roles: None,
-        location: located("/semantic_model/0/datasets/1/custom_extensions/1/data"),
-    }
-}
-
-fn model_of(dataset: Dataset) -> InternalModel {
-    model_with(vec![orders(Vec::new()), dataset], metrics())
-}
-
-/// The unit of periods: one month start per row, in a column named `PERIOD_START`.
-fn periods() -> PlanNode {
-    PlanNode::new(
-        Operation::Scan {
-            dataset: name("ORDERS"),
-            row_identity: None,
-        },
-        OutputSchema::new(vec![column("PERIOD_START", LogicalType::Date, false)]),
-        Origin::Model(located("/semantic_model/0/datasets/0")),
-    )
-}
-
-fn plan(
-    population_name: &str,
-    model: &InternalModel,
-    context: &AdmittedSecurityContext,
-) -> Result<PlanNode, PlanError> {
-    plan_population(
-        &PopulationRequest {
-            population: &name(population_name),
-            grain: Grain::Month,
-            periods: periods(),
-            period: ColumnName::new("PERIOD_START"),
-            has_reference_time: false,
-        },
-        context,
-        model,
-        &catalog(),
-    )
-}
-
-fn rule(node: &PlanNode) -> &PopulationRule {
-    match node.operation() {
-        Operation::Population { rule, .. } => rule,
-        other => panic!("not a Population node: {other:?}"),
-    }
-}
-
-fn visible_input(node: &PlanNode) -> &PlanNode {
-    node.inputs().first().copied().expect("the visible rows")
-}
+use support::{anyone, located, name, orders, tree, user};
 
 #[test]
 fn e4_3_12_population_outputs_entity_then_period_over_visible_rows_and_periods() {
