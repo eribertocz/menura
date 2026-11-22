@@ -1,7 +1,7 @@
 //! The values of missing pairs (ADD-4.3, E4-7.5, E4-7.6): 0 from the `added` rows under
 //! `missing: zero`, or the latest earlier value of the entity under `carry_forward`.
 
-use menura_model::internal_model::StaleHandling;
+use menura_model::internal_model::{NullHandling, StaleHandling};
 use menura_representations::logical_plan::{PlanNode, SnapshotMissing};
 
 use super::frame::{Frame, PERIOD, STALE, equalities, qualified, truncated};
@@ -38,7 +38,8 @@ impl<'input> StepWriter<'input> {
                 max_carry_forward,
                 on_stale,
             } => {
-                let rows = self.period_values(frame, carried, extra, Some(frame.rule.nulls))?;
+                let nulls = carried_nulls(frame.rule.nulls);
+                let rows = self.period_values(frame, carried, extra, Some(nulls))?;
                 let rows = self.push_step("carried", rows);
                 let limit = max_carry_forward.get();
                 let body = self.carry_values(frame, missing, &rows, limit, *on_stale)?;
@@ -179,4 +180,14 @@ fn zero_values(frame: &Frame<'_>, missing: &str, added: &str) -> Result<SelectBo
             "JOIN {missing} AS {MISSING} ON {entity} AND {FILL}.{PERIOD} = {MISSING}.{PERIOD}"
         )],
     })
+}
+
+/// `nulls` for the carried read: a carried NULL is carried as NULL under `error`, since only
+/// the conditions inside the queried range count (E6-4.6b) and the carried read reaches before
+/// it (E4-7.5).
+fn carried_nulls(nulls: NullHandling) -> NullHandling {
+    match nulls {
+        NullHandling::Error => NullHandling::Keep,
+        other => other,
+    }
 }

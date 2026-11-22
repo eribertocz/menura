@@ -368,6 +368,30 @@ fn pop_3_5_a_timestamp_over_is_compared_by_day_in_the_query_time_zone() {
 }
 
 #[test]
+fn e6_4_6b_carried_values_are_never_checked_for_nulls() {
+    let rule = Rule {
+        nulls: NullHandling::Error,
+        unexpected: UnexpectedHandling::Error,
+        missing: Missing::CarryForward(StaleHandling::Exclude),
+        ..BASE
+    };
+    let sql = sql_of(rule);
+    assert_golden(
+        &sql,
+        include_str!("golden/e6_4_6b_snapshot_carried_nulls_unchecked.sql"),
+    );
+    let carried = sql
+        .split("_carried\" AS (")
+        .nth(1)
+        .and_then(|rest| rest.split("\n  ),").next())
+        .expect("a carried step");
+    assert!(
+        !carried.contains("RADD-03"),
+        "the carried read raises nothing"
+    );
+}
+
+#[test]
 fn pop_3_7_missing_error_ignores_population_rows_without_an_entity() {
     let rule = Rule {
         missing: Missing::Error,
