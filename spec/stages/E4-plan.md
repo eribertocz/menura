@@ -85,7 +85,7 @@ Semi-additive metrics (balances, inventory) are planned as defined by the
 
 | ID | Rule |
 |---|---|
-| E4-7.1 | **Evaluation.** In each evaluation unit (ADD-4.7), the metric expression is evaluated per (result row, entity, `over` truncated to `snapshot_grain`); `aggregation` is then applied per entity across those values; the entity values are then combined with the recomposition function of the metric's aggregate (E0G-3). A semi-additive metric has only distributive components (E0G-4.1), so that function always exists. |
+| E4-7.1 | **Evaluation.** In each evaluation unit (ADD-4.7), each component of the metric is evaluated per (result row, entity, `over` truncated to `snapshot_grain`); `aggregation` is then applied per entity across those values; the entity values of each component are then combined with the recomposition function of its aggregate (E0G-3: `SUM` and `COUNT` by `SUM`, `MIN` by `MIN`, `MAX` by `MAX`). The metric expression is evaluated from the combined components, as after stitching (E4-5.0c). A semi-additive metric has only distributive components (E0G-4.1), so every component has a recomposition function. |
 | E4-7.2 | **Average.** `aggregation: avg` averages an entity's values over the periods of the unit where the entity has a value after `missing` and `nulls` apply. |
 | E4-7.3 | **Periods with data.** The periods with data (ADD-4.7) are the periods of the home rows that pass the row policies and the query filters, for any entity, rows with a NULL value included. |
 | E4-7.4 | **Date range.** The query `date_range` bounds the unit only when its dimension is `over`; otherwise it is a query filter like any other. |
