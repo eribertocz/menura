@@ -144,9 +144,37 @@ wide_table/e24_no_path_stores:
 wide_table/e25_no_anchor_stores:
   reason: not implemented
   fixed_in: "0.7.0"
+query/a01_grand_total:
+  reason: not implemented
+  fixed_in: "0.6.0"
+  issue: "#382"
+query/a02_measure_per_group:
+  reason: not implemented
+  fixed_in: "0.6.0"
+  issue: "#382"
+query/a03_where_before_measure:
+  reason: not implemented
+  fixed_in: "0.6.0"
+  issue: "#382"
 query/a04_having_on_unselected_measure:
   reason: not implemented
   fixed_in: "1.x"
+query/a05_scalar_ops_on_measure_values:
+  reason: not implemented
+  fixed_in: "0.6.0"
+  issue: "#382"
+query/a06_nulls_follow_aggregate:
+  reason: not implemented
+  fixed_in: "0.6.0"
+  issue: "#382"
+query/a07_empty_input_set:
+  reason: not implemented
+  fixed_in: "0.6.0"
+  issue: "#382"
+query/a08_group_by_all_skips_measures:
+  reason: not implemented
+  fixed_in: "0.6.0"
+  issue: "#382"
 query/a09_rollup_not_average_of_averages:
   reason: subtotals are not supported in 1.0.0 (spec/07-roadmap.md 7.1b)
   fixed_in: "1.x"
