@@ -14,19 +14,31 @@ use menura_representations::paths::{Branch, Branches, ComponentKey};
 use crate::columns::{component_column, over_scan, source_prefix};
 use crate::dimensions::at;
 use crate::error::{InvariantViolation, PlanError};
-use crate::expansion::{ExpandedMetric, InputColumn, expand};
+use crate::expansion::{ExpandedMetric, InputColumn, expand, expand_inline};
 
-/// The model location of the first metric of `metrics`, where the final `Project` comes
-/// from; `None` without metrics.
+/// The model location of the first model metric of `metrics`, where the final `Project`
+/// comes from; `None` without model metrics.
 pub(crate) fn first_metric_location(metrics: &[PlannedMetric<'_>]) -> Option<SourceLocation> {
-    metrics.first().map(|metric| metric.model.location.clone())
+    metrics
+        .iter()
+        .find_map(|metric| metric.model)
+        .map(|metric| metric.location.clone())
 }
 
 /// A metric of the query, read from the model and expanded into its base components.
 pub(crate) struct PlannedMetric<'input> {
     bound: &'input BoundMetric,
-    model: &'input Metric,
+    /// The metric of the model; `None` for an inline metric of the SQL form.
+    model: Option<&'input Metric>,
     expanded: ExpandedMetric<'input>,
+}
+
+/// The result type of a metric, as E0.f typed it.
+pub(crate) struct ResultType {
+    /// Its logical type.
+    pub(crate) logical_type: LogicalType,
+    /// Whether it can be NULL.
+    pub(crate) nullable: bool,
 }
 
 /// A metric output column, evaluated from the components.
@@ -35,10 +47,9 @@ pub(crate) struct MetricOutput {
     pub(crate) name: ColumnName,
     /// Its expression over the Aggregate columns.
     pub(crate) expression: Expression,
-    /// Its result type, as E0.f typed the metric.
-    pub(crate) logical_type: LogicalType,
-    /// Whether it can be NULL.
-    pub(crate) nullable: bool,
+    /// Its result type, as E0.f typed the metric; `None` for an inline metric, whose type is
+    /// the type of its expression over the columns it reads.
+    pub(crate) result_type: Option<ResultType>,
     /// The derived metric whose formula it is, when it has a division rule (DER-3.1).
     pub(crate) derived: Option<DerivedFormula>,
 }
@@ -47,8 +58,8 @@ pub(crate) struct MetricOutput {
 ///
 /// # Errors
 ///
-/// An internal error for an inline metric, a metric or input the model does not have or did
-/// not classify, a cycle of derived metrics, or a metric or input with the context extension.
+/// An internal error for a metric or input the model does not have or did not classify, a
+/// cycle of derived metrics, or a metric or input with the context extension.
 pub(crate) fn planned_metrics<'input>(
     query: &'input BoundQuery,
     model: &'input InternalModel,
@@ -68,15 +79,18 @@ fn planned_metric<'input>(
     position: usize,
     model: &'input InternalModel,
 ) -> Result<PlannedMetric<'input>, InvariantViolation> {
-    let BoundMetricKind::Reference(path) = &bound.kind else {
-        return Err(InvariantViolation::InlineMetric);
-    };
-    let found = model_metric(path, model).ok_or(InvariantViolation::UnknownMetric)?;
-    Ok(PlannedMetric {
-        bound,
-        model: found,
-        expanded: expand(path, position, model, &check_extensions)?,
-    })
+    match &bound.kind {
+        BoundMetricKind::Reference(path) => Ok(PlannedMetric {
+            bound,
+            model: Some(model_metric(path, model).ok_or(InvariantViolation::UnknownMetric)?),
+            expanded: expand(path, position, model, &check_extensions)?,
+        }),
+        BoundMetricKind::Inline(formula) => Ok(PlannedMetric {
+            bound,
+            model: None,
+            expanded: expand_inline(formula, position, model, &check_extensions)?,
+        }),
+    }
 }
 
 /// The metric `path` names.
@@ -226,20 +240,26 @@ fn metric_output(
     if !every_computed {
         return Err(InvariantViolation::UnknownComponent);
     }
+    Ok(MetricOutput {
+        name: ColumnName::new(metric.bound.output_name.as_str()),
+        expression: metric.expanded.expression.clone(),
+        result_type: metric.model.map(result_type).transpose()?,
+        derived: metric.expanded.derived.clone(),
+    })
+}
+
+/// The result type of `metric`, as E0.f typed it.
+fn result_type(metric: &Metric) -> Result<ResultType, InvariantViolation> {
     let typed = metric
-        .model
         .typed
         .as_ref()
         .ok_or(InvariantViolation::UntypedExpression)?;
     let ValueType::Logical(logical_type) = &typed.value_type else {
         return Err(InvariantViolation::UntypedExpression);
     };
-    Ok(MetricOutput {
-        name: ColumnName::new(metric.bound.output_name.as_str()),
-        expression: metric.expanded.expression.clone(),
+    Ok(ResultType {
         logical_type: logical_type.clone(),
         nullable: typed.nullable,
-        derived: metric.expanded.derived.clone(),
     })
 }
 

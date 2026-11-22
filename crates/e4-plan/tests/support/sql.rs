@@ -41,6 +41,16 @@ pub fn aggregated(metric_name: &str, output: &str, column: usize) -> SqlColumn {
     })
 }
 
+/// The inline metric `formula AS output`, with its `AGG(…)` terms written as E2 writes them
+/// (`AGG("METRIC")` for a metric of the semantic model), at `column`.
+pub fn inline(formula: &str, output: &str, column: usize) -> SqlColumn {
+    OutputColumn::Metric(BoundMetric {
+        kind: BoundMetricKind::Inline(tree(formula)),
+        output_name: OutputName::new(output),
+        origin: select_item(column),
+    })
+}
+
 /// The SQL-form query with `columns` in `SELECT` order and `parts`, in time zone `UTC`.
 pub fn sql_query(columns: Vec<SqlColumn>, parts: BoundQueryParts) -> BoundQuery {
     let time = QueryTime {

@@ -107,8 +107,6 @@ pub enum InvariantViolation {
     UntypedField,
     /// An expression the plan cannot type, which E0.f typed.
     UntypedExpression,
-    /// An inline metric of the SQL form.
-    InlineMetric,
     /// A metric the model does not have, or that E0.g did not classify.
     UnknownMetric,
     /// A component key that names no component of its metric.
