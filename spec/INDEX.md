@@ -198,21 +198,22 @@ Find a rule ID or a section here, then open only that file at that line.
 | [architecture/README.md](architecture/README.md#L118) | 118 | section | 3.6.1 Python package |
 | [architecture/README.md](architecture/README.md#L120) | 120 | rule | ARC-6.3 |
 | [architecture/README.md](architecture/README.md#L121) | 121 | rule | ARC-6.4 |
-| [architecture/README.md](architecture/README.md#L126) | 126 | rule | ARC-6.5 |
-| [architecture/README.md](architecture/README.md#L128) | 128 | section | 3.6.2 MCP server |
-| [architecture/README.md](architecture/README.md#L130) | 130 | rule | ARC-6.6 |
-| [architecture/README.md](architecture/README.md#L131) | 131 | rule | ARC-6.7 |
-| [architecture/README.md](architecture/README.md#L132) | 132 | rule | ARC-6.8 |
-| [architecture/README.md](architecture/README.md#L133) | 133 | rule | ARC-6.9 |
-| [architecture/README.md](architecture/README.md#L135) | 135 | section | 3.7 Integration |
-| [architecture/README.md](architecture/README.md#L143) | 143 | section | 3.8 Boundary enforcement (from the first commit) |
-| [architecture/README.md](architecture/README.md#L150) | 150 | rule | A1 |
-| [architecture/README.md](architecture/README.md#L151) | 151 | rule | A2 |
-| [architecture/README.md](architecture/README.md#L152) | 152 | rule | A3 |
-| [architecture/README.md](architecture/README.md#L153) | 153 | rule | A4 |
-| [architecture/README.md](architecture/README.md#L154) | 154 | rule | A5 |
-| [architecture/README.md](architecture/README.md#L155) | 155 | rule | A6 |
-| [architecture/README.md](architecture/README.md#L160) | 160 | section | 3.9 Lineage and audit |
+| [architecture/README.md](architecture/README.md#L122) | 122 | rule | ARC-6.5 |
+| [architecture/README.md](architecture/README.md#L123) | 123 | rule | ARC-6.5a |
+| [architecture/README.md](architecture/README.md#L125) | 125 | section | 3.6.2 MCP server |
+| [architecture/README.md](architecture/README.md#L127) | 127 | rule | ARC-6.6 |
+| [architecture/README.md](architecture/README.md#L128) | 128 | rule | ARC-6.7 |
+| [architecture/README.md](architecture/README.md#L129) | 129 | rule | ARC-6.8 |
+| [architecture/README.md](architecture/README.md#L130) | 130 | rule | ARC-6.9 |
+| [architecture/README.md](architecture/README.md#L132) | 132 | section | 3.7 Integration |
+| [architecture/README.md](architecture/README.md#L140) | 140 | section | 3.8 Boundary enforcement (from the first commit) |
+| [architecture/README.md](architecture/README.md#L147) | 147 | rule | A1 |
+| [architecture/README.md](architecture/README.md#L148) | 148 | rule | A2 |
+| [architecture/README.md](architecture/README.md#L149) | 149 | rule | A3 |
+| [architecture/README.md](architecture/README.md#L150) | 150 | rule | A4 |
+| [architecture/README.md](architecture/README.md#L151) | 151 | rule | A5 |
+| [architecture/README.md](architecture/README.md#L152) | 152 | rule | A6 |
+| [architecture/README.md](architecture/README.md#L157) | 157 | section | 3.9 Lineage and audit |
 | [contracts/README.md](contracts/README.md#L1) | 1 | section | Contracts |
 | [contracts/README.md](contracts/README.md#L21) | 21 | section | Public contracts |
 | [contracts/README.md](contracts/README.md#L23) | 23 | rule | CON-0.1 |
