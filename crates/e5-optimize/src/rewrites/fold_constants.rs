@@ -2,9 +2,10 @@
 //!
 //! The folded branch keeps its `Aggregate`, its `Project` of expression dimensions, its query
 //! filter and its `Join` nodes with their joined rows unchanged, so every column the
-//! `Aggregate` reads keeps its name and type. Below the first `Join` only the home `Scan` and
-//! its row-policy `Filter` remain: the propagation `SemiJoin` nodes over that `Filter` and the
-//! `Deduplicate` are dropped, because they cannot change an input that has no row. The
+//! `Aggregate` reads keeps its name and type. The `Deduplicate` over the joins is dropped, and
+//! below the first `Join` only the home `Scan` and its row-policy `Filter` remain: the
+//! propagation `SemiJoin` nodes over that `Filter` are dropped too. Neither can change an input
+//! that has no row. The
 //! `Aggregate` then yields no row when it has keys and one row of empty-input values when it
 //! has none (E4-5.0b), as the base plan does over no rows. The `FALSE` filter itself stays
 //! (E5-3.7). A joined dataset whose filter is `FALSE` is not folded.

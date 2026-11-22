@@ -10,10 +10,13 @@ use menura_representations::logical_plan::{
 use menura_representations::names::{ColumnName, ColumnPrefix};
 use menura_representations::origin::{Origin, QueryLocation};
 
+use super::rewrite;
+use crate::context::RewriteContext;
+use crate::evidence::Evidence;
 use crate::test_support::{
     RELATIONSHIP, anyone, empty_query, filtered_scan, shop_model, shop_schema,
 };
-use crate::{NodePath, RewriteOutcome, RewriteRecord, RewriteRule, RewriteSubject, optimize};
+use crate::{NodePath, RewriteOutcome, RewriteRecord, RewriteRule, RewriteSubject};
 
 fn model_origin() -> Origin {
     Origin::Model(SourceLocation {
@@ -158,16 +161,19 @@ fn applied(steps: Vec<usize>) -> RewriteRecord {
     }
 }
 
+/// The rewrite of `plan` alone, with its records, so that no other rewrite changes the plan.
 fn run(plan: &PlanNode) -> (PlanNode, Vec<RewriteRecord>) {
-    let optimized = optimize(
-        plan,
-        &empty_query(),
-        &shop_model(),
-        &shop_schema(),
-        None,
-        &anyone(),
-    );
-    (optimized.plan().clone(), optimized.records().to_vec())
+    let (query, model, schema, security) = (empty_query(), shop_model(), shop_schema(), anyone());
+    let context = RewriteContext {
+        query: &query,
+        model: &model,
+        schema: &schema,
+        evidence: Evidence::new(&model, None),
+        security: &security,
+    };
+    let mut records = Vec::new();
+    let plan = rewrite(plan.clone(), &context, &mut records);
+    (plan, records)
 }
 
 #[test]
