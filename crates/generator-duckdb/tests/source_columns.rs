@@ -1,6 +1,7 @@
 //! A `Scan` column that names a catalog column, read by a development-line dataset metric
 //! (E0D-3), a field that reads a lower-case catalog column, and a `Scan` with no columns
-//! (E6-4.3, E6-4.4, PLN-2.2, issue #264).
+//! (E6-4.3, E6-4.4, PLN-2.2, issue #264), and a `Filter` over a `Scan` with no columns (issue
+//! #449).
 
 // `cfg(test)` marks the helpers as test code, where `expect` and `panic!` are allowed
 // (clippy.toml).
@@ -8,8 +9,8 @@
 mod support;
 
 use support::{
-    aggregate, assert_golden, big_integer, column, component, decimal, generate, named, project,
-    query, scan_of,
+    aggregate, assert_golden, big_integer, column, component, decimal, filter, from_query,
+    generate, named, project, query, scan_of,
 };
 
 use menura_representations::logical_plan::PlanNode;
@@ -89,6 +90,40 @@ fn e6_4_4_an_empty_scan_still_counts_rows() {
     );
     let generated = generate(&plan, &query(&[], &["ORDER_COUNT"])).expect("generated SQL");
     assert_golden(&generated.sql, include_str!("golden/e6_4_4_empty_scan.sql"));
+}
+
+/// `COUNT(*)` of the `ORDERS` rows kept by the query filter `FALSE`, which reads no column.
+fn count_of_filtered_empty_scan() -> PlanNode {
+    let filtered = filter(
+        scan_of("ORDERS", Vec::new()),
+        "FALSE",
+        from_query("/query/filter"),
+    );
+    let counted = aggregate(
+        filtered,
+        Vec::new(),
+        vec![component("ORDER_COUNT", "COUNT(*)", None)],
+        vec![column("ORDER_COUNT", big_integer(), false)],
+    );
+    project(
+        counted,
+        vec![named("ORDER_COUNT", "ORDER_COUNT")],
+        vec![column("ORDER_COUNT", big_integer(), false)],
+        support::from_model("/semantic_model/0/metrics/0"),
+    )
+}
+
+#[test]
+fn e6_4_4_a_filter_over_an_empty_scan_still_selects_one_item() {
+    let generated = generate(
+        &count_of_filtered_empty_scan(),
+        &query(&[], &["ORDER_COUNT"]),
+    )
+    .expect("generated SQL");
+    assert_golden(
+        &generated.sql,
+        include_str!("golden/e6_4_4_empty_filter.sql"),
+    );
 }
 
 #[test]

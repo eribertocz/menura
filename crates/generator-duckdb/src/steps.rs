@@ -303,11 +303,20 @@ impl<'input> StepWriter<'input> {
     }
 }
 
-/// The columns of `node`, each read unchanged from `input`.
+/// The only select item of a step that passes through no column, such as the `Filter` over a
+/// `Scan` with no columns: a constant, so that the step is valid SQL and the later nodes still
+/// count its rows (E6-4.4). Its name is never read.
+const EMPTY_STEP_ITEM: &str = "TRUE AS \"menura.row\"";
+
+/// The columns of `node`, each read unchanged from `input`; the constant `EMPTY_STEP_ITEM`
+/// when `node` has no column.
 pub(crate) fn pass_through(
     node: &PlanNode,
     input: &OutputSchema,
 ) -> Result<Vec<String>, GenerateError> {
+    if node.schema().columns().is_empty() {
+        return Ok(vec![EMPTY_STEP_ITEM.to_owned()]);
+    }
     node.schema()
         .columns()
         .iter()
