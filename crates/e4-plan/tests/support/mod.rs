@@ -39,7 +39,7 @@ use menura_representations::columns::Columns;
 use menura_representations::logical_plan::PlanNode;
 use menura_representations::names::OutputName;
 use menura_representations::origin::QueryLocation;
-use menura_representations::paths::{Branch, Branches, ComponentKey, JoinTree};
+use menura_representations::paths::{Branch, BranchKind, Branches, ComponentKey, JoinTree};
 use menura_representations::query_tree::QueryLimit;
 use menura_representations::time::{QueryTime, TimeZoneName};
 use menura_security::{AdmittedSecurityContext, admit_security_context};
@@ -274,6 +274,7 @@ pub fn dimension(field: &str, grain: Option<Grain>, index: usize) -> BoundDimens
         kind: BoundDimensionKind::Field {
             field: field_path(field),
             time_grain: grain,
+            time_grain_origin: None,
         },
         output_name: OutputName::new(&field.to_lowercase()),
         origin: at(&format!("/query/dimensions/{index}")),
@@ -376,6 +377,7 @@ pub fn branches(component_counts: &[usize]) -> Branches {
         .collect();
     Branches::new(vec![Branch {
         home: name("ORDERS"),
+        kind: BranchKind::Plain,
         components,
         join_tree: JoinTree::default(),
     }])

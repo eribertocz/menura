@@ -1,0 +1,72 @@
+version: "0.1.1"
+semantic_model:
+  - name: next_semi_additive_policy
+    description: 'Semi-additive metrics with each unexpected and nulls rule'
+    custom_extensions:
+      - vendor_name: COMMON
+        data: '{"namespace": "menura", "version": 1, "security_context": {"roles": ["analyst"], "attributes": []}}'
+    datasets:
+      - name: balances
+        source: shop.main.balances
+        primary_key: [customer_id, period]
+        fields:
+          - name: customer_id
+            expression: {dialects: [{dialect: ANSI_SQL, expression: 'customer_id'}]}
+          - name: period
+            expression: {dialects: [{dialect: ANSI_SQL, expression: 'period'}]}
+            dimension: {is_time: true}
+          - name: balance
+            expression: {dialects: [{dialect: ANSI_SQL, expression: 'balance'}]}
+        custom_extensions:
+          - vendor_name: COMMON
+            data: '{"namespace": "menura", "version": 1, "access": {"mode": "roles", "roles": ["analyst"]}}'
+      - name: members
+        source: shop.main.members
+        fields:
+          - name: customer_id
+            expression: {dialects: [{dialect: ANSI_SQL, expression: 'customer_id'}]}
+          - name: valid_from
+            expression: {dialects: [{dialect: ANSI_SQL, expression: 'valid_from'}]}
+            dimension: {is_time: true}
+          - name: valid_to
+            expression: {dialects: [{dialect: ANSI_SQL, expression: 'valid_to'}]}
+            dimension: {is_time: true}
+        custom_extensions:
+          - vendor_name: COMMON
+            data: '{"namespace": "menura", "version": 1, "access": {"mode": "roles", "roles": ["analyst"]}, "populations": [{"name": "active_members", "mode": "validity", "entity": ["customer_id"], "valid_from": "valid_from", "valid_to": "valid_to", "partial_period": "any_day"}]}'
+    metrics:
+      - name: unexpected_included
+        expression: {dialects: [{dialect: ANSI_SQL, expression: 'SUM(balances.balance)'}]}
+        custom_extensions:
+          - vendor_name: COMMON
+            data: '{"namespace": "menura", "version": 1, "additivity": {"type": "semi_additive", "over": "balances.period", "entity": ["balances.customer_id"], "aggregation": "last", "selection": "global_period", "snapshot_grain": "month", "population": "active_members", "missing": "exclude", "unexpected": "include", "nulls": "keep"}}'
+      - name: unexpected_excluded
+        expression: {dialects: [{dialect: ANSI_SQL, expression: 'SUM(balances.balance)'}]}
+        custom_extensions:
+          - vendor_name: COMMON
+            data: '{"namespace": "menura", "version": 1, "additivity": {"type": "semi_additive", "over": "balances.period", "entity": ["balances.customer_id"], "aggregation": "last", "selection": "global_period", "snapshot_grain": "month", "population": "active_members", "missing": "exclude", "unexpected": "exclude", "nulls": "keep"}}'
+      - name: unexpected_error
+        expression: {dialects: [{dialect: ANSI_SQL, expression: 'SUM(balances.balance)'}]}
+        custom_extensions:
+          - vendor_name: COMMON
+            data: '{"namespace": "menura", "version": 1, "additivity": {"type": "semi_additive", "over": "balances.period", "entity": ["balances.customer_id"], "aggregation": "last", "selection": "global_period", "snapshot_grain": "month", "population": "active_members", "missing": "exclude", "unexpected": "error", "nulls": "keep"}}'
+      - name: nulls_kept
+        expression: {dialects: [{dialect: ANSI_SQL, expression: 'MIN(balances.balance)'}]}
+        custom_extensions:
+          - vendor_name: COMMON
+            data: '{"namespace": "menura", "version": 1, "additivity": {"type": "semi_additive", "over": "balances.period", "entity": ["balances.customer_id"], "aggregation": "last", "selection": "global_period", "snapshot_grain": "month", "population": "active_members", "missing": "exclude", "unexpected": "exclude", "nulls": "keep"}}'
+      - name: nulls_zero
+        expression: {dialects: [{dialect: ANSI_SQL, expression: 'MIN(balances.balance)'}]}
+        custom_extensions:
+          - vendor_name: COMMON
+            data: '{"namespace": "menura", "version": 1, "additivity": {"type": "semi_additive", "over": "balances.period", "entity": ["balances.customer_id"], "aggregation": "last", "selection": "global_period", "snapshot_grain": "month", "population": "active_members", "missing": "exclude", "unexpected": "exclude", "nulls": "zero"}}'
+      - name: nulls_as_missing
+        expression: {dialects: [{dialect: ANSI_SQL, expression: 'MIN(balances.balance)'}]}
+        custom_extensions:
+          - vendor_name: COMMON
+            data: '{"namespace": "menura", "version": 1, "additivity": {"type": "semi_additive", "over": "balances.period", "entity": ["balances.customer_id"], "aggregation": "last", "selection": "global_period", "snapshot_grain": "month", "population": "active_members", "missing": "error", "unexpected": "exclude", "nulls": "as_missing"}}'
+      - name: nulls_error
+        expression: {dialects: [{dialect: ANSI_SQL, expression: 'MIN(balances.balance)'}]}
+        custom_extensions:
+          - vendor_name: COMMON
+            data: '{"namespace": "menura", "version": 1, "additivity": {"type": "semi_additive", "over": "balances.period", "entity": ["balances.customer_id"], "aggregation": "last", "selection": "global_period", "snapshot_grain": "month", "population": "active_members", "missing": "exclude", "unexpected": "exclude", "nulls": "error"}}'

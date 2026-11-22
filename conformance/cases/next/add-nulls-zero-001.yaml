@@ -1,0 +1,15 @@
+id: add-nulls-zero-001
+rules: [ADD-4.5]
+model: next-semi-additive-rules
+security_context: analyst.json
+query:
+  contract: "menura.query"
+  contract_version: "1.1.0"
+  time_zone: "UTC"
+  query:
+    metrics:
+      - {"metric": "nulls_zero", "alias": "nulls_zero"}
+expect:
+  outcome: "plan"
+  rows: "add-nulls-zero-001.csv"
+  row_order: "any"

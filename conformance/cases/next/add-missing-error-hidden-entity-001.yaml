@@ -1,0 +1,15 @@
+id: add-missing-error-hidden-entity-001
+rules: [ADD-4.2, ADD-4.3]
+model: next-semi-additive-policy
+security_context: north.json
+query:
+  contract: "menura.query"
+  contract_version: "1.1.0"
+  time_zone: "UTC"
+  query:
+    metrics:
+      - {"metric": "strict_balance", "alias": "strict_balance"}
+expect:
+  outcome: "plan"
+  rows: "add-missing-error-hidden-entity-001.csv"
+  row_order: "any"

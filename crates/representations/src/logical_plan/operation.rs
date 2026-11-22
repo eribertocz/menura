@@ -1,7 +1,7 @@
 //! The operations of plan nodes (E4-3 table).
 
 use menura_contracts::types::common::Grain;
-use menura_model::expression::Expression;
+use menura_model::expression::{DateValue, Expression};
 use menura_model::internal_model::NormalizedName;
 
 use super::PlanNode;
@@ -9,6 +9,7 @@ use super::items::{
     AggregateComponent, JoinCondition, JoinKind, NamedExpression, SortItem, StitchColumn,
 };
 use super::population::PopulationRule;
+use super::snapshot::SnapshotRule;
 use crate::names::{ColumnName, ColumnPrefix};
 
 /// What a plan node does (E4-3). Every node of the table is defined.
@@ -123,6 +124,30 @@ pub enum Operation {
         period: ColumnName,
         /// When an entity is expected, over the columns of `input`.
         rule: PopulationRule,
+    },
+    /// `Periods(from, to, grain)`: one row per period start at `grain` from the period of
+    /// `from` to the period of `to`, both ends included (E4-3.14): the unit of periods of a
+    /// query with a `date_range` on a semi-additive `over` (ADD-4.7). It reads no input. Its
+    /// output is one column, the period start.
+    Periods {
+        /// The first day of the range.
+        from: DateValue,
+        /// The last day of the range.
+        to: DateValue,
+        /// The grain of the periods.
+        grain: Grain,
+    },
+    /// `Snapshot(input, expected, rule)`: reduce the rows of `input` to one value per (result
+    /// group, entity) under the semi-additive `rule` (E4-3.13, E4-7.1). With a time `over`,
+    /// `expected` is the `Population` output the rule holds. Its output is the `keys` columns
+    /// of `rule`, then its `entity` columns, then its `components` columns, one row per
+    /// (result group, entity) with a value.
+    Snapshot {
+        /// The rows of the branch inside the query: its joins and query filters applied
+        /// (E4-4.0a–E4-4.0d).
+        input: Box<PlanNode>,
+        /// The semi-additive rule, with the expected entities and the other rows it reads.
+        rule: SnapshotRule,
     },
     /// `Sort(input, items)`: order the rows.
     Sort {
