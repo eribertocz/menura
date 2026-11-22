@@ -88,6 +88,7 @@ pub fn component_of(name: &str, call: AggregateCall, filter: Option<&str>) -> Ag
         name: ColumnName::new(name),
         call,
         filter: filter.map(parse),
+        recomposition: None,
     }
 }
 
