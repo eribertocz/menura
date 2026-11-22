@@ -61,6 +61,10 @@ impl Sources<'_> {
             }
             Operation::Population { .. } | Operation::Snapshot { .. } => self.semi_additive(node),
             Operation::Periods { .. } => Ok(reads_nothing(node)),
+            Operation::PeriodRange { .. } | Operation::FullJoin { .. } => Err(InternalError::new(
+                "core",
+                "a compiled plan holds an operation of the integrity checks",
+            )),
         }
     }
 

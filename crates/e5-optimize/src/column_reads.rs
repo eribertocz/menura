@@ -13,10 +13,15 @@ pub(crate) type ColumnNames = BTreeSet<String>;
 /// `Population` read their own rules, which this does not cover.
 pub(crate) fn add_operation_reads(operation: &Operation, columns: &mut ColumnNames) {
     match operation {
-        Operation::Join { on, .. } | Operation::SemiJoin { on, .. } => {
+        Operation::Join { on, .. }
+        | Operation::SemiJoin { on, .. }
+        | Operation::FullJoin { on, .. } => {
             columns.extend(on.iter().map(|pair| pair.left.as_str().to_owned()));
         }
         Operation::Filter { predicate, .. } => add_expression_reads(predicate, columns),
+        Operation::PeriodRange { coverage, .. } => {
+            columns.insert(coverage.as_str().to_owned());
+        }
         Operation::Deduplicate {
             group, identity, ..
         } => {

@@ -1,17 +1,21 @@
 //! The public function `integrity_checks` (architecture section 3.5): the checks E0 recorded
 //! (E0H-4.3), each generated from its logical plan by the dialect's generator (CHK-4.2).
 
+mod field_references;
 mod key_columns;
 mod plan_nodes;
 mod relationship_plans;
 mod result_names;
+mod summary_base;
+mod summary_compare;
+mod typed_columns;
 
 use menura_contracts::ContractKind;
 use menura_contracts::types::common::Dialect;
 use menura_contracts::types::compiled_plan::{CompileErrorContract, CompileErrorDocument};
 use menura_contracts::types::descriptions::{
-    CheckKind as ContractCheckKind, CheckParameter, IntegrityCheck, IntegrityChecksContract,
-    IntegrityChecksDocument,
+    BuildQuery, CheckKind as ContractCheckKind, CheckParameter, IntegrityCheck,
+    IntegrityChecksContract, IntegrityChecksDocument,
 };
 use menura_generator_duckdb::generate_check_sql;
 use menura_model::internal_model::{CheckKind, NormalizedName, RecordedCheck, Relationship};
@@ -22,14 +26,18 @@ use crate::handle::Handle;
 use crate::stop::Stop;
 use key_columns::STAGE;
 use relationship_plans::{key_uniqueness_plan, orphan_keys_plan};
+use summary_base::{SummaryParts, build_plan};
+use summary_compare::summary_check_plan;
 
 /// Generates the integrity checks of the model of `handle` in `dialect` (E0H-4, CHK-2).
 ///
 /// The document lists the `key_uniqueness` and `orphan_keys` checks of every usable
-/// relationship, sorted by `check_id` (E0H-4.3). Each check's query is generated from its
-/// logical plan by the same generator as `compile` (CHK-4.2); it returns one row per
-/// violation (CHK-2.1, CHK-2.5) and applies no row policy (CHK-2.2). The other kinds of check
-/// are not generated yet.
+/// relationship and the `summary` check of every summary, sorted by `check_id` (E0H-4.3).
+/// Each check's query is generated from its logical plan by the same generator as `compile`
+/// (CHK-4.2); it returns one row per violation (CHK-2.1, CHK-2.5) and applies no row policy
+/// (CHK-2.2). A `summary` check carries the summary's build query, generated from the same
+/// base plan (CHK-5.1, CHK-5.4). The `population` and `semi_additive` kinds are not generated
+/// yet.
 ///
 /// # Errors
 ///
@@ -82,11 +90,68 @@ fn generated_checks(
 
 /// Whether checks of `kind` are generated in this version.
 fn generated_kind(kind: CheckKind) -> bool {
-    matches!(kind, CheckKind::KeyUniqueness | CheckKind::OrphanKeys)
+    matches!(
+        kind,
+        CheckKind::KeyUniqueness | CheckKind::OrphanKeys | CheckKind::Summary
+    )
 }
 
 /// The check `recorded` with its query in `dialect`.
 fn generated_check(
+    handle: &Handle,
+    dialect: Dialect,
+    recorded: &RecordedCheck,
+) -> Result<IntegrityCheck, InternalError> {
+    match recorded.kind {
+        CheckKind::Summary => summary_check(handle, dialect, recorded),
+        _ => relationship_check(handle, dialect, recorded),
+    }
+}
+
+/// The `summary` check `recorded` with its query and its build query in `dialect` (CHK-6.6,
+/// CHK-5.4). Both read the base and bind the same slots (CHK-7.2).
+fn summary_check(
+    handle: &Handle,
+    dialect: Dialect,
+    recorded: &RecordedCheck,
+) -> Result<IntegrityCheck, InternalError> {
+    let model = handle.model();
+    let summary = model
+        .parts()
+        .summaries
+        .iter()
+        .find(|summary| summary.dataset.as_str() == recorded.target)
+        .ok_or_else(|| {
+            InternalError::new(
+                STAGE,
+                format!("the check {} names no summary", recorded.check_id),
+            )
+        })?;
+    let parts = SummaryParts::of(summary, model)?;
+    let (sql, parameters) = generated_sql(handle, dialect, &summary_check_plan(&parts)?)?;
+    let (build, columns) = build_plan(&parts, handle.catalog_schema())?;
+    let (build_sql, build_parameters) = generated_sql(handle, dialect, &build)?;
+    let mut sources = vec![parts.base.source.clone(), parts.dataset.source.clone()];
+    sources.sort();
+    sources.dedup();
+    Ok(IntegrityCheck {
+        check_id: recorded.check_id.clone(),
+        kind: ContractCheckKind::Summary,
+        target: recorded.target.clone(),
+        definition_hash: recorded.definition_hash.clone(),
+        sql,
+        parameters,
+        sources,
+        build: Some(BuildQuery {
+            sql: build_sql,
+            parameters: build_parameters,
+            columns,
+        }),
+    })
+}
+
+/// The relationship check `recorded` with its query in `dialect`.
+fn relationship_check(
     handle: &Handle,
     dialect: Dialect,
     recorded: &RecordedCheck,
@@ -132,7 +197,8 @@ fn generated_check(
     })
 }
 
-/// The SQL of `plan` in `dialect` and its parameters, each a value the compiler fixed (CHK-7.1).
+/// The SQL of `plan` in `dialect` and its parameters: values the compiler fixed and slots the
+/// pipeline binds (CHK-7.1).
 fn generated_sql(
     handle: &Handle,
     dialect: Dialect,
@@ -142,12 +208,7 @@ fn generated_sql(
         Dialect::Duckdb => {
             let generated = generate_check_sql(plan, handle.catalog_schema(), handle.model())
                 .map_err(|error| InternalError::new("E6", format!("{error:?}")))?;
-            let parameters = generated
-                .parameters
-                .into_iter()
-                .map(CheckParameter::Fixed)
-                .collect();
-            Ok((generated.sql, parameters))
+            Ok((generated.sql, generated.parameters))
         }
     }
 }

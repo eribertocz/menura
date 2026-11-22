@@ -11,16 +11,19 @@
 mod additivity_error;
 mod body;
 mod check;
+mod check_types;
 mod day;
 mod deduplicate;
 mod error;
 mod expression;
+mod full_join;
 mod identifiers;
 mod instant;
 mod join;
 mod join_keys;
 mod output;
 mod parameters;
+mod period_range;
 mod periods;
 mod population;
 mod result_schema;
@@ -34,6 +37,7 @@ mod types;
 mod values;
 
 pub use check::{GeneratedCheckSql, generate_check_sql};
+pub use check_types::check_column_type;
 pub use error::{GenerateError, InvariantViolation};
 pub use output::GeneratedSql;
 

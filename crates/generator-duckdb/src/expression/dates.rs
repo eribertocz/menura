@@ -59,7 +59,7 @@ impl ExpressionWriter<'_, '_> {
         let value = self.local(operand)?;
         let interval = self.interval(unit, amount)?;
         let sum = if zoned {
-            let zone = self.time_zone()?;
+            let zone = self.time_zone();
             format!("({value} + {interval}) AT TIME ZONE {zone}")
         } else {
             format!("{value} + {interval}")
@@ -105,7 +105,7 @@ impl ExpressionWriter<'_, '_> {
         let zoned = self.is_zoned(operand);
         let value = self.operand(operand)?;
         if zoned {
-            Ok(format!("({value} AT TIME ZONE {})", self.time_zone()?))
+            Ok(format!("({value} AT TIME ZONE {})", self.time_zone()))
         } else {
             Ok(value)
         }

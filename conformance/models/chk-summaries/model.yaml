@@ -1,0 +1,52 @@
+version: "0.1.1"
+semantic_model:
+  - name: chk_summaries
+    description: 'Orders with a monthly summary by region (NULL regions form a group) and a daily summary of a timestamp with time zone with a filtered measure: the summary check and build query of each (CHK-5, CHK-6.6, CHK-7)'
+    custom_extensions:
+      - vendor_name: COMMON
+        data: '{"namespace": "menura", "version": 1, "security_context": {"roles": ["analyst"], "attributes": []}}'
+    datasets:
+      - name: orders
+        source: shop.main.orders
+        primary_key: [order_id]
+        fields:
+          - name: order_id
+            expression: {dialects: [{dialect: ANSI_SQL, expression: order_id}]}
+          - name: region
+            expression: {dialects: [{dialect: ANSI_SQL, expression: region}]}
+          - name: order_date
+            expression: {dialects: [{dialect: ANSI_SQL, expression: order_date}]}
+          - name: ordered_at
+            expression: {dialects: [{dialect: ANSI_SQL, expression: ordered_at}]}
+          - name: amount
+            expression: {dialects: [{dialect: ANSI_SQL, expression: amount}]}
+        custom_extensions:
+          - vendor_name: COMMON
+            data: '{"namespace": "menura", "version": 1, "access": {"mode": "roles", "roles": ["analyst"]}}'
+      - name: orders_monthly
+        source: shop.main.orders_monthly
+        fields:
+          - name: region
+            expression: {dialects: [{dialect: ANSI_SQL, expression: region}]}
+          - name: month
+            expression: {dialects: [{dialect: ANSI_SQL, expression: month_start}]}
+          - name: total_amount
+            expression: {dialects: [{dialect: ANSI_SQL, expression: total_amount}]}
+          - name: order_count
+            expression: {dialects: [{dialect: ANSI_SQL, expression: order_count}]}
+        custom_extensions:
+          - vendor_name: COMMON
+            data: '{"namespace": "menura", "version": 1, "access": {"mode": "internal"}, "aggregate": {"of": "orders", "dimensions": [{"field": "month", "base": "order_date", "grain": "month"}, {"field": "region", "base": "region"}], "measures": [{"field": "total_amount", "base_aggregate": "SUM(orders.amount)"}, {"field": "order_count", "base_aggregate": "COUNT(orders.order_id)"}], "coverage_field": "month"}}'
+      - name: orders_daily_local
+        source: shop.main.orders_daily_local
+        fields:
+          - name: day
+            expression: {dialects: [{dialect: ANSI_SQL, expression: day_start}]}
+          - name: large_amount
+            expression: {dialects: [{dialect: ANSI_SQL, expression: large_amount}]}
+        custom_extensions:
+          - vendor_name: COMMON
+            data: '{"namespace": "menura", "version": 1, "access": {"mode": "internal"}, "aggregate": {"of": "orders", "dimensions": [{"field": "day", "base": "ordered_at", "grain": "day"}], "measures": [{"field": "large_amount", "base_aggregate": "SUM(orders.amount) FILTER (WHERE orders.amount > 20)"}], "coverage_field": "day"}}'
+    metrics:
+      - name: total_amount
+        expression: {dialects: [{dialect: ANSI_SQL, expression: SUM(orders.amount)}]}
