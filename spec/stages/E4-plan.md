@@ -26,6 +26,8 @@ lowering, with row policies, additivity rules and context modifiers applied.
 | E4-3.8 | `Project(input, expressions)` | Compute output columns |
 | E4-3.9 | `Sort(input, items)` | Order |
 | E4-3.10 | `Limit(input, n)` | Limit |
+| E4-3.12 | `Population(dataset, population, grain, periods)` | Output the expected (entity, period) pairs of `population` (POP-3) at `grain` over `periods`, the query's unit of periods (ADD-4.7). It reads V(D) of `dataset` (E4-6.5, E2-4.9). |
+| E4-3.13 | `Snapshot(input, expected, rule)` | Reduce the rows of `input` to one value per (result group, entity) under the semi-additive `rule` (ADD-3.2, E4-7), `expected` being the output of a `Population` |
 
 - **E4-3.11** Every node carries its output schema (names, logical types, nullability) and its origin. Column names and the order of the inputs of a multi-node plan follow E6-4.12.
 
@@ -78,8 +80,20 @@ With two or more branches, the plan MUST equal Apache Ossie Layer 3 section 5.5:
 ## E4-7 Additivity
 
 Semi-additive metrics (balances, inventory) are planned as defined by the
-[additivity extension](../extensions/additivity.md), using the population extension where
-declared. Non-additive metrics are always computed from base rows at the query grain.
+[additivity extension](../extensions/additivity.md) and the
+[population extension](../extensions/population.md), with `Population` and `Snapshot` nodes.
+
+| ID | Rule |
+|---|---|
+| E4-7.1 | **Evaluation.** In each evaluation unit (ADD-4.7), the metric expression is evaluated per (result row, entity, `over` truncated to `snapshot_grain`); `aggregation` is then applied per entity across those values; the entity values are then combined with the recomposition function of the metric's aggregate (E0G-3). |
+| E4-7.2 | **Average.** `aggregation: avg` averages an entity's values over the periods of the unit where the entity has a value after `missing` and `nulls` apply. |
+| E4-7.3 | **Periods with data.** The periods with data (ADD-4.7) are the periods of the home rows that pass the row policies and the query filters, for any entity, rows with a NULL value included. |
+| E4-7.4 | **Date range.** The query `date_range` bounds the unit only when its dimension is `over`; otherwise it is a query filter like any other. |
+| E4-7.5 | **Carry-forward read.** The read that finds carried values keeps the row policies and the other query filters, and drops only the `date_range` predicate on `over`. |
+| E4-7.6 | **Rows that do not exist.** A carried row keeps the fields of the row it carries. A row added for `missing: zero` has its `entity` fields from the population and NULL for every other home field; it joins like a home row and can fall into the NULL group (E4-4.1). Query filters apply after these rows are added. |
+| E4-7.7 | **Missing under `per_entity`.** With `selection: per_entity`, an entity is missing when it is expected in the last (or first, per `aggregation`) period of the unit and has no row in the unit. |
+| E4-7.8 | **Grain of a plain `over`.** A query dimension `over` without a time grain has grain `day` for a `date` and the source precision for a `timestamp` (ADD-4.9). In the SQL form, `DATE_TRUNC('<grain>', over)` counts as that grain. `E4-03` is located at the `time_grains` entry, else at the dimension, else at the SQL `SELECT` item. |
+| E4-7.9 | **Non-additive.** Before summaries (0.6.0), a non-additive metric plans exactly as its deduced additivity. |
 
 ## E4-8 Context modifiers
 
@@ -99,4 +113,4 @@ branch with its own grain and filters, stitched by the query keys.
 | `ESEC-02` | An applicable row policy needs an absent attribute |
 | `EQRY-03` | An applicable row policy needs `reference_time` and the query has none (E4-6.9b) |
 | `E4-02` | A context modifier needs a time dimension the query lacks, or at a coarser grain |
-| `E4-03` | Query grain of a semi-additive `over` finer than its `snapshot_grain` |
+| `E4-03` | Query grain of a semi-additive `over` finer than its `snapshot_grain` (ADD-4.9, E4-7.8); located at the `time_grains` entry, else the dimension, else the SQL `SELECT` item |

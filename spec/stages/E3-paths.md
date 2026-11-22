@@ -27,7 +27,7 @@ following Apache Ossie Layer 3 (sections 4 and 5.3). The compiler never guesses 
 
 ## E3-4 Branches
 
-- **E3-4.1** Components with the same home dataset form one **branch**.
+- **E3-4.1** Components with the same home dataset form one **branch**; the components of a semi-additive metric form their own branch, stitched by the query keys (E4-5).
 - **E3-4.2** A branch's **join tree** is the union of its paths to every dimension dataset and every filter dataset (E3-3.1a), the dataset of the `date_range` included.
 - **E3-4.2a** The join tree holds one **join instance** per distinct path prefix. Paths that start with the same steps share the instances of those steps; the same dataset reached by two different step sequences is two instances (role-playing). Each query element is bound to the instance at the end of its own path.
 - **E3-4.3** Branches are ordered by the normalized name of their home dataset (P3).
