@@ -14,6 +14,8 @@ pub enum Subject {
     Field(FieldPath),
     /// `relationship:<name>`.
     Relationship(NormalizedName),
+    /// `metric:<name>`.
+    Metric(NormalizedName),
     /// `policy:<dataset>.<policy>`: a row policy, by the dataset that declares it.
     Policy {
         /// The dataset that declares the policy.
@@ -49,6 +51,7 @@ impl fmt::Display for Subject {
                 field.field.as_str()
             ),
             Self::Relationship(name) => write!(formatter, "relationship:{}", name.as_str()),
+            Self::Metric(name) => write!(formatter, "metric:{}", name.as_str()),
             Self::Policy { dataset, policy } => {
                 write!(formatter, "policy:{}.{policy}", dataset.as_str())
             }

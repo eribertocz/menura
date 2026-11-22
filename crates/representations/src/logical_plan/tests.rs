@@ -6,8 +6,9 @@ use menura_model::expression::{AggregateCall, Expression, Identifier, Reference,
 use menura_model::internal_model::PartialPeriod;
 
 use super::{
-    AggregateComponent, JoinCondition, JoinKind, Membership, NamedExpression, Operation,
-    OutputSchema, PlanNode, PopulationRule, SchemaColumn, SortItem, StitchColumn,
+    AggregateComponent, JoinCondition, JoinKind, LookupColumn, LookupKey, Membership,
+    NamedExpression, Operation, OutputSchema, PlanNode, PopulationRule, SchemaColumn, SortItem,
+    StitchColumn,
 };
 use crate::names::{ColumnName, ColumnPrefix};
 use crate::origin::Origin;
@@ -70,6 +71,7 @@ fn kind_of(operation: &Operation) -> &'static str {
         Operation::Periods { .. } => "Periods",
         Operation::Snapshot { .. } => "Snapshot",
         Operation::Stitch { .. } => "Stitch",
+        Operation::Lookup { .. } => "Lookup",
         Operation::Project { .. } => "Project",
         Operation::Sort { .. } => "Sort",
         Operation::Limit { .. } => "Limit",
@@ -277,6 +279,36 @@ fn e4_3_5_e4_3_7_deduplicate_and_stitch_keep_their_keys() {
     assert_eq!(kind_of(deduplicate.operation()), "Deduplicate");
     assert!(!stitch.is_simple_plan());
     assert!(!first_branch.is_simple_plan());
+}
+
+#[test]
+fn e4_3_16_e4_4_2_a_lookup_reads_its_result_then_its_value_and_is_not_simple() {
+    let lookup = PlanNode::new(
+        Operation::Lookup {
+            result: Box::new(filtered_total(scan("ORDERS"))),
+            value: Box::new(filtered_total(scan("RETURNS"))),
+            mapping: vec![LookupKey::Equal {
+                result: ColumnName::new("region"),
+                value: ColumnName::new("region"),
+            }],
+            columns: vec![LookupColumn {
+                value: ColumnName::new("amount"),
+                name: ColumnName::new("context_1_component_1"),
+                empty_value: None,
+            }],
+        },
+        region_schema(),
+        query_origin(),
+    );
+
+    let inputs: Vec<&str> = lookup
+        .inputs()
+        .into_iter()
+        .map(|input| kind_of(input.operation()))
+        .collect();
+    assert_eq!(inputs.len(), 2);
+    assert!(lookup.inputs().iter().all(|input| input.is_simple_plan()));
+    assert!(!lookup.is_simple_plan());
 }
 
 #[test]

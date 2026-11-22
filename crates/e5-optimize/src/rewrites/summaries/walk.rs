@@ -5,6 +5,7 @@ use menura_representations::logical_plan::{Operation, PlanNode};
 
 use super::selection::select;
 use crate::context::RewriteContext;
+use crate::plan_inputs::map_inputs;
 use crate::record::RewriteRecord;
 
 /// `node` with each branch `Aggregate` below its `Limit`, `Sort`, `Project` and `Stitch` nodes
@@ -37,6 +38,7 @@ pub(super) fn select_in_branches(
             keys: keys.clone(),
             columns: columns.clone(),
         },
+        Operation::Lookup { .. } => return selected_lookup(node, context, records),
         _ => return None,
     };
     Some(PlanNode::new(
@@ -44,6 +46,30 @@ pub(super) fn select_in_branches(
         node.schema().clone(),
         node.origin().clone(),
     ))
+}
+
+/// The `Lookup` `node` with the branches of its result rows and of its context query rewritten
+/// by [`select_in_branches`]; `None` when none is. A context query is planned like a query
+/// (E4-8.2, E4-8.9).
+fn selected_lookup(
+    node: &PlanNode,
+    context: &RewriteContext<'_>,
+    records: &mut Vec<RewriteRecord>,
+) -> Option<PlanNode> {
+    let mut selected: Vec<Option<PlanNode>> = node
+        .inputs()
+        .into_iter()
+        .map(|input| select_in_branches(input, context, records))
+        .collect();
+    if selected.iter().all(Option::is_none) {
+        return None;
+    }
+    Some(map_inputs(node, |index, input| {
+        selected
+            .get_mut(index)
+            .and_then(Option::take)
+            .unwrap_or_else(|| input.clone())
+    }))
 }
 
 /// `branches` with each one rewritten by [`select_in_branches`]; `None` when none is.

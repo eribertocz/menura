@@ -10,15 +10,23 @@
 //! a formula never inlines another formula: an input whose value is more than one component
 //! column is computed as an input column of its own, one level of derivation per `Project`
 //! below the final one (E6-4.6a).
+//!
+//! A context metric is expanded like a derived metric that reads its base (E4-8.1), and the
+//! base is expanded once more over the columns that the `Lookup` of its context query attaches
+//! (E4-8.7); its value combines the two as its modifier states (E4-8.3).
 
 use menura_contracts::types::common::LogicalType;
-use menura_model::expression::{Expression, Reference};
+use menura_model::expression::{BinaryOperator, Expression, Reference};
 use menura_model::internal_model::{Component, InternalModel, Metric, NormalizedName, ValueType};
 use menura_representations::bound_query::MetricPath;
 use menura_representations::logical_plan::DerivedFormula;
 use menura_representations::names::ColumnName;
+use menura_representations::origin::QueryLocation;
 
-use crate::columns::{column_reference, component_column, field_name, input_column};
+use crate::columns::{
+    column_reference, component_column, context_component_column, field_name, input_column,
+};
+use crate::context::ContextRegistry;
 use crate::error::InvariantViolation;
 use crate::rewrite::rewrite;
 
@@ -50,6 +58,34 @@ impl MetricKey {
             metric: field_name(&reference.name),
         }
     }
+
+    fn path(&self) -> MetricPath {
+        match &self.dataset {
+            None => MetricPath::SemanticModel(self.metric.clone()),
+            Some(dataset) => MetricPath::Dataset {
+                dataset: dataset.clone(),
+                metric: self.metric.clone(),
+            },
+        }
+    }
+}
+
+/// Where the context queries of the metrics of a query are registered (E4-8.8), and where the
+/// query metric being expanded is written.
+pub(crate) struct ContextSite<'site, 'query> {
+    /// The context queries found so far.
+    pub(crate) registry: &'site mut ContextRegistry<'query>,
+    /// Where the query metric being expanded is written.
+    pub(crate) origin: &'site QueryLocation,
+}
+
+/// Which columns the base components of an expansion read.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum Naming {
+    /// The components at the result rows (E4-8.1).
+    Query,
+    /// The components a `Lookup` attaches from the context query at this position (E4-8.7).
+    Context(usize),
 }
 
 /// One base component of an expanded metric.
@@ -103,23 +139,16 @@ pub(crate) struct ExpandedMetric<'model> {
 /// or did not classify; [`InvariantViolation::DerivedCycle`] for inputs that lead back to a
 /// derived metric; [`InvariantViolation::ComponentMismatch`] for a metric without an
 /// expression or whose aggregates do not match its components;
-/// [`InvariantViolation::UntypedExpression`] for an input without a type; and the violation
-/// `check` returns for a metric it rejects.
+/// [`InvariantViolation::UntypedExpression`] for an input without a type; and
+/// [`InvariantViolation::ContextMetric`] for a context metric E4 does not plan yet, or one
+/// read by the base of another.
 pub(crate) fn expand<'model>(
     path: &MetricPath,
     position: usize,
     model: &'model InternalModel,
-    check: &impl Fn(&Metric) -> Result<(), InvariantViolation>,
+    contexts: ContextSite<'_, '_>,
 ) -> Result<ExpandedMetric<'model>, InvariantViolation> {
-    let mut expansion = Expansion {
-        model,
-        position,
-        check,
-        chain: Vec::new(),
-        expanded: Vec::new(),
-        components: Vec::new(),
-        inputs: Vec::new(),
-    };
+    let mut expansion = Expansion::new(model, position, contexts);
     let key = MetricKey::of_path(path);
     let metric = find(&key, model).ok_or(InvariantViolation::UnknownMetric)?;
     let value = expansion.expand(key)?;
@@ -143,17 +172,9 @@ pub(crate) fn expand_inline<'model>(
     formula: &Expression,
     position: usize,
     model: &'model InternalModel,
-    check: &impl Fn(&Metric) -> Result<(), InvariantViolation>,
+    contexts: ContextSite<'_, '_>,
 ) -> Result<ExpandedMetric<'model>, InvariantViolation> {
-    let mut expansion = Expansion {
-        model,
-        position,
-        check,
-        chain: Vec::new(),
-        expanded: Vec::new(),
-        components: Vec::new(),
-        inputs: Vec::new(),
-    };
+    let mut expansion = Expansion::new(model, position, contexts);
     let value = expansion.formula(formula)?;
     Ok(ExpandedMetric {
         components: expansion.components,
@@ -172,10 +193,12 @@ struct Value {
 }
 
 /// The state of one expansion.
-struct Expansion<'model, 'check, Check> {
+struct Expansion<'model, 'site, 'query> {
     model: &'model InternalModel,
     position: usize,
-    check: &'check Check,
+    contexts: ContextSite<'site, 'query>,
+    /// The columns its base components read now.
+    naming: Naming,
     /// The derived metrics being expanded, outermost first.
     chain: Vec<MetricKey>,
     /// The inputs already expanded, with their values.
@@ -186,10 +209,24 @@ struct Expansion<'model, 'check, Check> {
     inputs: Vec<InputColumn>,
 }
 
-impl<'model, Check> Expansion<'model, '_, Check>
-where
-    Check: Fn(&Metric) -> Result<(), InvariantViolation>,
-{
+impl<'model, 'site, 'query> Expansion<'model, 'site, 'query> {
+    fn new(
+        model: &'model InternalModel,
+        position: usize,
+        contexts: ContextSite<'site, 'query>,
+    ) -> Self {
+        Self {
+            model,
+            position,
+            contexts,
+            naming: Naming::Query,
+            chain: Vec::new(),
+            expanded: Vec::new(),
+            components: Vec::new(),
+            inputs: Vec::new(),
+        }
+    }
+
     /// The value of the metric `key` over the columns of its components and inputs.
     fn expand(&mut self, key: MetricKey) -> Result<Value, InvariantViolation> {
         let metric = find(&key, self.model).ok_or(InvariantViolation::UnknownMetric)?;
@@ -197,7 +234,9 @@ where
             .expression
             .as_ref()
             .ok_or(InvariantViolation::ComponentMismatch)?;
-        (self.check)(metric)?;
+        if metric.context.is_some() {
+            return self.context(metric, expression);
+        }
         if !is_derived(expression) {
             let expression = self.base(metric, key.dataset.is_some(), expression)?;
             return Ok(Value {
@@ -209,6 +248,61 @@ where
         let value = self.formula(expression)?;
         self.chain.pop();
         Ok(value)
+    }
+
+    /// The value of the context metric `metric`, whose expression `AGG(<base>)` is
+    /// `expression`, from the base at the result rows (E4-8.1) and the base in its context
+    /// query, whose components a `Lookup` attaches (E4-8.7). A `share_of_total` divides the
+    /// first by the second, a 64-bit float that is NULL when either is NULL or the divisor is
+    /// zero (E4-8.3, CTX-3.4, E6-4.6).
+    fn context(
+        &mut self,
+        metric: &Metric,
+        expression: &Expression,
+    ) -> Result<Value, InvariantViolation> {
+        if self.naming != Naming::Query {
+            return Err(InvariantViolation::ContextMetric);
+        }
+        let Expression::MetricAggregate(reference) = expression else {
+            return Err(InvariantViolation::ContextMetric);
+        };
+        let base = MetricKey::of_term(reference);
+        let index = self
+            .contexts
+            .registry
+            .register(metric, base.path(), self.contexts.origin)?;
+        let at_result = self.input(base.clone())?;
+        let in_context = self.in_context(base, index)?;
+        Ok(Value {
+            expression: Expression::Binary {
+                operator: BinaryOperator::Divide,
+                left: Box::new(at_result.expression),
+                right: Box::new(in_context.expression),
+            },
+            reads: at_result.reads.max(in_context.reads),
+        })
+    }
+
+    /// The value of `base` over the components that the `Lookup` of the context query at
+    /// `index` attaches: expanded afresh, its components read under the names of that
+    /// `Lookup`, and its input columns computed after it.
+    fn in_context(&mut self, base: MetricKey, index: usize) -> Result<Value, InvariantViolation> {
+        let expanded = std::mem::take(&mut self.expanded);
+        let components = std::mem::take(&mut self.components);
+        self.naming = Naming::Context(index);
+        let value = self.input(base);
+        self.naming = Naming::Query;
+        self.expanded = expanded;
+        self.components = components;
+        value
+    }
+
+    /// The column of the base component at `position` in the current naming.
+    fn component_column(&self, position: usize) -> ColumnName {
+        match self.naming {
+            Naming::Query => component_column(self.position, position),
+            Naming::Context(index) => context_component_column(index, position),
+        }
     }
 
     /// The value of the derived formula `expression`, with each `AGG(…)` term replaced by the
@@ -301,7 +395,7 @@ where
                 component,
                 in_dataset_metric,
             });
-            let column = component_column(self.position, first + next);
+            let column = self.component_column(first + next);
             next += 1;
             column_reference(column.as_str()).map(Some)
         })?;

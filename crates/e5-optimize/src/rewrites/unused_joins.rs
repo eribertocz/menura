@@ -1,9 +1,10 @@
 //! E5-3.1, E5-3.1a: removes the `Join` nodes whose dataset contributes no column, filter or policy.
 
-use menura_representations::logical_plan::{Operation, OutputSchema, PlanNode};
+use menura_representations::logical_plan::{LookupKey, Operation, OutputSchema, PlanNode};
 
 use crate::column_reads::{ColumnNames, add_operation_reads};
 use crate::context::RewriteContext;
+use crate::plan_inputs::map_inputs;
 use crate::record::{NodePath, RewriteOutcome, RewriteRecord, RewriteRule, RewriteSubject};
 
 /// Applies the rewrite to `plan` and adds a record of every `Join` it removed to `records`.
@@ -58,6 +59,13 @@ fn visit(
                 .collect();
             with_branches(node, branches)
         }
+        Operation::Lookup { .. } => {
+            let value_reads = lookup_value_reads(node, &reads);
+            map_inputs(node, |position, input| {
+                let input_reads = if position == 0 { &reads } else { &value_reads };
+                visit(input, &child(path, position), input_reads, records)
+            })
+        }
         Operation::Filter { input, .. }
         | Operation::SemiJoin { input, .. }
         | Operation::Aggregate { input, .. }
@@ -108,6 +116,26 @@ fn with_branches(node: &PlanNode, branches: Vec<PlanNode>) -> PlanNode {
         columns: columns.clone(),
     };
     PlanNode::new(operation, node.schema().clone(), node.origin().clone())
+}
+
+/// `reads` with the columns of the context query that the `Lookup` `node` reads: its value
+/// keys and the components it attaches.
+fn lookup_value_reads(node: &PlanNode, reads: &ColumnNames) -> ColumnNames {
+    let mut value_reads = reads.clone();
+    if let Operation::Lookup {
+        mapping, columns, ..
+    } = node.operation()
+    {
+        value_reads.extend(mapping.iter().map(|key| match key {
+            LookupKey::Equal { value, .. } => value.as_str().to_owned(),
+        }));
+        value_reads.extend(
+            columns
+                .iter()
+                .map(|column| column.value.as_str().to_owned()),
+        );
+    }
+    value_reads
 }
 
 /// Whether a column of the joined plan `right` is among `later_reads` (E5-3.1a).
@@ -228,6 +256,7 @@ fn replace_input(operation: &Operation, input: PlanNode) -> Operation {
         | Operation::Population { .. }
         | Operation::Snapshot { .. }
         | Operation::Stitch { .. }
+        | Operation::Lookup { .. }
         | Operation::PeriodRange { .. }
         | Operation::FullJoin { .. } => operation.clone(),
     }

@@ -12,9 +12,10 @@ use menura_representations::names::ColumnName;
 use menura_representations::paths::{Branch, Branches, ComponentKey};
 
 use crate::columns::{component_column, over_scan, source_prefix};
+use crate::context::{ContextQuery, ContextRegistry};
 use crate::dimensions::at;
 use crate::error::{InvariantViolation, PlanError};
-use crate::expansion::{ExpandedMetric, InputColumn, expand, expand_inline};
+use crate::expansion::{ContextSite, ExpandedMetric, InputColumn, expand, expand_inline};
 
 /// The model location of the first model metric of `metrics`, where the final `Project`
 /// comes from; `None` without model metrics.
@@ -58,37 +59,59 @@ pub(crate) struct MetricOutput {
 ///
 /// # Errors
 ///
-/// An internal error for a metric or input the model does not have or did not classify, a
-/// cycle of derived metrics, or a metric or input with the context extension.
+/// As [`planned_metrics_with_contexts`].
 pub(crate) fn planned_metrics<'input>(
     query: &'input BoundQuery,
     model: &'input InternalModel,
 ) -> Result<Vec<PlannedMetric<'input>>, PlanError> {
-    query
+    planned_metrics_with_contexts(query, model).map(|(metrics, _)| metrics)
+}
+
+/// The metrics of `query`, in output order, each read from `model`, and the context queries
+/// they need, in the order of E4-8.8: the query's metrics in order and, depth first, the
+/// metrics each derived metric reads, in written order.
+///
+/// # Errors
+///
+/// An internal error for a metric or input the model does not have or did not classify, a
+/// cycle of derived metrics, or a context metric that E4 does not plan yet.
+pub(crate) fn planned_metrics_with_contexts<'input>(
+    query: &'input BoundQuery,
+    model: &'input InternalModel,
+) -> Result<(Vec<PlannedMetric<'input>>, Vec<ContextQuery>), PlanError> {
+    let mut registry = ContextRegistry::new(query);
+    let metrics = query
         .columns()
         .metrics()
         .enumerate()
         .map(|(position, bound)| {
-            planned_metric(bound, position, model).map_err(|violation| at(violation, &bound.origin))
+            let site = ContextSite {
+                registry: &mut registry,
+                origin: &bound.origin,
+            };
+            planned_metric(bound, position, model, site)
+                .map_err(|violation| at(violation, &bound.origin))
         })
-        .collect()
+        .collect::<Result<Vec<_>, _>>()?;
+    Ok((metrics, registry.into_queries()))
 }
 
 fn planned_metric<'input>(
     bound: &'input BoundMetric,
     position: usize,
     model: &'input InternalModel,
+    site: ContextSite<'_, '_>,
 ) -> Result<PlannedMetric<'input>, InvariantViolation> {
     match &bound.kind {
         BoundMetricKind::Reference(path) => Ok(PlannedMetric {
             bound,
             model: Some(model_metric(path, model).ok_or(InvariantViolation::UnknownMetric)?),
-            expanded: expand(path, position, model, &check_extensions)?,
+            expanded: expand(path, position, model, site)?,
         }),
         BoundMetricKind::Inline(formula) => Ok(PlannedMetric {
             bound,
             model: None,
-            expanded: expand_inline(formula, position, model, &check_extensions)?,
+            expanded: expand_inline(formula, position, model, site)?,
         }),
     }
 }
@@ -103,14 +126,6 @@ fn model_metric<'model>(path: &MetricPath, model: &'model InternalModel) -> Opti
             .iter()
             .find(|candidate| &candidate.name == metric),
     }
-}
-
-/// Fails for a metric extension outside the slice (VS-1).
-fn check_extensions(metric: &Metric) -> Result<(), InvariantViolation> {
-    if metric.context.is_some() {
-        return Err(InvariantViolation::ContextMetric);
-    }
-    Ok(())
 }
 
 /// The semi-additive declaration of the base metric whose components `branch` holds, with

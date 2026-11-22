@@ -15,6 +15,7 @@ use menura_representations::logical_plan::{Operation, PlanNode};
 use menura_representations::origin::Origin;
 
 use crate::context::RewriteContext;
+use crate::plan_inputs::map_inputs;
 use crate::record::{NodePath, RewriteOutcome, RewriteRecord, RewriteRule, RewriteSubject};
 
 /// Applies the rewrite to `plan` and adds a record of every branch it folded to `records`.
@@ -51,8 +52,33 @@ fn fold_branches(
             folded.map(|folded| with_input(node, folded))
         }
         Operation::Stitch { branches, .. } => fold_stitch(node, branches, steps, records),
+        Operation::Lookup { .. } => fold_lookup(node, steps, records),
         _ => None,
     }
+}
+
+/// The `Lookup` `node` with the branches of its result rows and of its context query folded;
+/// `None` when none is folded.
+fn fold_lookup(
+    node: &PlanNode,
+    steps: &mut Vec<usize>,
+    records: &mut Vec<RewriteRecord>,
+) -> Option<PlanNode> {
+    let mut folded = Vec::new();
+    for (index, input) in node.inputs().into_iter().enumerate() {
+        steps.push(index);
+        folded.push(fold_branches(input, steps, records));
+        steps.pop();
+    }
+    if folded.iter().all(Option::is_none) {
+        return None;
+    }
+    Some(map_inputs(node, |index, input| {
+        folded
+            .get_mut(index)
+            .and_then(Option::take)
+            .unwrap_or_else(|| input.clone())
+    }))
 }
 
 /// The `Stitch` `node` with each of its `branches` folded; `None` when none is folded.
