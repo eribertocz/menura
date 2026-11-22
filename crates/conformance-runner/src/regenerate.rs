@@ -260,11 +260,13 @@ mod tests {
     fn cs_2_10a_the_produced_outputs_are_in_stored_form() {
         let case =
             read_case(&conformance_directory().join("cases/cs/cs-lineage-001.yaml")).unwrap();
-        let outputs = plan_outputs(&conformance_directory(), &case)
+        let outputs = case_outputs(&conformance_directory(), &case)
             .unwrap()
             .unwrap();
-        let lineage = JsonValue::parse(&outputs.lineage).unwrap();
-        assert_eq!(lineage.stored_form(), outputs.lineage);
-        assert!(outputs.sql.starts_with("SELECT") || outputs.sql.starts_with("WITH"));
+        let stored = outputs.lineage.unwrap();
+        let lineage = JsonValue::parse(&stored).unwrap();
+        assert_eq!(lineage.stored_form(), stored);
+        let sql = outputs.sql.unwrap();
+        assert!(sql.starts_with("SELECT") || sql.starts_with("WITH"));
     }
 }

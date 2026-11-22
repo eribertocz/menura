@@ -72,10 +72,9 @@ fn compare_query(case: &Case, handle: &Handle, inputs: &QueryInputs<'_>) -> Case
                 describe(error.errors.first())
             ))
         }
-        (Outcome::Error, CompileResult::Error(error)) => match check_error(&case.expect, &error) {
-            CaseStatus::Passed => check_audit(case, audit.as_deref(), inputs.case_folder),
-            status => status,
-        },
+        (Outcome::Error, CompileResult::Error(error)) => {
+            check_error_and_audit(case, &error, audit.as_deref(), inputs.case_folder)
+        }
         (Outcome::Error, CompileResult::Plan(_)) => CaseStatus::Failed(format!(
             "the query compiles, but the case expects the error {}",
             case.expect.error.as_deref().unwrap_or("none")
@@ -87,34 +86,50 @@ fn compare_query(case: &Case, handle: &Handle, inputs: &QueryInputs<'_>) -> Case
             "the query does not compile: {}",
             describe(error.errors.first())
         )),
-        (_, CompileResult::Plan(plan)) => {
-            match check_audit(case, audit.as_deref(), inputs.case_folder) {
-                CaseStatus::Passed => check_plan_and_explain(
-                    case,
-                    &plan,
-                    inputs,
-                    || compile_query().result,
-                    || explain(handle, &query, inputs.security_context, &options),
-                ),
-                status => status,
-            }
-        }
+        (_, CompileResult::Plan(plan)) => check_plan_and_explain(
+            case,
+            &plan,
+            audit.as_deref(),
+            inputs,
+            || compile_query().result,
+            || explain(handle, &query, inputs.security_context, &options),
+        ),
     }
 }
 
-/// Checks a compiled plan with [`check_plan`]; a passed `outcome: plan` case also runs
-/// `explain` from 0.7.0, whose document must match the plan (CS-2.16).
+/// Checks the audit record of a compiled plan (CS-2.13), then the plan with [`check_plan`]; a
+/// passed `outcome: plan` case also runs `explain` from 0.7.0, whose document must match the
+/// plan (CS-2.16).
 fn check_plan_and_explain(
     case: &Case,
     plan: &CompiledPlanDocument,
+    audit: Option<&AuditRecordDocument>,
     inputs: &QueryInputs<'_>,
     compile_again: impl FnOnce() -> CompileResult,
     explain_query: impl FnOnce() -> CompileResult,
 ) -> CaseStatus {
+    let audited = check_audit(case, audit, inputs.case_folder);
+    if audited != CaseStatus::Passed {
+        return audited;
+    }
     match check_plan(case, plan, inputs, compile_again) {
         CaseStatus::Passed if runs_explain(case) => explained_mismatch(plan, &explain_query())
             .map_or(CaseStatus::Passed, CaseStatus::Failed),
         status => status,
+    }
+}
+
+/// Compares the compile error of an `error` case with its expectation (CS-2.9), then its audit
+/// record (CS-2.13).
+fn check_error_and_audit(
+    case: &Case,
+    error: &CompileErrorDocument,
+    audit: Option<&AuditRecordDocument>,
+    case_folder: &Path,
+) -> CaseStatus {
+    match check_error(&case.expect, error) {
+        CaseStatus::Passed => check_audit(case, audit, case_folder),
+        failed => failed,
     }
 }
 
