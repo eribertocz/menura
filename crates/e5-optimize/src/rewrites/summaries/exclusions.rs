@@ -17,7 +17,7 @@ use super::expression_map::{any_node, field_name, references};
 use super::restricted::reads_restricted_metric;
 
 /// Whether the branch is excluded by SUM-3.2: it still has a `Deduplicate`, one of its
-/// components is read by a non-additive or semi-additive metric of the query,
+/// components is read by a metric of the query declared non-additive or semi-additive,
 /// or one of its components aggregates a float.
 pub(super) fn excluded(shape: &BranchShape<'_>, model: &InternalModel, query: &BoundQuery) -> bool {
     shape.deduplicate

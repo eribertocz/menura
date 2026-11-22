@@ -11,6 +11,7 @@ query:
     metrics:
       - {metric: total_amount, alias: total_amount}
       - {metric: order_count, alias: order_count}
+      - {metric: average_amount, alias: average_amount}
     nonportable_extensions:
       - {"vendor_name": "COMMON", "data": {"namespace": "menura", "version": 1, "time_grains": [{"dimension": "orders.order_date", "grain": "month"}]}}
 expect:

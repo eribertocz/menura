@@ -5,7 +5,7 @@
 pub(crate) enum SummaryCondition {
     /// SUM-3.1: a component matches no summary measure, or does not recompose exactly.
     Equivalence,
-    /// SUM-3.2: a non-additive or semi-additive metric, a remaining `Deduplicate`, or a
+    /// SUM-3.2: a declared non-additive or semi-additive metric, a remaining `Deduplicate`, or a
     /// float argument.
     Exclusions,
     /// SUM-3.2a: a summary row depends on the time or time zone of its build.
