@@ -285,20 +285,21 @@ Find a rule ID or a section here, then open only that file at that line.
 | [contracts/compiled-plan.md](contracts/compiled-plan.md#L102) | 102 | rule | PLN-6.1 |
 | [contracts/compiled-plan.md](contracts/compiled-plan.md#L103) | 103 | rule | PLN-6.2 |
 | [contracts/compiled-plan.md](contracts/compiled-plan.md#L104) | 104 | rule | PLN-6.3 |
-| [contracts/compiled-plan.md](contracts/compiled-plan.md#L105) | 105 | rule | PLN-6.4 |
-| [contracts/compiled-plan.md](contracts/compiled-plan.md#L106) | 106 | rule | PLN-6.5 |
-| [contracts/compiled-plan.md](contracts/compiled-plan.md#L112) | 112 | rule | PLN-6.6 |
-| [contracts/compiled-plan.md](contracts/compiled-plan.md#L113) | 113 | rule | PLN-6.7 |
-| [contracts/compiled-plan.md](contracts/compiled-plan.md#L114) | 114 | rule | PLN-6.8 |
-| [contracts/compiled-plan.md](contracts/compiled-plan.md#L116) | 116 | section | PLN-7 Explanation |
-| [contracts/compiled-plan.md](contracts/compiled-plan.md#L128) | 128 | rule | PLN-7.1 |
-| [contracts/compiled-plan.md](contracts/compiled-plan.md#L129) | 129 | rule | PLN-7.2 |
-| [contracts/compiled-plan.md](contracts/compiled-plan.md#L130) | 130 | rule | PLN-7.3 |
-| [contracts/compiled-plan.md](contracts/compiled-plan.md#L145) | 145 | rule | PLN-7.4 |
-| [contracts/compiled-plan.md](contracts/compiled-plan.md#L147) | 147 | section | PLN-8 Explain |
-| [contracts/compiled-plan.md](contracts/compiled-plan.md#L149) | 149 | rule | PLN-8.1 |
-| [contracts/compiled-plan.md](contracts/compiled-plan.md#L150) | 150 | rule | PLN-8.2 |
-| [contracts/compiled-plan.md](contracts/compiled-plan.md#L151) | 151 | rule | PLN-8.3 |
+| [contracts/compiled-plan.md](contracts/compiled-plan.md#L105) | 105 | rule | PLN-6.3a |
+| [contracts/compiled-plan.md](contracts/compiled-plan.md#L106) | 106 | rule | PLN-6.4 |
+| [contracts/compiled-plan.md](contracts/compiled-plan.md#L107) | 107 | rule | PLN-6.5 |
+| [contracts/compiled-plan.md](contracts/compiled-plan.md#L113) | 113 | rule | PLN-6.6 |
+| [contracts/compiled-plan.md](contracts/compiled-plan.md#L114) | 114 | rule | PLN-6.7 |
+| [contracts/compiled-plan.md](contracts/compiled-plan.md#L115) | 115 | rule | PLN-6.8 |
+| [contracts/compiled-plan.md](contracts/compiled-plan.md#L117) | 117 | section | PLN-7 Explanation |
+| [contracts/compiled-plan.md](contracts/compiled-plan.md#L129) | 129 | rule | PLN-7.1 |
+| [contracts/compiled-plan.md](contracts/compiled-plan.md#L130) | 130 | rule | PLN-7.2 |
+| [contracts/compiled-plan.md](contracts/compiled-plan.md#L131) | 131 | rule | PLN-7.3 |
+| [contracts/compiled-plan.md](contracts/compiled-plan.md#L146) | 146 | rule | PLN-7.4 |
+| [contracts/compiled-plan.md](contracts/compiled-plan.md#L148) | 148 | section | PLN-8 Explain |
+| [contracts/compiled-plan.md](contracts/compiled-plan.md#L150) | 150 | rule | PLN-8.1 |
+| [contracts/compiled-plan.md](contracts/compiled-plan.md#L151) | 151 | rule | PLN-8.2 |
+| [contracts/compiled-plan.md](contracts/compiled-plan.md#L152) | 152 | rule | PLN-8.3 |
 | [contracts/integrity-checks.md](contracts/integrity-checks.md#L1) | 1 | section | Contract: integrity checks |
 | [contracts/integrity-checks.md](contracts/integrity-checks.md#L5) | 5 | section | CHK-1 Purpose |
 | [contracts/integrity-checks.md](contracts/integrity-checks.md#L10) | 10 | section | CHK-2 Document |
@@ -326,12 +327,13 @@ Find a rule ID or a section here, then open only that file at that line.
 | [contracts/integrity-checks.md](contracts/integrity-checks.md#L69) | 69 | rule | CHK-6.3 |
 | [contracts/integrity-checks.md](contracts/integrity-checks.md#L70) | 70 | rule | CHK-6.4 |
 | [contracts/integrity-checks.md](contracts/integrity-checks.md#L71) | 71 | rule | CHK-6.5 |
-| [contracts/integrity-checks.md](contracts/integrity-checks.md#L78) | 78 | rule | CHK-6.6 |
-| [contracts/integrity-checks.md](contracts/integrity-checks.md#L80) | 80 | section | CHK-7 Parameters and bindings |
-| [contracts/integrity-checks.md](contracts/integrity-checks.md#L82) | 82 | rule | CHK-7.1 |
-| [contracts/integrity-checks.md](contracts/integrity-checks.md#L83) | 83 | rule | CHK-7.2 |
-| [contracts/integrity-checks.md](contracts/integrity-checks.md#L84) | 84 | rule | CHK-7.3 |
-| [contracts/integrity-checks.md](contracts/integrity-checks.md#L85) | 85 | rule | CHK-7.4 |
+| [contracts/integrity-checks.md](contracts/integrity-checks.md#L78) | 78 | rule | CHK-6.5a |
+| [contracts/integrity-checks.md](contracts/integrity-checks.md#L79) | 79 | rule | CHK-6.6 |
+| [contracts/integrity-checks.md](contracts/integrity-checks.md#L81) | 81 | section | CHK-7 Parameters and bindings |
+| [contracts/integrity-checks.md](contracts/integrity-checks.md#L83) | 83 | rule | CHK-7.1 |
+| [contracts/integrity-checks.md](contracts/integrity-checks.md#L84) | 84 | rule | CHK-7.2 |
+| [contracts/integrity-checks.md](contracts/integrity-checks.md#L85) | 85 | rule | CHK-7.3 |
+| [contracts/integrity-checks.md](contracts/integrity-checks.md#L86) | 86 | rule | CHK-7.4 |
 | [contracts/model-description.md](contracts/model-description.md#L1) | 1 | section | Contract: model description |
 | [contracts/model-description.md](contracts/model-description.md#L5) | 5 | section | DSC-1 Purpose |
 | [contracts/model-description.md](contracts/model-description.md#L11) | 11 | section | DSC-2 Content |
