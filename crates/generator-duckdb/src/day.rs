@@ -27,7 +27,7 @@ impl<'input> StepWriter<'input> {
                 let zone = self
                     .writer(node, Columns::Input(input.schema()))
                     .time_zone();
-                Ok(format!("CAST({value} AT TIME ZONE {zone} AS DATE)"))
+                Ok(format!("CAST(({value}) AT TIME ZONE {zone} AS DATE)"))
             }
             LogicalType::Timestamp { .. } => Ok(format!("CAST({value} AS DATE)")),
             _ => Err(error(InvariantViolation::UnsupportedType, node)),

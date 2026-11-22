@@ -12,7 +12,10 @@ use menura_generator_duckdb::InvariantViolation;
 use menura_model::internal_model::PartialPeriod;
 use menura_representations::logical_plan::{Membership, PlanNode};
 use menura_representations::names::ColumnName;
-use support::{assert_golden, generate_population, policy, population, population_scan, validity};
+use support::{
+    assert_golden, generate_population, policy, population, population_over, population_scan,
+    validity,
+};
 
 const CUSTOMER_FIELDS: [&str; 4] = ["CUSTOMER_ID", "VALID_FROM", "VALID_TO", "IS_BILLABLE"];
 
@@ -126,4 +129,19 @@ fn pop_3_5_timestamps_belong_to_their_day_in_the_query_time_zone() {
         include_str!("golden/pop_3_5_population_timestamps.sql"),
     );
     assert_eq!(generated.parameters.len(), 1, "one time-zone parameter");
+}
+
+#[test]
+fn pop_3_5_periods_of_timestamps_are_compared_by_day() {
+    let plan = population_over(
+        population_scan("CUSTOMERS", &CUSTOMER_FIELDS),
+        "CUSTOMERS",
+        validity(PartialPeriod::FullPeriod),
+        None,
+        (Grain::Month, population_scan("INSTANTS", &["PERIOD"])),
+    );
+    assert_golden(
+        &sql_of(&plan),
+        include_str!("golden/pop_3_5_population_timestamp_periods.sql"),
+    );
 }

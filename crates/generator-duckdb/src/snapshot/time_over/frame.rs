@@ -1,6 +1,6 @@
 //! The names a time `Snapshot` writes its steps with.
 
-use menura_representations::logical_plan::{Operation, PlanNode, SnapshotRule, TimeSnapshot};
+use menura_representations::logical_plan::{PlanNode, SnapshotRule, TimeSnapshot};
 
 use crate::error::{GenerateError, InvariantViolation};
 use crate::identifiers::quote;
@@ -12,8 +12,18 @@ pub(super) const PERIOD: &str = "\"menura.period\"";
 pub(super) const UNIT: &str = "\"menura.unit\"";
 /// The synthesized column that marks a stale carried value (ADD-4.3).
 pub(super) const STALE: &str = "\"menura.stale\"";
+/// The alias of an expected pair.
+pub(super) const EXPECTED: &str = "\"menura_expected\"";
 /// The synthesized column of the text of a runtime condition (ADD-7).
 pub(super) const VIOLATION: &str = "\"menura.violation\"";
+
+/// The days of the periods a time `Snapshot` reads (POP-3.5): of an expected pair, and of
+/// the query's periods, with the step that holds them.
+pub(super) struct Days {
+    pub(super) expected: String,
+    pub(super) periods: String,
+    pub(super) period: String,
+}
 
 /// A `Snapshot` node with a time `over`, and the names its steps read.
 pub(super) struct Frame<'input> {
@@ -32,7 +42,9 @@ pub(super) struct Frame<'input> {
     pub(super) expected_entity: Vec<String>,
     /// Its quoted period column.
     pub(super) expected_period: String,
-    /// The step of the query's periods, and its quoted period column.
+    /// The day of the period of an expected pair, `menura_expected` (POP-3.5).
+    pub(super) expected_day: String,
+    /// The step of the query's periods, and the day of its period column.
     pub(super) periods: (String, String),
 }
 
@@ -44,11 +56,8 @@ impl<'input> Frame<'input> {
         rule: &'input SnapshotRule,
         time: &'input TimeSnapshot,
         expected: String,
-        periods: String,
+        days: Days,
     ) -> Result<Self, GenerateError> {
-        let Operation::Population { period, .. } = time.expected.operation() else {
-            return Err(error(InvariantViolation::NodeOutsideSlice, node));
-        };
         let expected_columns = time.expected.schema().columns();
         let Some((expected_period, expected_entity)) = expected_columns.split_last() else {
             return Err(error(InvariantViolation::UnknownColumn, node));
@@ -66,7 +75,8 @@ impl<'input> Frame<'input> {
             expected,
             expected_entity: names(expected_entity.iter().map(|column| column.name.as_str())),
             expected_period: quote(expected_period.name.as_str()),
-            periods: (periods, quote(period.as_str())),
+            expected_day: days.expected,
+            periods: (days.periods, days.period),
         })
     }
 

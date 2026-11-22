@@ -21,10 +21,19 @@ use menura_representations::logical_plan::{
 use menura_representations::names::ColumnName;
 use support::{
     assert_golden, big_integer, column, component, decimal, from_model, generate_billing, named,
-    parse, population, population_scan, query, validity,
+    parse, population_over, population_scan, query, validity,
 };
 
 const BALANCE_FIELDS: [&str; 4] = ["CUSTOMER_ID", "BALANCE_DATE", "BRANCH", "BALANCE"];
+
+/// The fields of the balances `rule` reads: `BOOKED_AT` too when it is `over`.
+fn balance_fields(rule: Rule) -> Vec<&'static str> {
+    let mut fields = BALANCE_FIELDS.to_vec();
+    if rule.over_instant {
+        fields.push("BOOKED_AT");
+    }
+    fields
+}
 const CUSTOMER_FIELDS: [&str; 3] = ["CUSTOMER_ID", "VALID_FROM", "VALID_TO"];
 
 /// What a missing entity does, with the rows it reads.
@@ -45,6 +54,8 @@ struct Rule {
     unexpected: UnexpectedHandling,
     missing: Missing,
     by_year: bool,
+    /// Whether `over` is the `timestamp with time zone` field `BOOKED_AT`.
+    over_instant: bool,
 }
 
 const LAST: SnapshotAggregation = SnapshotAggregation::Last(Selection::GlobalPeriod);
@@ -55,21 +66,22 @@ const BASE: Rule = Rule {
     unexpected: UnexpectedHandling::Include,
     missing: Missing::Exclude,
     by_year: true,
+    over_instant: false,
 };
 
-fn missing(missing: Missing) -> SnapshotMissing {
-    match missing {
+fn missing(rule: Rule) -> SnapshotMissing {
+    match rule.missing {
         Missing::Exclude => SnapshotMissing::Exclude,
         Missing::Error => SnapshotMissing::Error,
         Missing::Zero => {
-            let mut fields = BALANCE_FIELDS.to_vec();
+            let mut fields = balance_fields(rule);
             fields.push("PERIOD");
             SnapshotMissing::Zero {
                 added: Box::new(population_scan("ADDED_BALANCES", &fields)),
             }
         }
         Missing::CarryForward(on_stale) => SnapshotMissing::CarryForward {
-            carried: Box::new(population_scan("BALANCES", &BALANCE_FIELDS)),
+            carried: Box::new(population_scan("BALANCES", &balance_fields(rule))),
             max_carry_forward: NonZeroU64::MIN.saturating_add(2),
             on_stale,
         },
@@ -81,12 +93,17 @@ fn snapshot_rule(rule: Rule) -> SnapshotRule {
     if rule.by_year {
         keys.push(named("BALANCE_YEAR", "DATE_TRUNC('year', BALANCE_DATE)"));
     }
-    let expected = population(
+    let (over, periods) = if rule.over_instant {
+        ("BOOKED_AT", "INSTANTS")
+    } else {
+        ("BALANCE_DATE", "MONTHS")
+    };
+    let expected = population_over(
         population_scan("CUSTOMERS", &CUSTOMER_FIELDS),
         "CUSTOMERS",
         validity(PartialPeriod::AnyDay),
         None,
-        Grain::Month,
+        (Grain::Month, population_scan(periods, &["PERIOD"])),
     );
     SnapshotRule {
         metric: NormalizedName::new("BALANCE"),
@@ -96,14 +113,14 @@ fn snapshot_rule(rule: Rule) -> SnapshotRule {
         aggregation: rule.aggregation,
         nulls: rule.nulls,
         over: SnapshotOver::Time(TimeSnapshot {
-            period: parse("DATE_TRUNC('month', BALANCE_DATE)"),
+            period: parse(&format!("DATE_TRUNC('month', {over})")),
             grain: Grain::Month,
             unit: rule.by_year.then(|| UnitKey {
                 column: ColumnName::new("BALANCE_YEAR"),
                 grain: Grain::Year,
             }),
             expected: Box::new(expected),
-            missing: missing(rule.missing),
+            missing: missing(rule),
             unexpected: rule.unexpected,
         }),
     }
@@ -122,7 +139,7 @@ fn sql_of(rule: Rule) -> String {
     dimensions.push("CUSTOMER_ID");
     let plan = PlanNode::new(
         Operation::Snapshot {
-            input: Box::new(population_scan("BALANCES", &BALANCE_FIELDS)),
+            input: Box::new(population_scan("BALANCES", &balance_fields(rule))),
             rule: snapshot_rule(rule),
         },
         OutputSchema::new(columns),
@@ -336,4 +353,20 @@ fn e6_4_6b_the_first_condition_in_code_order_is_raised() {
     let third = sql.find("'RADD-03:").expect("RADD-03");
     assert!(first < second && second < third);
     assert!(sql.contains("error(MIN(\"menura.violation\"))"));
+}
+
+#[test]
+fn pop_3_5_a_timestamp_over_is_compared_by_day_in_the_query_time_zone() {
+    let rule = Rule {
+        aggregation: SnapshotAggregation::Last(Selection::PerEntity),
+        missing: Missing::Error,
+        unexpected: UnexpectedHandling::Exclude,
+        by_year: false,
+        over_instant: true,
+        ..BASE
+    };
+    assert_golden(
+        &sql_of(rule),
+        include_str!("golden/pop_3_5_snapshot_timestamp_over.sql"),
+    );
 }

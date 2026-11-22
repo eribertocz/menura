@@ -8,8 +8,8 @@ use menura_model::internal_model::{
 use super::Steps;
 use menura_representations::logical_plan::SnapshotMissing;
 
-use super::frame::{Frame, PERIOD, STALE, VIOLATION, qualified};
-use super::values::{EXPECTED, VALUE, expected_join};
+use super::frame::{EXPECTED, Frame, PERIOD, STALE, VIOLATION, qualified};
+use super::values::{VALUE, expected_join};
 use crate::additivity_error::AdditivityCondition;
 use crate::body::{SelectBody, union_all};
 use crate::error::GenerateError;

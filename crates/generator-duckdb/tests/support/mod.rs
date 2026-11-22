@@ -50,7 +50,7 @@ pub use plan::{
     scan_of, sort,
 };
 pub use population::{
-    generate_billing, generate_population, population, population_scan, validity,
+    generate_billing, generate_population, population, population_over, population_scan, validity,
 };
 pub use propagation::{
     generate_propagation, orders_scan, policy, propagation_model, scan_fields, scan_typed,

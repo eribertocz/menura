@@ -4,7 +4,7 @@
 use menura_model::internal_model::NullHandling;
 use menura_representations::logical_plan::PlanNode;
 
-use super::frame::{Frame, PERIOD, equalities, qualified};
+use super::frame::{EXPECTED, Frame, PERIOD, equalities, qualified};
 use super::reads_unexpected;
 use crate::body::SelectBody;
 use crate::error::GenerateError;
@@ -16,8 +16,6 @@ use crate::steps::StepWriter;
 
 /// The alias of a row of the values.
 pub(super) const VALUE: &str = "\"menura_value\"";
-/// The alias of an expected pair.
-pub(super) const EXPECTED: &str = "\"menura_expected\"";
 
 impl<'input> StepWriter<'input> {
     /// One row per (keys, entity, period) of `source`, written as `source_name`, with its
@@ -108,7 +106,7 @@ pub(super) fn checked(frame: &Frame<'_>, values: &str) -> SelectBody {
 pub(super) fn expected_join(frame: &Frame<'_>) -> String {
     let entity = equalities(VALUE, &frame.entity, EXPECTED, &frame.expected_entity);
     format!(
-        "LEFT JOIN {} AS {EXPECTED} ON {entity} AND {VALUE}.{PERIOD} = {EXPECTED}.{}",
-        frame.expected, frame.expected_period
+        "LEFT JOIN {} AS {EXPECTED} ON {entity} AND {VALUE}.{PERIOD} = {}",
+        frame.expected, frame.expected_day
     )
 }

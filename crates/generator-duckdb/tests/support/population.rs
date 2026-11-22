@@ -54,6 +54,7 @@ fn balance_shapes() -> Vec<Shape> {
                 ("BALANCE_DATE", "balance_date", LogicalType::Date),
                 ("BRANCH", "branch", LogicalType::Text),
                 ("BALANCE", "balance", decimal(12, 2)),
+                ("BOOKED_AT", "booked_at", instant()),
                 ("PERIOD", "period", LogicalType::Date),
             ],
         ),
@@ -65,6 +66,7 @@ fn balance_shapes() -> Vec<Shape> {
                 ("BALANCE_DATE", "balance_date", LogicalType::Date),
                 ("BRANCH", "branch", LogicalType::Text),
                 ("BALANCE", "balance", decimal(12, 2)),
+                ("BOOKED_AT", "booked_at", instant()),
             ],
         ),
     ]
@@ -84,6 +86,11 @@ fn other_shapes() -> Vec<Shape> {
                 ("ACTIVE_FROM", "active_from", instant()),
                 ("ACTIVE_TO", "active_to", local_timestamp()),
             ],
+        ),
+        (
+            "INSTANTS",
+            "main.instants",
+            vec![("PERIOD", "period", instant())],
         ),
         (
             "MONTHS",
@@ -248,13 +255,26 @@ pub fn population(
     required_when: Option<&str>,
     grain: Grain,
 ) -> PlanNode {
+    let periods = population_scan("MONTHS", &["PERIOD"]);
+    population_over(input, dataset, membership, required_when, (grain, periods))
+}
+
+/// The `Population` of `population`, over the `PERIOD` column of `periods` at `grain`.
+pub fn population_over(
+    input: PlanNode,
+    dataset: &str,
+    membership: Membership,
+    required_when: Option<&str>,
+    (grain, periods): (Grain, PlanNode),
+) -> PlanNode {
+    let period_type = periods.schema().columns()[0].logical_type.clone();
     PlanNode::new(
         Operation::Population {
             input: Box::new(input),
             dataset: NormalizedName::new(dataset),
             population: NormalizedName::new("EXPECTED_CUSTOMERS"),
             grain,
-            periods: Box::new(population_scan("MONTHS", &["PERIOD"])),
+            periods: Box::new(periods),
             period: ColumnName::new("PERIOD"),
             rule: PopulationRule {
                 entity: vec![ColumnName::new("CUSTOMER_ID")],
@@ -270,7 +290,7 @@ pub fn population(
             },
             SchemaColumn {
                 name: ColumnName::new("PERIOD"),
-                logical_type: LogicalType::Date,
+                logical_type: period_type,
                 nullable: false,
             },
         ]),

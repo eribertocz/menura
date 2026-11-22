@@ -4,9 +4,8 @@
 
 use menura_representations::logical_plan::SnapshotMissing;
 
-use super::frame::{Frame, PERIOD, UNIT, equalities, qualified, truncated};
+use super::frame::{EXPECTED, Frame, PERIOD, UNIT, equalities, qualified, truncated};
 use super::per_entity_edge;
-use super::values::EXPECTED;
 use crate::body::SelectBody;
 use crate::day::grain_name;
 use crate::snapshot::group_by;
@@ -58,7 +57,7 @@ fn expected_items(frame: &Frame<'_>) -> Vec<String> {
         .zip(&frame.entity)
         .map(|(column, name)| format!("{column} AS {name}"))
         .collect();
-    items.push(format!("{EXPECTED}.{} AS {PERIOD}", frame.expected_period));
+    items.push(format!("{} AS {PERIOD}", frame.expected_day));
     items
 }
 
@@ -70,8 +69,8 @@ fn all_missing(frame: &Frame<'_>, present: &str) -> SelectBody {
         from: format!("{} AS {EXPECTED}", frame.expected),
         clauses: vec![
             format!(
-                "LEFT JOIN {present} AS {PRESENT} ON {entity} AND {PRESENT}.{PERIOD} = {EXPECTED}.{}",
-                frame.expected_period
+                "LEFT JOIN {present} AS {PRESENT} ON {entity} AND {PRESENT}.{PERIOD} = {}",
+                frame.expected_day
             ),
             format!("WHERE {}", absent(frame)),
         ],
@@ -107,8 +106,8 @@ fn edge_missing(frame: &Frame<'_>, present: &str, edges: &str, has_unit: bool) -
         from: format!("{} AS {EXPECTED}", frame.expected),
         clauses: vec![
             format!(
-                "JOIN {edges} AS {EDGE} ON {EXPECTED}.{} = {EDGE}.{PERIOD}",
-                frame.expected_period
+                "JOIN {edges} AS {EDGE} ON {} = {EDGE}.{PERIOD}",
+                frame.expected_day
             ),
             format!("LEFT JOIN {present} AS {PRESENT} ON {condition}"),
             format!("WHERE {}", absent(frame)),

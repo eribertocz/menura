@@ -9,12 +9,15 @@ mod reduce;
 mod values;
 
 use menura_model::internal_model::{SnapshotAggregation, UnexpectedHandling};
-use menura_representations::logical_plan::{PlanNode, SnapshotMissing, SnapshotRule, TimeSnapshot};
+use menura_representations::logical_plan::{
+    Operation, PlanNode, SnapshotMissing, SnapshotRule, TimeSnapshot,
+};
 
 use crate::body::SelectBody;
-use crate::error::GenerateError;
-use crate::steps::StepWriter;
-use frame::Frame;
+use crate::error::{GenerateError, InvariantViolation};
+use crate::identifiers::quote;
+use crate::steps::{StepWriter, error};
+use frame::{Days, EXPECTED, Frame};
 
 /// The steps a `Snapshot` reads, by name: its `values`, after the rules (`checked`), the
 /// pairs `missing` finds, and the rows `fill` adds for them.
@@ -43,7 +46,8 @@ impl<'input> StepWriter<'input> {
             SnapshotMissing::Exclude | SnapshotMissing::Error => None,
         };
         self.parameters.start_node(node.origin());
-        let frame = Frame::new(node, rule, time, expected, periods)?;
+        let days = self.days(node, &time.expected, periods)?;
+        let frame = Frame::new(node, rule, time, expected, days)?;
         let values = self.period_values(&frame, input, &written.name, None)?;
         let values = self.push_step("values", values);
         let checked = values::checked(&frame, &values);
@@ -60,6 +64,48 @@ impl<'input> StepWriter<'input> {
             filled,
         };
         self.reduce(&frame, &steps)
+    }
+}
+
+impl<'input> StepWriter<'input> {
+    /// The days of the period of an expected pair and of the query's periods, the step
+    /// `periods` of `expected`, a `Population` (POP-3.5).
+    fn days(
+        &mut self,
+        node: &'input PlanNode,
+        expected: &'input PlanNode,
+        periods: String,
+    ) -> Result<Days, GenerateError> {
+        let Operation::Population {
+            periods: periods_node,
+            period,
+            ..
+        } = expected.operation()
+        else {
+            return Err(error(InvariantViolation::NodeOutsideSlice, node));
+        };
+        let column = |plan: &PlanNode, name: &str| {
+            plan.schema()
+                .columns()
+                .iter()
+                .find(|column| column.name.as_str() == name)
+                .map(|column| column.logical_type.clone())
+                .ok_or_else(|| error(InvariantViolation::UnknownColumn, node))
+        };
+        let expected_column = expected
+            .schema()
+            .columns()
+            .last()
+            .ok_or_else(|| error(InvariantViolation::UnknownColumn, node))?;
+        let value = format!("{EXPECTED}.{}", quote(expected_column.name.as_str()));
+        let expected_day = self.day_sql(node, expected, &value, &expected_column.logical_type)?;
+        let period_type = column(periods_node, period.as_str())?;
+        let period = self.day_sql(node, periods_node, &quote(period.as_str()), &period_type)?;
+        Ok(Days {
+            expected: expected_day,
+            periods,
+            period,
+        })
     }
 }
 

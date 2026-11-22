@@ -3,7 +3,7 @@
 
 mod membership;
 
-use menura_contracts::types::common::{Grain, LogicalType};
+use menura_contracts::types::common::Grain;
 use menura_representations::logical_plan::{Operation, PlanNode, PopulationRule};
 use menura_representations::names::ColumnName;
 
@@ -72,11 +72,13 @@ impl<'input> StepWriter<'input> {
             None => input.name,
         };
         let period = format!("{PERIOD}.{}", quote(inputs.period.as_str()));
+        let period_type = membership::column_type(node, inputs.periods, inputs.period)?;
+        let start = self.day_sql(node, inputs.periods, &period, period_type)?;
         let covered = self.covers(
             node,
             inputs.input,
             &inputs.rule.membership,
-            &period,
+            &start,
             inputs.grain,
         )?;
         let body = SelectBody {
@@ -113,15 +115,12 @@ fn population_inputs(node: &PlanNode) -> Result<PopulationInputs<'_>, GenerateEr
 }
 
 /// Checks that the entity columns are columns of the input and that the period column is a
-/// `date` column of the periods.
+/// column of the periods.
 fn check_columns(node: &PlanNode, inputs: &PopulationInputs<'_>) -> Result<(), GenerateError> {
     for name in &inputs.rule.entity {
         membership::column_type(node, inputs.input, name)?;
     }
-    match membership::column_type(node, inputs.periods, inputs.period)? {
-        LogicalType::Date => Ok(()),
-        _ => Err(error(InvariantViolation::UnsupportedType, node)),
-    }
+    membership::column_type(node, inputs.periods, inputs.period).map(|_| ())
 }
 
 /// The entity columns of the row, then the period, each named as the node's schema names it.
