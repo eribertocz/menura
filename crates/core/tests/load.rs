@@ -1,5 +1,5 @@
-//! `validate`, `load` and `with_state`: PLN-5.3, ARC-5.1, ARC-5.2, CAT-8.8, CAT-9.1 and
-//! SUM-6.1.8.
+//! `validate`, `load` and `with_state`: PLN-5.3, ARC-5.1, ARC-5.2, CAT-8.6, CAT-8.8, CAT-9.1
+//! and SUM-6.1.8.
 
 use menura_core::{
     CompileErrorContract, CompileErrorDocument, Handle, InputDocument, LoadOptions, load, validate,
@@ -11,6 +11,18 @@ const SAMPLE_CATALOG: &str = include_str!("../../../conformance/models/sample/ca
 const SUMMARIES_MODEL: &str = include_str!("../../../conformance/models/e0-summaries/model.yaml");
 const SUMMARIES_CATALOG: &str =
     include_str!("../../../conformance/models/e0-summaries/catalog-schema.json");
+/// A month summary of `orders`, whose catalog state builds it from day periods.
+const MONTHLY_MODEL: &str =
+    include_str!("../../../conformance/models/cat-state-summary-built-from-days-001/model.yaml");
+const MONTHLY_CATALOG: &str = include_str!(
+    "../../../conformance/models/cat-state-summary-built-from-days-001/catalog-schema.json"
+);
+const MONTHLY_BUILT_FROM_DAYS: &str = include_str!(
+    "../../../conformance/models/cat-state-summary-built-from-days-001/catalog-state.json"
+);
+const MONTHLY_BUILT_FROM_WEEKS: &str = include_str!(
+    "../../../conformance/models/cat-state-summary-built-from-weeks-001/catalog-state.json"
+);
 
 /// A field of `orders` whose column the catalog schema does not describe (`W0D-01`).
 fn sample_with_missing_column() -> String {
@@ -167,6 +179,55 @@ fn cat_8_8_load_checks_the_summary_builds_of_its_catalog_state() {
     .unwrap();
     assert!(handle.catalog_state().is_none());
     assert_eq!(warning_codes(&handle), ["WCAT-03"]);
+}
+
+/// The handle of the month summary model with the catalog state `state`.
+fn monthly_handle(state: &str) -> Handle {
+    load(
+        MONTHLY_MODEL.as_bytes(),
+        MONTHLY_CATALOG.as_bytes(),
+        Some(state.as_bytes()),
+        &LoadOptions::default(),
+    )
+    .unwrap()
+}
+
+#[test]
+fn cat_8_8_a_month_summary_built_from_day_periods_is_admitted() {
+    let handle = monthly_handle(MONTHLY_BUILT_FROM_DAYS);
+    assert!(handle.catalog_state().is_some());
+    assert!(warning_codes(&handle).is_empty());
+}
+
+#[test]
+fn cat_8_8_a_month_summary_built_from_week_periods_is_ignored_with_wcat_03() {
+    let handle = monthly_handle(MONTHLY_BUILT_FROM_WEEKS);
+    assert!(handle.catalog_state().is_none());
+    assert_eq!(warning_codes(&handle), ["WCAT-03"]);
+    let location = handle.warnings().next().unwrap().location.clone().unwrap();
+    assert_eq!(location.document, InputDocument::CatalogState);
+    assert_eq!(
+        location.pointer,
+        "/relations/1/aggregate_build/built_from/0/period"
+    );
+}
+
+#[test]
+fn cat_8_8_a_month_summary_with_day_coverage_is_ignored_with_wcat_03() {
+    let state = MONTHLY_BUILT_FROM_DAYS.replace(
+        r#""from": "2026-11",
+          "to": "2026-11""#,
+        r#""from": "2026-11-01",
+          "to": "2026-11-02""#,
+    );
+    assert_ne!(state, MONTHLY_BUILT_FROM_DAYS);
+    let handle = monthly_handle(&state);
+    assert_eq!(warning_codes(&handle), ["WCAT-03"]);
+    let location = handle.warnings().next().unwrap().location.clone().unwrap();
+    assert_eq!(
+        location.pointer,
+        "/relations/1/aggregate_build/coverage/from"
+    );
 }
 
 #[test]

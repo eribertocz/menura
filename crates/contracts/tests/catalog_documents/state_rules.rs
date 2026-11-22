@@ -205,6 +205,44 @@ fn cat_8_6_summary_periods_of_mixed_grains_are_wcat_03() {
     );
 }
 
+/// The state example whose summary build lists `built_from` and `verified` periods, with the
+/// same two versions.
+fn summary_built_from(built_from: [&str; 2], verified: [&str; 2]) -> serde_json::Value {
+    let build = "/relations/2/aggregate_build";
+    let mut document = state_example();
+    for (list, periods) in [
+        ("built_from", built_from),
+        ("integrity_check/verified", verified),
+    ] {
+        for (index, period) in periods.iter().enumerate() {
+            document = with(
+                document,
+                &format!("{build}/{list}/{index}/period"),
+                json!(period),
+            );
+        }
+    }
+    document
+}
+
+#[test]
+fn cat_8_6_a_summary_built_from_finer_periods_than_its_coverage_is_admitted() {
+    let days = ["2026-09-30", "2026-10-01"];
+    assert_state_admitted(&summary_built_from(days, days));
+}
+
+#[test]
+fn cat_8_6_a_build_and_a_check_of_different_grains_are_wcat_03() {
+    let document = summary_built_from(["2026-09-30", "2026-10-01"], ["2026-09", "2026-10"]);
+    assert_eq!(
+        state_failure(&document),
+        (
+            AdmissionCode::Wcat03,
+            pointer("/relations/2/aggregate_build/integrity_check/verified/0/period")
+        )
+    );
+}
+
 #[test]
 fn cat_8_6_a_repeated_check_version_is_wcat_03() {
     let document = with(
