@@ -1,0 +1,14 @@
+id: ctx-prior-sql-date-trunc-001
+rules: [E4-8.6, E4-8.4, CTX-3a.2]
+model: ctx-prior
+security_context: analyst.json
+query:
+  contract: "menura.query"
+  contract_version: "1.1.0"
+  time_zone: "UTC"
+  sql: "SELECT DATE_TRUNC('month', o.order_date) AS order_month, AGG(sales) AS sales, AGG(sales_prior_year) AS sales_prior_year FROM ctx_prior.orders AS o GROUP BY 1"
+expect:
+  outcome: "plan"
+  sql: "ctx-prior-sql-date-trunc-001.sql"
+  row_order: "any"
+  rows: "ctx-prior-sql-date-trunc-001.csv"
