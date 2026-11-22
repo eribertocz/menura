@@ -60,7 +60,7 @@ fn dimension_key(
 }
 
 /// The unit a time grain truncates to; E6 truncates in the query time zone (E6-5.2).
-fn grain_unit(grain: Grain) -> DateUnit {
+pub(crate) fn grain_unit(grain: Grain) -> DateUnit {
     match grain {
         Grain::Day => DateUnit::Day,
         Grain::Week => DateUnit::Week,

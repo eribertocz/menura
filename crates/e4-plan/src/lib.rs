@@ -39,11 +39,8 @@ mod query_filter;
 mod rewrite;
 mod rows;
 mod scan;
+mod semi_additive;
 mod slice;
-#[expect(
-    dead_code,
-    reason = "used by the semi-additive branch plan, which follows in this pull request"
-)]
 mod snapshot_grain;
 mod stitch;
 mod typing;
@@ -57,7 +54,7 @@ use menura_model::internal_model::InternalModel;
 use menura_representations::bound_query::BoundQuery;
 use menura_representations::logical_plan::PlanNode;
 use menura_representations::origin::Origin;
-use menura_representations::paths::{Branch, Branches};
+use menura_representations::paths::{Branch, BranchKind, Branches};
 use menura_security::AdmittedSecurityContext;
 
 use crate::layout::Layout;
@@ -92,6 +89,7 @@ pub fn build_plan(
         .iter()
         .map(|branch| branch_plan(branch, query, security, model, catalog, &metrics))
         .collect::<Result<Vec<_>, _>>()?;
+    snapshot_grain::check_snapshot_grains(query, &snapshot_axes(branches, &metrics, model)?)?;
     let combined = match plans.len() {
         0 => return Err(slice::no_branch()),
         1 => plans.pop().ok_or_else(slice::no_branch)?,
@@ -128,11 +126,23 @@ fn branch_plan(
         catalog,
         has_reference_time: query.time().reference_time.is_some(),
     };
+    if let BranchKind::SemiAdditive { .. } = branch.kind {
+        let (metric, declaration) = metrics::semi_additive_metric(branch, metrics)?;
+        return semi_additive::semi_additive_plan(&semi_additive::SemiAdditiveBranch {
+            source,
+            query,
+            metric,
+            declaration,
+            keys,
+            components,
+        });
+    }
     let request = rows::RowsRequest {
         keys: &keys,
         components: &components,
         fields: &[],
         predicate: query_filter::query_predicate(query, &layout)?,
+        replaced_home: None,
     };
     let node = rows::branch_rows(&source, request)?;
     aggregate(
@@ -141,4 +151,33 @@ fn branch_plan(
         components,
         &Origin::Model(home.location.clone()),
     )
+}
+
+/// The time `over` of each semi-additive branch of `branches`, in branch order, for the check
+/// of `E4-03` (ADD-4.9).
+fn snapshot_axes<'model>(
+    branches: &'model Branches,
+    metrics: &[metrics::PlannedMetric<'model>],
+    model: &'model InternalModel,
+) -> Result<Vec<snapshot_grain::SnapshotAxis<'model>>, PlanError> {
+    let mut axes = Vec::new();
+    for branch in branches.as_slice() {
+        let BranchKind::SemiAdditive { .. } = branch.kind else {
+            continue;
+        };
+        let (metric, declaration) = metrics::semi_additive_metric(branch, metrics)?;
+        let Some(snapshot_grain) = declaration.snapshot_grain else {
+            continue;
+        };
+        let home = slice::home_dataset(branch, model)?;
+        let over_type = semi_additive::over_type(declaration, home).map_err(|violation| {
+            PlanError::invariant(violation, &Origin::Model(metric.location.clone()))
+        })?;
+        axes.push(snapshot_grain::SnapshotAxis {
+            over: &declaration.over,
+            over_type,
+            snapshot_grain,
+        });
+    }
+    Ok(axes)
 }
