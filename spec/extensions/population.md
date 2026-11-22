@@ -33,6 +33,8 @@ Fields are named without dataset prefix: they belong to the dataset that declare
 | POP-3.2 | `periodic`: an entity is expected in a period if its row for that period exists. |
 | POP-3.3 | In both modes, `required_when` MUST also hold. |
 | POP-3.4 | In `validity`, an entity may have several non-overlapping validity rows (deactivation and reactivation). |
+| POP-3.5 | **Days and periods.** A `timestamp` value belongs to its day in the query `time_zone`, truncated as E6-5.2 states; a `date` value is its own day. For a period with first day `p` and last day `l` at the grain: `any_day` holds when `valid_from` ≤ `l` and (`valid_to` is NULL or `valid_to` ≥ `p`); `full_period` when `valid_from` ≤ `p` and (`valid_to` is NULL or `valid_to` ≥ `l`); `period_end` when `valid_from` ≤ `l` and (`valid_to` is NULL or `valid_to` ≥ `l`). A NULL `valid_from` is never expected. |
+| POP-3.6 | **Periodic rows.** In `periodic`, a row is for period `p` when its `period`, truncated to `grain` with POP-3.5, equals `p`. A NULL `period` is never expected. |
 
 ## POP-4 Validation
 

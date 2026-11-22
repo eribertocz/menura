@@ -433,14 +433,16 @@ Find a rule ID or a section here, then open only that file at that line.
 | [extensions/population.md](extensions/population.md#L33) | 33 | rule | POP-3.2 |
 | [extensions/population.md](extensions/population.md#L34) | 34 | rule | POP-3.3 |
 | [extensions/population.md](extensions/population.md#L35) | 35 | rule | POP-3.4 |
-| [extensions/population.md](extensions/population.md#L37) | 37 | section | POP-4 Validation |
-| [extensions/population.md](extensions/population.md#L47) | 47 | rule | POP-4.1 |
-| [extensions/population.md](extensions/population.md#L48) | 48 | rule | POP-4.2 |
-| [extensions/population.md](extensions/population.md#L49) | 49 | rule | POP-4.3 |
-| [extensions/population.md](extensions/population.md#L50) | 50 | rule | POP-4.4 |
-| [extensions/population.md](extensions/population.md#L51) | 51 | rule | POP-4.5 |
-| [extensions/population.md](extensions/population.md#L52) | 52 | rule | POP-4.6 |
-| [extensions/population.md](extensions/population.md#L54) | 54 | section | POP-5 Integrity checks |
+| [extensions/population.md](extensions/population.md#L36) | 36 | rule | POP-3.5 |
+| [extensions/population.md](extensions/population.md#L37) | 37 | rule | POP-3.6 |
+| [extensions/population.md](extensions/population.md#L39) | 39 | section | POP-4 Validation |
+| [extensions/population.md](extensions/population.md#L49) | 49 | rule | POP-4.1 |
+| [extensions/population.md](extensions/population.md#L50) | 50 | rule | POP-4.2 |
+| [extensions/population.md](extensions/population.md#L51) | 51 | rule | POP-4.3 |
+| [extensions/population.md](extensions/population.md#L52) | 52 | rule | POP-4.4 |
+| [extensions/population.md](extensions/population.md#L53) | 53 | rule | POP-4.5 |
+| [extensions/population.md](extensions/population.md#L54) | 54 | rule | POP-4.6 |
+| [extensions/population.md](extensions/population.md#L56) | 56 | section | POP-5 Integrity checks |
 | [extensions/security.md](extensions/security.md#L1) | 1 | section | Extension: security |
 | [extensions/security.md](extensions/security.md#L5) | 5 | section | SCY-1 Principle |
 | [extensions/security.md](extensions/security.md#L13) | 13 | section | SCY-2 `security_context` (model, required) |
@@ -691,9 +693,11 @@ Find a rule ID or a section here, then open only that file at that line.
 | [stages/E1-parse.md](stages/E1-parse.md#L46) | 46 | rule | E1-4.8 |
 | [stages/E1-parse.md](stages/E1-parse.md#L47) | 47 | rule | E1-4.9 |
 | [stages/E1-parse.md](stages/E1-parse.md#L48) | 48 | rule | E1-4.10 |
-| [stages/E1-parse.md](stages/E1-parse.md#L50) | 50 | section | E1-5 Query tree |
-| [stages/E1-parse.md](stages/E1-parse.md#L64) | 64 | rule | E1-5.1 |
-| [stages/E1-parse.md](stages/E1-parse.md#L66) | 66 | section | E1-6 Diagnostics |
+| [stages/E1-parse.md](stages/E1-parse.md#L49) | 49 | rule | E1-4.11 |
+| [stages/E1-parse.md](stages/E1-parse.md#L50) | 50 | rule | E1-4.12 |
+| [stages/E1-parse.md](stages/E1-parse.md#L52) | 52 | section | E1-5 Query tree |
+| [stages/E1-parse.md](stages/E1-parse.md#L66) | 66 | rule | E1-5.1 |
+| [stages/E1-parse.md](stages/E1-parse.md#L68) | 68 | section | E1-6 Diagnostics |
 | [stages/E2-bind.md](stages/E2-bind.md#L1) | 1 | section | E2 Bind and authorize |
 | [stages/E2-bind.md](stages/E2-bind.md#L3) | 3 | section | E2-1 Purpose |
 | [stages/E2-bind.md](stages/E2-bind.md#L8) | 8 | section | E2-2 Input and output |
