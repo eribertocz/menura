@@ -1,7 +1,7 @@
-//! Row 12c of E2-5: the 0.5.0 slice (VS-1c). The first element in query order that needs a
-//! context metric (0.8.0) is `E_NOT_YET_SUPPORTED`, located at that element (E2-5.4, VS-2).
-//! From 0.5.0, context metrics are the only capability outside the slice, and none belongs to
-//! the whole query (E2-5.4a).
+//! Row 12c of E2-5: the 0.6.0 slice (VS-1d), which is the 0.5.0 slice (VS-1c) unchanged. The
+//! first element in query order that needs a context metric (0.8.0) is `E_NOT_YET_SUPPORTED`,
+//! located at that element (E2-5.4, VS-2). From 0.5.0, context metrics are the only capability
+//! outside the slice, and none belongs to the whole query (E2-5.4a).
 
 use menura_model::internal_model::{InternalModel, Metric};
 
@@ -11,7 +11,7 @@ use crate::model_elements::metric;
 use crate::named::{NamedElement, NamedTarget};
 use crate::read_metrics::metric_closure;
 
-/// The capability outside the 0.5.0 slice, as a message names it.
+/// The capability outside the 0.6.0 slice, as a message names it.
 const CONTEXT_METRIC: &str = "context metrics";
 
 /// The version that adds it (table 7.1).
