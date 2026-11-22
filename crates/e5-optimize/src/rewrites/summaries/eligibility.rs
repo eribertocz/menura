@@ -2,7 +2,7 @@
 //! catalog state: freshness (SUM-3.7) is checked apart.
 
 use menura_model::internal_model::{Dataset, NormalizedName, Summary, SummaryDimension, ValueType};
-use menura_representations::bound_query::BoundQuery;
+use menura_representations::bound_query::{BoundDateRange, BoundQuery};
 use menura_representations::logical_plan::{AggregateComponent, PlanNode, SchemaColumn};
 use menura_representations::names::ColumnName;
 use menura_representations::origin::Origin;
@@ -91,7 +91,7 @@ fn summary_use(
         return Err(SummaryCondition::QueryDependentValues);
     }
     let reads = branch_reads(&shape, context.query);
-    grain(&reads, summary, context.query)?;
+    grain(&reads, summary, shape.date_range(context.query).as_ref())?;
     let dataset = context
         .model
         .dataset(&summary.dataset)
@@ -112,7 +112,11 @@ fn dimension<'summary>(
 }
 
 /// SUM-3.3, SUM-3.3a, SUM-3.4 and SUM-3.5, in that order.
-fn grain(reads: &[Read], summary: &Summary, query: &BoundQuery) -> Result<(), SummaryCondition> {
+fn grain(
+    reads: &[Read],
+    summary: &Summary,
+    date_range: Option<&BoundDateRange>,
+) -> Result<(), SummaryCondition> {
     let queried = || reads.iter().filter(|read| read.kind != ReadKind::Policy);
     if queried().any(|read| dimension(summary, &read.column).is_none()) {
         return Err(SummaryCondition::Grain);
@@ -131,7 +135,7 @@ fn grain(reads: &[Read], summary: &Summary, query: &BoundQuery) -> Result<(), Su
     if underived {
         return Err(SummaryCondition::TimeGrain);
     }
-    let unaligned = query.date_range().is_some_and(|range| {
+    let unaligned = date_range.is_some_and(|range| {
         reads.iter().any(|read| match (read.kind, grain_of(read)) {
             (ReadKind::DateRange, Some(grain)) => !is_aligned(range.from, range.to, grain),
             _ => false,
