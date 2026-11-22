@@ -174,51 +174,66 @@ mod tests {
         }
     }
 
+    fn mismatch() -> CaseOutcome {
+        CaseOutcome::Mismatch("no".to_owned())
+    }
+
     #[test]
-    fn oss_2_4_a_listed_case_is_pending_with_its_reason() {
-        assert_eq!(
-            case_status(CaseOutcome::NotRun, Some(&entry())),
-            CaseStatus::Pending("not implemented, expected to pass in 0.7.0 (OSS-2.4)".to_owned())
-        );
-        assert_eq!(
-            case_status(CaseOutcome::Mismatch("no".to_owned()), Some(&entry())),
-            CaseStatus::Pending(
-                "not implemented, expected to pass in 0.7.0 (OSS-2.4): no".to_owned()
-            )
-        );
+    fn oss_2_4_a_listed_case_that_does_not_pass_is_pending_with_its_reason() {
+        for suite in Suite::ALL {
+            assert_eq!(
+                case_status(suite, mismatch(), Some(&entry())),
+                CaseStatus::Pending(
+                    "not implemented, expected to pass in 0.7.0 (OSS-2.4): no".to_owned()
+                )
+            );
+        }
     }
 
     #[test]
     fn oss_2_4_a_case_that_does_not_pass_and_is_not_listed_fails() {
-        assert!(matches!(
-            case_status(CaseOutcome::NotRun, None),
-            CaseStatus::Failed(_)
-        ));
-        assert!(matches!(
-            case_status(CaseOutcome::Mismatch("no".to_owned()), None),
-            CaseStatus::Failed(_)
-        ));
+        for suite in Suite::ALL {
+            assert!(matches!(
+                case_status(suite, mismatch(), None),
+                CaseStatus::Failed(_)
+            ));
+        }
     }
 
     #[test]
     fn cs_4_6_a_case_that_matches_and_is_not_listed_passes() {
-        assert_eq!(case_status(CaseOutcome::Matched, None), CaseStatus::Passed);
+        for suite in Suite::ALL {
+            assert_eq!(
+                case_status(suite, CaseOutcome::Matched, None),
+                CaseStatus::Passed
+            );
+        }
     }
 
     #[test]
-    fn oss_2_4_a_case_that_passes_while_listed_is_pending_while_no_suite_blocks() {
+    fn oss_2_4b_a_layer_3_case_that_passes_while_listed_fails_the_build() {
         assert!(matches!(
-            case_status(CaseOutcome::Matched, Some(&entry())),
+            case_status(Suite::WideTable, CaseOutcome::Matched, Some(&entry())),
+            CaseStatus::Failed(_)
+        ));
+    }
+
+    #[test]
+    fn oss_2_4_a_layer_2_case_that_passes_while_listed_is_pending_while_layer_2_does_not_block() {
+        assert!(matches!(
+            case_status(Suite::Query, CaseOutcome::Matched, Some(&entry())),
             CaseStatus::Pending(_)
         ));
     }
 
     #[test]
     fn cs_4_4_a_case_whose_fixture_cannot_be_prepared_fails() {
-        let error = RunnerError::new(RunnerErrorKind::NoRules, "x");
-        assert!(matches!(
-            case_status(CaseOutcome::Unprepared(error), Some(&entry())),
-            CaseStatus::Failed(_)
-        ));
+        for suite in Suite::ALL {
+            let error = RunnerError::new(RunnerErrorKind::NoRules, "x");
+            assert!(matches!(
+                case_status(suite, CaseOutcome::Unprepared(error), Some(&entry())),
+                CaseStatus::Failed(_)
+            ));
+        }
     }
 }

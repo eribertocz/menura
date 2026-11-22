@@ -110,6 +110,12 @@ mod tests {
     use super::*;
 
     #[test]
+    fn oss_2_4b_only_the_layer_3_suite_blocks() {
+        assert!(Suite::WideTable.blocks());
+        assert!(!Suite::Query.blocks());
+    }
+
+    #[test]
     fn cs_4_3_case_keys_name_the_suite_and_the_folder() {
         let case = OssieCase {
             suite: Suite::WideTable,
