@@ -1,5 +1,5 @@
-//! Runs a prepared Layer 2 case through `core` (CS-4.6): the model is loaded over the catalog
-//! schema built from the created tables (CS-4.4), the query envelope is compiled for the runner
+//! Runs a prepared Apache Ossie case through `core` (CS-4.4, CS-4.6): the model is loaded over
+//! the catalog schema built from the created tables (CS-4.4), the query envelope is compiled for the runner
 //! security context (CS-4.5), and the plan's rows on the fixture are compared with the expected
 //! rows, or the first error code with the expected one.
 

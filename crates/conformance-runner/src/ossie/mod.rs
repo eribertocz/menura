@@ -1,6 +1,6 @@
 //! The vendored Apache Ossie suites of `conformance/ossie/` (CS-3): finds their cases, prepares
-//! each one as CS-4.4 and CS-4.6 say, runs the Layer 2 cases (CS-4.6), and checks the results
-//! against the expected-failure list (OSS-2.4).
+//! and runs each one as CS-4.4 and CS-4.6 say, and checks the results against the expected-failure
+//! list (OSS-2.4), which the Layer 3 suite blocks on (OSS-2.4b).
 
 mod catalog_schema;
 mod comparison;
@@ -37,8 +37,6 @@ pub const OSSIE_AREA: &str = "ossie";
 enum CaseOutcome {
     /// The case files or its fixture cannot be prepared.
     Unprepared(RunnerError),
-    /// The case is prepared, but the runner does not run its suite yet (the wide-table form).
-    NotRun,
     /// The case ran and does not match its expectation, with the reason.
     Mismatch(String),
     /// The case ran and matches its expectation.
@@ -67,10 +65,10 @@ pub fn check_layout(ossie_directory: &Path) -> Result<(), RunnerError> {
 /// Runs every case of the suites vendored in `ossie_directory` (`just conformance ossie`,
 /// OSS-2.3), after checking their layout as [`check_layout`] does.
 ///
-/// A Layer 2 case is run through `core` and compared with its expected result (CS-4.6); a
-/// wide-table case is only prepared. A case that does not pass is pending when it is listed in
-/// `expected-failures.yaml` and fails when it is not; a case whose fixtures cannot be prepared
-/// fails (OSS-2.4).
+/// Every case is run through `core` and compared with its expected result (CS-4.4, CS-4.6). A
+/// case that does not pass is pending when it is listed in `expected-failures.yaml` and fails when
+/// it is not; a case whose fixtures cannot be prepared fails (OSS-2.4). A case of a suite that
+/// blocks fails when it passes while listed (OSS-2.4b).
 ///
 /// # Errors
 ///
@@ -85,7 +83,7 @@ pub fn run_suites(ossie_directory: &Path) -> Result<Vec<CaseResult>, RunnerError
             CaseResult {
                 id: CaseId::new(case.key()),
                 rules: case.suite.rules(),
-                status: case_status(outcome, suites.failures.get(&case.key())),
+                status: case_status(case.suite, outcome, suites.failures.get(&case.key())),
             }
         })
         .collect())
@@ -107,11 +105,10 @@ fn read_suites(ossie_directory: &Path) -> Result<Suites, RunnerError> {
     })
 }
 
-/// Prepares `case` and, for a Layer 2 case, runs it.
+/// Prepares `case` and runs it.
 fn run_case(case: &OssieCase, security_context: &Value) -> CaseOutcome {
     match prepare_case(case, security_context) {
         Err(error) => CaseOutcome::Unprepared(error),
-        Ok(_) if case.suite == Suite::WideTable => CaseOutcome::NotRun,
         Ok((prepared, connection)) => match query_mismatch(&case.key(), &prepared, &connection) {
             Some(reason) => CaseOutcome::Mismatch(reason),
             None => CaseOutcome::Matched,
@@ -119,21 +116,20 @@ fn run_case(case: &OssieCase, security_context: &Value) -> CaseOutcome {
     }
 }
 
-/// The status of a case that gave `outcome`, listed with `entry`. No suite blocks yet
-/// (OSS-2.3), so a case that passes while listed is pending, never failed (OSS-2.4).
-fn case_status(outcome: CaseOutcome, entry: Option<&ExpectedFailure>) -> CaseStatus {
+/// The status of a case of `suite` that gave `outcome`, listed with `entry` (OSS-2.4). A case
+/// that passes while listed fails when its suite blocks (OSS-2.4b) and is pending otherwise.
+fn case_status(suite: Suite, outcome: CaseOutcome, entry: Option<&ExpectedFailure>) -> CaseStatus {
     const NOT_LISTED: &str = "does not pass and is not listed in expected-failures.yaml (OSS-2.4)";
+    const LISTED: &str =
+        "passes while listed in expected-failures.yaml; remove its entry (OSS-2.4)";
     match (outcome, entry) {
         (CaseOutcome::Unprepared(error), _) => CaseStatus::Failed(error.to_string()),
         (CaseOutcome::Matched, None) => CaseStatus::Passed,
-        (CaseOutcome::Matched, Some(_)) => CaseStatus::Pending(
-            "passes while listed in expected-failures.yaml; remove its entry (OSS-2.4)".to_owned(),
-        ),
-        (CaseOutcome::NotRun, Some(entry)) => CaseStatus::Pending(listed_reason(entry)),
+        (CaseOutcome::Matched, Some(_)) if suite.blocks() => CaseStatus::Failed(LISTED.to_owned()),
+        (CaseOutcome::Matched, Some(_)) => CaseStatus::Pending(LISTED.to_owned()),
         (CaseOutcome::Mismatch(reason), Some(entry)) => {
             CaseStatus::Pending(format!("{}: {reason}", listed_reason(entry)))
         }
-        (CaseOutcome::NotRun, None) => CaseStatus::Failed(NOT_LISTED.to_owned()),
         (CaseOutcome::Mismatch(reason), None) => {
             CaseStatus::Failed(format!("{reason}; the case {NOT_LISTED}"))
         }
