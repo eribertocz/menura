@@ -7,6 +7,7 @@ mod datasets;
 mod graph;
 mod listing;
 mod metrics;
+mod steps;
 
 use menura_contracts::ContractKind;
 use menura_contracts::types::compiled_plan::{
