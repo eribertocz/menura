@@ -53,8 +53,8 @@ class ReleaseAssetsTest(unittest.TestCase):
             names = [path.name for path in release_assets.schema_files(pathlib.Path(directory))]
         self.assertEqual(names, ["audit-record.schema.json", "query.schema.json"])
 
-    def test_con_0_3_the_repository_has_the_nine_contract_schemas(self):
-        self.assertEqual(len(release_assets.schema_files(ROOT)), 9)
+    def test_con_0_3_the_repository_has_the_eleven_contract_schemas(self):
+        self.assertEqual(len(release_assets.schema_files(ROOT)), 11)
 
     def test_con_0_3_attaches_every_schema(self):
         release = FakeRelease()
