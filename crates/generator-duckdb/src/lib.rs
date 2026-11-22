@@ -7,6 +7,14 @@
 
 #![forbid(unsafe_code)]
 
+#[cfg_attr(
+    not(test),
+    expect(
+        dead_code,
+        reason = "used by the Snapshot generation, which waits for the node of #357"
+    )
+)]
+mod additivity_error;
 mod body;
 mod deduplicate;
 mod error;
