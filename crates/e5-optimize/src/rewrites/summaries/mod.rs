@@ -86,6 +86,16 @@ mod restricted;
 )]
 pub(crate) mod summary_branch;
 
+mod freshness;
+#[cfg(test)]
+mod freshness_build_tests;
+#[cfg(test)]
+mod freshness_fixture;
+#[cfg(test)]
+mod freshness_tests;
+mod period;
+#[cfg(test)]
+mod period_tests;
 #[cfg(test)]
 mod tests;
 
