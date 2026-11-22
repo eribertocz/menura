@@ -48,7 +48,7 @@ impl ExpressionWriter<'_, '_> {
             },
             Value::String(utc),
         )?;
-        let zone = self.time_zone()?;
+        let zone = self.time_zone();
         self.typed(expression, &format!("{instant} AT TIME ZONE {zone}"))
     }
 }

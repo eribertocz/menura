@@ -25,11 +25,13 @@ pub(crate) fn map_inputs(
 pub(crate) fn input_mut(operation: &mut Operation, index: usize) -> Option<&mut PlanNode> {
     match operation {
         Operation::Scan { .. } | Operation::Periods { .. } => None,
-        Operation::Join { left, right, .. } => match index {
-            0 => Some(left.as_mut()),
-            1 => Some(right.as_mut()),
-            _ => None,
-        },
+        Operation::Join { left, right, .. } | Operation::FullJoin { left, right, .. } => {
+            match index {
+                0 => Some(left.as_mut()),
+                1 => Some(right.as_mut()),
+                _ => None,
+            }
+        }
         Operation::SemiJoin {
             input,
             related_all,
@@ -55,6 +57,7 @@ pub(crate) fn input_mut(operation: &mut Operation, index: usize) -> Option<&mut 
         | Operation::Deduplicate { input, .. }
         | Operation::Aggregate { input, .. }
         | Operation::Project { input, .. }
+        | Operation::PeriodRange { input, .. }
         | Operation::Sort { input, .. }
         | Operation::Limit { input, .. } => (index == 0).then_some(input.as_mut()),
     }

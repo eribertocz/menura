@@ -1,0 +1,124 @@
+{
+  "checks": [
+    {
+      "build": {
+        "columns": [
+          "day_start",
+          "large_amount"
+        ],
+        "parameters": [
+          {
+            "binding": "time_zone",
+            "logical_type": {
+              "kind": "text"
+            },
+            "position": 1
+          },
+          {
+            "binding": "period_from",
+            "logical_type": {
+              "kind": "text"
+            },
+            "position": 2
+          },
+          {
+            "binding": "period_to",
+            "logical_type": {
+              "kind": "text"
+            },
+            "position": 3
+          }
+        ],
+        "sql": "WITH\n  \"menura_1_scan\" AS (\n    SELECT\n      \"ordered_at\" AS \"ORDERED_AT\",\n      \"amount\" AS \"AMOUNT\"\n    FROM \"shop\".\"main\".\"orders\"\n  ),\n  \"menura_2_periodrange\" AS (\n    SELECT\n      \"ORDERED_AT\",\n      \"AMOUNT\"\n    FROM \"menura_1_scan\"\n    WHERE CAST((\"ORDERED_AT\") AT TIME ZONE CAST($1 AS VARCHAR) AS DATE) >= CASE WHEN length(CAST($2 AS VARCHAR)) = 4 THEN make_date(CAST(substr(CAST($2 AS VARCHAR), 1, 4) AS INTEGER), 1, 1) WHEN substr(CAST($2 AS VARCHAR), 6, 1) = 'Q' THEN make_date(CAST(substr(CAST($2 AS VARCHAR), 1, 4) AS INTEGER), CAST(substr(CAST($2 AS VARCHAR), 7, 1) AS INTEGER) * 3 - 2, 1) WHEN substr(CAST($2 AS VARCHAR), 6, 1) = 'W' THEN CAST(date_trunc('week', make_date(CAST(substr(CAST($2 AS VARCHAR), 1, 4) AS INTEGER), 1, 4)) AS DATE) + 7 * (CAST(substr(CAST($2 AS VARCHAR), 7, 2) AS INTEGER) - 1) WHEN length(CAST($2 AS VARCHAR)) = 7 THEN make_date(CAST(substr(CAST($2 AS VARCHAR), 1, 4) AS INTEGER), CAST(substr(CAST($2 AS VARCHAR), 6, 2) AS INTEGER), 1) ELSE CAST(CAST($2 AS VARCHAR) AS DATE) END AND CAST((\"ORDERED_AT\") AT TIME ZONE CAST($1 AS VARCHAR) AS DATE) <= CAST(CASE WHEN length(CAST($3 AS VARCHAR)) = 4 THEN make_date(CAST(substr(CAST($3 AS VARCHAR), 1, 4) AS INTEGER), 1, 1) WHEN substr(CAST($3 AS VARCHAR), 6, 1) = 'Q' THEN make_date(CAST(substr(CAST($3 AS VARCHAR), 1, 4) AS INTEGER), CAST(substr(CAST($3 AS VARCHAR), 7, 1) AS INTEGER) * 3 - 2, 1) WHEN substr(CAST($3 AS VARCHAR), 6, 1) = 'W' THEN CAST(date_trunc('week', make_date(CAST(substr(CAST($3 AS VARCHAR), 1, 4) AS INTEGER), 1, 4)) AS DATE) + 7 * (CAST(substr(CAST($3 AS VARCHAR), 7, 2) AS INTEGER) - 1) WHEN length(CAST($3 AS VARCHAR)) = 7 THEN make_date(CAST(substr(CAST($3 AS VARCHAR), 1, 4) AS INTEGER), CAST(substr(CAST($3 AS VARCHAR), 6, 2) AS INTEGER), 1) ELSE CAST(CAST($3 AS VARCHAR) AS DATE) END + CASE WHEN length(CAST($3 AS VARCHAR)) = 4 THEN INTERVAL 1 YEAR WHEN substr(CAST($3 AS VARCHAR), 6, 1) = 'Q' THEN INTERVAL 3 MONTH WHEN substr(CAST($3 AS VARCHAR), 6, 1) = 'W' THEN INTERVAL 7 DAY WHEN length(CAST($3 AS VARCHAR)) = 7 THEN INTERVAL 1 MONTH ELSE INTERVAL 1 DAY END - INTERVAL 1 DAY AS DATE)\n  ),\n  \"menura_3_aggregate\" AS (\n    SELECT\n      date_trunc('day', \"ORDERED_AT\" AT TIME ZONE CAST($1 AS VARCHAR)) AT TIME ZONE CAST($1 AS VARCHAR) AS \"DAY\",\n      CAST(SUM(\"AMOUNT\") FILTER (WHERE \"AMOUNT\" > 20) AS DECIMAL(38,2)) AS \"LARGE_AMOUNT\"\n    FROM \"menura_2_periodrange\"\n    GROUP BY 1\n  ),\n  \"menura_4_project\" AS (\n    SELECT\n      \"DAY\" AS \"day_start\",\n      \"LARGE_AMOUNT\" AS \"large_amount\"\n    FROM \"menura_3_aggregate\"\n  )\nSELECT\n  \"day_start\",\n  \"large_amount\"\nFROM \"menura_4_project\""
+      },
+      "check_id": "summary:ORDERS_DAILY_LOCAL",
+      "definition_hash": "d91b04b509d0e91b60a65679b9972e65f0a0026784afe5cac2a2ae30a96ddcf4",
+      "kind": "summary",
+      "parameters": [
+        {
+          "binding": "time_zone",
+          "logical_type": {
+            "kind": "text"
+          },
+          "position": 1
+        },
+        {
+          "binding": "period_from",
+          "logical_type": {
+            "kind": "text"
+          },
+          "position": 2
+        },
+        {
+          "binding": "period_to",
+          "logical_type": {
+            "kind": "text"
+          },
+          "position": 3
+        }
+      ],
+      "sources": [
+        "shop.main.orders",
+        "shop.main.orders_daily_local"
+      ],
+      "sql": "WITH\n  \"menura_1_scan\" AS (\n    SELECT\n      \"ordered_at\" AS \"ORDERED_AT\",\n      \"amount\" AS \"AMOUNT\"\n    FROM \"shop\".\"main\".\"orders\"\n  ),\n  \"menura_2_periodrange\" AS (\n    SELECT\n      \"ORDERED_AT\",\n      \"AMOUNT\"\n    FROM \"menura_1_scan\"\n    WHERE CAST((\"ORDERED_AT\") AT TIME ZONE CAST($1 AS VARCHAR) AS DATE) >= CASE WHEN length(CAST($2 AS VARCHAR)) = 4 THEN make_date(CAST(substr(CAST($2 AS VARCHAR), 1, 4) AS INTEGER), 1, 1) WHEN substr(CAST($2 AS VARCHAR), 6, 1) = 'Q' THEN make_date(CAST(substr(CAST($2 AS VARCHAR), 1, 4) AS INTEGER), CAST(substr(CAST($2 AS VARCHAR), 7, 1) AS INTEGER) * 3 - 2, 1) WHEN substr(CAST($2 AS VARCHAR), 6, 1) = 'W' THEN CAST(date_trunc('week', make_date(CAST(substr(CAST($2 AS VARCHAR), 1, 4) AS INTEGER), 1, 4)) AS DATE) + 7 * (CAST(substr(CAST($2 AS VARCHAR), 7, 2) AS INTEGER) - 1) WHEN length(CAST($2 AS VARCHAR)) = 7 THEN make_date(CAST(substr(CAST($2 AS VARCHAR), 1, 4) AS INTEGER), CAST(substr(CAST($2 AS VARCHAR), 6, 2) AS INTEGER), 1) ELSE CAST(CAST($2 AS VARCHAR) AS DATE) END AND CAST((\"ORDERED_AT\") AT TIME ZONE CAST($1 AS VARCHAR) AS DATE) <= CAST(CASE WHEN length(CAST($3 AS VARCHAR)) = 4 THEN make_date(CAST(substr(CAST($3 AS VARCHAR), 1, 4) AS INTEGER), 1, 1) WHEN substr(CAST($3 AS VARCHAR), 6, 1) = 'Q' THEN make_date(CAST(substr(CAST($3 AS VARCHAR), 1, 4) AS INTEGER), CAST(substr(CAST($3 AS VARCHAR), 7, 1) AS INTEGER) * 3 - 2, 1) WHEN substr(CAST($3 AS VARCHAR), 6, 1) = 'W' THEN CAST(date_trunc('week', make_date(CAST(substr(CAST($3 AS VARCHAR), 1, 4) AS INTEGER), 1, 4)) AS DATE) + 7 * (CAST(substr(CAST($3 AS VARCHAR), 7, 2) AS INTEGER) - 1) WHEN length(CAST($3 AS VARCHAR)) = 7 THEN make_date(CAST(substr(CAST($3 AS VARCHAR), 1, 4) AS INTEGER), CAST(substr(CAST($3 AS VARCHAR), 6, 2) AS INTEGER), 1) ELSE CAST(CAST($3 AS VARCHAR) AS DATE) END + CASE WHEN length(CAST($3 AS VARCHAR)) = 4 THEN INTERVAL 1 YEAR WHEN substr(CAST($3 AS VARCHAR), 6, 1) = 'Q' THEN INTERVAL 3 MONTH WHEN substr(CAST($3 AS VARCHAR), 6, 1) = 'W' THEN INTERVAL 7 DAY WHEN length(CAST($3 AS VARCHAR)) = 7 THEN INTERVAL 1 MONTH ELSE INTERVAL 1 DAY END - INTERVAL 1 DAY AS DATE)\n  ),\n  \"menura_3_aggregate\" AS (\n    SELECT\n      date_trunc('day', \"ORDERED_AT\" AT TIME ZONE CAST($1 AS VARCHAR)) AT TIME ZONE CAST($1 AS VARCHAR) AS \"DAY\",\n      CAST(SUM(\"AMOUNT\") FILTER (WHERE \"AMOUNT\" > 20) AS DECIMAL(38,2)) AS \"LARGE_AMOUNT\"\n    FROM \"menura_2_periodrange\"\n    GROUP BY 1\n  ),\n  \"menura_4_scan\" AS (\n    SELECT\n      \"day_start\" AS \"DAY\",\n      \"large_amount\" AS \"LARGE_AMOUNT\"\n    FROM \"shop\".\"main\".\"orders_daily_local\"\n  ),\n  \"menura_5_periodrange\" AS (\n    SELECT\n      \"DAY\",\n      \"LARGE_AMOUNT\"\n    FROM \"menura_4_scan\"\n    WHERE CAST((\"DAY\") AT TIME ZONE CAST($1 AS VARCHAR) AS DATE) >= CASE WHEN length(CAST($2 AS VARCHAR)) = 4 THEN make_date(CAST(substr(CAST($2 AS VARCHAR), 1, 4) AS INTEGER), 1, 1) WHEN substr(CAST($2 AS VARCHAR), 6, 1) = 'Q' THEN make_date(CAST(substr(CAST($2 AS VARCHAR), 1, 4) AS INTEGER), CAST(substr(CAST($2 AS VARCHAR), 7, 1) AS INTEGER) * 3 - 2, 1) WHEN substr(CAST($2 AS VARCHAR), 6, 1) = 'W' THEN CAST(date_trunc('week', make_date(CAST(substr(CAST($2 AS VARCHAR), 1, 4) AS INTEGER), 1, 4)) AS DATE) + 7 * (CAST(substr(CAST($2 AS VARCHAR), 7, 2) AS INTEGER) - 1) WHEN length(CAST($2 AS VARCHAR)) = 7 THEN make_date(CAST(substr(CAST($2 AS VARCHAR), 1, 4) AS INTEGER), CAST(substr(CAST($2 AS VARCHAR), 6, 2) AS INTEGER), 1) ELSE CAST(CAST($2 AS VARCHAR) AS DATE) END AND CAST((\"DAY\") AT TIME ZONE CAST($1 AS VARCHAR) AS DATE) <= CAST(CASE WHEN length(CAST($3 AS VARCHAR)) = 4 THEN make_date(CAST(substr(CAST($3 AS VARCHAR), 1, 4) AS INTEGER), 1, 1) WHEN substr(CAST($3 AS VARCHAR), 6, 1) = 'Q' THEN make_date(CAST(substr(CAST($3 AS VARCHAR), 1, 4) AS INTEGER), CAST(substr(CAST($3 AS VARCHAR), 7, 1) AS INTEGER) * 3 - 2, 1) WHEN substr(CAST($3 AS VARCHAR), 6, 1) = 'W' THEN CAST(date_trunc('week', make_date(CAST(substr(CAST($3 AS VARCHAR), 1, 4) AS INTEGER), 1, 4)) AS DATE) + 7 * (CAST(substr(CAST($3 AS VARCHAR), 7, 2) AS INTEGER) - 1) WHEN length(CAST($3 AS VARCHAR)) = 7 THEN make_date(CAST(substr(CAST($3 AS VARCHAR), 1, 4) AS INTEGER), CAST(substr(CAST($3 AS VARCHAR), 6, 2) AS INTEGER), 1) ELSE CAST(CAST($3 AS VARCHAR) AS DATE) END + CASE WHEN length(CAST($3 AS VARCHAR)) = 4 THEN INTERVAL 1 YEAR WHEN substr(CAST($3 AS VARCHAR), 6, 1) = 'Q' THEN INTERVAL 3 MONTH WHEN substr(CAST($3 AS VARCHAR), 6, 1) = 'W' THEN INTERVAL 7 DAY WHEN length(CAST($3 AS VARCHAR)) = 7 THEN INTERVAL 1 MONTH ELSE INTERVAL 1 DAY END - INTERVAL 1 DAY AS DATE)\n  ),\n  \"menura_6_fulljoin\" AS (\n    SELECT\n      \"menura_3_aggregate\".\"DAY\" AS \"DAY\",\n      \"menura_3_aggregate\".\"LARGE_AMOUNT\" AS \"LARGE_AMOUNT\",\n      \"menura_5_periodrange\".\"DAY\" AS \"menura.summary.DAY\",\n      \"menura_5_periodrange\".\"LARGE_AMOUNT\" AS \"menura.summary.LARGE_AMOUNT\"\n    FROM \"menura_3_aggregate\"\n    FULL OUTER JOIN \"menura_5_periodrange\" ON (\"menura_3_aggregate\".\"DAY\" IS NOT DISTINCT FROM \"menura_5_periodrange\".\"DAY\")\n  ),\n  \"menura_7_project\" AS (\n    SELECT\n      CAST(CAST(coalesce(CAST(\"DAY\" AS TIMESTAMP WITH TIME ZONE), CAST(\"menura.summary.DAY\" AS TIMESTAMP WITH TIME ZONE)) AS TIMESTAMP WITH TIME ZONE) AS TIMESTAMP WITH TIME ZONE) AS \"DAY\",\n      \"LARGE_AMOUNT\" AS \"base.LARGE_AMOUNT\",\n      \"menura.summary.LARGE_AMOUNT\" AS \"summary.LARGE_AMOUNT\",\n      CAST(CASE WHEN (\"menura.summary.DAY\" IS NULL) THEN 'missing_in_summary' WHEN (\"DAY\" IS NULL) THEN 'missing_in_base' WHEN (\"LARGE_AMOUNT\" IS DISTINCT FROM \"menura.summary.LARGE_AMOUNT\") THEN 'measure_differs' END AS VARCHAR) AS \"violation\"\n    FROM \"menura_6_fulljoin\"\n  ),\n  \"menura_8_filter\" AS (\n    SELECT\n      \"DAY\",\n      \"base.LARGE_AMOUNT\",\n      \"summary.LARGE_AMOUNT\",\n      \"violation\"\n    FROM \"menura_7_project\"\n    WHERE \"violation\" IS NOT NULL\n  )\nSELECT\n  \"DAY\",\n  \"base.LARGE_AMOUNT\",\n  \"summary.LARGE_AMOUNT\",\n  \"violation\"\nFROM \"menura_8_filter\"",
+      "target": "ORDERS_DAILY_LOCAL"
+    },
+    {
+      "build": {
+        "columns": [
+          "month_start",
+          "order_count",
+          "region",
+          "total_amount"
+        ],
+        "parameters": [
+          {
+            "binding": "period_from",
+            "logical_type": {
+              "kind": "text"
+            },
+            "position": 1
+          },
+          {
+            "binding": "period_to",
+            "logical_type": {
+              "kind": "text"
+            },
+            "position": 2
+          }
+        ],
+        "sql": "WITH\n  \"menura_1_scan\" AS (\n    SELECT\n      \"order_date\" AS \"ORDER_DATE\",\n      \"order_id\" AS \"ORDER_ID\",\n      \"region\" AS \"REGION\",\n      \"amount\" AS \"AMOUNT\"\n    FROM \"shop\".\"main\".\"orders\"\n  ),\n  \"menura_2_periodrange\" AS (\n    SELECT\n      \"ORDER_DATE\",\n      \"ORDER_ID\",\n      \"REGION\",\n      \"AMOUNT\"\n    FROM \"menura_1_scan\"\n    WHERE \"ORDER_DATE\" >= CASE WHEN length(CAST($1 AS VARCHAR)) = 4 THEN make_date(CAST(substr(CAST($1 AS VARCHAR), 1, 4) AS INTEGER), 1, 1) WHEN substr(CAST($1 AS VARCHAR), 6, 1) = 'Q' THEN make_date(CAST(substr(CAST($1 AS VARCHAR), 1, 4) AS INTEGER), CAST(substr(CAST($1 AS VARCHAR), 7, 1) AS INTEGER) * 3 - 2, 1) WHEN substr(CAST($1 AS VARCHAR), 6, 1) = 'W' THEN CAST(date_trunc('week', make_date(CAST(substr(CAST($1 AS VARCHAR), 1, 4) AS INTEGER), 1, 4)) AS DATE) + 7 * (CAST(substr(CAST($1 AS VARCHAR), 7, 2) AS INTEGER) - 1) WHEN length(CAST($1 AS VARCHAR)) = 7 THEN make_date(CAST(substr(CAST($1 AS VARCHAR), 1, 4) AS INTEGER), CAST(substr(CAST($1 AS VARCHAR), 6, 2) AS INTEGER), 1) ELSE CAST(CAST($1 AS VARCHAR) AS DATE) END AND \"ORDER_DATE\" <= CAST(CASE WHEN length(CAST($2 AS VARCHAR)) = 4 THEN make_date(CAST(substr(CAST($2 AS VARCHAR), 1, 4) AS INTEGER), 1, 1) WHEN substr(CAST($2 AS VARCHAR), 6, 1) = 'Q' THEN make_date(CAST(substr(CAST($2 AS VARCHAR), 1, 4) AS INTEGER), CAST(substr(CAST($2 AS VARCHAR), 7, 1) AS INTEGER) * 3 - 2, 1) WHEN substr(CAST($2 AS VARCHAR), 6, 1) = 'W' THEN CAST(date_trunc('week', make_date(CAST(substr(CAST($2 AS VARCHAR), 1, 4) AS INTEGER), 1, 4)) AS DATE) + 7 * (CAST(substr(CAST($2 AS VARCHAR), 7, 2) AS INTEGER) - 1) WHEN length(CAST($2 AS VARCHAR)) = 7 THEN make_date(CAST(substr(CAST($2 AS VARCHAR), 1, 4) AS INTEGER), CAST(substr(CAST($2 AS VARCHAR), 6, 2) AS INTEGER), 1) ELSE CAST(CAST($2 AS VARCHAR) AS DATE) END + CASE WHEN length(CAST($2 AS VARCHAR)) = 4 THEN INTERVAL 1 YEAR WHEN substr(CAST($2 AS VARCHAR), 6, 1) = 'Q' THEN INTERVAL 3 MONTH WHEN substr(CAST($2 AS VARCHAR), 6, 1) = 'W' THEN INTERVAL 7 DAY WHEN length(CAST($2 AS VARCHAR)) = 7 THEN INTERVAL 1 MONTH ELSE INTERVAL 1 DAY END - INTERVAL 1 DAY AS DATE)\n  ),\n  \"menura_3_aggregate\" AS (\n    SELECT\n      CAST(date_trunc('month', \"ORDER_DATE\") AS DATE) AS \"MONTH\",\n      \"REGION\" AS \"REGION\",\n      CAST(COUNT(\"ORDER_ID\") AS BIGINT) AS \"ORDER_COUNT\",\n      CAST(SUM(\"AMOUNT\") AS DECIMAL(38,2)) AS \"TOTAL_AMOUNT\"\n    FROM \"menura_2_periodrange\"\n    GROUP BY 1, 2\n  ),\n  \"menura_4_project\" AS (\n    SELECT\n      \"MONTH\" AS \"month_start\",\n      \"ORDER_COUNT\" AS \"order_count\",\n      \"REGION\" AS \"region\",\n      \"TOTAL_AMOUNT\" AS \"total_amount\"\n    FROM \"menura_3_aggregate\"\n  )\nSELECT\n  \"month_start\",\n  \"order_count\",\n  \"region\",\n  \"total_amount\"\nFROM \"menura_4_project\""
+      },
+      "check_id": "summary:ORDERS_MONTHLY",
+      "definition_hash": "3a2748bf8b4d36e38d71585e0a8bd69ceee66795aff0ac27a2402ec64c5dbec5",
+      "kind": "summary",
+      "parameters": [
+        {
+          "binding": "period_from",
+          "logical_type": {
+            "kind": "text"
+          },
+          "position": 1
+        },
+        {
+          "binding": "period_to",
+          "logical_type": {
+            "kind": "text"
+          },
+          "position": 2
+        }
+      ],
+      "sources": [
+        "shop.main.orders",
+        "shop.main.orders_monthly"
+      ],
+      "sql": "WITH\n  \"menura_1_scan\" AS (\n    SELECT\n      \"order_date\" AS \"ORDER_DATE\",\n      \"order_id\" AS \"ORDER_ID\",\n      \"region\" AS \"REGION\",\n      \"amount\" AS \"AMOUNT\"\n    FROM \"shop\".\"main\".\"orders\"\n  ),\n  \"menura_2_periodrange\" AS (\n    SELECT\n      \"ORDER_DATE\",\n      \"ORDER_ID\",\n      \"REGION\",\n      \"AMOUNT\"\n    FROM \"menura_1_scan\"\n    WHERE \"ORDER_DATE\" >= CASE WHEN length(CAST($1 AS VARCHAR)) = 4 THEN make_date(CAST(substr(CAST($1 AS VARCHAR), 1, 4) AS INTEGER), 1, 1) WHEN substr(CAST($1 AS VARCHAR), 6, 1) = 'Q' THEN make_date(CAST(substr(CAST($1 AS VARCHAR), 1, 4) AS INTEGER), CAST(substr(CAST($1 AS VARCHAR), 7, 1) AS INTEGER) * 3 - 2, 1) WHEN substr(CAST($1 AS VARCHAR), 6, 1) = 'W' THEN CAST(date_trunc('week', make_date(CAST(substr(CAST($1 AS VARCHAR), 1, 4) AS INTEGER), 1, 4)) AS DATE) + 7 * (CAST(substr(CAST($1 AS VARCHAR), 7, 2) AS INTEGER) - 1) WHEN length(CAST($1 AS VARCHAR)) = 7 THEN make_date(CAST(substr(CAST($1 AS VARCHAR), 1, 4) AS INTEGER), CAST(substr(CAST($1 AS VARCHAR), 6, 2) AS INTEGER), 1) ELSE CAST(CAST($1 AS VARCHAR) AS DATE) END AND \"ORDER_DATE\" <= CAST(CASE WHEN length(CAST($2 AS VARCHAR)) = 4 THEN make_date(CAST(substr(CAST($2 AS VARCHAR), 1, 4) AS INTEGER), 1, 1) WHEN substr(CAST($2 AS VARCHAR), 6, 1) = 'Q' THEN make_date(CAST(substr(CAST($2 AS VARCHAR), 1, 4) AS INTEGER), CAST(substr(CAST($2 AS VARCHAR), 7, 1) AS INTEGER) * 3 - 2, 1) WHEN substr(CAST($2 AS VARCHAR), 6, 1) = 'W' THEN CAST(date_trunc('week', make_date(CAST(substr(CAST($2 AS VARCHAR), 1, 4) AS INTEGER), 1, 4)) AS DATE) + 7 * (CAST(substr(CAST($2 AS VARCHAR), 7, 2) AS INTEGER) - 1) WHEN length(CAST($2 AS VARCHAR)) = 7 THEN make_date(CAST(substr(CAST($2 AS VARCHAR), 1, 4) AS INTEGER), CAST(substr(CAST($2 AS VARCHAR), 6, 2) AS INTEGER), 1) ELSE CAST(CAST($2 AS VARCHAR) AS DATE) END + CASE WHEN length(CAST($2 AS VARCHAR)) = 4 THEN INTERVAL 1 YEAR WHEN substr(CAST($2 AS VARCHAR), 6, 1) = 'Q' THEN INTERVAL 3 MONTH WHEN substr(CAST($2 AS VARCHAR), 6, 1) = 'W' THEN INTERVAL 7 DAY WHEN length(CAST($2 AS VARCHAR)) = 7 THEN INTERVAL 1 MONTH ELSE INTERVAL 1 DAY END - INTERVAL 1 DAY AS DATE)\n  ),\n  \"menura_3_aggregate\" AS (\n    SELECT\n      CAST(date_trunc('month', \"ORDER_DATE\") AS DATE) AS \"MONTH\",\n      \"REGION\" AS \"REGION\",\n      CAST(COUNT(\"ORDER_ID\") AS BIGINT) AS \"ORDER_COUNT\",\n      CAST(SUM(\"AMOUNT\") AS DECIMAL(38,2)) AS \"TOTAL_AMOUNT\"\n    FROM \"menura_2_periodrange\"\n    GROUP BY 1, 2\n  ),\n  \"menura_4_scan\" AS (\n    SELECT\n      \"month_start\" AS \"MONTH\",\n      \"order_count\" AS \"ORDER_COUNT\",\n      \"region\" AS \"REGION\",\n      \"total_amount\" AS \"TOTAL_AMOUNT\"\n    FROM \"shop\".\"main\".\"orders_monthly\"\n  ),\n  \"menura_5_periodrange\" AS (\n    SELECT\n      \"MONTH\",\n      \"ORDER_COUNT\",\n      \"REGION\",\n      \"TOTAL_AMOUNT\"\n    FROM \"menura_4_scan\"\n    WHERE \"MONTH\" >= CASE WHEN length(CAST($1 AS VARCHAR)) = 4 THEN make_date(CAST(substr(CAST($1 AS VARCHAR), 1, 4) AS INTEGER), 1, 1) WHEN substr(CAST($1 AS VARCHAR), 6, 1) = 'Q' THEN make_date(CAST(substr(CAST($1 AS VARCHAR), 1, 4) AS INTEGER), CAST(substr(CAST($1 AS VARCHAR), 7, 1) AS INTEGER) * 3 - 2, 1) WHEN substr(CAST($1 AS VARCHAR), 6, 1) = 'W' THEN CAST(date_trunc('week', make_date(CAST(substr(CAST($1 AS VARCHAR), 1, 4) AS INTEGER), 1, 4)) AS DATE) + 7 * (CAST(substr(CAST($1 AS VARCHAR), 7, 2) AS INTEGER) - 1) WHEN length(CAST($1 AS VARCHAR)) = 7 THEN make_date(CAST(substr(CAST($1 AS VARCHAR), 1, 4) AS INTEGER), CAST(substr(CAST($1 AS VARCHAR), 6, 2) AS INTEGER), 1) ELSE CAST(CAST($1 AS VARCHAR) AS DATE) END AND \"MONTH\" <= CAST(CASE WHEN length(CAST($2 AS VARCHAR)) = 4 THEN make_date(CAST(substr(CAST($2 AS VARCHAR), 1, 4) AS INTEGER), 1, 1) WHEN substr(CAST($2 AS VARCHAR), 6, 1) = 'Q' THEN make_date(CAST(substr(CAST($2 AS VARCHAR), 1, 4) AS INTEGER), CAST(substr(CAST($2 AS VARCHAR), 7, 1) AS INTEGER) * 3 - 2, 1) WHEN substr(CAST($2 AS VARCHAR), 6, 1) = 'W' THEN CAST(date_trunc('week', make_date(CAST(substr(CAST($2 AS VARCHAR), 1, 4) AS INTEGER), 1, 4)) AS DATE) + 7 * (CAST(substr(CAST($2 AS VARCHAR), 7, 2) AS INTEGER) - 1) WHEN length(CAST($2 AS VARCHAR)) = 7 THEN make_date(CAST(substr(CAST($2 AS VARCHAR), 1, 4) AS INTEGER), CAST(substr(CAST($2 AS VARCHAR), 6, 2) AS INTEGER), 1) ELSE CAST(CAST($2 AS VARCHAR) AS DATE) END + CASE WHEN length(CAST($2 AS VARCHAR)) = 4 THEN INTERVAL 1 YEAR WHEN substr(CAST($2 AS VARCHAR), 6, 1) = 'Q' THEN INTERVAL 3 MONTH WHEN substr(CAST($2 AS VARCHAR), 6, 1) = 'W' THEN INTERVAL 7 DAY WHEN length(CAST($2 AS VARCHAR)) = 7 THEN INTERVAL 1 MONTH ELSE INTERVAL 1 DAY END - INTERVAL 1 DAY AS DATE)\n  ),\n  \"menura_6_fulljoin\" AS (\n    SELECT\n      \"menura_3_aggregate\".\"MONTH\" AS \"MONTH\",\n      \"menura_3_aggregate\".\"REGION\" AS \"REGION\",\n      \"menura_3_aggregate\".\"ORDER_COUNT\" AS \"ORDER_COUNT\",\n      \"menura_3_aggregate\".\"TOTAL_AMOUNT\" AS \"TOTAL_AMOUNT\",\n      \"menura_5_periodrange\".\"MONTH\" AS \"menura.summary.MONTH\",\n      \"menura_5_periodrange\".\"ORDER_COUNT\" AS \"menura.summary.ORDER_COUNT\",\n      \"menura_5_periodrange\".\"REGION\" AS \"menura.summary.REGION\",\n      \"menura_5_periodrange\".\"TOTAL_AMOUNT\" AS \"menura.summary.TOTAL_AMOUNT\"\n    FROM \"menura_3_aggregate\"\n    FULL OUTER JOIN \"menura_5_periodrange\" ON (\"menura_3_aggregate\".\"MONTH\" IS NOT DISTINCT FROM \"menura_5_periodrange\".\"MONTH\") AND (\"menura_3_aggregate\".\"REGION\" IS NOT DISTINCT FROM \"menura_5_periodrange\".\"REGION\")\n  ),\n  \"menura_7_project\" AS (\n    SELECT\n      CAST(CAST(coalesce(CAST(\"MONTH\" AS DATE), CAST(\"menura.summary.MONTH\" AS DATE)) AS DATE) AS DATE) AS \"MONTH\",\n      CAST(CAST(coalesce(CAST(\"REGION\" AS VARCHAR), CAST(\"menura.summary.REGION\" AS VARCHAR)) AS VARCHAR) AS VARCHAR) AS \"REGION\",\n      \"ORDER_COUNT\" AS \"base.ORDER_COUNT\",\n      \"menura.summary.ORDER_COUNT\" AS \"summary.ORDER_COUNT\",\n      \"TOTAL_AMOUNT\" AS \"base.TOTAL_AMOUNT\",\n      \"menura.summary.TOTAL_AMOUNT\" AS \"summary.TOTAL_AMOUNT\",\n      CAST(CASE WHEN (\"menura.summary.MONTH\" IS NULL) THEN 'missing_in_summary' WHEN (\"MONTH\" IS NULL) THEN 'missing_in_base' WHEN ((\"ORDER_COUNT\" IS DISTINCT FROM \"menura.summary.ORDER_COUNT\") OR (\"TOTAL_AMOUNT\" IS DISTINCT FROM \"menura.summary.TOTAL_AMOUNT\")) THEN 'measure_differs' END AS VARCHAR) AS \"violation\"\n    FROM \"menura_6_fulljoin\"\n  ),\n  \"menura_8_filter\" AS (\n    SELECT\n      \"MONTH\",\n      \"REGION\",\n      \"base.ORDER_COUNT\",\n      \"summary.ORDER_COUNT\",\n      \"base.TOTAL_AMOUNT\",\n      \"summary.TOTAL_AMOUNT\",\n      \"violation\"\n    FROM \"menura_7_project\"\n    WHERE \"violation\" IS NOT NULL\n  )\nSELECT\n  \"MONTH\",\n  \"REGION\",\n  \"base.ORDER_COUNT\",\n  \"summary.ORDER_COUNT\",\n  \"base.TOTAL_AMOUNT\",\n  \"summary.TOTAL_AMOUNT\",\n  \"violation\"\nFROM \"menura_8_filter\"",
+      "target": "ORDERS_MONTHLY"
+    }
+  ],
+  "contract": "menura.integrity_checks",
+  "contract_version": "1.2.0",
+  "dialect": "duckdb",
+  "model_hash": "516c2fdbc1ca81a2c47c1fd2434d0b8bdcd6020d58c4fe4b00342e73ba8180a7"
+}

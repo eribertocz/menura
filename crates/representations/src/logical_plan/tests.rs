@@ -73,6 +73,8 @@ fn kind_of(operation: &Operation) -> &'static str {
         Operation::Project { .. } => "Project",
         Operation::Sort { .. } => "Sort",
         Operation::Limit { .. } => "Limit",
+        Operation::PeriodRange { .. } => "PeriodRange",
+        Operation::FullJoin { .. } => "FullJoin",
     }
 }
 
@@ -346,4 +348,43 @@ fn e4_3_12_population_reads_visible_rows_then_periods() {
     assert_eq!(kinds, ["Filter", "Scan"]);
     assert_eq!(kind_of(population.operation()), "Population");
     assert!(population.is_simple_plan());
+}
+
+#[test]
+fn chk_6_6_a_full_join_reads_its_left_then_its_right_input() {
+    let in_range = PlanNode::new(
+        Operation::PeriodRange {
+            input: Box::new(scan("ORDERS")),
+            coverage: ColumnName::new("region"),
+        },
+        region_schema(),
+        in_model("/semantic_model/0/datasets/0"),
+    );
+    let compared = PlanNode::new(
+        Operation::FullJoin {
+            left: Box::new(in_range),
+            right: Box::new(scan("ORDERS_BY_REGION")),
+            on: vec![JoinCondition {
+                left: ColumnName::new("region"),
+                right: ColumnName::new("summary.region"),
+            }],
+            right_prefix: ColumnPrefix::new("summary."),
+        },
+        region_schema(),
+        in_model("/semantic_model/0/datasets/1"),
+    );
+
+    let kinds: Vec<&str> = compared
+        .inputs()
+        .iter()
+        .map(|input| kind_of(input.operation()))
+        .collect();
+    assert_eq!(kinds, ["PeriodRange", "Scan"]);
+    let in_range_inputs: Vec<&str> = compared.inputs()[0]
+        .inputs()
+        .iter()
+        .map(|input| kind_of(input.operation()))
+        .collect();
+    assert_eq!(in_range_inputs, ["Scan"]);
+    assert!(compared.is_simple_plan());
 }

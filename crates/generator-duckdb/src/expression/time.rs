@@ -1,6 +1,7 @@
 //! Time grains (E6-5.2) and the types the generator needs to write them.
 
 use menura_contracts::types::common::LogicalType;
+use menura_contracts::types::descriptions::Binding;
 use menura_expressions::typing::{Aggregates, Outcome, Stop, Typed, TypingScope, type_expression};
 use menura_model::expression::{DateUnit, Expression, Literal, Reference};
 
@@ -28,7 +29,7 @@ impl ExpressionWriter<'_, '_> {
                 with_time_zone: true,
                 ..
             } => {
-                let zone = self.time_zone()?;
+                let zone = self.time_zone();
                 Ok(format!(
                     "date_trunc('{grain}', {value} AT TIME ZONE {zone}) AT TIME ZONE {zone}"
                 ))
@@ -38,26 +39,22 @@ impl ExpressionWriter<'_, '_> {
         }
     }
 
-    /// The query time zone, a `text` parameter: `CAST($tz AS VARCHAR)`. `text` always has a
-    /// `DuckDB` name, so it is written here without the fallible lookup.
-    ///
-    /// # Errors
-    ///
-    /// [`InvariantViolation::MissingTimeZone`] in a statement without query time settings.
-    pub(crate) fn time_zone(&mut self) -> Result<String, GenerateError> {
-        let name = self
-            .environment
-            .time
-            .ok_or_else(|| self.error(InvariantViolation::MissingTimeZone))?
-            .time_zone
-            .as_str()
-            .to_owned();
+    /// The query time zone, a `text` parameter: `CAST($tz AS VARCHAR)`. In a statement
+    /// without query time settings, an integrity check, it is the `time_zone` slot the
+    /// pipeline binds (CHK-7.3). `text` always has a `DuckDB` name, so it is written here
+    /// without the fallible lookup.
+    pub(crate) fn time_zone(&mut self) -> String {
+        let Some(time) = self.environment.time else {
+            let placeholder = self.parameters.bind_slot(Binding::TimeZone);
+            return cast(&placeholder, "VARCHAR");
+        };
+        let name = time.time_zone.as_str().to_owned();
         let placeholder = self.parameters.bind_shared(
             SharedValue::TimeZone,
             LogicalType::Text,
             serde_json::Value::String(name),
         );
-        Ok(cast(&placeholder, "VARCHAR"))
+        cast(&placeholder, "VARCHAR")
     }
 
     /// The logical type of a literal, as E0.f types it (E0F-9.3).

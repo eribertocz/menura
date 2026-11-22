@@ -89,7 +89,8 @@ impl<'input> StepWriter<'input> {
     }
 
     /// The body and kind of a node that reads, joins, deduplicates or combines rows: `Scan`,
-    /// `Join`, `Deduplicate`, `SemiJoin`, `Stitch`, `Population`, `Periods` and `Snapshot`.
+    /// `Join`, `Deduplicate`, `SemiJoin`, `Stitch`, `Population`, `Periods` and `Snapshot`, and
+    /// the nodes of integrity checks.
     fn relation_step(
         &mut self,
         node: &'input PlanNode,
@@ -137,7 +138,7 @@ impl<'input> StepWriter<'input> {
                 Ok((self.periods(node, *from, *to, *grain)?, "periods"))
             }
             Operation::Snapshot { .. } => Ok((self.snapshot(node)?, "snapshot")),
-            _ => Err(error(InvariantViolation::NodeOutsideSlice, node)),
+            _ => self.check_step(node),
         }
     }
 

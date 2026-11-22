@@ -69,7 +69,7 @@ impl PlanNode {
         ) && self.inputs().into_iter().all(PlanNode::is_simple_plan)
     }
 
-    /// The input nodes, in order: none for `Scan` and `Periods`, `left` then `right` for `Join`, `input`,
+    /// The input nodes, in order: none for `Scan` and `Periods`, `left` then `right` for `Join` and `FullJoin`, `input`,
     /// `related_all` then `related_visible` for `SemiJoin`, `input` then `periods` for
     /// `Population`, `input` then the plans of its rule for `Snapshot` (`SnapshotRule::inputs`),
     /// the branches for `Stitch`, and the one input otherwise.
@@ -77,7 +77,9 @@ impl PlanNode {
     pub fn inputs(&self) -> Vec<&PlanNode> {
         match &self.operation {
             Operation::Scan { .. } | Operation::Periods { .. } => Vec::new(),
-            Operation::Join { left, right, .. } => vec![left, right],
+            Operation::Join { left, right, .. } | Operation::FullJoin { left, right, .. } => {
+                vec![left, right]
+            }
             Operation::SemiJoin {
                 input,
                 related_all,
@@ -95,6 +97,7 @@ impl PlanNode {
             | Operation::Deduplicate { input, .. }
             | Operation::Aggregate { input, .. }
             | Operation::Project { input, .. }
+            | Operation::PeriodRange { input, .. }
             | Operation::Sort { input, .. }
             | Operation::Limit { input, .. } => vec![input],
         }

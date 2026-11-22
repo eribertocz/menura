@@ -20,13 +20,23 @@ pub(crate) struct KeySide<'key> {
 /// common type of E0F-3.1. `None` when the two types have no common type or `T` has no
 /// `DuckDB` name.
 pub(crate) fn key_equality(left: KeySide<'_>, right: KeySide<'_>) -> Option<String> {
+    key_comparison(left, right, "=")
+}
+
+/// `left IS NOT DISTINCT FROM right`, with the casts of [`key_equality`]: the equality of a
+/// `FullJoin`, under which NULL values match (CHK-6.6).
+pub(crate) fn null_safe_key_equality(left: KeySide<'_>, right: KeySide<'_>) -> Option<String> {
+    key_comparison(left, right, "IS NOT DISTINCT FROM")
+}
+
+fn key_comparison(left: KeySide<'_>, right: KeySide<'_>, operator: &str) -> Option<String> {
     if left.logical_type == right.logical_type {
-        return Some(format!("{} = {}", left.sql, right.sql));
+        return Some(format!("{} {operator} {}", left.sql, right.sql));
     }
     let common = comparison_type(left.logical_type, right.logical_type)?;
     let physical = physical_type(&common)?;
     Some(format!(
-        "CAST({} AS {physical}) = CAST({} AS {physical})",
+        "CAST({} AS {physical}) {operator} CAST({} AS {physical})",
         left.sql, right.sql
     ))
 }
@@ -64,7 +74,7 @@ fn is_numeric(logical_type: &LogicalType) -> bool {
 mod tests {
     use menura_contracts::types::common::{IntegerBits, LogicalType};
 
-    use super::{KeySide, key_equality};
+    use super::{KeySide, key_equality, null_safe_key_equality};
 
     fn integer(bits: IntegerBits) -> LogicalType {
         LogicalType::Integer { bits, signed: true }
@@ -121,6 +131,20 @@ mod tests {
         assert_eq!(
             backward.as_deref(),
             Some("CAST(\"R\" AS DECIMAL(13,2)) = CAST(\"L\" AS DECIMAL(13,2))")
+        );
+    }
+
+    #[test]
+    fn chk_6_6_full_join_keys_match_null_values() {
+        let big = integer(IntegerBits::SixtyFour);
+        let small = integer(IntegerBits::ThirtyTwo);
+        assert_eq!(
+            null_safe_key_equality(side("\"L\"", &big), side("\"R\"", &big)).as_deref(),
+            Some("\"L\" IS NOT DISTINCT FROM \"R\"")
+        );
+        assert_eq!(
+            null_safe_key_equality(side("\"L\"", &small), side("\"R\"", &big)).as_deref(),
+            Some("CAST(\"L\" AS HUGEINT) IS NOT DISTINCT FROM CAST(\"R\" AS HUGEINT)")
         );
     }
 
