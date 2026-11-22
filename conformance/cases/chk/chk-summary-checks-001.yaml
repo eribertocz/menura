@@ -1,0 +1,6 @@
+id: chk-summary-checks-001
+rules: [SUM-5, CHK-2.4, CHK-2.6, CHK-3, CHK-5.1, CHK-5.2, CHK-5.4, CHK-5.5, CHK-6.6, CHK-7.1, CHK-7.2, CHK-7.3, CHK-7.4]
+model: chk-summaries
+expect:
+  outcome: "integrity_checks"
+  document: "chk-summary-checks-001.document.json"
