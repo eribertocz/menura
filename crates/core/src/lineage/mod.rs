@@ -1,0 +1,114 @@
+//! The lineage of a compiled plan (PLN-4): one entry per output column, with the model
+//! elements, catalog columns, summary and row policies behind it.
+
+mod metrics;
+mod names;
+mod policies;
+mod provenance;
+mod references;
+mod scan;
+mod semi_additive;
+mod walk;
+
+use std::collections::BTreeSet;
+
+use menura_contracts::types::catalog::CatalogSchemaDocument;
+use menura_contracts::types::compiled_plan::{Lineage, PhysicalInput};
+use menura_model::internal_model::InternalModel;
+use menura_representations::bound_query::{BoundDimension, BoundMetric, BoundQuery};
+use menura_representations::columns::OutputColumn;
+use menura_representations::logical_plan::PlanNode;
+use menura_security::AdmittedSecurityContext;
+
+use crate::compile::InternalError;
+use metrics::metrics_read;
+use names::{declared, model_inputs};
+use policies::applied_policies;
+use provenance::NodeLineage;
+use scan::Sources;
+
+/// What the lineage of a plan is computed against.
+#[derive(Debug, Clone, Copy)]
+pub(crate) struct LineageInputs<'input> {
+    /// The model.
+    pub(crate) model: &'input InternalModel,
+    /// The admitted catalog schema.
+    pub(crate) catalog: &'input CatalogSchemaDocument,
+    /// The admitted security context of the user.
+    pub(crate) context: &'input AdmittedSecurityContext,
+}
+
+/// The lineage of `plan`, the final optimized plan of `query` (PLN-4.3): one entry per output
+/// column, in output order, named after the column.
+///
+/// # Errors
+///
+/// An [`InternalError`] when the plan names an element its inputs do not have, or does not
+/// output one column per query column.
+pub(crate) fn lineage(
+    plan: &PlanNode,
+    query: &BoundQuery,
+    inputs: LineageInputs<'_>,
+) -> Result<Vec<Lineage>, InternalError> {
+    let sources = Sources {
+        model: inputs.model,
+        catalog: inputs.catalog,
+    };
+    let root = sources.node(plan, None)?;
+    let columns = plan.schema().columns();
+    if columns.len() != query.columns().iter().count() {
+        return Err(InternalError::new(
+            "core",
+            "the plan does not output one column per query column",
+        ));
+    }
+    columns
+        .iter()
+        .zip(query.columns().iter())
+        .map(|(column, output)| entry(&root, column.name.as_str(), output, inputs))
+        .collect()
+}
+
+/// The lineage entry of the output column `name`, the query column `output`, over the
+/// lineage `root` of the final plan node.
+fn entry(
+    root: &NodeLineage,
+    name: &str,
+    output: &OutputColumn<BoundDimension, BoundMetric>,
+    inputs: LineageInputs<'_>,
+) -> Result<Lineage, InternalError> {
+    let provenance = root.columns.get(name).ok_or_else(|| {
+        InternalError::new("core", format!("the plan outputs `{name}` underived"))
+    })?;
+    let mut reads = root.shared.clone();
+    for branch in &provenance.branches {
+        if let Some(branch_reads) = root.branches.get(*branch) {
+            reads.absorb(branch_reads.clone());
+        }
+    }
+    let metrics = match output {
+        OutputColumn::Dimension(_) => BTreeSet::new(),
+        OutputColumn::Metric(metric) => metrics_read(metric, inputs.model)?,
+    };
+    let physical_inputs = provenance
+        .catalog_columns
+        .iter()
+        .chain(&reads.catalog_columns)
+        .collect::<BTreeSet<_>>()
+        .into_iter()
+        .map(|read| PhysicalInput {
+            source: read.source.clone(),
+            column: read.column.clone(),
+        })
+        .collect();
+    Ok(Lineage {
+        output: name.to_owned(),
+        model_inputs: model_inputs(&provenance.fields, &metrics, &provenance.relationships),
+        physical_inputs,
+        summary: reads
+            .summary
+            .as_ref()
+            .map(|summary| declared(summary).to_owned()),
+        security_policies: applied_policies(&reads.datasets, inputs.model, inputs.context),
+    })
+}
