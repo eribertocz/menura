@@ -12,14 +12,14 @@ use crate::pointer::{JsonPointer, key_text};
 use crate::read::{Location, Node, Value, read_document};
 use crate::structure::schema_errors;
 
-/// The code of a number of the model that has no JSON form (MIG-3.3).
+/// The code of a number of the model that has no JSON form (MIG-3.3a).
 const NO_JSON_FORM: &str = "EMIG-01";
 
 /// Reads the model document `model` with E0.a and validates its structure with E0.b in the
 /// format `format` (section 4.5), covering every model of the document: no model is selected
 /// (MIG-3.1). Returns the document tree E0.a produces, anchors and aliases expanded and dates as
 /// text, as a JSON object whose members keep the order they were read in and whose integers
-/// keep their exact digits (MIG-3.3).
+/// keep their exact digits (MIG-3.3, MIG-3.3a).
 ///
 /// Keys that are not strings become their JSON text; of two keys with the same text the first
 /// is kept, as JSON Pointers resolve them.
@@ -28,7 +28,7 @@ const NO_JSON_FORM: &str = "EMIG-01";
 ///
 /// A [`LoadRejection`] without warnings: the errors of E0.a or E0.b when either rejects the
 /// document (MIG-3.1); otherwise `EMIG-01` at every number without a JSON form (`.inf`,
-/// `.nan`), in document order (MIG-3.3).
+/// `-.inf`, `.nan`), in document order (MIG-3.3a).
 ///
 /// # Example
 ///
@@ -172,7 +172,7 @@ mod tests {
     }
 
     #[test]
-    fn mig_3_3_integers_keep_their_exact_digits() {
+    fn mig_3_3a_integers_keep_their_exact_digits() {
         let document =
             read_document(b"[1, -2, 1.5, 0x10, 123456789012345678901234567890123456789012]")
                 .unwrap();
@@ -203,7 +203,7 @@ mod tests {
     }
 
     #[test]
-    fn mig_3_3_a_number_without_a_json_form_is_emig_01_at_that_value() {
+    fn mig_3_3a_a_number_without_a_json_form_is_emig_01_at_that_value() {
         let text = "version: 0.3.0.dev0\nname: m\ndatasets:\n  - name: d\n    source: s.t\n    nonportable_extensions:\n      - vendor_name: COMMON\n        data: {limits: [.nan, .inf]}\n";
         let errors = read_model_tree(text.as_bytes(), OssieFormat::Development)
             .unwrap_err()

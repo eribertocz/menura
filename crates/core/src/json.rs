@@ -76,7 +76,7 @@ pub fn diff_json(document: &ModelDiffDocument) -> Result<String, OutputError> {
 }
 
 /// The JSON text of a migration report, indented with two spaces; the model keeps its member
-/// order and its integers their exact digits, whatever their size (MIG-3.3).
+/// order and its integers their exact digits, whatever their size (MIG-3.3, MIG-3.3a).
 ///
 /// # Errors
 ///

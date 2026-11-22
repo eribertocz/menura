@@ -267,7 +267,7 @@ fn development_options() -> LoadOptions {
 }
 
 #[test]
-fn mig_3_3_integers_of_any_size_are_written_with_their_exact_digits() {
+fn mig_3_3a_integers_of_any_size_are_written_with_their_exact_digits() {
     let digits = "123456789012345678901234567890123456789012345";
     let model = development(&format!("{{namespace: other, size: {digits}, small: -7}}"));
     let report = report(&model, &development_options());
@@ -277,7 +277,7 @@ fn mig_3_3_integers_of_any_size_are_written_with_their_exact_digits() {
 }
 
 #[test]
-fn mig_3_3_a_number_without_a_json_form_is_refused_with_emig_01() {
+fn mig_3_3a_a_number_without_a_json_form_is_refused_with_emig_01() {
     let model = development("{namespace: semantic_compiler, version: 1, limit: .inf}");
     let error = migrate(model.as_bytes(), &development_options()).unwrap_err();
     assert_eq!(error.errors.len(), 1);

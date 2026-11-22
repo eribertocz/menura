@@ -358,7 +358,7 @@ fn arc_5_4_help_lists_every_command() {
 }
 
 #[test]
-fn arc_5_9_a_number_without_a_json_form_exits_1_with_emig_01() {
+fn mig_3_3a_migrate_with_a_number_without_a_json_form_exits_1_with_emig_01() {
     let model = scratch_file(
         "migrate_emig",
         "model.yaml",

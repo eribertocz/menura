@@ -1,5 +1,5 @@
 //! The indented JSON text of an [`OrderedJson`] value, written by hand so that integers of any
-//! size keep their exact digits (MIG-3.3): a serializer writes numbers of at most 128 bits.
+//! size keep their exact digits (MIG-3.3a): a serializer writes numbers of at most 128 bits.
 //! Every scalar but an integer is written by `serde_json`, so the text has the same form as
 //! the other output documents: two-space indentation, `": "` between a name and its value.
 
@@ -84,7 +84,7 @@ mod tests {
     }
 
     #[test]
-    fn mig_3_3_integers_of_any_size_keep_their_digits() {
+    fn mig_3_3a_integers_of_any_size_keep_their_digits() {
         let digits = "-123456789012345678901234567890123456789012";
         let value = OrderedJson::Object(OrderedObject::new(vec![(
             "n".to_owned(),
