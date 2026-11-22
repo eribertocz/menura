@@ -12,9 +12,13 @@ use menura_representations::query_tree::{
     QueryPath, QueryReference, QueryRelation, QueryTree, TimeGrainChoice,
 };
 
+use crate::alternatives::ExpectedKind;
 use crate::authorized_query::{AuthorizedDateRange, AuthorizedTimeGrain, ResolvedName};
 use crate::error::{BindCode, BindDiagnostic, BindError, InvariantViolation};
-use crate::names::{written_expression_reference, written_identifier, written_reference};
+use crate::names::{
+    normalized_expression_reference, normalized_reference, written_expression_reference,
+    written_identifier, written_reference,
+};
 use crate::resolver::{NameScope, RelationScope, Resolver};
 use crate::walk::nodes;
 
@@ -135,7 +139,7 @@ fn resolve_relation<'tree>(
             written_identifier(&relation.model),
             written_identifier(&relation.dataset)
         );
-        not_found(&written, "dataset", &relation.origin)
+        not_found(&written, "dataset", &relation.origin, Vec::new())
     })?;
     Ok(ResolvedRelation { scope, relation })
 }
@@ -148,7 +152,13 @@ fn resolve_dimension<'tree>(
     let (expression, reads) = match &dimension.kind {
         QueryDimensionKind::Field { reference } => (
             None,
-            vec![resolve_read(reference, scope, &dimension.origin, resolver)?],
+            vec![resolve_read(
+                reference,
+                ExpectedKind::Field,
+                scope,
+                &dimension.origin,
+                resolver,
+            )?],
         ),
         QueryDimensionKind::Expression(expression) => (
             Some(expression),
@@ -172,7 +182,13 @@ fn resolve_metric<'tree>(
     let (expression, reads) = match &metric.kind {
         QueryMetricKind::Reference(reference) => (
             None,
-            vec![resolve_read(reference, scope, &metric.origin, resolver)?],
+            vec![resolve_read(
+                reference,
+                ExpectedKind::Metric,
+                scope,
+                &metric.origin,
+                resolver,
+            )?],
         ),
         QueryMetricKind::Inline(expression) => (
             Some(expression),
@@ -188,17 +204,21 @@ fn resolve_metric<'tree>(
     })
 }
 
-/// The column reference `reference`, resolved in `scope`.
+/// The column reference `reference`, resolved in `scope`, at a position that expects
+/// `expected`.
 fn resolve_read(
     reference: &QueryReference,
+    expected: ExpectedKind,
     scope: NameScope<'_>,
     origin: &QueryLocation,
     resolver: &mut Resolver<'_>,
 ) -> Result<ResolvedRead, BindError> {
     let written = written_reference(reference);
-    let target = resolver
-        .scoped_reference(scope, reference)
-        .ok_or_else(|| not_found(&written, "field or metric", origin))?;
+    let target = resolver.scoped_reference(scope, reference).ok_or_else(|| {
+        let alternatives =
+            resolver.alternatives(expected, normalized_reference(reference).as_deref());
+        not_found(&written, "field or metric", origin, alternatives)
+    })?;
     Ok(ResolvedRead { written, target })
 }
 
@@ -217,11 +237,11 @@ fn expression_reads(
         ));
     }
     let mut reads = Vec::new();
-    for reference in nodes(expression).into_iter().filter_map(reference_of) {
+    for (reference, expected) in nodes(expression).into_iter().filter_map(expected_reference) {
         let written = written_expression_reference(reference);
         let target = resolver
             .scoped_expression_reference(scope, reference)
-            .ok_or_else(|| not_found(&written, "field or metric", origin))?;
+            .ok_or_else(|| expression_not_found(reference, expected, origin, resolver))?;
         reads.push(ResolvedRead { written, target });
     }
     Ok(reads)
@@ -234,19 +254,13 @@ fn resolve_filter<'tree>(
     resolver: &mut Resolver<'_>,
 ) -> Result<ResolvedFilter<'tree>, BindError> {
     let mut targets = Vec::new();
-    for reference in nodes(&filter.expression)
+    for (reference, expected) in nodes(&filter.expression)
         .into_iter()
-        .filter_map(reference_of)
+        .filter_map(expected_reference)
     {
         let target = resolver
             .scoped_expression_reference(scope, reference)
-            .ok_or_else(|| {
-                not_found(
-                    &written_expression_reference(reference),
-                    "field or metric",
-                    &filter.origin,
-                )
-            })?;
+            .ok_or_else(|| expression_not_found(reference, expected, &filter.origin, resolver))?;
         targets.push(target);
     }
     Ok(ResolvedFilter { filter, targets })
@@ -260,6 +274,34 @@ pub(crate) fn reference_of(node: &Expression) -> Option<&Reference> {
         }
         _ => None,
     }
+}
+
+/// The reference a node names, with the kind its position expects (PLN-5.4 step 1): a field
+/// for a field or metric reference, a metric for the metric of `AGG(…)`.
+fn expected_reference(node: &Expression) -> Option<(&Reference, ExpectedKind)> {
+    match node {
+        Expression::Reference(reference) => Some((reference, ExpectedKind::Field)),
+        Expression::MetricAggregate(reference) => Some((reference, ExpectedKind::Metric)),
+        _ => None,
+    }
+}
+
+/// `E_NAME_NOT_FOUND` for the expression reference `reference`, at a position that expects
+/// `expected`, with its alternatives (PLN-5.4).
+fn expression_not_found(
+    reference: &Reference,
+    expected: ExpectedKind,
+    origin: &QueryLocation,
+    resolver: &Resolver<'_>,
+) -> BindError {
+    let normalized = normalized_expression_reference(reference);
+    let alternatives = resolver.alternatives(expected, Some(&normalized));
+    not_found(
+        &written_expression_reference(reference),
+        "field or metric",
+        origin,
+        alternatives,
+    )
 }
 
 fn resolve_time_grain(
@@ -288,39 +330,71 @@ fn resolve_date_range(
 fn resolve_path(path: &QueryPath, resolver: &mut Resolver<'_>) -> Result<BoundPath, BindError> {
     let origin = path.origin();
     let mut dataset = |reference: &QueryReference| {
-        resolver
-            .dataset_reference(reference)
-            .ok_or_else(|| not_found(&written_reference(reference), "dataset", origin))
+        resolver.dataset_reference(reference).ok_or_else(|| {
+            let alternatives = resolver.alternatives(
+                ExpectedKind::Dataset,
+                normalized_reference(reference).as_deref(),
+            );
+            not_found(
+                &written_reference(reference),
+                "dataset",
+                origin,
+                alternatives,
+            )
+        })
     };
     let from = dataset(path.from())?;
     let to = dataset(path.to())?;
     let mut relationships = Vec::new();
     for reference in path.relationships() {
-        let relationship = resolver
-            .relationship_reference(reference)
-            .ok_or_else(|| not_found(&written_reference(reference), "relationship", origin))?;
+        let relationship = resolver.relationship_reference(reference).ok_or_else(|| {
+            not_found(
+                &written_reference(reference),
+                "relationship",
+                origin,
+                Vec::new(),
+            )
+        })?;
         relationships.push(relationship);
     }
     BoundPath::new(from, to, relationships, origin.clone())
         .ok_or_else(|| BindError::invariant(InvariantViolation::PathWithoutRelationship, origin))
 }
 
-/// The field or metric `reference` names, or `E_NAME_NOT_FOUND` at `origin`.
+/// The field `reference` names, or `E_NAME_NOT_FOUND` at `origin` with the fields closest to
+/// it (PLN-5.4).
 fn resolve(
     reference: &QueryReference,
     origin: &QueryLocation,
     resolver: &mut Resolver<'_>,
 ) -> Result<ResolvedName, BindError> {
-    resolver
-        .reference(reference)
-        .ok_or_else(|| not_found(&written_reference(reference), "field or metric", origin))
+    resolver.reference(reference).ok_or_else(|| {
+        let alternatives = resolver.alternatives(
+            ExpectedKind::Field,
+            normalized_reference(reference).as_deref(),
+        );
+        not_found(
+            &written_reference(reference),
+            "field or metric",
+            origin,
+            alternatives,
+        )
+    })
 }
 
-/// `E_NAME_NOT_FOUND` for the name `written`, which should name a `kind`. The message is the
-/// same whether the name is unknown or unauthorized (E2-4.4, PLN-5.2).
-fn not_found(written: &str, kind: &str, origin: &QueryLocation) -> BindError {
+/// `E_NAME_NOT_FOUND` for the name `written`, which should name a `kind`, carrying
+/// `alternatives` (PLN-5.4). The message and the alternatives are the same whether the name is
+/// unknown or unauthorized (E2-4.4, PLN-5.2, PLN-5.4a).
+fn not_found(
+    written: &str,
+    kind: &str,
+    origin: &QueryLocation,
+    alternatives: Vec<String>,
+) -> BindError {
     let message = format!(
         "`{written}` does not name a {kind} of the model; check the name and how it is written"
     );
-    BindDiagnostic::new(BindCode::NameNotFound, message, origin).into()
+    BindDiagnostic::new(BindCode::NameNotFound, message, origin)
+        .with_alternatives(alternatives)
+        .into()
 }

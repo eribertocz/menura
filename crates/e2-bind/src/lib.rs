@@ -8,6 +8,7 @@
 
 #![forbid(unsafe_code)]
 
+mod alternatives;
 mod authorized_query;
 mod bind;
 mod calendar;
