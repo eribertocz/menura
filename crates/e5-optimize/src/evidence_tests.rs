@@ -157,9 +157,9 @@ fn cat_7_3_a_missing_verified_period_is_not_evidence() {
         {"source": "shop.main.customers", "version": token("customers-1")},
         {"source": "shop.main.orders", "version": token("orders-9"), "period": "2026-09"}
     ]);
-    let state = state_with(result("key_uniqueness", CURRENT_HASH, "passed", verified));
+    let state = state_with(result("orphan_keys", CURRENT_HASH, "passed", verified));
 
-    assert!(!holds(Some(&state), CheckKind::KeyUniqueness));
+    assert!(!holds(Some(&state), CheckKind::OrphanKeys));
 }
 
 #[test]
@@ -169,9 +169,9 @@ fn cat_7_3_a_different_verified_period_version_is_not_evidence() {
         {"source": "shop.main.orders", "version": token("orders-9"), "period": "2026-09"},
         {"source": "shop.main.orders", "version": token("orders-10b"), "period": "2026-10"}
     ]);
-    let state = state_with(result("key_uniqueness", CURRENT_HASH, "passed", verified));
+    let state = state_with(result("orphan_keys", CURRENT_HASH, "passed", verified));
 
-    assert!(!holds(Some(&state), CheckKind::KeyUniqueness));
+    assert!(!holds(Some(&state), CheckKind::OrphanKeys));
 }
 
 #[test]
@@ -182,9 +182,31 @@ fn cat_7_3_a_verified_period_the_relation_no_longer_has_is_a_difference() {
         {"source": "shop.main.orders", "version": token("orders-9"), "period": "2026-09"},
         {"source": "shop.main.orders", "version": token("orders-10"), "period": "2026-10"}
     ]);
+    let state = state_with(result("orphan_keys", CURRENT_HASH, "passed", verified));
+
+    assert!(!holds(Some(&state), CheckKind::OrphanKeys));
+}
+
+#[test]
+fn cat_7_3_key_uniqueness_reads_only_the_to_relation() {
+    let verified = json!([
+        {"source": "shop.main.customers", "version": token("customers-1")},
+        {"source": "shop.main.orders", "version": token("orders-8"), "period": "2026-08"}
+    ]);
     let state = state_with(result("key_uniqueness", CURRENT_HASH, "passed", verified));
 
-    assert!(!holds(Some(&state), CheckKind::KeyUniqueness));
+    assert!(holds(Some(&state), CheckKind::KeyUniqueness));
+}
+
+#[test]
+fn cat_7_3_orphan_keys_reads_the_from_relation_too() {
+    let verified = json!([
+        {"source": "shop.main.customers", "version": token("customers-1")},
+        {"source": "shop.main.orders", "version": token("orders-8"), "period": "2026-08"}
+    ]);
+    let state = state_with(result("orphan_keys", CURRENT_HASH, "passed", verified));
+
+    assert!(!holds(Some(&state), CheckKind::OrphanKeys));
 }
 
 #[test]
