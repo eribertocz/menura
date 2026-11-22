@@ -13,12 +13,13 @@ use menura_model::internal_model::{
     Dataset, Descriptions, Field, InternalModel, ModelParts, NormalizedName, PartialPeriod,
     RelationshipGraph, TypedValue, ValueType,
 };
+use menura_representations::bound_query::BoundQuery;
 use menura_representations::logical_plan::{
     Membership, Operation, OutputSchema, PlanNode, PopulationRule, SchemaColumn,
 };
 use menura_representations::names::ColumnName;
 
-use super::{big_integer, from_model, instant, location, parse, query, security};
+use super::{big_integer, decimal, from_model, instant, location, parse, query, security};
 
 /// One dataset: name, `source`, and its fields as (name, catalog column, type).
 type Shape = (
@@ -38,6 +39,16 @@ fn local_timestamp() -> LogicalType {
 /// The datasets, sorted by name as the model keeps them.
 fn shapes() -> Vec<Shape> {
     vec![
+        (
+            "BALANCES",
+            "main.balances",
+            vec![
+                ("CUSTOMER_ID", "customer_id", big_integer()),
+                ("BALANCE_DATE", "balance_date", LogicalType::Date),
+                ("BRANCH", "branch", LogicalType::Text),
+                ("BALANCE", "balance", decimal(12, 2)),
+            ],
+        ),
         (
             "CUSTOMERS",
             "main.customers",
@@ -61,6 +72,16 @@ fn shapes() -> Vec<Shape> {
             vec![
                 ("CUSTOMER_ID", "customer_id", big_integer()),
                 ("STATEMENT_MONTH", "statement_month", LogicalType::Date),
+            ],
+        ),
+        (
+            "STOCK",
+            "main.stock",
+            vec![
+                ("WAREHOUSE", "warehouse", LogicalType::Text),
+                ("PRODUCT_ID", "product_id", big_integer()),
+                ("CATEGORY", "category", LogicalType::Text),
+                ("QUANTITY", "quantity", big_integer()),
             ],
         ),
     ]
@@ -235,11 +256,19 @@ pub fn population(
 
 /// The SQL of `plan` over the population model, for a query of `CUSTOMER_ID` and `PERIOD`.
 pub fn generate_population(plan: &PlanNode) -> Result<GeneratedSql, GenerateError> {
+    generate_billing(plan, &query(&["CUSTOMER_ID", "PERIOD"], &[]))
+}
+
+/// The SQL of `plan` over the population model, for `query`.
+pub fn generate_billing(
+    plan: &PlanNode,
+    query: &BoundQuery,
+) -> Result<GeneratedSql, GenerateError> {
     menura_generator_duckdb::generate_sql(
         plan,
         &population_catalog(),
         &population_model(),
-        &query(&["CUSTOMER_ID", "PERIOD"], &[]),
+        query,
         &security(),
     )
 }

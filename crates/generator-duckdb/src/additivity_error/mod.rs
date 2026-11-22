@@ -9,6 +9,13 @@ mod tests;
 
 /// A runtime condition of a semi-additive metric that its rule turns into an error (ADD-7).
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[cfg_attr(
+    not(test),
+    expect(
+        dead_code,
+        reason = "RADD-01, RADD-02 and RADD-04 belong to a time `over`, not generated yet"
+    )
+)]
 pub(crate) enum AdditivityCondition {
     /// `RADD-01`: `missing: error` and an expected entity has no row.
     MissingEntity,

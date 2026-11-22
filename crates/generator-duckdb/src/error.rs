@@ -61,6 +61,9 @@ pub enum InvariantViolation {
     UnknownRelationship,
     /// A `Stitch` column whose branch index names no branch of the node (E4-3.7).
     UnknownBranch,
+    /// A `Snapshot` rule that ADD-5.1.5 forbids for its `over`: `first`, `last` or
+    /// `nulls: as_missing` across a field that is not a time field.
+    SnapshotOutsideRule,
     /// A final node whose columns do not match the output columns of the query (E1-5).
     ResultColumnMismatch,
 }
