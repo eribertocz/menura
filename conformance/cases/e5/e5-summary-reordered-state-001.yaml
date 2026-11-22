@@ -1,0 +1,22 @@
+id: e5-summary-reordered-state-001
+rules: [E5-2.3]
+model: e5-summary-reordered-state
+security_context: analyst.json
+query:
+  contract: menura.query
+  contract_version: "1.1.0"
+  time_zone: UTC
+  query:
+    dimensions: [orders.region, orders.order_date]
+    metrics:
+      - {metric: total_amount, alias: total_amount}
+      - {metric: order_count, alias: order_count}
+      - {metric: average_amount, alias: average_amount}
+    nonportable_extensions:
+      - {"vendor_name": "COMMON", "data": {"namespace": "menura", "version": 1, "time_grains": [{"dimension": "orders.order_date", "grain": "month"}]}}
+expect:
+  outcome: plan
+  sql: e5-summary-reordered-state-001.sql
+  rows: e5-summary-reordered-state-001.csv
+  row_order: any
+oracle: e5-summary-reordered-state-001.oracle.sql

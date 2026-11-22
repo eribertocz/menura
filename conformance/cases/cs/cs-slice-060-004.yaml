@@ -1,0 +1,17 @@
+id: cs-slice-060-004
+rules: [VS-1d, VS-3, VS-2]
+model: slice-060-no-state
+security_context: analyst.json
+query:
+  contract: menura.query
+  contract_version: "1.1.0"
+  time_zone: UTC
+  query:
+    dimensions: [orders.region]
+    metrics:
+      - {metric: total_amount, alias: total_amount}
+      - {metric: amount_share, alias: amount_share}
+expect:
+  outcome: error
+  error: E_NOT_YET_SUPPORTED
+  location: {document: query, pointer: /query/metrics/1}

@@ -1,5 +1,5 @@
 id: e5-summary-used-001
-rules: [E5-4, E5-3.5, E5-3.5a, SUM-3.1]
+rules: [E5-4, E5-3.5, E5-3.5a, SUM-3.1, SUM-3.8, E6-4.15, CAT-7.2.1, E5-2.2, VS-1d]
 model: e5-summary-selection
 security_context: analyst.json
 query:
