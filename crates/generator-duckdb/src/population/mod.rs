@@ -30,7 +30,8 @@ struct PopulationInputs<'input> {
 impl<'input> StepWriter<'input> {
     /// One row per (entity, period) pair where the entity is expected (POP-3): the rows of the
     /// input, kept where `required_when` holds (POP-3.3), each paired with the periods its
-    /// membership covers. Several rows of one entity give one pair (POP-3.4).
+    /// membership covers. Several rows of one entity give one pair (POP-3.4); a row with a
+    /// NULL entity field gives none (POP-3.7).
     pub(crate) fn population(
         &mut self,
         node: &'input PlanNode,
@@ -86,6 +87,7 @@ impl<'input> StepWriter<'input> {
             from: format!("{rows} AS {ROW}"),
             clauses: vec![
                 format!("JOIN {} AS {PERIOD} ON {covered}", periods.name),
+                format!("WHERE {}", known_entity(inputs.rule)),
                 format!("GROUP BY {}", ordinals(node.schema().columns().len())),
             ],
         };
@@ -142,6 +144,15 @@ fn output_items(
         .zip(names)
         .map(|(value, column)| format!("{value} AS {}", quote(column.name.as_str())))
         .collect())
+}
+
+/// `row.e1 IS NOT NULL AND …`: a row without its whole entity is never expected (POP-3.7).
+fn known_entity(rule: &PopulationRule) -> String {
+    rule.entity
+        .iter()
+        .map(|name| format!("{ROW}.{} IS NOT NULL", quote(name.as_str())))
+        .collect::<Vec<_>>()
+        .join(" AND ")
 }
 
 /// `1, 2, …, count`.

@@ -25,6 +25,7 @@ WITH
       "menura_period"."PERIOD" AS "PERIOD"
     FROM "menura_2_scan" AS "menura_row"
     JOIN "menura_3_scan" AS "menura_period" ON "menura_row"."VALID_FROM" <= CAST("menura_period"."PERIOD" + INTERVAL 1 MONTH - INTERVAL 1 DAY AS DATE) AND ("menura_row"."VALID_TO" IS NULL OR "menura_row"."VALID_TO" >= "menura_period"."PERIOD")
+    WHERE "menura_row"."CUSTOMER_ID" IS NOT NULL
     GROUP BY 1, 2
   ),
   "menura_5_scan" AS (

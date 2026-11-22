@@ -366,3 +366,13 @@ fn pop_3_5_a_timestamp_over_is_compared_by_day_in_the_query_time_zone() {
         include_str!("golden/pop_3_5_snapshot_timestamp_over.sql"),
     );
 }
+
+#[test]
+fn pop_3_7_missing_error_ignores_population_rows_without_an_entity() {
+    let rule = Rule {
+        missing: Missing::Error,
+        ..BASE
+    };
+    let sql = sql_of(rule);
+    assert!(sql.contains("WHERE \"menura_row\".\"CUSTOMER_ID\" IS NOT NULL"));
+}

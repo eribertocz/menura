@@ -18,6 +18,7 @@ WITH
       "menura_period"."PERIOD" AS "PERIOD"
     FROM "menura_1_scan" AS "menura_row"
     JOIN "menura_2_scan" AS "menura_period" ON "menura_row"."VALID_FROM" <= CAST(("menura_period"."PERIOD") AT TIME ZONE CAST($1 AS VARCHAR) AS DATE) AND ("menura_row"."VALID_TO" IS NULL OR "menura_row"."VALID_TO" >= CAST(CAST(("menura_period"."PERIOD") AT TIME ZONE CAST($1 AS VARCHAR) AS DATE) + INTERVAL 1 MONTH - INTERVAL 1 DAY AS DATE))
+    WHERE "menura_row"."CUSTOMER_ID" IS NOT NULL
     GROUP BY 1, 2
   )
 SELECT

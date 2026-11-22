@@ -16,6 +16,7 @@ WITH
       "menura_period"."PERIOD" AS "PERIOD"
     FROM "menura_1_scan" AS "menura_row"
     JOIN "menura_2_scan" AS "menura_period" ON CAST(date_trunc('month', "menura_row"."STATEMENT_MONTH") AS DATE) = "menura_period"."PERIOD"
+    WHERE "menura_row"."CUSTOMER_ID" IS NOT NULL
     GROUP BY 1, 2
   )
 SELECT
