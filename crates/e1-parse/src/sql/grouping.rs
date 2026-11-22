@@ -6,7 +6,7 @@ use std::ops::Range;
 use menura_model::expression::Expression;
 
 use super::expression::{SqlExpression, parse_expression};
-use super::items::{ItemKind, SelectItem, comparison_name, output_identifier};
+use super::items::{ItemKind, SelectItem, comparison_name};
 use super::lexer::Token;
 use super::numbers::integer_literal;
 use super::position::{outside_subset, unparsable};
@@ -33,7 +33,7 @@ pub(super) enum GroupEntry {
         /// The offset of its first byte.
         offset: usize,
     },
-    /// An expression or the output name of an item.
+    /// An expression written as a non-aggregated item.
     Expression(SqlExpression),
 }
 
@@ -123,26 +123,13 @@ fn grouped_item(sql: &str, entry: &GroupEntry, items: &Items) -> Result<usize, P
     }
 }
 
-/// The index of the non-aggregated item that `expression` writes, by expression first and
-/// then by output name.
+/// The index of the non-aggregated item that `expression` writes, compared as parsed trees
+/// with regular identifiers in upper case (E0D-1.1). Never by output name (E1-4.11).
 pub(super) fn non_aggregated_match(expression: &SqlExpression, items: &Items) -> Option<usize> {
-    let non_aggregated = || {
-        items
-            .iter()
-            .enumerate()
-            .filter(|(_, (_, kind))| !kind.is_aggregated())
-    };
-    let by_expression = non_aggregated()
-        .find(|(_, (item, _))| expression.key.is_some() && item.expression.key == expression.key)
-        .map(|(index, _)| index);
-    by_expression.or_else(|| {
-        let name = bare_name(expression)?;
-        non_aggregated()
-            .find(|(_, (item, kind))| {
-                output_identifier(item, kind).map(comparison_name).as_ref() == Some(&name)
-            })
-            .map(|(index, _)| index)
-    })
+    expression.key.as_ref()?;
+    items
+        .iter()
+        .position(|(item, kind)| !kind.is_aggregated() && item.expression.key == expression.key)
 }
 
 /// The name of an expression that is one unqualified identifier, as E0D-1.1 compares it.

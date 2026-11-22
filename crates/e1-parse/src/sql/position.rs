@@ -44,6 +44,19 @@ pub(super) fn outside_subset(sql: &str, offset: usize, construct: &str) -> Parse
     )
 }
 
+/// `E0F-02` for an expression of the SQL text that parses with a construct outside the E0F-2
+/// subset, at byte `offset`: the code of the same expression in the wide-table form (E1-4.12).
+pub(super) fn invalid_expression(sql: &str, offset: usize, problem: &str) -> ParseError {
+    ParseError::new(
+        ParseErrorCode::E0f02,
+        SQL,
+        format!(
+            "the expression at {} is not accepted: {problem}",
+            describe(sql, offset)
+        ),
+    )
+}
+
 /// `EQRY-13` for the `SELECT` item at byte `offset` that is not a plain field reference and
 /// has no alias.
 pub(super) fn missing_alias(sql: &str, offset: usize, item: &str) -> ParseError {

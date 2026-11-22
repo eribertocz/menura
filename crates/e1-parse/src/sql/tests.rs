@@ -193,11 +193,10 @@ fn e1_4_7_every_non_aggregated_item_is_grouped() {
 }
 
 #[test]
-fn e1_4_7_group_by_accepts_expressions_positions_names_and_all() {
+fn e1_4_7_group_by_accepts_expressions_positions_and_all() {
     for sql in [
         "SELECT region, AGG(m) AS m FROM slice.sales GROUP BY REGION",
         "SELECT region, AGG(m) AS m FROM slice.sales GROUP BY 1",
-        "SELECT UPPER(region) AS r, AGG(m) AS m FROM slice.sales GROUP BY r",
         "SELECT UPPER(region) AS r, AGG(m) AS m FROM slice.sales GROUP BY upper( region )",
         "SELECT region, channel, AGG(m) AS m FROM slice.sales GROUP BY ALL",
         "SELECT AGG(m) AS m FROM slice.sales",
@@ -319,4 +318,70 @@ fn e1_4_5_broken_structure_does_not_parse() {
     ] {
         assert_eqry_05(sql);
     }
+}
+
+#[test]
+fn e1_4_11_group_by_never_names_an_output() {
+    assert_eqry_05("SELECT UPPER(region) AS r, AGG(m) AS m FROM slice.sales GROUP BY r");
+}
+
+#[test]
+fn e1_4_11_reports_the_first_failure_in_order() {
+    let error = |sql: &str| {
+        let error = error(sql);
+        (error.code, error.message)
+    };
+    let (code, message) = error("SELECT SUM(amount) AS a, AGG(m) FROM slice.sales");
+    assert_eq!(code, ParseErrorCode::Eqry05, "{message}");
+    assert!(message.contains("aggregate function"), "{message}");
+    let (code, message) = error("SELECT region, AGG(m) FROM slice.sales GROUP BY 5");
+    assert_eq!(code, ParseErrorCode::Eqry13, "{message}");
+    let (code, message) = error("SELECT region FROM slice.sales WHERE AGG(m) > 1");
+    assert!(message.contains("no AGG"), "{code}: {message}");
+    let (code, message) = error("SELECT region, AGG(m) AS m FROM slice.sales WHERE AGG(m) > 1");
+    assert!(message.contains("WHERE"), "{code}: {message}");
+    let (code, message) =
+        error("SELECT region, AGG(m) AS m FROM slice.sales GROUP BY 1 ORDER BY channel LIMIT 0");
+    assert!(message.contains("ORDER BY"), "{code}: {message}");
+    let (code, message) =
+        error("SELECT region, AGG(m) AS m FROM slice.sales GROUP BY 1 ORDER BY 1 LIMIT 0");
+    assert!(message.contains("LIMIT"), "{code}: {message}");
+}
+
+#[test]
+fn e1_4_12_a_parsed_but_invalid_expression_keeps_its_wide_table_code() {
+    for sql in [
+        "SELECT RANDOM() AS r, AGG(m) AS m FROM slice.sales GROUP BY 1",
+        "SELECT AGG(m) AS m FROM slice.sales WHERE region = RANDOM()",
+    ] {
+        let error = error(sql);
+        assert_eq!(error.code, ParseErrorCode::E0f02, "`{sql}`: {error}");
+        assert_eq!(error.pointer, "/sql");
+    }
+}
+
+#[test]
+fn e1_5_the_tree_carries_the_from_relation() {
+    let tree = tree("SELECT AGG(m) AS m\nFROM slice.\"Sales\" AS s");
+    let relation = tree.relation();
+    assert_eq!(
+        relation.map(|relation| relation.model.text()),
+        Some("slice")
+    );
+    assert_eq!(
+        relation.map(|relation| relation.dataset.text()),
+        Some("Sales")
+    );
+    assert_eq!(
+        relation
+            .and_then(|relation| relation.alias.as_ref())
+            .map(Identifier::text),
+        Some("s")
+    );
+    assert_eq!(
+        relation
+            .and_then(|relation| relation.origin.position())
+            .map(|position| (position.line(), position.column())),
+        Some((2, 6))
+    );
 }

@@ -1,22 +1,12 @@
 //! The `FROM` relation: exactly one `<model>.<dataset> [[AS] alias]` (E1-4 "FROM", QRY-5.1).
 
 use menura_model::expression::Identifier;
+use menura_representations::query_tree::QueryRelation;
 
 use super::clauses::Clause;
 use super::lexer::{Token, TokenKind};
-use super::position::{outside_subset, unparsable};
+use super::position::{location, outside_subset, unparsable};
 use crate::error::ParseError;
-
-/// The relation of the statement, as written. E2 checks the model name (E1-4.9).
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub(super) struct Relation {
-    /// The model name.
-    pub(super) model: Identifier,
-    /// The dataset name.
-    pub(super) dataset: Identifier,
-    /// The alias, when written.
-    pub(super) alias: Option<Identifier>,
-}
 
 /// Reads the relation of the `FROM` clause.
 ///
@@ -28,7 +18,7 @@ pub(super) fn relation(
     sql: &str,
     tokens: &[Token],
     clause: &Clause,
-) -> Result<Relation, ParseError> {
+) -> Result<QueryRelation, ParseError> {
     let slice = tokens.get(clause.tokens.clone()).unwrap_or_default();
     if let Some(comma) = slice.iter().find(|token| token.is_symbol(',')) {
         return Err(outside_subset(
@@ -46,10 +36,11 @@ pub(super) fn relation(
     }
     let (model, dataset, name_length) = relation_name(sql, slice)?;
     let alias = relation_alias(sql, slice.get(name_length..).unwrap_or_default())?;
-    Ok(Relation {
+    Ok(QueryRelation {
         model,
         dataset,
         alias,
+        origin: location(sql, slice.first().map_or(sql.len(), |token| token.start)),
     })
 }
 

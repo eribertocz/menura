@@ -3,11 +3,11 @@
 
 use std::ops::Range;
 
-use menura_expressions::{ExpressionCode, parse};
+use menura_expressions::{ExpressionCode, ExpressionErrorKind, parse};
 use menura_model::expression::Expression;
 
 use super::lexer::{Token, TokenKind};
-use super::position::{outside_subset, unparsable};
+use super::position::{invalid_expression, outside_subset, unparsable};
 use crate::error::ParseError;
 
 /// `AGG`, which `MEASURE` is written as before the E0F-9 parser reads it, padded to the length
@@ -33,7 +33,9 @@ pub(super) struct SqlExpression {
 ///
 /// # Errors
 ///
-/// `EQRY-05`: the text does not parse (E1-4.5), or uses a construct outside the subset.
+/// `EQRY-05` when the text does not parse (E1-4.5) or has a window function (E1-4
+/// "Statement"); `E0F-02` when it parses with a construct outside the E0F-2 subset, the code
+/// of the same expression in the wide-table form (E1-4.12).
 pub(super) fn parse_expression(
     sql: &str,
     tokens: &[Token],
@@ -50,8 +52,13 @@ pub(super) fn parse_expression(
         let offset = start + error.span().start;
         match error.code() {
             ExpressionCode::Unparsable => unparsable(sql, offset, &error.kind().to_string()),
+            ExpressionCode::OutsideSubset
+                if matches!(error.kind(), ExpressionErrorKind::WindowFunction) =>
+            {
+                outside_subset(sql, offset, "a window function")
+            }
             ExpressionCode::OutsideSubset => {
-                outside_subset(sql, offset, &format!("{}", error.kind()))
+                invalid_expression(sql, offset, &error.kind().to_string())
             }
         }
     })?;
