@@ -24,6 +24,16 @@ pub(crate) fn component_column(metric: usize, component: usize) -> ColumnName {
     ))
 }
 
+/// The column under which the `Lookup` of the context query `context` attaches the component
+/// `component` of its base, both from 0 (E4-8.7).
+pub(crate) fn context_component_column(context: usize, component: usize) -> ColumnName {
+    ColumnName::new(&format!(
+        "context_{}_component_{}",
+        context + 1,
+        component + 1
+    ))
+}
+
 /// The column of the value of the metric `metric`, from 0, computed below the `Project` of the
 /// inline metrics of the SQL form, which reads it.
 pub(crate) fn metric_value_column(metric: usize) -> ColumnName {

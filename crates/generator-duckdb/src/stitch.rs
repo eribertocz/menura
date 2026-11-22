@@ -104,7 +104,7 @@ fn first_name<'name>(
 
 /// The rows of the branch step `name`, each column of `branch` unchanged, with the presence
 /// column `presence`, TRUE on every row (E6-4.7).
-fn present_rows(branch: &PlanNode, name: &str, presence: &str) -> SelectBody {
+pub(crate) fn present_rows(branch: &PlanNode, name: &str, presence: &str) -> SelectBody {
     let mut items: Vec<String> = branch
         .schema()
         .columns()
@@ -140,7 +140,7 @@ fn check_output(
 }
 
 /// Whether `node` produces the column `name`.
-fn has_column(node: &PlanNode, name: &ColumnName) -> bool {
+pub(crate) fn has_column(node: &PlanNode, name: &ColumnName) -> bool {
     node.schema()
         .columns()
         .iter()
@@ -149,7 +149,7 @@ fn has_column(node: &PlanNode, name: &ColumnName) -> bool {
 
 /// The shortest `menura.present` followed by zero or more `.` that no column of any branch
 /// starts with, so that it never collides with a branch column (E6-4.12).
-fn presence_column(branches: &[PlanNode]) -> String {
+pub(crate) fn presence_column(branches: &[PlanNode]) -> String {
     let mut name = String::from("menura.present");
     while branches.iter().any(|branch| {
         branch

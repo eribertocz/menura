@@ -10,7 +10,7 @@ query:
     dimensions: [orders.region]
     metrics:
       - {metric: total_amount, alias: total_amount}
-      - {metric: amount_share, alias: amount_share}
+      - {metric: amount_to_date, alias: amount_to_date}
 expect:
   outcome: error
   error: E_NOT_YET_SUPPORTED

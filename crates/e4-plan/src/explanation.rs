@@ -1,6 +1,7 @@
 //! The decisions E4 records in the explanation (PLN-7.3), in the order of that table: each
-//! `Deduplicate` (E4-4.0e), each `left` join that can produce a NULL group (E4-4.1), then each
-//! propagated row policy (E4-6.5, E4-6.10).
+//! `Deduplicate` (E4-4.0e), each `left` join that can produce a NULL group (E4-4.1), each
+//! context query (E4-8.2), then each propagated row policy (E4-6.5, E4-6.10). The branches of
+//! the context queries follow those of the query (E4-8.8).
 
 use std::collections::BTreeSet;
 
@@ -12,6 +13,8 @@ use menura_representations::logical_plan::{Operation, PlanNode};
 use menura_representations::paths::{Branch, Branches, QueryElement};
 use menura_security::{AdmittedSecurityContext, policies_in_filter};
 
+use crate::PlanInputs;
+use crate::context::ContextQuery;
 use crate::error::PlanError;
 use crate::followed::PolicyGraph;
 use crate::metrics::planned_metrics;
@@ -31,13 +34,68 @@ pub fn explanation<'input>(
     security: &AdmittedSecurityContext,
     model: &'input InternalModel,
 ) -> Result<Vec<ExplanationEntry>, PlanError> {
+    let inputs = PlanInputs {
+        branches,
+        query,
+        contexts: &[],
+    };
+    explanation_with_contexts(plan, &inputs, security, model)
+}
+
+/// The entries of E4 for `plan`, the plan [`crate::build_plan_with_contexts`] built from
+/// `inputs` for the user of `security` over `model`.
+///
+/// # Errors
+///
+/// [`PlanError::Invariant`] for an input that [`crate::build_plan_with_contexts`] rejects the
+/// same way.
+pub fn explanation_with_contexts(
+    plan: &PlanNode,
+    inputs: &PlanInputs<'_>,
+    security: &AdmittedSecurityContext,
+    model: &InternalModel,
+) -> Result<Vec<ExplanationEntry>, PlanError> {
     let mut entries = deduplications(plan);
-    let dimensions = query.columns().dimensions().count();
-    for branch in branches.as_slice() {
+    let dimensions = inputs.query.columns().dimensions().count();
+    for branch in inputs.branches.as_slice() {
         entries.extend(null_groups(branch, dimensions));
     }
-    entries.extend(propagated_policies(branches, query, security, model)?);
+    for context in inputs.contexts {
+        let dimensions = context.context.query().columns().dimensions().count();
+        for branch in context.branches.as_slice() {
+            entries.extend(null_groups(branch, dimensions));
+        }
+    }
+    entries.extend(
+        inputs
+            .contexts
+            .iter()
+            .map(|context| context_query(context.context)),
+    );
+    entries.extend(propagated_policies(
+        inputs.branches,
+        inputs.query,
+        security,
+        model,
+    )?);
     Ok(entries)
+}
+
+/// The `E4-8.2` entry of `context`, at the first context metric that needs it; its reason
+/// names the modifier type and the base, never a value (PLN-7.3).
+fn context_query(context: &ContextQuery) -> ExplanationEntry {
+    ExplanationEntry {
+        code: "E4-8.2",
+        step: Step::E4,
+        subject: Subject::Metric(context.metric().clone()),
+        decision: "context query".to_owned(),
+        reason: format!(
+            "{} of {}: the base is evaluated in its own context query, attached to the result \
+             rows by a Lookup",
+            context.modifier_type(),
+            context.base().as_str()
+        ),
+    }
 }
 
 /// One `E4-4.0e` entry per `Deduplicate` of `plan`, in branch order (E3-4.3).

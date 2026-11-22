@@ -21,6 +21,7 @@ mod identifiers;
 mod instant;
 mod join;
 mod join_keys;
+mod lookup;
 mod output;
 mod parameters;
 mod period_range;

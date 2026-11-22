@@ -1,0 +1,100 @@
+version: "0.1.1"
+semantic_model:
+  - name: ctx_share
+    description: 'share_of_total context metrics (CTX-3.3 to CTX-3.5, E4-8): a base on one dataset, a derived base over two home datasets, a COUNT base, and two metrics that share one context query; analyst does not see void orders'
+    custom_extensions:
+      - vendor_name: COMMON
+        data: '{"namespace": "menura", "version": 1, "security_context": {"roles": ["admin", "analyst"], "attributes": []}}'
+    datasets:
+      - name: orders
+        source: shop.main.orders
+        primary_key: [order_id]
+        fields:
+          - name: order_id
+            expression: {dialects: [{dialect: ANSI_SQL, expression: order_id}]}
+          - name: customer_id
+            expression: {dialects: [{dialect: ANSI_SQL, expression: customer_id}]}
+          - name: status
+            expression: {dialects: [{dialect: ANSI_SQL, expression: status}]}
+          - name: amount
+            expression: {dialects: [{dialect: ANSI_SQL, expression: amount}]}
+        custom_extensions:
+          - vendor_name: COMMON
+            data: '{"namespace": "menura", "version": 1, "access": {"mode": "roles", "roles": ["admin", "analyst"]}, "row_access": [{"name": "not_void", "condition": "status <> ''void''", "exempt_roles": ["admin"]}]}'
+      - name: returns
+        source: shop.main.returns
+        primary_key: [return_id]
+        fields:
+          - name: return_id
+            expression: {dialects: [{dialect: ANSI_SQL, expression: return_id}]}
+          - name: customer_id
+            expression: {dialects: [{dialect: ANSI_SQL, expression: customer_id}]}
+          - name: refund
+            expression: {dialects: [{dialect: ANSI_SQL, expression: refund}]}
+        custom_extensions:
+          - vendor_name: COMMON
+            data: '{"namespace": "menura", "version": 1, "access": {"mode": "roles", "roles": ["admin", "analyst"]}}'
+      - name: customers
+        source: shop.main.customers
+        primary_key: [customer_id]
+        fields:
+          - name: customer_id
+            expression: {dialects: [{dialect: ANSI_SQL, expression: customer_id}]}
+          - name: region
+            expression: {dialects: [{dialect: ANSI_SQL, expression: region}]}
+        custom_extensions:
+          - vendor_name: COMMON
+            data: '{"namespace": "menura", "version": 1, "access": {"mode": "roles", "roles": ["admin", "analyst"]}}'
+    relationships:
+      - name: orders_customers
+        from: orders
+        to: customers
+        from_columns: [customer_id]
+        to_columns: [customer_id]
+      - name: returns_customers
+        from: returns
+        to: customers
+        from_columns: [customer_id]
+        to_columns: [customer_id]
+    metrics:
+      - name: sales
+        expression: {dialects: [{dialect: ANSI_SQL, expression: 'SUM(orders.amount)'}]}
+      - name: order_count
+        expression: {dialects: [{dialect: ANSI_SQL, expression: 'COUNT(orders.order_id)'}]}
+      - name: refunds
+        expression: {dialects: [{dialect: ANSI_SQL, expression: 'SUM(returns.refund)'}]}
+      - name: net_sales
+        expression: {dialects: [{dialect: ANSI_SQL, expression: 'AGG(sales) - AGG(refunds)'}]}
+        custom_extensions:
+          - vendor_name: COMMON
+            data: '{"namespace": "menura", "version": 1, "derived": {}}'
+      - name: sales_share_in_region
+        expression: {dialects: [{dialect: ANSI_SQL, expression: 'AGG(sales)'}]}
+        custom_extensions:
+          - vendor_name: COMMON
+            data: '{"namespace": "menura", "version": 1, "context": {"base": "sales", "modifier": {"type": "share_of_total", "remove": ["orders.status"]}}}'
+      - name: sales_share_in_region_too
+        expression: {dialects: [{dialect: ANSI_SQL, expression: 'AGG(sales)'}]}
+        custom_extensions:
+          - vendor_name: COMMON
+            data: '{"namespace": "menura", "version": 1, "context": {"base": "sales", "modifier": {"type": "share_of_total", "remove": ["orders.status", "orders.order_id"]}}}'
+      - name: sales_share_of_regions
+        expression: {dialects: [{dialect: ANSI_SQL, expression: 'AGG(sales)'}]}
+        custom_extensions:
+          - vendor_name: COMMON
+            data: '{"namespace": "menura", "version": 1, "context": {"base": "sales", "modifier": {"type": "share_of_total", "remove": ["customers.region"]}}}'
+      - name: sales_share_of_all
+        expression: {dialects: [{dialect: ANSI_SQL, expression: 'AGG(sales)'}]}
+        custom_extensions:
+          - vendor_name: COMMON
+            data: '{"namespace": "menura", "version": 1, "context": {"base": "sales", "modifier": {"type": "share_of_total", "remove": "all"}}}'
+      - name: order_count_share_of_all
+        expression: {dialects: [{dialect: ANSI_SQL, expression: 'AGG(order_count)'}]}
+        custom_extensions:
+          - vendor_name: COMMON
+            data: '{"namespace": "menura", "version": 1, "context": {"base": "order_count", "modifier": {"type": "share_of_total", "remove": "all"}}}'
+      - name: net_sales_share_of_regions
+        expression: {dialects: [{dialect: ANSI_SQL, expression: 'AGG(net_sales)'}]}
+        custom_extensions:
+          - vendor_name: COMMON
+            data: '{"namespace": "menura", "version": 1, "context": {"base": "net_sales", "modifier": {"type": "share_of_total", "remove": ["customers.region"]}}}'

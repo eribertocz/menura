@@ -1,0 +1,19 @@
+id: ctx-share-derived-base-001
+rules: [E4-8.1, E4-8.2, E4-8.7, CTX-3.5, E6-4.14]
+model: ctx-share
+security_context: analyst.json
+query:
+  contract: "menura.query"
+  contract_version: "1.1.0"
+  time_zone: "UTC"
+  query:
+    dimensions: ["customers.region"]
+    metrics:
+      - {"metric": "net_sales", "alias": "net_sales"}
+      - {"metric": "net_sales_share_of_regions", "alias": "net_sales_share_of_regions"}
+expect:
+  outcome: "plan"
+  sql: "ctx-share-derived-base-001.sql"
+  tolerance: 1e-12
+  row_order: "any"
+  rows: "ctx-share-derived-base-001.csv"

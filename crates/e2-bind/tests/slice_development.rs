@@ -6,9 +6,10 @@
 #[cfg(test)]
 mod support;
 
+use menura_contracts::types::common::Grain;
 use menura_e2_bind::{BindCode, BindDiagnostic};
 use menura_model::internal_model::{
-    ContextMetric, ContextModifier, DeclaredAdditivity, Metric, RemovedDimensions,
+    ContextMetric, ContextModifier, DeclaredAdditivity, FieldPath, Metric,
 };
 use menura_representations::query_tree::{QueryTree, QueryTreeParts};
 
@@ -51,7 +52,7 @@ fn context_over(metric: &mut Metric, base: &str) {
     read_through_agg(metric, base);
     metric.context = Some(ContextMetric {
         base: name(&base.to_uppercase()),
-        modifier: ContextModifier::ShareOfTotal(RemovedDimensions::All),
+        modifier: prior_period(),
     });
 }
 
@@ -83,7 +84,7 @@ fn e2_5_4a_a_context_metric_reading_its_base_is_a_context_metric_of_0_8_0() {
         cost.classification = Some(read);
         cost.context = Some(ContextMetric {
             base: name("REVENUE"),
-            modifier: ContextModifier::ShareOfTotal(RemovedDimensions::All),
+            modifier: prior_period(),
         });
     });
     let diagnostic = bind_diagnostic(&cost_by_region(), &model, ADMIN);
@@ -155,4 +156,16 @@ fn e2_5_4_metrics_that_read_each_other_are_visited_once_and_reported() {
     });
     let diagnostic = bind_diagnostic(&cost_by_region(), &model, ADMIN);
     assert_not_yet_supported(&diagnostic, "0.8.0", "context");
+}
+
+/// A `prior_period` modifier, which stays outside the slice until its own issue.
+fn prior_period() -> ContextModifier {
+    ContextModifier::PriorPeriod {
+        time_dimension: FieldPath {
+            dataset: name("ORDERS"),
+            field: name("ORDER_DATE"),
+        },
+        grain: Grain::Year,
+        offset: std::num::NonZeroU64::MIN,
+    }
 }

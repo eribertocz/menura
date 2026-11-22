@@ -336,7 +336,7 @@ mod tests {
         status_in_model("slice", case_text, divergences)
     }
 
-    /// Runs the query part of a case of the `e0-context` model, whose `billed_share` is a
+    /// Runs the query part of a case of the `e0-context` model, whose `billed_ytd` is a
     /// context metric, a capability outside the 0.7.0 slice (VS-1e).
     fn context_status(case_text: &str) -> CaseStatus {
         status_in_model("e0-context", case_text, &Divergences::default())
@@ -386,8 +386,8 @@ mod tests {
         )
     }
 
-    /// `billed_share` is a context metric, which is outside the 0.7.0 slice (VS-1e).
-    const OUTSIDE_THE_SLICE: &str = "{metrics: [billed, billed_share]}";
+    /// `billed_ytd` is a `period_to_date` context metric, which is outside the slice (VS-1e).
+    const OUTSIDE_THE_SLICE: &str = "{metrics: [billed, billed_ytd]}";
 
     const BY_REGION: &str = "{dimensions: [sales.region], metrics: [total_amount, total_quantity, \
                              sale_count]}";

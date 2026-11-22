@@ -53,6 +53,11 @@ pub(crate) fn input_mut(operation: &mut Operation, index: usize) -> Option<&mut 
             _ => snapshot_input_mut(&mut rule.over, index - 1),
         },
         Operation::Stitch { branches, .. } => branches.get_mut(index),
+        Operation::Lookup { result, value, .. } => match index {
+            0 => Some(result.as_mut()),
+            1 => Some(value.as_mut()),
+            _ => None,
+        },
         Operation::Filter { input, .. }
         | Operation::Deduplicate { input, .. }
         | Operation::Aggregate { input, .. }

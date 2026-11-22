@@ -7,7 +7,7 @@ use menura_representations::logical_plan::{
 use menura_representations::names::ColumnName;
 
 use crate::context::RewriteContext;
-use crate::plan_inputs::home_dataset;
+use crate::plan_inputs::{home_dataset, map_inputs};
 use crate::record::{NodePath, RewriteOutcome, RewriteRecord, RewriteRule, RewriteSubject};
 
 #[path = "merge_scans_rows.rs"]
@@ -65,9 +65,21 @@ fn rewrite_at(
                 rows,
             }
         }
+        Operation::Lookup { .. } => {
+            return map_inputs(&plan, |position, input| {
+                rewrite_at(input.clone(), child(&path, position), model, records)
+            });
+        }
         _ => return plan,
     };
     PlanNode::new(operation, schema, origin)
+}
+
+/// `path` followed by `position`: the path of an input of the node at `path`.
+fn child(path: &[usize], position: usize) -> Vec<usize> {
+    let mut child = path.to_vec();
+    child.push(position);
+    child
 }
 
 /// The `Stitch` node `stitch`, at `path`, with each branch merged into the first earlier

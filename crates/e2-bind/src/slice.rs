@@ -2,9 +2,11 @@
 //! of the compiler; no output of the compiler is checked here. The
 //! first element in query order that needs a context metric (0.8.0) is `E_NOT_YET_SUPPORTED`,
 //! located at that element (E2-5.4, VS-2). From 0.5.0, context metrics are the only capability
-//! outside the slice, and none belongs to the whole query (E2-5.4a).
+//! outside the slice, and none belongs to the whole query (E2-5.4a). `share_of_total` is
+//! implemented (issue #473); the `prior_period` and `period_to_date` modifiers stay outside the
+//! slice until their own issues.
 
-use menura_model::internal_model::{InternalModel, Metric};
+use menura_model::internal_model::{ContextModifier, InternalModel, Metric};
 
 use crate::authorized_query::ResolvedName;
 use crate::error::{BindCode, BindDiagnostic};
@@ -46,8 +48,12 @@ fn needs_context_metric(model: &InternalModel, target: &NamedTarget) -> bool {
     })
 }
 
+/// Whether `metric` is a context metric whose modifier is not implemented yet.
 fn is_context_metric(metric: &Metric) -> bool {
-    metric.context.is_some()
+    metric
+        .context
+        .as_ref()
+        .is_some_and(|context| !matches!(context.modifier, ContextModifier::ShareOfTotal(_)))
 }
 
 fn not_yet_supported(element: &NamedElement) -> BindDiagnostic {

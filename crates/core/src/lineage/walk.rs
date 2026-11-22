@@ -3,7 +3,8 @@
 use menura_model::expression::Expression;
 use menura_model::internal_model::NormalizedName;
 use menura_representations::logical_plan::{
-    AggregateComponent, JoinCondition, NamedExpression, Operation, PlanNode, StitchColumn,
+    AggregateComponent, JoinCondition, LookupColumn, NamedExpression, Operation, PlanNode,
+    StitchColumn,
 };
 use menura_representations::names::{ColumnName, ColumnPrefix};
 
@@ -59,6 +60,7 @@ impl Sources<'_> {
                     .collect::<Result<Vec<_>, _>>()?;
                 Ok(stitch(branches, keys, columns))
             }
+            Operation::Lookup { .. } => self.lookup(node),
             Operation::Population { .. } | Operation::Snapshot { .. } => self.semi_additive(node),
             Operation::Periods { .. } => Ok(reads_nothing(node)),
             Operation::PeriodRange { .. } | Operation::FullJoin { .. } => Err(InternalError::new(
@@ -66,6 +68,27 @@ impl Sources<'_> {
                 "a compiled plan holds an operation of the integrity checks",
             )),
         }
+    }
+
+    /// The lineage of the `Lookup` `node`.
+    fn lookup(&self, node: &PlanNode) -> Result<NodeLineage, InternalError> {
+        let Operation::Lookup {
+            result,
+            value,
+            columns,
+            ..
+        } = node.operation()
+        else {
+            return Err(InternalError::new(
+                "core",
+                "a lookup lineage over another node",
+            ));
+        };
+        Ok(lookup(
+            self.node(result, None)?,
+            self.node(value, None)?,
+            columns,
+        ))
     }
 
     /// The lineage of the `Join` `node`, whose left `Scan` columns are under `prefix`.
@@ -243,6 +266,40 @@ fn stitch(
             reads.absorb(nested);
         }
         lineage.branches.push(reads);
+    }
+    lineage
+}
+
+/// `Lookup(result, value)`: the columns of `result`, then each attached column from the
+/// context column it copies. The branches of the context query follow those of the result
+/// rows (E4-8.8), so the branches of `value` are numbered after those of `result` (PLN-4.8).
+fn lookup(result: NodeLineage, value: NodeLineage, columns: &[LookupColumn]) -> NodeLineage {
+    let mut lineage = with_branches(result);
+    let value = with_branches(value);
+    let offset = lineage.branches.len();
+    for column in columns {
+        let mut provenance = value.provenance_of([column.value.as_str()]);
+        provenance.branches = provenance
+            .branches
+            .iter()
+            .map(|branch| branch + offset)
+            .collect();
+        lineage
+            .columns
+            .insert(column.name.as_str().to_owned(), provenance);
+    }
+    lineage.branches.extend(value.branches);
+    lineage
+}
+
+/// `lineage` with its branches explicit: a plan part without a `Stitch` is its one branch,
+/// which reads what the part reads in every branch, and every column comes from it.
+fn with_branches(mut lineage: NodeLineage) -> NodeLineage {
+    if lineage.branches.is_empty() {
+        lineage.branches.push(std::mem::take(&mut lineage.shared));
+        for provenance in lineage.columns.values_mut() {
+            provenance.branches.insert(0);
+        }
     }
     lineage
 }

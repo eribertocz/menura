@@ -18,6 +18,7 @@ pub fn kind(node: &PlanNode) -> &'static str {
         Operation::Periods { .. } => "Periods",
         Operation::Snapshot { .. } => "Snapshot",
         Operation::Stitch { .. } => "Stitch",
+        Operation::Lookup { .. } => "Lookup",
         Operation::Project { .. } => "Project",
         Operation::Sort { .. } => "Sort",
         Operation::Limit { .. } => "Limit",
