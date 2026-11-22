@@ -17,7 +17,7 @@ use menura_model::internal_model::{
 use menura_representations::bound_query::{
     BoundDimension, BoundDimensionKind, BoundMetric, BoundMetricKind, BoundQuery, BoundQueryParts,
 };
-use menura_representations::paths::{Branch, Branches, ComponentKey, JoinTree};
+use menura_representations::paths::{Branch, BranchKind, Branches, ComponentKey, JoinTree};
 use support::{
     anyone, branches, build_plan, dimension, field_path, metric, metric_reference, metrics, model,
     model_with, name, orders, query,
@@ -43,6 +43,7 @@ fn violation(
 fn branch(home: &str, join_tree: JoinTree) -> Branch {
     Branch {
         home: name(home),
+        kind: BranchKind::Plain,
         components: vec![ComponentKey {
             metric: 0,
             component: 0,

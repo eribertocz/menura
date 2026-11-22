@@ -21,11 +21,27 @@ pub struct ComponentKey {
     pub component: usize,
 }
 
+/// Which components a branch holds (E3-4.1). The order of the variants is the order of
+/// branches with the same home dataset (E3-4.3).
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub enum BranchKind {
+    /// The components of the metrics that are not semi-additive, or none for a
+    /// dimension-only query.
+    Plain,
+    /// The components of one semi-additive metric.
+    SemiAdditive {
+        /// The normalized name of the metric.
+        metric: NormalizedName,
+    },
+}
+
 /// The components evaluated over one home dataset, with the joins they need (E3-4.1).
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Branch {
     /// The home dataset, or the anchor of a dimension-only query (E3-5.3).
     pub home: NormalizedName,
+    /// Which components it holds.
+    pub kind: BranchKind,
     /// The components whose home dataset it is; empty for a dimension-only query (E3-5.3).
     pub components: Vec<ComponentKey>,
     /// The union of the paths to every dimension and filter dataset, as join instances, with
@@ -33,20 +49,22 @@ pub struct Branch {
     pub join_tree: JoinTree,
 }
 
-/// The branches of a query, ordered by the normalized name of their home dataset (E3-4.3).
+/// The branches of a query, ordered by the normalized name of their home dataset, then, for
+/// the same home dataset, the plain branch first and each semi-additive branch by the
+/// normalized name of its metric (E3-4.3).
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Branches(Vec<Branch>);
 
 impl Branches {
-    /// The branches `branches`, ordered by home dataset (E3-4.3). Returns `None` when two of
-    /// them share a home dataset: such components form one branch (E3-4.1).
+    /// The branches `branches`, in the order of E3-4.3. Returns `None` when two of them share
+    /// a home dataset and a kind: such components form one branch (E3-4.1).
     #[must_use]
     pub fn new(mut branches: Vec<Branch>) -> Option<Self> {
-        branches.sort_by(|left, right| left.home.cmp(&right.home));
-        let homes_differ = branches
-            .windows(2)
-            .all(|pair| matches!(pair, [left, right] if left.home != right.home));
-        homes_differ.then_some(Self(branches))
+        branches.sort_by(|left, right| (&left.home, &left.kind).cmp(&(&right.home, &right.kind)));
+        let branches_differ = branches.windows(2).all(|pair| {
+            matches!(pair, [left, right] if (&left.home, &left.kind) != (&right.home, &right.kind))
+        });
+        branches_differ.then_some(Self(branches))
     }
 
     /// The single branch of a dimension-only query: the anchor as home dataset and no
@@ -55,12 +73,13 @@ impl Branches {
     pub fn dimension_only(anchor: NormalizedName, join_tree: JoinTree) -> Self {
         Self(vec![Branch {
             home: anchor,
+            kind: BranchKind::Plain,
             components: Vec::new(),
             join_tree,
         }])
     }
 
-    /// The branches, ordered by home dataset.
+    /// The branches, in the order of E3-4.3.
     #[must_use]
     pub fn as_slice(&self) -> &[Branch] {
         &self.0

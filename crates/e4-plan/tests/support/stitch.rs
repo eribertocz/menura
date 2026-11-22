@@ -12,7 +12,7 @@ use menura_representations::bound_query::{BoundDimension, BoundMetric, BoundQuer
 use menura_representations::logical_plan::{Operation, PlanNode, StitchColumn};
 use menura_representations::names::ColumnName;
 use menura_representations::paths::{
-    Branch, Branches, ComponentKey, ElementPath, JoinStep, JoinTree, QueryElement,
+    Branch, BranchKind, Branches, ComponentKey, ElementPath, JoinStep, JoinTree, QueryElement,
 };
 
 use super::joins::joined_dimension;
@@ -222,6 +222,7 @@ fn region_tree(home: &str, with_dimension: bool) -> JoinTree {
 pub fn branch(home: &str, components: &[(usize, usize)], with_dimension: bool) -> Branch {
     Branch {
         home: name(home),
+        kind: BranchKind::Plain,
         components: components
             .iter()
             .map(|(metric, component)| ComponentKey {

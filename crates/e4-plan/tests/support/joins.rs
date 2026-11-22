@@ -8,7 +8,7 @@ use menura_model::internal_model::{
 use menura_representations::bound_query::{BoundDimension, BoundDimensionKind, BoundFilter};
 use menura_representations::names::OutputName;
 use menura_representations::paths::{
-    Branch, Branches, ComponentKey, ElementPath, JoinStep, JoinTree, QueryElement,
+    Branch, BranchKind, Branches, ComponentKey, ElementPath, JoinStep, JoinTree, QueryElement,
 };
 
 use super::{at, field, located, metrics, model_with, name, orders, tree};
@@ -189,6 +189,7 @@ pub fn joined_branches(components: usize, paths: Vec<ElementPath>) -> Branches {
     }
     Branches::new(vec![Branch {
         home: name("ORDERS"),
+        kind: BranchKind::Plain,
         components: (0..components)
             .map(|component| ComponentKey {
                 metric: 0,
