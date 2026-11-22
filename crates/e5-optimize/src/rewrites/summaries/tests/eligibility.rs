@@ -5,9 +5,13 @@ use menura_model::internal_model::{
     Additivity, Component, DeclaredAdditivity, DecomposabilityClass, Descriptions, Metric,
     MetricClassification, ModelParts, NormalizedName, Summary, SummaryDimension,
 };
-use menura_representations::bound_query::BoundQuery;
+use menura_representations::bound_query::{
+    BoundMetric, BoundMetricKind, BoundQuery, BoundQueryParts, MetricPath,
+};
+use menura_representations::columns::Columns;
 use menura_representations::logical_plan::{PlanNode, Recomposition};
 use menura_representations::names::ColumnName;
+use menura_representations::names::OutputName;
 
 use super::expressions::{binary, call, cast, column, equals, qualified, truncated};
 use super::{
@@ -192,9 +196,9 @@ fn sum_3_2_a_remaining_deduplicate_is_excluded() {
     );
 }
 
-#[test]
-fn sum_3_2_a_component_of_a_non_additive_metric_is_excluded() {
-    let metric = Metric {
+/// The non-additive metric `AMOUNT_SNAPSHOT`, whose component is `SUM(orders.amount)`.
+fn non_additive() -> Metric {
+    Metric {
         name: NormalizedName::new("AMOUNT_SNAPSHOT"),
         expression: None,
         typed: None,
@@ -216,14 +220,46 @@ fn sum_3_2_a_component_of_a_non_additive_metric_is_excluded() {
         descriptions: Descriptions::default(),
         query_errors: Vec::new(),
         location: location(),
-    };
-    let eligibility = checked_with(
+    }
+}
+
+/// The eligibility of the plan by region and month when the model has `non_additive`, for a
+/// query that names it when `named` holds.
+fn with_non_additive(named: bool) -> Option<SummaryCondition> {
+    let mut plan_query = query();
+    if named {
+        let metric = BoundMetric {
+            kind: BoundMetricKind::Reference(MetricPath::SemanticModel(NormalizedName::new(
+                "AMOUNT_SNAPSHOT",
+            ))),
+            output_name: OutputName::new("AMOUNT_SNAPSHOT"),
+            origin: super::at(),
+        };
+        plan_query = BoundQuery::new(
+            Columns::dimensions_then_metrics(Vec::new(), vec![metric]),
+            plan_query.time().clone(),
+            BoundQueryParts {
+                subgraph: plan_query.subgraph().clone(),
+                ..BoundQueryParts::default()
+            },
+        );
+    }
+    failed(&checked_with(
         &by_region_and_month(visible_orders()),
         &monthly(),
-        |parts| parts.metrics.push(metric),
-        &query(),
-    );
-    assert_eq!(failed(&eligibility), Some(SummaryCondition::Exclusions));
+        |parts| parts.metrics.push(non_additive()),
+        &plan_query,
+    ))
+}
+
+#[test]
+fn sum_3_2_a_component_of_a_non_additive_metric_of_the_query_is_excluded() {
+    assert_eq!(with_non_additive(true), Some(SummaryCondition::Exclusions));
+}
+
+#[test]
+fn sum_3_2_a_non_additive_metric_outside_the_query_excludes_nothing() {
+    assert_eq!(with_non_additive(false), None);
 }
 
 #[test]

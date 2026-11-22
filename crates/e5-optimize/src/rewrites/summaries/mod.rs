@@ -76,6 +76,14 @@ mod reads;
         reason = "called by the summary selection of E5-4 (#397), which is not written yet"
     )
 )]
+mod restricted;
+#[cfg_attr(
+    not(test),
+    expect(
+        dead_code,
+        reason = "called by the summary selection of E5-4 (#397), which is not written yet"
+    )
+)]
 pub(crate) mod summary_branch;
 
 #[cfg(test)]

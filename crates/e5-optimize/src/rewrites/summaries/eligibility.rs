@@ -80,7 +80,7 @@ fn summary_use(
         return Err(SummaryCondition::Equivalence);
     }
     let recomposed = recompose(shape.components, summary).ok_or(SummaryCondition::Equivalence)?;
-    if excluded(&shape, context.model, summary) {
+    if excluded(&shape, context.model, context.query, summary) {
         return Err(SummaryCondition::Exclusions);
     }
     let base = context

@@ -6,63 +6,32 @@ use menura_model::expression::{
     AggregateCall, BinaryOperator, Expression, Literal, Reference, SimpleAggregate,
 };
 use menura_model::internal_model::{
-    Additivity, Dataset, Field, InternalModel, Metric, NormalizedName, Summary, ValueType,
+    Dataset, Field, InternalModel, NormalizedName, Summary, ValueType,
 };
 use menura_representations::logical_plan::{AggregateComponent, OutputSchema};
 
+use menura_representations::bound_query::BoundQuery;
+
 use super::branch::BranchShape;
-use super::equivalence::{ScanAggregate, over_scan};
+use super::equivalence::over_scan;
 use super::expression_map::{any_node, columns_read, field_name, references};
+use super::restricted::reads_restricted_metric;
 
 /// Whether the branch is excluded by SUM-3.2: it still has a `Deduplicate`, one of its
-/// components is a component of a non-additive or semi-additive metric of its home dataset,
+/// components is read by a non-additive or semi-additive metric of the query,
 /// or one of its components aggregates a float.
-pub(super) fn excluded(shape: &BranchShape<'_>, model: &InternalModel, summary: &Summary) -> bool {
+pub(super) fn excluded(
+    shape: &BranchShape<'_>,
+    model: &InternalModel,
+    query: &BoundQuery,
+    summary: &Summary,
+) -> bool {
     let summary_dataset = model.dataset(&summary.dataset);
     shape.deduplicate
-        || reads_restricted_metric(shape, model)
+        || reads_restricted_metric(shape, model, query)
         || shape.components.iter().any(|component| {
             aggregates_float(component, shape.scan.schema(), summary, summary_dataset)
         })
-}
-
-/// Whether a component of the branch is, after normalization, a component of a non-additive
-/// or semi-additive metric of its home dataset. A component shared with an additive metric is
-/// excluded too: when in doubt, the base is used (SUM-1).
-fn reads_restricted_metric(shape: &BranchShape<'_>, model: &InternalModel) -> bool {
-    let parts = model.parts();
-    let metrics = parts.metrics.iter().chain(
-        parts
-            .datasets
-            .iter()
-            .flat_map(|dataset| dataset.metrics.iter()),
-    );
-    let restricted: Vec<ScanAggregate> = metrics
-        .filter(|metric| is_restricted(metric))
-        .filter_map(|metric| metric.classification.as_ref())
-        .flat_map(|classification| classification.components.iter())
-        .filter(|component| &component.home_dataset == shape.home)
-        .filter_map(|component| {
-            over_scan(&Expression::Aggregate {
-                call: component.call.clone(),
-                filter: component.filter.clone().map(Box::new),
-            })
-        })
-        .collect();
-    shape.components.iter().any(|component| {
-        restricted
-            .iter()
-            .any(|(call, filter)| call == &component.call && filter == &component.filter)
-    })
-}
-
-/// Whether `metric` is declared or deduced non-additive or semi-additive (E4-7.9, ADD-3).
-fn is_restricted(metric: &Metric) -> bool {
-    metric.declared_additivity.is_some()
-        || metric
-            .classification
-            .as_ref()
-            .is_some_and(|classification| classification.additivity != Additivity::Additive)
 }
 
 /// Whether the argument of `component` may be a float: a recomposed float sum can differ
