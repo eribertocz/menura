@@ -13,8 +13,8 @@ wide_table/a15_unconnected_filter_false:
   reason: not implemented
   fixed_in: "0.7.0"
 wide_table/e08_window_in_filter:
-  reason: not implemented
-  fixed_in: "0.7.0"
+  reason: window functions are outside the expression language until 1.2.0 (spec/07-roadmap.md), so the filter is rejected as E0F-02
+  fixed_in: "1.2.0"
 query/a04_having_on_unselected_measure:
   reason: not implemented
   fixed_in: "1.x"
