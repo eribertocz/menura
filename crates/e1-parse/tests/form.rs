@@ -1,4 +1,4 @@
-//! E1-3.2 filter text, VS-2 SQL form and E2-5 rows 1 and 2: the checks after the JSON Schema.
+//! E1-3.2 filter text, VS-1c SQL form and E2-5 rows 1 and 2: the checks after the JSON Schema.
 
 // `cfg(test)` marks the helpers as test code, where `expect` and `panic` are allowed
 // (clippy.toml).
@@ -85,27 +85,25 @@ fn e1_3_2_filter_is_kept_as_a_parsed_expression() {
 }
 
 #[test]
-fn vs_2_sql_form_is_not_yet_supported() {
-    let error = rejected(&sql_query(
-        "SELECT orders.region, AGG(revenue) FROM m.orders GROUP BY 1",
+fn vs_1c_sql_form_is_parsed_into_the_query_tree() {
+    let parsed = accepted(&sql_query(
+        "SELECT orders.region, AGG(revenue) AS revenue FROM m.orders GROUP BY 1",
     ));
-    assert_eq!(error.code, ParseErrorCode::NotYetSupported);
-    assert!(error.message.contains("SQL form"), "{}", error.message);
-    assert!(error.message.contains("0.5.0"), "{}", error.message);
+    assert_eq!(parsed.tree.columns().iter().count(), 2);
 }
 
 #[test]
-fn vs_2_sql_form_with_an_unsupported_construct_is_still_not_yet_supported() {
-    let error = rejected(&sql_query(
-        "WITH t AS (SELECT 1) SELECT * FROM t JOIN u ON TRUE",
-    ));
-    assert_eq!(error.code, ParseErrorCode::NotYetSupported);
+fn vs_1c_sql_form_with_a_construct_outside_the_subset_is_eqry_05() {
+    assert_rejected(
+        &sql_query("WITH t AS (SELECT 1) SELECT * FROM t JOIN u ON TRUE"),
+        ParseErrorCode::Eqry05,
+        "/sql",
+    );
 }
 
 #[test]
-fn vs_2_sql_form_without_dimensions_or_metrics_is_not_yet_supported() {
-    let error = rejected(&sql_query("SELECT 1"));
-    assert_eq!(error.code, ParseErrorCode::NotYetSupported);
+fn vs_1c_sql_form_without_an_agg_item_is_eqry_05() {
+    assert_rejected(&sql_query("SELECT 1"), ParseErrorCode::Eqry05, "/sql");
 }
 
 #[test]
