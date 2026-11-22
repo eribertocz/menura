@@ -41,5 +41,6 @@ pub(crate) fn recomposed(
             argument: Box::new(column_reference(component.name.as_str())?),
         },
         filter: None,
+        recomposition: None,
     })
 }

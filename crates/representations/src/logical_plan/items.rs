@@ -54,8 +54,31 @@ pub struct AggregateComponent {
     pub name: ColumnName,
     /// The aggregate call.
     pub call: AggregateCall,
-    /// Its `FILTER (WHERE …)` condition, when it has one.
+    /// Its `FILTER (WHERE …)` condition, when it has one. `None` on a recomposed component,
+    /// whose filter is part of the summary measure.
     pub filter: Option<Expression>,
+    /// How `call`, over a summary measure, recomposes the base component (SUM-3.1, E6-4.15);
+    /// `None` for a component over base rows.
+    pub recomposition: Option<Recomposition>,
+}
+
+/// How a component over a summary recomposes its base component (SUM-3.1). The recomposed
+/// value has the result type of the base component (SUM-3.8).
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum Recomposition {
+    /// `SUM(x)`: `call` is `SUM(s)` over the summary measure `s`.
+    Sum,
+    /// `COUNT(x)`: `call` is `SUM(c)` over the summary measure `c`, and the value over no rows
+    /// is `0`.
+    Count,
+    /// `MIN(x)` or `MAX(x)`: `call` is `MIN(m)` or `MAX(m)` over the summary measure `m`.
+    MinMax,
+    /// `AVG(x)`: `call` is `SUM(s)`, divided by the recomposed count of the summary column
+    /// `count`, the measure `COUNT(x)` of the same argument and filter.
+    Average {
+        /// The summary column of the measure `COUNT(x)`.
+        count: ColumnName,
+    },
 }
 
 /// A component column of a `Stitch` node: the branch that computes it and its value for a

@@ -158,7 +158,8 @@ impl<'input> StepWriter<'input> {
         })
     }
 
-    /// Keys, then components cast to their fixed result type (E6-4.5), grouped by the keys.
+    /// Keys, then components cast to their fixed result type (E6-4.5), a recomposed one to the
+    /// result type of its base component (E6-4.15), grouped by the keys.
     fn aggregate(
         &mut self,
         node: &'input PlanNode,
@@ -175,9 +176,13 @@ impl<'input> StepWriter<'input> {
             items.push(format!("{value} AS {}", quote(key.name.as_str())));
         }
         for component in components {
-            let call = self
-                .writer(node, columns)
-                .aggregate(&component.call, component.filter.as_ref())?;
+            let mut writer = self.writer(node, columns);
+            let call = match &component.recomposition {
+                Some(recomposition) => {
+                    writer.recomposed(&component.call, component.filter.as_ref(), recomposition)?
+                }
+                None => writer.aggregate(&component.call, component.filter.as_ref())?,
+            };
             let result_type = column_type(node, component.name.as_str())?;
             items.push(format!(
                 "CAST({call} AS {result_type}) AS {}",

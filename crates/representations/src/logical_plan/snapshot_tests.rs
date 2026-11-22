@@ -70,6 +70,7 @@ fn rule(over: SnapshotOver, aggregation: SnapshotAggregation) -> SnapshotRule {
                 argument: Box::new(field("debt", "balance")),
             },
             filter: None,
+            recomposition: None,
         }],
         aggregation,
         nulls: NullHandling::Keep,
