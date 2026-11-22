@@ -28,6 +28,7 @@ lowering, with row policies, additivity rules and context modifiers applied.
 | E4-3.10 | `Limit(input, n)` | Limit |
 | E4-3.12 | `Population(dataset, population, grain, periods)` | Output the expected (entity, period) pairs of `population` (POP-3) at `grain` over `periods`, the query's unit of periods (ADD-4.7). It reads V(D) of `dataset` (E4-6.5, E2-4.9). |
 | E4-3.13 | `Snapshot(input, expected, rule)` | Reduce the rows of `input` to one value per (result group, entity) under the semi-additive `rule` (ADD-3.2, E4-7), `expected` being the output of a `Population` |
+| E4-3.14 | `Periods(from, to, grain)` | One row per period start at `grain`, from the period of `from` to the period of `to`, both included, truncated as POP-3.5 states; the unit of periods of a semi-additive branch with a `date_range` on `over` (E4-7.6) |
 
 - **E4-3.11** Every node carries its output schema (names, logical types, nullability) and its origin. Column names and the order of the inputs of a multi-node plan follow E6-4.12.
 
