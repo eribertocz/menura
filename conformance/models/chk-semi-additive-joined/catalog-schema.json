@@ -1,0 +1,74 @@
+{
+  "contract": "menura.catalog_schema",
+  "contract_version": "1.1.0",
+  "document_id": {
+    "origin": "conformance:chk-semi-additive-joined",
+    "snapshot": "chk-semi-additive-joined"
+  },
+  "engine": {
+    "name": "duckdb",
+    "version": "2.0.0"
+  },
+  "relations": [
+    {
+      "source": "shop.main.accounts",
+      "columns": [
+        {
+          "name": "account_id",
+          "logical_type": {
+            "kind": "integer",
+            "bits": 32,
+            "signed": true
+          },
+          "physical_type": "INTEGER",
+          "nullable": false
+        },
+        {
+          "name": "customer_id",
+          "logical_type": {
+            "kind": "integer",
+            "bits": 32,
+            "signed": true
+          },
+          "physical_type": "INTEGER",
+          "nullable": true
+        }
+      ]
+    },
+    {
+      "source": "shop.main.balances",
+      "columns": [
+        {
+          "name": "account_id",
+          "logical_type": {
+            "kind": "integer",
+            "bits": 32,
+            "signed": true
+          },
+          "physical_type": "INTEGER",
+          "nullable": true
+        },
+        {
+          "name": "snapshot",
+          "logical_type": {
+            "kind": "integer",
+            "bits": 32,
+            "signed": true
+          },
+          "physical_type": "INTEGER",
+          "nullable": true
+        },
+        {
+          "name": "balance",
+          "logical_type": {
+            "kind": "integer",
+            "bits": 32,
+            "signed": true
+          },
+          "physical_type": "INTEGER",
+          "nullable": false
+        }
+      ]
+    }
+  ]
+}

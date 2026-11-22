@@ -1,0 +1,6 @@
+id: chk-semi-additive-joined-001
+rules: [CHK-6.5a]
+model: chk-semi-additive-joined
+expect:
+  outcome: "integrity_checks"
+  document: "chk-semi-additive-joined-001.document.json"
