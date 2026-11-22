@@ -114,6 +114,32 @@ fn pop_5_chk_6_3_validity_returns_invalid_intervals_and_each_overlapping_row() {
 }
 
 #[test]
+fn chk_6_3_equal_rows_among_many_rows_are_each_an_overlap_and_no_row_overlaps_itself() {
+    let document = document();
+    let connection = database();
+    connection
+        .execute_batch(
+            "DELETE FROM shop.main.memberships;
+             INSERT INTO shop.main.memberships
+               SELECT i, DATE '2026-01-01', DATE '2026-01-31' FROM range(10, 300010) AS t(i);
+             INSERT INTO shop.main.memberships VALUES
+               (6, DATE '2026-02-01', NULL),
+               (6, DATE '2026-02-01', NULL),
+               (6, DATE '2026-02-01', NULL),
+               (7, DATE '2026-02-01', DATE '2026-02-01');",
+        )
+        .unwrap();
+    assert_eq!(
+        violations(&connection, &document, "population:MEMBERS", "UTC"),
+        [
+            row(&[Some("6"), Some("2026-02-01"), None, Some("overlap")]),
+            row(&[Some("6"), Some("2026-02-01"), None, Some("overlap")]),
+            row(&[Some("6"), Some("2026-02-01"), None, Some("overlap")]),
+        ]
+    );
+}
+
+#[test]
 fn chk_7_3_validity_reads_days_in_the_bound_time_zone() {
     let document = document();
     let connection = database();

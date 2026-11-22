@@ -240,3 +240,14 @@ fn chk_6_5_a_metric_reading_over_or_entity_from_a_reached_dataset_has_no_check()
         ]
     );
 }
+
+#[test]
+fn chk_6_3_rows_are_numbered_in_the_order_of_every_scanned_column() {
+    let sql = check("population:MEMBERS").sql;
+    assert!(
+        sql.contains(
+            "row_number() OVER (ORDER BY \"CUSTOMER_ID\", \"VALID_FROM\", \"VALID_TO\") AS \"menura.row\""
+        ),
+        "{sql}"
+    );
+}
