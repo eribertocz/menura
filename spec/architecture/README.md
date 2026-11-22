@@ -102,10 +102,14 @@ One core, written in Rust (reference implementation). Every other form is a thin
 |---|---|
 | Rust crate | Native embedding |
 | Python package | Embedding in Python hosts |
-| CLI | `validate`, `compile`, `explain`, `describe`, `integrity-checks`, `migrate` |
+| CLI | `validate`, `compile`, `explain`, `describe`, `integrity-checks`, `migrate`, `diff` |
+| MCP server (`menura-mcp`, from 0.9.0) | One MCP tool per public function and per CLI command, for modelers and developers (ARC-6.1) |
 | HTTP service (optional, after the MVP) | Same JSON contracts, for remote hosts. A Rust wrapper built on `axum` |
 
 The public functions are those of section 3.5.
+
+- **ARC-6.1** `menura-mcp` is a crate of this repository, a wrapper like `cli`, released with every Menura version from 0.9.0. It speaks MCP over standard input and output only, opens no network connection and has no logic of its own. Each public function of section 3.5 and each CLI command has exactly one equivalent MCP tool, which takes the same inputs, applies the same validations and returns the same documents, errors and warnings. Like `cli`, it is exempt from A2 only for standard input and output.
+- **ARC-6.2** **Audience boundary.** `menura-mcp` and the CLI serve modelers and developers (authoring), and may show the whole compiled plan, SQL, parameters and policy conditions included. End users and their agents never call Menura directly. They query through the platform's semantic service (Accipiter, an external module), which shows them the explanation without SQL, parameters or policy conditions. Menura's contracts give that service what it needs, and the boundary is enforced by the service and by deployment, not by the core (P2).
 
 ## 3.7 Integration
 

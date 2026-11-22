@@ -189,15 +189,17 @@ Find a rule ID or a section here, then open only that file at that line.
 | [architecture/README.md](architecture/README.md#L94) | 94 | rule | ARC-5.4 |
 | [architecture/README.md](architecture/README.md#L95) | 95 | rule | ARC-5.5 |
 | [architecture/README.md](architecture/README.md#L97) | 97 | section | 3.6 Delivery forms |
-| [architecture/README.md](architecture/README.md#L110) | 110 | section | 3.7 Integration |
-| [architecture/README.md](architecture/README.md#L118) | 118 | section | 3.8 Boundary enforcement (from the first commit) |
-| [architecture/README.md](architecture/README.md#L125) | 125 | rule | A1 |
-| [architecture/README.md](architecture/README.md#L126) | 126 | rule | A2 |
-| [architecture/README.md](architecture/README.md#L127) | 127 | rule | A3 |
-| [architecture/README.md](architecture/README.md#L128) | 128 | rule | A4 |
-| [architecture/README.md](architecture/README.md#L129) | 129 | rule | A5 |
-| [architecture/README.md](architecture/README.md#L130) | 130 | rule | A6 |
-| [architecture/README.md](architecture/README.md#L135) | 135 | section | 3.9 Lineage and audit |
+| [architecture/README.md](architecture/README.md#L111) | 111 | rule | ARC-6.1 |
+| [architecture/README.md](architecture/README.md#L112) | 112 | rule | ARC-6.2 |
+| [architecture/README.md](architecture/README.md#L114) | 114 | section | 3.7 Integration |
+| [architecture/README.md](architecture/README.md#L122) | 122 | section | 3.8 Boundary enforcement (from the first commit) |
+| [architecture/README.md](architecture/README.md#L129) | 129 | rule | A1 |
+| [architecture/README.md](architecture/README.md#L130) | 130 | rule | A2 |
+| [architecture/README.md](architecture/README.md#L131) | 131 | rule | A3 |
+| [architecture/README.md](architecture/README.md#L132) | 132 | rule | A4 |
+| [architecture/README.md](architecture/README.md#L133) | 133 | rule | A5 |
+| [architecture/README.md](architecture/README.md#L134) | 134 | rule | A6 |
+| [architecture/README.md](architecture/README.md#L139) | 139 | section | 3.9 Lineage and audit |
 | [contracts/README.md](contracts/README.md#L1) | 1 | section | Contracts |
 | [contracts/README.md](contracts/README.md#L19) | 19 | section | Public contracts |
 | [contracts/README.md](contracts/README.md#L21) | 21 | rule | CON-0.1 |
@@ -368,11 +370,17 @@ Find a rule ID or a section here, then open only that file at that line.
 | [decisions/0004-strategic-direction.md](decisions/0004-strategic-direction.md#L46) | 46 | section | Decision |
 | [decisions/0004-strategic-direction.md](decisions/0004-strategic-direction.md#L78) | 78 | section | Consequences |
 | [decisions/0004-strategic-direction.md](decisions/0004-strategic-direction.md#L88) | 88 | section | Rules changed |
+| [decisions/0004-strategic-direction.md](decisions/0004-strategic-direction.md#L100) | 100 | section | Amendment |
 | [decisions/0005-summary-evidence-and-e5.md](decisions/0005-summary-evidence-and-e5.md#L1) | 1 | section | 0005 Summary evidence, build time zone and the E5 audit |
 | [decisions/0005-summary-evidence-and-e5.md](decisions/0005-summary-evidence-and-e5.md#L3) | 3 | section | Context |
 | [decisions/0005-summary-evidence-and-e5.md](decisions/0005-summary-evidence-and-e5.md#L11) | 11 | section | Decision |
 | [decisions/0005-summary-evidence-and-e5.md](decisions/0005-summary-evidence-and-e5.md#L30) | 30 | section | Consequences |
 | [decisions/0005-summary-evidence-and-e5.md](decisions/0005-summary-evidence-and-e5.md#L35) | 35 | section | Rules changed |
+| [decisions/0007-agent-channels-and-dependencies.md](decisions/0007-agent-channels-and-dependencies.md#L1) | 1 | section | 0007 Agent channels, audience boundary and model dependencies |
+| [decisions/0007-agent-channels-and-dependencies.md](decisions/0007-agent-channels-and-dependencies.md#L3) | 3 | section | Context |
+| [decisions/0007-agent-channels-and-dependencies.md](decisions/0007-agent-channels-and-dependencies.md#L7) | 7 | section | Decision |
+| [decisions/0007-agent-channels-and-dependencies.md](decisions/0007-agent-channels-and-dependencies.md#L17) | 17 | section | Consequences |
+| [decisions/0007-agent-channels-and-dependencies.md](decisions/0007-agent-channels-and-dependencies.md#L21) | 21 | section | Rules changed |
 | [decisions/README.md](decisions/README.md#L1) | 1 | section | Decision records |
 | [extensions/README.md](extensions/README.md#L1) | 1 | section | Extensions |
 | [extensions/README.md](extensions/README.md#L18) | 18 | section | EXT-1 Runtime failure policies |
