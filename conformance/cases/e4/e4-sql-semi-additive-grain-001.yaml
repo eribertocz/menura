@@ -1,0 +1,14 @@
+id: e4-sql-semi-additive-grain-001
+rules: [E4-7.8, ADD-4.7]
+model: next-semi-additive
+security_context: analyst.json
+oracle: "e4-sql-semi-additive-grain-001.oracle.sql"
+query:
+  contract: "menura.query"
+  contract_version: "1.1.0"
+  time_zone: "UTC"
+  sql: "SELECT DATE_TRUNC('year', period) AS period_year, AGG(last_global) AS balance FROM next_semi_additive.balances GROUP BY ALL ORDER BY period_year"
+expect:
+  outcome: "plan"
+  row_order: "exact"
+  rows: "e4-sql-semi-additive-grain-001.csv"

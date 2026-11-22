@@ -1,5 +1,5 @@
-//! The E1 stage function: envelope, JSON Schema, filter text, SQL form, empty query, tree, in
-//! the order of E2-5 rows 0b to 2.
+//! The E1 stage function: envelope, JSON Schema, then the tree of the SQL form, or the filter
+//! text, empty query and tree of the wide-table form, in the order of E2-5 rows 0b to 2.
 
 use menura_contracts::types::query::{QueryDocument, QueryForm, WideTableQuery};
 use menura_contracts::{IncomingContract, decode};
@@ -9,8 +9,9 @@ use menura_representations::time::{QueryTime, TimeZoneName};
 use crate::envelope::check_envelope;
 use crate::error::{ParseError, ParseErrorCode, ParseWarning};
 use crate::filters::parse_filters;
-use crate::pointer::{QUERY, SQL};
+use crate::pointer::QUERY;
 use crate::reference_time::read_reference_time;
+use crate::sql::sql_tree;
 use crate::time_zone::local_date;
 use crate::tree::wide_table_tree;
 use crate::warnings::former_name_warnings;
@@ -41,10 +42,10 @@ pub struct ParsedQuery {
 ///
 /// The first error, in this order (E2-5 rows 0b to 2): not JSON (`E_INVALID_QUERY`), `EQRY-08`,
 /// `EQRY-01`, `EQRY-02`, `EQRY-06`, the JSON Schema with the range of `reference_time`
-/// (`E_INVALID_QUERY`, QRY-2), the filter text
-/// (`E0F-01`, `E0F-02`), the SQL form (`E_NOT_YET_SUPPORTED`, VS-2), then
-/// `E_EMPTY_AGGREGATION_QUERY`. An error after the JSON Schema carries the `WQRY-01` warnings
-/// of the query (E1-2.4), which E1 reports for every query that passes the schema.
+/// (`E_INVALID_QUERY`, QRY-2), then the filter text (`E0F-01`, `E0F-02`) and
+/// `E_EMPTY_AGGREGATION_QUERY` for the wide-table form, or the SQL text (`EQRY-05`, `E0F-02`,
+/// `EQRY-13`, E1-4.11) for the SQL form. An error after the JSON Schema carries the `WQRY-01`
+/// warnings of the query (E1-2.4), which E1 reports for every query that passes the schema.
 pub fn parse_query(text: &str) -> Result<ParsedQuery, ParseError> {
     let contract = IncomingContract::Query;
     let document = contract.parse_json(text)?;
@@ -59,12 +60,12 @@ pub fn parse_query(text: &str) -> Result<ParsedQuery, ParseError> {
     }
 }
 
-/// The query tree of `query`, which passed the envelope and the JSON Schema: the filter text,
-/// the SQL form, then the empty query.
+/// The query tree of `query`, which passed the envelope and the JSON Schema: the SQL text of
+/// the SQL form (E1-4), or the filter text then the empty query of the wide-table form.
 fn query_tree(query: &QueryDocument, time: QueryTime) -> Result<QueryTree, ParseError> {
     let wide_table = match &query.form {
         QueryForm::WideTable(wide_table) => wide_table,
-        QueryForm::Sql(_) => return Err(sql_form_not_yet_supported()),
+        QueryForm::Sql(sql) => return sql_tree(sql, time),
     };
     let filters = parse_filters(wide_table)?;
     if is_empty_aggregation(wide_table) {
@@ -75,15 +76,6 @@ fn query_tree(query: &QueryDocument, time: QueryTime) -> Result<QueryTree, Parse
         ));
     }
     wide_table_tree(wide_table, time, filters)
-}
-
-/// VS-2: no SQL text is parsed before the version that adds the SQL form.
-fn sql_form_not_yet_supported() -> ParseError {
-    ParseError::new(
-        ParseErrorCode::NotYetSupported,
-        SQL,
-        "the SQL form is not supported before 0.5.0; use the wide-table form (`query`)".to_owned(),
-    )
 }
 
 fn is_empty_aggregation(query: &WideTableQuery) -> bool {

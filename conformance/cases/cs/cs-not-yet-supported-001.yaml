@@ -1,16 +1,17 @@
 id: cs-not-yet-supported-001
-rules: [CS-2.8, VS-2, VS-4, E2-5.4, E2-5.4a, VS-1b, VS-3]
-model: sample
+rules: [CS-2.8, VS-2, VS-4, E2-5.4, E2-5.4a, VS-1c, VS-3]
+model: e0-context
+load_options: {grant_authenticated_to_all: true}
 security_context: analyst.json
 query:
   contract: "menura.query"
   contract_version: "1.1.0"
   time_zone: "UTC"
   query:
-    dimensions: ["balances.customer_id"]
+    dimensions: ["customers.region"]
     metrics:
-      - {"metric": "total_amount", "alias": "total_amount"}
-      - {"metric": "total_balance", "alias": "total_balance"}
+      - {"metric": "billed", "alias": "billed"}
+      - {"metric": "billed_share", "alias": "billed_share"}
 expect:
   outcome: "error"
   error: "E_NOT_YET_SUPPORTED"
