@@ -100,8 +100,7 @@ fn derivation(
             (declaration.data.clone(), declaration.location),
         ));
     }
-    let dataset_metrics = !terms.is_empty() && terms.iter().all(|term| term.qualifier.is_some());
-    (development && dataset_metrics).then(|| {
+    (development && reads_dataset_metrics_only(terms)).then(|| {
         (
             DerivedOrigin::Development,
             (
@@ -110,6 +109,25 @@ fn derivation(
             ),
         )
     })
+}
+
+/// Whether the model metric at `metric`, whose formula has the `AGG(…)` terms `terms`, is a
+/// derived metric: declared `derived`, or, in the `development` format, with terms that all
+/// name dataset metrics (DER-2.2). A context metric is never derived.
+pub(super) fn is_derived(
+    extensions: &Extensions,
+    metric: &JsonPointer,
+    terms: &[&Reference],
+    development: bool,
+) -> bool {
+    !extensions.is_context_metric(metric)
+        && (extensions.derived_declaration(metric).is_some()
+            || (development && reads_dataset_metrics_only(terms)))
+}
+
+/// Whether `terms` is not empty and every term names a dataset metric (DER-2.2).
+fn reads_dataset_metrics_only(terms: &[&Reference]) -> bool {
+    !terms.is_empty() && terms.iter().all(|term| term.qualifier.is_some())
 }
 
 /// The metrics `AGG(…)` can name: the model metrics, and the dataset metrics of each dataset.
