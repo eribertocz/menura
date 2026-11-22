@@ -168,7 +168,8 @@ fn chk_6_6_a_built_summary_passes_its_check_and_corrupted_rows_fail_it() {
 fn chk_5_3_a_summary_passes_its_check_only_in_the_time_zone_it_was_built_in() {
     let document = document();
     let connection = database();
-    let la_paz = ["2026-11-01", "2026-11-02", "America/La_Paz"];
+    // The time-zone slot is $1, then period_from and period_to.
+    let la_paz = ["America/La_Paz", "2026-11-01", "2026-11-02"];
     build_into(
         &connection,
         "shop.main.orders_daily_local (day_start, large_amount)",
@@ -177,7 +178,7 @@ fn chk_5_3_a_summary_passes_its_check_only_in_the_time_zone_it_was_built_in() {
     );
     let check = sql(&document, DAILY, false);
     assert!(rows(&connection, &check, &la_paz).is_empty());
-    let utc = ["2026-11-01", "2026-11-02", "UTC"];
+    let utc = ["UTC", "2026-11-01", "2026-11-02"];
     assert_eq!(
         violations(&rows(&connection, &check, &utc)),
         ["missing_in_base", "missing_in_summary"]

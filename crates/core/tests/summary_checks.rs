@@ -188,9 +188,9 @@ fn chk_7_4_a_date_summary_binds_only_the_period_slots() {
 fn chk_7_3_a_summary_of_a_timestamp_with_time_zone_binds_the_time_zone() {
     let check = check(DAILY);
     let expected = [
-        (1, Binding::PeriodFrom),
-        (2, Binding::PeriodTo),
-        (3, Binding::TimeZone),
+        (1, Binding::TimeZone),
+        (2, Binding::PeriodFrom),
+        (3, Binding::PeriodTo),
     ];
     assert_eq!(bindings(&check.parameters), expected);
     assert_eq!(bindings(&check.build.unwrap().parameters), expected);
@@ -200,15 +200,46 @@ fn chk_7_3_a_summary_of_a_timestamp_with_time_zone_binds_the_time_zone() {
 fn chk_7_2_each_slot_appears_once_and_is_shared_by_every_use() {
     let check = check(DAILY);
     assert!(
-        check.sql.matches("CAST($3 AS VARCHAR)").count() >= 2,
-        "{}",
-        check.sql
-    );
-    assert!(
         check.sql.matches("CAST($1 AS VARCHAR)").count() >= 2,
         "{}",
         check.sql
     );
+    assert!(
+        check.sql.matches("CAST($2 AS VARCHAR)").count() >= 2,
+        "{}",
+        check.sql
+    );
+}
+
+/// The positions of the placeholders of `sql`, in order of first appearance.
+fn first_appearances(sql: &str) -> Vec<u64> {
+    let mut positions = Vec::new();
+    for (index, _) in sql.match_indices('$') {
+        let digits: String = sql[index + 1..]
+            .chars()
+            .take_while(char::is_ascii_digit)
+            .collect();
+        let position: u64 = digits.parse().unwrap();
+        if !positions.contains(&position) {
+            positions.push(position);
+        }
+    }
+    positions
+}
+
+#[test]
+fn e6_4_2_slot_positions_follow_their_first_appearance_in_the_sql() {
+    for id in [MONTHLY, DAILY] {
+        let check = check(id);
+        let build = check.build.clone().unwrap();
+        for (sql, count) in [
+            (&check.sql, check.parameters.len()),
+            (&build.sql, build.parameters.len()),
+        ] {
+            let expected: Vec<u64> = (1..=u64::try_from(count).unwrap()).collect();
+            assert_eq!(first_appearances(sql), expected, "{id}: {sql}");
+        }
+    }
 }
 
 #[test]

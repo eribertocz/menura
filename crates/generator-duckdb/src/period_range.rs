@@ -28,9 +28,10 @@ impl<'input> StepWriter<'input> {
             .iter()
             .find(|column| &column.name == coverage)
             .ok_or_else(|| error(InvariantViolation::UnknownColumn, node))?;
+        let day = self.day_sql(node, input, &quote(coverage.as_str()), &column.logical_type)?;
+        // The day is written first, so its time-zone slot is bound first (E6-4.2).
         let from = text(&self.parameters.bind_slot(Binding::PeriodFrom));
         let to = text(&self.parameters.bind_slot(Binding::PeriodTo));
-        let day = self.day_sql(node, input, &quote(coverage.as_str()), &column.logical_type)?;
         Ok(SelectBody {
             items: pass_through(node, input.schema())?,
             from: written.name,
