@@ -1,7 +1,7 @@
 //! The operations of plan nodes (E4-3 table).
 
 use menura_contracts::types::common::Grain;
-use menura_model::expression::Expression;
+use menura_model::expression::{DateValue, Expression};
 use menura_model::internal_model::NormalizedName;
 
 use super::PlanNode;
@@ -124,6 +124,18 @@ pub enum Operation {
         period: ColumnName,
         /// When an entity is expected, over the columns of `input`.
         rule: PopulationRule,
+    },
+    /// `Periods(from, to, grain)`: one row per period start at `grain` from the period of
+    /// `from` to the period of `to`, both ends included (E4-3.14): the unit of periods of a
+    /// query with a `date_range` on a semi-additive `over` (ADD-4.7). It reads no input. Its
+    /// output is one column, the period start.
+    Periods {
+        /// The first day of the range.
+        from: DateValue,
+        /// The last day of the range.
+        to: DateValue,
+        /// The grain of the periods.
+        grain: Grain,
     },
     /// `Snapshot(input, expected, rule)`: reduce the rows of `input` to one value per (result
     /// group, entity) under the semi-additive `rule` (E4-3.13, E4-7.1). With a time `over`,
