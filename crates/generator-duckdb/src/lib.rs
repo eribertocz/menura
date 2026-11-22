@@ -7,7 +7,9 @@
 
 #![forbid(unsafe_code)]
 
+mod additivity_error;
 mod body;
+mod day;
 mod deduplicate;
 mod error;
 mod expression;
@@ -17,9 +19,12 @@ mod join;
 mod join_keys;
 mod output;
 mod parameters;
+mod periods;
+mod population;
 mod result_schema;
 mod scan;
 mod semi_join;
+mod snapshot;
 mod source_columns;
 mod steps;
 mod stitch;
