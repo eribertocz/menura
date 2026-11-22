@@ -55,8 +55,8 @@ pub(super) struct LexicalError {
 }
 
 /// The tokens of `sql`, without whitespace and comments (E0F-9.3: `-- …` and `/* … */`, which
-/// do not nest).
-pub(super) fn tokenize(sql: &str) -> Result<Vec<Token>, LexicalError> {
+/// do not nest): every token before the first element that cannot be read, and that element.
+pub(super) fn tokenize(sql: &str) -> (Vec<Token>, Option<LexicalError>) {
     let mut tokens = Vec::new();
     let mut start = 0;
     while let Some(character) = sql.get(start..).and_then(|rest| rest.chars().next()) {
@@ -65,10 +65,17 @@ pub(super) fn tokenize(sql: &str) -> Result<Vec<Token>, LexicalError> {
             offset: start,
             element,
         };
-        let length = if let Some(length) = skipped_length(rest, character).map_err(error)? {
+        let skipped = match skipped_length(rest, character) {
+            Ok(skipped) => skipped,
+            Err(element) => return (tokens, Some(error(element))),
+        };
+        let length = if let Some(length) = skipped {
             length
         } else {
-            let (kind, length) = token_at(rest, character).map_err(error)?;
+            let (kind, length) = match token_at(rest, character) {
+                Ok(token) => token,
+                Err(element) => return (tokens, Some(error(element))),
+            };
             tokens.push(Token {
                 kind,
                 start,
@@ -78,7 +85,7 @@ pub(super) fn tokenize(sql: &str) -> Result<Vec<Token>, LexicalError> {
         };
         start += length;
     }
-    Ok(tokens)
+    (tokens, None)
 }
 
 /// The length of the whitespace or comment that `rest`, whose first character is `first`,

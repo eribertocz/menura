@@ -1,0 +1,15 @@
+id: next-sql-check-order-002
+rules: [E1-4.11, E1-4.12]
+model: slice
+security_context: auditor.json
+query:
+  contract: "menura.query"
+  contract_version: "1.1.0"
+  time_zone: "UTC"
+  sql: "SELECT RANDOM() AS r, AGG(sale_count) FROM slice.sales GROUP BY 1"
+expect:
+  outcome: "error"
+  error: "E0F-02"
+  location:
+    document: "query"
+    pointer: "/sql"

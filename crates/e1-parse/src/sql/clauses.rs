@@ -4,46 +4,47 @@
 use std::ops::Range;
 
 use super::lexer::Token;
-use super::position::{outside_subset, unparsable};
-use crate::error::ParseError;
+use super::position::{Failure, outside_subset, unparsable};
 
-/// A clause: the tokens after its keyword, as a range of token indices.
+/// A clause: its keyword and the tokens after it, as a range of token indices.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(super) struct Clause {
-    /// The tokens of its body, never empty.
+    /// Its keyword.
+    pub(super) keyword: ClauseKeyword,
+    /// The tokens of its body.
     pub(super) tokens: Range<usize>,
 }
 
-/// The clauses of the one `SELECT` statement, in the order the subset allows.
+/// The clauses found before the first structural failure, and the failures of the structure:
+/// the first token that breaks it, and each clause without a body.
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub(super) struct Statement {
-    /// `SELECT` items.
-    pub(super) select: Clause,
-    /// `FROM` relation.
-    pub(super) from: Clause,
-    /// `WHERE` condition.
-    pub(super) filter: Option<Clause>,
-    /// `GROUP BY` entries.
-    pub(super) group_by: Option<Clause>,
-    /// `ORDER BY` items.
-    pub(super) order_by: Option<Clause>,
-    /// `LIMIT` count.
-    pub(super) limit: Option<Clause>,
+pub(super) struct Scan {
+    /// The clauses, in text order.
+    pub(super) clauses: Vec<Clause>,
+    /// The failures, in text order.
+    pub(super) failures: Vec<Failure>,
 }
 
 /// The clause keywords, in the only order the subset allows.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
-enum ClauseKeyword {
+pub(super) enum ClauseKeyword {
+    /// `SELECT`.
     Select,
+    /// `FROM`.
     From,
+    /// `WHERE`.
     Where,
+    /// `GROUP BY`.
     GroupBy,
+    /// `ORDER BY`.
     OrderBy,
+    /// `LIMIT`.
     Limit,
 }
 
 impl ClauseKeyword {
-    fn name(self) -> &'static str {
+    /// The keyword as written in messages.
+    pub(super) fn name(self) -> &'static str {
         match self {
             Self::Select => "SELECT",
             Self::From => "FROM",
@@ -69,61 +70,49 @@ const UNSUPPORTED_KEYWORDS: [(&str, &str); 10] = [
     ("FETCH", "FETCH"),
 ];
 
-/// The clauses of the statement made of `tokens`: one `SELECT`, with an optional trailing `;`.
-///
-/// # Errors
-///
-/// `EQRY-05` at the first token, in text order, that breaks the statement's structure or
-/// starts a construct outside the subset.
-pub(super) fn statement(sql: &str, tokens: &[Token]) -> Result<Statement, ParseError> {
+/// Scans the statement made of `tokens`, one `SELECT` with an optional trailing `;`, whose text
+/// a reader stops reading at byte `end`.
+pub(super) fn scan(sql: &str, tokens: &[Token], end: usize) -> Scan {
     let count = match tokens.last() {
         Some(last) if last.is_symbol(';') => tokens.len() - 1,
         _ => tokens.len(),
     };
-    let starts = clause_starts(sql, &tokens[..count])?;
-    let mut statement = Statement {
-        select: Clause { tokens: 0..0 },
-        from: Clause { tokens: 0..0 },
-        filter: None,
-        group_by: None,
-        order_by: None,
-        limit: None,
+    let tokens = tokens.get(..count).unwrap_or_default();
+    let (starts, stop, failure) = match clause_starts(sql, tokens, end) {
+        Ok(starts) => (starts, tokens.len(), None),
+        Err(broken) => (broken.starts, broken.stop, Some(broken.failure)),
     };
-    let mut has_from = false;
+    let mut clauses = Vec::new();
+    let mut failures = Vec::new();
     for (index, &(keyword, body_start)) in starts.iter().enumerate() {
-        let body_end = starts.get(index + 1).map_or(count, |&(next, next_start)| {
+        let body_end = starts.get(index + 1).map_or(stop, |&(next, next_start)| {
             next_start - keyword_length(next)
         });
         if body_start >= body_end {
-            let offset = tokens
-                .get(body_start)
-                .map_or(sql.len(), |token| token.start);
-            return Err(unparsable(
+            failures.push(unparsable(
                 sql,
-                offset,
+                next_offset(tokens, body_start, end),
                 &format!("expected the body of {}", keyword.name()),
             ));
         }
-        let clause = Clause {
-            tokens: body_start..body_end,
-        };
-        match keyword {
-            ClauseKeyword::Select => statement.select = clause,
-            ClauseKeyword::From => {
-                has_from = true;
-                statement.from = clause;
-            }
-            ClauseKeyword::Where => statement.filter = Some(clause),
-            ClauseKeyword::GroupBy => statement.group_by = Some(clause),
-            ClauseKeyword::OrderBy => statement.order_by = Some(clause),
-            ClauseKeyword::Limit => statement.limit = Some(clause),
-        }
+        clauses.push(Clause {
+            keyword,
+            tokens: body_start..body_end.max(body_start),
+        });
     }
-    if !has_from {
-        return Err(unparsable(sql, sql.len(), "expected FROM"));
-    }
-    Ok(statement)
+    failures.extend(failure);
+    failures.sort_by_key(|failure| failure.offset);
+    Scan { clauses, failures }
 }
+
+/// The offset of the token at `index`, or `end` after the last token.
+pub(super) fn next_offset(tokens: &[Token], index: usize, end: usize) -> usize {
+    tokens.get(index).map_or(end, |token| token.start)
+}
+
+/// The clause keywords found while scanning, each with the index of the first token of its
+/// body.
+type Starts = Vec<(ClauseKeyword, usize)>;
 
 /// The number of tokens of the clause keyword.
 fn keyword_length(keyword: ClauseKeyword) -> usize {
@@ -133,10 +122,64 @@ fn keyword_length(keyword: ClauseKeyword) -> usize {
     }
 }
 
-/// Each clause keyword of `tokens`, in order, with the index of the first token of its body.
-fn clause_starts(sql: &str, tokens: &[Token]) -> Result<Vec<(ClauseKeyword, usize)>, ParseError> {
+/// Each clause keyword of `tokens`, in order, with the index of the first token of its body;
+/// on a structural failure, the keywords before it, the index of the failing token and the
+/// failure.
+fn clause_starts(sql: &str, tokens: &[Token], end: usize) -> Result<Starts, Box<Broken>> {
+    check_first(sql, tokens, end).map_err(|failure| broken(Vec::new(), 0, failure))?;
+    let mut starts = Vec::new();
+    let mut depth = 0_usize;
+    let mut index = 0;
+    while index < tokens.len() {
+        match structural_step(
+            sql,
+            tokens,
+            index,
+            depth,
+            starts.last().map(|&(last, _)| last),
+        ) {
+            Ok(Step::Next(new_depth)) => {
+                depth = new_depth;
+                index += 1;
+            }
+            Ok(Step::Skip(length)) => index += length,
+            Ok(Step::Clause(keyword)) => {
+                index += keyword_length(keyword);
+                starts.push((keyword, index));
+            }
+            Err(failure) => return Err(broken(starts, index, failure)),
+        }
+    }
+    if depth > 0 {
+        return Err(broken(
+            starts,
+            index,
+            unparsable(sql, end, "a `(` is never closed"),
+        ));
+    }
+    Ok(starts)
+}
+
+/// A structure that breaks: the clause keywords before the failure, the index of the token
+/// where the scan stops, and the failure.
+struct Broken {
+    starts: Starts,
+    stop: usize,
+    failure: Failure,
+}
+
+fn broken(starts: Starts, stop: usize, failure: Failure) -> Box<Broken> {
+    Box::new(Broken {
+        starts,
+        stop,
+        failure,
+    })
+}
+
+/// `EQRY-05` unless the statement starts with `SELECT`.
+fn check_first(sql: &str, tokens: &[Token], end: usize) -> Result<(), Failure> {
     let Some(first) = tokens.first() else {
-        return Err(unparsable(sql, sql.len(), "expected SELECT"));
+        return Err(unparsable(sql, end, "expected SELECT"));
     };
     if first.is_keyword(sql, "WITH") {
         return Err(outside_subset(sql, first.start, "WITH"));
@@ -144,45 +187,63 @@ fn clause_starts(sql: &str, tokens: &[Token]) -> Result<Vec<(ClauseKeyword, usiz
     if !first.is_keyword(sql, "SELECT") {
         return Err(unparsable(sql, first.start, "expected SELECT"));
     }
-    let mut starts = Vec::new();
-    let mut open_parentheses = Vec::new();
-    let mut index = 0;
-    while let Some(token) = tokens.get(index) {
-        if token.is_symbol('(') {
-            open_parentheses.push(token.start);
-        } else if token.is_symbol(')') {
-            if open_parentheses.pop().is_none() {
-                return Err(unparsable(sql, token.start, "`)` closes no parenthesis"));
-            }
-        } else if token.is_symbol(';') {
-            return Err(outside_subset(sql, token.start, "a second statement"));
-        } else if token.is_keyword(sql, "SELECT") && !open_parentheses.is_empty() {
-            return Err(outside_subset(sql, token.start, "a subquery"));
-        } else if open_parentheses.is_empty() {
-            if token.is_keyword(sql, "DISTINCT") {
-                index += distinct_length(sql, tokens, index)?;
-                continue;
-            }
-            if let Some(keyword) = clause_keyword(sql, tokens, index)? {
-                if starts.last().is_some_and(|&(last, _)| last >= keyword) {
-                    return Err(unparsable(
-                        sql,
-                        token.start,
-                        &format!("unexpected {}", keyword.name()),
-                    ));
-                }
-                index += keyword_length(keyword);
-                starts.push((keyword, index));
-                continue;
-            }
-            check_supported(sql, token)?;
+    Ok(())
+}
+
+/// What the scan does at one token.
+enum Step {
+    /// Go to the next token, at this parenthesis depth.
+    Next(usize),
+    /// Step over this many tokens.
+    Skip(usize),
+    /// A clause keyword starts here.
+    Clause(ClauseKeyword),
+}
+
+/// The step at `tokens[index]`, at parenthesis `depth`, after the clause `last`.
+fn structural_step(
+    sql: &str,
+    tokens: &[Token],
+    index: usize,
+    depth: usize,
+    last: Option<ClauseKeyword>,
+) -> Result<Step, Failure> {
+    let Some(token) = tokens.get(index) else {
+        return Ok(Step::Skip(1));
+    };
+    if token.is_symbol('(') {
+        return Ok(Step::Next(depth + 1));
+    }
+    if token.is_symbol(')') {
+        return depth
+            .checked_sub(1)
+            .map(Step::Next)
+            .ok_or_else(|| unparsable(sql, token.start, "`)` closes no parenthesis"));
+    }
+    if token.is_symbol(';') {
+        return Err(outside_subset(sql, token.start, "a second statement"));
+    }
+    if token.is_keyword(sql, "SELECT") && depth > 0 {
+        return Err(outside_subset(sql, token.start, "a subquery"));
+    }
+    if depth > 0 {
+        return Ok(Step::Next(depth));
+    }
+    if token.is_keyword(sql, "DISTINCT") {
+        return distinct_length(sql, tokens, index).map(Step::Skip);
+    }
+    if let Some(keyword) = clause_keyword(sql, tokens, index)? {
+        if last.is_some_and(|last| last >= keyword) {
+            return Err(unparsable(
+                sql,
+                token.start,
+                &format!("unexpected {}", keyword.name()),
+            ));
         }
-        index += 1;
+        return Ok(Step::Clause(keyword));
     }
-    match open_parentheses.last() {
-        Some(&offset) => Err(unparsable(sql, offset, "`(` is never closed")),
-        None => Ok(starts),
-    }
+    check_supported(sql, token)?;
+    Ok(Step::Next(depth))
 }
 
 /// The clause keyword that starts at `tokens[index]`, if any.
@@ -190,7 +251,7 @@ fn clause_keyword(
     sql: &str,
     tokens: &[Token],
     index: usize,
-) -> Result<Option<ClauseKeyword>, ParseError> {
+) -> Result<Option<ClauseKeyword>, Failure> {
     let Some(token) = tokens.get(index) else {
         return Ok(None);
     };
@@ -227,7 +288,7 @@ fn clause_keyword(
 /// # Errors
 ///
 /// `EQRY-05` for `SELECT DISTINCT`.
-fn distinct_length(sql: &str, tokens: &[Token], index: usize) -> Result<usize, ParseError> {
+fn distinct_length(sql: &str, tokens: &[Token], index: usize) -> Result<usize, Failure> {
     let before = |distance: usize| index.checked_sub(distance).and_then(|at| tokens.get(at));
     let is_word =
         |token: Option<&Token>, word: &str| token.is_some_and(|token| token.is_keyword(sql, word));
@@ -246,7 +307,7 @@ fn distinct_length(sql: &str, tokens: &[Token], index: usize) -> Result<usize, P
 }
 
 /// `EQRY-05` when `token`, at depth 0, starts a construct outside the subset.
-fn check_supported(sql: &str, token: &Token) -> Result<(), ParseError> {
+fn check_supported(sql: &str, token: &Token) -> Result<(), Failure> {
     match UNSUPPORTED_KEYWORDS
         .iter()
         .find(|(word, _)| token.is_keyword(sql, word))
@@ -256,16 +317,19 @@ fn check_supported(sql: &str, token: &Token) -> Result<(), ParseError> {
     }
 }
 
-/// The ranges of the items of `clause`, separated by commas at depth 0.
+/// The ranges of the items of `clause`, separated by commas at depth 0; the text is read up to
+/// byte `end`.
 ///
 /// # Errors
 ///
-/// `EQRY-05` at a comma with no item before it, or at the end when the last item is empty.
+/// `EQRY-05` at a comma with no item before it, or after the clause when its last item is
+/// empty.
 pub(super) fn items(
     sql: &str,
     tokens: &[Token],
     clause: &Clause,
-) -> Result<Vec<Range<usize>>, ParseError> {
+    end: usize,
+) -> Result<Vec<Range<usize>>, Failure> {
     let mut items = Vec::new();
     let mut depth = 0_usize;
     let mut start = clause.tokens.start;
@@ -286,7 +350,7 @@ pub(super) fn items(
         }
     }
     if start == clause.tokens.end {
-        let offset = tokens.get(start).map_or(sql.len(), |token| token.start);
+        let offset = next_offset(tokens, start, end);
         return Err(unparsable(sql, offset, "expected an item"));
     }
     items.push(start..clause.tokens.end);
