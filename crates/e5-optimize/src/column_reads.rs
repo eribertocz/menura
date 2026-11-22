@@ -18,7 +18,9 @@ pub(crate) fn add_operation_reads(operation: &Operation, columns: &mut ColumnNam
         | Operation::FullJoin { on, .. } => {
             columns.extend(on.iter().map(|pair| pair.left.as_str().to_owned()));
         }
-        Operation::Filter { predicate, .. } => add_expression_reads(predicate, columns),
+        Operation::Filter { .. } | Operation::ShiftedFilter { .. } => {
+            add_filter_reads(operation, columns);
+        }
         Operation::PeriodRange { coverage, .. } => {
             columns.insert(coverage.as_str().to_owned());
         }
@@ -59,6 +61,23 @@ pub(crate) fn add_operation_reads(operation: &Operation, columns: &mut ColumnNam
         | Operation::Periods { .. }
         | Operation::Snapshot { .. }
         | Operation::Limit { .. } => {}
+    }
+}
+
+/// Adds the columns a `Filter` or a `ShiftedFilter` reads: its predicate, and the column of
+/// its shifted range.
+fn add_filter_reads(operation: &Operation, columns: &mut ColumnNames) {
+    match operation {
+        Operation::Filter { predicate, .. } => add_expression_reads(predicate, columns),
+        Operation::ShiftedFilter {
+            predicate, range, ..
+        } => {
+            if let Some(predicate) = predicate {
+                add_expression_reads(predicate, columns);
+            }
+            add_expression_reads(&range.column, columns);
+        }
+        _ => {}
     }
 }
 

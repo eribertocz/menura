@@ -64,6 +64,7 @@ fn kind_of(operation: &Operation) -> &'static str {
         Operation::Scan { .. } => "Scan",
         Operation::Join { .. } => "Join",
         Operation::Filter { .. } => "Filter",
+        Operation::ShiftedFilter { .. } => "ShiftedFilter",
         Operation::SemiJoin { .. } => "SemiJoin",
         Operation::Deduplicate { .. } => "Deduplicate",
         Operation::Aggregate { .. } => "Aggregate",

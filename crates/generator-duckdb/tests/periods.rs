@@ -19,6 +19,7 @@ fn periods(grain: Grain, logical_type: LogicalType) -> PlanNode {
             from: DateValue::new(2026, 2, 14).expect("a date"),
             to: DateValue::new(2026, 6, 30).expect("a date"),
             grain,
+            shift: None,
         },
         OutputSchema::new(vec![column("PERIOD", logical_type, false)]),
         from_query("/query/date_range"),

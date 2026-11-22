@@ -164,6 +164,7 @@ fn e4_3_14_periods_reads_no_input() {
             from,
             to,
             grain: Grain::Month,
+            shift: None,
         },
         &["period"],
     );

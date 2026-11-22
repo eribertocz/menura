@@ -6,7 +6,8 @@ use menura_model::expression::{Expression, Literal};
 use menura_model::internal_model::{MissingHandling, NormalizedName, SemiAdditive};
 use menura_representations::bound_query::BoundDateRange;
 use menura_representations::logical_plan::{
-    NamedExpression, Operation, OutputSchema, PlanNode, SchemaColumn, SnapshotMissing, TimeSnapshot,
+    NamedExpression, Operation, OutputSchema, PeriodShift, PlanNode, SchemaColumn, SnapshotMissing,
+    TimeSnapshot,
 };
 use menura_representations::names::ColumnName;
 use menura_representations::origin::Origin;
@@ -89,29 +90,32 @@ fn unit_of_periods(
 ) -> Result<PlanNode, PlanError> {
     match branch.query.date_range() {
         Some(range) if range.field == branch.declaration.over => {
-            if branch
+            let shift = branch
                 .range_shift
-                .is_some_and(|range_shift| range_shift.field == &range.field)
-            {
-                return Err(PlanError::invariant(
-                    InvariantViolation::ContextMetric,
-                    &branch.origin(),
-                ));
-            }
-            Ok(periods_of_range(range, grain, over_type))
+                .filter(|range_shift| range_shift.field == &range.field)
+                .map(|range_shift| range_shift.shift);
+            Ok(periods_of_range(range, grain, over_type, shift))
         }
         _ => periods_with_data(input.clone(), period.clone(), &branch.origin()),
     }
 }
 
 /// The unit of periods of a `date_range` on `over`: every period of `grain` inside it, with
-/// data or not (ADD-4.7, E4-3.14), each the start of its period, typed as `over`.
-fn periods_of_range(range: &BoundDateRange, grain: Grain, over_type: &LogicalType) -> PlanNode {
+/// data or not (ADD-4.7, E4-3.14), each the start of its period, typed as `over`. In a
+/// `prior_period` context query whose `time_dimension` is `over`, the range is shifted
+/// (E4-8.4).
+fn periods_of_range(
+    range: &BoundDateRange,
+    grain: Grain,
+    over_type: &LogicalType,
+    shift: Option<PeriodShift>,
+) -> PlanNode {
     PlanNode::new(
         Operation::Periods {
             from: range.from,
             to: range.to,
             grain,
+            shift,
         },
         OutputSchema::new(vec![SchemaColumn {
             name: ColumnName::new(PERIOD),

@@ -18,13 +18,14 @@ use menura_representations::bound_query::{
     MetricPath,
 };
 use menura_representations::columns::Columns;
+use menura_representations::logical_plan::PeriodShift;
 use menura_representations::names::OutputName;
 use menura_representations::origin::QueryLocation;
 use menura_representations::paths::Branches;
 
 use crate::context_time::{QueryTime, query_time};
 use crate::error::{InvariantViolation, PlanError};
-use crate::period_shift::PeriodShift;
+
 use crate::query_filter::RangeShift;
 
 /// One context query of a query (E4-8.2).

@@ -41,7 +41,6 @@ mod lookup;
 mod metrics;
 mod nodes;
 mod output;
-mod period_shift;
 mod policy;
 mod policy_visits;
 mod population;

@@ -67,6 +67,7 @@ fn visit(
             })
         }
         Operation::Filter { input, .. }
+        | Operation::ShiftedFilter { input, .. }
         | Operation::SemiJoin { input, .. }
         | Operation::Aggregate { input, .. }
         | Operation::Project { input, .. }
@@ -227,6 +228,13 @@ fn replace_input(operation: &Operation, input: PlanNode) -> Operation {
         Operation::Filter { predicate, .. } => Operation::Filter {
             input,
             predicate: predicate.clone(),
+        },
+        Operation::ShiftedFilter {
+            predicate, range, ..
+        } => Operation::ShiftedFilter {
+            input,
+            predicate: predicate.clone(),
+            range: range.clone(),
         },
         Operation::Deduplicate {
             group, identity, ..

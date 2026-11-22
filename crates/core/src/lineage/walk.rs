@@ -31,9 +31,9 @@ impl Sources<'_> {
                 row_identity,
             } => self.scan(node, dataset, row_identity.as_ref(), prefix),
             Operation::Join { .. } => self.join(node, prefix),
-            Operation::Filter { input, predicate } => {
+            Operation::Filter { input, .. } | Operation::ShiftedFilter { input, .. } => {
                 let mut lineage = self.node(input, prefix)?;
-                let read = lineage.provenance_of(columns_read(predicate));
+                let read = lineage.provenance_of(filter_columns(node.operation()));
                 lineage.read_in_every_branch(&read);
                 Ok(lineage)
             }
@@ -314,4 +314,22 @@ pub(super) fn read_by<'expression>(
         provenance.absorb(&lineage.provenance_of(columns_read(expression)));
     }
     provenance
+}
+
+/// The columns a `Filter` or a `ShiftedFilter` reads: its predicate, and the column of its
+/// shifted range (E4-8.4); none for another operation.
+fn filter_columns(operation: &Operation) -> Vec<&str> {
+    match operation {
+        Operation::Filter { predicate, .. } => columns_read(predicate),
+        Operation::ShiftedFilter {
+            predicate, range, ..
+        } => {
+            let mut columns = columns_read(&range.column);
+            if let Some(predicate) = predicate {
+                columns.extend(columns_read(predicate));
+            }
+            columns
+        }
+        _ => Vec::new(),
+    }
 }

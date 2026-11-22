@@ -34,7 +34,11 @@ impl ExpressionWriter<'_, '_> {
         other: Option<&LogicalType>,
     ) -> Result<String, GenerateError> {
         let text = self.operand(expression)?;
-        let date_parameter = self.literals == Literals::Bound && is_date_bound(expression);
+        let date_parameter = match self.literals {
+            Literals::Bound => matches!(expression, Expression::Literal(Literal::Date(_))),
+            Literals::QueryDates => is_date_bound(expression),
+            Literals::Written => false,
+        };
         match other {
             Some(LogicalType::Timestamp { with_time_zone, .. }) if date_parameter => {
                 let midnight = format!("CAST({text} AS TIMESTAMP)");
@@ -49,8 +53,8 @@ impl ExpressionWriter<'_, '_> {
     }
 }
 
-/// Whether `expression` is a `date` parameter, or a `DATEADD` or `DATE_TRUNC` of one: the
-/// bounds of a shifted `date_range` (E4-8.4).
+/// Whether `expression` is a `date` parameter, or a `DATEADD` or `DATE_TRUNC` of one: a bound
+/// of a shifted `date_range` (E4-8.4), written with [`Literals::QueryDates`].
 fn is_date_bound(expression: &Expression) -> bool {
     match expression {
         Expression::Literal(Literal::Date(_)) => true,

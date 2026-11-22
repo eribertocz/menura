@@ -264,6 +264,7 @@ fn add_4_7_a_date_range_on_over_makes_every_period_inside_it_the_unit() {
             from: date(2026, 1, 1),
             to: date(2026, 5, 31),
             grain: Grain::Month,
+            shift: None,
         }
     );
 }
