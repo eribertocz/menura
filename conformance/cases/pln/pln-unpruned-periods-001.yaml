@@ -1,0 +1,19 @@
+id: pln-unpruned-periods-001
+rules: [PLN-3.3, PLN-3.3a]
+model: e5-summary-tie
+security_context: analyst.json
+query:
+  contract: menura.query
+  contract_version: "1.1.0"
+  time_zone: UTC
+  query:
+    dimensions: [orders.order_id]
+    metrics:
+      - {metric: total_amount, alias: total_amount}
+    nonportable_extensions:
+      - {"vendor_name": "COMMON", "data": {"namespace": "menura", "version": 1, "date_range": {"dimension": "orders.order_date", "from": "2026-10-05", "to": "2026-10-05"}}}
+expect:
+  outcome: plan
+  rows: pln-unpruned-periods-001.csv
+  row_order: any
+  cache_key: "038caf6f1f86798b3adb07640d6b9055983d58fee7bf3cc2fc975ad470ba7de5"
