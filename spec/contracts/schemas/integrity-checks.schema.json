@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://menura.invalid/spec/contracts/integrity-checks/1.1.0",
+  "$id": "https://menura.invalid/spec/contracts/integrity-checks/1.2.0",
   "title": "Integrity checks document",
   "type": "object",
   "additionalProperties": false,
@@ -13,7 +13,10 @@
   ],
   "properties": {
     "contract": {
-      "enum": ["menura.integrity_checks", "semantic_compiler.integrity_checks"]
+      "enum": [
+        "menura.integrity_checks",
+        "semantic_compiler.integrity_checks"
+      ]
     },
     "contract_version": {
       "type": "string",
@@ -69,39 +72,124 @@
             "minLength": 1
           },
           "parameters": {
-            "type": "array",
-            "items": {
-              "type": "object",
-              "required": [
-                "position",
-                "logical_type",
-                "value"
-              ],
-              "additionalProperties": false,
-              "properties": {
-                "position": {
-                  "type": "integer",
-                  "minimum": 1
-                },
-                "logical_type": {
-                  "$ref": "#/$defs/logical_type"
-                },
-                "value": {}
-              }
-            }
+            "$ref": "#/$defs/parameters"
           },
           "sources": {
             "type": "array",
             "minItems": 1,
             "items": {
               "type": "string"
+            },
+            "uniqueItems": true
+          },
+          "build": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "sql",
+              "parameters",
+              "columns"
+            ],
+            "properties": {
+              "sql": {
+                "type": "string",
+                "minLength": 1
+              },
+              "parameters": {
+                "$ref": "#/$defs/parameters"
+              },
+              "columns": {
+                "type": "array",
+                "minItems": 1,
+                "uniqueItems": true,
+                "items": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              }
             }
+          }
+        },
+        "if": {
+          "properties": {
+            "kind": {
+              "const": "summary"
+            }
+          },
+          "required": [
+            "kind"
+          ]
+        },
+        "then": {
+          "required": [
+            "build"
+          ]
+        },
+        "else": {
+          "not": {
+            "required": [
+              "build"
+            ]
           }
         }
       }
     }
   },
   "$defs": {
+    "parameters": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "position",
+          "logical_type"
+        ],
+        "properties": {
+          "position": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "logical_type": {
+            "$ref": "#/$defs/logical_type"
+          },
+          "value": {},
+          "binding": {
+            "enum": [
+              "time_zone",
+              "period_from",
+              "period_to"
+            ]
+          }
+        },
+        "oneOf": [
+          {
+            "required": [
+              "value"
+            ]
+          },
+          {
+            "required": [
+              "binding"
+            ]
+          }
+        ],
+        "if": {
+          "required": [
+            "binding"
+          ]
+        },
+        "then": {
+          "properties": {
+            "logical_type": {
+              "const": {
+                "kind": "text"
+              }
+            }
+          }
+        }
+      }
+    },
     "logical_type": {
       "oneOf": [
         {

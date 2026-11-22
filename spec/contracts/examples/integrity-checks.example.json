@@ -1,6 +1,6 @@
 {
   "contract": "menura.integrity_checks",
-  "contract_version": "1.1.0",
+  "contract_version": "1.2.0",
   "model_hash": "1111111111111111111111111111111111111111111111111111111111111111",
   "dialect": "duckdb",
   "checks": [
@@ -9,12 +9,64 @@
       "kind": "orphan_keys",
       "target": "invoices_customer",
       "definition_hash": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
-      "sql": "WITH\n  \"scan_from\" AS (\n    SELECT \"i\".\"customer_id\" AS \"customer_id\"\n    FROM \"sales\".\"public\".\"fact_invoice\" AS \"i\"\n  ),\n  \"scan_to\" AS (\n    SELECT \"c\".\"customer_id\" AS \"customer_id\"\n    FROM \"sales\".\"public\".\"dim_customer\" AS \"c\"\n  ),\n  \"orphans\" AS (\n    SELECT \"f\".\"customer_id\"\n    FROM \"scan_from\" AS \"f\"\n    LEFT JOIN \"scan_to\" AS \"t\"\n      ON \"t\".\"customer_id\" = \"f\".\"customer_id\"\n    WHERE \"f\".\"customer_id\" IS NOT NULL\n      AND \"t\".\"customer_id\" IS NULL\n  )\nSELECT \"customer_id\"\nFROM \"orphans\"\nLIMIT 100",
+      "sql": "WITH\n  \"scan_from\" AS (\n    SELECT \"i\".\"customer_id\" AS \"customer_id\"\n    FROM \"sales\".\"public\".\"fact_invoice\" AS \"i\"\n  ),\n  \"scan_to\" AS (\n    SELECT \"c\".\"customer_id\" AS \"customer_id\"\n    FROM \"sales\".\"public\".\"dim_customer\" AS \"c\"\n  ),\n  \"orphans\" AS (\n    SELECT \"f\".\"customer_id\"\n    FROM \"scan_from\" AS \"f\"\n    WHERE \"f\".\"customer_id\" IS NOT NULL\n      AND NOT EXISTS (\n        SELECT 1\n        FROM \"scan_to\" AS \"t\"\n        WHERE \"t\".\"customer_id\" = \"f\".\"customer_id\"\n      )\n  )\nSELECT \"customer_id\"\nFROM \"orphans\"",
       "parameters": [],
       "sources": [
-        "sales.public.fact_invoice",
-        "sales.public.dim_customer"
+        "sales.public.dim_customer",
+        "sales.public.fact_invoice"
       ]
+    },
+    {
+      "check_id": "summary:invoices_by_month",
+      "kind": "summary",
+      "target": "invoices_by_month",
+      "definition_hash": "50d858e0985ecc7f60418aaf0cc5ab587f42c2570a884095a9e8ccacd0f6545c",
+      "sql": "WITH\n  \"bounds\" AS (\n    SELECT CASE\n      WHEN length(CAST($1 AS VARCHAR)) = 4 THEN make_date(CAST(CAST($1 AS VARCHAR) AS INTEGER), 1, 1)\n      WHEN substr(CAST($1 AS VARCHAR), 6, 1) = 'Q' THEN make_date(CAST(substr(CAST($1 AS VARCHAR), 1, 4) AS INTEGER), CAST(substr(CAST($1 AS VARCHAR), 7, 1) AS INTEGER) * 3 - 2, 1)\n      WHEN substr(CAST($1 AS VARCHAR), 6, 1) = 'W' THEN CAST(date_trunc('week', make_date(CAST(substr(CAST($1 AS VARCHAR), 1, 4) AS INTEGER), 1, 4)) AS DATE) + 7 * (CAST(substr(CAST($1 AS VARCHAR), 7, 2) AS INTEGER) - 1)\n      WHEN length(CAST($1 AS VARCHAR)) = 7 THEN make_date(CAST(substr(CAST($1 AS VARCHAR), 1, 4) AS INTEGER), CAST(substr(CAST($1 AS VARCHAR), 6, 2) AS INTEGER), 1)\n      ELSE CAST(CAST($1 AS VARCHAR) AS DATE)\n    END AS \"from_day\",\n    CAST(CASE\n      WHEN length(CAST($2 AS VARCHAR)) = 4 THEN make_date(CAST(CAST($2 AS VARCHAR) AS INTEGER), 1, 1)\n      WHEN substr(CAST($2 AS VARCHAR), 6, 1) = 'Q' THEN make_date(CAST(substr(CAST($2 AS VARCHAR), 1, 4) AS INTEGER), CAST(substr(CAST($2 AS VARCHAR), 7, 1) AS INTEGER) * 3 - 2, 1)\n      WHEN substr(CAST($2 AS VARCHAR), 6, 1) = 'W' THEN CAST(date_trunc('week', make_date(CAST(substr(CAST($2 AS VARCHAR), 1, 4) AS INTEGER), 1, 4)) AS DATE) + 7 * (CAST(substr(CAST($2 AS VARCHAR), 7, 2) AS INTEGER) - 1)\n      WHEN length(CAST($2 AS VARCHAR)) = 7 THEN make_date(CAST(substr(CAST($2 AS VARCHAR), 1, 4) AS INTEGER), CAST(substr(CAST($2 AS VARCHAR), 6, 2) AS INTEGER), 1)\n      ELSE CAST(CAST($2 AS VARCHAR) AS DATE)\n    END + CASE\n      WHEN length(CAST($2 AS VARCHAR)) = 4 THEN INTERVAL 1 YEAR\n      WHEN substr(CAST($2 AS VARCHAR), 6, 1) = 'Q' THEN INTERVAL 3 MONTH\n      WHEN substr(CAST($2 AS VARCHAR), 6, 1) = 'W' THEN INTERVAL 7 DAY\n      WHEN length(CAST($2 AS VARCHAR)) = 7 THEN INTERVAL 1 MONTH\n      ELSE INTERVAL 1 DAY\n    END - INTERVAL 1 DAY AS DATE) AS \"to_day\"\n  ),\n  \"scan_base\" AS (\n    SELECT \"i\".\"invoice_date\" AS \"invoice_date\", \"i\".\"customer_id\" AS \"customer_id\", \"i\".\"amount\" AS \"amount\"\n    FROM \"sales\".\"public\".\"fact_invoice\" AS \"i\"\n    CROSS JOIN \"bounds\" AS \"b\"\n    WHERE \"i\".\"invoice_date\" >= \"b\".\"from_day\"\n      AND \"i\".\"invoice_date\" <= \"b\".\"to_day\"\n  ),\n  \"aggregate_base\" AS (\n    SELECT CAST(date_trunc('month', \"invoice_date\") AS DATE) AS \"month\", \"customer_id\" AS \"customer_id\",\n      SUM(\"amount\") AS \"amount_sum\", COUNT(\"amount\") AS \"amount_count\"\n    FROM \"scan_base\"\n    GROUP BY ALL\n  ),\n  \"scan_summary\" AS (\n    SELECT \"s\".\"month\" AS \"month\", \"s\".\"customer_id\" AS \"customer_id\", \"s\".\"amount_sum\" AS \"amount_sum\", \"s\".\"amount_count\" AS \"amount_count\"\n    FROM \"sales\".\"public\".\"agg_invoice_month\" AS \"s\"\n    CROSS JOIN \"bounds\" AS \"b\"\n    WHERE \"s\".\"month\" >= \"b\".\"from_day\"\n      AND \"s\".\"month\" <= \"b\".\"to_day\"\n  ),\n  \"compared\" AS (\n    SELECT\n      COALESCE(\"a\".\"month\", \"s\".\"month\") AS \"month\",\n      COALESCE(\"a\".\"customer_id\", \"s\".\"customer_id\") AS \"customer_id\",\n      \"a\".\"amount_sum\" AS \"base.amount_sum\", \"s\".\"amount_sum\" AS \"summary.amount_sum\",\n      \"a\".\"amount_count\" AS \"base.amount_count\", \"s\".\"amount_count\" AS \"summary.amount_count\",\n      CASE\n        WHEN \"s\".\"month\" IS NULL THEN 'missing_in_summary'\n        WHEN \"a\".\"month\" IS NULL THEN 'missing_in_base'\n        WHEN \"a\".\"amount_sum\" IS DISTINCT FROM \"s\".\"amount_sum\"\n          OR \"a\".\"amount_count\" IS DISTINCT FROM \"s\".\"amount_count\" THEN 'measure_differs'\n      END AS \"violation\"\n    FROM \"aggregate_base\" AS \"a\"\n    FULL OUTER JOIN \"scan_summary\" AS \"s\"\n      ON \"a\".\"month\" IS NOT DISTINCT FROM \"s\".\"month\"\n      AND \"a\".\"customer_id\" IS NOT DISTINCT FROM \"s\".\"customer_id\"\n  )\nSELECT \"month\", \"customer_id\", \"base.amount_sum\", \"summary.amount_sum\", \"base.amount_count\", \"summary.amount_count\", \"violation\"\nFROM \"compared\"\nWHERE \"violation\" IS NOT NULL",
+      "parameters": [
+        {
+          "position": 1,
+          "logical_type": {
+            "kind": "text"
+          },
+          "binding": "period_from"
+        },
+        {
+          "position": 2,
+          "logical_type": {
+            "kind": "text"
+          },
+          "binding": "period_to"
+        }
+      ],
+      "sources": [
+        "sales.public.agg_invoice_month",
+        "sales.public.fact_invoice"
+      ],
+      "build": {
+        "sql": "WITH\n  \"bounds\" AS (\n    SELECT CASE\n      WHEN length(CAST($1 AS VARCHAR)) = 4 THEN make_date(CAST(CAST($1 AS VARCHAR) AS INTEGER), 1, 1)\n      WHEN substr(CAST($1 AS VARCHAR), 6, 1) = 'Q' THEN make_date(CAST(substr(CAST($1 AS VARCHAR), 1, 4) AS INTEGER), CAST(substr(CAST($1 AS VARCHAR), 7, 1) AS INTEGER) * 3 - 2, 1)\n      WHEN substr(CAST($1 AS VARCHAR), 6, 1) = 'W' THEN CAST(date_trunc('week', make_date(CAST(substr(CAST($1 AS VARCHAR), 1, 4) AS INTEGER), 1, 4)) AS DATE) + 7 * (CAST(substr(CAST($1 AS VARCHAR), 7, 2) AS INTEGER) - 1)\n      WHEN length(CAST($1 AS VARCHAR)) = 7 THEN make_date(CAST(substr(CAST($1 AS VARCHAR), 1, 4) AS INTEGER), CAST(substr(CAST($1 AS VARCHAR), 6, 2) AS INTEGER), 1)\n      ELSE CAST(CAST($1 AS VARCHAR) AS DATE)\n    END AS \"from_day\",\n    CAST(CASE\n      WHEN length(CAST($2 AS VARCHAR)) = 4 THEN make_date(CAST(CAST($2 AS VARCHAR) AS INTEGER), 1, 1)\n      WHEN substr(CAST($2 AS VARCHAR), 6, 1) = 'Q' THEN make_date(CAST(substr(CAST($2 AS VARCHAR), 1, 4) AS INTEGER), CAST(substr(CAST($2 AS VARCHAR), 7, 1) AS INTEGER) * 3 - 2, 1)\n      WHEN substr(CAST($2 AS VARCHAR), 6, 1) = 'W' THEN CAST(date_trunc('week', make_date(CAST(substr(CAST($2 AS VARCHAR), 1, 4) AS INTEGER), 1, 4)) AS DATE) + 7 * (CAST(substr(CAST($2 AS VARCHAR), 7, 2) AS INTEGER) - 1)\n      WHEN length(CAST($2 AS VARCHAR)) = 7 THEN make_date(CAST(substr(CAST($2 AS VARCHAR), 1, 4) AS INTEGER), CAST(substr(CAST($2 AS VARCHAR), 6, 2) AS INTEGER), 1)\n      ELSE CAST(CAST($2 AS VARCHAR) AS DATE)\n    END + CASE\n      WHEN length(CAST($2 AS VARCHAR)) = 4 THEN INTERVAL 1 YEAR\n      WHEN substr(CAST($2 AS VARCHAR), 6, 1) = 'Q' THEN INTERVAL 3 MONTH\n      WHEN substr(CAST($2 AS VARCHAR), 6, 1) = 'W' THEN INTERVAL 7 DAY\n      WHEN length(CAST($2 AS VARCHAR)) = 7 THEN INTERVAL 1 MONTH\n      ELSE INTERVAL 1 DAY\n    END - INTERVAL 1 DAY AS DATE) AS \"to_day\"\n  ),\n  \"scan_base\" AS (\n    SELECT \"i\".\"invoice_date\" AS \"invoice_date\", \"i\".\"customer_id\" AS \"customer_id\", \"i\".\"amount\" AS \"amount\"\n    FROM \"sales\".\"public\".\"fact_invoice\" AS \"i\"\n    CROSS JOIN \"bounds\" AS \"b\"\n    WHERE \"i\".\"invoice_date\" >= \"b\".\"from_day\"\n      AND \"i\".\"invoice_date\" <= \"b\".\"to_day\"\n  ),\n  \"aggregate_base\" AS (\n    SELECT CAST(date_trunc('month', \"invoice_date\") AS DATE) AS \"month\", \"customer_id\" AS \"customer_id\",\n      SUM(\"amount\") AS \"amount_sum\", COUNT(\"amount\") AS \"amount_count\"\n    FROM \"scan_base\"\n    GROUP BY ALL\n  )\nSELECT \"month\", \"customer_id\", \"amount_sum\", \"amount_count\"\nFROM \"aggregate_base\"",
+        "parameters": [
+          {
+            "position": 1,
+            "logical_type": {
+              "kind": "text"
+            },
+            "binding": "period_from"
+          },
+          {
+            "position": 2,
+            "logical_type": {
+              "kind": "text"
+            },
+            "binding": "period_to"
+          }
+        ],
+        "columns": [
+          "month",
+          "customer_id",
+          "amount_sum",
+          "amount_count"
+        ]
+      }
     }
   ]
 }
