@@ -1,0 +1,19 @@
+id: cs-slice-060-002
+rules: [VS-1d, VS-3]
+model: slice-060-no-state
+security_context: analyst.json
+query:
+  contract: menura.query
+  contract_version: "1.1.0"
+  time_zone: UTC
+  query:
+    dimensions: [orders.order_date]
+    metrics:
+      - {metric: total_amount, alias: total_amount}
+    nonportable_extensions:
+      - {"vendor_name": "COMMON", "data": {"namespace": "menura", "version": 1, "time_grains": [{"dimension": "orders.order_date", "grain": "month"}]}}
+expect:
+  outcome: plan
+  sql: cs-slice-060-002.sql
+  rows: cs-slice-060-002.csv
+  row_order: any

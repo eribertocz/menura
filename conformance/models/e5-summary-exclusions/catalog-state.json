@@ -1,0 +1,169 @@
+{
+  "contract": "menura.catalog_state",
+  "contract_version": "1.1.0",
+  "document_id": {
+    "origin": "conformance:catalog",
+    "snapshot": "state-1"
+  },
+  "schema_document_id": {
+    "origin": "conformance:catalog",
+    "snapshot": "1"
+  },
+  "relations": [
+    {
+      "source": "shop.main.orders",
+      "row_count_estimate": 4,
+      "partitions": {
+        "column": "order_date",
+        "grain": "day",
+        "versions": [
+          {
+            "period": "2026-10-05",
+            "version": {
+              "origin": "conformance:catalog",
+              "snapshot": "orders-2026-10-05"
+            }
+          },
+          {
+            "period": "2026-10-20",
+            "version": {
+              "origin": "conformance:catalog",
+              "snapshot": "orders-2026-10-20"
+            }
+          },
+          {
+            "period": "2026-11-02",
+            "version": {
+              "origin": "conformance:catalog",
+              "snapshot": "orders-2026-11-02"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "source": "shop.main.orders_price_by_month",
+      "row_count_estimate": 3,
+      "aggregate_build": {
+        "definition_hash": "c2ee6d611a4ab37b340c76c1f9fba73f3625b2ca94f6ae7bc7931acc990ee719",
+        "coverage": {
+          "from": "2026-10",
+          "to": "2026-11"
+        },
+        "built_from": [
+          {
+            "period": "2026-10-05",
+            "version": {
+              "origin": "conformance:catalog",
+              "snapshot": "orders-2026-10-05"
+            }
+          },
+          {
+            "period": "2026-10-20",
+            "version": {
+              "origin": "conformance:catalog",
+              "snapshot": "orders-2026-10-20"
+            }
+          },
+          {
+            "period": "2026-11-02",
+            "version": {
+              "origin": "conformance:catalog",
+              "snapshot": "orders-2026-11-02"
+            }
+          }
+        ],
+        "integrity_check": {
+          "status": "passed",
+          "definition_hash": "c2ee6d611a4ab37b340c76c1f9fba73f3625b2ca94f6ae7bc7931acc990ee719",
+          "verified": [
+            {
+              "period": "2026-10-05",
+              "version": {
+                "origin": "conformance:catalog",
+                "snapshot": "orders-2026-10-05"
+              }
+            },
+            {
+              "period": "2026-10-20",
+              "version": {
+                "origin": "conformance:catalog",
+                "snapshot": "orders-2026-10-20"
+              }
+            },
+            {
+              "period": "2026-11-02",
+              "version": {
+                "origin": "conformance:catalog",
+                "snapshot": "orders-2026-11-02"
+              }
+            }
+          ]
+        },
+        "time_zone": "UTC"
+      }
+    },
+    {
+      "source": "shop.main.orders_created_by_month",
+      "row_count_estimate": 2,
+      "aggregate_build": {
+        "definition_hash": "dc1e8b5835d6b1a165c5267f13b2eb2d5de9826962b0a6c14b886d454e3bf863",
+        "coverage": {
+          "from": "2026-10",
+          "to": "2026-11"
+        },
+        "built_from": [
+          {
+            "period": "2026-10-05",
+            "version": {
+              "origin": "conformance:catalog",
+              "snapshot": "orders-2026-10-05"
+            }
+          },
+          {
+            "period": "2026-10-20",
+            "version": {
+              "origin": "conformance:catalog",
+              "snapshot": "orders-2026-10-20"
+            }
+          },
+          {
+            "period": "2026-11-02",
+            "version": {
+              "origin": "conformance:catalog",
+              "snapshot": "orders-2026-11-02"
+            }
+          }
+        ],
+        "integrity_check": {
+          "status": "passed",
+          "definition_hash": "dc1e8b5835d6b1a165c5267f13b2eb2d5de9826962b0a6c14b886d454e3bf863",
+          "verified": [
+            {
+              "period": "2026-10-05",
+              "version": {
+                "origin": "conformance:catalog",
+                "snapshot": "orders-2026-10-05"
+              }
+            },
+            {
+              "period": "2026-10-20",
+              "version": {
+                "origin": "conformance:catalog",
+                "snapshot": "orders-2026-10-20"
+              }
+            },
+            {
+              "period": "2026-11-02",
+              "version": {
+                "origin": "conformance:catalog",
+                "snapshot": "orders-2026-11-02"
+              }
+            }
+          ]
+        },
+        "time_zone": "UTC"
+      }
+    }
+  ]
+}
