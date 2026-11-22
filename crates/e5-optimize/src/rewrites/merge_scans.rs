@@ -14,3 +14,7 @@ pub(super) fn rewrite(
 ) -> PlanNode {
     plan
 }
+
+#[cfg(test)]
+#[path = "merge_scans_tests.rs"]
+mod tests;
