@@ -7,10 +7,11 @@ use std::path::Path;
 
 use duckdb::Connection;
 use menura_core::{
-    CompileErrorDocument, CompileOptions, CompileResult, CompiledPlanDocument, Diagnostic, Handle,
-    compile,
+    AuditRecordDocument, Compilation, CompileErrorDocument, CompileOptions, CompileResult,
+    CompiledPlanDocument, Diagnostic, Handle, build_producer, compile,
 };
 
+use crate::audit_check::audit_mismatch;
 use crate::case::{Case, Expectation, Outcome};
 use crate::csv_rows::parse_csv;
 use crate::diagnostic_check::{Part, describe, location_mismatch, missing_warnings};
@@ -56,7 +57,7 @@ fn compare_query(case: &Case, handle: &Handle, inputs: &QueryInputs<'_>) -> Case
     };
     let options = compile_options(case);
     let compile_query = || compile(handle, &query, inputs.security_context, &options);
-    let result = compile_query();
+    let Compilation { result, audit } = compile_query();
     if let Some(reason) = missing_warnings(&case.expect.warnings, warnings_of(&result), Part::Query)
     {
         return CaseStatus::Failed(reason);
@@ -71,7 +72,10 @@ fn compare_query(case: &Case, handle: &Handle, inputs: &QueryInputs<'_>) -> Case
                 describe(error.errors.first())
             ))
         }
-        (Outcome::Error, CompileResult::Error(error)) => check_error(&case.expect, &error),
+        (Outcome::Error, CompileResult::Error(error)) => match check_error(&case.expect, &error) {
+            CaseStatus::Passed => check_audit(case, audit.as_deref(), inputs.case_folder),
+            status => status,
+        },
         (Outcome::Error, CompileResult::Plan(_)) => CaseStatus::Failed(format!(
             "the query compiles, but the case expects the error {}",
             case.expect.error.as_deref().unwrap_or("none")
@@ -83,7 +87,32 @@ fn compare_query(case: &Case, handle: &Handle, inputs: &QueryInputs<'_>) -> Case
             "the query does not compile: {}",
             describe(error.errors.first())
         )),
-        (_, CompileResult::Plan(plan)) => check_plan(case, &plan, inputs, compile_query),
+        (_, CompileResult::Plan(plan)) => {
+            match check_audit(case, audit.as_deref(), inputs.case_folder) {
+                CaseStatus::Passed => check_plan(case, &plan, inputs, || compile_query().result),
+                status => status,
+            }
+        }
+    }
+}
+
+/// Compares the audit record with the case's `audit` golden file, when it gives one
+/// (CS-2.13): the record's `producer` must be the build's, and the rest must equal the file.
+fn check_audit(case: &Case, audit: Option<&AuditRecordDocument>, case_folder: &Path) -> CaseStatus {
+    let Some(file_name) = case.expect.audit.as_deref() else {
+        return CaseStatus::Passed;
+    };
+    let Some(record) = audit else {
+        return CaseStatus::Failed(
+            "`compile` with `audit: true` returned no audit record".to_owned(),
+        );
+    };
+    let Some(producer) = build_producer() else {
+        return CaseStatus::Failed("the producer of the build cannot be written".to_owned());
+    };
+    match audit_mismatch(record, &producer, case_folder, file_name) {
+        Some(reason) => CaseStatus::Failed(reason),
+        None => CaseStatus::Passed,
     }
 }
 
@@ -271,7 +300,7 @@ mod tests {
     }
 
     /// Runs the query part of a case of the `e0-context` model, whose `billed_share` is a
-    /// context metric, a capability outside the 0.6.0 slice (VS-1d).
+    /// context metric, a capability outside the 0.7.0 slice (VS-1e).
     fn context_status(case_text: &str) -> CaseStatus {
         status_in_model("e0-context", case_text, &Divergences::default())
     }
@@ -320,7 +349,7 @@ mod tests {
         )
     }
 
-    /// `billed_share` is a context metric, which is outside the 0.6.0 slice (VS-1d).
+    /// `billed_share` is a context metric, which is outside the 0.7.0 slice (VS-1e).
     const OUTSIDE_THE_SLICE: &str = "{metrics: [billed, billed_share]}";
 
     const BY_REGION: &str = "{dimensions: [sales.region], metrics: [total_amount, total_quantity, \

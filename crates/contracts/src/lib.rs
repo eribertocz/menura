@@ -33,7 +33,7 @@ pub use catalog_admission::{
     state_former_name_warning,
 };
 pub use contract::{ContractKind, ContractVersion, FORMER_NAMESPACE, NAMESPACE};
-pub use hash::{InvalidSha256Hash, Sha256Hash, hash_value};
+pub use hash::{InvalidSha256Hash, Sha256Hash, document_hash, hash_value};
 pub use identifier::normalize_unquoted_identifier;
 pub use ordering::compare_names;
 pub use schema::{

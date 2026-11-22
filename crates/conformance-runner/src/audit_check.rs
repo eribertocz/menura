@@ -11,18 +11,11 @@ use crate::golden_json::golden_mismatch;
 
 /// The member of the audit record that is checked against the build and left out of the golden
 /// file (CS-2.13).
-const PRODUCER: &str = "producer";
+pub(crate) const PRODUCER: &str = "producer";
 
 /// Why the audit record does not meet the `audit` expectation `file_name`, or `None`: its
 /// `producer` must equal `build_producer`, the producer of the build under test, and the record
 /// without `producer` must equal the golden file (CS-2.13, CS-2.10).
-#[cfg_attr(
-    not(test),
-    expect(
-        dead_code,
-        reason = "compared once core returns the audit record; until then the audit part is pending (CS-2.8)"
-    )
-)]
 pub(crate) fn audit_mismatch(
     record: &AuditRecordDocument,
     build_producer: &Producer,

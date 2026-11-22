@@ -1,0 +1,59 @@
+{
+  "authorization": [
+    {
+      "decision": "granted",
+      "object": "dataset:SALES",
+      "rule": "access:roles"
+    },
+    {
+      "decision": "granted",
+      "object": "field:SALES.REGION",
+      "rule": "no_field_restriction"
+    },
+    {
+      "decision": "denied",
+      "object": "field:SALES.COST",
+      "rule": "field_access:manager"
+    }
+  ],
+  "compile_options": {
+    "dialect": "duckdb"
+  },
+  "contract": "menura.audit_record",
+  "contract_version": "1.2.0",
+  "contract_versions": {
+    "catalog_schema": "1.1.0",
+    "model": "0.1.1",
+    "query": "1.1.0",
+    "security_context": "1.1.0"
+  },
+  "decisions": [
+    {
+      "code": "DEV-4",
+      "decision": "datasets without access are inaccessible",
+      "reason": "grant_authenticated_to_all is false",
+      "step": "E0",
+      "subject": "load_option:grant_authenticated_to_all"
+    }
+  ],
+  "inputs": {
+    "catalog_schema": "91880f14f5c474326dab7ce0edce1f6aa5df9eeb70a96352bb07a1c48c54bb22",
+    "catalog_state": null,
+    "model": "ce65d82cd8213f1180a7ee76fe057a1b0c5600978b01a910b267de57e6232fbe",
+    "query": "19e8e233d2232dd35a52a9b54e659fccc4745dce05e584adfb6b6e31be2b6324",
+    "security_fingerprint": "e05e3622701f4444cf092bfe49c3d282f13e2357a8695991816a7bd8769808c5"
+  },
+  "load_options": {
+    "data_source": "conformance:slice",
+    "grant_authenticated_to_all": false,
+    "namespace": "menura",
+    "ossie_format": "release"
+  },
+  "outcome": {
+    "error_codes": [
+      "E_NAME_NOT_FOUND"
+    ]
+  },
+  "row_policies": [],
+  "subject": "analyst-north"
+}

@@ -31,8 +31,8 @@ use crate::unusable::check_rows_10_to_12a;
 /// E0 (rows 10 to 12a); then the E0.f code of a filter that does not type or is not boolean
 /// (`E0F-03` to `E0F-08`), `E2-01`, `EQRY-09`, `EQRY-10`, `EQRY-11`, `EQRY-12`,
 /// `EQRY-03`, `E_INVALID_QUERY` and `EQRY-04` (row 12b); then `E_NOT_YET_SUPPORTED` for the
-/// first element outside the 0.6.0 slice (row 12c, VS-1d). [`BindError::Invariant`] when the tree breaks the contract
-/// of E1.
+/// first element outside the 0.7.0 slice (row 12c, VS-1e). [`BindError::Invariant`] when the
+/// tree breaks the contract of E1.
 pub fn bind(
     tree: &QueryTree,
     model: &InternalModel,

@@ -1,7 +1,8 @@
 //! Pure, deterministic orchestration of the compilation stages.
 //!
 //! The public functions are those of architecture section 3.5 that exist in this version:
-//! [`validate`], [`load`], [`with_state`], [`compile`] and [`describe`]. Their inputs are the contract
+//! [`validate`], [`load`], [`with_state`], [`compile`] and [`describe`]; [`build_producer`]
+//! gives the producer every output of this build writes. Their inputs are the contract
 //! documents as bytes; their outputs are contract documents and the immutable [`Handle`]
 //! (ARC-5.1).
 //!
@@ -16,6 +17,7 @@
 
 #![forbid(unsafe_code)]
 
+mod audit;
 mod cache_key;
 mod catalog_state;
 mod compile;
@@ -27,18 +29,19 @@ mod json;
 mod lineage;
 mod load;
 mod load_options;
+mod passed_document;
 mod plan_document;
 mod producer;
 mod stop;
 
-pub use compile::{CompileResult, compile};
+pub use compile::{Compilation, CompileResult, compile};
 pub use compile_options::CompileOptions;
 pub use describe::{DescribeResult, describe};
 pub use handle::Handle;
 pub use json::{OutputError, document_json, plan_json};
 pub use load::{load, validate, with_state};
 pub use load_options::{LoadOptions, LoadOptionsError};
-pub use menura_contracts::types::audit_record::OssieFormat;
+pub use menura_contracts::types::audit_record::{AuditRecordDocument, OssieFormat};
 pub use menura_contracts::types::catalog::{CatalogSchemaDocument, CatalogStateDocument};
 pub use menura_contracts::types::common::Dialect;
 pub use menura_contracts::types::compiled_plan::{
@@ -50,3 +53,4 @@ pub use menura_contracts::types::descriptions::{
     ModelDescriptionDocument,
 };
 pub use menura_model::internal_model::InternalModel;
+pub use producer::build_producer;

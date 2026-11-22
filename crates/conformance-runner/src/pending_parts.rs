@@ -30,9 +30,8 @@ pub(crate) fn document_part(outcome: Outcome) -> CaseStatus {
     ))
 }
 
-/// The status of a case whose query part `status` ran: a passed part stays pending when the
-/// case expects an audit record, which `core` does not return yet (CS-2.13), or when it is an
-/// `outcome: plan` case of a version that runs `explain`, which `core` does not have yet
+/// The status of a case whose query part `status` ran: a passed part stays pending when it is
+/// an `outcome: plan` case of a version that runs `explain`, which `core` does not have yet
 /// (CS-2.16).
 pub(crate) fn with_pending_parts(case: &Case, status: CaseStatus) -> CaseStatus {
     with_pending_parts_of_version(case, status, BUILD_VERSION)
@@ -41,13 +40,6 @@ pub(crate) fn with_pending_parts(case: &Case, status: CaseStatus) -> CaseStatus 
 fn with_pending_parts_of_version(case: &Case, status: CaseStatus, version: &str) -> CaseStatus {
     if status != CaseStatus::Passed {
         return status;
-    }
-    if case.expect.audit.is_some() {
-        return CaseStatus::Pending(
-            "the audit part needs the audit record, which core does not return yet \
-             (CS-2.13, CS-2.8)"
-                .to_owned(),
-        );
     }
     if case.expect.outcome == Outcome::Plan && runs_explain(version) {
         return CaseStatus::Pending(
@@ -104,10 +96,10 @@ mod tests {
     }
 
     #[test]
-    fn cs_2_13_a_passed_case_with_audit_is_pending() {
+    fn cs_2_13_a_passed_case_with_audit_is_compared_not_pending() {
         let error = case("error", "  error: E2-01\n  audit: a.json\n");
-        let status = with_pending_parts_of_version(&error, CaseStatus::Passed, "0.6.0");
-        assert!(is_pending(&status, "CS-2.13"), "{status:?}");
+        let status = with_pending_parts_of_version(&error, CaseStatus::Passed, "0.7.0");
+        assert_eq!(status, CaseStatus::Passed);
     }
 
     #[test]

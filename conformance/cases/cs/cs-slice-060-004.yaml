@@ -1,5 +1,5 @@
 id: cs-slice-060-004
-rules: [VS-1d, VS-3, VS-2]
+rules: [VS-1d, VS-1e, VS-3, VS-2]
 model: slice-060-no-state
 security_context: analyst.json
 query:

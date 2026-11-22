@@ -8,6 +8,7 @@ use menura_e4_plan::PlanError;
 use crate::compile::InternalError;
 
 /// Why compilation stopped: the first error of E2-5, or a defect of the compiler.
+#[derive(Clone)]
 pub(crate) enum Stop {
     /// The first error, in the order of E2-5 (PLN-5.1).
     Error(Diagnostic),
@@ -71,18 +72,6 @@ pub(crate) fn plan_stop(error: &PlanError) -> Stop {
     match error.to_diagnostic() {
         Some(diagnostic) => diagnostic.into(),
         None => InternalError::new("E4", error.to_string()).into(),
-    }
-}
-
-/// `E_NOT_YET_SUPPORTED` for `audit: true`, which comes in 0.7.0 (VS-5).
-pub(crate) fn audit_not_yet_supported() -> Diagnostic {
-    Diagnostic {
-        code: "E_NOT_YET_SUPPORTED".to_owned(),
-        message: "the audit record (`audit: true`) is not supported before 0.7.0; compile \
-                  without `audit`"
-            .to_owned(),
-        location: None,
-        alternatives: None,
     }
 }
 

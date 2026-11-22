@@ -52,12 +52,30 @@ fn cs_2_15_the_describe_cases_pass() {
 #[test]
 fn cs_2_8_cases_that_need_a_missing_core_function_are_pending() {
     let report = run(&conformance_directory(), Some("next")).unwrap();
-    for case_id in ["next-audit-001", "next-integrity-checks-001"] {
+    let status = status(&report, "next-integrity-checks-001");
+    assert!(matches!(status, Some(CaseStatus::Pending(_))), "{status:?}");
+    assert!(!report.has_failures());
+}
+
+#[test]
+fn cs_2_13_the_audit_cases_are_compared() {
+    let report = run(&conformance_directory(), Some("pln")).unwrap();
+    for case_id in [
+        "pln-audit-not-admitted-001",
+        "pln-audit-denied-001",
+        "pln-audit-denied-field-001",
+    ] {
+        assert_eq!(
+            status(&report, case_id),
+            Some(&CaseStatus::Passed),
+            "{case_id}"
+        );
+    }
+    for case_id in ["pln-audit-plan-001", "pln-audit-row-policies-001"] {
         let status = status(&report, case_id);
         assert!(
-            matches!(status, Some(CaseStatus::Pending(_))),
+            matches!(status, Some(CaseStatus::Passed | CaseStatus::Pending(_))),
             "{case_id}: {status:?}"
         );
     }
-    assert!(!report.has_failures());
 }
