@@ -26,6 +26,9 @@
     {
       "name": "usable entry with a query error code",
       "valid": false,
+      "keywords": [
+        "not"
+      ],
       "patch": [
         {
           "op": "add",
@@ -37,6 +40,9 @@
     {
       "name": "unusable entry without a query error code",
       "valid": false,
+      "keywords": [
+        "required"
+      ],
       "patch": [
         {
           "op": "replace",
@@ -48,6 +54,9 @@
     {
       "name": "metric without kind",
       "valid": false,
+      "keywords": [
+        "required"
+      ],
       "patch": [
         {
           "op": "remove",
@@ -58,6 +67,9 @@
     {
       "name": "wrong object kind",
       "valid": false,
+      "keywords": [
+        "pattern"
+      ],
       "patch": [
         {
           "op": "replace",
@@ -69,6 +81,9 @@
     {
       "name": "short definition hash",
       "valid": false,
+      "keywords": [
+        "pattern"
+      ],
       "patch": [
         {
           "op": "replace",
@@ -80,11 +95,112 @@
     {
       "name": "unknown member",
       "valid": false,
+      "keywords": [
+        "additionalProperties"
+      ],
       "patch": [
         {
           "op": "add",
           "path": "/extra",
           "value": 1
+        }
+      ]
+    },
+    {
+      "name": "wrong contract",
+      "valid": false,
+      "keywords": [
+        "const",
+        "properties"
+      ],
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/contract",
+          "value": "menura.model_description"
+        }
+      ]
+    },
+    {
+      "name": "usable is not a boolean",
+      "valid": false,
+      "keywords": [
+        "type",
+        "properties",
+        "items"
+      ],
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/datasets/0/usable",
+          "value": "yes"
+        }
+      ]
+    },
+    {
+      "name": "empty query error code",
+      "valid": false,
+      "keywords": [
+        "minLength",
+        "if",
+        "then",
+        "else",
+        "not"
+      ],
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/metrics/0/usable",
+          "value": false
+        },
+        {
+          "op": "add",
+          "path": "/metrics/0/query_error_code",
+          "value": ""
+        }
+      ]
+    },
+    {
+      "name": "model input of an unknown kind",
+      "valid": false,
+      "keywords": [
+        "items",
+        "pattern"
+      ],
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/metrics/0/model_inputs/0",
+          "value": "policy:CUSTOMERS.REGION_SCOPE"
+        }
+      ]
+    },
+    {
+      "name": "compiler version not semver",
+      "valid": false,
+      "keywords": [
+        "$ref",
+        "pattern"
+      ],
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/producer/compiler_version",
+          "value": "0.8"
+        }
+      ]
+    },
+    {
+      "name": "unknown metric kind",
+      "valid": false,
+      "keywords": [
+        "enum"
+      ],
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/metrics/0/kind",
+          "value": "window"
         }
       ]
     }
