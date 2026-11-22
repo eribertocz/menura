@@ -54,3 +54,8 @@ spec/stages/E5-optimize.md E5-2.1 E5-2.2 E5-2.3 E5-3.2 E5-3.2a E5-3.3 E5-3.3a E5
 spec/extensions/summaries.md SUM-3.1 SUM-3.2 SUM-3.2a SUM-3.3 SUM-3.3a SUM-3.4 SUM-3.5 SUM-3.6 SUM-3.7 SUM-3.8
 spec/contracts/catalog.md CAT-7.2.1
 spec/stages/E6-generate.md E6-4.15
+# 0.7.0 gate (rules of the slice VS-1e; PLN-5.4, PLN-5.4a, PLN-6.8, PLN-8.2 and PLN-8.3 need a case-format extension planned for 0.8.0; CHK-2.1, E5-3.1 and E5-3.1a have no observable compiler behavior)
+spec/07-roadmap.md VS-1e
+spec/contracts/compiled-plan.md PLN-3.3 PLN-3.3a PLN-4.1 PLN-4.2 PLN-4.3 PLN-4.4 PLN-4.5 PLN-4.6 PLN-4.7 PLN-4.8 PLN-4.9 PLN-6.1 PLN-6.2 PLN-6.3 PLN-6.3a PLN-6.4 PLN-6.5 PLN-6.6 PLN-6.7 PLN-7.1 PLN-7.2 PLN-7.3 PLN-7.4 PLN-8.1
+spec/contracts/model-description.md DSC-3.1 DSC-3.2 DSC-3.2a DSC-3.3 DSC-3.4 DSC-3.5 DSC-3.6 DSC-3.7 DSC-3.8 DSC-3.9 DSC-3.10 DSC-3.11 DSC-3.12 DSC-4.1 DSC-4.2 DSC-4.3 DSC-4.4 DSC-4.5
+spec/contracts/integrity-checks.md CHK-2.2 CHK-2.3 CHK-2.4 CHK-2.5 CHK-2.6 CHK-3.1 CHK-4.1 CHK-4.2 CHK-5.1 CHK-5.2 CHK-5.3 CHK-5.4 CHK-5.5 CHK-5.6 CHK-6.1 CHK-6.2 CHK-6.3 CHK-6.4 CHK-6.5 CHK-6.5a CHK-6.6 CHK-7.1 CHK-7.2 CHK-7.3 CHK-7.4
