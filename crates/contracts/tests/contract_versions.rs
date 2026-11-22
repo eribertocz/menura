@@ -55,6 +55,9 @@ fn schema_text(kind: ContractKind) -> &'static str {
         ContractKind::ModelDiff => {
             include_str!("../../../spec/contracts/schemas/model-diff.schema.json")
         }
+        ContractKind::MigrationReport => {
+            include_str!("../../../spec/contracts/schemas/migration-report.schema.json")
+        }
     }
 }
 

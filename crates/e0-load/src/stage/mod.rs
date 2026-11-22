@@ -13,6 +13,7 @@ mod early;
 mod explanation;
 mod findings;
 mod parsing;
+mod reading;
 mod report;
 mod resolution;
 
@@ -29,6 +30,7 @@ use crate::internal_model::{ModelInput, build_internal_model};
 use crate::read::{Node, read_document};
 use analysis::{Earlier, classification, relationships, types};
 use early::{AcceptedExtensions, summaries_only};
+pub use reading::read_model_tree;
 use report::Report;
 use resolution::resolve;
 
