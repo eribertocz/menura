@@ -38,12 +38,45 @@ fn case_folders(suite: &str) -> usize {
         .count()
 }
 
+/// The Layer 2 cases the 0.5.0 slice compiles (issue #382), which must pass (CS-4.6).
+const PASSING_QUERY_CASES: [&str; 7] = [
+    "query/a01_grand_total",
+    "query/a02_measure_per_group",
+    "query/a03_where_before_measure",
+    "query/a05_scalar_ops_on_measure_values",
+    "query/a06_nulls_follow_aggregate",
+    "query/a07_empty_input_set",
+    "query/a08_group_by_all_skips_measures",
+];
+
 #[test]
-fn oss_2_3_every_vendored_case_is_reported_pending() {
+fn oss_2_3_every_vendored_case_is_reported() {
     let report = ossie_report().unwrap();
     let expected = case_folders("wide_table") + case_folders("query");
     assert_eq!(report.cases.len(), expected);
+    assert!(!report.has_failures(), "{}", report.render());
+}
+
+#[test]
+fn cs_4_6_the_query_cases_the_slice_compiles_pass() {
+    let report = ossie_report().unwrap();
+    for id in PASSING_QUERY_CASES {
+        let case = report
+            .cases
+            .iter()
+            .find(|case| case.id.as_str() == id)
+            .unwrap();
+        assert_eq!(case.status, CaseStatus::Passed, "{id}");
+    }
+}
+
+#[test]
+fn oss_2_4_every_other_case_is_reported_pending() {
+    let report = ossie_report().unwrap();
     for case in &report.cases {
+        if PASSING_QUERY_CASES.contains(&case.id.as_str()) {
+            continue;
+        }
         assert!(
             matches!(case.status, CaseStatus::Pending(_)),
             "{} is {:?}",

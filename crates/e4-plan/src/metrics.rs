@@ -197,6 +197,7 @@ fn component(
         name: component_column(key.metric, key.component),
         call,
         filter: filter.map(|filter| *filter),
+        recomposition: None,
     })
 }
 
