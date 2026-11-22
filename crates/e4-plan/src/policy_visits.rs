@@ -107,7 +107,7 @@ pub(crate) fn row_filters_from<'model>(
 
 /// The datasets with row policies that take part in the visible rows of `home`: `home` first,
 /// then the others by the length of their shortest path from `home`, then by name; each once.
-fn visit_order<'model>(
+pub(crate) fn visit_order<'model>(
     home: &'model Dataset,
     model: &'model InternalModel,
     graph: &PolicyGraph<'model>,

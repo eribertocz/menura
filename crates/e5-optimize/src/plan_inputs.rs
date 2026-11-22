@@ -1,6 +1,7 @@
 //! Mutable access to the inputs of a plan operation, for rewrites that replace one input or
 //! rebuild a node with new inputs.
 
+use menura_model::internal_model::NormalizedName;
 use menura_representations::logical_plan::{Operation, PlanNode, SnapshotMissing, SnapshotOver};
 
 /// `node` with each of its inputs replaced by `map(index, input)`, where `index` is the
@@ -70,5 +71,17 @@ fn snapshot_input_mut(over: &mut SnapshotOver, index: usize) -> Option<&mut Plan
         (1, SnapshotMissing::CarryForward { carried, .. }) => Some(carried.as_mut()),
         (1, SnapshotMissing::Zero { added }) => Some(added.as_mut()),
         _ => None,
+    }
+}
+
+/// The dataset of the home `Scan` of the branch or node `node`: the first input of each node,
+/// down to a `Scan`. `None` when the first inputs end without one.
+pub(crate) fn home_dataset(node: &PlanNode) -> Option<&NormalizedName> {
+    let mut current = node;
+    loop {
+        if let Operation::Scan { dataset, .. } = current.operation() {
+            return Some(dataset);
+        }
+        current = current.inputs().into_iter().next()?;
     }
 }

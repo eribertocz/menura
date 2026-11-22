@@ -37,7 +37,7 @@ pub(crate) fn check_query_policies(
 
 /// The datasets whose visible rows the query reads, in visit order: each branch's home
 /// dataset, then the dataset of its population when it has one.
-fn visit_roots<'model>(
+pub(crate) fn visit_roots<'model>(
     branches: &Branches,
     metrics: &[PlannedMetric<'model>],
     model: &'model InternalModel,

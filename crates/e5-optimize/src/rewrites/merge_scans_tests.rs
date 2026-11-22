@@ -265,6 +265,19 @@ fn e5_3_4a_branches_that_differ_in_a_query_filter_are_kept_apart() {
 }
 
 #[test]
+fn e5_3_8_branches_of_different_home_datasets_are_not_considered() {
+    let plan = stitched(vec![
+        branch(scan("ORDERS"), &["metric_1_component_1"]),
+        branch(scan("RETURNS"), &["metric_2_component_1"]),
+    ]);
+
+    let (rewritten, records) = merged(plan.clone());
+
+    assert_eq!(rewritten, plan);
+    assert!(records.is_empty());
+}
+
+#[test]
 fn e5_3_4a_branches_that_differ_in_a_join_are_kept_apart() {
     let plan = stitched(vec![
         branch(scan("ORDERS"), &["metric_1_component_1"]),

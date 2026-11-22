@@ -1,0 +1,18 @@
+id: pln-explanation-load-option-001
+rules: [PLN-1, PLN-7, PLN-7.3]
+model: slice
+security_context: auditor.json
+query:
+  contract: "menura.query"
+  contract_version: "1.1.0"
+  time_zone: "UTC"
+  query:
+    dimensions: ["sales.region"]
+    metrics:
+      - {"metric": "total_amount", "alias": "total_amount"}
+      - {"metric": "sale_count", "alias": "sale_count"}
+expect:
+  outcome: "plan"
+  row_order: "any"
+  rows: "pln-explanation-load-option-001.csv"
+  explanation: [DEV-4]

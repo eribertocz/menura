@@ -4,6 +4,7 @@ use std::sync::Arc;
 
 use menura_contracts::types::catalog::{CatalogSchemaDocument, CatalogStateDocument};
 use menura_contracts::types::compiled_plan::Diagnostic;
+use menura_model::explanation::ExplanationEntry;
 use menura_model::internal_model::InternalModel;
 
 use crate::catalog_state::StateAdmission;
@@ -25,6 +26,7 @@ struct Loaded {
     catalog_schema: CatalogSchemaDocument,
     options: LoadOptions,
     warnings: Vec<Diagnostic>,
+    explanation: Vec<ExplanationEntry>,
 }
 
 impl Handle {
@@ -34,6 +36,7 @@ impl Handle {
         catalog_schema: CatalogSchemaDocument,
         options: LoadOptions,
         warnings: Vec<Diagnostic>,
+        explanation: Vec<ExplanationEntry>,
     ) -> Self {
         Self {
             loaded: Arc::new(Loaded {
@@ -41,6 +44,7 @@ impl Handle {
                 catalog_schema,
                 options,
                 warnings,
+                explanation,
             }),
             catalog_state: None,
             state_warning: None,
@@ -79,6 +83,11 @@ impl Handle {
     #[must_use]
     pub fn load_options(&self) -> &LoadOptions {
         &self.loaded.options
+    }
+
+    /// The decisions E0 recorded for the explanation of every plan (DEV-4, PLN-7.3).
+    pub(crate) fn explanation(&self) -> &[ExplanationEntry] {
+        &self.loaded.explanation
     }
 
     /// The load warnings (a catalog schema's `WCAT-05` first, then those of E0-4.3), then the

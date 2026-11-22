@@ -10,12 +10,15 @@
 mod column_reads;
 mod context;
 mod evidence;
+mod explanation;
 mod plan_inputs;
 mod record;
 mod rewrites;
 
 #[cfg(test)]
 mod evidence_tests;
+#[cfg(test)]
+mod explanation_tests;
 #[cfg(test)]
 mod inner_joins_tests;
 #[cfg(test)]
@@ -26,6 +29,7 @@ mod tests;
 pub use record::{NodePath, RewriteOutcome, RewriteRecord, RewriteRule, RewriteSubject};
 
 use menura_contracts::types::catalog::{CatalogSchemaDocument, CatalogStateDocument};
+use menura_model::explanation::ExplanationEntry;
 use menura_model::internal_model::InternalModel;
 use menura_representations::bound_query::BoundQuery;
 use menura_representations::logical_plan::PlanNode;
@@ -40,6 +44,7 @@ use crate::rewrites::PIPELINE;
 pub struct OptimizedPlan {
     plan: PlanNode,
     records: Vec<RewriteRecord>,
+    explanation: Vec<ExplanationEntry>,
 }
 
 impl OptimizedPlan {
@@ -50,8 +55,7 @@ impl OptimizedPlan {
     }
 
     /// Every rewrite applied, and every rewrite considered and rejected, in the order E5
-    /// considered them (E5-3.8, E5-4.4). Before 0.7.0 they are not part of the compiled plan
-    /// (VS-5).
+    /// considered them (E5-3.8, E5-4.4).
     #[must_use]
     pub fn records(&self) -> &[RewriteRecord] {
         &self.records
@@ -59,13 +63,20 @@ impl OptimizedPlan {
 
     /// Whether the plan reads a summary, and so requires the authorized executor: summaries are
     /// `access: internal`, and only that executor's identity may read their relations (E5-4
-    /// step 5, SUM-4.2). It holds when a record shows a summary used (E5-3.5). Before 0.7.0 the
-    /// mark is not part of the compiled plan (VS-5).
+    /// step 5, SUM-4.2). It holds when a record shows a summary used (E5-3.5).
     #[must_use]
     pub fn requires_authorized_executor(&self) -> bool {
         self.records.iter().any(|record| {
             record.rule == RewriteRule::UseSummary && record.outcome == RewriteOutcome::Applied
         })
+    }
+
+    /// The E5 entries of the explanation (E5-2.2, PLN-7.3): one per record, with `decision`
+    /// `applied` or `rejected` (E5-3.8), then one `E5-4` entry per summary used, whose
+    /// `decision` is `requires authorized executor` (E5-4 step 5).
+    #[must_use]
+    pub fn explanation(&self) -> &[ExplanationEntry] {
+        &self.explanation
     }
 
     /// The optimized plan, without the records.
@@ -102,8 +113,17 @@ pub fn optimize(
         security,
     };
     let mut records = Vec::new();
+    let mut explanation = Vec::new();
     let plan = PIPELINE.iter().fold(plan.clone(), |plan, (_, rewrite)| {
-        rewrite(plan, &context, &mut records)
+        let first = records.len();
+        let rewritten = rewrite(plan.clone(), &context, &mut records);
+        explanation.extend(explanation::rewrite_entries(&records[first..], &plan));
+        rewritten
     });
-    OptimizedPlan { plan, records }
+    explanation.extend(explanation::authorized_executor_entries(&records));
+    OptimizedPlan {
+        plan,
+        records,
+        explanation,
+    }
 }

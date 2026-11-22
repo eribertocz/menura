@@ -1,0 +1,19 @@
+id: pln-explanation-merge-scans-001
+rules: [PLN-7.1, E5-3.8]
+model: e5-merge-scans
+security_context: analyst.json
+query:
+  contract: "menura.query"
+  contract_version: "1.1.0"
+  time_zone: "UTC"
+  query:
+    dimensions: ["customers.category"]
+    metrics:
+      - {"metric": "total_paid", "alias": "total_paid"}
+      - {"metric": "last_global", "alias": "last_global"}
+      - {"metric": "paid_rows", "alias": "paid_rows"}
+expect:
+  outcome: "plan"
+  rows: "pln-explanation-merge-scans-001.csv"
+  row_order: "any"
+  explanation: [DEV-4, E4-4.0e, E4-4.1, E5-3.2, E5-3.3, E5-3.4]
