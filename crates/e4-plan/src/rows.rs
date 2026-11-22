@@ -44,11 +44,20 @@ pub(crate) struct RowsRequest<'request> {
     pub(crate) fields: &'request [NormalizedName],
     /// The query-filter predicate, with the element it comes from.
     pub(crate) predicate: Option<(Expression, QueryLocation)>,
+    /// The rows that take the place of the visible home rows, built from the home columns
+    /// the rows read: the rows added for `missing: zero` (E4-7.6). `None` reads the home
+    /// rows.
+    pub(crate) replaced_home: Option<&'request ReplacedHome<'request>>,
 }
+
+/// Builds the rows that take the place of the home rows, with the given home columns.
+pub(crate) type ReplacedHome<'build> =
+    dyn Fn(&[NormalizedName]) -> Result<PlanNode, PlanError> + 'build;
 
 /// The rows of the branch of `source` for `request`: its visible home rows, joined along its
 /// join tree, filtered by the predicate, then deduplicated per (key values, home row) when the
-/// branch joins and has components (E4-4.0a to E4-4.0f).
+/// branch joins and has components (E4-4.0a to E4-4.0f). Replaced home rows are joined and
+/// filtered the same way, and never deduplicated: they have no home row identity.
 ///
 /// # Errors
 ///
@@ -87,10 +96,15 @@ pub(crate) fn branch_rows(
     for instance in layout.instances() {
         read.extend(visibility.instance_fields(instance.dataset, &instance.prefix)?);
     }
-    let deduplicated = !branch.join_tree.is_empty() && !request.components.is_empty();
-    let identity = deduplicated.then(|| layout.identity());
-    let scan = scan::scan(home, &joins::home_reads(layout, &read), catalog, identity)?;
-    let mut node = visibility.visible_rows(scan, home, None)?;
+    let home_reads = joins::home_reads(layout, &read);
+    let (mut node, identity) = if let Some(replaced) = request.replaced_home {
+        (replaced(&home_reads)?, None)
+    } else {
+        let deduplicated = !branch.join_tree.is_empty() && !request.components.is_empty();
+        let identity = deduplicated.then(|| layout.identity());
+        let scan = scan::scan(home, &home_reads, catalog, identity)?;
+        (visibility.visible_rows(scan, home, None)?, identity)
+    };
     node = joins::join_instances(node, layout, &read, &visibility)?;
     if let Some((predicate, location)) = request.predicate {
         node = filter(node, predicate, Origin::Query(location));

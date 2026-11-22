@@ -4,7 +4,7 @@
 use menura_contracts::types::common::LogicalType;
 use menura_model::expression::Expression;
 use menura_model::internal_model::{
-    Dataset, DeclaredAdditivity, InternalModel, Metric, SourceLocation, ValueType,
+    Dataset, DeclaredAdditivity, InternalModel, Metric, SemiAdditive, SourceLocation, ValueType,
 };
 use menura_representations::bound_query::{BoundMetric, BoundMetricKind, BoundQuery, MetricPath};
 use menura_representations::logical_plan::{AggregateComponent, DerivedFormula};
@@ -48,8 +48,7 @@ pub(crate) struct MetricOutput {
 /// # Errors
 ///
 /// An internal error for an inline metric, a metric or input the model does not have or did
-/// not classify, a cycle of derived metrics, or a metric or input with the additivity,
-/// population or context extension.
+/// not classify, a cycle of derived metrics, or a metric or input with the context extension.
 pub(crate) fn planned_metrics<'input>(
     query: &'input BoundQuery,
     model: &'input InternalModel,
@@ -97,12 +96,35 @@ fn check_extensions(metric: &Metric) -> Result<(), InvariantViolation> {
     if metric.context.is_some() {
         return Err(InvariantViolation::ContextMetric);
     }
+    Ok(())
+}
+
+/// The semi-additive declaration of the base metric whose components `branch` holds, with
+/// that metric (E3-4.1).
+///
+/// # Errors
+///
+/// An internal error for a branch without components, or whose first component's metric is
+/// not semi-additive.
+pub(crate) fn semi_additive_metric<'input>(
+    branch: &Branch,
+    metrics: &[PlannedMetric<'input>],
+) -> Result<(&'input Metric, &'input SemiAdditive), PlanError> {
+    let unknown = || {
+        PlanError::invariant(
+            InvariantViolation::UnknownComponent,
+            &crate::slice::query_root(),
+        )
+    };
+    let key = branch.components.first().ok_or_else(unknown)?;
+    let metric = metrics
+        .get(key.metric)
+        .and_then(|metric| metric.expanded.components.get(key.component))
+        .map(|base| base.metric)
+        .ok_or_else(unknown)?;
     match &metric.declared_additivity {
-        Some(DeclaredAdditivity::SemiAdditive(semi)) if semi.population.is_some() => {
-            Err(InvariantViolation::PopulationMetric)
-        }
-        Some(_) => Err(InvariantViolation::AdditivityMetric),
-        None => Ok(()),
+        Some(DeclaredAdditivity::SemiAdditive(semi_additive)) => Ok((metric, semi_additive)),
+        Some(DeclaredAdditivity::NonAdditive) | None => Err(unknown()),
     }
 }
 
