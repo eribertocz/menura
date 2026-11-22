@@ -127,6 +127,7 @@ fn aggregate(input: PlanNode, key: &str, components: &[&str]) -> PlanNode {
                 name: ColumnName::new(name),
                 call: AggregateCall::CountRows,
                 filter: None,
+                recomposition: None,
             })
             .collect(),
     };
@@ -388,4 +389,78 @@ fn e5_3_4_a_plan_without_stitch_is_unchanged_and_records_nothing() {
 
     assert_eq!(rewritten, plan);
     assert!(records.is_empty());
+}
+
+/// The home `Scan` of `ORDERS` that projects `columns`, under a row-policy `Filter` and a
+/// `Join` whose right columns follow.
+fn projecting(columns: &[&str]) -> PlanNode {
+    let operation = Operation::Scan {
+        dataset: NormalizedName::new("ORDERS"),
+        row_identity: None,
+    };
+    let scan = node(operation, columns);
+    let filter = node(
+        Operation::Filter {
+            input: Box::new(scan),
+            predicate: Expression::Literal(Literal::Boolean(true)),
+        },
+        columns,
+    );
+    let joined = join(filter);
+    let mut names = columns.to_vec();
+    names.extend(["C.CUSTOMER_ID", "C.REGION"]);
+    PlanNode::new(joined.operation().clone(), schema(&names), origin())
+}
+
+#[test]
+fn e5_3_4a_branches_whose_home_scans_project_other_columns_merge_with_their_union() {
+    let plan = stitched(vec![
+        branch(
+            projecting(&["CUSTOMER_ID", "REGION"]),
+            &["metric_1_component_1"],
+        ),
+        branch(projecting(&["REGION", "AMOUNT"]), &["metric_2_component_1"]),
+    ]);
+
+    let (plan, records) = merged(plan);
+
+    let expected = project(branch(
+        projecting(&["CUSTOMER_ID", "REGION", "AMOUNT"]),
+        &["metric_1_component_1", "metric_2_component_1"],
+    ));
+    assert_eq!(plan, expected);
+    assert_eq!(records, [record(1, RewriteOutcome::Applied)]);
+}
+
+#[test]
+fn e5_3_4a_the_merged_home_scan_lists_fields_in_field_order_then_sources_then_identity() {
+    let fields = [
+        NormalizedName::new("CUSTOMER_ID"),
+        NormalizedName::new("REGION"),
+        NormalizedName::new("AMOUNT"),
+    ];
+    let identity = ColumnName::new("menura.row_identity");
+
+    let columns = super::rows::scan_columns(
+        &schema(&["AMOUNT", "menura.paid", "menura.row_identity"]),
+        &schema(&["CUSTOMER_ID", "menura.due", "menura.row_identity"]),
+        &fields,
+        Some(&identity),
+    );
+
+    let names: Vec<&str> = columns
+        .columns()
+        .iter()
+        .map(|column| column.name.as_str())
+        .collect();
+    assert_eq!(
+        names,
+        [
+            "CUSTOMER_ID",
+            "AMOUNT",
+            "menura.paid",
+            "menura.due",
+            "menura.row_identity"
+        ]
+    );
 }
