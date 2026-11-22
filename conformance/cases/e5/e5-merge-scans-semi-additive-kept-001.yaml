@@ -1,5 +1,5 @@
 id: e5-merge-scans-semi-additive-kept-001
-rules: [E5-3.4, E5-3.4a]
+rules: [E5-3.4, E5-3.4a, E5-2.1]
 model: e5-merge-scans
 security_context: analyst.json
 query:

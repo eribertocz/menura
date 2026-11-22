@@ -1,0 +1,20 @@
+id: e5-summary-range-unaligned-001
+rules: [SUM-3.5]
+model: e5-summary-selection
+security_context: analyst.json
+query:
+  contract: menura.query
+  contract_version: "1.1.0"
+  time_zone: UTC
+  query:
+    dimensions: [orders.region]
+    metrics:
+      - {metric: total_amount, alias: total_amount}
+    nonportable_extensions:
+      - {"vendor_name": "COMMON", "data": {"namespace": "menura", "version": 1, "date_range": {"dimension": "orders.order_date", "from": "2026-10-05", "to": "2026-11-30"}}}
+expect:
+  outcome: plan
+  sql: e5-summary-range-unaligned-001.sql
+  rows: e5-summary-range-unaligned-001.csv
+  row_order: any
+oracle: e5-summary-range-unaligned-001.oracle.sql

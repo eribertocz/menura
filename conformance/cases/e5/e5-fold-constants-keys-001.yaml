@@ -1,5 +1,5 @@
 id: e5-fold-constants-keys-001
-rules: [E5-3.6]
+rules: [E5-3.6, E5-2.1, VS-1d]
 model: e5-fold-constants
 security_context: guest.json
 query:
