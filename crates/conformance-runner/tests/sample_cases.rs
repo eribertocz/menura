@@ -40,18 +40,11 @@ fn cs_2_sample_cases_cover_every_outcome_kind() {
 }
 
 #[test]
-fn cs_2_8_the_samples_pass_except_the_runtime_error_outside_the_slice() {
+fn cs_2_8_every_sample_passes_in_the_0_5_0_slice() {
     let report = run(&conformance_directory(), Some("sample")).unwrap();
     assert_eq!(report.cases.len(), 4);
     for case in &report.cases {
-        if case.id.as_str() == "sample-runtime-error-001" {
-            let CaseStatus::Pending(reason) = &case.status else {
-                panic!("{}: {:?}", case.id, case.status);
-            };
-            assert!(reason.contains("E_NOT_YET_SUPPORTED"), "{reason}");
-        } else {
-            assert_eq!(case.status, CaseStatus::Passed, "{}", case.id);
-        }
+        assert_eq!(case.status, CaseStatus::Passed, "{}", case.id);
     }
     assert!(!report.has_failures());
 }
@@ -80,7 +73,7 @@ fn cs_4_3_report_lists_each_sample_case_under_its_rule() {
         .render();
     assert!(text.contains("CS-2.2\n  sample-plan-001 passed"), "{text}");
     assert!(
-        text.ends_with("4 cases: 3 passed, 1 pending, 0 failed\n"),
+        text.ends_with("4 cases: 4 passed, 0 pending, 0 failed\n"),
         "{text}"
     );
 }
