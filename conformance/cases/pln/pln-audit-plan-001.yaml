@@ -1,5 +1,5 @@
 id: pln-audit-plan-001
-rules: [CS-2.13, VS-1e, PLN-6, PLN-6.1, PLN-6.2, PLN-6.3, PLN-6.5, PLN-6.6, PLN-6.7, E2-4.7]
+rules: [CS-2.13, VS-1e, PLN-6, PLN-6.1, PLN-6.2, PLN-6.3, PLN-6.3a, PLN-6.5, PLN-6.6, PLN-6.7, E2-4.7]
 model: slice
 security_context: auditor.json
 query:
