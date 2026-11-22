@@ -16,10 +16,10 @@ fn model_directory() -> PathBuf {
 }
 
 fn document() -> IntegrityChecksDocument {
-    let directory = model_directory();
-    let model = std::fs::read(directory.join("model.yaml")).unwrap();
-    let catalog_schema = std::fs::read(directory.join("catalog-schema.json")).unwrap();
-    let handle = load(&model, &catalog_schema, None, &LoadOptions::default()).unwrap();
+    let model = include_bytes!("../../../conformance/models/chk-relationships/model.yaml");
+    let catalog_schema =
+        include_bytes!("../../../conformance/models/chk-relationships/catalog-schema.json");
+    let handle = load(model, catalog_schema, None, &LoadOptions::default()).unwrap();
     integrity_checks(&handle, Dialect::Duckdb).unwrap()
 }
 
