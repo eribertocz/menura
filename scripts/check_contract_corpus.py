@@ -1,6 +1,6 @@
 """Validate the contract corpus with the reference JSON Schema implementation.
 
-Each file of crates/contracts/tests/corpus/ lists cases: a published example, a patch (a subset of
+Each file of spec/contracts/corpus/ lists cases: a published example, a patch (a subset of
 RFC 6902: add, replace, remove) and the expected verdict. This script checks every case with
 Python jsonschema (Draft 2020-12, format checker on). The Rust test `corpus` checks the same
 cases with the compiler's evaluator, so the two implementations cannot disagree on any case.
@@ -17,7 +17,7 @@ import jsonschema
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 CONTRACTS = ROOT / "spec" / "contracts"
-CORPUS = ROOT / "crates" / "contracts" / "tests" / "corpus"
+CORPUS = CONTRACTS / "corpus"
 
 
 def load(path):

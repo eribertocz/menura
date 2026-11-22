@@ -1,4 +1,5 @@
-//! Contract document tests: CON-0.1, CON-0.2, CON-1, PLN-1, PLN-5, CHK-2 and DSC-2.
+//! Contract document tests: CON-0.1, CON-0.2, CON-1, PLN-5 and DSC-2. The schema verdicts of
+//! each contract are the cases of `spec/contracts/corpus/` (`tests/corpus.rs`).
 
 // `cfg(test)` marks the helpers as test code, where `expect` is allowed (clippy.toml).
 #[cfg(test)]
@@ -141,68 +142,12 @@ fn con_1_typed_documents_reject_unknown_members() {
 }
 
 #[test]
-fn pln_1_compiled_plan_schema() {
-    let kind = ContractKind::CompiledPlan;
-    let document = example("compiled-plan.example.json");
-    assert_invalid_at(
-        kind,
-        &with(document.clone(), "/result_schema", json!([])),
-        "/result_schema",
+fn pln_5_a_null_location_round_trips() {
+    let null_location = with(
+        example("compile-error.example.json"),
+        "/errors/0/location",
+        Value::Null,
     );
-    assert_invalid_at(kind, &with(document.clone(), "/sql", json!("")), "/sql");
-    assert_invalid_at(
-        kind,
-        &with(document.clone(), "/dialect", json!("postgres")),
-        "/dialect",
-    );
-    assert_invalid_at(
-        kind,
-        &with(document.clone(), "/cache_key/key", json!("AA")),
-        "/cache_key/key",
-    );
-    assert_valid(
-        kind,
-        &with(document.clone(), "/cache_key/data_versions", Value::Null),
-    );
-    let explanation = with(document.clone(), "/contract", json!("menura.explanation"));
-    assert_invalid_at(kind, &explanation, "/parameters");
-    let explanation = with(
-        with(explanation, "/sql", json!("")),
-        "/parameters",
-        json!([]),
-    );
-    assert_valid(kind, &explanation);
-    let parameter = with(document, "/parameters/0/position", json!(0));
-    assert_invalid_at(kind, &parameter, "/parameters/0/position");
-}
-
-#[test]
-fn pln_5_compile_error_schema() {
-    let kind = ContractKind::CompileError;
-    let document = example("compile-error.example.json");
-    assert_invalid_at(
-        kind,
-        &with(document.clone(), "/errors", json!([])),
-        "/errors",
-    );
-    let report = with(
-        document.clone(),
-        "/contract",
-        json!("menura.validation_report"),
-    );
-    assert_valid(kind, &with(report, "/errors", json!([])));
-    assert_invalid_at(
-        kind,
-        &with(document.clone(), "/errors/0/code", json!("e_bad")),
-        "/errors/0/code",
-    );
-    assert_valid(
-        kind,
-        &with(document.clone(), "/errors/0/location", Value::Null),
-    );
-    let located = adding(document.clone(), "/errors/0/location", "line", json!(0));
-    assert_invalid_at(kind, &located, "/errors/0/location/line");
-    let null_location = with(document, "/errors/0/location", Value::Null);
     assert_eq!(
         round_trip::<CompileErrorDocument>(&null_location),
         Some(null_location)
@@ -210,46 +155,21 @@ fn pln_5_compile_error_schema() {
 }
 
 #[test]
-fn chk_2_integrity_checks_schema() {
-    let kind = ContractKind::IntegrityChecks;
-    let document = example("integrity-checks.example.json");
-    assert_invalid_at(
-        kind,
-        &with(document.clone(), "/checks/0/kind", json!("freshness")),
-        "/checks/0/kind",
+fn dsc_2_a_null_ai_context_round_trips() {
+    let context = adding(
+        example("model-description.example.json"),
+        "/metrics/0",
+        "ai_context",
+        Value::Null,
     );
-    assert_invalid_at(
-        kind,
-        &with(document.clone(), "/checks/0/sources", json!([])),
-        "/checks/0/sources",
-    );
-    assert_invalid_at(
-        kind,
-        &without(document, "/checks/0/definition_hash"),
-        "/checks/0",
-    );
-}
-
-#[test]
-fn dsc_2_model_description_schema() {
-    let kind = ContractKind::ModelDescription;
-    let document = example("model-description.example.json");
-    assert_invalid_at(kind, &without(document.clone(), "/metrics"), "");
-    let grain = with(
-        document.clone(),
-        "/datasets/1/fields/4/time_grains/0",
-        json!("hour"),
-    );
-    assert_invalid_at(kind, &grain, "/datasets/1/fields/4/time_grains/0");
-    assert_invalid_at(
-        kind,
-        &with(document.clone(), "/metrics/0/kind", json!("ratio")),
-        "/metrics/0/kind",
-    );
-    let context = adding(document, "/metrics/0", "ai_context", Value::Null);
-    assert_valid(kind, &context);
     assert_eq!(
         round_trip::<ModelDescriptionDocument>(&context),
         Some(context)
     );
+}
+
+#[test]
+fn pln_1_a_typed_plan_requires_every_member() {
+    let incomplete = without(example("compiled-plan.example.json"), "/lineage");
+    assert!(serde_json::from_value::<CompiledPlanDocument>(incomplete).is_err());
 }
