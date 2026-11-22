@@ -1,0 +1,89 @@
+[
+  {
+    "model_inputs": [
+      "field:ORDERS.REGION"
+    ],
+    "output": "region",
+    "physical_inputs": [
+      {
+        "column": "region",
+        "source": "shop.main.orders_by_region_month"
+      }
+    ],
+    "security_policies": [
+      "ORDERS.EVERY_REGION"
+    ],
+    "summary": "ORDERS_BY_REGION_MONTH"
+  },
+  {
+    "model_inputs": [
+      "field:ORDERS.ORDER_DATE"
+    ],
+    "output": "order_date",
+    "physical_inputs": [
+      {
+        "column": "order_month",
+        "source": "shop.main.orders_by_region_month"
+      }
+    ],
+    "security_policies": [
+      "ORDERS.EVERY_REGION"
+    ],
+    "summary": "ORDERS_BY_REGION_MONTH"
+  },
+  {
+    "model_inputs": [
+      "field:ORDERS.AMOUNT",
+      "metric:TOTAL_AMOUNT"
+    ],
+    "output": "total_amount",
+    "physical_inputs": [
+      {
+        "column": "amount_sum",
+        "source": "shop.main.orders_by_region_month"
+      }
+    ],
+    "security_policies": [
+      "ORDERS.EVERY_REGION"
+    ],
+    "summary": "ORDERS_BY_REGION_MONTH"
+  },
+  {
+    "model_inputs": [
+      "field:ORDERS.ORDER_ID",
+      "metric:ORDER_COUNT"
+    ],
+    "output": "order_count",
+    "physical_inputs": [
+      {
+        "column": "order_count",
+        "source": "shop.main.orders_by_region_month"
+      }
+    ],
+    "security_policies": [
+      "ORDERS.EVERY_REGION"
+    ],
+    "summary": "ORDERS_BY_REGION_MONTH"
+  },
+  {
+    "model_inputs": [
+      "field:ORDERS.AMOUNT",
+      "metric:AVERAGE_AMOUNT"
+    ],
+    "output": "average_amount",
+    "physical_inputs": [
+      {
+        "column": "amount_count",
+        "source": "shop.main.orders_by_region_month"
+      },
+      {
+        "column": "amount_sum",
+        "source": "shop.main.orders_by_region_month"
+      }
+    ],
+    "security_policies": [
+      "ORDERS.EVERY_REGION"
+    ],
+    "summary": "ORDERS_BY_REGION_MONTH"
+  }
+]
