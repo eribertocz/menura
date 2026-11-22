@@ -1,0 +1,66 @@
+version: "0.1.1"
+semantic_model:
+  - name: e0_context
+    description: A period_to_date metric whose base reads a semi-additive metric through a derived metric
+    datasets:
+      - name: invoices
+        source: shop.main.invoices
+        primary_key: [invoice_id]
+        fields:
+          - name: invoice_id
+            expression: {dialects: [{dialect: ANSI_SQL, expression: invoice_id}]}
+          - name: customer_id
+            expression: {dialects: [{dialect: ANSI_SQL, expression: customer_id}]}
+          - name: invoice_date
+            expression: {dialects: [{dialect: ANSI_SQL, expression: invoice_date}]}
+          - name: billed
+            expression: {dialects: [{dialect: ANSI_SQL, expression: billed}]}
+      - name: customers
+        source: shop.main.customers
+        primary_key: [customer_id]
+        fields:
+          - name: customer_id
+            expression: {dialects: [{dialect: ANSI_SQL, expression: customer_id}]}
+          - name: region
+            expression: {dialects: [{dialect: ANSI_SQL, expression: region}]}
+    relationships:
+      - name: invoices_customers
+        from: invoices
+        to: customers
+        from_columns: [customer_id]
+        to_columns: [customer_id]
+    metrics:
+      - name: billed
+        expression: {dialects: [{dialect: ANSI_SQL, expression: 'SUM(invoices.billed)'}]}
+      - name: billed_ytd
+        expression: {dialects: [{dialect: ANSI_SQL, expression: 'AGG(balance_twice)'}]}
+        custom_extensions:
+          - vendor_name: COMMON
+            data: '{"namespace": "menura", "version": 1, "context": {"base": "balance_twice", "modifier": {"type": "period_to_date", "time_dimension": "invoices.invoice_date", "grain": "year"}}}'
+      - name: billed_prior_year
+        expression: {dialects: [{dialect: ANSI_SQL, expression: 'AGG(billed)'}]}
+        custom_extensions:
+          - vendor_name: COMMON
+            data: '{"namespace": "menura", "version": 1, "context": {"base": "billed", "modifier": {"type": "prior_period", "time_dimension": "invoices.invoice_date", "grain": "year", "offset": 1}}}'
+      - name: billed_share
+        expression: {dialects: [{dialect: ANSI_SQL, expression: 'AGG(billed)'}]}
+        custom_extensions:
+          - vendor_name: COMMON
+            data: '{"namespace": "menura", "version": 1, "context": {"base": "billed", "modifier": {"type": "share_of_total", "remove": ["customers.region"]}}}'
+      - name: billed_change
+        expression: {dialects: [{dialect: ANSI_SQL, expression: 'AGG(billed) - AGG(billed_prior_year)'}]}
+        custom_extensions:
+          - vendor_name: COMMON
+            data: '{"namespace": "menura", "version": 1, "derived": {}}'
+      - name: customer_count
+        expression: {dialects: [{dialect: ANSI_SQL, expression: 'COUNT(DISTINCT customers.customer_id)'}]}
+      - name: balance
+        expression: {dialects: [{dialect: ANSI_SQL, expression: 'MAX(invoices.billed)'}]}
+        custom_extensions:
+          - vendor_name: COMMON
+            data: '{"namespace": "menura", "version": 1, "additivity": {"type": "semi_additive", "over": "invoices.customer_id", "entity": ["invoices.invoice_id"], "aggregation": "max", "nulls": "error"}}'
+      - name: balance_twice
+        expression: {dialects: [{dialect: ANSI_SQL, expression: 'AGG(balance) * 2'}]}
+        custom_extensions:
+          - vendor_name: COMMON
+            data: '{"namespace": "menura", "version": 1, "derived": {}}'

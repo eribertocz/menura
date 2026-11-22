@@ -21,6 +21,9 @@
     {
       "name": "unknown change",
       "valid": false,
+      "keywords": [
+        "enum"
+      ],
       "patch": [
         {
           "op": "replace",
@@ -32,6 +35,9 @@
     {
       "name": "object without kind",
       "valid": false,
+      "keywords": [
+        "pattern"
+      ],
       "patch": [
         {
           "op": "replace",
@@ -43,10 +49,86 @@
     {
       "name": "missing new model hash",
       "valid": false,
+      "keywords": [
+        "required"
+      ],
       "patch": [
         {
           "op": "remove",
           "path": "/new_model_hash"
+        }
+      ]
+    },
+    {
+      "name": "wrong contract",
+      "valid": false,
+      "keywords": [
+        "const",
+        "properties"
+      ],
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/contract",
+          "value": "menura.model_dependencies"
+        }
+      ]
+    },
+    {
+      "name": "changes is not an array",
+      "valid": false,
+      "keywords": [
+        "type"
+      ],
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/changes",
+          "value": {}
+        }
+      ]
+    },
+    {
+      "name": "change with an unknown member",
+      "valid": false,
+      "keywords": [
+        "items",
+        "additionalProperties"
+      ],
+      "patch": [
+        {
+          "op": "add",
+          "path": "/changes/0/reason",
+          "value": "x"
+        }
+      ]
+    },
+    {
+      "name": "compiler version not semver",
+      "valid": false,
+      "keywords": [
+        "$ref",
+        "pattern"
+      ],
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/producer/compiler_version",
+          "value": "0.8"
+        }
+      ]
+    },
+    {
+      "name": "empty tzdata version",
+      "valid": false,
+      "keywords": [
+        "minLength"
+      ],
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/producer/tzdata_version",
+          "value": ""
         }
       ]
     }
