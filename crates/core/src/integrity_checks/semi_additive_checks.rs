@@ -21,14 +21,17 @@ use super::result_names::added_column_name;
 use crate::compile::InternalError;
 
 /// The SQL of the `semi_additive` check of the metric `target`, and the datasets it reads:
-/// the home dataset, then, with a time `over`, the dataset of the population.
+/// the home dataset, then, with a time `over`, the dataset of the population. `None` when
+/// `over` or an `entity` field is not a field of the home dataset: that check is left out.
 pub(super) fn semi_additive_check_sql(
     model: &InternalModel,
     catalog: &CatalogSchemaDocument,
     target: &str,
-) -> Result<(GeneratedCheckSql, Vec<NormalizedName>), InternalError> {
+) -> Result<Option<(GeneratedCheckSql, Vec<NormalizedName>)>, InternalError> {
     let (metric, keys) = semi_additive_metric(model, target)?;
-    let home_name = home_dataset(metric, keys)?;
+    let Some(home_name) = home_dataset(metric, keys)? else {
+        return Ok(None);
+    };
     let home = model
         .dataset(home_name)
         .ok_or_else(|| defect(target, "names an unknown home dataset"))?;
@@ -69,7 +72,7 @@ pub(super) fn semi_additive_check_sql(
     };
     let generated = generate_snapshot_check_sql(&check, CheckInputs { catalog, model })
         .map_err(|error| InternalError::new("E6", format!("{error:?}")))?;
-    Ok((generated, datasets))
+    Ok(Some((generated, datasets)))
 }
 
 /// The population part of a check with a time `over`.
@@ -132,12 +135,13 @@ fn semi_additive_metric<'model>(
     }
 }
 
-/// The one home dataset of `metric` (ADD-5.1.6). The check reads `over` and `entity` as
-/// fields of that dataset; a field of a dataset reached from it is not generated yet.
+/// The one home dataset of `metric` (ADD-5.1.6), or `None` when `over` or an `entity` field
+/// is a field of a dataset reached from it: the check reads them as fields of the home
+/// dataset only.
 fn home_dataset<'model>(
     metric: &'model Metric,
     keys: &SemiAdditive,
-) -> Result<&'model NormalizedName, InternalError> {
+) -> Result<Option<&'model NormalizedName>, InternalError> {
     let target = metric.name.as_str();
     let homes = metric
         .classification
@@ -148,13 +152,8 @@ fn home_dataset<'model>(
         return Err(defect(target, "has not exactly one home dataset"));
     };
     let on_home = |path: &FieldPath| &path.dataset == home;
-    if !on_home(&keys.over) || !keys.entity.iter().all(on_home) {
-        return Err(defect(
-            target,
-            "reads over or entity from a reached dataset, which is not generated yet",
-        ));
-    }
-    Ok(home)
+    let read_on_home = on_home(&keys.over) && keys.entity.iter().all(on_home);
+    Ok(read_on_home.then_some(home))
 }
 
 /// Whether the `over` column, the last of `columns`, is a time field (ADD-5.1.5).
