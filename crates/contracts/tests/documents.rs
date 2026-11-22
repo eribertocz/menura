@@ -9,6 +9,7 @@ use menura_contracts::types::ContractDocument;
 use menura_contracts::types::audit_record::AuditRecordDocument;
 use menura_contracts::types::catalog::{CatalogSchemaDocument, CatalogStateDocument};
 use menura_contracts::types::compiled_plan::{CompileErrorDocument, CompiledPlanDocument};
+use menura_contracts::types::dependencies::{ModelDependenciesDocument, ModelDiffDocument};
 use menura_contracts::types::descriptions::{IntegrityChecksDocument, ModelDescriptionDocument};
 use menura_contracts::types::query::QueryDocument;
 use menura_contracts::types::security_context::SecurityContextDocument;
@@ -33,17 +34,22 @@ fn round_trip_of(kind: ContractKind, document: &Value) -> Option<Value> {
         ContractKind::AuditRecord => round_trip::<AuditRecordDocument>(document),
         ContractKind::ModelDescription => round_trip::<ModelDescriptionDocument>(document),
         ContractKind::IntegrityChecks => round_trip::<IntegrityChecksDocument>(document),
+        ContractKind::ModelDependencies => round_trip::<ModelDependenciesDocument>(document),
+        ContractKind::ModelDiff => round_trip::<ModelDiffDocument>(document),
     }
 }
 
 #[test]
 fn con_0_1_every_public_contract_has_a_kind() {
     let readme = include_str!("../../../spec/contracts/README.md");
-    // The table names each contract with its name or its former name (CON-0.5), so only the
-    // part after the namespace is compared.
+    // Both tables (the contracts produced and those planned for 0.8.0) name each contract with
+    // its name or its former name (CON-0.5), in whichever column holds the `contract` value, so
+    // every code span of every table row is read and only the part after the namespace is
+    // compared.
     let listed: Vec<&str> = readme
         .lines()
-        .filter_map(|line| line.split('`').nth(1))
+        .filter(|line| line.starts_with('|'))
+        .flat_map(|line| line.split('`').skip(1).step_by(2))
         .filter_map(|name| name.split_once('.'))
         .filter(|(namespace, _)| [NAMESPACE, FORMER_NAMESPACE].contains(namespace))
         .map(|(_, local_name)| local_name)

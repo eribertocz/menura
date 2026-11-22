@@ -32,7 +32,7 @@ macro_rules! corpus_file {
     };
 }
 
-fn corpus_files() -> [CorpusFile; 9] {
+fn corpus_files() -> [CorpusFile; 11] {
     [
         corpus_file!(CatalogSchema, "catalog-schema"),
         corpus_file!(CatalogState, "catalog-state"),
@@ -43,6 +43,8 @@ fn corpus_files() -> [CorpusFile; 9] {
         corpus_file!(AuditRecord, "audit-record"),
         corpus_file!(ModelDescription, "model-description"),
         corpus_file!(IntegrityChecks, "integrity-checks"),
+        corpus_file!(ModelDependencies, "model-dependencies"),
+        corpus_file!(ModelDiff, "model-diff"),
     ]
 }
 
@@ -78,6 +80,12 @@ fn example_text(file: &str) -> Option<&'static str> {
         }
         "integrity-checks.example.json" => {
             include_str!("../../../spec/contracts/examples/integrity-checks.example.json")
+        }
+        "model-dependencies.example.json" => {
+            include_str!("../../../spec/contracts/examples/model-dependencies.example.json")
+        }
+        "model-diff.example.json" => {
+            include_str!("../../../spec/contracts/examples/model-diff.example.json")
         }
         _ => return None,
     };

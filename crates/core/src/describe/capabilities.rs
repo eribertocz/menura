@@ -30,6 +30,12 @@ const EXTENSIONS: [&str; 7] = [
     "security_context",
 ];
 
+/// The contracts of the 0.8.0 slice (DEP-2): the compiler produces them, but the profile lists
+/// only what the slice of [`SLICE_VERSION`] provides (DSC-4.2), so they are listed once the
+/// slice reaches 0.8.0.
+const LATER_SLICE_CONTRACTS: [ContractKind; 2] =
+    [ContractKind::ModelDependencies, ContractKind::ModelDiff];
+
 /// The longest identifier (E0D-1.2).
 const MAX_IDENTIFIER_LENGTH: u64 = 128;
 
@@ -84,6 +90,7 @@ pub(super) fn capabilities() -> Result<Capabilities, InternalError> {
 fn contracts() -> Vec<SupportedContract> {
     let mut contracts: Vec<SupportedContract> = ContractKind::ALL
         .iter()
+        .filter(|kind| !LATER_SLICE_CONTRACTS.contains(kind))
         .map(|kind| supported(kind.contract_name(), *kind))
         .chain([
             supported("menura.explanation", ContractKind::CompiledPlan),

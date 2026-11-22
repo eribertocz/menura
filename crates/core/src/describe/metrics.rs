@@ -49,7 +49,7 @@ fn described_metric(
 
 /// `derived` for a metric of the derived-metric extension, `context` for one of the context
 /// extension, `base` otherwise.
-fn kind(metric: &Metric) -> MetricKind {
+pub(crate) fn kind(metric: &Metric) -> MetricKind {
     if metric.derived.is_some() {
         MetricKind::Derived
     } else if metric.context.is_some() {

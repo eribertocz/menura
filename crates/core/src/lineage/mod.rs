@@ -3,9 +3,9 @@
 
 mod metrics;
 mod names;
-mod policies;
+pub(crate) mod policies;
 mod provenance;
-mod references;
+pub(crate) mod references;
 mod scan;
 mod semi_additive;
 mod walk;

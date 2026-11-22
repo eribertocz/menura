@@ -106,6 +106,12 @@ pub(crate) fn schema_text(kind: ContractKind) -> &'static str {
         ContractKind::IntegrityChecks => {
             include_str!("../../../../spec/contracts/schemas/integrity-checks.schema.json")
         }
+        ContractKind::ModelDependencies => {
+            include_str!("../../../../spec/contracts/schemas/model-dependencies.schema.json")
+        }
+        ContractKind::ModelDiff => {
+            include_str!("../../../../spec/contracts/schemas/model-diff.schema.json")
+        }
     }
 }
 
