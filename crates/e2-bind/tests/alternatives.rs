@@ -13,6 +13,7 @@ use support::diagnostic;
 use support::query::{
     column, dimension, equals_text, filter, metric, metric_aggregate, path, tree,
 };
+use support::sql::{field_item, relation, sql_columns, sql_where, where_filter};
 
 const ANALYST: &[&str] = &["analyst"];
 const ADMIN: &[&str] = &["admin"];
@@ -148,4 +149,38 @@ fn pln_5_4a_hidden_and_missing_names_get_the_same_alternatives() {
 #[test]
 fn pln_5_4a_hidden_dataset_is_never_a_candidate() {
     assert!(alternatives(&path_query("secret", "orders_to_customers"), ANALYST).is_empty());
+}
+
+#[test]
+fn pln_5_4_sql_form_bare_column_is_qualified_by_the_relation() {
+    let tree = sql_columns(
+        relation("sales", "orders", None, 30),
+        vec![field_item("amont", 7)],
+    );
+    assert_eq!(
+        alternatives(&tree, ANALYST),
+        names(&["field:ORDERS.AMOUNT"])
+    );
+}
+
+#[test]
+fn pln_5_4_sql_form_alias_qualifier_is_the_relation_dataset() {
+    let tree = sql_where(
+        relation("sales", "orders", Some("o"), 30),
+        vec![field_item("o.region", 7)],
+        where_filter(equals_text(column("o.regon")), 50),
+    );
+    assert_eq!(
+        alternatives(&tree, ANALYST),
+        names(&["field:ORDERS.REGION"])
+    );
+}
+
+#[test]
+fn pln_5_4_sql_form_from_relation_has_no_alternatives() {
+    let tree = sql_columns(
+        relation("sales", "order", None, 30),
+        vec![field_item("amount", 7)],
+    );
+    assert!(alternatives(&tree, ANALYST).is_empty());
 }

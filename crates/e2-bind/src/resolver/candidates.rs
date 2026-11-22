@@ -6,17 +6,28 @@ use menura_contracts::types::audit_record::Access;
 use menura_model::internal_model::{Dataset, FieldPath, NormalizedName};
 use menura_representations::bound_query::MetricPath;
 
-use super::Resolver;
+use super::{NameScope, Resolver};
 use crate::alternatives::{ExpectedKind, select_alternatives};
+use crate::names::joined_names;
 
 impl Resolver<'_> {
-    /// The alternatives of a reference whose position expects `kind`, written `reference`
-    /// once normalized (PLN-5.4); empty when `reference` has no normalized form. Candidates
-    /// come only from authorized objects (PLN-5.4a).
-    pub(crate) fn alternatives(&self, kind: ExpectedKind, reference: Option<&str>) -> Vec<String> {
-        let Some(reference) = reference else {
+    /// The alternatives of a reference read in `scope` at a position that expects `kind`,
+    /// whose parts normalize to `names` (PLN-5.4); empty when a part has no normalized form
+    /// (`None`). Candidates come only from authorized objects (PLN-5.4a).
+    pub(crate) fn alternatives(
+        &self,
+        kind: ExpectedKind,
+        scope: NameScope<'_>,
+        names: Option<Vec<NormalizedName>>,
+    ) -> Vec<String> {
+        let Some(names) = names else {
             return Vec::new();
         };
+        let names = match kind {
+            ExpectedKind::Field => scope.field_names(names),
+            ExpectedKind::Metric | ExpectedKind::Dataset => names,
+        };
+        let reference = joined_names(&names);
         let candidates = match kind {
             ExpectedKind::Field => self.field_candidates(),
             ExpectedKind::Metric => self.metric_candidates(),
@@ -25,7 +36,7 @@ impl Resolver<'_> {
                 .map(|dataset| dataset.name.as_str().to_owned())
                 .collect(),
         };
-        select_alternatives(kind, reference, candidates)
+        select_alternatives(kind, &reference, candidates)
     }
 
     /// The datasets of the authorized subgraph (E2-4.8), without summaries (E2-4.6).

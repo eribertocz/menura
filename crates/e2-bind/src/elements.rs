@@ -14,11 +14,11 @@ use menura_representations::query_tree::{
 
 use crate::alternatives::ExpectedKind;
 use crate::authorized_query::{AuthorizedDateRange, AuthorizedTimeGrain, ResolvedName};
-use crate::error::{BindCode, BindDiagnostic, BindError, InvariantViolation};
+use crate::error::{BindError, InvariantViolation};
 use crate::names::{
-    normalized_expression_reference, normalized_reference, written_expression_reference,
-    written_identifier, written_reference,
+    reference_names, written_expression_reference, written_identifier, written_reference,
 };
+use crate::not_found::{expression_not_found, not_found};
 use crate::resolver::{NameScope, RelationScope, Resolver};
 use crate::walk::nodes;
 
@@ -215,8 +215,7 @@ fn resolve_read(
 ) -> Result<ResolvedRead, BindError> {
     let written = written_reference(reference);
     let target = resolver.scoped_reference(scope, reference).ok_or_else(|| {
-        let alternatives =
-            resolver.alternatives(expected, normalized_reference(reference).as_deref());
+        let alternatives = resolver.alternatives(expected, scope, reference_names(reference));
         not_found(&written, "field or metric", origin, alternatives)
     })?;
     Ok(ResolvedRead { written, target })
@@ -241,7 +240,7 @@ fn expression_reads(
         let written = written_expression_reference(reference);
         let target = resolver
             .scoped_expression_reference(scope, reference)
-            .ok_or_else(|| expression_not_found(reference, expected, origin, resolver))?;
+            .ok_or_else(|| expression_not_found(reference, expected, scope, origin, resolver))?;
         reads.push(ResolvedRead { written, target });
     }
     Ok(reads)
@@ -260,7 +259,9 @@ fn resolve_filter<'tree>(
     {
         let target = resolver
             .scoped_expression_reference(scope, reference)
-            .ok_or_else(|| expression_not_found(reference, expected, &filter.origin, resolver))?;
+            .ok_or_else(|| {
+                expression_not_found(reference, expected, scope, &filter.origin, resolver)
+            })?;
         targets.push(target);
     }
     Ok(ResolvedFilter { filter, targets })
@@ -284,24 +285,6 @@ fn expected_reference(node: &Expression) -> Option<(&Reference, ExpectedKind)> {
         Expression::MetricAggregate(reference) => Some((reference, ExpectedKind::Metric)),
         _ => None,
     }
-}
-
-/// `E_NAME_NOT_FOUND` for the expression reference `reference`, at a position that expects
-/// `expected`, with its alternatives (PLN-5.4).
-fn expression_not_found(
-    reference: &Reference,
-    expected: ExpectedKind,
-    origin: &QueryLocation,
-    resolver: &Resolver<'_>,
-) -> BindError {
-    let normalized = normalized_expression_reference(reference);
-    let alternatives = resolver.alternatives(expected, Some(&normalized));
-    not_found(
-        &written_expression_reference(reference),
-        "field or metric",
-        origin,
-        alternatives,
-    )
 }
 
 fn resolve_time_grain(
@@ -333,7 +316,8 @@ fn resolve_path(path: &QueryPath, resolver: &mut Resolver<'_>) -> Result<BoundPa
         resolver.dataset_reference(reference).ok_or_else(|| {
             let alternatives = resolver.alternatives(
                 ExpectedKind::Dataset,
-                normalized_reference(reference).as_deref(),
+                NameScope::Model,
+                reference_names(reference),
             );
             not_found(
                 &written_reference(reference),
@@ -371,7 +355,8 @@ fn resolve(
     resolver.reference(reference).ok_or_else(|| {
         let alternatives = resolver.alternatives(
             ExpectedKind::Field,
-            normalized_reference(reference).as_deref(),
+            NameScope::Model,
+            reference_names(reference),
         );
         not_found(
             &written_reference(reference),
@@ -380,21 +365,4 @@ fn resolve(
             alternatives,
         )
     })
-}
-
-/// `E_NAME_NOT_FOUND` for the name `written`, which should name a `kind`, carrying
-/// `alternatives` (PLN-5.4). The message and the alternatives are the same whether the name is
-/// unknown or unauthorized (E2-4.4, PLN-5.2, PLN-5.4a).
-fn not_found(
-    written: &str,
-    kind: &str,
-    origin: &QueryLocation,
-    alternatives: Vec<String>,
-) -> BindError {
-    let message = format!(
-        "`{written}` does not name a {kind} of the model; check the name and how it is written"
-    );
-    BindDiagnostic::new(BindCode::NameNotFound, message, origin)
-        .with_alternatives(alternatives)
-        .into()
 }

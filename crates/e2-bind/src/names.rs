@@ -79,20 +79,17 @@ fn delimited(text: &str) -> String {
     format!("\"{}\"", text.replace('"', "\"\""))
 }
 
-/// `reference` as written, normalized part by part and joined with `.` (PLN-5.4 step 3), or
-/// `None` when a part names nothing.
-pub(crate) fn normalized_reference(reference: &QueryReference) -> Option<String> {
-    let names = reference_names(reference)?;
-    let parts: Vec<&str> = names.iter().map(NormalizedName::as_str).collect();
-    Some(parts.join("."))
-}
-
-/// The expression reference `reference` as written, normalized part by part and joined with
-/// `.` (PLN-5.4 step 3).
-pub(crate) fn normalized_expression_reference(reference: &Reference) -> String {
+/// The normalized names of the parts of the expression reference `reference` (E0D-1.1).
+pub(crate) fn expression_reference_names(reference: &Reference) -> Vec<NormalizedName> {
     let name = identifier_name(&reference.name);
     match &reference.qualifier {
-        Some(qualifier) => format!("{}.{}", identifier_name(qualifier).as_str(), name.as_str()),
-        None => name.as_str().to_owned(),
+        Some(qualifier) => vec![identifier_name(qualifier), name],
+        None => vec![name],
     }
+}
+
+/// Normalized names joined with `.`, as PLN-5.4 step 3 compares a reference.
+pub(crate) fn joined_names(names: &[NormalizedName]) -> String {
+    let parts: Vec<&str> = names.iter().map(NormalizedName::as_str).collect();
+    parts.join(".")
 }
