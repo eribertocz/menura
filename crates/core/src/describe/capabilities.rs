@@ -11,30 +11,24 @@ use menura_contracts::{ContractKind, ContractVersion, compare_names};
 use crate::compile::InternalError;
 use crate::producer::{OSSIE_NORMATIVE, OSSIE_TRACKED_COMMIT, producer};
 
-/// The roadmap row whose slice the release compiles (7.1, VS-1e).
+/// The roadmap row whose slice the release compiles (7.1, VS-1f).
 const SLICE_VERSION: ContractVersion = ContractVersion {
     major: 0,
-    minor: 7,
+    minor: 8,
     patch: 0,
 };
 
-/// The extension keys whose elements the slice compiles, each in data version 1; `context`
-/// comes in 0.8.0 (DSC-4.2).
-const EXTENSIONS: [&str; 7] = [
+/// The extension keys whose elements the slice compiles, each in data version 1 (DSC-4.2).
+const EXTENSIONS: [&str; 8] = [
     "access",
     "additivity",
     "aggregate",
+    "context",
     "derived",
     "populations",
     "row_access",
     "security_context",
 ];
-
-/// The contracts of the 0.8.0 slice (DEP-2): the compiler produces them, but the profile lists
-/// only what the slice of [`SLICE_VERSION`] provides (DSC-4.2), so they are listed once the
-/// slice reaches 0.8.0.
-const LATER_SLICE_CONTRACTS: [ContractKind; 2] =
-    [ContractKind::ModelDependencies, ContractKind::ModelDiff];
 
 /// The longest identifier (E0D-1.2).
 const MAX_IDENTIFIER_LENGTH: u64 = 128;
@@ -90,7 +84,6 @@ pub(super) fn capabilities() -> Result<Capabilities, InternalError> {
 fn contracts() -> Vec<SupportedContract> {
     let mut contracts: Vec<SupportedContract> = ContractKind::ALL
         .iter()
-        .filter(|kind| !LATER_SLICE_CONTRACTS.contains(kind))
         .map(|kind| supported(kind.contract_name(), *kind))
         .chain([
             supported("menura.explanation", ContractKind::CompiledPlan),
@@ -121,16 +114,16 @@ mod tests {
             .map(|entry| entry.contract.as_str())
             .collect();
         assert!(contracts.windows(2).all(|pair| pair[0] < pair[1]));
-        assert_eq!(contracts.len(), 11);
+        assert_eq!(contracts.len(), 13);
         assert!(EXTENSIONS.windows(2).all(|pair| pair[0] < pair[1]));
     }
 
     #[test]
-    fn dsc_4_2_the_0_7_0_slice_compiles_both_query_forms_and_no_context_extension() {
+    fn dsc_4_2_the_0_8_0_slice_compiles_both_query_forms_and_the_context_extension() {
         let profile = capabilities().unwrap();
         assert_eq!(profile.query_forms.len(), 2);
         assert!(
-            !profile
+            profile
                 .extensions
                 .iter()
                 .any(|entry| entry.key == "context")
