@@ -1,0 +1,21 @@
+id: ctx-prior-summary-001
+rules: [E4-8.9, CTX-3.6, E4-8.4]
+model: ctx-prior-summary
+security_context: analyst.json
+query:
+  contract: "menura.query"
+  contract_version: "1.1.0"
+  time_zone: "UTC"
+  query:
+    dimensions: ["orders.order_date"]
+    metrics:
+      - {"metric": "total_amount", "alias": "total_amount"}
+      - {"metric": "total_amount_prior_month", "alias": "total_amount_prior_month"}
+    nonportable_extensions:
+      - {"vendor_name": "COMMON", "data": {"namespace": "menura", "version": 1, "time_grains": [{"dimension": "orders.order_date", "grain": "month"}], "date_range": {"dimension": "orders.order_date", "from": "2026-11-01", "to": "2026-11-30"}}}
+expect:
+  outcome: "plan"
+  sql: "ctx-prior-summary-001.sql"
+  explanation: [DEV-4, E4-8.2, E5-3.5, E5-3.5, E5-4]
+  row_order: "any"
+  rows: "ctx-prior-summary-001.csv"

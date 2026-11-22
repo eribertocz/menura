@@ -40,7 +40,7 @@ WITH
       "AMOUNT",
       "ORDER_DATE"
     FROM "menura_5_scan"
-    WHERE ("ORDER_DATE" >= CAST(CAST(date_trunc('month', CAST($1 AS DATE)) AS DATE) + to_years(CAST(-CAST(CAST($3 AS BIGINT) AS HUGEINT) AS INTEGER)) AS DATE)) AND ("ORDER_DATE" < CAST(CAST(CAST(date_trunc('month', CAST($4 AS DATE)) AS DATE) + to_years(CAST(-CAST(CAST($5 AS BIGINT) AS HUGEINT) AS INTEGER)) AS DATE) + to_months(CAST(CAST($6 AS BIGINT) AS INTEGER)) AS DATE))
+    WHERE (("ORDER_DATE" >= CAST(CAST(date_trunc('month', CAST($1 AS DATE)) AS DATE) + to_years(CAST(-CAST(1 AS HUGEINT) AS INTEGER)) AS DATE)) AND ("ORDER_DATE" < CAST(CAST(CAST(date_trunc('month', CAST($2 AS DATE)) AS DATE) + to_years(CAST(-CAST(1 AS HUGEINT) AS INTEGER)) AS DATE) + to_months(CAST(1 AS INTEGER)) AS DATE)))
   ),
   "menura_7_aggregate" AS (
     SELECT

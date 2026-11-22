@@ -1,0 +1,20 @@
+id: ctx-prior-semi-additive-001
+rules: [E4-8.4, E4-7.5, CTX-3.2, E6-4.14]
+model: ctx-prior-semi-additive
+security_context: analyst.json
+query:
+  contract: "menura.query"
+  contract_version: "1.1.0"
+  time_zone: "UTC"
+  query:
+    dimensions: ["balances.period"]
+    metrics:
+      - {"metric": "average_balance", "alias": "average_balance"}
+      - {"metric": "average_balance_prior_month", "alias": "average_balance_prior_month"}
+    nonportable_extensions:
+      - {"vendor_name": "COMMON", "data": {"namespace": "menura", "version": 1, "time_grains": [{"dimension": "balances.period", "grain": "month"}], "date_range": {"dimension": "balances.period", "from": "2026-02-01", "to": "2026-03-31"}}}
+expect:
+  outcome: "plan"
+  sql: "ctx-prior-semi-additive-001.sql"
+  row_order: "any"
+  rows: "ctx-prior-semi-additive-001.csv"
