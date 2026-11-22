@@ -13,9 +13,12 @@ use menura_representations::logical_plan::{
 use menura_representations::names::{ColumnName, ColumnPrefix};
 use menura_representations::origin::Origin;
 
+use menura_model::explanation::Subject;
+
 use super::unused_joins::rewrite;
 use crate::context::RewriteContext;
 use crate::evidence::Evidence;
+use crate::explanation::rewrite_entries;
 use crate::record::{NodePath, RewriteOutcome, RewriteRecord, RewriteRule, RewriteSubject};
 use crate::test_support::{anyone, empty_query, shop_model, shop_schema};
 
@@ -317,7 +320,26 @@ fn e5_3_1a_a_chain_of_two_unused_joins_is_removed_whole() {
         rewritten,
         branch_without_joins(home_scan(false), &["AMOUNT"])
     );
-    assert_eq!(records, vec![applied(&[0, 0]), applied(&[0, 0, 0])]);
+    assert_eq!(records, vec![applied(&[0, 0, 0]), applied(&[0, 0])]);
+}
+
+#[test]
+fn pln_7_3_the_entries_of_a_removed_chain_are_in_path_order() {
+    let plan = metric_branch(join_regions(join_customers(home_scan(true))), &["AMOUNT"]);
+
+    let (_, records) = run(plan.clone());
+    let subjects: Vec<Subject> = rewrite_entries(&records, &plan)
+        .into_iter()
+        .map(|entry| entry.subject)
+        .collect();
+
+    assert_eq!(
+        subjects,
+        [
+            Subject::Relationship(NormalizedName::new("ORDERS_TO_CUSTOMERS")),
+            Subject::Relationship(NormalizedName::new("CUSTOMERS_TO_REGIONS")),
+        ]
+    );
 }
 
 #[test]

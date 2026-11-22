@@ -6,8 +6,9 @@ use crate::column_reads::{ColumnNames, add_operation_reads};
 use crate::context::RewriteContext;
 use crate::record::{NodePath, RewriteOutcome, RewriteRecord, RewriteRule, RewriteSubject};
 
-/// Applies the rewrite to `plan` and adds a record of every `Join` it removed to `records`,
-/// the last `Join` of a chain first (E5-3.1a). A used `Join` is not recorded: the rewrite is
+/// Applies the rewrite to `plan` and adds a record of every `Join` it removed to `records`.
+/// Joins are examined from the last one of a chain backwards (E5-3.1a), and recorded in path
+/// order (PLN-7.3). A used `Join` is not recorded: the rewrite is
 /// considered only for an unused one, and is then never rejected (E5-3.8). It needs no
 /// catalog state.
 ///
@@ -87,8 +88,9 @@ fn visit_join(
         let left = visit(left, &child(path, 0), reads, records);
         rebuild(node, left)
     } else {
+        let left = visit(left, &child(path, 0), later_reads, records);
         records.push(record(path, RewriteOutcome::Applied));
-        visit(left, &child(path, 0), later_reads, records)
+        left
     }
 }
 
