@@ -14,3 +14,7 @@ pub(super) fn rewrite(
 ) -> PlanNode {
     plan
 }
+
+#[cfg(test)]
+#[path = "fold_constants_tests.rs"]
+mod tests;
