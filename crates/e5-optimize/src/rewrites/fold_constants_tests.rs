@@ -107,6 +107,7 @@ fn aggregate(input: PlanNode, keyed: bool) -> PlanNode {
             name: ColumnName::new("ROWS"),
             call: AggregateCall::CountRows,
             filter: None,
+            recomposition: None,
         }],
     })
 }
