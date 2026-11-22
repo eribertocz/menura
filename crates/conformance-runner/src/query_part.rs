@@ -7,8 +7,8 @@ use std::path::Path;
 
 use duckdb::Connection;
 use menura_core::{
-    AuditRecordDocument, Compilation, CompileErrorDocument, CompileResult, CompiledPlanDocument,
-    Diagnostic, Handle, build_producer, compile, explain,
+    AuditRecordDocument, Compilation, CompileErrorDocument, CompileOptions, CompileResult,
+    CompiledPlanDocument, Diagnostic, Handle, build_producer, compile, explain,
 };
 
 use crate::alternatives_check::alternatives_mismatch;
@@ -51,50 +51,29 @@ pub(crate) fn check_query(case: &Case, handle: &Handle, inputs: &QueryInputs<'_>
 /// whose document must match the plan, and a passed `outcome: error` case from 0.8.0, which must
 /// return the identical compile error (CS-2.16).
 fn compare_query(case: &Case, handle: &Handle, inputs: &QueryInputs<'_>) -> CaseStatus {
-    let Some(query) = &case.query else {
-        return CaseStatus::Failed("this outcome requires `query`".to_owned());
-    };
-    let query = match serde_json::to_vec(query) {
-        Ok(query) => query,
-        Err(error) => return CaseStatus::Failed(format!("the query is not JSON: {error}")),
-    };
-    let options = match compile_options(case) {
-        Ok(options) => options,
+    let (query, options) = match query_and_options(case) {
+        Ok(prepared) => prepared,
         Err(reason) => return CaseStatus::Failed(reason),
     };
     let compile_query = || compile(handle, &query, inputs.security_context, &options);
-    let explain_query = || {
-        explain(
-            handle,
-            &query,
-            inputs.security_context,
-            &explain_options(&options),
-        )
-    };
+    let explain_with = explain_options(&options);
+    let explain_query = || explain(handle, &query, inputs.security_context, &explain_with);
     let Compilation { result, audit } = compile_query();
     if let Some(reason) = missing_warnings(&case.expect.warnings, warnings_of(&result), Part::Query)
     {
         return CaseStatus::Failed(reason);
     }
+    if let Some(pending) = pending_status(&case.expect, &result) {
+        return pending;
+    }
     match (case.expect.outcome, result) {
-        (_, CompileResult::Error(error))
-            if first_code(&error) == Some(NOT_YET_SUPPORTED)
-                && !expects_not_yet_supported(&case.expect) =>
-        {
-            CaseStatus::Pending(format!(
-                "the query part needs a capability outside this version's slice (VS-4): {}",
-                describe(error.errors.first())
-            ))
-        }
-        (Outcome::Error, CompileResult::Error(error)) => {
-            match check_error_and_audit(case, &error, audit.as_deref(), inputs.case_folder) {
-                CaseStatus::Passed if runs_explain(case) => {
-                    explained_error_mismatch(&error, &explain_query())
-                        .map_or(CaseStatus::Passed, CaseStatus::Failed)
-                }
-                status => status,
-            }
-        }
+        (Outcome::Error, CompileResult::Error(error)) => check_error_and_explain(
+            case,
+            &error,
+            audit.as_deref(),
+            inputs.case_folder,
+            explain_query,
+        ),
         (Outcome::Error, CompileResult::Plan(_)) => CaseStatus::Failed(format!(
             "the query compiles, but the case expects the error {}",
             case.expect.error.as_deref().unwrap_or("none")
@@ -114,6 +93,53 @@ fn compare_query(case: &Case, handle: &Handle, inputs: &QueryInputs<'_>) -> Case
             || compile_query().result,
             explain_query,
         ),
+    }
+}
+
+/// The pending status of a compilation that returns `E_NOT_YET_SUPPORTED` when the case does
+/// not expect that error (VS-4), or `None`.
+fn pending_status(expect: &Expectation, result: &CompileResult) -> Option<CaseStatus> {
+    let CompileResult::Error(error) = result else {
+        return None;
+    };
+    (first_code(error) == Some(NOT_YET_SUPPORTED) && !expects_not_yet_supported(expect)).then(
+        || {
+            CaseStatus::Pending(format!(
+                "the query part needs a capability outside this version's slice (VS-4): {}",
+                describe(error.errors.first())
+            ))
+        },
+    )
+}
+
+/// The query document of `case` as JSON bytes, and the options it is compiled with (CS-2.13,
+/// CS-2.18), or why the case cannot be compiled.
+fn query_and_options(case: &Case) -> Result<(Vec<u8>, CompileOptions), String> {
+    let query = case
+        .query
+        .as_ref()
+        .ok_or_else(|| "this outcome requires `query`".to_owned())?;
+    let query =
+        serde_json::to_vec(query).map_err(|error| format!("the query is not JSON: {error}"))?;
+    Ok((query, compile_options(case)?))
+}
+
+/// Checks the compile error of an `error` case with [`check_error_and_audit`]; a passed case
+/// also runs `explain` from 0.8.0, which must return the identical compile error (CS-2.16,
+/// PLN-8.2).
+fn check_error_and_explain(
+    case: &Case,
+    error: &CompileErrorDocument,
+    audit: Option<&AuditRecordDocument>,
+    case_folder: &Path,
+    explain_query: impl FnOnce() -> CompileResult,
+) -> CaseStatus {
+    match check_error_and_audit(case, error, audit, case_folder) {
+        CaseStatus::Passed if runs_explain(case) => {
+            explained_error_mismatch(error, &explain_query())
+                .map_or(CaseStatus::Passed, CaseStatus::Failed)
+        }
+        status => status,
     }
 }
 
@@ -552,7 +578,7 @@ mod tests {
         };
         let context = read_bytes(&security_context_path(&model_folder, "auditor.json")).unwrap();
         let query = serde_json::to_vec(case.query.as_ref().unwrap()).unwrap();
-        let options = menura_core::CompileOptions::default();
+        let options = CompileOptions::default();
         let CompileResult::Plan(plan) = compile(&handle, &query, &context, &options).result else {
             panic!("the query compiles");
         };
