@@ -145,6 +145,7 @@ fn compile_stages(
     Ok(plan_document(
         handle,
         &plan,
+        &bound,
         generated,
         &context,
         options,

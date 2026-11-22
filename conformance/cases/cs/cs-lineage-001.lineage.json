@@ -1,1 +1,61 @@
-[]
+[
+  {
+    "model_inputs": [
+      "field:SALES.REGION"
+    ],
+    "output": "region",
+    "physical_inputs": [
+      {
+        "column": "region",
+        "source": "shop.main.sales"
+      }
+    ],
+    "security_policies": [],
+    "summary": null
+  },
+  {
+    "model_inputs": [
+      "field:SALES.AMOUNT",
+      "metric:TOTAL_AMOUNT"
+    ],
+    "output": "total_amount",
+    "physical_inputs": [
+      {
+        "column": "amount",
+        "source": "shop.main.sales"
+      }
+    ],
+    "security_policies": [],
+    "summary": null
+  },
+  {
+    "model_inputs": [
+      "field:SALES.QUANTITY",
+      "metric:TOTAL_QUANTITY"
+    ],
+    "output": "total_quantity",
+    "physical_inputs": [
+      {
+        "column": "quantity",
+        "source": "shop.main.sales"
+      }
+    ],
+    "security_policies": [],
+    "summary": null
+  },
+  {
+    "model_inputs": [
+      "field:SALES.SALE_ID",
+      "metric:SALE_COUNT"
+    ],
+    "output": "sale_count",
+    "physical_inputs": [
+      {
+        "column": "sale_id",
+        "source": "shop.main.sales"
+      }
+    ],
+    "security_policies": [],
+    "summary": null
+  }
+]

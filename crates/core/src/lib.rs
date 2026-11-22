@@ -23,6 +23,7 @@ mod compile_options;
 mod describe;
 mod handle;
 mod json;
+mod lineage;
 mod load;
 mod load_options;
 mod plan_document;

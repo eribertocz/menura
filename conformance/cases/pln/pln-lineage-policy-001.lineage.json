@@ -1,0 +1,80 @@
+[
+  {
+    "model_inputs": [
+      "field:STORES.REGION",
+      "relationship:ORDERS_STORES"
+    ],
+    "output": "region",
+    "physical_inputs": [
+      {
+        "column": "customer_id",
+        "source": "shop.main.customers"
+      },
+      {
+        "column": "segment",
+        "source": "shop.main.customers"
+      },
+      {
+        "column": "customer_id",
+        "source": "shop.main.orders"
+      },
+      {
+        "column": "store_id",
+        "source": "shop.main.orders"
+      },
+      {
+        "column": "region",
+        "source": "shop.main.stores"
+      },
+      {
+        "column": "store_id",
+        "source": "shop.main.stores"
+      }
+    ],
+    "security_policies": [
+      "STORES.NORTH_ONLY"
+    ],
+    "summary": null
+  },
+  {
+    "model_inputs": [
+      "field:ORDERS.AMOUNT",
+      "metric:TOTAL_AMOUNT"
+    ],
+    "output": "total_amount",
+    "physical_inputs": [
+      {
+        "column": "customer_id",
+        "source": "shop.main.customers"
+      },
+      {
+        "column": "segment",
+        "source": "shop.main.customers"
+      },
+      {
+        "column": "amount",
+        "source": "shop.main.orders"
+      },
+      {
+        "column": "customer_id",
+        "source": "shop.main.orders"
+      },
+      {
+        "column": "store_id",
+        "source": "shop.main.orders"
+      },
+      {
+        "column": "region",
+        "source": "shop.main.stores"
+      },
+      {
+        "column": "store_id",
+        "source": "shop.main.stores"
+      }
+    ],
+    "security_policies": [
+      "STORES.NORTH_ONLY"
+    ],
+    "summary": null
+  }
+]

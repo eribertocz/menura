@@ -1,0 +1,20 @@
+id: pln-lineage-branches-001
+rules: [PLN-4.4, PLN-4.8]
+model: pln-lineage
+security_context: analyst.json
+query:
+  contract: menura.query
+  contract_version: "1.1.0"
+  time_zone: UTC
+  query:
+    dimensions: [customers.segment]
+    metrics:
+      - {metric: total_amount, alias: total_amount}
+      - {metric: customer_count, alias: customer_count}
+      - {metric: amount_per_customer, alias: amount_per_customer}
+expect:
+  outcome: plan
+  sql: pln-lineage-branches-001.sql
+  rows: pln-lineage-branches-001.csv
+  row_order: any
+  lineage: pln-lineage-branches-001.lineage.json

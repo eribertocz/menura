@@ -1,0 +1,3 @@
+segment,total_amount,customer_count,amount_per_customer
+RETAIL,10,1,10
+WHOLESALE,5,1,5
