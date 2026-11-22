@@ -2,7 +2,7 @@
 //! listed datasets (DSC-3.2a, DSC-3.7), through many-to-one steps (E0E-2.3) that never repeat
 //! a dataset (E0E-2.4).
 
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 
 use menura_contracts::types::audit_record::Access;
 use menura_contracts::types::descriptions::AmbiguousPath;
@@ -58,19 +58,30 @@ impl<'model> DescribedGraph<'model> {
     /// The listed datasets every dataset of `homes` reaches, ordered by name (E3-3.4). A
     /// dataset reaches itself.
     pub(super) fn reached_by_all(&self, homes: &[NormalizedName]) -> Vec<String> {
-        let reached: Vec<Vec<&NormalizedName>> = homes
-            .iter()
-            .map(|home| {
-                let mut found = vec![home];
-                found.extend(self.paths_from(home).into_keys());
-                found
-            })
-            .collect();
+        let reached: Vec<BTreeSet<&NormalizedName>> =
+            homes.iter().map(|home| self.reached_from(home)).collect();
         self.datasets
             .iter()
-            .filter(|dataset| reached.iter().all(|found| found.contains(dataset)))
+            .filter(|dataset| reached.iter().all(|found| found.contains(*dataset)))
             .map(|dataset| dataset.as_str().to_owned())
             .collect()
+    }
+
+    /// The datasets `from` reaches, itself included.
+    fn reached_from<'name>(
+        &'name self,
+        from: &'name NormalizedName,
+    ) -> BTreeSet<&'name NormalizedName> {
+        let mut reached = BTreeSet::from([from]);
+        let mut pending = vec![from];
+        while let Some(dataset) = pending.pop() {
+            for (_, to) in self.steps.get(dataset).into_iter().flatten() {
+                if reached.insert(*to) {
+                    pending.push(*to);
+                }
+            }
+        }
+        reached
     }
 
     /// Every ordered pair of listed datasets with at least two paths, by `from` then `to`,
