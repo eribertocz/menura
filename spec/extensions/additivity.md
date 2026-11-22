@@ -43,7 +43,7 @@ Field references are written `dataset.field`.
 |---|---|
 | ADD-4.1 | `selection: global_period` takes the last (or first) period with data inside the queried range, the same for every entity. `per_entity` takes each entity's own last (or first) row inside the range. |
 | ADD-4.2 | An entity is **missing** in a period only if the population expects it in that period and it has no row. Completeness is never deduced from the history of rows. |
-| ADD-4.3 | `missing`: `exclude` contributes nothing; `carry_forward` reuses the latest known value, even from before the range, if it is at most `max_carry_forward` periods old, else `on_stale` applies; `zero` contributes 0; `error` fails at execution. |
+| ADD-4.3 | `missing`: `exclude` contributes nothing; `carry_forward` reuses the latest known value, even from before the range, if it is at most `max_carry_forward` periods old, else `on_stale` applies; an entity with no known value at all contributes nothing, and `on_stale` does not apply to it; `zero` contributes 0; `error` fails at execution. |
 | ADD-4.4 | A row is **unexpected** if its entity is not expected in that period. `include` uses it, `exclude` ignores it, `error` fails at execution. |
 | ADD-4.5 | `nulls`: `as_missing` treats the row as missing (only with a time `over`); `keep` keeps NULL; `zero` replaces it by 0; `error` fails at execution. |
 | ADD-4.6 | After the rule across `over`, the entity values are combined across every other dimension with the recomposition function of the metric's aggregate (E0G-3, E4-7.1). |
