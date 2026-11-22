@@ -12,6 +12,15 @@ mod filters;
 mod pointer;
 mod reference_time;
 mod references;
+#[cfg_attr(
+    not(test),
+    expect(
+        dead_code,
+        reason = "the stage reports E_NOT_YET_SUPPORTED for the SQL form until the 0.5.0 slice \
+                  issue removes that check (VS-2); only the unit tests reach the parser"
+    )
+)]
+mod sql;
 mod stage;
 mod time_zone;
 mod time_zone_database;

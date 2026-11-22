@@ -16,8 +16,14 @@ pub enum ParseErrorCode {
     Eqry01,
     /// `EQRY-02`: unknown time zone (E1-2.3).
     Eqry02,
+    /// `EQRY-05`: a SQL text that does not parse, or a construct outside the version 1
+    /// subset (E1-4).
+    Eqry05,
     /// `EQRY-06`: unsupported extension `version`.
     Eqry06,
+    /// `EQRY-13`: a SQL `SELECT` item that is not a plain field reference and has no alias
+    /// (E1-4).
+    Eqry13,
     /// `E0F-01`: a filter text does not parse (E1-3.2).
     E0f01,
     /// `E0F-02`: a filter text uses a construct outside the subset (E1-3.2).
@@ -42,7 +48,9 @@ impl ParseErrorCode {
             Self::Eqry08 => "EQRY-08",
             Self::Eqry01 => "EQRY-01",
             Self::Eqry02 => "EQRY-02",
+            Self::Eqry05 => "EQRY-05",
             Self::Eqry06 => "EQRY-06",
+            Self::Eqry13 => "EQRY-13",
             Self::E0f01 => "E0F-01",
             Self::E0f02 => "E0F-02",
             Self::NotYetSupported => "E_NOT_YET_SUPPORTED",
