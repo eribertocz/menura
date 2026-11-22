@@ -192,18 +192,22 @@ Find a rule ID or a section here, then open only that file at that line.
 | [architecture/README.md](architecture/README.md#L97) | 97 | rule | ARC-5.4 |
 | [architecture/README.md](architecture/README.md#L98) | 98 | rule | ARC-5.5 |
 | [architecture/README.md](architecture/README.md#L99) | 99 | rule | ARC-5.6 |
-| [architecture/README.md](architecture/README.md#L101) | 101 | section | 3.6 Delivery forms |
-| [architecture/README.md](architecture/README.md#L115) | 115 | rule | ARC-6.1 |
-| [architecture/README.md](architecture/README.md#L116) | 116 | rule | ARC-6.2 |
-| [architecture/README.md](architecture/README.md#L118) | 118 | section | 3.7 Integration |
-| [architecture/README.md](architecture/README.md#L126) | 126 | section | 3.8 Boundary enforcement (from the first commit) |
-| [architecture/README.md](architecture/README.md#L133) | 133 | rule | A1 |
-| [architecture/README.md](architecture/README.md#L134) | 134 | rule | A2 |
-| [architecture/README.md](architecture/README.md#L135) | 135 | rule | A3 |
-| [architecture/README.md](architecture/README.md#L136) | 136 | rule | A4 |
-| [architecture/README.md](architecture/README.md#L137) | 137 | rule | A5 |
-| [architecture/README.md](architecture/README.md#L138) | 138 | rule | A6 |
-| [architecture/README.md](architecture/README.md#L143) | 143 | section | 3.9 Lineage and audit |
+| [architecture/README.md](architecture/README.md#L100) | 100 | rule | ARC-5.7 |
+| [architecture/README.md](architecture/README.md#L101) | 101 | rule | ARC-5.8 |
+| [architecture/README.md](architecture/README.md#L102) | 102 | rule | ARC-5.9 |
+| [architecture/README.md](architecture/README.md#L103) | 103 | rule | ARC-5.10 |
+| [architecture/README.md](architecture/README.md#L105) | 105 | section | 3.6 Delivery forms |
+| [architecture/README.md](architecture/README.md#L119) | 119 | rule | ARC-6.1 |
+| [architecture/README.md](architecture/README.md#L120) | 120 | rule | ARC-6.2 |
+| [architecture/README.md](architecture/README.md#L122) | 122 | section | 3.7 Integration |
+| [architecture/README.md](architecture/README.md#L130) | 130 | section | 3.8 Boundary enforcement (from the first commit) |
+| [architecture/README.md](architecture/README.md#L137) | 137 | rule | A1 |
+| [architecture/README.md](architecture/README.md#L138) | 138 | rule | A2 |
+| [architecture/README.md](architecture/README.md#L139) | 139 | rule | A3 |
+| [architecture/README.md](architecture/README.md#L140) | 140 | rule | A4 |
+| [architecture/README.md](architecture/README.md#L141) | 141 | rule | A5 |
+| [architecture/README.md](architecture/README.md#L142) | 142 | rule | A6 |
+| [architecture/README.md](architecture/README.md#L147) | 147 | section | 3.9 Lineage and audit |
 | [contracts/README.md](contracts/README.md#L1) | 1 | section | Contracts |
 | [contracts/README.md](contracts/README.md#L21) | 21 | section | Public contracts |
 | [contracts/README.md](contracts/README.md#L23) | 23 | rule | CON-0.1 |
@@ -338,6 +342,16 @@ Find a rule ID or a section here, then open only that file at that line.
 | [contracts/integrity-checks.md](contracts/integrity-checks.md#L84) | 84 | rule | CHK-7.2 |
 | [contracts/integrity-checks.md](contracts/integrity-checks.md#L85) | 85 | rule | CHK-7.3 |
 | [contracts/integrity-checks.md](contracts/integrity-checks.md#L86) | 86 | rule | CHK-7.4 |
+| [contracts/migration-report.md](contracts/migration-report.md#L1) | 1 | section | Contract: migration report |
+| [contracts/migration-report.md](contracts/migration-report.md#L5) | 5 | section | MIG-1 Purpose |
+| [contracts/migration-report.md](contracts/migration-report.md#L11) | 11 | section | MIG-2 Content |
+| [contracts/migration-report.md](contracts/migration-report.md#L19) | 19 | section | MIG-3 Rules |
+| [contracts/migration-report.md](contracts/migration-report.md#L21) | 21 | rule | MIG-3.1 |
+| [contracts/migration-report.md](contracts/migration-report.md#L22) | 22 | rule | MIG-3.2 |
+| [contracts/migration-report.md](contracts/migration-report.md#L26) | 26 | rule | MIG-3.3 |
+| [contracts/migration-report.md](contracts/migration-report.md#L27) | 27 | rule | MIG-3.4 |
+| [contracts/migration-report.md](contracts/migration-report.md#L28) | 28 | rule | MIG-3.5 |
+| [contracts/migration-report.md](contracts/migration-report.md#L29) | 29 | rule | MIG-3.6 |
 | [contracts/model-dependencies.md](contracts/model-dependencies.md#L1) | 1 | section | Contract: model dependencies and model diff |
 | [contracts/model-dependencies.md](contracts/model-dependencies.md#L5) | 5 | section | DEP-1 Purpose |
 | [contracts/model-dependencies.md](contracts/model-dependencies.md#L14) | 14 | section | DEP-2 Content |
