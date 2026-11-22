@@ -1,5 +1,5 @@
 id: e5-skip-deduplication-002
-rules: [E5-3.2, E5-3.2a]
+rules: [E5-3.2, E5-3.2a, CHK-4.1]
 model: e5-deduplication-stale
 security_context: analyst.json
 query:

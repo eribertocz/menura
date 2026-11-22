@@ -1,5 +1,5 @@
 id: e5-summary-time-zone-001
-rules: [E5-4, SUM-3.7, CAT-7.2]
+rules: [E5-4, SUM-3.7, CAT-7.2, CHK-5.3]
 model: e5-summary-time-zone
 security_context: analyst.json
 query:
