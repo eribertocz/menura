@@ -14,7 +14,7 @@ be proven safe from the model and the catalog state, it is not applied.
 | Output | Equivalent logical plan, with every rewrite recorded in the explanation |
 
 - **E5-2.1** A missing or rejected catalog state is not an error: E5 then applies only rewrites that need no evidence.
-- **E5-2.2** The output plan uses only the nodes of E4-3, so E6 needs no knowledge of which rewrites ran. Its records of applied and rejected rewrites (E5-3.8, E5-4.4) are part of E5's output; before 0.7.0 the compiled plan's `explanation` stays empty (VS-5).
+- **E5-2.2** The output plan uses only the nodes of E4-3, so E6 needs no knowledge of which rewrites ran. Its records of applied and rejected rewrites (E5-3.8) and of summaries that require the authorized executor (E5-4 item 5) are part of E5's output, and become the E5 entries of the compiled plan's `explanation` (PLN-7.3).
 - **E5-2.3** E5 is deterministic (P3): the same plan, catalog state and security context always give the same output plan and records, whatever the order of the input documents' keys.
 
 ## E5-3 Rewrites
@@ -36,7 +36,16 @@ Applied in this order; each runs on the output of the previous one.
 - **E5-3.4a** **Identical branches.** Two branches are identical except for their components when they have the same home `Scan` with the same row-policy nodes, the same `Join` nodes in the same order, the same query filter, the same presence of `Deduplicate` and the same `Aggregate` keys. A branch with a `Population`, `Snapshot` or `Periods` node is never merged. The merged branch keeps the position of the first of them (E3-4.3), and its components keep their names, so the stitched result is unchanged. When one branch remains, the `Stitch` is removed (E4-4.2).
 - **E5-3.5a** **Summary branch.** Using summary S for a branch replaces its home `Scan` with a `Scan` of S and maps every reference to a base field to the summary field of the dimension with that `base`. The branch then has, in order: the `Filter` of the base's applicable row policies and the propagation `SemiJoin` nodes, over the mapped fields (SUM-3.6); the branch's `Join` nodes, from the mapped `from_columns`; the query filter and `date_range` predicate, mapped; and the `Aggregate`. A branch that still has a `Deduplicate` after E5-3.2 never uses a summary (SUM-3.2), so the summary branch has none; its `Aggregate` has the recomposed components of SUM-3.1. The data versions of the plan are those of PLN-3.3.
 - **E5-3.7** Row-policy filters are never removed, weakened or reordered above an aggregate (E4-6.1). A summary is used only if every applicable policy can be applied to it exactly.
-- **E5-3.8** Every rewrite applied, and every rewrite considered and rejected with its failed condition, is recorded in the explanation.
+- **E5-3.8** Every rewrite applied, and every rewrite considered and rejected with its failed condition, is recorded in the explanation (PLN-7.3), with `decision` `applied` or `rejected`. A rewrite is **considered** for a subject when its structural precondition holds, that is, the part of its condition that needs neither evidence nor the catalog state; it is then rejected when another condition fails, a missing catalog state included (E5-2.1). A rewrite whose structural precondition does not hold is not recorded.
+
+  | Rewrite | Subject | Structural precondition |
+  |---|---|---|
+  | E5-3.1 | `relationship:<name>` of the `Join` | The `Join` is unused (E5-3.1a). It is never rejected. |
+  | E5-3.2 | `dataset:<home>` of the branch | The branch has a `Deduplicate`. |
+  | E5-3.3 | `relationship:<name>` of the `Join` | The `Join` is `left` and conditions (1) to (3) of E5-3.3a hold. |
+  | E5-3.4 | `dataset:<home>` of the branches | Two or more branches have the same home `Scan`. |
+  | E5-3.5 | `summary:<name>` | The summary's `aggregate.of` is the home dataset of the branch. |
+  | E5-3.6 | `dataset:<home>` of the branch | The home dataset's row-policy filter is the constant `FALSE`. It is never rejected. |
 
 ## E5-4 Summary selection
 
