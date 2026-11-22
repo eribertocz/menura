@@ -215,6 +215,7 @@ pub fn joined_dimension(
                 field: name(field),
             },
             time_grain: grain,
+            time_grain_origin: None,
         },
         output_name: OutputName::new(&format!("{}_{index}", field.to_lowercase())),
         origin: at(&format!("/query/dimensions/{index}")),

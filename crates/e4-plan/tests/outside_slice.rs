@@ -157,6 +157,7 @@ fn vs_1_a_field_of_another_dataset_is_an_internal_error() {
             field: name("REGION"),
         },
         time_grain: None,
+        time_grain_origin: None,
     };
     let bound = query(vec![foreign], Vec::new(), BoundQueryParts::default());
     let result = build_plan(&branches(&[]), &bound, &anyone(), &model(Vec::new()));

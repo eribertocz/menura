@@ -273,6 +273,7 @@ pub fn dimension(field: &str, grain: Option<Grain>, index: usize) -> BoundDimens
         kind: BoundDimensionKind::Field {
             field: field_path(field),
             time_grain: grain,
+            time_grain_origin: None,
         },
         output_name: OutputName::new(&field.to_lowercase()),
         origin: at(&format!("/query/dimensions/{index}")),

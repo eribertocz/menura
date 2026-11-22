@@ -64,10 +64,10 @@ fn first_finer<'query>(
     snapshot_grain: Grain,
 ) -> Option<usize> {
     dimensions.position(|dimension| match dimension {
-        BoundDimensionKind::Field { field, time_grain } if field == over => {
-            OverGrain::of(*time_grain, over_type)
-                .is_some_and(|grain| grain.is_finer_than(snapshot_grain))
-        }
+        BoundDimensionKind::Field {
+            field, time_grain, ..
+        } if field == over => OverGrain::of(*time_grain, over_type)
+            .is_some_and(|grain| grain.is_finer_than(snapshot_grain)),
         BoundDimensionKind::Field { .. } | BoundDimensionKind::Expression { .. } => false,
     })
 }

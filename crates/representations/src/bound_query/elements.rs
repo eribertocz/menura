@@ -42,6 +42,9 @@ pub enum BoundDimensionKind {
         field: FieldPath,
         /// The time grain applied to it, when the query has one.
         time_grain: Option<Grain>,
+        /// Where the `time_grains` entry of `time_grain` is written, when the query has one
+        /// (E4-7.8).
+        time_grain_origin: Option<QueryLocation>,
     },
     /// SQL form: a scalar expression over fields of one dataset (E2-3.3).
     Expression {

@@ -66,7 +66,11 @@ fn path(dataset: &str, field: &str) -> FieldPath {
 }
 
 fn dimension(field: FieldPath, time_grain: Option<Grain>) -> BoundDimensionKind {
-    BoundDimensionKind::Field { field, time_grain }
+    BoundDimensionKind::Field {
+        field,
+        time_grain,
+        time_grain_origin: None,
+    }
 }
 
 #[test]

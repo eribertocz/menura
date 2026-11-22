@@ -27,6 +27,7 @@ fn bound_columns() -> Columns<BoundDimension, BoundMetric> {
             kind: BoundDimensionKind::Field {
                 field: field("ORDERS", "ORDERED_AT"),
                 time_grain: Some(Grain::Month),
+                time_grain_origin: None,
             },
             output_name: OutputName::new("ordered_at"),
             origin: at("/query/dimensions/0"),
@@ -80,6 +81,7 @@ fn e2_2_every_reference_points_to_a_model_element() {
         BoundDimensionKind::Field {
             field: field("ORDERS", "ORDERED_AT"),
             time_grain: Some(Grain::Month),
+            time_grain_origin: None,
         }
     );
     assert!(matches!(
