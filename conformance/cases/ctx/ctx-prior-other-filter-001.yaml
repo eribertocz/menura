@@ -1,0 +1,20 @@
+id: ctx-prior-other-filter-001
+rules: [CTX-3.2, E4-8.4, E4-8.7]
+model: ctx-prior
+security_context: analyst.json
+query:
+  contract: "menura.query"
+  contract_version: "1.1.0"
+  time_zone: "UTC"
+  query:
+    dimensions: ["orders.order_date", "orders.region"]
+    metrics:
+      - {"metric": "sales", "alias": "sales"}
+      - {"metric": "sales_prior_year", "alias": "sales_prior_year"}
+    filter: "orders.region = 'NORTH'"
+    nonportable_extensions:
+      - {"vendor_name": "COMMON", "data": {"namespace": "menura", "version": 1, "time_grains": [{"dimension": "orders.order_date", "grain": "month"}], "date_range": {"dimension": "orders.order_date", "from": "2024-03-01", "to": "2024-03-31"}}}
+expect:
+  outcome: "plan"
+  row_order: "any"
+  rows: "ctx-prior-other-filter-001.csv"

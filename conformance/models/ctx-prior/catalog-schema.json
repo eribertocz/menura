@@ -1,0 +1,65 @@
+{
+  "contract": "menura.catalog_schema",
+  "contract_version": "1.1.0",
+  "document_id": {
+    "origin": "conformance:ctx-prior",
+    "snapshot": "ctx-prior"
+  },
+  "engine": {
+    "name": "duckdb",
+    "version": "2.0.0"
+  },
+  "relations": [
+    {
+      "source": "shop.main.orders",
+      "columns": [
+        {
+          "name": "amount",
+          "logical_type": {
+            "kind": "integer",
+            "bits": 32,
+            "signed": true
+          },
+          "physical_type": "INTEGER",
+          "nullable": false
+        },
+        {
+          "name": "order_date",
+          "logical_type": {
+            "kind": "date"
+          },
+          "physical_type": "DATE",
+          "nullable": true
+        },
+        {
+          "name": "order_id",
+          "logical_type": {
+            "kind": "integer",
+            "bits": 32,
+            "signed": true
+          },
+          "physical_type": "INTEGER",
+          "nullable": false
+        },
+        {
+          "name": "ordered_at",
+          "logical_type": {
+            "kind": "timestamp",
+            "precision": "us",
+            "with_time_zone": true
+          },
+          "physical_type": "TIMESTAMP WITH TIME ZONE",
+          "nullable": true
+        },
+        {
+          "name": "region",
+          "logical_type": {
+            "kind": "text"
+          },
+          "physical_type": "VARCHAR",
+          "nullable": false
+        }
+      ]
+    }
+  ]
+}

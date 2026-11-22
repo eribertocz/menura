@@ -1,0 +1,19 @@
+id: ctx-prior-week-by-quarter-001
+rules: [E4-8.4, E4-8.6, CTX-3a.2]
+model: ctx-prior
+security_context: analyst.json
+query:
+  contract: "menura.query"
+  contract_version: "1.1.0"
+  time_zone: "UTC"
+  query:
+    dimensions: ["orders.order_date"]
+    metrics:
+      - {"metric": "sales", "alias": "sales"}
+      - {"metric": "sales_prior_quarter", "alias": "sales_prior_quarter"}
+    nonportable_extensions:
+      - {"vendor_name": "COMMON", "data": {"namespace": "menura", "version": 1, "time_grains": [{"dimension": "orders.order_date", "grain": "week"}], "date_range": {"dimension": "orders.order_date", "from": "2024-02-26", "to": "2024-03-31"}}}
+expect:
+  outcome: "plan"
+  row_order: "any"
+  rows: "ctx-prior-week-by-quarter-001.csv"
