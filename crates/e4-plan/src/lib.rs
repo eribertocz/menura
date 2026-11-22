@@ -36,6 +36,7 @@ mod policy;
 mod policy_visits;
 mod population;
 mod query_filter;
+mod query_policies;
 mod rewrite;
 mod rows;
 mod scan;
@@ -84,6 +85,8 @@ pub fn build_plan(
     let home_origin = Origin::Model(slice::home_dataset(first, model)?.location.clone());
     let project_origin =
         metrics::first_metric_location(&metrics).map_or(home_origin, Origin::Model);
+    let has_reference_time = query.time().reference_time.is_some();
+    query_policies::check_query_policies(branches, &metrics, model, security, has_reference_time)?;
     let mut plans = branches
         .as_slice()
         .iter()
