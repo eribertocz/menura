@@ -230,13 +230,14 @@ Find a rule ID or a section here, then open only that file at that line.
 | [contracts/catalog.md](contracts/catalog.md#L125) | 125 | rule | CAT-7.1.6 |
 | [contracts/catalog.md](contracts/catalog.md#L126) | 126 | rule | CAT-7.1.7 |
 | [contracts/catalog.md](contracts/catalog.md#L127) | 127 | rule | CAT-7.1.8 |
-| [contracts/catalog.md](contracts/catalog.md#L129) | 129 | section | CAT-7.2 Summary validity |
-| [contracts/catalog.md](contracts/catalog.md#L149) | 149 | rule | CAT-7.2.1 |
-| [contracts/catalog.md](contracts/catalog.md#L151) | 151 | section | CAT-7.3 Check evidence |
-| [contracts/catalog.md](contracts/catalog.md#L159) | 159 | section | CAT-7.4 Never |
-| [contracts/catalog.md](contracts/catalog.md#L165) | 165 | section | CAT-8 Semantic rules |
-| [contracts/catalog.md](contracts/catalog.md#L177) | 177 | section | CAT-9 Errors |
-| [contracts/catalog.md](contracts/catalog.md#L190) | 190 | rule | CAT-9.1 |
+| [contracts/catalog.md](contracts/catalog.md#L128) | 128 | rule | CAT-7.1.9 |
+| [contracts/catalog.md](contracts/catalog.md#L130) | 130 | section | CAT-7.2 Summary validity |
+| [contracts/catalog.md](contracts/catalog.md#L150) | 150 | rule | CAT-7.2.1 |
+| [contracts/catalog.md](contracts/catalog.md#L152) | 152 | section | CAT-7.3 Check evidence |
+| [contracts/catalog.md](contracts/catalog.md#L160) | 160 | section | CAT-7.4 Never |
+| [contracts/catalog.md](contracts/catalog.md#L166) | 166 | section | CAT-8 Semantic rules |
+| [contracts/catalog.md](contracts/catalog.md#L178) | 178 | section | CAT-9 Errors |
+| [contracts/catalog.md](contracts/catalog.md#L191) | 191 | rule | CAT-9.1 |
 | [contracts/compiled-plan.md](contracts/compiled-plan.md#L1) | 1 | section | Contract: compiled plan and compile error |
 | [contracts/compiled-plan.md](contracts/compiled-plan.md#L7) | 7 | section | PLN-1 Compiled plan |
 | [contracts/compiled-plan.md](contracts/compiled-plan.md#L25) | 25 | section | PLN-2 SQL rules |
@@ -359,8 +360,8 @@ Find a rule ID or a section here, then open only that file at that line.
 | [decisions/0005-summary-evidence-and-e5.md](decisions/0005-summary-evidence-and-e5.md#L1) | 1 | section | 0005 Summary evidence, build time zone and the E5 audit |
 | [decisions/0005-summary-evidence-and-e5.md](decisions/0005-summary-evidence-and-e5.md#L3) | 3 | section | Context |
 | [decisions/0005-summary-evidence-and-e5.md](decisions/0005-summary-evidence-and-e5.md#L11) | 11 | section | Decision |
-| [decisions/0005-summary-evidence-and-e5.md](decisions/0005-summary-evidence-and-e5.md#L29) | 29 | section | Consequences |
-| [decisions/0005-summary-evidence-and-e5.md](decisions/0005-summary-evidence-and-e5.md#L34) | 34 | section | Rules changed |
+| [decisions/0005-summary-evidence-and-e5.md](decisions/0005-summary-evidence-and-e5.md#L30) | 30 | section | Consequences |
+| [decisions/0005-summary-evidence-and-e5.md](decisions/0005-summary-evidence-and-e5.md#L35) | 35 | section | Rules changed |
 | [decisions/README.md](decisions/README.md#L1) | 1 | section | Decision records |
 | [extensions/README.md](extensions/README.md#L1) | 1 | section | Extensions |
 | [extensions/README.md](extensions/README.md#L18) | 18 | section | EXT-1 Runtime failure policies |
@@ -492,27 +493,28 @@ Find a rule ID or a section here, then open only that file at that line.
 | [extensions/summaries.md](extensions/summaries.md#L25) | 25 | section | SUM-3 Conditions for use |
 | [extensions/summaries.md](extensions/summaries.md#L29) | 29 | rule | SUM-3.1 |
 | [extensions/summaries.md](extensions/summaries.md#L30) | 30 | rule | SUM-3.2 |
-| [extensions/summaries.md](extensions/summaries.md#L31) | 31 | rule | SUM-3.3 |
-| [extensions/summaries.md](extensions/summaries.md#L32) | 32 | rule | SUM-3.4 |
-| [extensions/summaries.md](extensions/summaries.md#L33) | 33 | rule | SUM-3.3a |
-| [extensions/summaries.md](extensions/summaries.md#L34) | 34 | rule | SUM-3.5 |
-| [extensions/summaries.md](extensions/summaries.md#L35) | 35 | rule | SUM-3.6 |
-| [extensions/summaries.md](extensions/summaries.md#L36) | 36 | rule | SUM-3.7 |
-| [extensions/summaries.md](extensions/summaries.md#L37) | 37 | rule | SUM-3.8 |
-| [extensions/summaries.md](extensions/summaries.md#L39) | 39 | section | SUM-4 Visibility |
-| [extensions/summaries.md](extensions/summaries.md#L41) | 41 | rule | SUM-4.1 |
-| [extensions/summaries.md](extensions/summaries.md#L42) | 42 | rule | SUM-4.2 |
-| [extensions/summaries.md](extensions/summaries.md#L44) | 44 | section | SUM-5 Integrity check |
-| [extensions/summaries.md](extensions/summaries.md#L49) | 49 | section | SUM-6 Validation |
-| [extensions/summaries.md](extensions/summaries.md#L62) | 62 | section | SUM-6.1 Validation details |
-| [extensions/summaries.md](extensions/summaries.md#L66) | 66 | rule | SUM-6.1.1 |
-| [extensions/summaries.md](extensions/summaries.md#L67) | 67 | rule | SUM-6.1.2 |
-| [extensions/summaries.md](extensions/summaries.md#L68) | 68 | rule | SUM-6.1.3 |
-| [extensions/summaries.md](extensions/summaries.md#L69) | 69 | rule | SUM-6.1.4 |
-| [extensions/summaries.md](extensions/summaries.md#L70) | 70 | rule | SUM-6.1.5 |
-| [extensions/summaries.md](extensions/summaries.md#L71) | 71 | rule | SUM-6.1.6 |
-| [extensions/summaries.md](extensions/summaries.md#L72) | 72 | rule | SUM-6.1.7 |
-| [extensions/summaries.md](extensions/summaries.md#L73) | 73 | rule | SUM-6.1.8 |
+| [extensions/summaries.md](extensions/summaries.md#L31) | 31 | rule | SUM-3.2a |
+| [extensions/summaries.md](extensions/summaries.md#L32) | 32 | rule | SUM-3.3 |
+| [extensions/summaries.md](extensions/summaries.md#L33) | 33 | rule | SUM-3.4 |
+| [extensions/summaries.md](extensions/summaries.md#L34) | 34 | rule | SUM-3.3a |
+| [extensions/summaries.md](extensions/summaries.md#L35) | 35 | rule | SUM-3.5 |
+| [extensions/summaries.md](extensions/summaries.md#L36) | 36 | rule | SUM-3.6 |
+| [extensions/summaries.md](extensions/summaries.md#L37) | 37 | rule | SUM-3.7 |
+| [extensions/summaries.md](extensions/summaries.md#L38) | 38 | rule | SUM-3.8 |
+| [extensions/summaries.md](extensions/summaries.md#L40) | 40 | section | SUM-4 Visibility |
+| [extensions/summaries.md](extensions/summaries.md#L42) | 42 | rule | SUM-4.1 |
+| [extensions/summaries.md](extensions/summaries.md#L43) | 43 | rule | SUM-4.2 |
+| [extensions/summaries.md](extensions/summaries.md#L45) | 45 | section | SUM-5 Integrity check |
+| [extensions/summaries.md](extensions/summaries.md#L50) | 50 | section | SUM-6 Validation |
+| [extensions/summaries.md](extensions/summaries.md#L63) | 63 | section | SUM-6.1 Validation details |
+| [extensions/summaries.md](extensions/summaries.md#L67) | 67 | rule | SUM-6.1.1 |
+| [extensions/summaries.md](extensions/summaries.md#L68) | 68 | rule | SUM-6.1.2 |
+| [extensions/summaries.md](extensions/summaries.md#L69) | 69 | rule | SUM-6.1.3 |
+| [extensions/summaries.md](extensions/summaries.md#L70) | 70 | rule | SUM-6.1.4 |
+| [extensions/summaries.md](extensions/summaries.md#L71) | 71 | rule | SUM-6.1.5 |
+| [extensions/summaries.md](extensions/summaries.md#L72) | 72 | rule | SUM-6.1.6 |
+| [extensions/summaries.md](extensions/summaries.md#L73) | 73 | rule | SUM-6.1.7 |
+| [extensions/summaries.md](extensions/summaries.md#L74) | 74 | rule | SUM-6.1.8 |
 | [glossary.md](glossary.md#L1) | 1 | section | Glossary |
 | [ossie-mapping.md](ossie-mapping.md#L1) | 1 | section | Apache Ossie mapping |
 | [stages/E0/README.md](stages/E0/README.md#L1) | 1 | section | E0 Load and validate the model |

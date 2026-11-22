@@ -122,9 +122,10 @@ immutable state of it.
 | CAT-7.1.3 | `aggregate_build.definition_hash` is the hash the compiler computed for the definition the summary was built from: the `definition_hash` of the summary's `summary` check (CHK-3), copied unchanged. `aggregate_build.integrity_check.definition_hash` is the same value. |
 | CAT-7.1.4 | `integrity_check` reports the result of the check query the compiler generated for that same hash, run on the versions listed in `verified`. |
 | CAT-7.1.5 | `partitions.versions` lists every period of the relation that contains rows. |
-| CAT-7.1.6 | A check result (`checks[]`, `aggregate_build.integrity_check`) reports only a check query that ran to completion. A run that did not complete (error, timeout, cancellation) is never reported as `passed` or `failed`: the producer keeps the last completed result unchanged, `verified` included, or omits it. A summary with no completed check is omitted from the state. The rest of the state is still published. |
+| CAT-7.1.6 | A check result (`checks[]`, `aggregate_build.integrity_check`) reports only a check query that ran to completion. A run that did not complete (error, timeout, cancellation) is never reported as `passed` or `failed`: the producer keeps the last completed result unchanged, `verified` included, or omits it. A summary keeps a check result only if that check ran on the summary's current build (same `definition_hash`, CAT-7.1.3); a summary with no such completed check is omitted from the state. The rest of the state is still published. |
 | CAT-7.1.7 | `aggregate_build.time_zone` is the time zone the producer bound when it built the summary and ran its check (CHK-5.2). |
 | CAT-7.1.8 | `aggregate_build.built_from` lists every base period the summary's rows were built from, and the summary has rows only from those periods. |
+| CAT-7.1.9 | `aggregate_build` describes the rows the summary relation holds when the state is published. A build that did not complete leaves the previous rows and their `aggregate_build`, or the summary is omitted from the state. |
 
 ### CAT-7.2 Summary validity
 
@@ -136,7 +137,7 @@ lie inside a period of P. A period at G with no such listed period has no rows i
 (CAT-7.1.5, CAT-7.1.8), so it needs no evidence.
 R is valid only if **all** of the following hold:
 
-1. B has `partitions` on the column R's coverage dimension comes from, and G derives from g by exact grouping (SUM-3.4: `day` → every grain; `week` → `week`; `month` → `month`, `quarter`, `year`; `quarter` → `quarter`, `year`; `year` → `year`). If that Apache Ossie field is an expression rather than a plain column, or the column is a `timestamp` with time zone (partition periods carry no time zone), there is no evidence and R is not used.
+1. B has `partitions` on the column R's coverage dimension comes from, and G derives from g by exact grouping (SUM-3.4: `day` → every grain; `week` → `week`; `month` → `month`, `quarter`, `year`; `quarter` → `quarter`, `year`; `year` → `year`). If that Apache Ossie field is an expression rather than a plain column, or the column is a `timestamp` with time zone (partition periods carry no time zone), there is no evidence and R is not used. If the column has `nullable: true` in the catalog schema, its NULL rows belong to no period, so R is used only when the query has a date range on R's coverage dimension.
 2. Every period of P is inside `coverage`.
 3. The periods of `built_from` have grain g, and for every period of Q, B's `partitions` lists it if and only if `built_from` lists it, with equal versions.
 4. R's `definition_hash` equals the hash of the current definition.

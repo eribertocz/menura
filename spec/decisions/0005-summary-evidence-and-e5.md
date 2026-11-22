@@ -23,7 +23,8 @@ serve a filter, and that `COUNT` recomposed by `SUM` changes type on DuckDB.
   omits it (CAT-7.1.6, CHK-2.3). The compiler needs no change: evidence is tied to versions.
 - E5: inner joins also need non-nullable keys, an inner or home `from` side, and a joined scan
   that no policy filters (E5-3.3a). A summary field with a grain serves only time grains and
-  aligned date ranges (SUM-3.3a). Recomposed components keep the base type (SUM-3.8, E6-4.15).
+  aligned date ranges (SUM-3.3a). Summaries whose values depend on the build's time or zone,
+  and nullable partition columns without a date range, are not used (SUM-3.2a, CAT-7.2). Recomposed components keep the base type (SUM-3.8, E6-4.15).
   E5's records wait for `explanation` in 0.7.0 (E5-2.2). The 0.6.0 slice is unchanged (VS-1d).
 
 ## Consequences
@@ -33,6 +34,6 @@ that were valid stay valid; states with base-grain `built_from` periods become v
 
 ## Rules changed
 
-CAT-7.1.6, CAT-7.1.7, CAT-7.1.8, CAT-7.2, CAT-7.2.1, CAT-8.6, CAT-8.8, CHK-2.3, CHK-5.1–CHK-5.4,
-E5-2.2, E5-2.3, E5-3.1a, E5-3.2a, E5-3.3a, E5-3.4a, E5-3.5a, E5-4, SUM-3.3a, SUM-3.5, SUM-3.8,
+CAT-7.1.6, CAT-7.1.7, CAT-7.1.8, CAT-7.1.9, CAT-7.2, CAT-7.2.1, CAT-8.6, CAT-8.8, CHK-2.3, CHK-5.1–CHK-5.4,
+E5-2.2, E5-2.3, E5-3.1a, E5-3.2a, E5-3.3a, E5-3.4a, E5-3.5a, E5-4, SUM-3.2, SUM-3.2a, SUM-3.3, SUM-3.3a, SUM-3.5, SUM-3.8,
 E6-4.15, E4-7.9, VS-1d.
