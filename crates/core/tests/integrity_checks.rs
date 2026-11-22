@@ -180,14 +180,14 @@ fn chk_6_2_orphan_keys_is_an_anti_join_of_complete_keys() {
 }
 
 #[test]
-fn chk_6_2_a_source_column_key_is_named_as_the_catalog_spells_it() {
+fn chk_2_6_a_source_column_key_is_named_by_its_normalized_name() {
     let sql = check("orphan_keys:INVOICES_STORE").sql;
     assert!(
         sql.contains("\"store_code\" AS \"menura.source.STORE_CODE\""),
         "{sql}"
     );
     assert!(
-        sql.ends_with("SELECT\n  \"store_code\"\nFROM \"menura_6_project\""),
+        sql.ends_with("SELECT\n  \"STORE_CODE\"\nFROM \"menura_6_project\""),
         "{sql}"
     );
 }

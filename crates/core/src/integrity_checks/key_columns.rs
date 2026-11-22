@@ -18,7 +18,8 @@ pub(super) struct KeyColumn {
     /// The `Scan` column: the field's normalized name, or the source column under the source
     /// prefix of the dataset (E0D-3.1, E6-4.12).
     pub(super) scan: ColumnName,
-    /// The name of the result column that holds its value (CHK-2.6).
+    /// The name of the result column that holds its value: the key's normalized name
+    /// (CHK-2.6, E0H-1.1), for a field and for a source column alike.
     pub(super) result: String,
     /// Its logical type.
     pub(super) logical_type: LogicalType,
@@ -73,7 +74,7 @@ fn key_column(
         .ok_or_else(|| defect(dataset, name, "is neither a field nor a source column"))?;
     Ok(KeyColumn {
         scan: ColumnName::new(&format!("{}{}", source_prefix(dataset), name.as_str())),
-        result: column.name.clone(),
+        result: name.as_str().to_owned(),
         logical_type: column.logical_type.clone(),
         nullable: column.nullable,
     })
