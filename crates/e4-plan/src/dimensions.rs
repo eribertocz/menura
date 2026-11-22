@@ -43,7 +43,10 @@ fn dimension_key(
     element: &QueryElement,
     layout: &Layout<'_>,
 ) -> Result<Expression, InvariantViolation> {
-    let BoundDimensionKind::Field { field, time_grain } = &dimension.kind else {
+    let BoundDimensionKind::Field {
+        field, time_grain, ..
+    } = &dimension.kind
+    else {
         return Err(InvariantViolation::ExpressionDimension);
     };
     let column = column_reference(layout.element_column(element, field)?.as_str())?;
@@ -57,7 +60,7 @@ fn dimension_key(
 }
 
 /// The unit a time grain truncates to; E6 truncates in the query time zone (E6-5.2).
-fn grain_unit(grain: Grain) -> DateUnit {
+pub(crate) fn grain_unit(grain: Grain) -> DateUnit {
     match grain {
         Grain::Day => DateUnit::Day,
         Grain::Week => DateUnit::Week,

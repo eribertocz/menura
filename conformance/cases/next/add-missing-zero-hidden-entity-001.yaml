@@ -1,0 +1,15 @@
+id: add-missing-zero-hidden-entity-001
+rules: [ADD-4.2, ADD-4.3, E4-7.6, E2-4.9]
+model: next-semi-additive-policy
+security_context: north.json
+query:
+  contract: "menura.query"
+  contract_version: "1.1.0"
+  time_zone: "UTC"
+  query:
+    metrics:
+      - {"metric": "visible_zero_minimum", "alias": "visible_zero_minimum"}
+expect:
+  outcome: "plan"
+  rows: "add-missing-zero-hidden-entity-001.csv"
+  row_order: "any"

@@ -1,0 +1,14 @@
+id: add-nulls-as-missing-001
+rules: [ADD-4.5, ADD-4.2]
+model: next-semi-additive-rules
+security_context: analyst.json
+query:
+  contract: "menura.query"
+  contract_version: "1.1.0"
+  time_zone: "UTC"
+  query:
+    metrics:
+      - {"metric": "nulls_as_missing", "alias": "nulls_as_missing"}
+expect:
+  outcome: "runtime_error"
+  error: "RADD-01"

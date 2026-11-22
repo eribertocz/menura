@@ -27,6 +27,29 @@ pub(crate) fn query_predicate(
     query: &BoundQuery,
     layout: &Layout<'_>,
 ) -> Result<Option<(Expression, QueryLocation)>, PlanError> {
+    predicate_of(query, query.date_range(), layout)
+}
+
+/// [`query_predicate`] without the `date_range` predicate when its field is `over`: the read
+/// that finds carried values keeps the row policies and the other query filters (E4-7.5).
+///
+/// # Errors
+///
+/// As [`query_predicate`].
+pub(crate) fn query_predicate_outside_range(
+    query: &BoundQuery,
+    over: &FieldPath,
+    layout: &Layout<'_>,
+) -> Result<Option<(Expression, QueryLocation)>, PlanError> {
+    let range = query.date_range().filter(|range| &range.field != over);
+    predicate_of(query, range, layout)
+}
+
+fn predicate_of(
+    query: &BoundQuery,
+    date_range: Option<&BoundDateRange>,
+    layout: &Layout<'_>,
+) -> Result<Option<(Expression, QueryLocation)>, PlanError> {
     let mut terms = Vec::new();
     for (position, filter) in query.filters().iter().enumerate() {
         terms.push(
@@ -34,7 +57,7 @@ pub(crate) fn query_predicate(
                 .map_err(|violation| at(violation, &filter.origin))?,
         );
     }
-    if let Some(range) = query.date_range() {
+    if let Some(range) = date_range {
         terms.push(
             date_range_term(range, layout).map_err(|violation| at(violation, &range.origin))?,
         );
@@ -43,7 +66,7 @@ pub(crate) fn query_predicate(
         .filters()
         .first()
         .map(|filter| &filter.origin)
-        .or_else(|| query.date_range().map(|range| &range.origin));
+        .or_else(|| date_range.map(|range| &range.origin));
     let predicate = terms.into_iter().reduce(and);
     Ok(predicate.zip(origin.cloned()))
 }

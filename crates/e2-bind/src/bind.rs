@@ -9,10 +9,11 @@ use menura_representations::bound_query::{
     BoundDimension, BoundDimensionKind, BoundMetric, BoundQuery, BoundQueryParts,
 };
 use menura_representations::columns::{Columns, OutputColumn};
+use menura_representations::origin::QueryLocation;
 use menura_representations::query_tree::QueryTree;
 use menura_security::AdmittedSecurityContext;
 
-use crate::authorized_query::AuthorizedQuery;
+use crate::authorized_query::{AuthorizedQuery, ResolvedName};
 use crate::error::BindError;
 use crate::resolve_and_authorize;
 use crate::row_12b::{Row12bBindings, check_row_12b, resolve_date_range};
@@ -56,7 +57,7 @@ fn assemble(
         Some(range) => Some(resolve_date_range(range, reference_date)?),
         None => None,
     };
-    let columns = with_grains(&query.columns, &bindings.grains);
+    let columns = with_grains(&query.columns, &bindings.grains, &grain_origins(&query));
     let parts = BoundQueryParts {
         filters: query.filters,
         date_range,
@@ -69,18 +70,39 @@ fn assemble(
     Ok(BoundQuery::new(columns, tree.time().clone(), parts))
 }
 
-/// `columns` with the grain of each dimension's field (QRY-4.1).
+/// Where the `time_grains` entry of each field is written. A field with two entries never gets
+/// here (`EQRY-09`).
+fn grain_origins(query: &AuthorizedQuery) -> BTreeMap<FieldPath, QueryLocation> {
+    query
+        .time_grains
+        .iter()
+        .filter_map(|grain| match &grain.target {
+            ResolvedName::Field(field) => Some((field.clone(), grain.origin.clone())),
+            ResolvedName::Metric(_) => None,
+        })
+        .collect()
+}
+
+/// `columns` with the grain of each dimension's field and where its entry is written
+/// (QRY-4.1, E4-7.8).
 fn with_grains(
     columns: &Columns<BoundDimension, BoundMetric>,
     grains: &BTreeMap<FieldPath, Grain>,
+    origins: &BTreeMap<FieldPath, QueryLocation>,
 ) -> Columns<BoundDimension, BoundMetric> {
     let columns = columns
         .iter()
         .cloned()
         .map(|column| match column {
             OutputColumn::Dimension(mut dimension) => {
-                if let BoundDimensionKind::Field { field, time_grain } = &mut dimension.kind {
+                if let BoundDimensionKind::Field {
+                    field,
+                    time_grain,
+                    time_grain_origin,
+                } = &mut dimension.kind
+                {
                     *time_grain = grains.get(field).copied();
+                    *time_grain_origin = origins.get(field).cloned();
                 }
                 OutputColumn::Dimension(dimension)
             }

@@ -1,7 +1,8 @@
 //! Unit tests of the branches (E3-4, E3-5).
 
 use super::{
-    Branch, Branches, ComponentKey, ElementPath, InstanceId, JoinStep, JoinTree, QueryElement,
+    Branch, BranchKind, Branches, ComponentKey, ElementPath, InstanceId, JoinStep, JoinTree,
+    QueryElement,
 };
 use crate::test_support::name;
 
@@ -16,6 +17,7 @@ fn step(relationship: &str, from: &str, to: &str) -> JoinStep {
 fn branch(home: &str, metric: usize) -> Branch {
     Branch {
         home: name(home),
+        kind: BranchKind::Plain,
         components: vec![ComponentKey {
             metric,
             component: 0,
@@ -36,6 +38,63 @@ fn e3_4_1_components_with_the_same_home_dataset_form_one_branch() {
     let branches = Branches::new(vec![shared]).expect("one home per branch");
     let only = branches.as_slice().first().expect("one branch");
     assert_eq!(only.components.len(), 2);
+}
+
+fn semi_additive(home: &str, metric: usize, metric_name: &str) -> Branch {
+    Branch {
+        kind: BranchKind::SemiAdditive {
+            metric: name(metric_name),
+        },
+        ..branch(home, metric)
+    }
+}
+
+#[test]
+fn e3_4_1_a_semi_additive_metric_forms_its_own_branch() {
+    let branches = Branches::new(vec![semi_additive("DEBT", 0, "BALANCE"), branch("DEBT", 1)]);
+
+    assert!(branches.is_some_and(|branches| branches.as_slice().len() == 2));
+    assert!(
+        Branches::new(vec![
+            semi_additive("DEBT", 0, "BALANCE"),
+            semi_additive("DEBT", 1, "BALANCE"),
+        ])
+        .is_none()
+    );
+}
+
+#[test]
+fn e3_4_3_plain_branch_first_then_semi_additive_branches_by_metric_name() {
+    let branches = Branches::new(vec![
+        semi_additive("DEBT", 0, "STOCK"),
+        branch("ORDERS", 1),
+        semi_additive("DEBT", 2, "BALANCE"),
+        branch("DEBT", 3),
+        semi_additive("ACCOUNTS", 4, "ZETA"),
+    ])
+    .expect("distinct branches");
+
+    let order: Vec<(&str, usize)> = branches
+        .as_slice()
+        .iter()
+        .map(|branch| {
+            let metric = branch
+                .components
+                .first()
+                .map_or(usize::MAX, |key| key.metric);
+            (branch.home.as_str(), metric)
+        })
+        .collect();
+    assert_eq!(
+        order,
+        [
+            ("ACCOUNTS", 4),
+            ("DEBT", 3),
+            ("DEBT", 2),
+            ("DEBT", 0),
+            ("ORDERS", 1)
+        ]
+    );
 }
 
 fn path(element: QueryElement, steps: &[&JoinStep]) -> ElementPath {

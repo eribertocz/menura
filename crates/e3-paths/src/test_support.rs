@@ -140,6 +140,7 @@ pub(crate) fn dimension(dataset: &str, field: &str, index: usize) -> BoundDimens
                 field: name(field),
             },
             time_grain: None,
+            time_grain_origin: None,
         },
         output_name: OutputName::new(field),
         origin: at(&format!("/query/dimensions/{index}")),

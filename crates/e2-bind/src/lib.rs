@@ -104,6 +104,7 @@ fn bound_column(column: &ResolvedColumn<'_>) -> Option<OutputColumn<BoundDimensi
                 kind: BoundDimensionKind::Field {
                     field: field.clone(),
                     time_grain: None,
+                    time_grain_origin: None,
                 },
                 output_name: column.output_name.clone(),
                 origin: column.origin.clone(),

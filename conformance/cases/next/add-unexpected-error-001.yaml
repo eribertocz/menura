@@ -1,0 +1,14 @@
+id: add-unexpected-error-001
+rules: [ADD-4.4, ADD-7]
+model: next-semi-additive-rules
+security_context: analyst.json
+query:
+  contract: "menura.query"
+  contract_version: "1.1.0"
+  time_zone: "UTC"
+  query:
+    metrics:
+      - {"metric": "unexpected_error", "alias": "unexpected_error"}
+expect:
+  outcome: "runtime_error"
+  error: "RADD-02"

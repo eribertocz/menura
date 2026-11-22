@@ -1,0 +1,16 @@
+id: add-stale-carry-forward-error-001
+rules: [ADD-4.3, ADD-7]
+model: next-semi-additive
+security_context: analyst.json
+query:
+  contract: "menura.query"
+  contract_version: "1.1.0"
+  time_zone: "UTC"
+  query:
+    metrics:
+      - {"metric": "stale_error", "alias": "stale_error"}
+    nonportable_extensions:
+      - {"vendor_name": "COMMON", "data": {"namespace": "menura", "version": 1, "date_range": {"dimension": "balances.period", "from": "2026-01-01", "to": "2026-04-30"}}}
+expect:
+  outcome: "runtime_error"
+  error: "RADD-04"

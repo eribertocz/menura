@@ -5,7 +5,9 @@ use menura_model::internal_model::{FieldPath, InternalModel, Metric};
 use menura_representations::bound_query::{
     AuthorizedSubgraph, BoundDateRange, BoundDimension, BoundPath, BoundQuery, BoundQueryParts,
 };
-use menura_representations::paths::{Branch, Branches, ComponentKey, JoinStep, QueryElement};
+use menura_representations::paths::{
+    Branch, BranchKind, Branches, ComponentKey, JoinStep, QueryElement,
+};
 
 use super::BranchHome;
 use crate::test_support::{at, connected_model, metric, metric_reference, name, query};
@@ -93,6 +95,7 @@ pub(crate) fn shop() -> InternalModel {
 pub(crate) fn home(dataset: &str, components: &[(usize, usize)]) -> BranchHome {
     BranchHome {
         home: name(dataset),
+        kind: BranchKind::Plain,
         components: components
             .iter()
             .map(|&(metric, component)| ComponentKey { metric, component })
