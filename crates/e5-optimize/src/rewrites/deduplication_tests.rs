@@ -151,9 +151,15 @@ fn deduplicated(input: PlanNode) -> PlanNode {
     limited(deduplicate)
 }
 
-/// `Limit(input, 10)`.
+/// `Limit(input, 10)`, whose output has the columns of `input` but the row identity.
 fn limited(input: PlanNode) -> PlanNode {
-    let columns = input.schema().columns().to_vec();
+    let columns = input
+        .schema()
+        .columns()
+        .iter()
+        .filter(|column| column.name.as_str() != IDENTITY)
+        .cloned()
+        .collect();
     node(
         Operation::Limit {
             input: Box::new(input),
@@ -164,20 +170,23 @@ fn limited(input: PlanNode) -> PlanNode {
 }
 
 /// `shop_model` with the dataset `REGIONS` (`shop.main.regions`) and `SECOND_RELATIONSHIP`
-/// from `CUSTOMERS` to it, whose `key_uniqueness` check is recorded with `CURRENT_HASH`.
+/// from `CUSTOMERS` to it, each kept in name order, whose `key_uniqueness` check is recorded with `CURRENT_HASH`.
 fn two_join_model() -> InternalModel {
     let mut parts = shop_model().parts().clone();
     parts.datasets.push(dataset("REGIONS", "shop.main.regions"));
-    parts.relationships.push(Relationship {
-        name: NormalizedName::new(SECOND_RELATIONSHIP),
-        from: NormalizedName::new("CUSTOMERS"),
-        to: NormalizedName::new("REGIONS"),
-        from_columns: vec![NormalizedName::new("REGION_ID")],
-        to_columns: vec![NormalizedName::new("REGION_ID")],
-        descriptions: Descriptions::default(),
-        query_errors: Vec::new(),
-        location: location("/semantic_model/0/relationships/1"),
-    });
+    parts.relationships.insert(
+        0,
+        Relationship {
+            name: NormalizedName::new(SECOND_RELATIONSHIP),
+            from: NormalizedName::new("CUSTOMERS"),
+            to: NormalizedName::new("REGIONS"),
+            from_columns: vec![NormalizedName::new("REGION_ID")],
+            to_columns: vec![NormalizedName::new("REGION_ID")],
+            descriptions: Descriptions::default(),
+            query_errors: Vec::new(),
+            location: location("/semantic_model/0/relationships/1"),
+        },
+    );
     parts.checks.push(RecordedCheck {
         check_id: format!("key_uniqueness:{SECOND_RELATIONSHIP}"),
         kind: CheckKind::KeyUniqueness,
@@ -225,7 +234,7 @@ fn regions_unique() -> Value {
 }
 
 /// A state where every relation is at version `<name>-1`, with the results `checks`.
-fn state(checks: Vec<Value>) -> CatalogStateDocument {
+fn state(checks: &[Value]) -> CatalogStateDocument {
     let relation = |name: &str| {
         json!({"source": format!("shop.main.{name}"), "row_count_estimate": 1,
             "version": token(&format!("{name}-1"))})
@@ -280,7 +289,7 @@ fn kept_for(relationship: &str) -> RewriteRecord {
 
 #[test]
 fn e5_3_2_evidence_for_the_only_join_removes_the_deduplicate_and_the_row_identity() {
-    let state = state(vec![customers_unique()]);
+    let state = state(&[customers_unique()]);
 
     let (plan, records) = run(deduplicated(one_join(true)), &shop_model(), Some(&state));
 
@@ -290,7 +299,7 @@ fn e5_3_2_evidence_for_the_only_join_removes_the_deduplicate_and_the_row_identit
 
 #[test]
 fn e5_3_2a_evidence_for_every_join_removes_the_deduplicate() {
-    let state = state(vec![customers_unique(), regions_unique()]);
+    let state = state(&[customers_unique(), regions_unique()]);
 
     let (plan, records) = run(
         deduplicated(two_joins(true)),
@@ -304,7 +313,7 @@ fn e5_3_2a_evidence_for_every_join_removes_the_deduplicate() {
 
 #[test]
 fn e5_3_2a_one_join_without_evidence_keeps_the_deduplicate() {
-    let state = state(vec![customers_unique()]);
+    let state = state(&[customers_unique()]);
     let plan = deduplicated(two_joins(true));
 
     let (rewritten, records) = run(plan.clone(), &two_join_model(), Some(&state));
@@ -315,7 +324,7 @@ fn e5_3_2a_one_join_without_evidence_keeps_the_deduplicate() {
 
 #[test]
 fn e5_3_8_the_first_relationship_without_evidence_is_recorded() {
-    let state = state(Vec::new());
+    let state = state(&[]);
     let plan = deduplicated(two_joins(true));
 
     let (rewritten, records) = run(plan.clone(), &two_join_model(), Some(&state));
@@ -326,13 +335,13 @@ fn e5_3_8_the_first_relationship_without_evidence_is_recorded() {
 
 #[test]
 fn e5_3_2a_failed_evidence_keeps_the_deduplicate() {
-    let failed = uniqueness(
+    let failed_result = uniqueness(
         RELATIONSHIP,
         CURRENT_HASH,
         "failed",
         ("shop.main.customers", "customers-1"),
     );
-    let state = state(vec![failed]);
+    let state = state(&[failed_result]);
     let plan = deduplicated(one_join(true));
 
     let (rewritten, records) = run(plan.clone(), &shop_model(), Some(&state));
@@ -343,13 +352,13 @@ fn e5_3_2a_failed_evidence_keeps_the_deduplicate() {
 
 #[test]
 fn e5_3_2a_evidence_on_a_stale_version_keeps_the_deduplicate() {
-    let stale = uniqueness(
+    let stale_result = uniqueness(
         RELATIONSHIP,
         CURRENT_HASH,
         "passed",
         ("shop.main.customers", "customers-0"),
     );
-    let state = state(vec![stale]);
+    let state = state(&[stale_result]);
     let plan = deduplicated(one_join(true));
 
     let (rewritten, records) = run(plan.clone(), &shop_model(), Some(&state));
@@ -360,13 +369,13 @@ fn e5_3_2a_evidence_on_a_stale_version_keeps_the_deduplicate() {
 
 #[test]
 fn e5_3_2a_evidence_of_another_definition_hash_keeps_the_deduplicate() {
-    let other = uniqueness(
+    let other_result = uniqueness(
         RELATIONSHIP,
         OTHER_HASH,
         "passed",
         ("shop.main.customers", "customers-1"),
     );
-    let state = state(vec![other]);
+    let state = state(&[other_result]);
     let plan = deduplicated(one_join(true));
 
     let (rewritten, records) = run(plan.clone(), &shop_model(), Some(&state));
@@ -387,7 +396,7 @@ fn e5_5_without_a_state_the_deduplicate_is_kept() {
 
 #[test]
 fn e5_3_2a_a_join_that_does_not_follow_its_relationship_keeps_the_deduplicate() {
-    let state = state(vec![customers_unique()]);
+    let state = state(&[customers_unique()]);
     let reversed = join(
         home(true),
         joined_scan("ORDERS", RELATIONSHIP, &["CUSTOMER_ID"]),
@@ -411,7 +420,7 @@ fn e5_3_2a_a_join_that_does_not_follow_its_relationship_keeps_the_deduplicate() 
 
 #[test]
 fn e5_3_8_a_plan_without_a_deduplicate_has_no_record() {
-    let state = state(vec![customers_unique()]);
+    let state = state(&[customers_unique()]);
     let plan = limited(one_join(false));
 
     let (rewritten, records) = run(plan.clone(), &shop_model(), Some(&state));
