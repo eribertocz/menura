@@ -18,7 +18,6 @@ use crate::{NodePath, RewriteOutcome, RewriteRecord, RewriteRule, RewriteSubject
 
 const ORDERS_TO_CUSTOMERS: &str = "ORDERS_TO_CUSTOMERS";
 const CUSTOMERS_TO_REGIONS: &str = "CUSTOMERS_TO_REGIONS";
-
 const EVIDENCE: &str = "passing `orphan_keys` evidence for the relationship (CAT-7.3)";
 const NOT_NULL: &str =
     "every `from_columns` column has `nullable: false` in the catalog schema (E5-3.3a (1))";

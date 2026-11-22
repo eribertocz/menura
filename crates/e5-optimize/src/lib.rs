@@ -9,6 +9,7 @@
 
 mod context;
 mod evidence;
+mod plan_inputs;
 mod record;
 mod rewrites;
 
