@@ -1,0 +1,15 @@
+id: next-sql-mixed-item-001
+rules: [E1-4.8]
+model: slice
+security_context: auditor.json
+query:
+  contract: "menura.query"
+  contract_version: "1.1.0"
+  time_zone: "UTC"
+  sql: "SELECT region, AGG(total_amount) + quantity AS mixed FROM slice.sales GROUP BY region"
+expect:
+  outcome: "error"
+  error: "EQRY-05"
+  location:
+    document: "query"
+    pointer: "/sql"

@@ -5,9 +5,11 @@ use menura_contracts::types::query::{DateBounds, Direction, NullsOrder, Relative
 
 use super::{
     QueryDateRange, QueryDimension, QueryDimensionKind, QueryFilter, QueryLimit, QueryMetric,
-    QueryMetricKind, QueryOrderItem, QueryPath, QueryReference, QueryTree, QueryTreeParts,
-    ReferencePart, TimeGrainChoice,
+    QueryMetricKind, QueryOrderItem, QueryPath, QueryReference, QueryRelation, QueryTree,
+    QueryTreeParts, ReferencePart, TimeGrainChoice,
 };
+use menura_model::expression::Identifier;
+
 use crate::columns::OutputColumn;
 use crate::names::OutputName;
 use crate::test_support::{at, in_sql, madrid_time, query_reference, true_literal};
@@ -103,7 +105,14 @@ fn e1_5_sql_form_keeps_select_order() {
     first.origin = in_sql(1, 8);
     let mut second = dimension("region", "/sql");
     second.origin = in_sql(1, 25);
+    let relation = QueryRelation {
+        model: identifier("shop"),
+        dataset: identifier("orders"),
+        alias: Some(identifier("o")),
+        origin: in_sql(1, 37),
+    };
     let tree = QueryTree::in_select_order(
+        relation.clone(),
         vec![OutputColumn::Metric(first), OutputColumn::Dimension(second)],
         madrid_time(),
         QueryTreeParts::default(),
@@ -121,6 +130,22 @@ fn e1_5_sql_form_keeps_select_order() {
             .map(|dimension| dimension.origin.position()),
         Some(in_sql(1, 25).position())
     );
+    assert_eq!(tree.relation(), Some(&relation));
+}
+
+#[test]
+fn e1_5_the_wide_table_form_has_no_relation() {
+    let tree = QueryTree::wide_table(
+        Vec::new(),
+        Vec::new(),
+        madrid_time(),
+        QueryTreeParts::default(),
+    );
+    assert_eq!(tree.relation(), None);
+}
+
+fn identifier(text: &str) -> Identifier {
+    Identifier::regular(text).unwrap_or_else(|| unreachable!("a regular identifier"))
 }
 
 #[test]
