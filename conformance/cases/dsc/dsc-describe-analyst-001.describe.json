@@ -15,7 +15,7 @@
     }
   ],
   "capabilities": {
-    "compiler_version": "0.7.0",
+    "compiler_version": "0.8.0",
     "contracts": [
       {
         "contract": "menura.audit_record",
@@ -46,8 +46,16 @@
         "version": "1.2.0"
       },
       {
+        "contract": "menura.model_dependencies",
+        "version": "1.0.0"
+      },
+      {
         "contract": "menura.model_description",
         "version": "1.2.0"
+      },
+      {
+        "contract": "menura.model_diff",
+        "version": "1.0.0"
       },
       {
         "contract": "menura.query",
@@ -80,6 +88,12 @@
       },
       {
         "key": "aggregate",
+        "versions": [
+          1
+        ]
+      },
+      {
+        "key": "context",
         "versions": [
           1
         ]
@@ -135,7 +149,7 @@
       "sql",
       "wide_table"
     ],
-    "slice_version": "0.7.0"
+    "slice_version": "0.8.0"
   },
   "contract": "menura.model_description",
   "contract_version": "1.2.0",
