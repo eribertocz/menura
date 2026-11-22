@@ -27,7 +27,7 @@ impl<'input> StepWriter<'input> {
             } => {
                 let zone = self
                     .writer(node, Columns::Input(input.schema()))
-                    .time_zone();
+                    .time_zone()?;
                 Ok(format!("CAST(({value}) AT TIME ZONE {zone} AS DATE)"))
             }
             LogicalType::Timestamp { .. } => Ok(format!("CAST({value} AS DATE)")),
@@ -53,7 +53,9 @@ impl<'input> StepWriter<'input> {
                 with_time_zone: true,
                 ..
             } => {
-                let zone = self.writer(node, Columns::Input(node.schema())).time_zone();
+                let zone = self
+                    .writer(node, Columns::Input(node.schema()))
+                    .time_zone()?;
                 Ok(format!(
                     "CAST(CAST({start} AS TIMESTAMP) AT TIME ZONE {zone} AS {physical})"
                 ))

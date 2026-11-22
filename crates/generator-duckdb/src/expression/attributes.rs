@@ -54,6 +54,7 @@ impl ExpressionWriter<'_, '_> {
         let value = self
             .environment
             .security
+            .ok_or_else(|| self.error(InvariantViolation::MissingAttribute))?
             .attributes()
             .get(name)
             .ok_or_else(|| self.error(InvariantViolation::MissingAttribute))?;

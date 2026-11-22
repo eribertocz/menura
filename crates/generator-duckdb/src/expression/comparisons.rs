@@ -39,7 +39,7 @@ impl ExpressionWriter<'_, '_> {
             Some(LogicalType::Timestamp { with_time_zone, .. }) if date_parameter => {
                 let midnight = format!("CAST({text} AS TIMESTAMP)");
                 if *with_time_zone {
-                    Ok(format!("{midnight} AT TIME ZONE {}", self.time_zone()))
+                    Ok(format!("{midnight} AT TIME ZONE {}", self.time_zone()?))
                 } else {
                     Ok(midnight)
                 }

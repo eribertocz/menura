@@ -3,12 +3,14 @@
 //! [`generate_sql`] writes one read-only statement with one common table expression per plan
 //! node, in plan order (E6-4.1, E6-4.4), binds every query and security value as a positional
 //! parameter (E6-4.2) and builds the result schema (PLN-1). All `DuckDB` knowledge lives here
-//! (E6-3.2).
+//! (E6-3.2). [`generate_check_sql`] writes the query of an integrity check from its logical
+//! plan with the same steps (CHK-4.2).
 
 #![forbid(unsafe_code)]
 
 mod additivity_error;
 mod body;
+mod check;
 mod day;
 mod deduplicate;
 mod error;
@@ -31,6 +33,7 @@ mod stitch;
 mod types;
 mod values;
 
+pub use check::{GeneratedCheckSql, generate_check_sql};
 pub use error::{GenerateError, InvariantViolation};
 pub use output::GeneratedSql;
 
@@ -65,8 +68,8 @@ pub fn generate_sql(
     let environment = Environment {
         catalog,
         model,
-        security,
-        time: query.time(),
+        security: Some(security),
+        time: Some(query.time()),
     };
     let mut writer = StepWriter::new(&environment);
     let written = writer.write(plan)?;
