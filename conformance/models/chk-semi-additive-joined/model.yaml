@@ -1,0 +1,48 @@
+version: "0.1.1"
+semantic_model:
+  - name: chk_semi_additive_joined
+    description: 'Balances joined to accounts: a semi-additive metric whose entity is a field of the joined dataset gets no semi_additive check (CHK-6.5a), while the metric whose fields are all of its home dataset and the relationship checks are emitted'
+    custom_extensions:
+      - vendor_name: COMMON
+        data: '{"namespace": "menura", "version": 1, "security_context": {"roles": ["analyst"], "attributes": []}}'
+    datasets:
+      - name: balances
+        source: shop.main.balances
+        fields:
+          - name: account_id
+            expression: {dialects: [{dialect: ANSI_SQL, expression: account_id}]}
+          - name: snapshot
+            expression: {dialects: [{dialect: ANSI_SQL, expression: snapshot}]}
+          - name: balance
+            expression: {dialects: [{dialect: ANSI_SQL, expression: balance}]}
+        custom_extensions:
+          - vendor_name: COMMON
+            data: '{"namespace": "menura", "version": 1, "access": {"mode": "roles", "roles": ["analyst"]}}'
+      - name: accounts
+        source: shop.main.accounts
+        primary_key: [account_id]
+        fields:
+          - name: account_id
+            expression: {dialects: [{dialect: ANSI_SQL, expression: account_id}]}
+          - name: customer_id
+            expression: {dialects: [{dialect: ANSI_SQL, expression: customer_id}]}
+        custom_extensions:
+          - vendor_name: COMMON
+            data: '{"namespace": "menura", "version": 1, "access": {"mode": "roles", "roles": ["analyst"]}}'
+    relationships:
+      - name: balances_accounts
+        from: balances
+        to: accounts
+        from_columns: [account_id]
+        to_columns: [account_id]
+    metrics:
+      - name: account_balance
+        expression: {dialects: [{dialect: ANSI_SQL, expression: SUM(balances.balance)}]}
+        custom_extensions:
+          - vendor_name: COMMON
+            data: '{"namespace": "menura", "version": 1, "additivity": {"type": "semi_additive", "over": "balances.snapshot", "entity": ["balances.account_id"], "aggregation": "max", "nulls": "keep"}}'
+      - name: customer_balance
+        expression: {dialects: [{dialect: ANSI_SQL, expression: SUM(balances.balance)}]}
+        custom_extensions:
+          - vendor_name: COMMON
+            data: '{"namespace": "menura", "version": 1, "additivity": {"type": "semi_additive", "over": "balances.snapshot", "entity": ["accounts.customer_id"], "aggregation": "max", "nulls": "keep"}}'
