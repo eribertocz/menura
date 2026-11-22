@@ -1,0 +1,79 @@
+{
+  "contract": "menura.catalog_state",
+  "contract_version": "1.1.0",
+  "document_id": {
+    "origin": "conformance:catalog",
+    "snapshot": "state-1"
+  },
+  "schema_document_id": {
+    "origin": "conformance:catalog",
+    "snapshot": "1"
+  },
+  "relations": [
+    {
+      "source": "shop.main.orders",
+      "row_count_estimate": 3,
+      "partitions": {
+        "column": "order_date",
+        "grain": "day",
+        "versions": [
+          {
+            "period": "2026-11-01",
+            "version": {
+              "origin": "conformance:catalog",
+              "snapshot": "orders-1101"
+            }
+          },
+          {
+            "period": "2026-11-02",
+            "version": {
+              "origin": "conformance:catalog",
+              "snapshot": "orders-1102"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "source": "shop.main.orders_monthly",
+      "row_count_estimate": 2,
+      "aggregate_build": {
+        "definition_hash": "0000000000000000000000000000000000000000000000000000000000000000",
+        "coverage": {
+          "from": "2026-11",
+          "to": "2026-11"
+        },
+        "built_from": [
+          {
+            "period": "2026-11-01",
+            "version": {
+              "origin": "conformance:catalog",
+              "snapshot": "orders-1101"
+            }
+          },
+          {
+            "period": "2026-11-02",
+            "version": {
+              "origin": "conformance:catalog",
+              "snapshot": "orders-1102"
+            }
+          }
+        ],
+        "integrity_check": {
+          "status": "passed",
+          "definition_hash": "0000000000000000000000000000000000000000000000000000000000000000",
+          "verified": [
+            {
+              "period": "2026-11",
+              "version": {
+                "origin": "conformance:catalog",
+                "snapshot": "orders-11"
+              }
+            }
+          ]
+        },
+        "time_zone": "UTC"
+      }
+    }
+  ]
+}

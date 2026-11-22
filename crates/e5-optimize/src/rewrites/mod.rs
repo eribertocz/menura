@@ -7,6 +7,9 @@ mod merge_scans;
 mod summaries;
 mod unused_joins;
 
+#[cfg(test)]
+mod deduplication_tests;
+
 use menura_representations::logical_plan::PlanNode;
 
 use crate::context::RewriteContext;
