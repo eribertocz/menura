@@ -38,6 +38,16 @@ impl SelectBody {
     }
 }
 
+/// `first`, then `UNION ALL` and each of `others`, one clause per line (E6-4.9).
+pub(crate) fn union_all(first: SelectBody, others: &[SelectBody]) -> SelectBody {
+    let mut body = first;
+    for other in others {
+        body.clauses.push("UNION ALL".to_owned());
+        body.clauses.extend(other.lines(0));
+    }
+    body
+}
+
 /// The statement `WITH` every named body, in order, then the final `SELECT` (E6-4.1, E6-4.4).
 pub(crate) fn statement(steps: &[(String, SelectBody)], last: &SelectBody) -> String {
     let mut lines = vec!["WITH".to_owned()];

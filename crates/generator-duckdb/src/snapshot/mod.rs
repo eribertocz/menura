@@ -3,6 +3,7 @@
 
 mod field_over;
 mod nulls;
+mod time_over;
 
 use menura_representations::logical_plan::{NamedExpression, Operation, PlanNode, SnapshotOver};
 
@@ -20,12 +21,12 @@ impl<'input> StepWriter<'input> {
         };
         match &rule.over {
             SnapshotOver::Field(over) => self.field_snapshot(node, input, rule, over),
-            SnapshotOver::Time(_) => Err(error(InvariantViolation::NodeOutsideSlice, node)),
+            SnapshotOver::Time(time) => self.time_snapshot(node, input, rule, time),
         }
     }
 
     /// `expression AS name` for each of `named`, over the columns of `input`.
-    fn named_items(
+    pub(super) fn named_items(
         &mut self,
         node: &'input PlanNode,
         input: &'input PlanNode,
@@ -43,7 +44,7 @@ impl<'input> StepWriter<'input> {
 }
 
 /// `GROUP BY 1, 2, …, count`, or no clause when `count` is 0.
-fn group_by(count: usize) -> Vec<String> {
+pub(super) fn group_by(count: usize) -> Vec<String> {
     if count == 0 {
         return Vec::new();
     }

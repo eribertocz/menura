@@ -35,6 +35,24 @@ impl<'input> StepWriter<'input> {
         &mut self,
         node: &'input PlanNode,
     ) -> Result<SelectBody, GenerateError> {
+        self.population_and_periods(node).map(|(body, _)| body)
+    }
+
+    /// Writes the steps of `node`, a `Population`, and returns its step name and the step name
+    /// of its periods, which a `Snapshot` that reads it needs (E4-7.7).
+    pub(crate) fn write_population(
+        &mut self,
+        node: &'input PlanNode,
+    ) -> Result<(String, String), GenerateError> {
+        let (body, periods) = self.population_and_periods(node)?;
+        Ok((self.push_step("population", body), periods))
+    }
+
+    /// The body of `node`, a `Population`, and the step name of its periods.
+    fn population_and_periods(
+        &mut self,
+        node: &'input PlanNode,
+    ) -> Result<(SelectBody, String), GenerateError> {
         let inputs = population_inputs(node)?;
         check_columns(node, &inputs)?;
         let input = self.write(inputs.input)?;
@@ -61,14 +79,15 @@ impl<'input> StepWriter<'input> {
             &period,
             inputs.grain,
         )?;
-        Ok(SelectBody {
+        let body = SelectBody {
             items: output_items(node, inputs.rule, &period)?,
             from: format!("{rows} AS {ROW}"),
             clauses: vec![
                 format!("JOIN {} AS {PERIOD} ON {covered}", periods.name),
                 format!("GROUP BY {}", ordinals(node.schema().columns().len())),
             ],
-        })
+        };
+        Ok((body, periods.name))
     }
 }
 

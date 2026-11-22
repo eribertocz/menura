@@ -38,7 +38,25 @@ fn local_timestamp() -> LogicalType {
 
 /// The datasets, sorted by name as the model keeps them.
 fn shapes() -> Vec<Shape> {
+    let mut shapes = balance_shapes();
+    shapes.extend(other_shapes());
+    shapes
+}
+
+/// The datasets of balances, in name order.
+fn balance_shapes() -> Vec<Shape> {
     vec![
+        (
+            "ADDED_BALANCES",
+            "main.added_balances",
+            vec![
+                ("CUSTOMER_ID", "customer_id", big_integer()),
+                ("BALANCE_DATE", "balance_date", LogicalType::Date),
+                ("BRANCH", "branch", LogicalType::Text),
+                ("BALANCE", "balance", decimal(12, 2)),
+                ("PERIOD", "period", LogicalType::Date),
+            ],
+        ),
         (
             "BALANCES",
             "main.balances",
@@ -49,6 +67,12 @@ fn shapes() -> Vec<Shape> {
                 ("BALANCE", "balance", decimal(12, 2)),
             ],
         ),
+    ]
+}
+
+/// The other datasets, in name order, after the balances.
+fn other_shapes() -> Vec<Shape> {
+    vec![
         (
             "CUSTOMERS",
             "main.customers",

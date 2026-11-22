@@ -9,13 +9,6 @@ mod tests;
 
 /// A runtime condition of a semi-additive metric that its rule turns into an error (ADD-7).
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-#[cfg_attr(
-    not(test),
-    expect(
-        dead_code,
-        reason = "RADD-01, RADD-02 and RADD-04 belong to a time `over`, not generated yet"
-    )
-)]
 pub(crate) enum AdditivityCondition {
     /// `RADD-01`: `missing: error` and an expected entity has no row.
     MissingEntity,
@@ -41,11 +34,17 @@ impl AdditivityCondition {
     /// The SQL that raises this condition in the semi-additive metric `metric`, named by its
     /// normalized name. The text is a literal, never a parameter (E6-4.11, EXT-1).
     pub(crate) fn raise_sql(self, metric: &NormalizedName) -> String {
+        format!("error({})", self.message_sql(metric))
+    }
+
+    /// The code-and-message text of this condition in the metric `metric`, as a literal
+    /// (E6-4.11). The texts of the four codes sort in code order.
+    pub(crate) fn message_sql(self, metric: &NormalizedName) -> String {
         let message = format!(
             "{} in metric {}",
             self.code_and_condition(),
             metric.as_str()
         );
-        format!("error({})", text_sql(&message))
+        text_sql(&message)
     }
 }
