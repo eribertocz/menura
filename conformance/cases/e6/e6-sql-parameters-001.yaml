@@ -1,0 +1,14 @@
+id: e6-sql-parameters-001
+rules: [E6-4.2, E1-4.2, E4-7.9]
+model: next-semi-additive
+security_context: analyst.json
+query:
+  contract: "menura.query"
+  contract_version: "1.1.0"
+  time_zone: "UTC"
+  sql: "SELECT CASE WHEN customer_id = 1 THEN 'one' ELSE 'other' END AS bucket, AGG(carried_balance) + 1000 AS carried, AGG(total_paid) AS paid FROM next_semi_additive.balances GROUP BY ALL ORDER BY bucket"
+expect:
+  outcome: "plan"
+  sql: "e6-sql-parameters-001.sql"
+  rows: "e6-sql-parameters-001.csv"
+  row_order: "exact"

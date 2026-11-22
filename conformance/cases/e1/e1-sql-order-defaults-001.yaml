@@ -1,0 +1,14 @@
+id: e1-sql-order-defaults-001
+rules: [E1-4.10, E1-4.3]
+model: slice
+security_context: auditor.json
+oracle: "e1-sql-order-defaults-001.oracle.sql"
+query:
+  contract: "menura.query"
+  contract_version: "1.1.0"
+  time_zone: "UTC"
+  sql: "SELECT channel, AGG(sale_count) AS n FROM slice.sales GROUP BY channel ORDER BY channel"
+expect:
+  outcome: "plan"
+  row_order: "exact"
+  rows: "e1-sql-order-defaults-001.csv"
