@@ -216,3 +216,16 @@ fn e2_5_3_references_of_an_expression_are_taken_in_text_order() {
     assert_eq!(found.location, sql_at(8));
     assert!(found.message.contains("first_unknown"));
 }
+
+#[test]
+fn e2_3_3_an_expression_dimension_that_reads_no_field_is_metric_in_dimensions() {
+    let one = Expression::Literal(menura_model::expression::Literal::Boolean(true));
+    let tree = sql_columns(
+        relation("sales", "orders", None, 40),
+        vec![
+            expression_item(one, "flag", 8),
+            agg_item("revenue", "r", 20),
+        ],
+    );
+    assert_eq!(first_error_at(&tree), (BindCode::MetricInDimensions, 8));
+}

@@ -38,7 +38,7 @@ pub(crate) fn filter_datasets(filter: &ResolvedFilter<'_>) -> Vec<NormalizedName
 }
 
 /// Row 4: a dimension MUST name a field, and an expression dimension of the SQL form MUST read
-/// no metric (E2-3.3, E1-4.9).
+/// fields and no metric (E2-3.3, E1-4.9).
 fn metric_in_dimensions(
     columns: &[ResolvedColumn<'_>],
     sql_form: bool,
@@ -51,25 +51,28 @@ fn metric_in_dimensions(
             .reads
             .iter()
             .find(|read| matches!(read.target, ResolvedName::Metric(_)));
-        if let Some(read) = metric {
-            let message = if sql_form {
-                format!(
-                    "`{}` names a metric, which a `SELECT` item reads only inside `AGG(…)`; \
-                     write `AGG({})`",
-                    read.written, read.written
-                )
-            } else {
-                format!(
-                    "dimension `{}` names a metric; request it under `metrics`",
-                    read.written
-                )
-            };
-            return Err(BindDiagnostic::new(
-                BindCode::MetricInDimensions,
-                message,
-                column.origin,
-            ));
-        }
+        let message = match metric {
+            Some(read) if sql_form => format!(
+                "`{}` names a metric, which a `SELECT` item reads only inside `AGG(…)`; \
+                 write `AGG({})`",
+                read.written, read.written
+            ),
+            Some(read) => format!(
+                "dimension `{}` names a metric; request it under `metrics`",
+                read.written
+            ),
+            None if column.reads.is_empty() => format!(
+                "`{}` reads no field; a `SELECT` item without `AGG(…)` reads fields of the \
+                 relation",
+                column.output_name.as_str()
+            ),
+            None => continue,
+        };
+        return Err(BindDiagnostic::new(
+            BindCode::MetricInDimensions,
+            message,
+            column.origin,
+        ));
     }
     Ok(())
 }
