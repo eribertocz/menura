@@ -36,7 +36,11 @@ mod stitch;
 mod types;
 mod values;
 
-pub use check::{GeneratedCheckSql, generate_check_sql};
+pub use check::{
+    CheckInputs, GeneratedCheckSql, PeriodicCheck, SnapshotCheck, SnapshotTime, ValidityCheck,
+    generate_check_sql, generate_periodic_check_sql, generate_snapshot_check_sql,
+    generate_validity_check_sql,
+};
 pub use check_types::check_column_type;
 pub use error::{GenerateError, InvariantViolation};
 pub use output::GeneratedSql;

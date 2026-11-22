@@ -1,0 +1,73 @@
+version: "0.1.1"
+semantic_model:
+  - name: chk_populations
+    description: 'Memberships, stamped memberships, a monthly roster and balances: the population checks of each mode (CHK-6.3, CHK-6.4) and the semi_additive checks of a time over and of a field over (CHK-6.5, ADD-6); stamped memberships read days in the bound time zone (CHK-7.3)'
+    custom_extensions:
+      - vendor_name: COMMON
+        data: '{"namespace": "menura", "version": 1, "security_context": {"roles": ["analyst"], "attributes": []}}'
+    datasets:
+      - name: memberships
+        source: shop.main.memberships
+        fields:
+          - name: customer_id
+            expression: {dialects: [{dialect: ANSI_SQL, expression: customer_id}]}
+          - name: valid_from
+            expression: {dialects: [{dialect: ANSI_SQL, expression: valid_from}]}
+            dimension: {is_time: true}
+          - name: valid_to
+            expression: {dialects: [{dialect: ANSI_SQL, expression: valid_to}]}
+            dimension: {is_time: true}
+        custom_extensions:
+          - vendor_name: COMMON
+            data: '{"namespace": "menura", "version": 1, "access": {"mode": "roles", "roles": ["analyst"]}, "populations": [{"name": "members", "mode": "validity", "entity": ["customer_id"], "valid_from": "valid_from", "valid_to": "valid_to", "partial_period": "any_day"}]}'
+      - name: stamped_memberships
+        source: shop.main.stamped_memberships
+        fields:
+          - name: customer_id
+            expression: {dialects: [{dialect: ANSI_SQL, expression: customer_id}]}
+          - name: valid_from
+            expression: {dialects: [{dialect: ANSI_SQL, expression: valid_from}]}
+            dimension: {is_time: true}
+          - name: valid_to
+            expression: {dialects: [{dialect: ANSI_SQL, expression: valid_to}]}
+            dimension: {is_time: true}
+        custom_extensions:
+          - vendor_name: COMMON
+            data: '{"namespace": "menura", "version": 1, "access": {"mode": "roles", "roles": ["analyst"]}, "populations": [{"name": "stamped_members", "mode": "validity", "entity": ["customer_id"], "valid_from": "valid_from", "valid_to": "valid_to", "partial_period": "any_day"}]}'
+      - name: roster
+        source: shop.main.roster
+        fields:
+          - name: customer_id
+            expression: {dialects: [{dialect: ANSI_SQL, expression: customer_id}]}
+          - name: period_at
+            expression: {dialects: [{dialect: ANSI_SQL, expression: period_at}]}
+            dimension: {is_time: true}
+        custom_extensions:
+          - vendor_name: COMMON
+            data: '{"namespace": "menura", "version": 1, "access": {"mode": "roles", "roles": ["analyst"]}, "populations": [{"name": "monthly_roster", "mode": "periodic", "entity": ["customer_id"], "period": "period_at", "grain": "month"}]}'
+      - name: balances
+        source: shop.main.balances
+        fields:
+          - name: customer_id
+            expression: {dialects: [{dialect: ANSI_SQL, expression: customer_id}]}
+          - name: period
+            expression: {dialects: [{dialect: ANSI_SQL, expression: period}]}
+            dimension: {is_time: true}
+          - name: snapshot
+            expression: {dialects: [{dialect: ANSI_SQL, expression: snapshot}]}
+          - name: balance
+            expression: {dialects: [{dialect: ANSI_SQL, expression: balance}]}
+        custom_extensions:
+          - vendor_name: COMMON
+            data: '{"namespace": "menura", "version": 1, "access": {"mode": "roles", "roles": ["analyst"]}}'
+    metrics:
+      - name: roster_balance
+        expression: {dialects: [{dialect: ANSI_SQL, expression: SUM(balances.balance)}]}
+        custom_extensions:
+          - vendor_name: COMMON
+            data: '{"namespace": "menura", "version": 1, "additivity": {"type": "semi_additive", "over": "balances.period", "entity": ["balances.customer_id"], "aggregation": "last", "selection": "global_period", "snapshot_grain": "month", "population": "monthly_roster", "missing": "exclude", "unexpected": "exclude", "nulls": "keep"}}'
+      - name: snapshot_balance
+        expression: {dialects: [{dialect: ANSI_SQL, expression: SUM(balances.balance)}]}
+        custom_extensions:
+          - vendor_name: COMMON
+            data: '{"namespace": "menura", "version": 1, "additivity": {"type": "semi_additive", "over": "balances.snapshot", "entity": ["balances.customer_id"], "aggregation": "max", "nulls": "keep"}}'

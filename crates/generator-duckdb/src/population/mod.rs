@@ -1,7 +1,7 @@
 //! The step of a `Population` node (E4-3.12, E6-4.14): the expected (entity, period) pairs of
 //! a population at a grain over the query's periods (POP-3).
 
-mod membership;
+pub(crate) mod membership;
 
 use menura_contracts::types::common::Grain;
 use menura_representations::logical_plan::{Operation, PlanNode, PopulationRule};
@@ -14,9 +14,9 @@ use crate::identifiers::quote;
 use crate::steps::{StepWriter, error, pass_through};
 
 /// The alias of a row of the population's input.
-const ROW: &str = "\"menura_row\"";
+pub(crate) const ROW: &str = "\"menura_row\"";
 /// The alias of a row of the periods.
-const PERIOD: &str = "\"menura_period\"";
+pub(crate) const PERIOD: &str = "\"menura_period\"";
 
 /// The parts of a `Population` node the step reads.
 struct PopulationInputs<'input> {
