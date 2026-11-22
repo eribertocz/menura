@@ -8,6 +8,7 @@ use super::PlanNode;
 use super::items::{
     AggregateComponent, JoinCondition, JoinKind, NamedExpression, SortItem, StitchColumn,
 };
+use super::lookup::{LookupColumn, LookupKey};
 use super::population::PopulationRule;
 use super::snapshot::SnapshotRule;
 use crate::names::{ColumnName, ColumnPrefix};
@@ -96,6 +97,22 @@ pub enum Operation {
         /// The component columns, in branch order and, within a branch, in component order,
         /// each with its branch and empty-input value (E4-5.0b).
         columns: Vec<StitchColumn>,
+    },
+    /// `Lookup(result, value, mapping)`: attach to each row of `result` the components of the
+    /// row of `value` that `mapping` selects, or their empty-input values when none matches
+    /// (E4-3.16, E4-8.7). Each result row matches at most one row of `value`, and the node
+    /// never adds or removes a row. Its output is the columns of `result`, then `columns`, in
+    /// order.
+    Lookup {
+        /// The result rows: the query's `Stitch`, its single branch, or a previous `Lookup`.
+        result: Box<PlanNode>,
+        /// The context query, up to its `Stitch` or its single branch (E4-8.2).
+        value: Box<PlanNode>,
+        /// The keys that select the row of `value`, all of which must match; none when the
+        /// context query has no dimension and so exactly one row (E4-5.2).
+        mapping: Vec<LookupKey>,
+        /// The component columns of `value` it attaches, in the component order of `value`.
+        columns: Vec<LookupColumn>,
     },
     /// `Project(input, expressions)`: compute the output columns.
     Project {

@@ -3,7 +3,7 @@
 use std::collections::BTreeSet;
 
 use menura_model::expression::{AggregateCall, Expression};
-use menura_representations::logical_plan::{AggregateComponent, Operation};
+use menura_representations::logical_plan::{AggregateComponent, LookupKey, Operation};
 
 /// The names of plan columns, as text.
 pub(crate) type ColumnNames = BTreeSet<String>;
@@ -42,6 +42,11 @@ pub(crate) fn add_operation_reads(operation: &Operation, columns: &mut ColumnNam
         }
         Operation::Stitch { keys, .. } => {
             columns.extend(keys.iter().map(|key| key.as_str().to_owned()));
+        }
+        Operation::Lookup { mapping, .. } => {
+            columns.extend(mapping.iter().map(|key| match key {
+                LookupKey::Equal { result, .. } => result.as_str().to_owned(),
+            }));
         }
         Operation::Project { expressions, .. } => expressions
             .iter()

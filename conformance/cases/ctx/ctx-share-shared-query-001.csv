@@ -1,0 +1,6 @@
+region,status,sales_share_in_region,sales_share_in_region_too
+WEST,open,1.0,1.0
+SOUTH,open,1.0,1.0
+NORTH,closed,0.75,0.75
+,open,1.0,1.0
+NORTH,open,0.25,0.25

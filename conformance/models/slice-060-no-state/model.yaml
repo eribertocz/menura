@@ -61,8 +61,8 @@ semantic_model:
         expression: {dialects: [{dialect: ANSI_SQL, expression: 'COUNT(orders.order_id)'}]}
       - name: average_amount
         expression: {dialects: [{dialect: ANSI_SQL, expression: 'AVG(orders.amount)'}]}
-      - name: amount_share
+      - name: amount_to_date
         expression: {dialects: [{dialect: ANSI_SQL, expression: 'AGG(total_amount)'}]}
         custom_extensions:
           - vendor_name: COMMON
-            data: '{"namespace": "menura", "version": 1, "context": {"base": "total_amount", "modifier": {"type": "share_of_total", "remove": ["orders.region"]}}}'
+            data: '{"namespace": "menura", "version": 1, "context": {"base": "total_amount", "modifier": {"type": "period_to_date", "time_dimension": "orders.order_date", "grain": "year"}}}'

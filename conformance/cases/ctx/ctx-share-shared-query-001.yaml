@@ -1,0 +1,22 @@
+id: ctx-share-shared-query-001
+rules: [E4-8.2, E4-8.8, PLN-7.3, PLN-4.4]
+model: ctx-share
+security_context: analyst.json
+query:
+  contract: "menura.query"
+  contract_version: "1.1.0"
+  time_zone: "UTC"
+  query:
+    dimensions: ["customers.region", "orders.status"]
+    metrics:
+      - {"metric": "sales_share_in_region", "alias": "sales_share_in_region"}
+      - {"metric": "sales_share_in_region_too", "alias": "sales_share_in_region_too"}
+    filter: "orders.amount > 0"
+expect:
+  outcome: "plan"
+  sql: "ctx-share-shared-query-001.sql"
+  lineage: "ctx-share-shared-query-001.lineage.json"
+  explanation: ["DEV-4", "E4-4.0e", "E4-4.1", "E4-8.2", "E5-3.2", "E5-3.3"]
+  tolerance: 1e-12
+  row_order: "any"
+  rows: "ctx-share-shared-query-001.csv"

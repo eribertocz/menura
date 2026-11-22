@@ -122,8 +122,12 @@ pub enum InvariantViolation {
     UnknownPopulation,
     /// A unit of periods that does not output the period column it is read by (E4-3.12).
     UnknownPeriodColumn,
-    /// A context metric (CTX).
+    /// A context metric whose modifier E4 does not plan yet (`prior_period`, `period_to_date`),
+    /// or one that the base of another context metric reads (`E0C-64`).
     ContextMetric,
+    /// Context queries other than those the query's context metrics need, in the order of
+    /// E4-8.8 (E4-8.2).
+    UnplannedContextQuery,
     /// A home dataset whose `source` the catalog schema does not describe.
     UnknownRelation,
     /// A source column, read by a dataset metric, that the catalog relation does not have
