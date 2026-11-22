@@ -1,0 +1,20 @@
+id: pln-audit-actor-plan-001
+rules: [CS-2.18, CS-2.16, PLN-6.8, PLN-8.3]
+model: slice
+security_context: auditor.json
+compile_options: {actor: "agent-7"}
+query:
+  contract: "menura.query"
+  contract_version: "1.1.0"
+  time_zone: "UTC"
+  query:
+    dimensions: ["sales.region"]
+    metrics:
+      - {"metric": "total_amount", "alias": "total_amount"}
+      - {"metric": "total_quantity", "alias": "total_quantity"}
+      - {"metric": "sale_count", "alias": "sale_count"}
+expect:
+  outcome: "plan"
+  rows: "pln-audit-actor-plan-001.csv"
+  row_order: "any"
+  audit: "pln-audit-actor-plan-001.audit.json"
