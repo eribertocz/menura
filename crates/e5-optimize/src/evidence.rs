@@ -29,13 +29,6 @@ impl<'a> Evidence<'a> {
     /// the check reads (its CHK-2 `sources`): the `to` relation for `key_uniqueness`, the `from`
     /// and `to` relations for `orphan_keys`. Only those two kinds are evidence for E5; every
     /// other kind has none.
-    #[cfg_attr(
-        not(test),
-        expect(
-            dead_code,
-            reason = "read by the rewrites of E5-3.2 and E5-3.3, filled in by their own issues"
-        )
-    )]
     pub(crate) fn holds(&self, kind: CheckKind, target: &NormalizedName) -> bool {
         let Some(state) = self.state else {
             return false;

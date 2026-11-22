@@ -1,0 +1,41 @@
+version: "0.1.1"
+semantic_model:
+  - name: e5_deduplication_skipped
+    description: Orders joined to customers, with key-uniqueness evidence for the relationship
+    custom_extensions:
+      - vendor_name: COMMON
+        data: '{"namespace": "menura", "version": 1, "security_context": {"roles": ["analyst"], "attributes": []}}'
+    datasets:
+      - name: orders
+        source: shop.main.orders
+        primary_key: [order_id]
+        fields:
+          - name: order_id
+            expression: {dialects: [{dialect: ANSI_SQL, expression: order_id}]}
+          - name: customer_id
+            expression: {dialects: [{dialect: ANSI_SQL, expression: customer_id}]}
+          - name: amount
+            expression: {dialects: [{dialect: ANSI_SQL, expression: amount}]}
+        custom_extensions:
+          - vendor_name: COMMON
+            data: '{"namespace": "menura", "version": 1, "access": {"mode": "roles", "roles": ["analyst"]}}'
+      - name: customers
+        source: shop.main.customers
+        primary_key: [customer_id]
+        fields:
+          - name: customer_id
+            expression: {dialects: [{dialect: ANSI_SQL, expression: customer_id}]}
+          - name: region
+            expression: {dialects: [{dialect: ANSI_SQL, expression: region}]}
+        custom_extensions:
+          - vendor_name: COMMON
+            data: '{"namespace": "menura", "version": 1, "access": {"mode": "roles", "roles": ["analyst"]}}'
+    relationships:
+      - name: orders_customers
+        from: orders
+        to: customers
+        from_columns: [customer_id]
+        to_columns: [customer_id]
+    metrics:
+      - name: total_amount
+        expression: {dialects: [{dialect: ANSI_SQL, expression: SUM(orders.amount)}]}
