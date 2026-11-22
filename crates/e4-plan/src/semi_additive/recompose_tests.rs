@@ -13,6 +13,7 @@ fn component(call: AggregateCall) -> AggregateComponent {
         name: ColumnName::new("metric_1_component_1"),
         call,
         filter: Some(Expression::Literal(Literal::Boolean(true))),
+        recomposition: None,
     }
 }
 

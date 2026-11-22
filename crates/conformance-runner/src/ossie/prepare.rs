@@ -4,6 +4,7 @@
 
 use std::path::Path;
 
+use duckdb::Connection;
 use menura_contracts::types::audit_record::{LoadOptions, OssieFormat};
 use serde_json::{Value, json};
 
@@ -22,6 +23,8 @@ use crate::ossie::suite::{OssieCase, Suite};
 pub struct PreparedCase {
     /// The Apache Ossie model document, as read from its YAML file.
     pub model: Value,
+    /// The text of the model file, which the compiler loads unchanged (CS-3.1).
+    pub model_text: String,
     /// `ossie_format: development` and `grant_authenticated_to_all: true` (CS-4.4).
     pub load_options: LoadOptions,
     /// The tables the fixture created, from which the catalog schema is built (CS-4.4).
@@ -40,7 +43,8 @@ struct FixtureFiles {
     model: &'static str,
 }
 
-/// Prepares `case` in a fresh database, with the runner security context `security_context`.
+/// Prepares `case` in a fresh database, with the runner security context `security_context`,
+/// and returns the database with the fixture loaded, on which the case runs.
 ///
 /// # Errors
 ///
@@ -49,10 +53,11 @@ struct FixtureFiles {
 pub fn prepare_case(
     case: &OssieCase,
     security_context: &Value,
-) -> Result<PreparedCase, RunnerError> {
+) -> Result<(PreparedCase, Connection), RunnerError> {
     let folder = case.folder();
     let (files, query, expected) = case_inputs(case, &folder)?;
-    let model = read_model(&case.suite_directory.join(files.model))?;
+    let model_text = read_text(&case.suite_directory.join(files.model))?;
+    let model = parse_model(&model_text, &case.suite_directory.join(files.model))?;
     let fixture = ModelFixture {
         sources: dataset_sources(&model),
         data_script: read_text(&case.suite_directory.join(files.data_script))?,
@@ -66,14 +71,16 @@ pub fn prepare_case(
         let sql = read_text(&folder.join("expected.sql"))?;
         ExpectedResult::Rows(expected_rows_of(&connection, &sql).map_err(database_error)?)
     };
-    Ok(PreparedCase {
+    let prepared = PreparedCase {
         model,
+        model_text,
         load_options: load_options(),
         created_tables,
         query,
         security_context: security_context.clone(),
         expected,
-    })
+    };
+    Ok((prepared, connection))
 }
 
 /// The fixture files, the query envelope and, for a wide-table case, the expected result read
@@ -166,8 +173,8 @@ fn dataset_sources(model: &Value) -> Vec<String> {
         .collect()
 }
 
-fn read_model(path: &Path) -> Result<Value, RunnerError> {
-    serde_saphyr::from_str(&read_text(path)?)
+fn parse_model(text: &str, path: &Path) -> Result<Value, RunnerError> {
+    serde_saphyr::from_str(text)
         .map_err(|error| RunnerError::new(RunnerErrorKind::Malformed(error.to_string()), path))
 }
 
