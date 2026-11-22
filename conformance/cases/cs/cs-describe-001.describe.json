@@ -1,0 +1,366 @@
+{
+  "ambiguous_paths": [],
+  "capabilities": {
+    "compiler_version": "0.6.0",
+    "contracts": [
+      {
+        "contract": "menura.audit_record",
+        "version": "1.2.0"
+      },
+      {
+        "contract": "menura.catalog_schema",
+        "version": "1.1.0"
+      },
+      {
+        "contract": "menura.catalog_state",
+        "version": "1.1.0"
+      },
+      {
+        "contract": "menura.compile_error",
+        "version": "1.2.0"
+      },
+      {
+        "contract": "menura.compiled_plan",
+        "version": "1.2.0"
+      },
+      {
+        "contract": "menura.explanation",
+        "version": "1.2.0"
+      },
+      {
+        "contract": "menura.integrity_checks",
+        "version": "1.2.0"
+      },
+      {
+        "contract": "menura.model_description",
+        "version": "1.2.0"
+      },
+      {
+        "contract": "menura.query",
+        "version": "1.1.0"
+      },
+      {
+        "contract": "menura.security_context",
+        "version": "1.1.0"
+      },
+      {
+        "contract": "menura.validation_report",
+        "version": "1.2.0"
+      }
+    ],
+    "dialects": [
+      "duckdb"
+    ],
+    "extensions": [
+      {
+        "key": "access",
+        "versions": [
+          1
+        ]
+      },
+      {
+        "key": "additivity",
+        "versions": [
+          1
+        ]
+      },
+      {
+        "key": "aggregate",
+        "versions": [
+          1
+        ]
+      },
+      {
+        "key": "derived",
+        "versions": [
+          1
+        ]
+      },
+      {
+        "key": "populations",
+        "versions": [
+          1
+        ]
+      },
+      {
+        "key": "row_access",
+        "versions": [
+          1
+        ]
+      },
+      {
+        "key": "security_context",
+        "versions": [
+          1
+        ]
+      }
+    ],
+    "functions": [
+      "compile",
+      "describe",
+      "explain",
+      "integrity_checks",
+      "load",
+      "migrate",
+      "validate",
+      "with_state"
+    ],
+    "limits": {
+      "max_decimal_precision": 38,
+      "max_identifier_length": 128
+    },
+    "ossie": {
+      "formats": [
+        "development",
+        "release"
+      ],
+      "normative": "0.1.1",
+      "tracked_commit": "aa500d37894c3d62c96cdce4192cbecea4d7f06a"
+    },
+    "query_forms": [
+      "sql",
+      "wide_table"
+    ],
+    "slice_version": "0.7.0"
+  },
+  "contract": "menura.model_description",
+  "contract_version": "1.2.0",
+  "datasets": [
+    {
+      "fields": [
+        {
+          "is_time": false,
+          "logical_type": {
+            "kind": "decimal",
+            "precision": 10,
+            "scale": 2
+          },
+          "reference": "RETURNS.REFUND",
+          "time_grains": []
+        },
+        {
+          "is_time": false,
+          "logical_type": {
+            "bits": 32,
+            "kind": "integer",
+            "signed": true
+          },
+          "reference": "RETURNS.RETURN_ID",
+          "time_grains": []
+        },
+        {
+          "is_time": false,
+          "logical_type": {
+            "bits": 32,
+            "kind": "integer",
+            "signed": true
+          },
+          "reference": "RETURNS.SALE_ID",
+          "time_grains": []
+        }
+      ],
+      "name": "RETURNS"
+    },
+    {
+      "fields": [
+        {
+          "is_time": false,
+          "logical_type": {
+            "kind": "decimal",
+            "precision": 10,
+            "scale": 2
+          },
+          "reference": "SALES.AMOUNT",
+          "time_grains": []
+        },
+        {
+          "is_time": false,
+          "logical_type": {
+            "kind": "text"
+          },
+          "reference": "SALES.CHANNEL",
+          "time_grains": []
+        },
+        {
+          "is_time": true,
+          "logical_type": {
+            "kind": "timestamp",
+            "precision": "us",
+            "with_time_zone": false
+          },
+          "reference": "SALES.ENTERED_AT",
+          "time_grains": [
+            "day",
+            "week",
+            "month",
+            "quarter",
+            "year"
+          ]
+        },
+        {
+          "is_time": false,
+          "logical_type": {
+            "bits": 32,
+            "kind": "integer",
+            "signed": true
+          },
+          "reference": "SALES.QUANTITY",
+          "time_grains": []
+        },
+        {
+          "is_time": false,
+          "logical_type": {
+            "kind": "text"
+          },
+          "reference": "SALES.REGION",
+          "time_grains": []
+        },
+        {
+          "is_time": true,
+          "logical_type": {
+            "kind": "date"
+          },
+          "reference": "SALES.SALE_DATE",
+          "time_grains": [
+            "day",
+            "week",
+            "month",
+            "quarter",
+            "year"
+          ]
+        },
+        {
+          "is_time": false,
+          "logical_type": {
+            "bits": 32,
+            "kind": "integer",
+            "signed": true
+          },
+          "reference": "SALES.SALE_ID",
+          "time_grains": []
+        },
+        {
+          "is_time": true,
+          "logical_type": {
+            "kind": "timestamp",
+            "precision": "us",
+            "with_time_zone": true
+          },
+          "reference": "SALES.SOLD_AT",
+          "time_grains": [
+            "day",
+            "week",
+            "month",
+            "quarter",
+            "year"
+          ]
+        },
+        {
+          "is_time": false,
+          "logical_type": {
+            "bits": 32,
+            "kind": "integer",
+            "signed": true
+          },
+          "reference": "SALES.TEAM_ID",
+          "time_grains": []
+        },
+        {
+          "is_time": false,
+          "logical_type": {
+            "kind": "boolean"
+          },
+          "reference": "SALES.VOIDED",
+          "time_grains": []
+        },
+        {
+          "is_time": false,
+          "logical_type": {
+            "kind": "decimal",
+            "precision": 10,
+            "scale": 0
+          },
+          "reference": "SALES.WHOLE_AMOUNT",
+          "time_grains": []
+        }
+      ],
+      "name": "SALES"
+    }
+  ],
+  "metrics": [
+    {
+      "kind": "base",
+      "logical_type": {
+        "bits": 64,
+        "kind": "integer",
+        "signed": true
+      },
+      "reachable_datasets": [
+        "SALES"
+      ],
+      "reference": "SALE_COUNT"
+    },
+    {
+      "kind": "base",
+      "logical_type": {
+        "bits": 64,
+        "kind": "float"
+      },
+      "reachable_datasets": [
+        "SALES"
+      ],
+      "reference": "TEAM_PER_QUANTITY"
+    },
+    {
+      "kind": "base",
+      "logical_type": {
+        "kind": "decimal",
+        "precision": 38,
+        "scale": 2
+      },
+      "reachable_datasets": [
+        "SALES"
+      ],
+      "reference": "TOTAL_AMOUNT"
+    },
+    {
+      "kind": "base",
+      "logical_type": {
+        "bits": 128,
+        "kind": "integer",
+        "signed": true
+      },
+      "reachable_datasets": [
+        "SALES"
+      ],
+      "reference": "TOTAL_QUANTITY"
+    },
+    {
+      "kind": "base",
+      "logical_type": {
+        "kind": "decimal",
+        "precision": 38,
+        "scale": 2
+      },
+      "reachable_datasets": [
+        "RETURNS",
+        "SALES"
+      ],
+      "reference": "TOTAL_REFUND"
+    },
+    {
+      "kind": "base",
+      "logical_type": {
+        "kind": "decimal",
+        "precision": 38,
+        "scale": 0
+      },
+      "reachable_datasets": [
+        "SALES"
+      ],
+      "reference": "TOTAL_WHOLE_AMOUNT"
+    }
+  ],
+  "model_hash": "ce65d82cd8213f1180a7ee76fe057a1b0c5600978b01a910b267de57e6232fbe",
+  "security_fingerprint": "a6c4ed4133971642b8c3042444accfc487cf4dba852e3e3849bceb8d31acafff"
+}

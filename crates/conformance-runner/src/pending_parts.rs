@@ -16,8 +16,9 @@ const EXPLAIN_FROM: ContractVersion = ContractVersion {
     patch: 0,
 };
 
-/// The status of a `describe` or `integrity_checks` case whose model loads: `core` has neither
-/// function yet, so the document part is pending (CS-2.15, CS-2.8).
+/// The status of a document case whose model loads and whose function `core` does not have
+/// yet: the document part is pending (CS-2.15, CS-2.8). `integrity_checks` is the only such
+/// function.
 pub(crate) fn document_part(outcome: Outcome) -> CaseStatus {
     let function = if outcome == Outcome::Describe {
         "describe"
