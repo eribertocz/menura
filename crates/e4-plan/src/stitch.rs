@@ -112,7 +112,7 @@ fn merged_keys(previous: Vec<SchemaColumn>, next: Vec<SchemaColumn>) -> Option<V
 /// # Errors
 ///
 /// [`InvariantViolation::UnstitchableBranches`] only if `0` were not an integer literal.
-fn empty_value(call: &AggregateCall) -> Result<Option<Literal>, InvariantViolation> {
+pub(crate) fn empty_value(call: &AggregateCall) -> Result<Option<Literal>, InvariantViolation> {
     match call {
         AggregateCall::CountRows
         | AggregateCall::Simple {

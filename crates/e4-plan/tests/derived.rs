@@ -7,14 +7,14 @@
 
 mod support;
 
+use menura_contracts::types::common::Grain;
 use menura_e4_plan::{InvariantViolation, PlanError};
 use menura_expressions::typing::decimal;
 use menura_model::expression::{
     AggregateCall, BinaryOperator, Expression, IntegerLiteral, Literal, SimpleAggregate,
 };
 use menura_model::internal_model::{
-    ContextMetric, ContextModifier, DeclaredAdditivity, DivisionByZero, InternalModel,
-    RemovedDimensions,
+    ContextMetric, ContextModifier, DeclaredAdditivity, DivisionByZero, FieldPath, InternalModel,
 };
 use menura_representations::logical_plan::{DerivedFormula, NamedExpression, Operation, PlanNode};
 use support::derived::{changed_model, derived_model, derived_plan, float, plan_over};
@@ -389,7 +389,14 @@ fn vs_1_a_context_metric_read_as_an_input_is_an_internal_error() {
     let model = changed_model("SALES_TO_BUDGET", |metric| {
         metric.context = Some(ContextMetric {
             base: name("SALES_TOTAL"),
-            modifier: ContextModifier::ShareOfTotal(RemovedDimensions::All),
+            modifier: ContextModifier::PriorPeriod {
+                time_dimension: FieldPath {
+                    dataset: name("ORDERS"),
+                    field: name("ORDER_DATE"),
+                },
+                grain: Grain::Year,
+                offset: std::num::NonZeroU64::MIN,
+            },
         });
     });
 

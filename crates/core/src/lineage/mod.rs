@@ -24,7 +24,7 @@ use crate::compile::InternalError;
 use metrics::metrics_read;
 use names::{model_inputs, written_name};
 use policies::applied_policies;
-use provenance::NodeLineage;
+use provenance::{NodeLineage, Provenance};
 use scan::Sources;
 
 /// What the lineage of a plan is computed against.
@@ -95,6 +95,20 @@ pub(crate) fn row_policies(
     ))
 }
 
+/// The positions of the branches behind the output column `output` of provenance
+/// `provenance` (PLN-4.8): for a dimension, every branch of the plan, those of its context
+/// queries included; for a metric, every branch that computes one of its components.
+fn behind(
+    root: &NodeLineage,
+    provenance: &Provenance,
+    output: &OutputColumn<BoundDimension, BoundMetric>,
+) -> Vec<usize> {
+    match output {
+        OutputColumn::Dimension(_) => (0..root.branches.len()).collect(),
+        OutputColumn::Metric(_) => provenance.branches.iter().copied().collect(),
+    }
+}
+
 /// The lineage entry of the output column `name`, the query column `output`, over the
 /// lineage `root` of the final plan node.
 fn entry(
@@ -107,8 +121,8 @@ fn entry(
         InternalError::new("core", format!("the plan outputs `{name}` underived"))
     })?;
     let mut reads = root.shared.clone();
-    for branch in &provenance.branches {
-        if let Some(branch_reads) = root.branches.get(*branch) {
+    for branch in behind(root, provenance, output) {
+        if let Some(branch_reads) = root.branches.get(branch) {
             reads.absorb(branch_reads.clone());
         }
     }

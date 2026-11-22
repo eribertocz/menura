@@ -1,0 +1,20 @@
+id: ctx-share-remove-all-001
+rules: [E4-8.2, E4-8.3, E4-8.7, E4-8.8, CTX-3.5, CTX-3a.3, E6-4.12, E6-4.14]
+model: ctx-share
+security_context: analyst.json
+query:
+  contract: "menura.query"
+  contract_version: "1.1.0"
+  time_zone: "UTC"
+  query:
+    dimensions: ["customers.region"]
+    metrics:
+      - {"metric": "sales", "alias": "sales"}
+      - {"metric": "sales_share_of_all", "alias": "sales_share_of_all"}
+      - {"metric": "order_count_share_of_all", "alias": "order_count_share_of_all"}
+expect:
+  outcome: "plan"
+  sql: "ctx-share-remove-all-001.sql"
+  tolerance: 1e-12
+  row_order: "any"
+  rows: "ctx-share-remove-all-001.csv"

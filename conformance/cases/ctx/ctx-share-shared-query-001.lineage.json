@@ -1,0 +1,123 @@
+[
+  {
+    "model_inputs": [
+      "field:CUSTOMERS.REGION",
+      "relationship:ORDERS_CUSTOMERS"
+    ],
+    "output": "region",
+    "physical_inputs": [
+      {
+        "column": "customer_id",
+        "source": "shop.main.customers"
+      },
+      {
+        "column": "region",
+        "source": "shop.main.customers"
+      },
+      {
+        "column": "amount",
+        "source": "shop.main.orders"
+      },
+      {
+        "column": "customer_id",
+        "source": "shop.main.orders"
+      },
+      {
+        "column": "status",
+        "source": "shop.main.orders"
+      }
+    ],
+    "security_policies": [
+      "ORDERS.NOT_VOID"
+    ],
+    "summary": null
+  },
+  {
+    "model_inputs": [
+      "field:ORDERS.STATUS"
+    ],
+    "output": "status",
+    "physical_inputs": [
+      {
+        "column": "customer_id",
+        "source": "shop.main.customers"
+      },
+      {
+        "column": "amount",
+        "source": "shop.main.orders"
+      },
+      {
+        "column": "customer_id",
+        "source": "shop.main.orders"
+      },
+      {
+        "column": "status",
+        "source": "shop.main.orders"
+      }
+    ],
+    "security_policies": [
+      "ORDERS.NOT_VOID"
+    ],
+    "summary": null
+  },
+  {
+    "model_inputs": [
+      "field:ORDERS.AMOUNT",
+      "metric:SALES",
+      "metric:SALES_SHARE_IN_REGION"
+    ],
+    "output": "sales_share_in_region",
+    "physical_inputs": [
+      {
+        "column": "customer_id",
+        "source": "shop.main.customers"
+      },
+      {
+        "column": "amount",
+        "source": "shop.main.orders"
+      },
+      {
+        "column": "customer_id",
+        "source": "shop.main.orders"
+      },
+      {
+        "column": "status",
+        "source": "shop.main.orders"
+      }
+    ],
+    "security_policies": [
+      "ORDERS.NOT_VOID"
+    ],
+    "summary": null
+  },
+  {
+    "model_inputs": [
+      "field:ORDERS.AMOUNT",
+      "metric:SALES",
+      "metric:SALES_SHARE_IN_REGION_TOO"
+    ],
+    "output": "sales_share_in_region_too",
+    "physical_inputs": [
+      {
+        "column": "customer_id",
+        "source": "shop.main.customers"
+      },
+      {
+        "column": "amount",
+        "source": "shop.main.orders"
+      },
+      {
+        "column": "customer_id",
+        "source": "shop.main.orders"
+      },
+      {
+        "column": "status",
+        "source": "shop.main.orders"
+      }
+    ],
+    "security_policies": [
+      "ORDERS.NOT_VOID"
+    ],
+    "summary": null
+  }
+]
