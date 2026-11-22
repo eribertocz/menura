@@ -9,7 +9,9 @@ use menura_model::internal_model::{
     RoleName, RowPolicy,
 };
 use menura_representations::logical_plan::{Operation, PlanNode};
-use menura_representations::paths::{Branch, Branches, ComponentKey, JoinStep, JoinTree};
+use menura_representations::paths::{
+    Branch, BranchKind, Branches, ComponentKey, JoinStep, JoinTree,
+};
 
 use super::plan::{chain, column_names, kind};
 use super::{field, located, metrics, model_with, name, orders};
@@ -205,6 +207,7 @@ pub fn across(link: Link) -> JoinStep {
 pub fn home_branch() -> Branches {
     Branches::new(vec![Branch {
         home: name("ORDERS"),
+        kind: BranchKind::Plain,
         components: vec![ComponentKey {
             metric: 0,
             component: 0,

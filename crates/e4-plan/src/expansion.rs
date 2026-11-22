@@ -54,6 +54,8 @@ impl MetricKey {
 
 /// One base component of an expanded metric.
 pub(crate) struct BaseComponent<'model> {
+    /// The metric that is not derived whose expression it belongs to.
+    pub(crate) metric: &'model Metric,
     /// The component.
     pub(crate) component: &'model Component,
     /// Whether that metric is a dataset metric, whose `source.` references read source
@@ -256,6 +258,7 @@ where
             };
             let component = own.get(next).ok_or(InvariantViolation::ComponentMismatch)?;
             self.components.push(BaseComponent {
+                metric,
                 component,
                 in_dataset_metric,
             });

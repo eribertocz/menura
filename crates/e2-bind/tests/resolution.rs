@@ -65,11 +65,13 @@ fn e2_2_every_column_points_to_its_model_element_in_order() {
     let ungrained = BoundDimensionKind::Field {
         field: field("ORDERS", "ORDERED_AT"),
         time_grain: None,
+        time_grain_origin: None,
     };
     assert_eq!(ordered_at.kind, ungrained);
     let plain = BoundDimensionKind::Field {
         field: field("CUSTOMERS", "REGION"),
         time_grain: None,
+        time_grain_origin: None,
     };
     assert_eq!(region.kind, plain);
     let semantic = MetricPath::SemanticModel(name("REVENUE"));

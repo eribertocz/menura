@@ -15,6 +15,8 @@ pub fn kind(node: &PlanNode) -> &'static str {
         Operation::Deduplicate { .. } => "Deduplicate",
         Operation::Aggregate { .. } => "Aggregate",
         Operation::Population { .. } => "Population",
+        Operation::Periods { .. } => "Periods",
+        Operation::Snapshot { .. } => "Snapshot",
         Operation::Stitch { .. } => "Stitch",
         Operation::Project { .. } => "Project",
         Operation::Sort { .. } => "Sort",

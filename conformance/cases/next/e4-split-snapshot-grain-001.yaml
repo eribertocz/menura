@@ -1,0 +1,20 @@
+id: e4-split-snapshot-grain-001
+rules: [E4-03, ADD-4.9, E4-7.8]
+model: next-semi-additive
+security_context: analyst.json
+query:
+  contract: "menura.query"
+  contract_version: "1.1.0"
+  time_zone: "UTC"
+  query:
+    dimensions: ["balances.period"]
+    metrics:
+      - {"metric": "last_global", "alias": "last_global"}
+    nonportable_extensions:
+      - {"vendor_name": "COMMON", "data": {"namespace": "menura", "version": 1, "time_grains": [{"dimension": "balances.period", "grain": "week"}]}}
+expect:
+  outcome: "error"
+  error: "E4-03"
+  location:
+    document: "query"
+    pointer: "/query/nonportable_extensions/0/data/time_grains/0"

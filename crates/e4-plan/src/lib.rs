@@ -36,9 +36,13 @@ mod policy;
 mod policy_visits;
 mod population;
 mod query_filter;
+mod query_policies;
 mod rewrite;
+mod rows;
 mod scan;
+mod semi_additive;
 mod slice;
+mod snapshot_grain;
 mod stitch;
 mod typing;
 mod visibility;
@@ -47,17 +51,15 @@ pub use error::{InvariantViolation, PlanError};
 pub use population::{PopulationRequest, plan_population};
 
 use menura_contracts::types::catalog::CatalogSchemaDocument;
-use menura_model::expression::Expression;
-use menura_model::internal_model::{InternalModel, NormalizedName};
+use menura_model::internal_model::InternalModel;
 use menura_representations::bound_query::BoundQuery;
-use menura_representations::logical_plan::{AggregateComponent, NamedExpression, PlanNode};
+use menura_representations::logical_plan::PlanNode;
 use menura_representations::origin::Origin;
-use menura_representations::paths::{Branch, Branches};
+use menura_representations::paths::{Branch, BranchKind, Branches};
 use menura_security::AdmittedSecurityContext;
 
-use crate::columns::read_fields;
 use crate::layout::Layout;
-use crate::nodes::{aggregate, component_expression, deduplicate, filter};
+use crate::nodes::aggregate;
 
 /// Builds the logical plan of `query` from its `branches`, for the user of `security`, over
 /// `model` and the admitted `catalog` schema, which gives the type of every source column a
@@ -83,11 +85,14 @@ pub fn build_plan(
     let home_origin = Origin::Model(slice::home_dataset(first, model)?.location.clone());
     let project_origin =
         metrics::first_metric_location(&metrics).map_or(home_origin, Origin::Model);
+    let has_reference_time = query.time().reference_time.is_some();
+    query_policies::check_query_policies(branches, &metrics, model, security, has_reference_time)?;
     let mut plans = branches
         .as_slice()
         .iter()
         .map(|branch| branch_plan(branch, query, security, model, catalog, &metrics))
         .collect::<Result<Vec<_>, _>>()?;
+    snapshot_grain::check_snapshot_grains(query, &snapshot_axes(branches, &metrics, model)?)?;
     let combined = match plans.len() {
         0 => return Err(slice::no_branch()),
         1 => plans.pop().ok_or_else(slice::no_branch)?,
@@ -115,58 +120,67 @@ fn branch_plan(
     let layout = Layout::new(branch, home, model)?;
     let keys = dimensions::dimension_keys(query, &layout)?;
     let components = metrics::branch_components(branch, metrics, home)?;
-    let query_predicate = query_filter::query_predicate(query, &layout)?;
-    let has_reference_time = query.time().reference_time.is_some();
-    let graph = followed::PolicyGraph::new(model);
-    let row_filters =
-        policy_visits::row_filters(home, model, &graph, security, has_reference_time)?;
-
-    let mut read = fields_read(
-        &keys,
-        &components,
-        query_predicate.as_ref().map(|(predicate, _)| predicate),
-    );
-    let visibility = visibility::Visibility {
+    let source = rows::BranchSource {
+        branch,
+        home,
+        layout: &layout,
+        security,
         model,
-        graph: &graph,
-        filters: &row_filters,
         catalog,
+        has_reference_time: query.time().reference_time.is_some(),
     };
-    read.extend(joins::join_reads(&layout));
-    read.extend(visibility.fields(home)?);
-    for instance in layout.instances() {
-        read.extend(visibility.instance_fields(instance.dataset, &instance.prefix)?);
+    if let BranchKind::SemiAdditive { .. } = branch.kind {
+        let (metric, declaration) = metrics::semi_additive_metric(branch, metrics)?;
+        return semi_additive::semi_additive_plan(&semi_additive::SemiAdditiveBranch {
+            source,
+            query,
+            metric,
+            declaration,
+            keys,
+            components,
+        });
     }
-    let deduplicated = !branch.join_tree.is_empty() && !components.is_empty();
-    let identity = deduplicated.then(|| layout.identity());
-    let scan = scan::scan(home, &joins::home_reads(&layout, &read), catalog, identity)?;
-    let mut node = visibility.visible_rows(scan, home, None)?;
-    node = joins::join_instances(node, &layout, &read, &visibility)?;
-    if let Some((predicate, location)) = query_predicate {
-        node = filter(node, predicate, Origin::Query(location));
-    }
-    let home_origin = Origin::Model(home.location.clone());
-    if let Some(identity) = identity {
-        node = deduplicate(node, &keys, identity.clone(), home_origin.clone());
-    }
-    aggregate(node, keys, components, &home_origin)
+    let request = rows::RowsRequest {
+        keys: &keys,
+        components: &components,
+        fields: &[],
+        predicate: query_filter::query_predicate(query, &layout)?,
+        replaced_home: None,
+    };
+    let node = rows::branch_rows(&source, request)?;
+    aggregate(
+        node,
+        keys,
+        components,
+        &Origin::Model(home.location.clone()),
+    )
 }
 
-/// The fields the keys, the components and the query predicate read.
-fn fields_read(
-    keys: &[NamedExpression],
-    components: &[AggregateComponent],
-    query_predicate: Option<&Expression>,
-) -> Vec<NormalizedName> {
-    let mut read = Vec::new();
-    for key in keys {
-        read_fields(&key.expression, &mut read);
+/// The time `over` of each semi-additive branch of `branches`, in branch order, for the check
+/// of `E4-03` (ADD-4.9).
+fn snapshot_axes<'model>(
+    branches: &'model Branches,
+    metrics: &[metrics::PlannedMetric<'model>],
+    model: &'model InternalModel,
+) -> Result<Vec<snapshot_grain::SnapshotAxis<'model>>, PlanError> {
+    let mut axes = Vec::new();
+    for branch in branches.as_slice() {
+        let BranchKind::SemiAdditive { .. } = branch.kind else {
+            continue;
+        };
+        let (metric, declaration) = metrics::semi_additive_metric(branch, metrics)?;
+        let Some(snapshot_grain) = declaration.snapshot_grain else {
+            continue;
+        };
+        let home = slice::home_dataset(branch, model)?;
+        let over_type = semi_additive::over_type(declaration, home).map_err(|violation| {
+            PlanError::invariant(violation, &Origin::Model(metric.location.clone()))
+        })?;
+        axes.push(snapshot_grain::SnapshotAxis {
+            over: &declaration.over,
+            over_type,
+            snapshot_grain,
+        });
     }
-    for component in components {
-        read_fields(&component_expression(component), &mut read);
-    }
-    if let Some(predicate) = query_predicate {
-        read_fields(predicate, &mut read);
-    }
-    read
+    Ok(axes)
 }

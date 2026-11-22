@@ -368,19 +368,20 @@ fn der_2_4_a_cycle_of_derived_metrics_is_an_internal_error() {
 }
 
 #[test]
-fn der_4_1_an_input_outside_the_slice_is_an_internal_error() {
+fn e4_7_9_a_non_additive_input_plans_as_its_deduced_additivity() {
     let model = changed_model("BUDGET_TOTAL", |metric| {
         metric.declared_additivity = Some(DeclaredAdditivity::NonAdditive);
     });
+    let plan = |model| {
+        plan_over(
+            model,
+            vec![branch("BUDGETS", &[(0, 0), (0, 1)], false)],
+            Vec::new(),
+            &["AVERAGE_BUDGET"],
+        )
+    };
 
-    let result = plan_over(
-        &model,
-        vec![branch("BUDGETS", &[(0, 0), (0, 1)], false)],
-        Vec::new(),
-        &["AVERAGE_BUDGET"],
-    );
-
-    assert_eq!(violation(result), InvariantViolation::AdditivityMetric);
+    assert_eq!(plan(&model), plan(&derived_model()));
 }
 
 #[test]

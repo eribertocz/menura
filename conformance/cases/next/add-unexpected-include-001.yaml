@@ -1,0 +1,15 @@
+id: add-unexpected-include-001
+rules: [ADD-4.4]
+model: next-semi-additive-rules
+security_context: analyst.json
+query:
+  contract: "menura.query"
+  contract_version: "1.1.0"
+  time_zone: "UTC"
+  query:
+    metrics:
+      - {"metric": "unexpected_included", "alias": "unexpected_included"}
+expect:
+  outcome: "plan"
+  rows: "add-unexpected-include-001.csv"
+  row_order: "any"

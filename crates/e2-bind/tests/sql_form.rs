@@ -78,6 +78,7 @@ fn qry_5_1_each_dataset_is_the_relation_model_dot_dataset() {
         BoundDimensionKind::Field {
             field: field("ORDERS", "REGION"),
             time_grain: None,
+            time_grain_origin: None,
         }
     );
     assert_eq!(
@@ -124,10 +125,12 @@ fn qry_5_1_fields_may_be_qualified_by_the_alias_or_the_dataset_name() {
             BoundDimensionKind::Field {
                 field: field("ORDERS", "REGION"),
                 time_grain: None,
+                time_grain_origin: None,
             },
             BoundDimensionKind::Field {
                 field: field("ORDERS", "CUSTOMER_ID"),
                 time_grain: None,
+                time_grain_origin: None,
             },
         ]
     );

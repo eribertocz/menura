@@ -82,6 +82,7 @@ pub(crate) fn choose_paths(
         .zip(paths)
         .map(|(home, paths)| Branch {
             home: home.home,
+            kind: home.kind,
             components: home.components,
             join_tree: JoinTree::from_paths(paths),
         })

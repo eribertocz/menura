@@ -157,6 +157,7 @@ fn dimension_kind(
             ResolvedName::Field(field) => Some(BoundDimensionKind::Field {
                 field: field.clone(),
                 time_grain: None,
+                time_grain_origin: None,
             }),
             ResolvedName::Metric(_) => None,
         },

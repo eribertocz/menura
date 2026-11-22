@@ -133,7 +133,7 @@ fn visible_rows(
 }
 
 /// The dataset that declares the population `name`, and the population.
-fn declared<'model>(
+pub(crate) fn declared<'model>(
     model: &'model InternalModel,
     name: &NormalizedName,
 ) -> Result<(&'model Dataset, &'model Population), PlanError> {

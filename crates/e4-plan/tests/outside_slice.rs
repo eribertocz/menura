@@ -10,14 +10,11 @@ use std::num::NonZeroU64;
 
 use menura_contracts::types::common::Grain;
 use menura_e4_plan::{InvariantViolation, PlanError};
-use menura_model::internal_model::{
-    ContextMetric, ContextModifier, DeclaredAdditivity, Metric, NullHandling, SemiAdditive,
-    SnapshotAggregation,
-};
+use menura_model::internal_model::{ContextMetric, ContextModifier, DeclaredAdditivity, Metric};
 use menura_representations::bound_query::{
     BoundDimension, BoundDimensionKind, BoundMetric, BoundMetricKind, BoundQuery, BoundQueryParts,
 };
-use menura_representations::paths::{Branch, Branches, ComponentKey, JoinTree};
+use menura_representations::paths::{Branch, BranchKind, Branches, ComponentKey, JoinTree};
 use support::{
     anyone, branches, build_plan, dimension, field_path, metric, metric_reference, metrics, model,
     model_with, name, orders, query,
@@ -43,6 +40,7 @@ fn violation(
 fn branch(home: &str, join_tree: JoinTree) -> Branch {
     Branch {
         home: name(home),
+        kind: BranchKind::Plain,
         components: vec![ComponentKey {
             metric: 0,
             component: 0,
@@ -51,18 +49,19 @@ fn branch(home: &str, join_tree: JoinTree) -> Branch {
     }
 }
 
-fn plan_with_metric(model_metric: Metric) -> InvariantViolation {
+fn plan_of(
+    model_metric: Metric,
+) -> Result<menura_representations::logical_plan::PlanNode, PlanError> {
     let mut all = metrics();
     all.retain(|candidate| candidate.name != model_metric.name);
     all.push(model_metric);
     all.sort_by(|left, right| left.name.cmp(&right.name));
     let model = model_with(vec![orders(Vec::new())], all);
-    violation(build_plan(
-        &branches(&[1]),
-        &count_query(),
-        &anyone(),
-        &model,
-    ))
+    build_plan(&branches(&[1]), &count_query(), &anyone(), &model)
+}
+
+fn plan_with_metric(model_metric: Metric) -> InvariantViolation {
+    violation(plan_of(model_metric))
 }
 
 fn order_count() -> Metric {
@@ -73,39 +72,11 @@ fn order_count() -> Metric {
     )
 }
 
-fn semi_additive(population: Option<&str>) -> DeclaredAdditivity {
-    DeclaredAdditivity::SemiAdditive(SemiAdditive {
-        over: field_path("ORDER_DATE"),
-        entity: vec![field_path("REGION")],
-        aggregation: SnapshotAggregation::Minimum,
-        nulls: NullHandling::Keep,
-        snapshot_grain: None,
-        population: population.map(name),
-        missing: None,
-        unexpected: None,
-    })
-}
-
 #[test]
-fn vs_1_an_additivity_metric_is_an_internal_error() {
-    for declared in [DeclaredAdditivity::NonAdditive, semi_additive(None)] {
-        let mut declaring = order_count();
-        declaring.declared_additivity = Some(declared);
-        assert_eq!(
-            plan_with_metric(declaring),
-            InvariantViolation::AdditivityMetric
-        );
-    }
-}
-
-#[test]
-fn vs_1_a_population_metric_is_an_internal_error() {
+fn e4_7_9_a_non_additive_metric_plans_as_its_deduced_additivity() {
     let mut declaring = order_count();
-    declaring.declared_additivity = Some(semi_additive(Some("CUSTOMER_BASE")));
-    assert_eq!(
-        plan_with_metric(declaring),
-        InvariantViolation::PopulationMetric
-    );
+    declaring.declared_additivity = Some(DeclaredAdditivity::NonAdditive);
+    assert_eq!(plan_of(declaring), plan_of(order_count()));
 }
 
 #[test]
@@ -156,6 +127,7 @@ fn vs_1_a_field_of_another_dataset_is_an_internal_error() {
             field: name("REGION"),
         },
         time_grain: None,
+        time_grain_origin: None,
     };
     let bound = query(vec![foreign], Vec::new(), BoundQueryParts::default());
     let result = build_plan(&branches(&[]), &bound, &anyone(), &model(Vec::new()));

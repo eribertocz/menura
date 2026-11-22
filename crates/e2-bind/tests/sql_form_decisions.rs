@@ -75,6 +75,7 @@ fn qry_5_2_an_authorized_field_wins_over_a_same_named_metric() {
                 field: name("REGION"),
             },
             time_grain: None,
+            time_grain_origin: None,
         }]
     );
     let in_agg = sql_columns(

@@ -1,0 +1,15 @@
+id: add-non-time-over-001
+rules: [ADD-4.6, E4-7.1]
+model: next-semi-additive
+security_context: analyst.json
+query:
+  contract: "menura.query"
+  contract_version: "1.1.0"
+  time_zone: "UTC"
+  query:
+    metrics:
+      - {"metric": "peak_stock", "alias": "peak_stock"}
+expect:
+  outcome: "plan"
+  rows: "add-non-time-over-001.csv"
+  row_order: "any"

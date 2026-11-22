@@ -4,12 +4,16 @@
 use std::fmt;
 
 use menura_contracts::types::compiled_plan::{Diagnostic, DiagnosticLocation, InputDocument};
-use menura_representations::origin::Origin;
+use menura_representations::origin::{Origin, QueryLocation};
 use menura_security::RowFilterError;
 
 /// The message of `EQRY-03` in E4: it names neither the policy nor its dataset (SCY-4a.1).
 const MISSING_REFERENCE_TIME: &str =
     "the query needs `reference_time` to apply the security rules; add it to the query";
+
+/// The message of `E4-03` (ADD-4.9).
+const SPLIT_SNAPSHOT: &str = "this grain is finer than the `snapshot_grain` of a semi-additive \
+    metric, whose snapshots cannot be split; group by its `snapshot_grain` or a coarser grain";
 
 /// Why E4 stopped.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -21,6 +25,10 @@ pub enum PlanError {
     /// `reference_time` (E4-6.9b, QRY-2). It carries nothing about the policy, so that no
     /// message can name it (SCY-4a.1).
     MissingReferenceTime,
+    /// `E4-03`: the query groups by the `over` field of a semi-additive metric at a grain
+    /// finer than its `snapshot_grain` (ADD-4.9, E4-7.8, E2-5 row 19), located at the
+    /// `time_grains` entry, else the dimension, else the SQL `SELECT` item.
+    SplitSnapshot(QueryLocation),
     /// The input breaks the contract of the stages before E4. This is a defect of the
     /// compiler, not a query error, so it has no specification code.
     Invariant {
@@ -48,6 +56,19 @@ impl PlanError {
                     column: None,
                 }),
             }),
+            Self::SplitSnapshot(location) => {
+                let position = location.position();
+                Some(Diagnostic {
+                    code: "E4-03".to_owned(),
+                    message: SPLIT_SNAPSHOT.to_owned(),
+                    location: Some(DiagnosticLocation {
+                        document: InputDocument::Query,
+                        pointer: location.pointer().to_owned(),
+                        line: position.and_then(|position| u64::try_from(position.line()).ok()),
+                        column: position.and_then(|position| u64::try_from(position.column()).ok()),
+                    }),
+                })
+            }
             Self::Invariant { .. } => None,
         }
     }
@@ -99,10 +120,6 @@ pub enum InvariantViolation {
     /// A derived metric whose inputs lead back to it, which E0 reports as `E0C-34`
     /// (DER-5.1.4).
     DerivedCycle,
-    /// A metric with an additivity declaration (ADD).
-    AdditivityMetric,
-    /// A semi-additive metric with an expected population (POP).
-    PopulationMetric,
     /// A population that no dataset of the model declares (POP-2).
     UnknownPopulation,
     /// A unit of periods that does not output the period column it is read by (E4-3.12).
@@ -129,6 +146,13 @@ impl fmt::Display for PlanError {
         match self {
             Self::MissingAttribute(error) => error.fmt(formatter),
             Self::MissingReferenceTime => write!(formatter, "EQRY-03: {MISSING_REFERENCE_TIME}"),
+            Self::SplitSnapshot(location) => {
+                write!(
+                    formatter,
+                    "E4-03: {SPLIT_SNAPSHOT} at {}",
+                    location.pointer()
+                )
+            }
             Self::Invariant { violation, origin } => {
                 let pointer = match origin {
                     Origin::Query(location) => location.pointer(),
