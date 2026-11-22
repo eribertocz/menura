@@ -144,26 +144,43 @@ fn partition_periods(pointer: &str, partitions: &Partitions) -> Result<(), RuleV
     period_list(&list, &partitions.versions, partitions.grain)
 }
 
-/// The periods of a summary, which all have the grain of `coverage.from`.
+/// The periods of a summary: `coverage.to` has the grain of `coverage.from`, and the periods of
+/// `built_from` and `integrity_check.verified` all have the grain of the first of them.
 ///
 /// Where the document declares no grain, a period has the grain its shape denotes (CAT-8.6);
-/// the comparison with the model's summary grain belongs to CAT-8.8.
+/// the comparison of both grains with the model's summary grain belongs to CAT-8.8.
 fn summary_periods(pointer: &str, build: &AggregateBuild) -> Result<(), RuleViolation> {
     let base = format!("{pointer}/aggregate_build");
-    let from = &build.coverage.from;
-    let grain = canonical_grain(from).ok_or_else(|| {
+    let coverage_grain = denoted_grain(format!("{base}/coverage/from"), &build.coverage.from)?;
+    of_grain(
+        format!("{base}/coverage/to"),
+        &build.coverage.to,
+        coverage_grain,
+    )?;
+    let built_from = format!("{base}/built_from");
+    let verified = format!("{base}/integrity_check/verified");
+    let first = [
+        (&built_from, &build.built_from),
+        (&verified, &build.integrity_check.verified),
+    ]
+    .into_iter()
+    .find_map(|(list, versions)| versions.first().map(|version| (list, version)));
+    let Some((list, first)) = first else {
+        return Ok(());
+    };
+    let build_grain = denoted_grain(format!("{list}/0/period"), &first.period)?;
+    period_list(&built_from, &build.built_from, build_grain)?;
+    period_list(&verified, &build.integrity_check.verified, build_grain)
+}
+
+/// The grain the shape of `period` denotes, or the violation of a period that is not canonical.
+fn denoted_grain(pointer: String, period: &str) -> Result<Grain, RuleViolation> {
+    canonical_grain(period).ok_or_else(|| {
         RuleViolation::new(
-            format!("{base}/coverage/from"),
-            format!("period `{from}` is not a canonical period"),
+            pointer,
+            format!("period `{period}` is not a canonical period"),
         )
-    })?;
-    of_grain(format!("{base}/coverage/to"), &build.coverage.to, grain)?;
-    period_list(&format!("{base}/built_from"), &build.built_from, grain)?;
-    period_list(
-        &format!("{base}/integrity_check/verified"),
-        &build.integrity_check.verified,
-        grain,
-    )
+    })
 }
 
 /// The periods of a list: each of `grain`, none repeated.
