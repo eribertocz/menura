@@ -316,13 +316,26 @@ Find a rule ID or a section here, then open only that file at that line.
 | [contracts/model-description.md](contracts/model-description.md#L1) | 1 | section | Contract: model description |
 | [contracts/model-description.md](contracts/model-description.md#L5) | 5 | section | DSC-1 Purpose |
 | [contracts/model-description.md](contracts/model-description.md#L11) | 11 | section | DSC-2 Content |
-| [contracts/model-description.md](contracts/model-description.md#L20) | 20 | section | DSC-3 Rules |
-| [contracts/model-description.md](contracts/model-description.md#L22) | 22 | rule | DSC-3.1 |
-| [contracts/model-description.md](contracts/model-description.md#L23) | 23 | rule | DSC-3.2 |
-| [contracts/model-description.md](contracts/model-description.md#L24) | 24 | rule | DSC-3.2a |
-| [contracts/model-description.md](contracts/model-description.md#L25) | 25 | rule | DSC-3.3 |
-| [contracts/model-description.md](contracts/model-description.md#L26) | 26 | rule | DSC-3.4 |
-| [contracts/model-description.md](contracts/model-description.md#L27) | 27 | rule | DSC-3.5 |
+| [contracts/model-description.md](contracts/model-description.md#L21) | 21 | section | DSC-3 Rules |
+| [contracts/model-description.md](contracts/model-description.md#L23) | 23 | rule | DSC-3.1 |
+| [contracts/model-description.md](contracts/model-description.md#L24) | 24 | rule | DSC-3.2 |
+| [contracts/model-description.md](contracts/model-description.md#L25) | 25 | rule | DSC-3.2a |
+| [contracts/model-description.md](contracts/model-description.md#L26) | 26 | rule | DSC-3.3 |
+| [contracts/model-description.md](contracts/model-description.md#L27) | 27 | rule | DSC-3.4 |
+| [contracts/model-description.md](contracts/model-description.md#L28) | 28 | rule | DSC-3.5 |
+| [contracts/model-description.md](contracts/model-description.md#L29) | 29 | rule | DSC-3.6 |
+| [contracts/model-description.md](contracts/model-description.md#L35) | 35 | rule | DSC-3.7 |
+| [contracts/model-description.md](contracts/model-description.md#L36) | 36 | rule | DSC-3.8 |
+| [contracts/model-description.md](contracts/model-description.md#L37) | 37 | rule | DSC-3.9 |
+| [contracts/model-description.md](contracts/model-description.md#L38) | 38 | rule | DSC-3.10 |
+| [contracts/model-description.md](contracts/model-description.md#L39) | 39 | rule | DSC-3.11 |
+| [contracts/model-description.md](contracts/model-description.md#L40) | 40 | rule | DSC-3.12 |
+| [contracts/model-description.md](contracts/model-description.md#L42) | 42 | section | DSC-4 Capability profile |
+| [contracts/model-description.md](contracts/model-description.md#L59) | 59 | rule | DSC-4.1 |
+| [contracts/model-description.md](contracts/model-description.md#L60) | 60 | rule | DSC-4.2 |
+| [contracts/model-description.md](contracts/model-description.md#L61) | 61 | rule | DSC-4.3 |
+| [contracts/model-description.md](contracts/model-description.md#L62) | 62 | rule | DSC-4.4 |
+| [contracts/model-description.md](contracts/model-description.md#L63) | 63 | rule | DSC-4.5 |
 | [contracts/model.md](contracts/model.md#L1) | 1 | section | Contract: semantic model |
 | [contracts/model.md](contracts/model.md#L5) | 5 | section | MDL-1 Format |
 | [contracts/model.md](contracts/model.md#L7) | 7 | rule | MDL-1.1 |
