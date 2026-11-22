@@ -16,7 +16,7 @@ use menura_representations::origin::Origin;
 
 use super::key_columns::{KeyColumn, STAGE, key_columns};
 use super::plan_nodes::scan;
-use super::population_checks::{declared, population_rows, population_rule};
+use super::population_checks::{declared, expected_population_rows, population_rule};
 use super::result_names::added_column_name;
 use crate::compile::InternalError;
 
@@ -29,7 +29,7 @@ pub(super) fn semi_additive_check_sql(
     target: &str,
 ) -> Result<Option<(GeneratedCheckSql, Vec<NormalizedName>)>, InternalError> {
     let (metric, keys) = semi_additive_metric(model, target)?;
-    let Some(home_name) = home_dataset(metric, keys)? else {
+    let Some(home_name) = home_dataset(metric, keys, target)? else {
         return Ok(None);
     };
     let home = model
@@ -105,7 +105,7 @@ fn time_parts(
     Ok(Some(TimeParts {
         grain,
         dataset: dataset.name.clone(),
-        rows: population_rows(dataset, declared, catalog)?,
+        rows: expected_population_rows(dataset, declared, catalog)?,
         rule: population_rule(declared),
     }))
 }
@@ -141,8 +141,8 @@ fn semi_additive_metric<'model>(
 fn home_dataset<'model>(
     metric: &'model Metric,
     keys: &SemiAdditive,
+    target: &str,
 ) -> Result<Option<&'model NormalizedName>, InternalError> {
-    let target = metric.name.as_str();
     let homes = metric
         .classification
         .as_ref()

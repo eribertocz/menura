@@ -90,9 +90,21 @@ pub(super) fn declared<'model>(
         })
 }
 
-/// The `Scan` of every row of `dataset` that reads the fields of `population`; with a
-/// `required_when`, every typed field, since the condition may read any of them.
-pub(super) fn population_rows(
+/// The `Scan` of every row of `dataset` that reads the fields of `population`, which is
+/// what CHK-6.3 and CHK-6.4 read: they never apply `required_when`.
+fn population_rows(
+    dataset: &Dataset,
+    population: &Population,
+    catalog: &CatalogSchemaDocument,
+) -> Result<PlanNode, InternalError> {
+    let read: Vec<NormalizedName> = population.named_fields().into_iter().cloned().collect();
+    rows_reading(dataset, population, &read, catalog)
+}
+
+/// The `Scan` of every row of `dataset` that reads the fields of `population` for its
+/// expected pairs (POP-3); with a `required_when`, every typed field, since the condition may
+/// read any of them.
+pub(super) fn expected_population_rows(
     dataset: &Dataset,
     population: &Population,
     catalog: &CatalogSchemaDocument,
@@ -112,7 +124,17 @@ pub(super) fn population_rows(
                 .map(|field| field.name.clone()),
         );
     }
-    let keys = key_columns(dataset, &read, catalog)?;
+    rows_reading(dataset, population, &read, catalog)
+}
+
+/// The `Scan` of every row of `dataset` that reads `read`, with no row policy (CHK-2.2).
+fn rows_reading(
+    dataset: &Dataset,
+    population: &Population,
+    read: &[NormalizedName],
+    catalog: &CatalogSchemaDocument,
+) -> Result<PlanNode, InternalError> {
+    let keys = key_columns(dataset, read, catalog)?;
     Ok(scan(
         &dataset.name,
         &keys,
