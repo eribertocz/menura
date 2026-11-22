@@ -6,7 +6,7 @@ use menura_contracts::normalize_unquoted_identifier;
 use menura_model::internal_model::{InternalModel, NormalizedName, RoleName, RowPolicy};
 use menura_security::AdmittedSecurityContext;
 
-use super::names::declared;
+use super::names::written_name;
 
 /// Every row policy of `datasets` that is applicable to the user of `context` (E4-6.9): it
 /// remains after exemption and either has no `roles` or lists one of the user's roles. Each is
@@ -24,7 +24,7 @@ pub(super) fn applied_policies(
                 applied.insert((
                     dataset.name.clone(),
                     normalized_policy_name(&policy.name),
-                    format!("{}.{}", declared(&dataset.name), policy.name),
+                    format!("{}.{}", written_name(&dataset.name), policy.name),
                 ));
             }
         }

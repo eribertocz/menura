@@ -4,8 +4,8 @@ use std::collections::BTreeSet;
 
 use menura_model::internal_model::{FieldPath, NormalizedName};
 
-/// The name of a model element as lineage writes it.
-pub(super) fn declared(name: &NormalizedName) -> &str {
+/// The name of a model element as lineage writes it: its normalized name (E0H-1.1).
+pub(super) fn written_name(name: &NormalizedName) -> &str {
     name.as_str()
 }
 
@@ -20,15 +20,15 @@ pub(super) fn model_inputs(
     let fields = fields.iter().map(|path| {
         format!(
             "field:{}.{}",
-            declared(&path.dataset),
-            declared(&path.field)
+            written_name(&path.dataset),
+            written_name(&path.field)
         )
     });
     let metrics = metrics
         .iter()
-        .map(|name| format!("metric:{}", declared(name)));
+        .map(|name| format!("metric:{}", written_name(name)));
     let relationships = relationships
         .iter()
-        .map(|name| format!("relationship:{}", declared(name)));
+        .map(|name| format!("relationship:{}", written_name(name)));
     fields.chain(metrics).chain(relationships).collect()
 }

@@ -22,7 +22,7 @@ use menura_security::AdmittedSecurityContext;
 
 use crate::compile::InternalError;
 use metrics::metrics_read;
-use names::{declared, model_inputs};
+use names::{model_inputs, written_name};
 use policies::applied_policies;
 use provenance::NodeLineage;
 use scan::Sources;
@@ -108,7 +108,7 @@ fn entry(
         summary: reads
             .summary
             .as_ref()
-            .map(|summary| declared(summary).to_owned()),
+            .map(|summary| written_name(summary).to_owned()),
         security_policies: applied_policies(&reads.datasets, inputs.model, inputs.context),
     })
 }
