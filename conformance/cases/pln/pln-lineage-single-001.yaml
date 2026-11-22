@@ -1,0 +1,18 @@
+id: pln-lineage-single-001
+rules: [PLN-4, PLN-4.1, PLN-4.3, PLN-4.4, PLN-4.5]
+model: pln-lineage
+security_context: analyst.json
+query:
+  contract: menura.query
+  contract_version: "1.1.0"
+  time_zone: UTC
+  query:
+    dimensions: [stores.region]
+    metrics:
+      - {metric: total_amount, alias: total_amount}
+expect:
+  outcome: plan
+  sql: pln-lineage-single-001.sql
+  rows: pln-lineage-single-001.csv
+  row_order: any
+  lineage: pln-lineage-single-001.lineage.json

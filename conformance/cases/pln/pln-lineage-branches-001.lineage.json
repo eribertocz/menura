@@ -1,0 +1,131 @@
+[
+  {
+    "model_inputs": [
+      "field:CUSTOMERS.SEGMENT",
+      "relationship:ORDERS_CUSTOMERS"
+    ],
+    "output": "segment",
+    "physical_inputs": [
+      {
+        "column": "customer_id",
+        "source": "shop.main.customers"
+      },
+      {
+        "column": "segment",
+        "source": "shop.main.customers"
+      },
+      {
+        "column": "customer_id",
+        "source": "shop.main.orders"
+      },
+      {
+        "column": "store_id",
+        "source": "shop.main.orders"
+      },
+      {
+        "column": "region",
+        "source": "shop.main.stores"
+      },
+      {
+        "column": "store_id",
+        "source": "shop.main.stores"
+      }
+    ],
+    "security_policies": [
+      "STORES.north_only"
+    ],
+    "summary": null
+  },
+  {
+    "model_inputs": [
+      "field:ORDERS.AMOUNT",
+      "metric:TOTAL_AMOUNT"
+    ],
+    "output": "total_amount",
+    "physical_inputs": [
+      {
+        "column": "customer_id",
+        "source": "shop.main.customers"
+      },
+      {
+        "column": "amount",
+        "source": "shop.main.orders"
+      },
+      {
+        "column": "customer_id",
+        "source": "shop.main.orders"
+      },
+      {
+        "column": "store_id",
+        "source": "shop.main.orders"
+      },
+      {
+        "column": "region",
+        "source": "shop.main.stores"
+      },
+      {
+        "column": "store_id",
+        "source": "shop.main.stores"
+      }
+    ],
+    "security_policies": [
+      "STORES.north_only"
+    ],
+    "summary": null
+  },
+  {
+    "model_inputs": [
+      "field:CUSTOMERS.CUSTOMER_ID",
+      "metric:CUSTOMER_COUNT"
+    ],
+    "output": "customer_count",
+    "physical_inputs": [
+      {
+        "column": "customer_id",
+        "source": "shop.main.customers"
+      }
+    ],
+    "security_policies": [],
+    "summary": null
+  },
+  {
+    "model_inputs": [
+      "field:CUSTOMERS.CUSTOMER_ID",
+      "field:ORDERS.AMOUNT",
+      "metric:AMOUNT_PER_CUSTOMER",
+      "metric:CUSTOMER_COUNT",
+      "metric:TOTAL_AMOUNT"
+    ],
+    "output": "amount_per_customer",
+    "physical_inputs": [
+      {
+        "column": "customer_id",
+        "source": "shop.main.customers"
+      },
+      {
+        "column": "amount",
+        "source": "shop.main.orders"
+      },
+      {
+        "column": "customer_id",
+        "source": "shop.main.orders"
+      },
+      {
+        "column": "store_id",
+        "source": "shop.main.orders"
+      },
+      {
+        "column": "region",
+        "source": "shop.main.stores"
+      },
+      {
+        "column": "store_id",
+        "source": "shop.main.stores"
+      }
+    ],
+    "security_policies": [
+      "STORES.north_only"
+    ],
+    "summary": null
+  }
+]
