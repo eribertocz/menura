@@ -6,6 +6,8 @@ mod inner_joins;
 mod merge_scans;
 mod summaries;
 mod unused_joins;
+#[cfg(test)]
+mod unused_joins_tests;
 
 #[cfg(test)]
 mod deduplication_tests;
