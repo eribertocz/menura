@@ -19,7 +19,7 @@ use crate::columns::column_reference;
 use crate::dimensions::ComputedDimensions;
 use crate::error::{InvariantViolation, PlanError};
 use crate::nodes::{aggregate, component_expression};
-use crate::query_filter::query_predicate;
+use crate::query_filter::{RangeShift, query_predicate};
 use crate::rows::{BranchSource, RowsRequest, branch_rows};
 use crate::typing::typed_column;
 
@@ -41,6 +41,8 @@ pub(crate) struct SemiAdditiveBranch<'input> {
     pub(crate) computed: Option<ComputedDimensions>,
     /// Its components.
     pub(crate) components: Vec<AggregateComponent>,
+    /// The shift of the `date_range` of a `prior_period` context query (E4-8.4).
+    pub(crate) range_shift: Option<RangeShift<'input>>,
 }
 
 impl SemiAdditiveBranch<'_> {
@@ -71,7 +73,7 @@ pub(crate) fn semi_additive_plan(branch: &SemiAdditiveBranch<'_>) -> Result<Plan
             computed: branch.computed.as_ref(),
             components: &branch.components,
             fields: &rule::snapshot_fields(declaration),
-            predicate: query_predicate(branch.query, branch.source.layout)?,
+            predicate: query_predicate(branch.query, branch.source.layout, branch.range_shift)?,
             replaced_home: None,
         },
     )?;

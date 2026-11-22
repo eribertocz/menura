@@ -241,7 +241,7 @@ fn vs_1c_a_context_metric_is_0_8_0() {
     let model = model_with(|parts| {
         semantic_metric(parts, "COST").context = Some(ContextMetric {
             base: name("REVENUE"),
-            modifier: prior_period(),
+            modifier: period_to_date(),
         });
     });
     let query = tree(
@@ -278,7 +278,7 @@ fn vs_1f_a_share_of_total_metric_is_in_the_slice() {
 fn cost_as_a_context_metric(parts: &mut ModelParts) {
     semantic_metric(parts, "COST").context = Some(ContextMetric {
         base: name("REVENUE"),
-        modifier: prior_period(),
+        modifier: period_to_date(),
     });
 }
 
@@ -353,14 +353,13 @@ fn e2_5_4a_an_element_with_additivity_and_a_context_metric_names_context_metrics
     assert_context_metric(&bind_diagnostic(&query, &model, ADMIN), "/query/metrics/0");
 }
 
-/// A `prior_period` modifier, which stays outside the slice until its own issue.
-fn prior_period() -> ContextModifier {
-    ContextModifier::PriorPeriod {
+/// A `period_to_date` modifier, which stays outside the slice until its own issue.
+fn period_to_date() -> ContextModifier {
+    ContextModifier::PeriodToDate {
         time_dimension: FieldPath {
             dataset: name("ORDERS"),
             field: name("ORDER_DATE"),
         },
         grain: Grain::Year,
-        offset: std::num::NonZeroU64::MIN,
     }
 }

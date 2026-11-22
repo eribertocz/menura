@@ -12,7 +12,18 @@ use crate::columns::{column_reference, field_name};
 use crate::dimensions::at;
 use crate::error::{InvariantViolation, PlanError};
 use crate::layout::Layout;
+use crate::period_shift::PeriodShift;
 use crate::rewrite::rewrite;
+
+/// The shift of the `date_range` of a `prior_period` context query (E4-8.4): a `date_range`
+/// on `field` is replaced by its shift.
+#[derive(Debug, Clone, Copy)]
+pub(crate) struct RangeShift<'query> {
+    /// The modifier's `time_dimension`.
+    pub(crate) field: &'query FieldPath,
+    /// The shift of its query-grain periods.
+    pub(crate) shift: PeriodShift,
+}
 
 /// The predicate of the query-filter `Filter` over the columns of the `Join` of the branch,
 /// each field read through the join instance its element is bound to (E3-4.2a), with the
@@ -26,8 +37,9 @@ use crate::rewrite::rewrite;
 pub(crate) fn query_predicate(
     query: &BoundQuery,
     layout: &Layout<'_>,
+    range_shift: Option<RangeShift<'_>>,
 ) -> Result<Option<(Expression, QueryLocation)>, PlanError> {
-    predicate_of(query, query.date_range(), layout)
+    predicate_of(query, query.date_range(), layout, range_shift)
 }
 
 /// [`query_predicate`] without the `date_range` predicate when its field is `over`: the read
@@ -40,15 +52,17 @@ pub(crate) fn query_predicate_outside_range(
     query: &BoundQuery,
     over: &FieldPath,
     layout: &Layout<'_>,
+    range_shift: Option<RangeShift<'_>>,
 ) -> Result<Option<(Expression, QueryLocation)>, PlanError> {
     let range = query.date_range().filter(|range| &range.field != over);
-    predicate_of(query, range, layout)
+    predicate_of(query, range, layout, range_shift)
 }
 
 fn predicate_of(
     query: &BoundQuery,
     date_range: Option<&BoundDateRange>,
     layout: &Layout<'_>,
+    range_shift: Option<RangeShift<'_>>,
 ) -> Result<Option<(Expression, QueryLocation)>, PlanError> {
     let mut terms = Vec::new();
     for (position, filter) in query.filters().iter().enumerate() {
@@ -58,8 +72,12 @@ fn predicate_of(
         );
     }
     if let Some(range) = date_range {
+        let shift = range_shift
+            .filter(|range_shift| range_shift.field == &range.field)
+            .map(|range_shift| range_shift.shift);
         terms.push(
-            date_range_term(range, layout).map_err(|violation| at(violation, &range.origin))?,
+            date_range_term(range, layout, shift)
+                .map_err(|violation| at(violation, &range.origin))?,
         );
     }
     let origin = query
@@ -112,10 +130,12 @@ fn filter_field(
 
 /// `x >= from AND x <= to` for a date field; `x >= from AND x < to + 1 day` for a timestamp
 /// field, with `date` literals that E6 converts to the start of that day (E6-4.2b). When `to`
-/// is 9999-12-31, a timestamp field has no upper bound (QRY-4.2).
+/// is 9999-12-31, a timestamp field has no upper bound (QRY-4.2). With a `shift`, the range
+/// shifted as E4-8.4 states.
 fn date_range_term(
     range: &BoundDateRange,
     layout: &Layout<'_>,
+    shift: Option<PeriodShift>,
 ) -> Result<Expression, InvariantViolation> {
     let element = QueryElement::DateRange;
     let column = column_reference(layout.element_column(&element, &range.field)?.as_str())?;
@@ -124,6 +144,9 @@ fn date_range_term(
         .field(&range.field.field)
         .and_then(|field| field.typed.as_ref())
         .map(|typed| &typed.value_type);
+    if let Some(shift) = shift {
+        return shifted_range_term(range, column, field_type, shift);
+    }
     let lower = comparison(BinaryOperator::GreaterOrEqual, column.clone(), range.from);
     let upper = match field_type {
         Some(ValueType::Logical(LogicalType::Date)) => {
@@ -138,6 +161,42 @@ fn date_range_term(
         Some(upper) => and(lower, upper),
         None => lower,
     })
+}
+
+/// The shifted range of E4-8.4 on `column`: from the first day of the shifted query-grain
+/// period that contains `from` up to the last day of the shifted period that contains `to`,
+/// written `x >= start AND x < end`, where `end` is the start of the period after the last
+/// one. Both bounds are computed in SQL from the `from` and `to` of the query (E6-4.14), as
+/// `date` values that E6 converts to the start of their day for a timestamp (E6-4.2b).
+fn shifted_range_term(
+    range: &BoundDateRange,
+    column: Expression,
+    field_type: Option<&ValueType>,
+    shift: PeriodShift,
+) -> Result<Expression, InvariantViolation> {
+    if !matches!(
+        field_type,
+        Some(ValueType::Logical(
+            LogicalType::Date | LogicalType::Timestamp { .. }
+        ))
+    ) {
+        return Err(InvariantViolation::UnplannableDateRange);
+    }
+    let date = |value: DateValue| Expression::Literal(Literal::Date(value));
+    let start = shift.shifted_period_of(date(range.from));
+    let end = shift.next_period(shift.shifted_period_of(date(range.to)));
+    Ok(and(
+        bound(BinaryOperator::GreaterOrEqual, column.clone(), start),
+        bound(BinaryOperator::Less, column, end),
+    ))
+}
+
+fn bound(operator: BinaryOperator, column: Expression, value: Expression) -> Expression {
+    Expression::Binary {
+        operator,
+        left: Box::new(column),
+        right: Box::new(value),
+    }
 }
 
 fn comparison(operator: BinaryOperator, column: Expression, date: DateValue) -> Expression {

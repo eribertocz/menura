@@ -73,8 +73,10 @@ pub(crate) fn planned_metrics<'input>(
 ///
 /// # Errors
 ///
-/// An internal error for a metric or input the model does not have or did not classify, a
-/// cycle of derived metrics, or a context metric that E4 does not plan yet.
+/// [`PlanError::ContextTime`] (`E4-02`) for a `prior_period` metric whose time dimension the
+/// query lacks, has twice, or has at a grain E4-8.6 rejects. An internal error for a metric
+/// or input the model does not have or did not classify, a cycle of derived metrics, or a
+/// context metric that E4 does not plan yet.
 pub(crate) fn planned_metrics_with_contexts<'input>(
     query: &'input BoundQuery,
     model: &'input InternalModel,
@@ -93,7 +95,11 @@ pub(crate) fn planned_metrics_with_contexts<'input>(
                 .map_err(|violation| at(violation, &bound.origin))
         })
         .collect::<Result<Vec<_>, _>>()?;
-    Ok((metrics, registry.into_queries()))
+    let mut contexts = registry.into_queries();
+    for context in &mut contexts {
+        context.resolve_time(query, model)?;
+    }
+    Ok((metrics, contexts))
 }
 
 fn planned_metric<'input>(

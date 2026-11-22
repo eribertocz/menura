@@ -23,7 +23,8 @@ impl ExpressionWriter<'_, '_> {
         Ok(format!("{left} {} {right}", operator_sql(operator)))
     }
 
-    /// `expression` as an operand compared with a value of `other` type: a `date` parameter
+    /// `expression` as an operand compared with a value of `other` type: a `date` parameter,
+    /// or a `date` computed from one such as a shifted `date_range` bound (E4-8.4, E6-4.14),
     /// compared with a timestamp becomes the start of that day,
     /// `CAST(CAST($n AS DATE) AS TIMESTAMP)`, in the query time zone for a timestamp with time
     /// zone (E6-4.2b, E6-4.10).
@@ -33,8 +34,7 @@ impl ExpressionWriter<'_, '_> {
         other: Option<&LogicalType>,
     ) -> Result<String, GenerateError> {
         let text = self.operand(expression)?;
-        let date_parameter = self.literals == Literals::Bound
-            && matches!(expression, Expression::Literal(Literal::Date(_)));
+        let date_parameter = self.literals == Literals::Bound && is_date_bound(expression);
         match other {
             Some(LogicalType::Timestamp { with_time_zone, .. }) if date_parameter => {
                 let midnight = format!("CAST({text} AS TIMESTAMP)");
@@ -46,5 +46,17 @@ impl ExpressionWriter<'_, '_> {
             }
             _ => Ok(text),
         }
+    }
+}
+
+/// Whether `expression` is a `date` parameter, or a `DATEADD` or `DATE_TRUNC` of one: the
+/// bounds of a shifted `date_range` (E4-8.4).
+fn is_date_bound(expression: &Expression) -> bool {
+    match expression {
+        Expression::Literal(Literal::Date(_)) => true,
+        Expression::DateAdd { operand, .. } | Expression::DateTrunc { operand, .. } => {
+            is_date_bound(operand)
+        }
+        _ => false,
     }
 }

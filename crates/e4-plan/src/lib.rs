@@ -27,6 +27,7 @@
 
 mod columns;
 mod context;
+mod context_time;
 mod derived_inputs;
 mod dimensions;
 mod error;
@@ -40,6 +41,7 @@ mod lookup;
 mod metrics;
 mod nodes;
 mod output;
+mod period_shift;
 mod policy;
 mod policy_visits;
 mod population;
@@ -70,6 +72,7 @@ use menura_security::AdmittedSecurityContext;
 
 use crate::layout::Layout;
 use crate::nodes::aggregate;
+use crate::query_filter::RangeShift;
 
 /// Builds the logical plan of `query` from its `branches`, for the user of `security`, over
 /// `model` and the admitted `catalog` schema, which gives the type of every source column a
@@ -160,7 +163,7 @@ pub fn build_plan_with_contexts(
         model,
         catalog,
     };
-    let mut rows = query_rows(branches, query, &metrics, &sources, &project_origin)?;
+    let mut rows = query_rows(branches, query, &metrics, &sources, &project_origin, None)?;
     for (position, context) in contexts.iter().enumerate() {
         rows = context_lookup(rows, position, context, &sources)?;
     }
@@ -209,13 +212,15 @@ fn check_contexts(
 
 /// The rows of `query`, from its `branches`: the plan of each branch up to its `Aggregate`,
 /// combined by a `Stitch` when there are several (E4-4, E4-5), whose origin is
-/// `stitch_origin`.
+/// `stitch_origin`. The `date_range` of a `prior_period` context query is shifted by
+/// `range_shift` (E4-8.4).
 fn query_rows(
     branches: &Branches,
     query: &BoundQuery,
     metrics: &[metrics::PlannedMetric<'_>],
     sources: &RowSources<'_>,
     stitch_origin: &Origin,
+    range_shift: Option<RangeShift<'_>>,
 ) -> Result<PlanNode, PlanError> {
     let RowSources {
         security,
@@ -227,7 +232,16 @@ fn query_rows(
     let mut plans = branches
         .as_slice()
         .iter()
-        .map(|branch| branch_plan(branch, query, security, model, catalog, metrics))
+        .map(|branch| {
+            let source = BranchInputs {
+                query,
+                security,
+                model,
+                catalog,
+                range_shift,
+            };
+            branch_plan(branch, &source, metrics)
+        })
         .collect::<Result<Vec<_>, _>>()?;
     snapshot_grain::check_snapshot_grains(query, &snapshot_axes(branches, metrics, model)?)?;
     match plans.len() {
@@ -250,19 +264,40 @@ fn context_lookup(
     let first = slice::first_branch(context.branches)?;
     let home_origin = Origin::Model(slice::home_dataset(first, sources.model)?.location.clone());
     let stitch_origin = metrics::first_metric_location(&metrics).map_or(home_origin, Origin::Model);
-    let value = query_rows(context.branches, query, &metrics, sources, &stitch_origin)?;
+    let value = query_rows(
+        context.branches,
+        query,
+        &metrics,
+        sources,
+        &stitch_origin,
+        context.context.range_shift(),
+    )?;
     lookup::lookup(rows, value, position, context.context)
+}
+
+/// What the plan of one branch reads besides the branch: the query, the user, the model, the
+/// catalog schema, and the shift of the `date_range` of a `prior_period` context query.
+struct BranchInputs<'input> {
+    query: &'input BoundQuery,
+    security: &'input AdmittedSecurityContext,
+    model: &'input InternalModel,
+    catalog: &'input CatalogSchemaDocument,
+    range_shift: Option<RangeShift<'input>>,
 }
 
 /// The plan of `branch`, up to its `Aggregate` (E4-4).
 fn branch_plan(
     branch: &Branch,
-    query: &BoundQuery,
-    security: &AdmittedSecurityContext,
-    model: &InternalModel,
-    catalog: &CatalogSchemaDocument,
+    inputs: &BranchInputs<'_>,
     metrics: &[metrics::PlannedMetric<'_>],
 ) -> Result<PlanNode, PlanError> {
+    let BranchInputs {
+        query,
+        security,
+        model,
+        catalog,
+        range_shift,
+    } = *inputs;
     let home = slice::home_dataset(branch, model)?;
     let layout = Layout::new(branch, home, model)?;
     let dimensions::BranchKeys { keys, computed } = dimensions::dimension_keys(query, &layout)?;
@@ -286,6 +321,7 @@ fn branch_plan(
             keys,
             computed,
             components,
+            range_shift,
         });
     }
     let request = rows::RowsRequest {
@@ -293,7 +329,7 @@ fn branch_plan(
         computed: computed.as_ref(),
         components: &components,
         fields: &[],
-        predicate: query_filter::query_predicate(query, &layout)?,
+        predicate: query_filter::query_predicate(query, &layout, range_shift)?,
         replaced_home: None,
     };
     let node = rows::branch_rows(&source, request)?;

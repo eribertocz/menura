@@ -15,6 +15,10 @@ const MISSING_REFERENCE_TIME: &str =
 const SPLIT_SNAPSHOT: &str = "this grain is finer than the `snapshot_grain` of a semi-additive \
     metric, whose snapshots cannot be split; group by its `snapshot_grain` or a coarser grain";
 
+/// The message of `E4-02` (E4-8.6, CTX-3.1).
+const CONTEXT_TIME: &str = "this metric needs its `time_dimension` in the query exactly once, \
+    at a grain equal to or finer than its `grain`, with a time grain when it is a timestamp";
+
 /// Why E4 stopped.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum PlanError {
@@ -29,6 +33,10 @@ pub enum PlanError {
     /// finer than its `snapshot_grain` (ADD-4.9, E4-7.8, E2-5 row 19), located at the
     /// `time_grains` entry, else the dimension, else the SQL `SELECT` item.
     SplitSnapshot(QueryLocation),
+    /// `E4-02`: a context modifier needs a time dimension the query lacks, at a coarser grain,
+    /// or a `timestamp` without a time grain (E4-8.6, CTX-3.1), located at the query metric
+    /// that reads the context metric.
+    ContextTime(QueryLocation),
     /// The input breaks the contract of the stages before E4. This is a defect of the
     /// compiler, not a query error, so it has no specification code.
     Invariant {
@@ -58,19 +66,9 @@ impl PlanError {
                 alternatives: None,
             }),
             Self::SplitSnapshot(location) => {
-                let position = location.position();
-                Some(Diagnostic {
-                    code: "E4-03".to_owned(),
-                    message: SPLIT_SNAPSHOT.to_owned(),
-                    location: Some(DiagnosticLocation {
-                        document: InputDocument::Query,
-                        pointer: location.pointer().to_owned(),
-                        line: position.and_then(|position| u64::try_from(position.line()).ok()),
-                        column: position.and_then(|position| u64::try_from(position.column()).ok()),
-                    }),
-                    alternatives: None,
-                })
+                Some(query_diagnostic("E4-03", SPLIT_SNAPSHOT, location))
             }
+            Self::ContextTime(location) => Some(query_diagnostic("E4-02", CONTEXT_TIME, location)),
             Self::Invariant { .. } => None,
         }
     }
@@ -81,6 +79,22 @@ impl PlanError {
             violation,
             origin: origin.clone(),
         }
+    }
+}
+
+/// The diagnostic `code` with `message`, located at `location` of the query.
+fn query_diagnostic(code: &str, message: &str, location: &QueryLocation) -> Diagnostic {
+    let position = location.position();
+    Diagnostic {
+        code: code.to_owned(),
+        message: message.to_owned(),
+        location: Some(DiagnosticLocation {
+            document: InputDocument::Query,
+            pointer: location.pointer().to_owned(),
+            line: position.and_then(|position| u64::try_from(position.line()).ok()),
+            column: position.and_then(|position| u64::try_from(position.column()).ok()),
+        }),
+        alternatives: None,
     }
 }
 
@@ -122,7 +136,7 @@ pub enum InvariantViolation {
     UnknownPopulation,
     /// A unit of periods that does not output the period column it is read by (E4-3.12).
     UnknownPeriodColumn,
-    /// A context metric whose modifier E4 does not plan yet (`prior_period`, `period_to_date`),
+    /// A context metric whose modifier E4 does not plan yet (`period_to_date`),
     /// or one that the base of another context metric reads (`E0C-64`).
     ContextMetric,
     /// Context queries other than those the query's context metrics need, in the order of
@@ -154,6 +168,9 @@ impl fmt::Display for PlanError {
                     "E4-03: {SPLIT_SNAPSHOT} at {}",
                     location.pointer()
                 )
+            }
+            Self::ContextTime(location) => {
+                write!(formatter, "E4-02: {CONTEXT_TIME} at {}", location.pointer())
             }
             Self::Invariant { violation, origin } => {
                 let pointer = match origin {

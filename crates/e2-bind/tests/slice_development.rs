@@ -52,7 +52,7 @@ fn context_over(metric: &mut Metric, base: &str) {
     read_through_agg(metric, base);
     metric.context = Some(ContextMetric {
         base: name(&base.to_uppercase()),
-        modifier: prior_period(),
+        modifier: period_to_date(),
     });
 }
 
@@ -84,7 +84,7 @@ fn e2_5_4a_a_context_metric_reading_its_base_is_a_context_metric_of_0_8_0() {
         cost.classification = Some(read);
         cost.context = Some(ContextMetric {
             base: name("REVENUE"),
-            modifier: prior_period(),
+            modifier: period_to_date(),
         });
     });
     let diagnostic = bind_diagnostic(&cost_by_region(), &model, ADMIN);
@@ -158,14 +158,13 @@ fn e2_5_4_metrics_that_read_each_other_are_visited_once_and_reported() {
     assert_not_yet_supported(&diagnostic, "0.8.0", "context");
 }
 
-/// A `prior_period` modifier, which stays outside the slice until its own issue.
-fn prior_period() -> ContextModifier {
-    ContextModifier::PriorPeriod {
+/// A `period_to_date` modifier, which stays outside the slice until its own issue.
+fn period_to_date() -> ContextModifier {
+    ContextModifier::PeriodToDate {
         time_dimension: FieldPath {
             dataset: name("ORDERS"),
             field: name("ORDER_DATE"),
         },
         grain: Grain::Year,
-        offset: std::num::NonZeroU64::MIN,
     }
 }

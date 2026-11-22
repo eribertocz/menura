@@ -89,6 +89,15 @@ fn unit_of_periods(
 ) -> Result<PlanNode, PlanError> {
     match branch.query.date_range() {
         Some(range) if range.field == branch.declaration.over => {
+            if branch
+                .range_shift
+                .is_some_and(|range_shift| range_shift.field == &range.field)
+            {
+                return Err(PlanError::invariant(
+                    InvariantViolation::ContextMetric,
+                    &branch.origin(),
+                ));
+            }
             Ok(periods_of_range(range, grain, over_type))
         }
         _ => periods_with_data(input.clone(), period.clone(), &branch.origin()),
@@ -155,8 +164,12 @@ fn snapshot_missing(
 /// predicate on `over` (E4-7.5).
 fn carried_rows(branch: &SemiAdditiveBranch<'_>) -> Result<PlanNode, PlanError> {
     let source = &branch.source;
-    let predicate =
-        query_predicate_outside_range(branch.query, &branch.declaration.over, source.layout)?;
+    let predicate = query_predicate_outside_range(
+        branch.query,
+        &branch.declaration.over,
+        source.layout,
+        branch.range_shift,
+    )?;
     branch_rows(
         source,
         RowsRequest {
@@ -187,7 +200,7 @@ fn added_rows(branch: &SemiAdditiveBranch<'_>, expected: &PlanNode) -> Result<Pl
             computed: branch.computed.as_ref(),
             components: &branch.components,
             fields: &snapshot_fields(branch.declaration),
-            predicate: query_predicate(branch.query, source.layout)?,
+            predicate: query_predicate(branch.query, source.layout, branch.range_shift)?,
             replaced_home: Some(&replaced),
         },
     )
