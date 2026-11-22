@@ -9,13 +9,14 @@ use menura_model::internal_model::NormalizedName;
 use crate::authorized_query::ResolvedName;
 use crate::elements::{ColumnRole, ResolvedColumn, ResolvedElements, ResolvedFilter};
 use crate::error::{BindCode, BindDiagnostic};
-use crate::names::{output_key, written_reference};
+use crate::names::output_key;
 use crate::walk::nodes;
 
 /// Rows 4 to 9, in order, over the elements row 3 resolved.
 pub(crate) fn check_rows_4_to_9(elements: &ResolvedElements<'_>) -> Result<(), BindDiagnostic> {
-    metric_in_dimensions(&elements.columns)?;
-    field_in_metrics(&elements.columns)?;
+    let sql_form = elements.relation.is_some();
+    metric_in_dimensions(&elements.columns, sql_form)?;
+    field_in_metrics(&elements.columns, sql_form)?;
     aggregate_in_where(&elements.filters)?;
     // Row 7, `E_WINDOW_IN_WHERE`: no query tree holds a window function, because the
     // expression language rejects one as `E0F-02` (E0F-2.4), which E1 reports at row 1.
@@ -36,40 +37,75 @@ pub(crate) fn filter_datasets(filter: &ResolvedFilter<'_>) -> Vec<NormalizedName
     datasets.into_iter().cloned().collect()
 }
 
-/// Row 4: a dimension MUST name a field (E2-3.3).
-fn metric_in_dimensions(columns: &[ResolvedColumn<'_>]) -> Result<(), BindDiagnostic> {
-    let found = columns.iter().find(|column| {
-        column.role == ColumnRole::Dimension && matches!(column.target, ResolvedName::Metric(_))
-    });
-    match found {
-        Some(column) => Err(BindDiagnostic::new(
-            BindCode::MetricInDimensions,
-            format!(
-                "dimension `{}` names a metric; request it under `metrics`",
-                written_reference(column.reference)
-            ),
-            column.origin,
-        )),
-        None => Ok(()),
+/// Row 4: a dimension MUST name a field, and an expression dimension of the SQL form MUST read
+/// no metric (E2-3.3, E1-4.9).
+fn metric_in_dimensions(
+    columns: &[ResolvedColumn<'_>],
+    sql_form: bool,
+) -> Result<(), BindDiagnostic> {
+    for column in columns
+        .iter()
+        .filter(|column| column.role == ColumnRole::Dimension)
+    {
+        let metric = column
+            .reads
+            .iter()
+            .find(|read| matches!(read.target, ResolvedName::Metric(_)));
+        if let Some(read) = metric {
+            let message = if sql_form {
+                format!(
+                    "`{}` names a metric, which a `SELECT` item reads only inside `AGG(…)`; \
+                     write `AGG({})`",
+                    read.written, read.written
+                )
+            } else {
+                format!(
+                    "dimension `{}` names a metric; request it under `metrics`",
+                    read.written
+                )
+            };
+            return Err(BindDiagnostic::new(
+                BindCode::MetricInDimensions,
+                message,
+                column.origin,
+            ));
+        }
     }
+    Ok(())
 }
 
-/// Row 5: a metric MUST name a metric (E2-3.3).
-fn field_in_metrics(columns: &[ResolvedColumn<'_>]) -> Result<(), BindDiagnostic> {
-    let found = columns.iter().find(|column| {
-        column.role == ColumnRole::Metric && matches!(column.target, ResolvedName::Field(_))
-    });
-    match found {
-        Some(column) => Err(BindDiagnostic::new(
-            BindCode::FieldInMetrics,
-            format!(
-                "metric `{}` names a field; request it under `dimensions`, or name a metric",
-                written_reference(column.reference)
-            ),
-            column.origin,
-        )),
-        None => Ok(()),
+/// Row 5: a metric MUST name a metric, and `AGG(…)` of the SQL form MUST take a metric
+/// (E2-3.3, E1-4.9).
+fn field_in_metrics(columns: &[ResolvedColumn<'_>], sql_form: bool) -> Result<(), BindDiagnostic> {
+    for column in columns
+        .iter()
+        .filter(|column| column.role == ColumnRole::Metric)
+    {
+        let field = column
+            .reads
+            .iter()
+            .find(|read| matches!(read.target, ResolvedName::Field(_)));
+        if let Some(read) = field {
+            let message = if sql_form {
+                format!(
+                    "`AGG({})` names a field; `AGG(…)` takes a metric of the relation, and a \
+                     field is a `SELECT` item of its own",
+                    read.written
+                )
+            } else {
+                format!(
+                    "metric `{}` names a field; request it under `dimensions`, or name a metric",
+                    read.written
+                )
+            };
+            return Err(BindDiagnostic::new(
+                BindCode::FieldInMetrics,
+                message,
+                column.origin,
+            ));
+        }
     }
+    Ok(())
 }
 
 /// Row 6: a filter holds no aggregate and no metric.

@@ -32,6 +32,7 @@ fn field(dataset: &str, field: &str) -> FieldPath {
 }
 
 /// The reference E2 writes for a bound field: `"DATASET"."FIELD"`, normalized.
+#[cfg(test)]
 fn bound_field(dataset: &str, field: &str) -> Expression {
     Expression::Reference(Reference {
         qualifier: Identifier::delimited(dataset),
@@ -40,6 +41,7 @@ fn bound_field(dataset: &str, field: &str) -> Expression {
 }
 
 /// The `AGG(…)` E2 writes for a bound metric of the semantic model.
+#[cfg(test)]
 fn bound_model_metric(metric: &str) -> Expression {
     Expression::MetricAggregate(Reference {
         qualifier: None,
@@ -48,6 +50,7 @@ fn bound_model_metric(metric: &str) -> Expression {
 }
 
 /// The `AGG(…)` E2 writes for a bound dataset metric.
+#[cfg(test)]
 fn bound_dataset_metric(dataset: &str, metric: &str) -> Expression {
     Expression::MetricAggregate(Reference {
         qualifier: Identifier::delimited(dataset),

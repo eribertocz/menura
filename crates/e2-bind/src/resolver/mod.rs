@@ -2,6 +2,8 @@
 //! authorized as soon as it resolves (E2-4). A name that does not resolve and one that is not
 //! authorized give the same answer, `None` (E2-4.4).
 
+mod relation;
+
 use std::collections::HashMap;
 
 use menura_contracts::types::audit_record::Access;
@@ -15,6 +17,8 @@ use menura_security::{AdmittedSecurityContext, Authorization};
 
 use crate::authorized_query::ResolvedName;
 use crate::names::{identifier_name, reference_names};
+
+pub(crate) use relation::{NameScope, RelationScope};
 
 /// The query error code E0 records for a relationship it drops (`E0E-01`, `E0E-02`).
 const DROPPED_RELATIONSHIP: &str = "E_NAME_NOT_FOUND";

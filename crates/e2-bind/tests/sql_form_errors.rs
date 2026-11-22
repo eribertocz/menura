@@ -19,13 +19,14 @@ use support::sql::{
 const ANALYST: &[&str] = &["analyst"];
 
 /// The code and the SQL column of the first error of `tree` for an analyst.
+#[cfg(test)]
 fn first_error_at(tree: &menura_representations::query_tree::QueryTree) -> (BindCode, usize) {
     let found = diagnostic(tree, ANALYST);
     assert_eq!(found.location.pointer(), "/sql");
     let column = found
         .location
         .position()
-        .map(|position| position.column())
+        .map(menura_representations::origin::TextPosition::column)
         .expect("a position in the SQL text");
     (found.code, column)
 }
@@ -104,7 +105,7 @@ fn e1_4_9_a_metric_named_without_agg_is_metric_in_dimensions() {
         vec![
             field_item("region", 8),
             field_item("revenue", 16),
-            agg_item("cost", "c", 25),
+            agg_item("order_total", "c", 25),
         ],
     );
     assert_eq!(first_error_at(&tree), (BindCode::MetricInDimensions, 16));
@@ -125,7 +126,7 @@ fn e2_3_3_an_expression_dimension_that_reads_a_metric_is_metric_in_dimensions() 
         relation("sales", "orders", None, 50),
         vec![
             expression_item(upper(column("revenue")), "x", 8),
-            agg_item("cost", "c", 30),
+            agg_item("order_total", "c", 30),
         ],
     );
     assert_eq!(first_error_at(&tree), (BindCode::MetricInDimensions, 8));
@@ -150,7 +151,7 @@ fn e1_4_9_a_where_over_a_metric_is_aggregate_in_where() {
     let tree = sql_where(
         relation("sales", "orders", None, 30),
         vec![agg_item("revenue", "r", 8)],
-        where_filter(equals_text(column("cost")), 50),
+        where_filter(equals_text(column("revenue")), 50),
     );
     assert_eq!(first_error_at(&tree), (BindCode::AggregateInWhere, 50));
 }
@@ -190,7 +191,7 @@ fn e2_5_3_each_row_is_checked_over_every_item_before_the_next_row() {
         vec![
             agg_item("amount", "a", 8),
             field_item("revenue", 20),
-            agg_item("cost", "c", 30),
+            agg_item("order_total", "c", 30),
         ],
     );
     assert_eq!(first_error_at(&tree), (BindCode::MetricInDimensions, 20));

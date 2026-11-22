@@ -1,0 +1,125 @@
+//! Row 3 of E2-5 in the SQL form: the `FROM` relation (QRY-5.1, E1-4.9) and the names read
+//! through it (E1-4 "FROM", QRY-5.2, DEV-8).
+
+use menura_model::expression::Reference;
+use menura_model::internal_model::NormalizedName;
+use menura_representations::query_tree::{QueryReference, QueryRelation};
+
+use super::Resolver;
+use crate::authorized_query::ResolvedName;
+use crate::names::{identifier_name, reference_names};
+
+/// The relation of a SQL-form query: the dataset it exposes, and the names that may qualify a
+/// reference to it.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub(crate) struct RelationScope {
+    dataset: NormalizedName,
+    qualifiers: Vec<NormalizedName>,
+}
+
+impl RelationScope {
+    /// The dataset the relation exposes.
+    pub(crate) fn dataset(&self) -> &NormalizedName {
+        &self.dataset
+    }
+
+    /// Whether `qualifier` names the relation: its dataset name or its alias (E1-4 "FROM").
+    fn admits(&self, qualifier: &NormalizedName) -> bool {
+        self.qualifiers.contains(qualifier)
+    }
+}
+
+/// Where the names of a query are looked up.
+#[derive(Debug, Clone, Copy)]
+pub(crate) enum NameScope<'scope> {
+    /// The whole model: the wide-table form (QRY-3.2).
+    Model,
+    /// The one relation of a SQL-form query.
+    Relation(&'scope RelationScope),
+}
+
+impl Resolver<'_> {
+    /// The scope of `relation`, when its model is the model and its dataset exists and is
+    /// authorized (QRY-5.1, E1-4.9). Names compare under E0D-1 (E2-3.1).
+    pub(crate) fn relation(&mut self, relation: &QueryRelation) -> Option<RelationScope> {
+        if identifier_name(&relation.model) != self.model.parts().name {
+            return None;
+        }
+        let dataset = identifier_name(&relation.dataset);
+        if !self.dataset(&dataset) {
+            return None;
+        }
+        let mut qualifiers = vec![dataset.clone()];
+        qualifiers.extend(relation.alias.as_ref().map(identifier_name));
+        Some(RelationScope {
+            dataset,
+            qualifiers,
+        })
+    }
+
+    /// The field or metric a reference of a column names in `scope`.
+    pub(crate) fn scoped_reference(
+        &mut self,
+        scope: NameScope<'_>,
+        reference: &QueryReference,
+    ) -> Option<ResolvedName> {
+        let NameScope::Relation(relation) = scope else {
+            return self.reference(reference);
+        };
+        match reference_names(reference)?.as_slice() {
+            [member] => self.relation_member(relation, None, member),
+            [qualifier, member] => self.relation_member(relation, Some(qualifier), member),
+            _ => None,
+        }
+    }
+
+    /// The field or metric a reference of an expression names in `scope`.
+    pub(crate) fn scoped_expression_reference(
+        &mut self,
+        scope: NameScope<'_>,
+        reference: &Reference,
+    ) -> Option<ResolvedName> {
+        let NameScope::Relation(relation) = scope else {
+            return self.expression_reference(reference);
+        };
+        let qualifier = reference.qualifier.as_ref().map(identifier_name);
+        self.relation_member(
+            relation,
+            qualifier.as_ref(),
+            &identifier_name(&reference.name),
+        )
+    }
+
+    /// The member `member` of `relation`, unqualified or qualified by `qualifier`: a field of
+    /// its dataset, then a dataset metric of it, then a metric of the semantic model whose home
+    /// dataset is that dataset alone (QRY-5.2, DEV-8). Any other metric is not exposed.
+    fn relation_member(
+        &mut self,
+        relation: &RelationScope,
+        qualifier: Option<&NormalizedName>,
+        member: &NormalizedName,
+    ) -> Option<ResolvedName> {
+        if qualifier.is_some_and(|name| !relation.admits(name)) {
+            return None;
+        }
+        let dataset = self.model.dataset(&relation.dataset)?;
+        let is_dataset_member = dataset.field(member).is_some()
+            || dataset.metrics.iter().any(|metric| &metric.name == member);
+        if is_dataset_member {
+            return self.member(&relation.dataset, member);
+        }
+        let exposed = self
+            .model
+            .metric(member)?
+            .classification
+            .as_ref()
+            .is_some_and(|classification| {
+                classification.home_datasets.as_slice() == std::slice::from_ref(&relation.dataset)
+            });
+        if exposed {
+            self.semantic_metric(member)
+        } else {
+            None
+        }
+    }
+}
