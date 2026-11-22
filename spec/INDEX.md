@@ -183,21 +183,21 @@ Find a rule ID or a section here, then open only that file at that line.
 | [architecture/README.md](architecture/README.md#L38) | 38 | section | 3.3 Contract evolution |
 | [architecture/README.md](architecture/README.md#L47) | 47 | section | 3.4 Compiled plan |
 | [architecture/README.md](architecture/README.md#L60) | 60 | section | 3.5 Public functions |
-| [architecture/README.md](architecture/README.md#L90) | 90 | rule | ARC-5.1 |
-| [architecture/README.md](architecture/README.md#L91) | 91 | rule | ARC-5.2 |
-| [architecture/README.md](architecture/README.md#L93) | 93 | rule | ARC-5.3 |
-| [architecture/README.md](architecture/README.md#L94) | 94 | rule | ARC-5.4 |
-| [architecture/README.md](architecture/README.md#L95) | 95 | rule | ARC-5.5 |
-| [architecture/README.md](architecture/README.md#L97) | 97 | section | 3.6 Delivery forms |
-| [architecture/README.md](architecture/README.md#L110) | 110 | section | 3.7 Integration |
-| [architecture/README.md](architecture/README.md#L118) | 118 | section | 3.8 Boundary enforcement (from the first commit) |
-| [architecture/README.md](architecture/README.md#L125) | 125 | rule | A1 |
-| [architecture/README.md](architecture/README.md#L126) | 126 | rule | A2 |
-| [architecture/README.md](architecture/README.md#L127) | 127 | rule | A3 |
-| [architecture/README.md](architecture/README.md#L128) | 128 | rule | A4 |
-| [architecture/README.md](architecture/README.md#L129) | 129 | rule | A5 |
-| [architecture/README.md](architecture/README.md#L130) | 130 | rule | A6 |
-| [architecture/README.md](architecture/README.md#L135) | 135 | section | 3.9 Lineage and audit |
+| [architecture/README.md](architecture/README.md#L91) | 91 | rule | ARC-5.1 |
+| [architecture/README.md](architecture/README.md#L92) | 92 | rule | ARC-5.2 |
+| [architecture/README.md](architecture/README.md#L94) | 94 | rule | ARC-5.3 |
+| [architecture/README.md](architecture/README.md#L95) | 95 | rule | ARC-5.4 |
+| [architecture/README.md](architecture/README.md#L96) | 96 | rule | ARC-5.5 |
+| [architecture/README.md](architecture/README.md#L98) | 98 | section | 3.6 Delivery forms |
+| [architecture/README.md](architecture/README.md#L111) | 111 | section | 3.7 Integration |
+| [architecture/README.md](architecture/README.md#L119) | 119 | section | 3.8 Boundary enforcement (from the first commit) |
+| [architecture/README.md](architecture/README.md#L126) | 126 | rule | A1 |
+| [architecture/README.md](architecture/README.md#L127) | 127 | rule | A2 |
+| [architecture/README.md](architecture/README.md#L128) | 128 | rule | A3 |
+| [architecture/README.md](architecture/README.md#L129) | 129 | rule | A4 |
+| [architecture/README.md](architecture/README.md#L130) | 130 | rule | A5 |
+| [architecture/README.md](architecture/README.md#L131) | 131 | rule | A6 |
+| [architecture/README.md](architecture/README.md#L136) | 136 | section | 3.9 Lineage and audit |
 | [contracts/README.md](contracts/README.md#L1) | 1 | section | Contracts |
 | [contracts/README.md](contracts/README.md#L19) | 19 | section | Public contracts |
 | [contracts/README.md](contracts/README.md#L21) | 21 | rule | CON-0.1 |
@@ -261,17 +261,42 @@ Find a rule ID or a section here, then open only that file at that line.
 | [contracts/compiled-plan.md](contracts/compiled-plan.md#L37) | 37 | rule | PLN-3.1 |
 | [contracts/compiled-plan.md](contracts/compiled-plan.md#L38) | 38 | rule | PLN-3.2 |
 | [contracts/compiled-plan.md](contracts/compiled-plan.md#L39) | 39 | rule | PLN-3.3 |
-| [contracts/compiled-plan.md](contracts/compiled-plan.md#L41) | 41 | section | PLN-4 Lineage |
-| [contracts/compiled-plan.md](contracts/compiled-plan.md#L52) | 52 | rule | PLN-4.1 |
-| [contracts/compiled-plan.md](contracts/compiled-plan.md#L53) | 53 | rule | PLN-4.2 |
-| [contracts/compiled-plan.md](contracts/compiled-plan.md#L55) | 55 | section | PLN-5 Compile error |
-| [contracts/compiled-plan.md](contracts/compiled-plan.md#L66) | 66 | rule | PLN-5.1 |
-| [contracts/compiled-plan.md](contracts/compiled-plan.md#L67) | 67 | rule | PLN-5.1a |
-| [contracts/compiled-plan.md](contracts/compiled-plan.md#L68) | 68 | rule | PLN-5.2 |
-| [contracts/compiled-plan.md](contracts/compiled-plan.md#L69) | 69 | rule | PLN-5.3 |
-| [contracts/compiled-plan.md](contracts/compiled-plan.md#L73) | 73 | section | PLN-6 Audit record |
-| [contracts/compiled-plan.md](contracts/compiled-plan.md#L85) | 85 | rule | PLN-6.1 |
-| [contracts/compiled-plan.md](contracts/compiled-plan.md#L86) | 86 | rule | PLN-6.2 |
+| [contracts/compiled-plan.md](contracts/compiled-plan.md#L40) | 40 | rule | PLN-3.3a |
+| [contracts/compiled-plan.md](contracts/compiled-plan.md#L42) | 42 | section | PLN-4 Lineage |
+| [contracts/compiled-plan.md](contracts/compiled-plan.md#L54) | 54 | rule | PLN-4.1 |
+| [contracts/compiled-plan.md](contracts/compiled-plan.md#L55) | 55 | rule | PLN-4.2 |
+| [contracts/compiled-plan.md](contracts/compiled-plan.md#L56) | 56 | rule | PLN-4.3 |
+| [contracts/compiled-plan.md](contracts/compiled-plan.md#L57) | 57 | rule | PLN-4.4 |
+| [contracts/compiled-plan.md](contracts/compiled-plan.md#L58) | 58 | rule | PLN-4.5 |
+| [contracts/compiled-plan.md](contracts/compiled-plan.md#L59) | 59 | rule | PLN-4.6 |
+| [contracts/compiled-plan.md](contracts/compiled-plan.md#L60) | 60 | rule | PLN-4.7 |
+| [contracts/compiled-plan.md](contracts/compiled-plan.md#L61) | 61 | rule | PLN-4.8 |
+| [contracts/compiled-plan.md](contracts/compiled-plan.md#L62) | 62 | rule | PLN-4.9 |
+| [contracts/compiled-plan.md](contracts/compiled-plan.md#L64) | 64 | section | PLN-5 Compile error |
+| [contracts/compiled-plan.md](contracts/compiled-plan.md#L76) | 76 | rule | PLN-5.1 |
+| [contracts/compiled-plan.md](contracts/compiled-plan.md#L77) | 77 | rule | PLN-5.1a |
+| [contracts/compiled-plan.md](contracts/compiled-plan.md#L78) | 78 | rule | PLN-5.2 |
+| [contracts/compiled-plan.md](contracts/compiled-plan.md#L79) | 79 | rule | PLN-5.3 |
+| [contracts/compiled-plan.md](contracts/compiled-plan.md#L80) | 80 | rule | PLN-5.4 |
+| [contracts/compiled-plan.md](contracts/compiled-plan.md#L85) | 85 | rule | PLN-5.4a |
+| [contracts/compiled-plan.md](contracts/compiled-plan.md#L89) | 89 | section | PLN-6 Audit record |
+| [contracts/compiled-plan.md](contracts/compiled-plan.md#L102) | 102 | rule | PLN-6.1 |
+| [contracts/compiled-plan.md](contracts/compiled-plan.md#L103) | 103 | rule | PLN-6.2 |
+| [contracts/compiled-plan.md](contracts/compiled-plan.md#L104) | 104 | rule | PLN-6.3 |
+| [contracts/compiled-plan.md](contracts/compiled-plan.md#L105) | 105 | rule | PLN-6.4 |
+| [contracts/compiled-plan.md](contracts/compiled-plan.md#L106) | 106 | rule | PLN-6.5 |
+| [contracts/compiled-plan.md](contracts/compiled-plan.md#L112) | 112 | rule | PLN-6.6 |
+| [contracts/compiled-plan.md](contracts/compiled-plan.md#L113) | 113 | rule | PLN-6.7 |
+| [contracts/compiled-plan.md](contracts/compiled-plan.md#L114) | 114 | rule | PLN-6.8 |
+| [contracts/compiled-plan.md](contracts/compiled-plan.md#L116) | 116 | section | PLN-7 Explanation |
+| [contracts/compiled-plan.md](contracts/compiled-plan.md#L128) | 128 | rule | PLN-7.1 |
+| [contracts/compiled-plan.md](contracts/compiled-plan.md#L129) | 129 | rule | PLN-7.2 |
+| [contracts/compiled-plan.md](contracts/compiled-plan.md#L130) | 130 | rule | PLN-7.3 |
+| [contracts/compiled-plan.md](contracts/compiled-plan.md#L145) | 145 | rule | PLN-7.4 |
+| [contracts/compiled-plan.md](contracts/compiled-plan.md#L147) | 147 | section | PLN-8 Explain |
+| [contracts/compiled-plan.md](contracts/compiled-plan.md#L149) | 149 | rule | PLN-8.1 |
+| [contracts/compiled-plan.md](contracts/compiled-plan.md#L150) | 150 | rule | PLN-8.2 |
+| [contracts/compiled-plan.md](contracts/compiled-plan.md#L151) | 151 | rule | PLN-8.3 |
 | [contracts/integrity-checks.md](contracts/integrity-checks.md#L1) | 1 | section | Contract: integrity checks |
 | [contracts/integrity-checks.md](contracts/integrity-checks.md#L5) | 5 | section | CHK-1 Purpose |
 | [contracts/integrity-checks.md](contracts/integrity-checks.md#L10) | 10 | section | CHK-2 Document |
@@ -373,6 +398,11 @@ Find a rule ID or a section here, then open only that file at that line.
 | [decisions/0005-summary-evidence-and-e5.md](decisions/0005-summary-evidence-and-e5.md#L11) | 11 | section | Decision |
 | [decisions/0005-summary-evidence-and-e5.md](decisions/0005-summary-evidence-and-e5.md#L30) | 30 | section | Consequences |
 | [decisions/0005-summary-evidence-and-e5.md](decisions/0005-summary-evidence-and-e5.md#L35) | 35 | section | Rules changed |
+| [decisions/0006-plan-outputs-0-7-0.md](decisions/0006-plan-outputs-0-7-0.md#L1) | 1 | section | 0006 Plan outputs for 0.7.0: lineage, explanation, `explain` and the audit record |
+| [decisions/0006-plan-outputs-0-7-0.md](decisions/0006-plan-outputs-0-7-0.md#L3) | 3 | section | Context |
+| [decisions/0006-plan-outputs-0-7-0.md](decisions/0006-plan-outputs-0-7-0.md#L15) | 15 | section | Decision |
+| [decisions/0006-plan-outputs-0-7-0.md](decisions/0006-plan-outputs-0-7-0.md#L58) | 58 | section | Consequences |
+| [decisions/0006-plan-outputs-0-7-0.md](decisions/0006-plan-outputs-0-7-0.md#L66) | 66 | section | Rules changed |
 | [decisions/README.md](decisions/README.md#L1) | 1 | section | Decision records |
 | [extensions/README.md](extensions/README.md#L1) | 1 | section | Extensions |
 | [extensions/README.md](extensions/README.md#L18) | 18 | section | EXT-1 Runtime failure policies |
@@ -866,8 +896,8 @@ Find a rule ID or a section here, then open only that file at that line.
 | [stages/E5-optimize.md](stages/E5-optimize.md#L37) | 37 | rule | E5-3.5a |
 | [stages/E5-optimize.md](stages/E5-optimize.md#L38) | 38 | rule | E5-3.7 |
 | [stages/E5-optimize.md](stages/E5-optimize.md#L39) | 39 | rule | E5-3.8 |
-| [stages/E5-optimize.md](stages/E5-optimize.md#L41) | 41 | section | E5-4 Summary selection |
-| [stages/E5-optimize.md](stages/E5-optimize.md#L49) | 49 | section | E5-5 Never |
+| [stages/E5-optimize.md](stages/E5-optimize.md#L50) | 50 | section | E5-4 Summary selection |
+| [stages/E5-optimize.md](stages/E5-optimize.md#L58) | 58 | section | E5-5 Never |
 | [stages/E6-generate.md](stages/E6-generate.md#L1) | 1 | section | E6 Generate SQL |
 | [stages/E6-generate.md](stages/E6-generate.md#L3) | 3 | section | E6-1 Purpose |
 | [stages/E6-generate.md](stages/E6-generate.md#L8) | 8 | section | E6-2 Input and output |

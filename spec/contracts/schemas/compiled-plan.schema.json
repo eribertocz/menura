@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://menura.invalid/spec/contracts/compiled-plan/1.1.0",
+  "$id": "https://menura.invalid/spec/contracts/compiled-plan/1.2.0",
   "title": "Compiled plan document",
   "type": "object",
   "required": [
@@ -21,7 +21,12 @@
   "additionalProperties": false,
   "properties": {
     "contract": {
-      "enum": ["menura.compiled_plan", "menura.explanation", "semantic_compiler.compiled_plan", "semantic_compiler.explanation"]
+      "enum": [
+        "menura.compiled_plan",
+        "menura.explanation",
+        "semantic_compiler.compiled_plan",
+        "semantic_compiler.explanation"
+      ]
     },
     "contract_version": {
       "$ref": "#/$defs/semver"
@@ -272,8 +277,13 @@
         ],
         "additionalProperties": false,
         "properties": {
+          "code": {
+            "type": "string",
+            "minLength": 1
+          },
           "step": {
             "enum": [
+              "E0",
               "E1",
               "E2",
               "E3",
@@ -281,6 +291,10 @@
               "E5",
               "E6"
             ]
+          },
+          "subject": {
+            "type": "string",
+            "minLength": 1
           },
           "decision": {
             "type": "string"
@@ -354,6 +368,16 @@
               "type": "integer",
               "minimum": 1
             }
+          }
+        },
+        "alternatives": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 5,
+          "items": {
+            "type": "string",
+            "maxLength": 256,
+            "pattern": "^(field|metric|dataset):.+$"
           }
         }
       }
@@ -499,7 +523,10 @@
       "if": {
         "properties": {
           "contract": {
-            "enum": ["menura.compiled_plan", "semantic_compiler.compiled_plan"]
+            "enum": [
+              "menura.compiled_plan",
+              "semantic_compiler.compiled_plan"
+            ]
           }
         }
       },
