@@ -1,11 +1,19 @@
 {
   "contract": "menura.model_description",
-  "contract_version": "1.1.0",
+  "contract_version": "1.2.0",
   "model_hash": "1111111111111111111111111111111111111111111111111111111111111111",
   "security_fingerprint": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
   "datasets": [
     {
       "name": "customers",
+      "ai_context": {
+        "value": "One row per customer; region is the sales region.",
+        "source": {
+          "pointer": "/semantic_model/0/datasets/1/ai_context",
+          "model_hash": "1111111111111111111111111111111111111111111111111111111111111111"
+        },
+        "trust": "untrusted_model_content"
+      },
       "fields": [
         {
           "reference": "customers.customer_id",
@@ -46,7 +54,20 @@
             "scale": 2
           },
           "is_time": false,
-          "time_grains": []
+          "time_grains": [],
+          "ai_context": {
+            "value": {
+              "synonyms": [
+                "revenue",
+                "invoice total"
+              ]
+            },
+            "source": {
+              "pointer": "/semantic_model/0/datasets/0/fields/5/ai_context",
+              "model_hash": "1111111111111111111111111111111111111111111111111111111111111111"
+            },
+            "trust": "untrusted_model_content"
+          }
         },
         {
           "reference": "invoices.area_id",
@@ -166,5 +187,128 @@
       ]
     }
   ],
-  "ambiguous_paths": []
+  "ambiguous_paths": [],
+  "capabilities": {
+    "compiler_version": "0.7.0",
+    "slice_version": "0.7.0",
+    "ossie": {
+      "normative": "0.1.1",
+      "tracked_commit": "aa500d3",
+      "formats": [
+        "development",
+        "release"
+      ]
+    },
+    "contracts": [
+      {
+        "contract": "menura.audit_record",
+        "version": "1.1.0"
+      },
+      {
+        "contract": "menura.catalog_schema",
+        "version": "1.1.0"
+      },
+      {
+        "contract": "menura.catalog_state",
+        "version": "1.1.0"
+      },
+      {
+        "contract": "menura.compile_error",
+        "version": "1.1.0"
+      },
+      {
+        "contract": "menura.compiled_plan",
+        "version": "1.1.0"
+      },
+      {
+        "contract": "menura.explanation",
+        "version": "1.1.0"
+      },
+      {
+        "contract": "menura.integrity_checks",
+        "version": "1.1.0"
+      },
+      {
+        "contract": "menura.model_description",
+        "version": "1.2.0"
+      },
+      {
+        "contract": "menura.query",
+        "version": "1.1.0"
+      },
+      {
+        "contract": "menura.security_context",
+        "version": "1.1.0"
+      },
+      {
+        "contract": "menura.validation_report",
+        "version": "1.1.0"
+      }
+    ],
+    "dialects": [
+      "duckdb"
+    ],
+    "query_forms": [
+      "sql",
+      "wide_table"
+    ],
+    "extensions": [
+      {
+        "key": "access",
+        "versions": [
+          1
+        ]
+      },
+      {
+        "key": "additivity",
+        "versions": [
+          1
+        ]
+      },
+      {
+        "key": "aggregate",
+        "versions": [
+          1
+        ]
+      },
+      {
+        "key": "derived",
+        "versions": [
+          1
+        ]
+      },
+      {
+        "key": "populations",
+        "versions": [
+          1
+        ]
+      },
+      {
+        "key": "row_access",
+        "versions": [
+          1
+        ]
+      },
+      {
+        "key": "security_context",
+        "versions": [
+          1
+        ]
+      }
+    ],
+    "functions": [
+      "compile",
+      "describe",
+      "explain",
+      "integrity_checks",
+      "load",
+      "migrate",
+      "validate",
+      "with_state"
+    ],
+    "limits": {
+      "max_identifier_length": 128,
+      "max_decimal_precision": 38
+    }
+  }
 }
