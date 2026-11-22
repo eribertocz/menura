@@ -153,11 +153,11 @@ fn add_6_chk_6_5_a_time_over_returns_each_add_6_condition() {
             "UTC"
         ),
         [
+            row(&[None, Some("2026-02-01"), Some("gap")]),
             row(&[Some("1"), Some("2026-01-01"), Some("duplicate_snapshot")]),
             row(&[Some("1"), Some("2026-01-01"), Some("unexpected_entity")]),
             row(&[Some("2"), Some("2026-03-01"), Some("missing_entity")]),
             row(&[Some("4"), Some("2026-03-01"), Some("unexpected_entity")]),
-            row(&[None, Some("2026-02-01"), Some("gap")]),
         ]
     );
 }
