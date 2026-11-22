@@ -1,0 +1,65 @@
+version: "0.1.1"
+semantic_model:
+  - name: e5_merge_scans
+    description: 'One plain and one semi-additive branch over balances, with a NULL group and a category without members'
+    custom_extensions:
+      - vendor_name: COMMON
+        data: '{"namespace": "menura", "version": 1, "security_context": {"roles": ["analyst"], "attributes": []}}'
+    datasets:
+      - name: balances
+        source: shop.main.balances
+        primary_key: [customer_id, period]
+        fields:
+          - name: customer_id
+            expression: {dialects: [{dialect: ANSI_SQL, expression: 'customer_id'}]}
+          - name: period
+            expression: {dialects: [{dialect: ANSI_SQL, expression: 'period'}]}
+            dimension: {is_time: true}
+          - name: balance
+            expression: {dialects: [{dialect: ANSI_SQL, expression: 'balance'}]}
+          - name: paid
+            expression: {dialects: [{dialect: ANSI_SQL, expression: 'paid'}]}
+        custom_extensions:
+          - vendor_name: COMMON
+            data: '{"namespace": "menura", "version": 1, "access": {"mode": "roles", "roles": ["analyst"]}}'
+      - name: customers
+        source: shop.main.customers
+        primary_key: [customer_id]
+        fields:
+          - name: customer_id
+            expression: {dialects: [{dialect: ANSI_SQL, expression: 'customer_id'}]}
+          - name: category
+            expression: {dialects: [{dialect: ANSI_SQL, expression: 'category'}]}
+        custom_extensions:
+          - vendor_name: COMMON
+            data: '{"namespace": "menura", "version": 1, "access": {"mode": "roles", "roles": ["analyst"]}}'
+      - name: members
+        source: shop.main.members
+        fields:
+          - name: customer_id
+            expression: {dialects: [{dialect: ANSI_SQL, expression: 'customer_id'}]}
+          - name: valid_from
+            expression: {dialects: [{dialect: ANSI_SQL, expression: 'valid_from'}]}
+            dimension: {is_time: true}
+          - name: valid_to
+            expression: {dialects: [{dialect: ANSI_SQL, expression: 'valid_to'}]}
+            dimension: {is_time: true}
+        custom_extensions:
+          - vendor_name: COMMON
+            data: '{"namespace": "menura", "version": 1, "access": {"mode": "roles", "roles": ["analyst"]}, "populations": [{"name": "active_members", "mode": "validity", "entity": ["customer_id"], "valid_from": "valid_from", "valid_to": "valid_to", "partial_period": "any_day"}]}'
+    relationships:
+      - name: balances_customers
+        from: balances
+        to: customers
+        from_columns: [customer_id]
+        to_columns: [customer_id]
+    metrics:
+      - name: last_global
+        expression: {dialects: [{dialect: ANSI_SQL, expression: 'SUM(balances.balance)'}]}
+        custom_extensions:
+          - vendor_name: COMMON
+            data: '{"namespace": "menura", "version": 1, "additivity": {"type": "semi_additive", "over": "balances.period", "entity": ["balances.customer_id"], "aggregation": "last", "selection": "global_period", "snapshot_grain": "month", "population": "active_members", "missing": "exclude", "unexpected": "exclude", "nulls": "keep"}}'
+      - name: total_paid
+        expression: {dialects: [{dialect: ANSI_SQL, expression: 'SUM(balances.paid)'}]}
+      - name: paid_rows
+        expression: {dialects: [{dialect: ANSI_SQL, expression: 'COUNT(balances.paid)'}]}

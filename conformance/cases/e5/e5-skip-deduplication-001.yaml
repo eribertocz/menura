@@ -1,0 +1,17 @@
+id: e5-skip-deduplication-001
+rules: [E5-3.2, E5-3.2a]
+model: e5-deduplication-skipped
+security_context: analyst.json
+query:
+  contract: "menura.query"
+  contract_version: "1.1.0"
+  time_zone: "UTC"
+  query:
+    dimensions: ["customers.region"]
+    metrics:
+      - {"metric": "total_amount", "alias": "total_amount"}
+expect:
+  outcome: "plan"
+  sql: "e5-skip-deduplication-001.sql"
+  rows: "e5-skip-deduplication-001.csv"
+  row_order: "any"

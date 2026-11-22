@@ -9,6 +9,9 @@ mod unused_joins;
 #[cfg(test)]
 mod unused_joins_tests;
 
+#[cfg(test)]
+mod deduplication_tests;
+
 use menura_representations::logical_plan::PlanNode;
 
 use crate::context::RewriteContext;
