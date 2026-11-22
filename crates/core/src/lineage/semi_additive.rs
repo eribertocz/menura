@@ -8,7 +8,7 @@ use menura_representations::logical_plan::{
 use menura_representations::names::ColumnName;
 
 use super::provenance::{NodeLineage, Provenance};
-use super::references::{columns_read, component_references};
+use super::references::{columns_read, component_columns};
 use super::scan::Sources;
 use super::walk::read_by;
 use crate::compile::InternalError;
@@ -77,9 +77,7 @@ impl Sources<'_> {
                 over.iter().copied().chain(entity.iter().copied()),
             ));
             for component in &rule.components {
-                let names = component_references(component)
-                    .into_iter()
-                    .map(|reference| reference.name.text());
+                let names = component_columns(component);
                 value.absorb(&lineage.provenance_of(names));
             }
         }

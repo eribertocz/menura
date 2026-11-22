@@ -142,6 +142,21 @@ fn pln_4_5_a_summary_branch_reads_the_summary_relation() {
 }
 
 #[test]
+fn pln_4_5_a_recomposed_average_reads_the_summary_count_column() {
+    let lineage = lineage_of(
+        &summary_handle(),
+        r#"{"dimensions": ["orders.region"], "metrics": ["average_amount"]}"#,
+    );
+    assert_eq!(
+        physical(&lineage[1]),
+        [
+            "shop.main.orders_by_region_month.amount_count",
+            "shop.main.orders_by_region_month.amount_sum",
+        ]
+    );
+}
+
+#[test]
 fn pln_4_6_summary_names_the_summary_used() {
     let summary = lineage_of(
         &summary_handle(),
@@ -162,7 +177,7 @@ fn pln_4_7_propagated_policies_are_listed() {
     assert!(
         lineage
             .iter()
-            .all(|entry| entry.security_policies == ["STORES.north_only"])
+            .all(|entry| entry.security_policies == ["STORES.NORTH_ONLY"])
     );
 }
 
@@ -175,7 +190,7 @@ fn pln_4_7_only_applicable_policies_are_listed() {
         compiled
             .lineage
             .iter()
-            .all(|entry| entry.security_policies == ["ORDERS.north_only"])
+            .all(|entry| entry.security_policies == ["ORDERS.NORTH_ONLY"])
     );
 }
 
@@ -184,7 +199,7 @@ fn pln_4_8_a_metric_reads_only_the_branches_of_its_components() {
     let lineage = lineage_of(&lineage_handle(), BY_SEGMENT);
     assert_eq!(physical(&lineage[2]), ["shop.main.customers.customer_id"]);
     assert!(lineage[2].security_policies.is_empty());
-    assert_eq!(lineage[3].security_policies, ["STORES.north_only"]);
+    assert_eq!(lineage[3].security_policies, ["STORES.NORTH_ONLY"]);
 }
 
 #[test]
@@ -201,7 +216,7 @@ fn pln_4_8_a_dimension_reads_every_branch() {
             "shop.main.stores.store_id",
         ]
     );
-    assert_eq!(lineage[0].security_policies, ["STORES.north_only"]);
+    assert_eq!(lineage[0].security_policies, ["STORES.NORTH_ONLY"]);
 }
 
 #[test]

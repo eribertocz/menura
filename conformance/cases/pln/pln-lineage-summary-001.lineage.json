@@ -11,7 +11,7 @@
       }
     ],
     "security_policies": [
-      "ORDERS.every_region"
+      "ORDERS.EVERY_REGION"
     ],
     "summary": "ORDERS_BY_REGION_MONTH"
   },
@@ -27,7 +27,7 @@
       }
     ],
     "security_policies": [
-      "ORDERS.every_region"
+      "ORDERS.EVERY_REGION"
     ],
     "summary": "ORDERS_BY_REGION_MONTH"
   },
@@ -44,7 +44,7 @@
       }
     ],
     "security_policies": [
-      "ORDERS.every_region"
+      "ORDERS.EVERY_REGION"
     ],
     "summary": "ORDERS_BY_REGION_MONTH"
   },
@@ -61,7 +61,7 @@
       }
     ],
     "security_policies": [
-      "ORDERS.every_region"
+      "ORDERS.EVERY_REGION"
     ],
     "summary": "ORDERS_BY_REGION_MONTH"
   },
@@ -73,12 +73,16 @@
     "output": "average_amount",
     "physical_inputs": [
       {
+        "column": "amount_count",
+        "source": "shop.main.orders_by_region_month"
+      },
+      {
         "column": "amount_sum",
         "source": "shop.main.orders_by_region_month"
       }
     ],
     "security_policies": [
-      "ORDERS.every_region"
+      "ORDERS.EVERY_REGION"
     ],
     "summary": "ORDERS_BY_REGION_MONTH"
   }

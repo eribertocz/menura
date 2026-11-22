@@ -20,7 +20,7 @@
       }
     ],
     "security_policies": [
-      "STORES.north_only"
+      "STORES.NORTH_ONLY"
     ],
     "summary": null
   },
@@ -49,7 +49,7 @@
       }
     ],
     "security_policies": [
-      "STORES.north_only"
+      "STORES.NORTH_ONLY"
     ],
     "summary": null
   }

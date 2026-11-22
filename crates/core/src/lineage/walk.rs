@@ -8,7 +8,7 @@ use menura_representations::logical_plan::{
 use menura_representations::names::{ColumnName, ColumnPrefix};
 
 use super::provenance::{ColumnProvenance, NodeLineage, Provenance};
-use super::references::{columns_read, component_references};
+use super::references::{columns_read, component_columns};
 use super::scan::Sources;
 use crate::compile::InternalError;
 
@@ -182,9 +182,7 @@ fn aggregate(
         columns.insert(key.name.as_str().to_owned(), read);
     }
     for component in components {
-        let names = component_references(component)
-            .into_iter()
-            .map(|reference| reference.name.text());
+        let names = component_columns(component);
         columns.insert(
             component.name.as_str().to_owned(),
             input.provenance_of(names),

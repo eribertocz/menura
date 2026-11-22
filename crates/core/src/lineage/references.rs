@@ -3,7 +3,7 @@
 use menura_contracts::normalize_unquoted_identifier;
 use menura_model::expression::{AggregateCall, Expression, Identifier, Reference};
 use menura_model::internal_model::NormalizedName;
-use menura_representations::logical_plan::AggregateComponent;
+use menura_representations::logical_plan::{AggregateComponent, Recomposition};
 
 /// Every reference `expression` makes, `AGG(…)` references included, in written order.
 pub(super) fn references(expression: &Expression) -> Vec<&Reference> {
@@ -12,14 +12,22 @@ pub(super) fn references(expression: &Expression) -> Vec<&Reference> {
     found
 }
 
-/// Every reference `component` makes, in its call and then its filter.
-pub(super) fn component_references(component: &AggregateComponent) -> Vec<&Reference> {
+/// The names of the plan columns `component` reads: those of its call, then of its filter,
+/// then, for a recomposed average, the summary column of its count (SUM-3.1).
+pub(super) fn component_columns(component: &AggregateComponent) -> Vec<&str> {
     let mut found = Vec::new();
     add_call_references(&component.call, &mut found);
     if let Some(filter) = &component.filter {
         add_references(filter, &mut found);
     }
-    found
+    let mut columns: Vec<&str> = found
+        .into_iter()
+        .map(|reference| reference.name.text())
+        .collect();
+    if let Some(Recomposition::Average { count }) = &component.recomposition {
+        columns.push(count.as_str());
+    }
+    columns
 }
 
 /// The names of the plan columns `expression` reads: plan expressions reference columns by

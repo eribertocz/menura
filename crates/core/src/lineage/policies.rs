@@ -10,7 +10,7 @@ use super::names::written_name;
 
 /// Every row policy of `datasets` that is applicable to the user of `context` (E4-6.9): it
 /// remains after exemption and either has no `roles` or lists one of the user's roles. Each is
-/// written `<dataset>.<policy>`, ordered in CON-5 order of the normalized dataset name, then of
+/// written `<dataset>.<policy>` with normalized names (E0H-1.1), ordered in CON-5 order of the normalized dataset name, then of
 /// the normalized policy name (PLN-4.7).
 pub(super) fn applied_policies(
     datasets: &BTreeSet<NormalizedName>,
@@ -21,11 +21,9 @@ pub(super) fn applied_policies(
     for dataset in datasets.iter().filter_map(|name| model.dataset(name)) {
         for policy in &dataset.row_policies {
             if is_applicable(policy, context) {
-                applied.insert((
-                    dataset.name.clone(),
-                    normalized_policy_name(&policy.name),
-                    format!("{}.{}", written_name(&dataset.name), policy.name),
-                ));
+                let policy_name = normalized_policy_name(&policy.name);
+                let written = format!("{}.{policy_name}", written_name(&dataset.name));
+                applied.insert((dataset.name.clone(), policy_name, written));
             }
         }
     }
