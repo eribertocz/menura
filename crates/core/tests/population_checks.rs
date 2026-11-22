@@ -207,3 +207,36 @@ fn chk_4_2_check_queries_come_from_the_generator_of_e6() {
 fn chk_2_the_same_model_gives_the_same_document() {
     assert_eq!(document(), document());
 }
+
+#[test]
+fn chk_6_5_a_metric_reading_over_or_entity_from_a_reached_dataset_has_no_check() {
+    let handle = load(
+        include_bytes!("fixtures/reached-snapshot/model.yaml"),
+        include_bytes!("fixtures/reached-snapshot/catalog-schema.json"),
+        None,
+        &LoadOptions::default(),
+    )
+    .unwrap();
+    assert!(
+        handle
+            .model()
+            .parts()
+            .checks
+            .iter()
+            .any(|recorded| recorded.check_id == "semi_additive:REACHED_BALANCE")
+    );
+    let ids: Vec<String> = integrity_checks(&handle, Dialect::Duckdb)
+        .unwrap()
+        .checks
+        .into_iter()
+        .map(|check| check.check_id)
+        .collect();
+    assert_eq!(
+        ids,
+        [
+            "key_uniqueness:BALANCES_CUSTOMER",
+            "orphan_keys:BALANCES_CUSTOMER",
+            "semi_additive:HOME_BALANCE",
+        ]
+    );
+}
