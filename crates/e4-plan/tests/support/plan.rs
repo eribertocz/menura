@@ -21,6 +21,8 @@ pub fn kind(node: &PlanNode) -> &'static str {
         Operation::Project { .. } => "Project",
         Operation::Sort { .. } => "Sort",
         Operation::Limit { .. } => "Limit",
+        Operation::PeriodRange { .. } => "PeriodRange",
+        Operation::FullJoin { .. } => "FullJoin",
     }
 }
 

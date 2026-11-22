@@ -67,10 +67,13 @@ fn visit(
             let input = visit(input, &child(path, 0), &reads, records);
             rebuild(node, input)
         }
+        // The operations of integrity checks never occur in a query plan.
         Operation::Scan { .. }
         | Operation::Periods { .. }
         | Operation::Population { .. }
-        | Operation::Snapshot { .. } => node.clone(),
+        | Operation::Snapshot { .. }
+        | Operation::PeriodRange { .. }
+        | Operation::FullJoin { .. } => node.clone(),
     }
 }
 
@@ -224,7 +227,9 @@ fn replace_input(operation: &Operation, input: PlanNode) -> Operation {
         | Operation::Periods { .. }
         | Operation::Population { .. }
         | Operation::Snapshot { .. }
-        | Operation::Stitch { .. } => operation.clone(),
+        | Operation::Stitch { .. }
+        | Operation::PeriodRange { .. }
+        | Operation::FullJoin { .. } => operation.clone(),
     }
 }
 
