@@ -264,19 +264,36 @@ Find a rule ID or a section here, then open only that file at that line.
 | [contracts/integrity-checks.md](contracts/integrity-checks.md#L1) | 1 | section | Contract: integrity checks |
 | [contracts/integrity-checks.md](contracts/integrity-checks.md#L5) | 5 | section | CHK-1 Purpose |
 | [contracts/integrity-checks.md](contracts/integrity-checks.md#L10) | 10 | section | CHK-2 Document |
-| [contracts/integrity-checks.md](contracts/integrity-checks.md#L23) | 23 | rule | CHK-2.1 |
-| [contracts/integrity-checks.md](contracts/integrity-checks.md#L24) | 24 | rule | CHK-2.2 |
-| [contracts/integrity-checks.md](contracts/integrity-checks.md#L25) | 25 | rule | CHK-2.3 |
-| [contracts/integrity-checks.md](contracts/integrity-checks.md#L27) | 27 | section | CHK-3 Definition hash |
-| [contracts/integrity-checks.md](contracts/integrity-checks.md#L40) | 40 | rule | CHK-3.1 |
-| [contracts/integrity-checks.md](contracts/integrity-checks.md#L42) | 42 | section | CHK-4 Use of evidence and generation |
-| [contracts/integrity-checks.md](contracts/integrity-checks.md#L46) | 46 | rule | CHK-4.1 |
-| [contracts/integrity-checks.md](contracts/integrity-checks.md#L47) | 47 | rule | CHK-4.2 |
-| [contracts/integrity-checks.md](contracts/integrity-checks.md#L49) | 49 | section | CHK-5 Summary build and time zone |
-| [contracts/integrity-checks.md](contracts/integrity-checks.md#L51) | 51 | rule | CHK-5.1 |
-| [contracts/integrity-checks.md](contracts/integrity-checks.md#L52) | 52 | rule | CHK-5.2 |
-| [contracts/integrity-checks.md](contracts/integrity-checks.md#L53) | 53 | rule | CHK-5.3 |
-| [contracts/integrity-checks.md](contracts/integrity-checks.md#L54) | 54 | rule | CHK-5.4 |
+| [contracts/integrity-checks.md](contracts/integrity-checks.md#L25) | 25 | rule | CHK-2.1 |
+| [contracts/integrity-checks.md](contracts/integrity-checks.md#L26) | 26 | rule | CHK-2.2 |
+| [contracts/integrity-checks.md](contracts/integrity-checks.md#L27) | 27 | rule | CHK-2.3 |
+| [contracts/integrity-checks.md](contracts/integrity-checks.md#L28) | 28 | rule | CHK-2.4 |
+| [contracts/integrity-checks.md](contracts/integrity-checks.md#L29) | 29 | rule | CHK-2.5 |
+| [contracts/integrity-checks.md](contracts/integrity-checks.md#L30) | 30 | rule | CHK-2.6 |
+| [contracts/integrity-checks.md](contracts/integrity-checks.md#L32) | 32 | section | CHK-3 Definition hash |
+| [contracts/integrity-checks.md](contracts/integrity-checks.md#L45) | 45 | rule | CHK-3.1 |
+| [contracts/integrity-checks.md](contracts/integrity-checks.md#L47) | 47 | section | CHK-4 Use of evidence and generation |
+| [contracts/integrity-checks.md](contracts/integrity-checks.md#L51) | 51 | rule | CHK-4.1 |
+| [contracts/integrity-checks.md](contracts/integrity-checks.md#L52) | 52 | rule | CHK-4.2 |
+| [contracts/integrity-checks.md](contracts/integrity-checks.md#L54) | 54 | section | CHK-5 Summary build and time zone |
+| [contracts/integrity-checks.md](contracts/integrity-checks.md#L56) | 56 | rule | CHK-5.1 |
+| [contracts/integrity-checks.md](contracts/integrity-checks.md#L57) | 57 | rule | CHK-5.2 |
+| [contracts/integrity-checks.md](contracts/integrity-checks.md#L58) | 58 | rule | CHK-5.3 |
+| [contracts/integrity-checks.md](contracts/integrity-checks.md#L59) | 59 | rule | CHK-5.4 |
+| [contracts/integrity-checks.md](contracts/integrity-checks.md#L60) | 60 | rule | CHK-5.5 |
+| [contracts/integrity-checks.md](contracts/integrity-checks.md#L61) | 61 | rule | CHK-5.6 |
+| [contracts/integrity-checks.md](contracts/integrity-checks.md#L63) | 63 | section | CHK-6 Check queries |
+| [contracts/integrity-checks.md](contracts/integrity-checks.md#L67) | 67 | rule | CHK-6.1 |
+| [contracts/integrity-checks.md](contracts/integrity-checks.md#L68) | 68 | rule | CHK-6.2 |
+| [contracts/integrity-checks.md](contracts/integrity-checks.md#L69) | 69 | rule | CHK-6.3 |
+| [contracts/integrity-checks.md](contracts/integrity-checks.md#L70) | 70 | rule | CHK-6.4 |
+| [contracts/integrity-checks.md](contracts/integrity-checks.md#L71) | 71 | rule | CHK-6.5 |
+| [contracts/integrity-checks.md](contracts/integrity-checks.md#L78) | 78 | rule | CHK-6.6 |
+| [contracts/integrity-checks.md](contracts/integrity-checks.md#L80) | 80 | section | CHK-7 Parameters and bindings |
+| [contracts/integrity-checks.md](contracts/integrity-checks.md#L82) | 82 | rule | CHK-7.1 |
+| [contracts/integrity-checks.md](contracts/integrity-checks.md#L83) | 83 | rule | CHK-7.2 |
+| [contracts/integrity-checks.md](contracts/integrity-checks.md#L84) | 84 | rule | CHK-7.3 |
+| [contracts/integrity-checks.md](contracts/integrity-checks.md#L85) | 85 | rule | CHK-7.4 |
 | [contracts/model-description.md](contracts/model-description.md#L1) | 1 | section | Contract: model description |
 | [contracts/model-description.md](contracts/model-description.md#L5) | 5 | section | DSC-1 Purpose |
 | [contracts/model-description.md](contracts/model-description.md#L11) | 11 | section | DSC-2 Content |
