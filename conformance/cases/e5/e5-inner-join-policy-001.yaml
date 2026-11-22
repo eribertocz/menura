@@ -1,0 +1,17 @@
+id: e5-inner-join-policy-001
+rules: [E5-3.3a]
+model: e5-inner-joins
+security_context: analyst.json
+query:
+  contract: menura.query
+  contract_version: "1.1.0"
+  time_zone: UTC
+  query:
+    dimensions: [stores.region]
+    metrics:
+      - {metric: total_amount, alias: total_amount}
+expect:
+  outcome: plan
+  sql: e5-inner-join-policy-001.sql
+  rows: e5-inner-join-policy-001.csv
+  row_order: any

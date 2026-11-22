@@ -1,0 +1,59 @@
+version: "0.1.1"
+semantic_model:
+  - name: inner_joins
+    description: 'Orders joined to customers and to stores, both with passing orphan_keys evidence (E5-3.3); stores has a row policy for analysts (E5-3.3a)'
+    custom_extensions:
+      - vendor_name: COMMON
+        data: '{"namespace": "menura", "version": 1, "security_context": {"roles": ["analyst"], "attributes": []}}'
+    datasets:
+      - name: orders
+        source: shop.main.orders
+        primary_key: [order_id]
+        fields:
+          - name: order_id
+            expression: {dialects: [{dialect: ANSI_SQL, expression: order_id}]}
+          - name: customer_id
+            expression: {dialects: [{dialect: ANSI_SQL, expression: customer_id}]}
+          - name: store_id
+            expression: {dialects: [{dialect: ANSI_SQL, expression: store_id}]}
+          - name: amount
+            expression: {dialects: [{dialect: ANSI_SQL, expression: amount}]}
+        custom_extensions:
+          - vendor_name: COMMON
+            data: '{"namespace": "menura", "version": 1, "access": {"mode": "roles", "roles": ["analyst"]}}'
+      - name: customers
+        source: shop.main.customers
+        primary_key: [customer_id]
+        fields:
+          - name: customer_id
+            expression: {dialects: [{dialect: ANSI_SQL, expression: customer_id}]}
+          - name: segment
+            expression: {dialects: [{dialect: ANSI_SQL, expression: segment}]}
+        custom_extensions:
+          - vendor_name: COMMON
+            data: '{"namespace": "menura", "version": 1, "access": {"mode": "roles", "roles": ["analyst"]}}'
+      - name: stores
+        source: shop.main.stores
+        primary_key: [store_id]
+        fields:
+          - name: store_id
+            expression: {dialects: [{dialect: ANSI_SQL, expression: store_id}]}
+          - name: region
+            expression: {dialects: [{dialect: ANSI_SQL, expression: region}]}
+        custom_extensions:
+          - vendor_name: COMMON
+            data: '{"namespace": "menura", "version": 1, "access": {"mode": "roles", "roles": ["analyst"]}, "row_access": [{"name": "north_only", "condition": "region = ''NORTH''", "roles": ["analyst"]}]}'
+    relationships:
+      - name: orders_customers
+        from: orders
+        to: customers
+        from_columns: [customer_id]
+        to_columns: [customer_id]
+      - name: orders_stores
+        from: orders
+        to: stores
+        from_columns: [store_id]
+        to_columns: [store_id]
+    metrics:
+      - name: total_amount
+        expression: {dialects: [{dialect: ANSI_SQL, expression: SUM(orders.amount)}]}
