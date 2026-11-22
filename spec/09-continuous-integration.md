@@ -27,6 +27,8 @@ GitHub Actions (WF-8.0). Blocking checks are required by branch protection.
 | `issue-label` | The linked issue carries exactly one of `spec` or `impl` | WF-6.5 | Yes |
 | `language` | Non-English titles, bodies and commit subjects | WF-9.3 | No (warning) |
 
+**Agent smoke test.** From 0.9.0, the `agent-smoke` job runs a fixed client script, with no language model, against `menura-mcp` over standard input and output, on a conformance model: `initialize` and `tools/list`; `describe`; `compile` of a valid query (a plan); `compile` with a misspelled metric (`E_NAME_NOT_FOUND` with `alternatives`, PLN-5.4); and `compile` of a metric the context may not use (the same error as a missing metric, PLN-5.4a). It uses only public interfaces, and its result never blocks a release (7.1).
+
 ## CI-2 Scheduled
 
 | Check name | Schedule | Action |
