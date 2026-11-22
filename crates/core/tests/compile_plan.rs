@@ -126,11 +126,6 @@ fn vs_5_the_default_dialect_option_is_duckdb() {
 }
 
 #[test]
-fn vs_5_lineage_is_empty() {
-    assert!(compiled().lineage.is_empty());
-}
-
-#[test]
 fn vs_5_a_plan_without_former_names_has_no_warnings() {
     assert!(compiled().warnings.is_empty());
 }

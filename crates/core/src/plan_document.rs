@@ -1,4 +1,4 @@
-//! The compiled plan document of the 0.3.0 slice, with the outputs of VS-5 (PLN-1).
+//! The compiled plan document (PLN-1), with its lineage (PLN-4) and the outputs of VS-5.
 
 use menura_contracts::ContractKind;
 use menura_contracts::types::common::Decision;
@@ -6,6 +6,7 @@ use menura_contracts::types::compiled_plan::{
     CompiledPlanContract, CompiledPlanDocument, Diagnostic, Limits,
 };
 use menura_generator_duckdb::GeneratedSql;
+use menura_representations::bound_query::BoundQuery;
 use menura_representations::logical_plan::{Operation, PlanNode};
 use menura_security::AdmittedSecurityContext;
 
@@ -13,6 +14,7 @@ use crate::cache_key::{HashedPlan, cache_key};
 use crate::compile::InternalError;
 use crate::compile_options::CompileOptions;
 use crate::handle::Handle;
+use crate::lineage::{LineageInputs, lineage};
 use crate::producer::producer;
 
 /// The members of the compiled plan that the stages gathered, besides the SQL.
@@ -23,15 +25,17 @@ pub(crate) struct PlanOutputs {
     pub(crate) warnings: Vec<Diagnostic>,
 }
 
-/// The compiled plan of `plan`, whose SQL is `generated`, for the user of `context`, with the
-/// explanation and warnings of `outputs`; `lineage` is empty before 0.7.0.
+/// The compiled plan of `plan`, the final plan of `query`, whose SQL is `generated`, for the
+/// user of `context`, with its lineage (PLN-4) and the explanation and warnings of `outputs`.
 ///
 /// # Errors
 ///
-/// An [`InternalError`] when the plan scans a dataset the model does not have.
+/// An [`InternalError`] when the plan scans a dataset the model does not have, or names an
+/// element its lineage cannot derive.
 pub(crate) fn plan_document(
     handle: &Handle,
     plan: &PlanNode,
+    query: &BoundQuery,
     generated: GeneratedSql,
     context: &AdmittedSecurityContext,
     options: &CompileOptions,
@@ -39,6 +43,15 @@ pub(crate) fn plan_document(
 ) -> Result<CompiledPlanDocument, InternalError> {
     let data_source = data_source(handle);
     let sources = relations_read(handle, plan)?;
+    let lineage = lineage(
+        plan,
+        query,
+        LineageInputs {
+            model: handle.model(),
+            catalog: handle.catalog_schema(),
+            context,
+        },
+    )?;
     let cache_key = cache_key(
         &HashedPlan {
             dialect: options.dialect,
@@ -65,7 +78,7 @@ pub(crate) fn plan_document(
             timeout_ms: options.timeout_ms.get(),
             max_rows: options.max_rows.map(std::num::NonZeroU64::get),
         },
-        lineage: Vec::new(),
+        lineage,
         explanation: outputs.explanation,
         warnings: outputs.warnings,
     })
