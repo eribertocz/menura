@@ -38,6 +38,11 @@ mod query_filter;
 mod rewrite;
 mod scan;
 mod slice;
+#[expect(
+    dead_code,
+    reason = "used by the semi-additive branch plan, which follows in this pull request"
+)]
+mod snapshot_grain;
 mod stitch;
 mod typing;
 mod visibility;
