@@ -19,6 +19,7 @@ mod join;
 mod join_keys;
 mod output;
 mod parameters;
+mod periods;
 mod population;
 mod result_schema;
 mod scan;
