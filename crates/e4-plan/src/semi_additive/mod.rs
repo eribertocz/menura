@@ -85,6 +85,17 @@ pub(crate) fn semi_additive_plan(branch: &SemiAdditiveBranch<'_>) -> Result<Plan
         over,
     };
     let snapshot = snapshot(input, rule, &origin).map_err(fail)?;
+    recomposition(snapshot, branch, &origin)
+}
+
+/// The `Aggregate` over `snapshot` by the keys of `branch`, which recomposes each component
+/// across entities (E4-7.1, ADD-4.6).
+fn recomposition(
+    snapshot: PlanNode,
+    branch: &SemiAdditiveBranch<'_>,
+    origin: &Origin,
+) -> Result<PlanNode, PlanError> {
+    let fail = |violation| PlanError::invariant(violation, origin);
     let keys = branch
         .keys
         .iter()
@@ -103,7 +114,7 @@ pub(crate) fn semi_additive_plan(branch: &SemiAdditiveBranch<'_>) -> Result<Plan
         .map(recompose::recomposed)
         .collect::<Result<Vec<_>, _>>()
         .map_err(fail)?;
-    aggregate(snapshot, keys, components, &origin)
+    aggregate(snapshot, keys, components, origin)
 }
 
 /// The `Snapshot` of `input` under `rule`: its output is the keys, the entity columns and the

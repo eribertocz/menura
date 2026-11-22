@@ -79,23 +79,13 @@ pub(crate) fn branch_rows(
     let graph = followed::PolicyGraph::new(model);
     let row_filters =
         policy_visits::row_filters(home, model, &graph, security, has_reference_time)?;
-    let mut read = fields_read(
-        request.keys,
-        request.components,
-        request.predicate.as_ref().map(|(predicate, _)| predicate),
-    );
-    read.extend(request.fields.iter().cloned());
     let visibility = visibility::Visibility {
         model,
         graph: &graph,
         filters: &row_filters,
         catalog,
     };
-    read.extend(joins::join_reads(layout));
-    read.extend(visibility.fields(home)?);
-    for instance in layout.instances() {
-        read.extend(visibility.instance_fields(instance.dataset, &instance.prefix)?);
-    }
+    let read = rows_read(&request, layout, home, &visibility)?;
     let home_reads = joins::home_reads(layout, &read);
     let (mut node, identity) = if let Some(replaced) = request.replaced_home {
         (replaced(&home_reads)?, None)
@@ -114,6 +104,28 @@ pub(crate) fn branch_rows(
         node = deduplicate(node, request.keys, identity.clone(), origin);
     }
     Ok(node)
+}
+
+/// Every column the rows read: the fields of `request`, the join keys, and the fields of the
+/// row policies of the home dataset and of each join instance.
+fn rows_read(
+    request: &RowsRequest<'_>,
+    layout: &Layout<'_>,
+    home: &Dataset,
+    visibility: &visibility::Visibility<'_>,
+) -> Result<Vec<NormalizedName>, PlanError> {
+    let mut read = fields_read(
+        request.keys,
+        request.components,
+        request.predicate.as_ref().map(|(predicate, _)| predicate),
+    );
+    read.extend(request.fields.iter().cloned());
+    read.extend(joins::join_reads(layout));
+    read.extend(visibility.fields(home)?);
+    for instance in layout.instances() {
+        read.extend(visibility.instance_fields(instance.dataset, &instance.prefix)?);
+    }
+    Ok(read)
 }
 
 /// The fields the keys, the components and the query predicate read.
