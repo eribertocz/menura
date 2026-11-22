@@ -14,7 +14,7 @@ use menura_model::internal_model::{PartialPeriod, RoleName, RowPolicy};
 use menura_representations::logical_plan::{Membership, Operation};
 use menura_representations::names::ColumnName;
 use menura_representations::origin::Origin;
-use support::plan::{column, column_names, column_reference, kind, kinds, predicate};
+use support::plan::{column, column_names, kind, kinds, predicate};
 use support::population::{
     POPULATION_POINTER, active, model_of, periodic, periods, plan, population, rule, subscriptions,
     team_policy, validity, visible_input,
@@ -110,9 +110,10 @@ fn pop_3_3_required_when_is_kept_over_the_columns_of_the_rows() {
         ));
         let node = plan("ACTIVE", &model, &anyone()).expect("a population plan");
 
-        let required_when = rule(&node).required_when.clone().expect("a condition");
-        let expected = column_reference("IS_BILLABLE");
-        assert!(format!("{required_when:?}").contains(&format!("{expected:?}")));
+        assert_eq!(
+            rule(&node).required_when,
+            Some(tree(r#""IS_BILLABLE" AND "PLAN" <> 'free'"#))
+        );
         assert!(column_names(visible_input(&node)).contains(&"IS_BILLABLE"));
     }
 }
@@ -172,9 +173,8 @@ fn e2_4_9_opposite_users_read_opposite_populations() {
 
     let sees = predicate(visible_input(&analyst));
     let denied = predicate(visible_input(&auditor));
-    assert!(format!("{sees:?}").contains("gold"));
-    assert!(!format!("{denied:?}").contains("gold"));
-    assert!(format!("{denied:?}").contains("Boolean(false)"));
+    assert_eq!(sees, &tree(r#""PLAN" = 'gold' AND TRUE"#));
+    assert_eq!(denied, &tree("FALSE AND TRUE"));
 }
 
 #[test]

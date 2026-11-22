@@ -1,9 +1,10 @@
 //! The time `over` of a semi-additive branch (ADD-4.2–ADD-4.4, E4-7.3–E4-7.6): its periods
 //! with data, its expected entities, and the rows that `missing` reads.
 
-use menura_contracts::types::common::Grain;
+use menura_contracts::types::common::{Grain, LogicalType};
 use menura_model::expression::{Expression, Literal};
 use menura_model::internal_model::{MissingHandling, NormalizedName, SemiAdditive};
+use menura_representations::bound_query::BoundDateRange;
 use menura_representations::logical_plan::{
     NamedExpression, Operation, OutputSchema, PlanNode, SchemaColumn, SnapshotMissing, TimeSnapshot,
 };
@@ -51,8 +52,12 @@ pub(crate) fn time_snapshot(
         unit: grain_unit(grain),
         operand: Box::new(over),
     };
-    let periods = periods_with_data(input.clone(), period.clone(), &origin)?;
     let source = &branch.source;
+    let over_type = over_type(declaration, source.home).map_err(fail)?;
+    let periods = match branch.query.date_range() {
+        Some(range) if range.field == declaration.over => periods_of_range(range, grain, over_type),
+        _ => periods_with_data(input.clone(), period.clone(), &origin)?,
+    };
     let expected = plan_population(
         PopulationRequest {
             home: &source.home.name,
@@ -66,7 +71,6 @@ pub(crate) fn time_snapshot(
         source.model,
         source.catalog,
     )?;
-    let over_type = over_type(declaration, source.home).map_err(fail)?;
     Ok(TimeSnapshot {
         period,
         grain,
@@ -77,7 +81,25 @@ pub(crate) fn time_snapshot(
     })
 }
 
-/// The periods with data (E4-7.3): the distinct `period` of the rows of the branch, which
+/// The unit of periods of a `date_range` on `over`: every period of `grain` inside it, with
+/// data or not (ADD-4.7, E4-3.14), each the start of its period, typed as `over`.
+fn periods_of_range(range: &BoundDateRange, grain: Grain, over_type: &LogicalType) -> PlanNode {
+    PlanNode::new(
+        Operation::Periods {
+            from: range.from,
+            to: range.to,
+            grain,
+        },
+        OutputSchema::new(vec![SchemaColumn {
+            name: ColumnName::new(PERIOD),
+            logical_type: over_type.clone(),
+            nullable: false,
+        }]),
+        Origin::Query(range.origin.clone()),
+    )
+}
+
+/// Without a `date_range` on `over`, the periods with data (E4-7.3): the distinct `period` of the rows of the branch, which
 /// passed the row policies and the query filters, for any entity.
 fn periods_with_data(
     input: PlanNode,

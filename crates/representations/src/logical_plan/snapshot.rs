@@ -92,9 +92,9 @@ pub enum SnapshotMissing {
     /// `zero`: a missing entity contributes 0.
     Zero {
         /// The rows added for missing entities (E4-7.6): each expected (entity, period)
-        /// pair as a home row, its `entity` fields from the population and NULL for every
-        /// other home field, joined like a home row and then filtered by the query filters,
-        /// with the columns of `input` followed by the column of its period.
+        /// pair as a home row, its `entity` fields from the population, its `over` field the
+        /// first instant of its period, and NULL for every other home field, joined like a
+        /// home row and then filtered by the query filters, with the columns of `input`.
         added: Box<PlanNode>,
     },
     /// `error`: a missing entity fails at execution (`RADD-01`).

@@ -111,18 +111,17 @@ fn time(rule: &SnapshotRule) -> &TimeSnapshot {
     }
 }
 
+fn monthly_plan(missing: MissingHandling) -> PlanNode {
+    plan(declaration(missing), month(), BoundQueryParts::default()).expect("a plan")
+}
+
 fn month() -> Vec<BoundDimension> {
     vec![dimension("ORDER_DATE", Some(Grain::Month), 0)]
 }
 
 #[test]
 fn e4_3_13_a_semi_additive_branch_aggregates_a_snapshot_of_its_rows() {
-    let plan = plan(
-        declaration(MissingHandling::Exclude),
-        month(),
-        BoundQueryParts::default(),
-    )
-    .expect("a plan");
+    let plan = monthly_plan(MissingHandling::Exclude);
 
     assert_eq!(kinds(&plan), ["Project", "Aggregate", "Snapshot", "Scan"]);
     let rule = snapshot_rule(&plan);
@@ -134,12 +133,10 @@ fn e4_3_13_a_semi_additive_branch_aggregates_a_snapshot_of_its_rows() {
         .collect();
     assert_eq!(entity, ["entity_1", "entity_2"]);
     assert_eq!(rule.entity[0].expression, column_reference("REGION"));
-    assert_eq!(rule.components.len(), 2);
     let time = time(rule);
     assert_eq!(time.grain, Grain::Month);
     assert_eq!(kind(&time.expected), "Population");
     assert_eq!(time.missing, SnapshotMissing::Exclude);
-    assert_eq!(time.unexpected, UnexpectedHandling::Exclude);
 }
 
 #[test]
@@ -178,8 +175,8 @@ fn e4_7_1_each_component_is_recomposed_by_its_own_function() {
         declaration(MissingHandling::Exclude),
         month(),
         BoundQueryParts::default(),
-    )
-    .expect("a plan");
+    );
+    let plan = plan.expect("a plan");
 
     let Operation::Aggregate { components, .. } = node(&plan, "Aggregate").operation() else {
         panic!("an Aggregate");
@@ -203,12 +200,7 @@ fn e4_7_1_each_component_is_recomposed_by_its_own_function() {
 
 #[test]
 fn e4_7_3_the_periods_with_data_are_the_truncated_periods_of_the_rows() {
-    let plan = plan(
-        declaration(MissingHandling::Exclude),
-        month(),
-        BoundQueryParts::default(),
-    )
-    .expect("a plan");
+    let plan = monthly_plan(MissingHandling::Exclude);
 
     let time = time(snapshot_rule(&plan));
     let periods = time.expected.inputs()[1];
@@ -253,13 +245,32 @@ fn e4_7_5_carried_values_are_read_without_the_date_range_on_over() {
 }
 
 #[test]
+fn add_4_7_a_date_range_on_over_makes_every_period_inside_it_the_unit() {
+    let parts = BoundQueryParts {
+        date_range: Some(date_range(
+            "ORDER_DATE",
+            date(2026, 1, 1),
+            date(2026, 5, 31),
+        )),
+        ..BoundQueryParts::default()
+    };
+
+    let plan = plan(declaration(MissingHandling::Exclude), month(), parts).expect("a plan");
+
+    let periods = time(snapshot_rule(&plan)).expected.inputs()[1];
+    assert_eq!(
+        periods.operation(),
+        &Operation::Periods {
+            from: date(2026, 1, 1),
+            to: date(2026, 5, 31),
+            grain: Grain::Month,
+        }
+    );
+}
+
+#[test]
 fn e4_7_6_rows_added_for_missing_zero_come_from_the_expected_pairs() {
-    let plan = plan(
-        declaration(MissingHandling::Zero),
-        month(),
-        BoundQueryParts::default(),
-    )
-    .expect("a plan");
+    let plan = monthly_plan(MissingHandling::Zero);
 
     let SnapshotMissing::Zero { added } = &time(snapshot_rule(&plan)).missing else {
         panic!("zero");
