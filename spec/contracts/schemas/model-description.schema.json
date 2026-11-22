@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://menura.invalid/spec/contracts/model-description/1.1.0",
+  "$id": "https://menura.invalid/spec/contracts/model-description/1.2.0",
   "title": "Model description document",
   "type": "object",
   "additionalProperties": false,
@@ -14,11 +14,13 @@
   ],
   "properties": {
     "contract": {
-      "enum": ["menura.model_description", "semantic_compiler.model_description"]
+      "enum": [
+        "menura.model_description",
+        "semantic_compiler.model_description"
+      ]
     },
     "contract_version": {
-      "type": "string",
-      "pattern": "^(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)$"
+      "$ref": "#/$defs/semver"
     },
     "model_hash": {
       "type": "string",
@@ -91,7 +93,8 @@
                 "ai_context": {}
               }
             }
-          }
+          },
+          "ai_context": {}
         }
       }
     },
@@ -110,6 +113,9 @@
           "reference": {
             "type": "string",
             "minLength": 1
+          },
+          "label": {
+            "type": "string"
           },
           "description": {
             "type": "string"
@@ -162,6 +168,158 @@
                 "type": "string",
                 "minLength": 1
               }
+            }
+          }
+        }
+      }
+    },
+    "capabilities": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "compiler_version",
+        "slice_version",
+        "ossie",
+        "contracts",
+        "dialects",
+        "query_forms",
+        "extensions",
+        "functions",
+        "limits"
+      ],
+      "properties": {
+        "compiler_version": {
+          "$ref": "#/$defs/semver"
+        },
+        "slice_version": {
+          "$ref": "#/$defs/semver"
+        },
+        "ossie": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "normative",
+            "tracked_commit",
+            "formats"
+          ],
+          "properties": {
+            "normative": {
+              "type": "string",
+              "minLength": 1
+            },
+            "tracked_commit": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{7,40}$"
+            },
+            "formats": {
+              "type": "array",
+              "uniqueItems": true,
+              "items": {
+                "enum": [
+                  "development",
+                  "release"
+                ]
+              }
+            }
+          }
+        },
+        "contracts": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "contract",
+              "version"
+            ],
+            "properties": {
+              "contract": {
+                "type": "string",
+                "pattern": "^menura\\.[a-z][a-z_]*$"
+              },
+              "version": {
+                "$ref": "#/$defs/semver"
+              }
+            }
+          }
+        },
+        "dialects": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "query_forms": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "enum": [
+              "sql",
+              "wide_table"
+            ]
+          }
+        },
+        "extensions": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "key",
+              "versions"
+            ],
+            "properties": {
+              "key": {
+                "type": "string",
+                "minLength": 1
+              },
+              "versions": {
+                "type": "array",
+                "minItems": 1,
+                "uniqueItems": true,
+                "items": {
+                  "type": "integer",
+                  "minimum": 1
+                }
+              }
+            }
+          }
+        },
+        "functions": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "enum": [
+              "compile",
+              "describe",
+              "explain",
+              "integrity_checks",
+              "load",
+              "migrate",
+              "validate",
+              "with_state"
+            ]
+          }
+        },
+        "limits": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "max_identifier_length",
+            "max_decimal_precision"
+          ],
+          "properties": {
+            "max_identifier_length": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "max_decimal_precision": {
+              "type": "integer",
+              "minimum": 1
             }
           }
         }
@@ -303,6 +461,92 @@
           }
         }
       ]
+    },
+    "semver": {
+      "type": "string",
+      "pattern": "^(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)$"
+    },
+    "ai_context": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "value",
+        "source",
+        "trust"
+      ],
+      "properties": {
+        "value": {},
+        "source": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "pointer",
+            "model_hash"
+          ],
+          "properties": {
+            "pointer": {
+              "type": "string",
+              "pattern": "^(/([^~/]|~[01])*)+$"
+            },
+            "model_hash": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{64}$"
+            }
+          }
+        },
+        "trust": {
+          "enum": [
+            "untrusted_model_content"
+          ]
+        }
+      }
     }
-  }
+  },
+  "allOf": [
+    {
+      "$comment": "Contract versions 1.0 and 1.1 carried ai_context as any JSON value; from 1.2.0 it carries its provenance and trust label (DSC-3.6).",
+      "if": {
+        "required": [
+          "contract_version"
+        ],
+        "properties": {
+          "contract_version": {
+            "type": "string",
+            "pattern": "^1\\.[01]\\."
+          }
+        }
+      },
+      "else": {
+        "properties": {
+          "datasets": {
+            "items": {
+              "properties": {
+                "ai_context": {
+                  "$ref": "#/$defs/ai_context"
+                },
+                "fields": {
+                  "items": {
+                    "properties": {
+                      "ai_context": {
+                        "$ref": "#/$defs/ai_context"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "metrics": {
+            "items": {
+              "properties": {
+                "ai_context": {
+                  "$ref": "#/$defs/ai_context"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  ]
 }
