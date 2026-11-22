@@ -83,13 +83,6 @@ fn cache_key_mismatch(expect: &Expectation, plan: &CompiledPlanDocument) -> Opti
 /// Why the document `explain` returned differs from the compiled plan, or `None`: it must equal
 /// the plan member for member, except `contract`, which is `menura.explanation`, and `sql` and
 /// `parameters`, which it does not have (CS-2.16).
-#[cfg_attr(
-    not(test),
-    expect(
-        dead_code,
-        reason = "compared once core has `explain`; until then the explain part is pending (CS-2.8)"
-    )
-)]
 pub(crate) fn explain_mismatch(
     plan: &CompiledPlanDocument,
     explained: &JsonValue,
