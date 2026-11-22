@@ -25,11 +25,11 @@ conformance/
 id: e3-ambiguous-path-001
 rules: [E3-3.2]                 # every rule ID this case covers
 model: stores                   # folder under models/
-security_context: analyst.json  # required for error, plan and runtime_error; under models/<model-name>/contexts/
+security_context: analyst.json  # required for error, plan, runtime_error and describe; under models/<model-name>/contexts/
 query: { ... }                  # query document, or omitted for load-only cases
 load_options: { ossie_format: development, model_name: shop }  # optional (CS-2.7)
 expect:
-  outcome: error                # load_error | error | plan | runtime_error
+  outcome: error                # load_error | error | plan | runtime_error | describe | integrity_checks
   error: E_AMBIGUOUS_PATH       # the first error code (E2-5.2)
   warnings: [W0F-01]            # optional: warnings that MUST be reported, by code (CS-2.4b)
   location: { document: model, pointer: /semantic_model/0/datasets/0, line: 7, column: 9 }  # optional: location of the first error
@@ -37,6 +37,11 @@ expect:
   rows: expected.csv            # optional result after executing on DuckDB
   row_order: any                # any | exact
   tolerance: 1.0e-9             # for float columns only
+  lineage: expected.lineage.json            # optional golden file of the plan's lineage (CS-2.11)
+  explanation: ["<decision>", …]           # optional: the plan's explanation decisions, in order (CS-2.12)
+  audit: expected.audit.json                # optional golden audit record; compiles with audit: true (CS-2.13)
+  cache_key: "<64 hex digits>"            # optional: the plan's cache key, 64 lowercase hex digits (CS-2.14)
+  document: expected.describe.json          # describe and integrity_checks only: golden output document (CS-2.15)
 oracle: expected.oracle.sql      # optional: reference SQL for a differential case (CS-4.7); requires outcome plan
 ```
 
@@ -53,19 +58,27 @@ oracle: expected.oracle.sql      # optional: reference SQL for a differential ca
 | CS-2.6 | The **coverage scope** is listed in `spec/coverage-scope.txt`, one entry per line; lines starting with `#` are comments. An entry is a specification path, which puts every rule ID defined in that file in scope, or a path followed by rule IDs separated by spaces, which puts only those rules in scope. `rule-coverage` fails when a rule ID in scope is not covered (T1), or when an entry names a file or a rule ID that `spec/INDEX.md` does not define in that file, and only reports other rule IDs. The specification session adds the entries of a version at its gate (7.1a). A gate before 1.0.0 adds, rule by rule, the rules its slice implements (VS-1–VS-3); a whole-file entry is added once every rule of the file is implemented, and at the latest at the 1.0.0 gate. An entry is never removed, so later work cannot lose coverage. |
 | CS-2.7 | `load_options` holds load options of architecture section 3.5 (`ossie_format`, `model_name`, `namespace`, `grant_authenticated_to_all`); an option it omits takes its default. It lets a case cover a rule that applies only with a load option. |
 | CS-2.9 | `location`, when present, is compared with the location of the first error: `document` and `pointer` exactly, and `line` and `column` when the case gives them (PLN-5). |
+| CS-2.10 | **Golden JSON files.** `lineage`, `audit` and `document` name golden JSON files next to the case. A golden JSON file is compared byte for byte after canonical JSON: the runner parses the golden file and the produced value, serializes both as RFC 8785 canonical JSON, and the case passes only when the two byte sequences are equal. A golden file that is not valid JSON, or that has a duplicate member name, fails the case. The stored form of a golden JSON file is fixed, so that regenerating it is deterministic: UTF-8, members in RFC 8785 order, numbers and strings written as RFC 8785 writes them, two spaces of indentation per level, one member or element per line, `[]` and `{}` for empty values, and one line feed at the end. A golden file not in stored form fails the case, naming the file. |
+| CS-2.10a | **Regenerating golden files.** A golden file (`sql`, `lineage`, `audit`, `document`) is written by the case's pull request when the case is added. Changing an existing golden file is regenerating it: the runner writes the produced output in stored form (CS-2.10 for JSON, the plan's `sql` text unchanged for `sql`), only for cases named explicitly, never in CI. CS-2.3 applies to every golden file: a regeneration pull request touches only golden files and states, for each file, which rule or contract change made its content change. |
+| CS-2.11 | `lineage` is allowed only with `outcome: plan`. Its golden file holds the value of the plan's `lineage` member (PLN-4), a JSON array, compared as CS-2.10 states. |
+| CS-2.12 | `explanation` is allowed only with `outcome: plan`. It lists the `decision` value of every entry of the plan's `explanation` (PLN-1), in order: the case passes only when both lists have the same length and equal items at each position. `step` and `reason` are not compared. An empty list asserts that the explanation is empty. |
+| CS-2.13 | `audit` is allowed only with `outcome: error` and `outcome: plan`. A case with `audit` is compiled with the compile option `audit: true`, every other case with `audit: false`. The runner first checks that the record's `producer` equals the `producer` of the build under test (PLN-1), then removes the `producer` member and compares the rest with the golden file, which has no `producer` member, as CS-2.10 states. The plan or the compile error is also checked against the other expectations of the case (VS-1e). |
+| CS-2.14 | `cache_key` is allowed only with `outcome: plan`. It is compared exactly with the plan's `cache_key.key` (PLN-3). |
+| CS-2.15 | `outcome: describe` runs `describe` with the case's `security_context`; `outcome: integrity_checks` runs `integrity_checks` with dialect `duckdb` and needs no security context. Both outcomes require `document`, the golden output document compared as CS-2.10 states, and forbid `query`, `error`, `location`, `sql`, `rows`, `row_order`, `tolerance`, `lineage`, `explanation`, `audit` and `cache_key`. `document` is allowed with no other outcome. A model that fails to load fails the case. |
+| CS-2.16 | From 0.7.0, the runner also runs `explain` with the inputs of every `outcome: plan` case, and the case fails unless the returned document equals the compiled plan member for member, except `contract`, which is `menura.explanation`, and `sql` and `parameters` (architecture section 3.5). |
 | CS-2.8 | A case whose outcome needs stages not yet implemented is checked in parts. From 0.2.0, the runner checks its load: `load_error` cases fully, and for the other outcomes, that the model loads and reports the expected `warnings`. The query part (`error`, `plan`, `runtime_error`) is checked from the version that implements E1–E6 (0.3.0). Until then the runner reports that part as pending, never as passed, and a version gate counts only the parts that run. From 0.3.0, a query part whose compilation returns `E_NOT_YET_SUPPORTED` stays pending, unless the case expects that code (VS-4). |
 
 ## CS-3 Apache Ossie suites
 
 - **CS-3.1** The Apache Ossie conformance suites are vendored under `conformance/ossie/` at the tracked development commit and run unchanged.
-- **CS-3.2** Updating the commit is done only by the `ossie-update` skill (OSS-4.6), in its own pull request.
+- **CS-3.2** Updating the commit is done only by the `ossie-update` skill (OSS-4.6), in its own pull request. `conformance/ossie/expected-failures.yaml` changes only in that pull request, or in the pull request of an issue that makes listed cases pass, which removes their entries (OSS-2.4a).
 
 ## CS-4 Running
 
 - **CS-4.1** `just conformance` runs every case of `conformance/cases/` and checks the layout of `conformance/ossie/` (the stale-list rule of OSS-2.4). `just conformance <area>` runs one area. The outcomes of the Apache Ossie suites are judged only by `just conformance ossie`, the `ossie-suites` check (OSS-2.3).
 - **CS-4.2** Each case runs in a fresh in-memory DuckDB database. For each source with three parts (`catalog.schema.table`), the runner attaches an in-memory database named after the first part before running `data.sql`; two-part sources (`schema.table`) live in the default database, and `data.sql` creates their schema. This applies to the compiler's own cases and to the Apache Ossie suites (CS-4.4). The session uses non-default settings (`TimeZone` not UTC, `integer_division = true`) to prove E6-4.10. The runner's DuckDB build includes the `icu` extension, which provides time zones, so no setting or query ever downloads an extension at run time.
 - **CS-4.3** The runner reports, per rule ID, the cases that cover it and their result.
-- **CS-4.4** For Apache Ossie suites, the runner loads the fixture with `ossie_format: development` and `grant_authenticated_to_all: true`, builds the catalog schema by reading the created tables, wraps each `query.json` in a query envelope with `time_zone: UTC`, and compares the first error code or the rows. SQL-form cases refer to relations as `<model name>.<dataset name>` (QRY-5.1).
+- **CS-4.4** For Apache Ossie suites, the runner loads the fixture with `ossie_format: development` and `grant_authenticated_to_all: true`, builds the catalog schema by reading the created tables, wraps each `query.json` in a query envelope with `time_zone: UTC`, and compares the first error code or the rows. From 0.7.0, when Layer 3 suites block, every Layer 3 case is run this way; none is only prepared (OSS-2.4b). SQL-form cases refer to relations as `<model name>.<dataset name>` (QRY-5.1).
 - **CS-4.5** Runner security context for Apache Ossie suites: `{"contract": "menura.security_context", "contract_version": "1.1.0", "subject": "conformance-runner", "roles": [], "attributes": {}}`, stored as `conformance/ossie/runner-context.json`.
 - **CS-4.6** Layer 2 cases: the runner wraps the text of `query.ossie.sql` in the `sql` field of a query envelope (`time_zone: UTC`), runs `expected.sql` on the fixture to obtain the expected rows, and compares them under the case's comparison rules; an expected error is compared by its first code.
 - **CS-4.7** Differential cases compare the **result rows** of the compiled plan with those of an independent oracle under CS-2.4, never the SQL text alone. Each divergence is classified in a reviewed file as a bug, a known deviation or unsupported; an unclassified divergence fails. Generated inputs record their seeds. An oracle is test tooling only (ARC-5.3) and needs an approved `deny.toml` entry.
