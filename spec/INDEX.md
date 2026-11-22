@@ -115,14 +115,15 @@ Find a rule ID or a section here, then open only that file at that line.
 | [07-roadmap.md](07-roadmap.md#L40) | 40 | section | 7.1c Version slices before 1.0.0 |
 | [07-roadmap.md](07-roadmap.md#L47) | 47 | rule | VS-1 |
 | [07-roadmap.md](07-roadmap.md#L48) | 48 | rule | VS-1b |
-| [07-roadmap.md](07-roadmap.md#L49) | 49 | rule | VS-2 |
-| [07-roadmap.md](07-roadmap.md#L50) | 50 | rule | VS-3 |
-| [07-roadmap.md](07-roadmap.md#L51) | 51 | rule | VS-4 |
-| [07-roadmap.md](07-roadmap.md#L52) | 52 | rule | VS-5 |
-| [07-roadmap.md](07-roadmap.md#L54) | 54 | section | 7.1b What 1.0.0 guarantees |
-| [07-roadmap.md](07-roadmap.md#L66) | 66 | section | 7.2 After the MVP |
-| [07-roadmap.md](07-roadmap.md#L80) | 80 | section | 7.3 Capability scope |
-| [07-roadmap.md](07-roadmap.md#L102) | 102 | section | 7.4 Backlog after the MVP |
+| [07-roadmap.md](07-roadmap.md#L49) | 49 | rule | VS-1c |
+| [07-roadmap.md](07-roadmap.md#L50) | 50 | rule | VS-2 |
+| [07-roadmap.md](07-roadmap.md#L51) | 51 | rule | VS-3 |
+| [07-roadmap.md](07-roadmap.md#L52) | 52 | rule | VS-4 |
+| [07-roadmap.md](07-roadmap.md#L53) | 53 | rule | VS-5 |
+| [07-roadmap.md](07-roadmap.md#L55) | 55 | section | 7.1b What 1.0.0 guarantees |
+| [07-roadmap.md](07-roadmap.md#L67) | 67 | section | 7.2 After the MVP |
+| [07-roadmap.md](07-roadmap.md#L81) | 81 | section | 7.3 Capability scope |
+| [07-roadmap.md](07-roadmap.md#L103) | 103 | section | 7.4 Backlog after the MVP |
 | [08-conformance-suite.md](08-conformance-suite.md#L1) | 1 | section | 8. Conformance suite |
 | [08-conformance-suite.md](08-conformance-suite.md#L5) | 5 | section | CS-1 Layout |
 | [08-conformance-suite.md](08-conformance-suite.md#L22) | 22 | section | CS-2 Case format |
@@ -684,9 +685,15 @@ Find a rule ID or a section here, then open only that file at that line.
 | [stages/E1-parse.md](stages/E1-parse.md#L40) | 40 | rule | E1-4.2 |
 | [stages/E1-parse.md](stages/E1-parse.md#L41) | 41 | rule | E1-4.3 |
 | [stages/E1-parse.md](stages/E1-parse.md#L42) | 42 | rule | E1-4.4 |
-| [stages/E1-parse.md](stages/E1-parse.md#L44) | 44 | section | E1-5 Query tree |
-| [stages/E1-parse.md](stages/E1-parse.md#L58) | 58 | rule | E1-5.1 |
-| [stages/E1-parse.md](stages/E1-parse.md#L60) | 60 | section | E1-6 Diagnostics |
+| [stages/E1-parse.md](stages/E1-parse.md#L43) | 43 | rule | E1-4.5 |
+| [stages/E1-parse.md](stages/E1-parse.md#L44) | 44 | rule | E1-4.6 |
+| [stages/E1-parse.md](stages/E1-parse.md#L45) | 45 | rule | E1-4.7 |
+| [stages/E1-parse.md](stages/E1-parse.md#L46) | 46 | rule | E1-4.8 |
+| [stages/E1-parse.md](stages/E1-parse.md#L47) | 47 | rule | E1-4.9 |
+| [stages/E1-parse.md](stages/E1-parse.md#L48) | 48 | rule | E1-4.10 |
+| [stages/E1-parse.md](stages/E1-parse.md#L50) | 50 | section | E1-5 Query tree |
+| [stages/E1-parse.md](stages/E1-parse.md#L64) | 64 | rule | E1-5.1 |
+| [stages/E1-parse.md](stages/E1-parse.md#L66) | 66 | section | E1-6 Diagnostics |
 | [stages/E2-bind.md](stages/E2-bind.md#L1) | 1 | section | E2 Bind and authorize |
 | [stages/E2-bind.md](stages/E2-bind.md#L3) | 3 | section | E2-1 Purpose |
 | [stages/E2-bind.md](stages/E2-bind.md#L8) | 8 | section | E2-2 Input and output |
