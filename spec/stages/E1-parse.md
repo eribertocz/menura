@@ -46,6 +46,8 @@ covered by the Layer 2 suite cases that test it.
 - **E1-4.8** A `SELECT` item that mixes field references with `AGG(…)` terms is `EQRY-05`.
 - **E1-4.9** These checks need the model, so they run in E2 at their rows of E2-5: a `FROM` relation whose `<model>` is not the model name is `E_NAME_NOT_FOUND` (row 3); a metric named without `AGG(…)` is `E_METRIC_IN_DIMENSIONS` (row 4); `AGG(…)` of a field is `E_FIELD_IN_METRICS` (row 5).
 - **E1-4.10** An `ORDER BY` item without a direction is `ASC`; one without `NULLS FIRST` or `NULLS LAST` is `NULLS LAST`, in either direction.
+- **E1-4.11** **Order of E1 checks in the SQL form.** The first failure is reported, in this order: (1) a text that does not parse or a statement-level construct outside the subset, in text order; (2) each `SELECT` item in order: a construct outside the subset (an aggregate function other than `AGG`/`MEASURE`, `USER_ATTRIBUTE`), then E1-4.8, then `EQRY-13`; (3) E1-4.6; (4) `WHERE`; (5) each `GROUP BY` entry in order, then the first non-aggregated item that `GROUP BY` does not list (E1-4.7); (6) `ORDER BY`; (7) `LIMIT`. A `GROUP BY` entry names an item by expression or position only, never by output name. `WHERE` with `AGG(…)`, an aggregate function or `USER_ATTRIBUTE` is `EQRY-05`. A `FROM` relation that does not have exactly two parts is `EQRY-05`.
+- **E1-4.12** A scalar expression of the SQL form that parses but is invalid (types, unknown function) gets the same code as the same expression in the wide-table form, located at `/sql`.
 
 ## E1-5 Query tree
 
