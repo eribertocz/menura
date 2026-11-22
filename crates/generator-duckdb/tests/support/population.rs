@@ -55,7 +55,6 @@ fn balance_shapes() -> Vec<Shape> {
                 ("BRANCH", "branch", LogicalType::Text),
                 ("BALANCE", "balance", decimal(12, 2)),
                 ("BOOKED_AT", "booked_at", instant()),
-                ("PERIOD", "period", LogicalType::Date),
             ],
         ),
         (

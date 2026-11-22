@@ -73,13 +73,9 @@ fn missing(rule: Rule) -> SnapshotMissing {
     match rule.missing {
         Missing::Exclude => SnapshotMissing::Exclude,
         Missing::Error => SnapshotMissing::Error,
-        Missing::Zero => {
-            let mut fields = balance_fields(rule);
-            fields.push("PERIOD");
-            SnapshotMissing::Zero {
-                added: Box::new(population_scan("ADDED_BALANCES", &fields)),
-            }
-        }
+        Missing::Zero => SnapshotMissing::Zero {
+            added: Box::new(population_scan("ADDED_BALANCES", &balance_fields(rule))),
+        },
         Missing::CarryForward(on_stale) => SnapshotMissing::CarryForward {
             carried: Box::new(population_scan("BALANCES", &balance_fields(rule))),
             max_carry_forward: NonZeroU64::MIN.saturating_add(2),

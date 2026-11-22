@@ -32,8 +32,7 @@ WITH
       "customer_id" AS "CUSTOMER_ID",
       "balance_date" AS "BALANCE_DATE",
       "branch" AS "BRANCH",
-      "balance" AS "BALANCE",
-      "period" AS "PERIOD"
+      "balance" AS "BALANCE"
     FROM "main"."added_balances"
   ),
   "menura_6_values" AS (
@@ -83,7 +82,7 @@ WITH
       "BRANCH" AS "BRANCH",
       CAST(date_trunc('year', "BALANCE_DATE") AS DATE) AS "BALANCE_YEAR",
       "CUSTOMER_ID" AS "CUSTOMER_ID",
-      "PERIOD" AS "menura.period"
+      CAST(date_trunc('month', "BALANCE_DATE") AS DATE) AS "menura.period"
     FROM "menura_5_scan"
   ),
   "menura_12_zero" AS (

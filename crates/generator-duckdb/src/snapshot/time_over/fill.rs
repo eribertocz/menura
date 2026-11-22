@@ -8,6 +8,7 @@ use super::frame::{Frame, PERIOD, STALE, equalities, qualified, truncated};
 use crate::body::SelectBody;
 use crate::day::grain_name;
 use crate::error::{GenerateError, InvariantViolation};
+use crate::expression::Columns;
 use crate::steps::{StepWriter, column_type, error};
 
 /// The alias of a missing pair.
@@ -49,7 +50,9 @@ impl<'input> StepWriter<'input> {
         }
     }
 
-    /// The keys, the entity and the period of each `added` row: its last column is its period.
+    /// The keys, the entity and the period of each `added` row. An added row's `over` is the
+    /// first instant of its expected period (E4-7.6), so its period follows from `over` like
+    /// that of any other row.
     fn added_rows(
         &mut self,
         frame: &Frame<'input>,
@@ -57,15 +60,12 @@ impl<'input> StepWriter<'input> {
         name: &str,
     ) -> Result<SelectBody, GenerateError> {
         let node = frame.node;
+        let columns = Columns::Input(added.schema());
         let mut items = self.named_items(node, added, &frame.rule.keys)?;
         items.extend(self.named_items(node, added, &frame.rule.entity)?);
-        let period = added
-            .schema()
-            .columns()
-            .last()
-            .ok_or_else(|| error(InvariantViolation::UnknownColumn, node))?;
-        let value = crate::identifiers::quote(period.name.as_str());
-        let day = self.day_sql(node, added, &value, &period.logical_type)?;
+        let period = self.expression(node, columns, &frame.time.period)?;
+        let period_type = self.writer(node, columns).type_of(&frame.time.period)?;
+        let day = self.day_sql(node, added, &period, &period_type)?;
         items.push(format!("{day} AS {PERIOD}"));
         Ok(SelectBody {
             items,
