@@ -1,8 +1,7 @@
-//! Rebuilds a plan node with new inputs, so that a rewrite can change a node deep in a plan.
+//! Mutable access to the inputs of a plan operation, for rewrites that replace one input or
+//! rebuild a node with new inputs.
 
-use menura_representations::logical_plan::{
-    Operation, PlanNode, SnapshotMissing, SnapshotOver, SnapshotRule,
-};
+use menura_representations::logical_plan::{Operation, PlanNode, SnapshotMissing, SnapshotOver};
 
 /// `node` with each of its inputs replaced by `map(index, input)`, where `index` is the
 /// position of the input in `PlanNode::inputs`. The operation, schema and origin of `node` are
@@ -12,49 +11,64 @@ pub(crate) fn map_inputs(
     mut map: impl FnMut(usize, &PlanNode) -> PlanNode,
 ) -> PlanNode {
     let mut operation = node.operation().clone();
-    for (index, input) in inputs_mut(&mut operation).into_iter().enumerate() {
-        *input = map(index, input);
+    for index in 0..node.inputs().len() {
+        if let Some(input) = input_mut(&mut operation, index) {
+            *input = map(index, input);
+        }
     }
     PlanNode::new(operation, node.schema().clone(), node.origin().clone())
 }
 
-/// The inputs of `operation`, in the order of `PlanNode::inputs`.
-fn inputs_mut(operation: &mut Operation) -> Vec<&mut PlanNode> {
+/// The input of `operation` at `index`, in the order of `PlanNode::inputs`, or `None` when
+/// the operation has no input at that index.
+pub(crate) fn input_mut(operation: &mut Operation, index: usize) -> Option<&mut PlanNode> {
     match operation {
-        Operation::Scan { .. } | Operation::Periods { .. } => Vec::new(),
-        Operation::Join { left, right, .. } => vec![left, right],
+        Operation::Scan { .. } | Operation::Periods { .. } => None,
+        Operation::Join { left, right, .. } => match index {
+            0 => Some(left.as_mut()),
+            1 => Some(right.as_mut()),
+            _ => None,
+        },
         Operation::SemiJoin {
             input,
             related_all,
             related_visible,
             ..
-        } => vec![input, related_all, related_visible],
-        Operation::Population { input, periods, .. } => vec![input, periods],
-        Operation::Snapshot { input, rule } => {
-            let mut inputs = vec![input.as_mut()];
-            inputs.extend(rule_inputs_mut(rule));
-            inputs
-        }
-        Operation::Stitch { branches, .. } => branches.iter_mut().collect(),
+        } => match index {
+            0 => Some(input.as_mut()),
+            1 => Some(related_all.as_mut()),
+            2 => Some(related_visible.as_mut()),
+            _ => None,
+        },
+        Operation::Population { input, periods, .. } => match index {
+            0 => Some(input.as_mut()),
+            1 => Some(periods.as_mut()),
+            _ => None,
+        },
+        Operation::Snapshot { input, rule } => match index {
+            0 => Some(input.as_mut()),
+            _ => snapshot_input_mut(&mut rule.over, index - 1),
+        },
+        Operation::Stitch { branches, .. } => branches.get_mut(index),
         Operation::Filter { input, .. }
         | Operation::Deduplicate { input, .. }
         | Operation::Aggregate { input, .. }
         | Operation::Project { input, .. }
         | Operation::Sort { input, .. }
-        | Operation::Limit { input, .. } => vec![input],
+        | Operation::Limit { input, .. } => (index == 0).then_some(input.as_mut()),
     }
 }
 
-/// The plans `rule` reads, in the order of `SnapshotRule::inputs`.
-fn rule_inputs_mut(rule: &mut SnapshotRule) -> Vec<&mut PlanNode> {
-    let SnapshotOver::Time(time) = &mut rule.over else {
-        return Vec::new();
+/// The plan of the snapshot rule over `over` at `index`, in the order of
+/// `SnapshotRule::inputs`: `expected`, then the `carried` or `added` rows.
+fn snapshot_input_mut(over: &mut SnapshotOver, index: usize) -> Option<&mut PlanNode> {
+    let SnapshotOver::Time(time) = over else {
+        return None;
     };
-    let mut inputs = vec![time.expected.as_mut()];
-    match &mut time.missing {
-        SnapshotMissing::CarryForward { carried, .. } => inputs.push(carried),
-        SnapshotMissing::Zero { added } => inputs.push(added),
-        SnapshotMissing::Exclude | SnapshotMissing::Error => {}
+    match (index, &mut time.missing) {
+        (0, _) => Some(time.expected.as_mut()),
+        (1, SnapshotMissing::CarryForward { carried, .. }) => Some(carried.as_mut()),
+        (1, SnapshotMissing::Zero { added }) => Some(added.as_mut()),
+        _ => None,
     }
-    inputs
 }
