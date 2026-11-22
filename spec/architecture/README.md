@@ -69,7 +69,7 @@ All functions are pure. Inputs and outputs are the contract documents of `spec/c
 | `integrity_checks` | handle, dialect | Integrity-check document ([contract](../contracts/integrity-checks.md)) |
 | `compile` | handle, query, security context, compile options | Compiled plan, or compile error; with `audit: true`, also an audit record in both cases |
 | `migrate` | model document | Model document with deprecated extensions rewritten to their native form, and a report |
-| `explain` | handle, query, security context, compile options | The compiled plan with `sql` and `parameters` replaced by empty values (same schema, `contract` `menura.explanation`) |
+| `explain` | handle, query, security context, compile options | Exactly the document `compile` returns, with `sql` `""` and `parameters` `[]` (same schema, `contract` `menura.explanation`); the same compile error when `compile` fails; `audit` and `actor` are ignored (PLN-8) |
 | `describe` | handle, security context | Model description |
 
 | Load option | Meaning | Default |
@@ -86,6 +86,7 @@ All functions are pure. Inputs and outputs are the contract documents of `spec/c
 | `timeout_ms` | Written to `limits.timeout_ms` | 30000 |
 | `max_rows` | Written to `limits.max_rows` | `null` |
 | `audit` | Also return the audit record | `false` |
+| `actor` | Delegated actor authenticated by the host: invocation metadata written only in the audit record, outside every hash (PLN-6.8) | absent |
 
 - **ARC-5.1** A handle is immutable. A new model means `load`; a new catalog state means `with_state`.
 - **ARC-5.2** The catalog state is validated by `load` and `with_state`. An invalid state produces a warning (`WCAT-01`–`WCAT-04`) and is ignored: the handle has no state, and E5 applies only rewrites that need no evidence. The state is admitted after the model, because CAT-8.8 needs the model's summaries, so its warning comes after the E0 warnings. A `WCAT-03` from CAT-8.8 is located at `/relations/<i>/aggregate_build` when the relation is not a summary, and at the offending period when its grain differs.
@@ -139,9 +140,9 @@ Lineage and audit are compiler outputs, because only the compiler knows how each
 **Lineage** is part of every compiled plan. It is column-level and reports, for each result column:
 
 - the model fields, metrics and relationships it derives from,
-- the physical tables and columns read,
-- the summary used, if any, and why it was valid,
-- the security filters applied.
+- the physical tables and columns read, for its value, its filters, joins and row policies,
+- the summary used, if any (why it was valid is in the explanation),
+- the row policies applied (PLN-4).
 
 The lineage format maps to the OpenLineage column-lineage facet, so external lineage tools can
 consume it without translation.
