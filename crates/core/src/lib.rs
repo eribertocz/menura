@@ -1,7 +1,7 @@
 //! Pure, deterministic orchestration of the compilation stages.
 //!
 //! The public functions are those of architecture section 3.5 that exist in this version:
-//! [`validate`], [`load`], [`with_state`] and [`compile`]. Their inputs are the contract
+//! [`validate`], [`load`], [`with_state`], [`compile`] and [`integrity_checks`]. Their inputs are the contract
 //! documents as bytes; their outputs are contract documents and the immutable [`Handle`]
 //! (ARC-5.1).
 //!
@@ -21,6 +21,7 @@ mod catalog_state;
 mod compile;
 mod compile_options;
 mod handle;
+mod integrity_checks;
 mod json;
 mod load;
 mod load_options;
@@ -31,6 +32,7 @@ mod stop;
 pub use compile::{CompileResult, compile};
 pub use compile_options::CompileOptions;
 pub use handle::Handle;
+pub use integrity_checks::integrity_checks;
 pub use json::{OutputError, document_json, plan_json};
 pub use load::{load, validate, with_state};
 pub use load_options::{LoadOptions, LoadOptionsError};
@@ -41,4 +43,5 @@ pub use menura_contracts::types::compiled_plan::{
     CompileErrorContract, CompileErrorDocument, CompiledPlanDocument, Diagnostic,
     DiagnosticLocation, InputDocument,
 };
+pub use menura_contracts::types::descriptions::IntegrityChecksDocument;
 pub use menura_model::internal_model::InternalModel;
