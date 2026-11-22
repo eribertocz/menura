@@ -11,6 +11,7 @@ pub mod joins;
 pub mod plan;
 pub mod population;
 pub mod propagation;
+pub mod sql;
 pub mod stitch;
 
 use menura_contracts::ContractKind;
