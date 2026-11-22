@@ -17,6 +17,7 @@ use crate::fixture::{ModelFixture, read_bytes, security_context_path};
 use crate::load_options::resolve_load_options;
 use crate::load_part::{LoadOutcome, ModelDocuments, check_load};
 use crate::ossie::{OSSIE_AREA, check_layout, run_suites};
+use crate::pending_parts::document_part;
 use crate::query_part::{QueryInputs, check_query};
 use crate::report::{CaseResult, CaseStatus, Report};
 
@@ -124,6 +125,9 @@ fn run_case(
     };
     match check_load(case, &documents, &prepared.load_options) {
         LoadOutcome::Checked(status) => status,
+        LoadOutcome::Loaded(_) if case.expect.outcome.returns_document() => {
+            document_part(case.expect.outcome)
+        }
         LoadOutcome::Loaded(handle) => {
             let Some(security_context) = prepared.security_context.as_deref() else {
                 return CaseStatus::Failed("this outcome requires `security_context`".to_owned());

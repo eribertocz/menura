@@ -34,7 +34,10 @@ fn cs_2_8_cases_that_need_a_missing_core_function_are_pending() {
         "next-integrity-checks-001",
     ] {
         let status = status(&report, case_id);
-        assert!(matches!(status, CaseStatus::Pending(_)), "{case_id}: {status:?}");
+        assert!(
+            matches!(status, CaseStatus::Pending(_)),
+            "{case_id}: {status:?}"
+        );
     }
     assert!(!report.has_failures());
 }

@@ -24,3 +24,7 @@ conformance area="":
 # files of spec/coverage-scope.txt (CS-2.6). Requires PyYAML.
 rule-coverage:
     python3 scripts/ci/check_rule_coverage.py
+
+# Regenerate the golden files of the named cases only; refused in CI (CS-2.10a).
+regenerate +cases:
+    cargo run --locked --quiet -p menura-conformance-runner -- conformance --regenerate {{cases}}
