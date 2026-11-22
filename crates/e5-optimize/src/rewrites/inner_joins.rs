@@ -1,16 +1,305 @@
-//! E5-3.3, E5-3.3a: changes a `left` join to `inner` with `orphan_keys` evidence and the conditions of E5-3.3a.
+//! E5-3.3, E5-3.3a: changes a `left` join to `inner` with `orphan_keys` evidence and the
+//! conditions of E5-3.3a.
+//!
+//! A chain of `Join` nodes is examined in path order, from the `Join` over the home side to
+//! the last one, because condition (2) of E5-3.3a depends on the joins before it.
 
-use menura_representations::logical_plan::PlanNode;
+use std::collections::BTreeSet;
+
+use menura_model::expression::{Expression, Reference};
+use menura_model::internal_model::{CheckKind, NormalizedName, Relationship};
+use menura_representations::logical_plan::{JoinCondition, JoinKind, Operation, PlanNode};
+use menura_representations::names::ColumnPrefix;
 
 use crate::context::RewriteContext;
-use crate::record::RewriteRecord;
+use crate::plan_inputs::map_inputs;
+use crate::record::{NodePath, RewriteOutcome, RewriteRecord, RewriteRule, RewriteSubject};
 
-/// Applies the rewrite to `plan` and adds a record of every case it considered to `records`.
-/// Not yet implemented: returns `plan` unchanged and records nothing.
+/// Applies the rewrite to `plan` and adds a record of every `left` join it considered to
+/// `records`, in path order.
 pub(super) fn rewrite(
     plan: PlanNode,
-    _context: &RewriteContext<'_>,
-    _records: &mut Vec<RewriteRecord>,
+    context: &RewriteContext<'_>,
+    records: &mut Vec<RewriteRecord>,
 ) -> PlanNode {
-    plan
+    if !has_join(&plan) {
+        return plan;
+    }
+    rewrite_node(&plan, Vec::new(), context, records)
+}
+
+/// Whether the plan rooted at `node` has a `Join` node.
+fn has_join(node: &PlanNode) -> bool {
+    matches!(node.operation(), Operation::Join { .. }) || node.inputs().into_iter().any(has_join)
+}
+
+/// `node`, at `path` in the input plan, with the rewrite applied to every join chain in it.
+fn rewrite_node(
+    node: &PlanNode,
+    path: Vec<usize>,
+    context: &RewriteContext<'_>,
+    records: &mut Vec<RewriteRecord>,
+) -> PlanNode {
+    if matches!(node.operation(), Operation::Join { .. }) {
+        return rewrite_chain(node, path, context, records);
+    }
+    map_inputs(node, |index, input| {
+        rewrite_node(input, child(&path, index), context, records)
+    })
+}
+
+/// The path of input `index` of the node at `path`.
+fn child(path: &[usize], index: usize) -> Vec<usize> {
+    let mut steps = path.to_vec();
+    steps.push(index);
+    steps
+}
+
+/// One `Join` of a chain, with its path in the input plan.
+struct ChainJoin<'plan> {
+    /// The `Join` node.
+    node: &'plan PlanNode,
+    /// Its path in the input plan.
+    path: Vec<usize>,
+    /// Its joined side.
+    right: &'plan PlanNode,
+    /// The relationship it joins along.
+    relationship: &'plan NormalizedName,
+    /// Its kind in the input plan.
+    kind: JoinKind,
+    /// Its key equalities.
+    on: &'plan [JoinCondition],
+    /// The prefix of the columns of its joined side.
+    right_prefix: &'plan ColumnPrefix,
+}
+
+/// The `Join` at `path` with the joins below it through `left`, in path order, and the home
+/// side below the first one with its path.
+fn unwind(top: &PlanNode, path: Vec<usize>) -> (Vec<ChainJoin<'_>>, &PlanNode, Vec<usize>) {
+    let mut joins = Vec::new();
+    let mut node = top;
+    let mut node_path = path;
+    while let Operation::Join {
+        left,
+        right,
+        relationship,
+        kind,
+        on,
+        right_prefix,
+    } = node.operation()
+    {
+        let left_path = child(&node_path, 0);
+        joins.push(ChainJoin {
+            node,
+            path: node_path,
+            right,
+            relationship,
+            kind: *kind,
+            on,
+            right_prefix,
+        });
+        node = left;
+        node_path = left_path;
+    }
+    joins.reverse();
+    (joins, node, node_path)
+}
+
+/// The chain whose last `Join` is `top`, at `path`, with each `left` join changed to `inner`
+/// when E5-3.3 and E5-3.3a hold, in path order.
+fn rewrite_chain(
+    top: &PlanNode,
+    path: Vec<usize>,
+    context: &RewriteContext<'_>,
+    records: &mut Vec<RewriteRecord>,
+) -> PlanNode {
+    let (joins, home, home_path) = unwind(top, path);
+    let mut sides = vec![Side {
+        columns: columns(home),
+        reads_every_row: true,
+    }];
+    let mut kinds = Vec::with_capacity(joins.len());
+    for join in &joins {
+        let decided = match join.kind {
+            JoinKind::Inner => JoinKind::Inner,
+            JoinKind::Left => {
+                let outcome = decide(join, &sides, context);
+                let decided = outcome.map_or(JoinKind::Left, |()| JoinKind::Inner);
+                records.push(record(&join.path, outcome));
+                decided
+            }
+        };
+        sides.push(Side {
+            columns: columns(join.right),
+            reads_every_row: decided == JoinKind::Inner,
+        });
+        kinds.push(decided);
+    }
+    let mut node = rewrite_node(home, home_path, context, records);
+    for (join, kind) in joins.iter().zip(kinds) {
+        node = rebuilt_join(join, node, kind, context, records);
+    }
+    node
+}
+
+/// One side of a chain that a later `Join` can join from: the home side, or the joined side of
+/// a `Join`.
+struct Side<'plan> {
+    /// The columns it contributes.
+    columns: BTreeSet<&'plan str>,
+    /// Whether every one of its rows reaches the joins after it: true for the home side and for
+    /// a side joined by an `inner` join (E5-3.3a (2)).
+    reads_every_row: bool,
+}
+
+/// The names of the columns `node` produces.
+fn columns(node: &PlanNode) -> BTreeSet<&str> {
+    node.schema()
+        .columns()
+        .iter()
+        .map(|column| column.name.as_str())
+        .collect()
+}
+
+/// `join` with `left` as its left input, its joined side rewritten, and `kind`.
+fn rebuilt_join(
+    join: &ChainJoin<'_>,
+    left: PlanNode,
+    kind: JoinKind,
+    context: &RewriteContext<'_>,
+    records: &mut Vec<RewriteRecord>,
+) -> PlanNode {
+    let right = rewrite_node(join.right, child(&join.path, 1), context, records);
+    PlanNode::new(
+        Operation::Join {
+            left: Box::new(left),
+            right: Box::new(right),
+            relationship: join.relationship.clone(),
+            kind,
+            on: join.on.to_vec(),
+            right_prefix: join.right_prefix.clone(),
+        },
+        join.node.schema().clone(),
+        join.node.origin().clone(),
+    )
+}
+
+/// The record of the `left` join at `path`: applied, or rejected with its failed condition.
+fn record(path: &[usize], outcome: Result<(), FailedCondition>) -> RewriteRecord {
+    RewriteRecord {
+        rule: RewriteRule::InnerJoins,
+        subject: RewriteSubject::Node(NodePath::new(path.to_vec())),
+        outcome: match outcome {
+            Ok(()) => RewriteOutcome::Applied,
+            Err(failed) => RewriteOutcome::Rejected {
+                failed_condition: failed.text().to_owned(),
+            },
+        },
+    }
+}
+
+/// A condition of E5-3.3 or E5-3.3a, in the order they are checked.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum FailedCondition {
+    /// E5-3.3: no passing `orphan_keys` evidence.
+    Evidence,
+    /// E5-3.3a (1): a `from_columns` column can be NULL.
+    NotNull,
+    /// E5-3.3a (2): the `from` side may have lost rows.
+    FromSide,
+    /// E5-3.3a (3): the joined side may not read every row of `to`.
+    JoinedSide,
+}
+
+impl FailedCondition {
+    /// The condition, as the rule states it.
+    fn text(self) -> &'static str {
+        match self {
+            Self::Evidence => "passing `orphan_keys` evidence for the relationship (CAT-7.3)",
+            Self::NotNull => {
+                "every `from_columns` column has `nullable: false` in the catalog schema \
+                 (E5-3.3a (1))"
+            }
+            Self::FromSide => {
+                "the `from` side is the home `Scan` or a dataset joined by an `inner` join \
+                 (E5-3.3a (2))"
+            }
+            Self::JoinedSide => {
+                "the joined `Scan` reads every row of `to` for this user (E5-3.3a (3))"
+            }
+        }
+    }
+}
+
+/// Whether the `left` join `join`, after the `sides` of the chain before it, may become
+/// `inner`: the first failed condition otherwise.
+fn decide(
+    join: &ChainJoin<'_>,
+    sides: &[Side<'_>],
+    context: &RewriteContext<'_>,
+) -> Result<(), FailedCondition> {
+    if !context
+        .evidence
+        .holds(CheckKind::OrphanKeys, join.relationship)
+    {
+        return Err(FailedCondition::Evidence);
+    }
+    let relationship = context
+        .model
+        .relationship(join.relationship)
+        .ok_or(FailedCondition::Evidence)?;
+    if !from_columns_are_not_null(relationship, context) {
+        return Err(FailedCondition::NotNull);
+    }
+    if !from_side_reads_every_row(join.on, sides) {
+        return Err(FailedCondition::FromSide);
+    }
+    if !is_bare_scan_of(join.right, &relationship.to) {
+        return Err(FailedCondition::JoinedSide);
+    }
+    Ok(())
+}
+
+/// Whether every `from_columns` field of `relationship` is a catalog column of its `from`
+/// dataset, read as is, that the catalog schema declares `nullable: false` (E5-3.3a (1)). E0
+/// takes the nullability of a column reference from the admitted catalog schema (E0H-2.2).
+fn from_columns_are_not_null(relationship: &Relationship, context: &RewriteContext<'_>) -> bool {
+    let Some(from) = context.model.dataset(&relationship.from) else {
+        return false;
+    };
+    relationship.from_columns.iter().all(|name| {
+        from.field(name).is_some_and(|field| {
+            matches!(
+                field.expression,
+                Some(Expression::Reference(Reference {
+                    qualifier: None,
+                    ..
+                }))
+            ) && field.typed.as_ref().is_some_and(|typed| !typed.nullable)
+        })
+    })
+}
+
+/// Whether the columns of the left side of `on` all come from one side of the chain, and that
+/// side is the home side or a side joined by an `inner` join (E5-3.3a (2)).
+fn from_side_reads_every_row(on: &[JoinCondition], sides: &[Side<'_>]) -> bool {
+    let Some(first) = on.first() else {
+        return false;
+    };
+    sides
+        .iter()
+        .find(|side| side.columns.contains(first.left.as_str()))
+        .is_some_and(|side| {
+            side.reads_every_row
+                && on
+                    .iter()
+                    .all(|condition| side.columns.contains(condition.left.as_str()))
+        })
+}
+
+/// Whether `node` is a `Scan` of `dataset` with no `Filter` or `SemiJoin` over it: no
+/// applicable policy and no propagation filters it for this user, and `G` is not `FALSE`
+/// (E5-3.3a (3), E4-6.5c).
+fn is_bare_scan_of(node: &PlanNode, dataset: &NormalizedName) -> bool {
+    matches!(node.operation(), Operation::Scan { dataset: scanned, .. } if scanned == dataset)
 }
