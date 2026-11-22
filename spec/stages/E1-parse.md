@@ -33,7 +33,7 @@ covered by the Layer 2 suite cases that test it.
 | `SELECT` items | A field of the relation; a scalar expression over fields of the relation (the E0F-2 language: operators, `CASE`, `CAST` (E0F-11) and the scalar functions of E0F-10); `AGG(metric)` or `MEASURE(metric)` of a metric exposed on the relation (QRY-5.2); a scalar expression over `AGG(…)` terms, literals and the same functions. An item that is not a plain field reference MUST have `AS alias` (`EQRY-13`). |
 | `WHERE` | A boolean expression over fields of the relation. |
 | `GROUP BY` | Exactly the non-aggregated `SELECT` items, by expression or position, or `GROUP BY ALL`. At least one `AGG(…)` item is required; without `GROUP BY`, every item MUST contain `AGG(…)` and the result is one row. |
-| `ORDER BY` | Output names or positions, each with `ASC`/`DESC` and `NULLS FIRST`/`NULLS LAST`. |
+| `ORDER BY` | Output names, positions, or an expression written exactly as a non-aggregated `SELECT` item (it sorts by that output), each with `ASC`/`DESC` and `NULLS FIRST`/`NULLS LAST`. An item that is none of these is `EQRY-05`. |
 | `LIMIT` | A positive integer literal, with a total order (QRY-4.6). |
 
 - **E1-4.1** Semantics are those of Layer 2 section 8.1 for one relation: each `AGG(alias.metric)` evaluates the metric over the rows of the relation that pass `WHERE` and fall in the group. This coincides with a single-branch wide-table plan, so both forms lower to the same logical plan (P5).
