@@ -1,0 +1,492 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://menura.invalid/spec/contracts/model-dependencies/1.0.0",
+  "title": "Model dependencies",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "contract",
+    "contract_version",
+    "producer",
+    "model_hash",
+    "datasets",
+    "relationships",
+    "fields",
+    "metrics",
+    "policies"
+  ],
+  "properties": {
+    "contract": {
+      "const": "menura.model_dependencies"
+    },
+    "contract_version": {
+      "type": "string",
+      "pattern": "^(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)$"
+    },
+    "producer": {
+      "type": "object",
+      "required": [
+        "compiler_version",
+        "ossie_normative",
+        "ossie_tracked_commit",
+        "tzdata_version"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "compiler_version": {
+          "$ref": "#/$defs/semver"
+        },
+        "ossie_normative": {
+          "type": "string",
+          "minLength": 1
+        },
+        "ossie_tracked_commit": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{7,40}$"
+        },
+        "tzdata_version": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "model_hash": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "datasets": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "object",
+          "definition_hash",
+          "usable",
+          "model_inputs",
+          "physical_inputs",
+          "security_policies"
+        ],
+        "properties": {
+          "object": {
+            "type": "string",
+            "pattern": "^dataset:.+$"
+          },
+          "definition_hash": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$"
+          },
+          "usable": {
+            "type": "boolean"
+          },
+          "query_error_code": {
+            "type": "string",
+            "minLength": 1
+          },
+          "model_inputs": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "pattern": "^(dataset|field|metric|relationship):.+$"
+            }
+          },
+          "physical_inputs": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "source",
+                "column"
+              ],
+              "additionalProperties": false,
+              "properties": {
+                "source": {
+                  "type": "string"
+                },
+                "column": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "security_policies": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        },
+        "if": {
+          "properties": {
+            "usable": {
+              "const": false
+            }
+          }
+        },
+        "then": {
+          "required": [
+            "query_error_code"
+          ]
+        },
+        "else": {
+          "not": {
+            "required": [
+              "query_error_code"
+            ]
+          }
+        }
+      }
+    },
+    "relationships": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "object",
+          "definition_hash",
+          "usable",
+          "model_inputs",
+          "physical_inputs",
+          "security_policies"
+        ],
+        "properties": {
+          "object": {
+            "type": "string",
+            "pattern": "^relationship:.+$"
+          },
+          "definition_hash": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$"
+          },
+          "usable": {
+            "type": "boolean"
+          },
+          "query_error_code": {
+            "type": "string",
+            "minLength": 1
+          },
+          "model_inputs": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "pattern": "^(dataset|field|metric|relationship):.+$"
+            }
+          },
+          "physical_inputs": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "source",
+                "column"
+              ],
+              "additionalProperties": false,
+              "properties": {
+                "source": {
+                  "type": "string"
+                },
+                "column": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "security_policies": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        },
+        "if": {
+          "properties": {
+            "usable": {
+              "const": false
+            }
+          }
+        },
+        "then": {
+          "required": [
+            "query_error_code"
+          ]
+        },
+        "else": {
+          "not": {
+            "required": [
+              "query_error_code"
+            ]
+          }
+        }
+      }
+    },
+    "fields": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "object",
+          "definition_hash",
+          "usable",
+          "model_inputs",
+          "physical_inputs",
+          "security_policies"
+        ],
+        "properties": {
+          "object": {
+            "type": "string",
+            "pattern": "^field:.+$"
+          },
+          "definition_hash": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$"
+          },
+          "usable": {
+            "type": "boolean"
+          },
+          "query_error_code": {
+            "type": "string",
+            "minLength": 1
+          },
+          "model_inputs": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "pattern": "^(dataset|field|metric|relationship):.+$"
+            }
+          },
+          "physical_inputs": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "source",
+                "column"
+              ],
+              "additionalProperties": false,
+              "properties": {
+                "source": {
+                  "type": "string"
+                },
+                "column": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "security_policies": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        },
+        "if": {
+          "properties": {
+            "usable": {
+              "const": false
+            }
+          }
+        },
+        "then": {
+          "required": [
+            "query_error_code"
+          ]
+        },
+        "else": {
+          "not": {
+            "required": [
+              "query_error_code"
+            ]
+          }
+        }
+      }
+    },
+    "metrics": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "object",
+          "kind",
+          "definition_hash",
+          "usable",
+          "model_inputs",
+          "physical_inputs",
+          "security_policies"
+        ],
+        "properties": {
+          "object": {
+            "type": "string",
+            "pattern": "^metric:.+$"
+          },
+          "definition_hash": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$"
+          },
+          "usable": {
+            "type": "boolean"
+          },
+          "query_error_code": {
+            "type": "string",
+            "minLength": 1
+          },
+          "model_inputs": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "pattern": "^(dataset|field|metric|relationship):.+$"
+            }
+          },
+          "physical_inputs": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "source",
+                "column"
+              ],
+              "additionalProperties": false,
+              "properties": {
+                "source": {
+                  "type": "string"
+                },
+                "column": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "security_policies": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "kind": {
+            "enum": [
+              "base",
+              "derived",
+              "context"
+            ]
+          }
+        },
+        "if": {
+          "properties": {
+            "usable": {
+              "const": false
+            }
+          }
+        },
+        "then": {
+          "required": [
+            "query_error_code"
+          ]
+        },
+        "else": {
+          "not": {
+            "required": [
+              "query_error_code"
+            ]
+          }
+        }
+      }
+    },
+    "policies": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "object",
+          "definition_hash",
+          "usable",
+          "model_inputs",
+          "physical_inputs",
+          "security_policies"
+        ],
+        "properties": {
+          "object": {
+            "type": "string",
+            "pattern": "^policy:.+$"
+          },
+          "definition_hash": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$"
+          },
+          "usable": {
+            "type": "boolean"
+          },
+          "query_error_code": {
+            "type": "string",
+            "minLength": 1
+          },
+          "model_inputs": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "pattern": "^(dataset|field|metric|relationship):.+$"
+            }
+          },
+          "physical_inputs": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "source",
+                "column"
+              ],
+              "additionalProperties": false,
+              "properties": {
+                "source": {
+                  "type": "string"
+                },
+                "column": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "security_policies": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        },
+        "if": {
+          "properties": {
+            "usable": {
+              "const": false
+            }
+          }
+        },
+        "then": {
+          "required": [
+            "query_error_code"
+          ]
+        },
+        "else": {
+          "not": {
+            "required": [
+              "query_error_code"
+            ]
+          }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "semver": {
+      "type": "string",
+      "pattern": "^(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)$"
+    }
+  }
+}

@@ -1,0 +1,26 @@
+{
+  "contract": "menura.model_diff",
+  "contract_version": "1.0.0",
+  "producer": {
+    "compiler_version": "0.8.0",
+    "ossie_normative": "0.1.1",
+    "ossie_tracked_commit": "0123456789abcdef0123456789abcdef01234567",
+    "tzdata_version": "2026a"
+  },
+  "old_model_hash": "1111111111111111111111111111111111111111111111111111111111111111",
+  "new_model_hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+  "changes": [
+    {
+      "object": "field:INVOICES.DISCOUNT",
+      "change": "added"
+    },
+    {
+      "object": "metric:BILLED",
+      "change": "changed"
+    },
+    {
+      "object": "metric:LEGACY_TOTAL",
+      "change": "removed"
+    }
+  ]
+}

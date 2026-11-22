@@ -1,0 +1,248 @@
+{
+  "contract": "menura.model_dependencies",
+  "contract_version": "1.0.0",
+  "producer": {
+    "compiler_version": "0.8.0",
+    "ossie_normative": "0.1.1",
+    "ossie_tracked_commit": "0123456789abcdef0123456789abcdef01234567",
+    "tzdata_version": "2026a"
+  },
+  "model_hash": "1111111111111111111111111111111111111111111111111111111111111111",
+  "datasets": [
+    {
+      "object": "dataset:CUSTOMERS",
+      "definition_hash": "2222222222222222222222222222222222222222222222222222222222222222",
+      "usable": true,
+      "model_inputs": [
+        "field:CUSTOMERS.REGION"
+      ],
+      "physical_inputs": [
+        {
+          "source": "sales.public.dim_customer",
+          "column": "region"
+        }
+      ],
+      "security_policies": [
+        "CUSTOMERS.REGION_SCOPE"
+      ]
+    },
+    {
+      "object": "dataset:INVOICES",
+      "definition_hash": "3333333333333333333333333333333333333333333333333333333333333333",
+      "usable": true,
+      "model_inputs": [
+        "dataset:CUSTOMERS",
+        "field:CUSTOMERS.CUSTOMER_ID",
+        "field:CUSTOMERS.REGION",
+        "field:INVOICES.CUSTOMER_ID",
+        "relationship:INVOICE_CUSTOMER"
+      ],
+      "physical_inputs": [
+        {
+          "source": "sales.public.dim_customer",
+          "column": "customer_id"
+        },
+        {
+          "source": "sales.public.dim_customer",
+          "column": "region"
+        },
+        {
+          "source": "sales.public.fact_invoice",
+          "column": "customer_id"
+        }
+      ],
+      "security_policies": [
+        "CUSTOMERS.REGION_SCOPE"
+      ]
+    }
+  ],
+  "relationships": [
+    {
+      "object": "relationship:INVOICE_CUSTOMER",
+      "definition_hash": "4444444444444444444444444444444444444444444444444444444444444444",
+      "usable": true,
+      "model_inputs": [
+        "dataset:CUSTOMERS",
+        "dataset:INVOICES",
+        "field:CUSTOMERS.CUSTOMER_ID",
+        "field:CUSTOMERS.REGION",
+        "field:INVOICES.CUSTOMER_ID"
+      ],
+      "physical_inputs": [
+        {
+          "source": "sales.public.dim_customer",
+          "column": "customer_id"
+        },
+        {
+          "source": "sales.public.dim_customer",
+          "column": "region"
+        },
+        {
+          "source": "sales.public.fact_invoice",
+          "column": "customer_id"
+        }
+      ],
+      "security_policies": []
+    }
+  ],
+  "fields": [
+    {
+      "object": "field:CUSTOMERS.CUSTOMER_ID",
+      "definition_hash": "5555555555555555555555555555555555555555555555555555555555555555",
+      "usable": true,
+      "model_inputs": [
+        "dataset:CUSTOMERS",
+        "field:CUSTOMERS.REGION"
+      ],
+      "physical_inputs": [
+        {
+          "source": "sales.public.dim_customer",
+          "column": "customer_id"
+        },
+        {
+          "source": "sales.public.dim_customer",
+          "column": "region"
+        }
+      ],
+      "security_policies": [
+        "CUSTOMERS.REGION_SCOPE"
+      ]
+    },
+    {
+      "object": "field:CUSTOMERS.REGION",
+      "definition_hash": "6666666666666666666666666666666666666666666666666666666666666666",
+      "usable": true,
+      "model_inputs": [
+        "dataset:CUSTOMERS"
+      ],
+      "physical_inputs": [
+        {
+          "source": "sales.public.dim_customer",
+          "column": "region"
+        }
+      ],
+      "security_policies": [
+        "CUSTOMERS.REGION_SCOPE"
+      ]
+    },
+    {
+      "object": "field:INVOICES.AMOUNT",
+      "definition_hash": "7777777777777777777777777777777777777777777777777777777777777777",
+      "usable": true,
+      "model_inputs": [
+        "dataset:CUSTOMERS",
+        "dataset:INVOICES",
+        "field:CUSTOMERS.CUSTOMER_ID",
+        "field:CUSTOMERS.REGION",
+        "field:INVOICES.CUSTOMER_ID",
+        "relationship:INVOICE_CUSTOMER"
+      ],
+      "physical_inputs": [
+        {
+          "source": "sales.public.dim_customer",
+          "column": "customer_id"
+        },
+        {
+          "source": "sales.public.dim_customer",
+          "column": "region"
+        },
+        {
+          "source": "sales.public.fact_invoice",
+          "column": "amount"
+        },
+        {
+          "source": "sales.public.fact_invoice",
+          "column": "customer_id"
+        }
+      ],
+      "security_policies": [
+        "CUSTOMERS.REGION_SCOPE"
+      ]
+    },
+    {
+      "object": "field:INVOICES.CUSTOMER_ID",
+      "definition_hash": "8888888888888888888888888888888888888888888888888888888888888888",
+      "usable": true,
+      "model_inputs": [
+        "dataset:CUSTOMERS",
+        "dataset:INVOICES",
+        "field:CUSTOMERS.CUSTOMER_ID",
+        "field:CUSTOMERS.REGION",
+        "relationship:INVOICE_CUSTOMER"
+      ],
+      "physical_inputs": [
+        {
+          "source": "sales.public.dim_customer",
+          "column": "customer_id"
+        },
+        {
+          "source": "sales.public.dim_customer",
+          "column": "region"
+        },
+        {
+          "source": "sales.public.fact_invoice",
+          "column": "customer_id"
+        }
+      ],
+      "security_policies": [
+        "CUSTOMERS.REGION_SCOPE"
+      ]
+    }
+  ],
+  "metrics": [
+    {
+      "object": "metric:BILLED",
+      "kind": "base",
+      "definition_hash": "9999999999999999999999999999999999999999999999999999999999999999",
+      "usable": true,
+      "model_inputs": [
+        "dataset:CUSTOMERS",
+        "dataset:INVOICES",
+        "field:CUSTOMERS.CUSTOMER_ID",
+        "field:CUSTOMERS.REGION",
+        "field:INVOICES.AMOUNT",
+        "field:INVOICES.CUSTOMER_ID",
+        "relationship:INVOICE_CUSTOMER"
+      ],
+      "physical_inputs": [
+        {
+          "source": "sales.public.dim_customer",
+          "column": "customer_id"
+        },
+        {
+          "source": "sales.public.dim_customer",
+          "column": "region"
+        },
+        {
+          "source": "sales.public.fact_invoice",
+          "column": "amount"
+        },
+        {
+          "source": "sales.public.fact_invoice",
+          "column": "customer_id"
+        }
+      ],
+      "security_policies": [
+        "CUSTOMERS.REGION_SCOPE"
+      ]
+    }
+  ],
+  "policies": [
+    {
+      "object": "policy:CUSTOMERS.REGION_SCOPE",
+      "definition_hash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "usable": true,
+      "model_inputs": [
+        "dataset:CUSTOMERS",
+        "field:CUSTOMERS.REGION"
+      ],
+      "physical_inputs": [
+        {
+          "source": "sales.public.dim_customer",
+          "column": "region"
+        }
+      ],
+      "security_policies": []
+    }
+  ]
+}

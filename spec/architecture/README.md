@@ -71,6 +71,8 @@ All functions are pure. Inputs and outputs are the contract documents of `spec/c
 | `migrate` | model document | Model document with deprecated extensions rewritten to their native form, and a report |
 | `explain` | handle, query, security context, compile options | Exactly the document `compile` returns, with `sql` `""` and `parameters` `[]` (same schema, `contract` `menura.explanation`); the same compile error when `compile` fails; `audit` and `actor` are ignored (PLN-8) |
 | `describe` | handle, security context | Model description |
+| `dependencies` | handle | Model-dependency document ([contract](../contracts/model-dependencies.md)); for modelers and governance tools, never end users (DEP-3.1) |
+| `diff` | two model-dependency documents | Model diff (DEP-4) |
 
 | Load option | Meaning | Default |
 |---|---|---|
@@ -94,6 +96,7 @@ All functions are pure. Inputs and outputs are the contract documents of `spec/c
 - **ARC-5.3** The conformance runner (chapter 8) is **test tooling, not part of the compiler**. It lives in its own crate, `conformance-runner`, which calls the public functions, reads case files and executes SQL on DuckDB. Like `cli`, it is exempt from A2 (I/O, clock, database). No other crate may depend on it, and it is never shipped as part of the compiler. `just conformance` runs it.
 - **ARC-5.4** Every CLI command (section 3.6) writes its output document as JSON on standard output. Its exit status is `0` when the document is neither a compile error nor a validation report with errors (warnings do not change it); `1` when the document is a compile error or a validation report with at least one error; `2` when the command cannot run (usage error, an input file that cannot be read, or a file the command itself parses, such as the load-options file, that is not UTF-8), with a message on standard error and nothing on standard output.
 - **ARC-5.5** `menura validate --model <path> --catalog-schema <path> [--load-options <path>]`. The flags may come in any order, each at most once. `--load-options` names a JSON file holding an object with the load options of section 3.5; an option it omits takes its default. A missing required flag, an unknown or repeated flag, a positional argument, or a load-options file that is not such an object (an unknown option, or a value of the wrong type) is a usage error (exit `2`). The model and catalog schema files are read as bytes and passed to `validate` unchanged: their content problems are diagnostics in the report (exit `1`), never usage errors. `--help` writes the usage text to standard output and exits `0`, wherever it appears on the line. Only the form `--flag <value>` is accepted, so `--flag=value` is an unknown flag. A load option whose value is `null` has the wrong type.
+- **ARC-5.6** `menura dependencies --model <path> --catalog-schema <path> [--load-options <path>]` loads the model as `validate` does and writes its model-dependency document. `menura diff --old-model <path> --old-catalog-schema <path> --new-model <path> --new-catalog-schema <path> [--load-options <path>]` loads both models with the same load options, old first, and writes the diff of their dependencies (DEP-4). A model that does not load gives its compile error (exit `1`); flags follow ARC-5.5.
 
 ## 3.6 Delivery forms
 
@@ -103,7 +106,7 @@ One core, written in Rust (reference implementation). Every other form is a thin
 |---|---|
 | Rust crate | Native embedding |
 | Python package | Embedding in Python hosts |
-| CLI | `validate`, `compile`, `explain`, `describe`, `integrity-checks`, `migrate`, `diff` |
+| CLI | `validate`, `compile`, `explain`, `describe`, `integrity-checks`, `dependencies`, `migrate`, `diff` |
 | MCP server (`menura-mcp`, from 0.9.0) | One MCP tool per public function and per CLI command, for modelers and developers (ARC-6.1) |
 | HTTP service (optional, after the MVP) | Same JSON contracts, for remote hosts. A Rust wrapper built on `axum` |
 
