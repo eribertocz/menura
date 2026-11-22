@@ -131,8 +131,12 @@ pub enum ExtensionCode {
     ContextOffset,
     /// `E0C-63`: a `remove` field that does not exist (CTX-5.1.3).
     RemovedFieldMissing,
-    /// `E0C-64`: a context `base` that is itself a context metric (CTX-5.1.3).
+    /// `E0C-64`: a context `base` that is itself a context metric, or reads one through
+    /// derived metrics (CTX-5.1.3).
     NestedContext,
+    /// `E0C-65`: a `period_to_date` `base` that is semi-additive, or reads a semi-additive
+    /// metric through derived metrics (CTX-5.1.3).
+    SemiAdditiveRunningTotal,
     /// `W0C-01`: a `COMMON` entry whose `data` is not valid JSON; kept, not interpreted.
     NotJson,
     /// `W0C-02`: an entry under the former namespace `semantic_compiler`, read as ours until
@@ -203,6 +207,7 @@ impl ExtensionCode {
             Self::ContextOffset => "E0C-62",
             Self::RemovedFieldMissing => "E0C-63",
             Self::NestedContext => "E0C-64",
+            Self::SemiAdditiveRunningTotal => "E0C-65",
             Self::NotJson => "W0C-01",
             Self::FormerNamespace => "W0C-02",
             Self::NoSecurityContext => "W0C-40",

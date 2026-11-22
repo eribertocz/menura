@@ -1,22 +1,29 @@
-//! `E0C-60`, `E0C-63` and `E0C-64`: the base and the removed fields of context metrics, in
+//! `E0C-60`, `E0C-63`, `E0C-64` and `E0C-65`: the base and the removed fields of context metrics, in
 //! E0.d (CTX-5.1.3).
 //!
 //! `base` names a model metric, compared under E0D-1.1 and E0D-1.3, and the metric's
 //! expression is exactly one `AGG(…)` term that names it. A base that names no model metric,
 //! an expression of another form, and a metric that is both context and derived are `E0C-60`;
-//! a base that is itself a context metric is `E0C-64`; a `remove` field whose dataset or field
+//! a base that is itself a context metric, or reads one through derived metrics, is `E0C-64`;
+//! a `period_to_date` base that is semi-additive, or reads such a metric through derived
+//! metrics, is `E0C-65`; a `remove` field whose dataset or field
 //! does not exist, or whose dataset is a summary (SUM-6.1.7), is `E0C-63`. Each rejects the model (E0-4 table), and is located at the
 //! `data` member of the metric's entry of ours (E0C-2.6).
 
+mod depth;
 mod output;
 
 pub(crate) use output::{ContextMetric, ContextMetrics};
 
-use std::collections::HashMap;
+use depth::{nested_context_problem, read_metrics, running_total_problem};
 
+use std::collections::{HashMap, HashSet};
+
+use menura_contracts::types::audit_record::OssieFormat;
 use menura_model::expression::{Expression, Reference};
 
-use super::derived::metric_trees;
+use super::derived::{is_derived, metric_trees};
+use super::walk::metric_aggregates;
 use crate::expressions::{ExpressionPlace, parse_element_expression};
 use crate::extensions::context::ContextDeclaration;
 use crate::extensions::{ExtensionCode, ExtensionDiagnostic, Extensions, Problems, report_at};
@@ -26,13 +33,14 @@ use crate::pointer::{JsonPointer, position};
 use crate::read::Node;
 use crate::structure::Structure;
 
-/// What resolving context metrics reads: the model metrics and datasets by name, and the tree
-/// of every model metric that parses. Summaries are left out: no model element may name them
+/// What resolving context metrics reads: the model metrics and datasets by name, the tree
+/// of every model metric that parses, and the derived model metrics among them. Summaries are left out: no model element may name them
 /// (SUM-6.1.7).
 struct Model<'model, 'document> {
     metrics: HashMap<&'model Name, &'model ElementOutline<'document>>,
     datasets: HashMap<&'model Name, &'model DatasetOutline<'document>>,
     trees: HashMap<&'model JsonPointer, Expression>,
+    derived: HashSet<&'model JsonPointer>,
 }
 
 /// Resolves the base and the removed fields of every context declaration of `extensions`, in
@@ -40,7 +48,7 @@ struct Model<'model, 'document> {
 ///
 /// # Errors
 ///
-/// Returns every `E0C-60`, `E0C-63` and `E0C-64` diagnostic, at most one per code and
+/// Returns every `E0C-60`, `E0C-63`, `E0C-64` and `E0C-65` diagnostic, at most one per code and
 /// metric, in document order then by code.
 pub fn resolve_context_references(
     document: &Node,
@@ -59,10 +67,22 @@ pub fn resolve_context_references(
             .map(|dataset| (&dataset.name, dataset)),
     );
     datasets.retain(|_, dataset| !extensions.is_summary(&dataset.pointer));
+    let development = structure.format == OssieFormat::Development;
+    let derived = outline
+        .metrics
+        .iter()
+        .map(|metric| &metric.pointer)
+        .filter(|pointer| {
+            trees.get(pointer).is_some_and(|tree| {
+                is_derived(extensions, pointer, &metric_aggregates(tree), development)
+            })
+        })
+        .collect();
     let model = Model {
         metrics: first_by_name(outline.metrics.iter().map(|metric| (&metric.name, metric))),
         datasets,
         trees,
+        derived,
     };
     let mut found = ContextMetrics::default();
     let mut errors = Vec::new();
@@ -137,16 +157,10 @@ fn context_metric(
             format!("`base` `{}` names no metric of the model", declaration.base),
         )),
     }
-    if let Some(base) = base
-        && extensions.is_context_metric(&base.pointer)
-    {
-        problems.push((
-            ExtensionCode::NestedContext,
-            format!(
-                "`base` `{}` is itself a context metric; a context metric has one level",
-                declaration.base
-            ),
-        ));
+    if let Some(base) = base {
+        let read = read_metrics(model, base);
+        problems.extend(nested_context_problem(extensions, declaration, &read));
+        problems.extend(running_total_problem(extensions, declaration, &read));
     }
     problems.extend(removed_field_problems(model, declaration));
     match (base, problems.is_empty()) {
