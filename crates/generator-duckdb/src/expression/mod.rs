@@ -55,6 +55,10 @@ pub(crate) enum Literals {
     Bound,
     /// A node whose origin is the model: literals are written in the SQL.
     Written,
+    /// The shifted bounds of a `prior_period` range (E4-8.4, E6-4.14): the `date` literals
+    /// are the query's dates, bound parameters, and every other literal is an amount of the
+    /// shift, a model constant written in the SQL (E6-4.11).
+    QueryDates,
 }
 
 impl Literals {
@@ -104,6 +108,13 @@ impl<'input, 'statement> ExpressionWriter<'input, 'statement> {
             parameters,
             zero_divisor: ZeroDivisor::Null,
         }
+    }
+
+    /// The writer with the literal rule of shifted bounds: only `date` literals are bound
+    /// ([`Literals::QueryDates`]).
+    pub(crate) fn binding_dates_only(mut self) -> Self {
+        self.literals = Literals::QueryDates;
+        self
     }
 
     /// The SQL of `expression`, binding its parameters in the order they appear in it.
@@ -195,7 +206,12 @@ impl<'input, 'statement> ExpressionWriter<'input, 'statement> {
     }
 
     fn literal(&mut self, literal: &Literal) -> Result<String, GenerateError> {
-        if self.literals == Literals::Written || *literal == Literal::Null {
+        let written = match self.literals {
+            Literals::Bound => false,
+            Literals::Written => true,
+            Literals::QueryDates => !matches!(literal, Literal::Date(_)),
+        };
+        if written || *literal == Literal::Null {
             return Ok(literal_sql(literal));
         }
         let logical_type = self.literal_type(literal)?;

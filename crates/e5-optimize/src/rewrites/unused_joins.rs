@@ -67,6 +67,7 @@ fn visit(
             })
         }
         Operation::Filter { input, .. }
+        | Operation::ShiftedFilter { input, .. }
         | Operation::SemiJoin { input, .. }
         | Operation::ToDate { input, .. }
         | Operation::Aggregate { input, .. }
@@ -225,16 +226,34 @@ fn column_names(nodes: &[&PlanNode]) -> ColumnNames {
         .collect()
 }
 
+/// The `Filter` or `ShiftedFilter` `operation` with `input` in place of its input; another
+/// operation is returned unchanged.
+fn replace_filter_input(operation: &Operation, input: Box<PlanNode>) -> Operation {
+    match operation {
+        Operation::Filter { predicate, .. } => Operation::Filter {
+            input,
+            predicate: predicate.clone(),
+        },
+        Operation::ShiftedFilter {
+            predicate, range, ..
+        } => Operation::ShiftedFilter {
+            input,
+            predicate: predicate.clone(),
+            range: range.clone(),
+        },
+        _ => operation.clone(),
+    }
+}
+
 /// `operation` with its first input, `left` for a `Join`, replaced by `input`. An operation
 /// without one is returned unchanged.
 fn replace_input(operation: &Operation, input: PlanNode) -> Operation {
     let input = Box::new(input);
     match operation {
         Operation::Join { .. } | Operation::SemiJoin { .. } => replace_left(operation, input),
-        Operation::Filter { predicate, .. } => Operation::Filter {
-            input,
-            predicate: predicate.clone(),
-        },
+        Operation::Filter { .. } | Operation::ShiftedFilter { .. } => {
+            replace_filter_input(operation, input)
+        }
         Operation::Deduplicate {
             group, identity, ..
         } => Operation::Deduplicate {

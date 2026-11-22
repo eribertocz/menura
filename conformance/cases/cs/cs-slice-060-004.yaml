@@ -1,5 +1,5 @@
 id: cs-slice-060-004
-rules: [VS-1d, VS-1e, VS-3, VS-2]
+rules: [VS-1d, VS-1e, VS-3, VS-2, VS-1f, E4-02]
 model: slice-060-no-state
 security_context: analyst.json
 query:
@@ -13,5 +13,5 @@ query:
       - {metric: amount_prior_year, alias: amount_prior_year}
 expect:
   outcome: error
-  error: E_NOT_YET_SUPPORTED
+  error: E4-02
   location: {document: query, pointer: /query/metrics/1}

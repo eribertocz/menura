@@ -22,7 +22,7 @@ pub enum ResolvedName {
 }
 
 /// A `time_grains` entry whose dimension is resolved and authorized. Grains are matched to
-/// the dimensions of the query with rows 10 to 12c (QRY-4.1), so the bound columns carry none
+/// the dimensions of the query with rows 10 to 12b (QRY-4.1), so the bound columns carry none
 /// yet.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct AuthorizedTimeGrain {
@@ -35,7 +35,7 @@ pub struct AuthorizedTimeGrain {
 }
 
 /// A date range whose dimension is resolved and authorized; its bounds are as written, and
-/// are resolved with rows 10 to 12c.
+/// are resolved with rows 10 to 12b.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct AuthorizedDateRange {
     /// The element its dimension names.

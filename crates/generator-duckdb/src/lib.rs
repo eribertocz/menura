@@ -30,6 +30,7 @@ mod population;
 mod result_schema;
 mod scan;
 mod semi_join;
+mod shifted_filter;
 mod snapshot;
 mod source_columns;
 mod steps;

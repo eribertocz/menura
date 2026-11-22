@@ -1,0 +1,17 @@
+id: ctx-prior-sql-hour-001
+rules: [E4-02, E4-8.6, CTX-3.1]
+model: ctx-prior
+security_context: analyst.json
+query:
+  contract: "menura.query"
+  contract_version: "1.1.0"
+  time_zone: "UTC"
+  sql: "SELECT DATE_TRUNC('hour', o.ordered_at) AS order_hour, AGG(sales_prior_year_at) AS sales_prior_year_at FROM ctx_prior.orders AS o GROUP BY 1"
+expect:
+  outcome: "error"
+  error: "E4-02"
+  location:
+    document: "query"
+    pointer: "/sql"
+    line: 1
+    column: 56

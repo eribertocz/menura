@@ -1,0 +1,62 @@
+version: "0.1.1"
+semantic_model:
+  - name: ctx_prior
+    description: 'prior_period context metrics (CTX-3.1, CTX-3.2, CTX-3a.2, E4-8.4): shifts by a year, a month and a quarter on a date and a timestamp time dimension, a COUNT base for the empty-input value, and a year-over-year derived metric'
+    custom_extensions:
+      - vendor_name: COMMON
+        data: '{"namespace": "menura", "version": 1, "security_context": {"roles": ["analyst"], "attributes": []}}'
+    datasets:
+      - name: orders
+        source: shop.main.orders
+        primary_key: [order_id]
+        fields:
+          - name: order_id
+            expression: {dialects: [{dialect: ANSI_SQL, expression: order_id}]}
+          - name: order_date
+            expression: {dialects: [{dialect: ANSI_SQL, expression: order_date}]}
+            dimension: {is_time: true}
+          - name: ordered_at
+            expression: {dialects: [{dialect: ANSI_SQL, expression: ordered_at}]}
+            dimension: {is_time: true}
+          - name: region
+            expression: {dialects: [{dialect: ANSI_SQL, expression: region}]}
+          - name: amount
+            expression: {dialects: [{dialect: ANSI_SQL, expression: amount}]}
+        custom_extensions:
+          - vendor_name: COMMON
+            data: '{"namespace": "menura", "version": 1, "access": {"mode": "roles", "roles": ["analyst"]}}'
+    metrics:
+      - name: sales
+        expression: {dialects: [{dialect: ANSI_SQL, expression: 'SUM(orders.amount)'}]}
+      - name: order_count
+        expression: {dialects: [{dialect: ANSI_SQL, expression: 'COUNT(orders.order_id)'}]}
+      - name: sales_prior_year
+        expression: {dialects: [{dialect: ANSI_SQL, expression: 'AGG(sales)'}]}
+        custom_extensions:
+          - vendor_name: COMMON
+            data: '{"namespace": "menura", "version": 1, "context": {"base": "sales", "modifier": {"type": "prior_period", "time_dimension": "orders.order_date", "grain": "year", "offset": 1}}}'
+      - name: sales_prior_month
+        expression: {dialects: [{dialect: ANSI_SQL, expression: 'AGG(sales)'}]}
+        custom_extensions:
+          - vendor_name: COMMON
+            data: '{"namespace": "menura", "version": 1, "context": {"base": "sales", "modifier": {"type": "prior_period", "time_dimension": "orders.order_date", "grain": "month", "offset": 1}}}'
+      - name: sales_prior_quarter
+        expression: {dialects: [{dialect: ANSI_SQL, expression: 'AGG(sales)'}]}
+        custom_extensions:
+          - vendor_name: COMMON
+            data: '{"namespace": "menura", "version": 1, "context": {"base": "sales", "modifier": {"type": "prior_period", "time_dimension": "orders.order_date", "grain": "quarter", "offset": 1}}}'
+      - name: order_count_prior_year
+        expression: {dialects: [{dialect: ANSI_SQL, expression: 'AGG(order_count)'}]}
+        custom_extensions:
+          - vendor_name: COMMON
+            data: '{"namespace": "menura", "version": 1, "context": {"base": "order_count", "modifier": {"type": "prior_period", "time_dimension": "orders.order_date", "grain": "year", "offset": 1}}}'
+      - name: sales_prior_year_at
+        expression: {dialects: [{dialect: ANSI_SQL, expression: 'AGG(sales)'}]}
+        custom_extensions:
+          - vendor_name: COMMON
+            data: '{"namespace": "menura", "version": 1, "context": {"base": "sales", "modifier": {"type": "prior_period", "time_dimension": "orders.ordered_at", "grain": "year", "offset": 1}}}'
+      - name: sales_change_on_year
+        expression: {dialects: [{dialect: ANSI_SQL, expression: 'AGG(sales) - AGG(sales_prior_year)'}]}
+        custom_extensions:
+          - vendor_name: COMMON
+            data: '{"namespace": "menura", "version": 1, "derived": {}}'

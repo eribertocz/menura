@@ -10,6 +10,7 @@ use super::items::{
 };
 use super::lookup::{LookupColumn, LookupKey};
 use super::population::PopulationRule;
+use super::shift::{PeriodShift, ShiftedRange};
 use super::snapshot::SnapshotRule;
 use super::to_date::{ToDateGrains, ToDateRange};
 use crate::names::{ColumnName, ColumnPrefix};
@@ -48,6 +49,18 @@ pub enum Operation {
         input: Box<PlanNode>,
         /// The predicate.
         predicate: Expression,
+    },
+    /// The query filter of a `prior_period` context query whose `date_range` is shifted
+    /// (E4-4.0d, E4-8.4): keep the rows where `predicate`, the query filters, and the shifted
+    /// range are TRUE. The query's dates are bound parameters and the amounts of the shift
+    /// are literals (E6-4.11, E6-4.14). Its output is the columns of `input`.
+    ShiftedFilter {
+        /// The input.
+        input: Box<PlanNode>,
+        /// The query filters as one conjunction; `None` without filters.
+        predicate: Option<Expression>,
+        /// The shifted `date_range`.
+        range: ShiftedRange,
     },
     /// `SemiJoin`: keep the rows of `input` that are visible along one relationship to D'
     /// (E4-3.4, E4-6.5a): a row is kept only if it has at least one match in `related_all`,
@@ -172,6 +185,10 @@ pub enum Operation {
         to: DateValue,
         /// The grain of the periods.
         grain: Grain,
+        /// For a `prior_period` context query, the shift of the range: the periods run from
+        /// the shifted query-grain period that contains `from` to the shifted period that
+        /// contains `to` (E4-8.4).
+        shift: Option<PeriodShift>,
     },
     /// `Snapshot(input, expected, rule)`: reduce the rows of `input` to one value per (result
     /// group, entity) under the semi-additive `rule` (E4-3.13, E4-7.1). With a time `over`,

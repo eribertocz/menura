@@ -2,12 +2,12 @@
 
 use menura_model::expression::Expression;
 use menura_representations::logical_plan::{
-    JoinCondition, NamedExpression, Operation, OutputSchema, PlanNode,
+    JoinCondition, NamedExpression, Operation, OutputSchema, PlanNode, ShiftedRange,
 };
 use menura_representations::names::ColumnName;
 use menura_representations::origin::Origin;
 
-use super::branch::BranchShape;
+use super::branch::{BranchShape, ShiftedPart};
 use super::eligibility::SummaryUse;
 use super::expression_map::{column_reference, columns_read, renamed};
 
@@ -56,10 +56,40 @@ pub(crate) fn summary_branch(branch: &PlanNode, summary_use: &SummaryUse) -> Opt
             query_filter.node.origin(),
         );
     }
+    if let Some(shifted) = shape.shifted_filter {
+        node = shifted_filter(node, shifted, &mapping)?;
+    }
     if shape.project.is_some() {
         node = mapping.project(node, &shape)?;
     }
     mapping.aggregate(node, &shape)
+}
+
+/// The `ShiftedFilter` of a `prior_period` branch over `input`, its predicate and the column of
+/// its shifted range mapped to the summary fields; `None` when one reads an unmapped column.
+fn shifted_filter(
+    input: PlanNode,
+    shifted: ShiftedPart<'_>,
+    mapping: &Mapping<'_>,
+) -> Option<PlanNode> {
+    let predicate = match shifted.predicate {
+        Some(predicate) => Some(mapping.expression(predicate)?),
+        None => None,
+    };
+    let range = ShiftedRange {
+        column: mapping.expression(&shifted.range.column)?,
+        ..shifted.range.clone()
+    };
+    let schema = input.schema().clone();
+    Some(PlanNode::new(
+        Operation::ShiftedFilter {
+            input: Box::new(input),
+            predicate,
+            range,
+        },
+        schema,
+        shifted.node.origin().clone(),
+    ))
 }
 
 /// `Filter(input, predicate)`, with the schema of `input`.

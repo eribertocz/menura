@@ -11,9 +11,9 @@
 //! reads its base at the result rows (E4-8.1) and in its own context query, planned like a
 //! query and attached by a `Lookup` after the `Stitch` (E4-8.2, E4-8.7): [`context_queries`]
 //! gives the context queries, and [`build_plan_with_contexts`] plans them with their branches.
-//! `share_of_total` and `period_to_date` are planned: the branches of a `period_to_date`
-//! context query repeat their rows with a `ToDate` (E4-8.5). `prior_period` comes in a later
-//! issue and is an internal error here.
+//! The branches of a `period_to_date` context query repeat their rows with a `ToDate`
+//! (E4-8.5); those of a `prior_period` one read the shifted `date_range`, and their `Lookup`
+//! matches the shifted time key (E4-8.4).
 //!
 //! The plan follows the conventions shared with E6 (issue #251, E6-4.12): the home `Scan`
 //! projects fields of its dataset by normalized name, and the source columns a dataset
@@ -28,6 +28,7 @@
 
 mod columns;
 mod context;
+mod context_time;
 mod derived_inputs;
 mod dimensions;
 mod error;
@@ -72,6 +73,7 @@ use menura_security::AdmittedSecurityContext;
 
 use crate::layout::Layout;
 use crate::nodes::aggregate;
+use crate::query_filter::RangeShift;
 use crate::to_date::{ToDatePlan, ToDateStep};
 
 /// Builds the logical plan of `query` from its `branches`, for the user of `security`, over
@@ -164,7 +166,14 @@ pub fn build_plan_with_contexts(
         model,
         catalog,
     };
-    let mut rows = query_rows(branches, query, &metrics, &sources, &project_origin, None)?;
+    let mut rows = query_rows(
+        branches,
+        query,
+        &metrics,
+        &sources,
+        &project_origin,
+        ContextShape::default(),
+    )?;
     for (position, context) in contexts.iter().enumerate() {
         rows = context_lookup(rows, position, context, &sources)?;
     }
@@ -213,15 +222,14 @@ fn check_contexts(
 
 /// The rows of `query`, from its `branches`: the plan of each branch up to its `Aggregate`,
 /// combined by a `Stitch` when there are several (E4-4, E4-5), whose origin is
-/// `stitch_origin`. The branches of a `period_to_date` context query repeat their rows by
-/// `to_date` (E4-8.5).
+/// `stitch_origin`. The branches of a context query take the changes of its `shape`.
 fn query_rows(
     branches: &Branches,
     query: &BoundQuery,
     metrics: &[metrics::PlannedMetric<'_>],
     sources: &RowSources<'_>,
     stitch_origin: &Origin,
-    to_date: Option<&ToDatePlan>,
+    shape: ContextShape<'_>,
 ) -> Result<PlanNode, PlanError> {
     let RowSources {
         security,
@@ -238,7 +246,8 @@ fn query_rows(
                 branch,
                 query,
                 metrics,
-                to_date,
+                to_date: shape.to_date,
+                range_shift: shape.range_shift,
             };
             branch_plan(&source, security, model, catalog)
         })
@@ -280,24 +289,37 @@ fn context_lookup(
     let first = slice::first_branch(context.branches)?;
     let home_origin = Origin::Model(slice::home_dataset(first, sources.model)?.location.clone());
     let stitch_origin = metrics::first_metric_location(&metrics).map_or(home_origin, Origin::Model);
+    let shape = ContextShape {
+        to_date,
+        range_shift: context.context.range_shift(),
+    };
     let value = query_rows(
         context.branches,
         query,
         &metrics,
         sources,
         &stitch_origin,
-        to_date,
+        shape,
     )?;
     lookup::lookup(rows, value, position, context.context)
 }
 
-/// One branch to plan: the branch, its query and metrics, and its `ToDate` in a
-/// `period_to_date` context query.
+/// How the branches of a context query differ from those of a query: the `ToDate` of a
+/// `period_to_date` (E4-8.5) and the shifted `date_range` of a `prior_period` (E4-8.4).
+#[derive(Debug, Clone, Copy, Default)]
+struct ContextShape<'input> {
+    to_date: Option<&'input ToDatePlan>,
+    range_shift: Option<RangeShift<'input>>,
+}
+
+/// One branch to plan: the branch, its query and metrics, its `ToDate` in a `period_to_date`
+/// context query, and its shifted `date_range` in a `prior_period` one.
 struct BranchInputs<'input> {
     branch: &'input Branch,
     query: &'input BoundQuery,
     metrics: &'input [metrics::PlannedMetric<'input>],
     to_date: Option<&'input ToDatePlan>,
+    range_shift: Option<RangeShift<'input>>,
 }
 
 /// The plan of a branch, up to its `Aggregate` (E4-4); with a `ToDate`, its keys read the
@@ -313,6 +335,7 @@ fn branch_plan(
         query,
         metrics,
         to_date,
+        range_shift,
     } = *inputs;
     let home = slice::home_dataset(branch, model)?;
     let home_origin = Origin::Model(home.location.clone());
@@ -339,6 +362,7 @@ fn branch_plan(
             keys,
             computed,
             components,
+            range_shift,
         });
     }
     let request = rows::RowsRequest {
@@ -346,7 +370,7 @@ fn branch_plan(
         computed: computed.as_ref(),
         components: &components,
         fields: &[],
-        predicate: query_filter::query_predicate(query, &layout)?,
+        predicate: query_filter::query_predicate(query, &layout, range_shift)?,
         replaced_home: None,
         to_date: step.as_ref(),
     };

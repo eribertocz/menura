@@ -1,18 +1,75 @@
 //! The query-filter predicate: the query filters as one conjunction, followed by the
-//! `date_range` predicate (E4-4 step 4, QRY-4.2).
+//! `date_range` predicate (E4-4 step 4, QRY-4.2), or by the shifted range of a
+//! `prior_period` context query (E4-8.4).
 
 use menura_contracts::types::common::LogicalType;
 use menura_model::expression::{BinaryOperator, DateValue, Expression, Literal, Reference};
 use menura_model::internal_model::{FieldPath, ValueType};
 use menura_representations::bound_query::{BoundDateRange, BoundFilter, BoundQuery};
-use menura_representations::origin::QueryLocation;
+use menura_representations::logical_plan::{Operation, PeriodShift, PlanNode, ShiftedRange};
+use menura_representations::origin::{Origin, QueryLocation};
 use menura_representations::paths::QueryElement;
 
 use crate::columns::{column_reference, field_name};
 use crate::dimensions::at;
 use crate::error::{InvariantViolation, PlanError};
 use crate::layout::Layout;
+use crate::nodes::filter;
 use crate::rewrite::rewrite;
+
+/// The shift of the `date_range` of a `prior_period` context query (E4-8.4): a `date_range`
+/// on `field` is replaced by its shift.
+#[derive(Debug, Clone, Copy)]
+pub(crate) struct RangeShift<'query> {
+    /// The modifier's `time_dimension`.
+    pub(crate) field: &'query FieldPath,
+    /// The shift of its query-grain periods.
+    pub(crate) shift: PeriodShift,
+}
+
+/// The query filter of a branch: its predicate, the shifted range of a `prior_period` context
+/// query, and the element it comes from.
+#[derive(Debug, Clone)]
+pub(crate) struct QueryPredicate {
+    /// The query filters and the `date_range`, as one conjunction; `None` when the only term
+    /// is the shifted range.
+    predicate: Option<Expression>,
+    /// The shifted `date_range` (E4-8.4).
+    shifted: Option<ShiftedRange>,
+    /// The first filter, or the date range.
+    origin: QueryLocation,
+}
+
+impl QueryPredicate {
+    /// `input` filtered: a `Filter`, or a `ShiftedFilter` with the shifted range, whose origin
+    /// is the query element, so that the query's values are bound parameters (E6-4.2).
+    pub(crate) fn filter(self, input: PlanNode) -> PlanNode {
+        let origin = Origin::Query(self.origin);
+        match (self.predicate, self.shifted) {
+            (predicate, Some(range)) => {
+                let schema = input.schema().clone();
+                PlanNode::new(
+                    Operation::ShiftedFilter {
+                        input: Box::new(input),
+                        predicate,
+                        range,
+                    },
+                    schema,
+                    origin,
+                )
+            }
+            (Some(predicate), None) => filter(input, predicate, origin),
+            (None, None) => input,
+        }
+    }
+
+    /// The expressions it reads.
+    pub(crate) fn expressions(&self) -> impl Iterator<Item = &Expression> {
+        self.predicate
+            .iter()
+            .chain(self.shifted.iter().map(|range| &range.column))
+    }
+}
 
 /// The predicate of the query-filter `Filter` over the columns of the `Join` of the branch,
 /// each field read through the join instance its element is bound to (E3-4.2a), with the
@@ -26,8 +83,9 @@ use crate::rewrite::rewrite;
 pub(crate) fn query_predicate(
     query: &BoundQuery,
     layout: &Layout<'_>,
-) -> Result<Option<(Expression, QueryLocation)>, PlanError> {
-    predicate_of(query, query.date_range(), layout)
+    range_shift: Option<RangeShift<'_>>,
+) -> Result<Option<QueryPredicate>, PlanError> {
+    predicate_of(query, query.date_range(), layout, range_shift)
 }
 
 /// [`query_predicate`] without the `date_range` predicate when its field is `over`: the read
@@ -40,17 +98,20 @@ pub(crate) fn query_predicate_outside_range(
     query: &BoundQuery,
     over: &FieldPath,
     layout: &Layout<'_>,
-) -> Result<Option<(Expression, QueryLocation)>, PlanError> {
+    range_shift: Option<RangeShift<'_>>,
+) -> Result<Option<QueryPredicate>, PlanError> {
     let range = query.date_range().filter(|range| &range.field != over);
-    predicate_of(query, range, layout)
+    predicate_of(query, range, layout, range_shift)
 }
 
 fn predicate_of(
     query: &BoundQuery,
     date_range: Option<&BoundDateRange>,
     layout: &Layout<'_>,
-) -> Result<Option<(Expression, QueryLocation)>, PlanError> {
+    range_shift: Option<RangeShift<'_>>,
+) -> Result<Option<QueryPredicate>, PlanError> {
     let mut terms = Vec::new();
+    let mut shifted = None;
     for (position, filter) in query.filters().iter().enumerate() {
         terms.push(
             filter_term(filter, position, layout)
@@ -58,9 +119,14 @@ fn predicate_of(
         );
     }
     if let Some(range) = date_range {
-        terms.push(
-            date_range_term(range, layout).map_err(|violation| at(violation, &range.origin))?,
-        );
+        let shift = range_shift
+            .filter(|range_shift| range_shift.field == &range.field)
+            .map(|range_shift| range_shift.shift);
+        let in_range = |violation| at(violation, &range.origin);
+        match shift {
+            Some(shift) => shifted = Some(shifted_range(range, layout, shift).map_err(in_range)?),
+            None => terms.push(date_range_term(range, layout).map_err(in_range)?),
+        }
     }
     let origin = query
         .filters()
@@ -68,7 +134,20 @@ fn predicate_of(
         .map(|filter| &filter.origin)
         .or_else(|| date_range.map(|range| &range.origin));
     let predicate = terms.into_iter().reduce(and);
-    Ok(predicate.zip(origin.cloned()))
+    if predicate.is_none() && shifted.is_none() {
+        return Ok(None);
+    }
+    let origin = origin.cloned().ok_or_else(|| {
+        PlanError::invariant(
+            InvariantViolation::UnplannableDateRange,
+            &crate::slice::query_root(),
+        )
+    })?;
+    Ok(Some(QueryPredicate {
+        predicate,
+        shifted,
+        origin,
+    }))
 }
 
 /// The filter at `position`, with every reference turned into the reference to the column
@@ -137,6 +216,37 @@ fn date_range_term(
     Ok(match upper {
         Some(upper) => and(lower, upper),
         None => lower,
+    })
+}
+
+/// The shifted range of E4-8.4 on the column of the `date_range` field, which E6 writes from
+/// the query's `from` and `to` (E6-4.14).
+fn shifted_range(
+    range: &BoundDateRange,
+    layout: &Layout<'_>,
+    shift: PeriodShift,
+) -> Result<ShiftedRange, InvariantViolation> {
+    let element = QueryElement::DateRange;
+    let column = column_reference(layout.element_column(&element, &range.field)?.as_str())?;
+    let field_type = layout
+        .dataset(layout.bound(&element))?
+        .field(&range.field.field)
+        .and_then(|field| field.typed.as_ref())
+        .map(|typed| &typed.value_type);
+    if !matches!(
+        field_type,
+        Some(ValueType::Logical(
+            LogicalType::Date | LogicalType::Timestamp { .. }
+        ))
+    ) {
+        return Err(InvariantViolation::UnplannableDateRange);
+    }
+    Ok(ShiftedRange {
+        column,
+        field: range.field.clone(),
+        from: range.from,
+        to: range.to,
+        shift,
     })
 }
 

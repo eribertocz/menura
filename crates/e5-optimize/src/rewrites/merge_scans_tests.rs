@@ -90,6 +90,7 @@ fn population() -> PlanNode {
         from: DateValue::new(2026, 1, 1).expect("a date"),
         to: DateValue::new(2026, 3, 31).expect("a date"),
         grain: Grain::Month,
+        shift: None,
     };
     let operation = Operation::Population {
         input: Box::new(scan("ORDERS")),

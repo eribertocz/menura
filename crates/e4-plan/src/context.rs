@@ -6,6 +6,7 @@
 //! plans it and attaches it to the result rows with a `Lookup` (E4-8.7).
 
 use std::collections::BTreeSet;
+use std::num::NonZeroU64;
 
 use menura_contracts::types::common::Grain;
 use menura_model::internal_model::{
@@ -17,11 +18,14 @@ use menura_representations::bound_query::{
     MetricPath,
 };
 use menura_representations::columns::Columns;
+use menura_representations::logical_plan::PeriodShift;
 use menura_representations::names::OutputName;
 use menura_representations::origin::QueryLocation;
 use menura_representations::paths::Branches;
 
+use crate::context_time::{QueryTime, query_time};
 use crate::error::InvariantViolation;
+use crate::query_filter::RangeShift;
 use crate::to_date::{ToDatePlan, to_date_plan};
 
 /// One context query of a query (E4-8.2).
@@ -39,8 +43,9 @@ pub struct ContextQuery {
     /// The positions, among the query's dimensions, of the dimensions it keeps, in order:
     /// its dimension `i` is the query dimension `kept[i]` (E4-8.3).
     kept: Vec<usize>,
-    /// For `period_to_date`, the time key of its branches (E4-8.5, E4-8.6).
-    to_date: Option<TimeKey>,
+    /// For `period_to_date` and `prior_period`, the time key of its branches (E4-8.4 to
+    /// E4-8.6).
+    time: Option<TimeKey>,
     /// Where the query metric that reads the first context metric is written.
     reader: QueryLocation,
 }
@@ -104,17 +109,39 @@ impl ContextQuery {
         match self.key.modifier {
             NormalizedModifier::ShareOfTotal(_) => "share_of_total",
             NormalizedModifier::PeriodToDate { .. } => "period_to_date",
+            NormalizedModifier::PriorPeriod { .. } => "prior_period",
         }
     }
 
     /// For `period_to_date`, the `ToDate` of its branches, or `Err` with the location of
     /// `E4-02` (E4-8.6); `Ok(None)` for another modifier.
+    /// It is `Err` for a `prior_period` without a time key too, so that both modifiers report
+    /// `E4-02` at the same point.
     pub(crate) fn to_date(&self) -> Result<Option<&ToDatePlan>, &QueryLocation> {
-        match &self.to_date {
-            None => Ok(None),
+        match &self.time {
+            None | Some(TimeKey::Shifted(_)) => Ok(None),
             Some(TimeKey::Found(plan)) => Ok(Some(plan)),
             Some(TimeKey::Missing) => Err(&self.reader),
         }
+    }
+
+    /// For `prior_period`, the time key and the shift of its periods (E4-8.4).
+    pub(crate) fn shifted_time(&self) -> Option<ShiftedTime> {
+        match &self.time {
+            Some(TimeKey::Shifted(time)) => Some(*time),
+            _ => None,
+        }
+    }
+
+    /// For `prior_period`, the shift of a `date_range` on its `time_dimension` (E4-8.4).
+    pub(crate) fn range_shift(&self) -> Option<RangeShift<'_>> {
+        let NormalizedModifier::PriorPeriod { time_dimension, .. } = &self.key.modifier else {
+            return None;
+        };
+        self.shifted_time().map(|time| RangeShift {
+            field: time_dimension,
+            shift: time.shift,
+        })
     }
 
     /// The name of the base metric.
@@ -125,11 +152,23 @@ impl ContextQuery {
     }
 }
 
-/// The time key of a `period_to_date` context query (E4-8.6).
+/// The time key of a `prior_period` context query and the shift of its periods (E4-8.4).
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub(crate) struct ShiftedTime {
+    /// The position of the time dimension among the query dimensions, and of the time key
+    /// among the dimensions of the context query, which keeps them all.
+    pub(crate) position: usize,
+    /// The shift of its query-grain periods (CTX-3a.2).
+    pub(crate) shift: PeriodShift,
+}
+
+/// The time key of a `period_to_date` or `prior_period` context query (E4-8.6).
 #[derive(Debug, Clone, PartialEq, Eq)]
 enum TimeKey {
-    /// The query has it: the branches repeat their rows by this `ToDate`.
+    /// `period_to_date`: the branches repeat their rows by this `ToDate`.
     Found(ToDatePlan),
+    /// `prior_period`: the result rows match the context rows by the shifted time key.
+    Shifted(ShiftedTime),
     /// The query lacks it: `E4-02` at the query metric that reads the context metric.
     Missing,
 }
@@ -164,6 +203,15 @@ enum NormalizedModifier {
         time_dimension: FieldPath,
         /// The grain of the period.
         grain: Grain,
+    },
+    /// `prior_period`: its time dimension, grain and offset.
+    PriorPeriod {
+        /// The time dimension.
+        time_dimension: FieldPath,
+        /// The unit of the shift.
+        grain: Grain,
+        /// The number of units shifted back.
+        offset: NonZeroU64,
     },
 }
 
@@ -208,27 +256,13 @@ impl<'query> ContextRegistry<'query> {
             .context
             .as_ref()
             .ok_or(InvariantViolation::ContextMetric)?;
-        let modifier = match &context.modifier {
-            ContextModifier::ShareOfTotal(removed) => {
-                NormalizedModifier::ShareOfTotal(self.kept(removed))
-            }
-            ContextModifier::PeriodToDate {
-                time_dimension,
-                grain,
-            } => NormalizedModifier::PeriodToDate {
-                time_dimension: time_dimension.clone(),
-                grain: *grain,
-            },
-            ContextModifier::PriorPeriod { .. } => {
-                return Err(InvariantViolation::ContextMetric);
-            }
-        };
+        let modifier = self.normalized(&context.modifier);
         let key = ContextKey { base, modifier };
         if let Some(position) = self.found.iter().position(|found| found.key == key) {
             return Ok(position);
         }
         let all: Vec<usize> = (0..self.query.columns().dimensions().count()).collect();
-        let (kept, to_date, without_range) = match &key.modifier {
+        let (kept, time, without_range) = match &key.modifier {
             NormalizedModifier::ShareOfTotal(kept) => (kept.clone(), None, None),
             NormalizedModifier::PeriodToDate {
                 time_dimension,
@@ -241,6 +275,15 @@ impl<'query> ContextRegistry<'query> {
                 ),
                 Some(time_dimension),
             ),
+            NormalizedModifier::PriorPeriod {
+                time_dimension,
+                grain,
+                offset,
+            } => (
+                all,
+                Some(self.shifted_time(time_dimension, *grain, *offset)),
+                None,
+            ),
         };
         let query = self.context_query(&key.base, &kept, without_range, origin);
         self.found.push(ContextQuery {
@@ -248,11 +291,62 @@ impl<'query> ContextRegistry<'query> {
             metric: metric.name.clone(),
             location: metric.location.clone(),
             kept,
-            to_date,
+            time,
             reader: origin.clone(),
             key,
         });
         Ok(self.found.len() - 1)
+    }
+
+    /// `modifier` normalized as E4-8.2 compares it.
+    fn normalized(&self, modifier: &ContextModifier) -> NormalizedModifier {
+        match modifier {
+            ContextModifier::ShareOfTotal(removed) => {
+                NormalizedModifier::ShareOfTotal(self.kept(removed))
+            }
+            ContextModifier::PeriodToDate {
+                time_dimension,
+                grain,
+            } => NormalizedModifier::PeriodToDate {
+                time_dimension: time_dimension.clone(),
+                grain: *grain,
+            },
+            ContextModifier::PriorPeriod {
+                time_dimension,
+                grain,
+                offset,
+            } => NormalizedModifier::PriorPeriod {
+                time_dimension: time_dimension.clone(),
+                grain: *grain,
+                offset: *offset,
+            },
+        }
+    }
+
+    /// The time key of a `prior_period` on `time_dimension` shifted by `offset` units of
+    /// `grain` (E4-8.4, E4-8.6); missing when the query has none.
+    fn shifted_time(
+        &self,
+        time_dimension: &FieldPath,
+        grain: Grain,
+        offset: NonZeroU64,
+    ) -> TimeKey {
+        query_time(self.query, self.model, time_dimension, grain).map_or(
+            TimeKey::Missing,
+            |QueryTime {
+                 position,
+                 grain: query_grain,
+             }| {
+                TimeKey::Shifted(ShiftedTime {
+                    position,
+                    shift: PeriodShift {
+                        query_grain,
+                        grain,
+                        offset,
+                    },
+                })
+            },
+        )
     }
 
     /// The positions of the query dimensions that a `share_of_total` with the `remove` value

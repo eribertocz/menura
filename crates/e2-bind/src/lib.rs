@@ -3,7 +3,7 @@
 //! [`resolve_and_authorize`] runs rows 3 to 9 of the error precedence of E2-5 on a query tree:
 //! every name resolves against the internal model (E2-3) and is authorized against the
 //! admitted security context as soon as it resolves (E2-4). [`bind`] runs it, then rows 10 to
-//! 12c, and builds the bound query (E2-2). A SQL-form query is bound like a wide-table query,
+//! 12b, and builds the bound query (E2-2). A SQL-form query is bound like a wide-table query,
 //! with its names read through its `FROM` relation (QRY-5).
 
 #![forbid(unsafe_code)]
@@ -20,11 +20,9 @@ mod model_elements;
 mod named;
 mod names;
 mod not_found;
-mod read_metrics;
 mod resolver;
 mod row_12b;
 mod rows;
-mod slice;
 mod unusable;
 mod walk;
 #[cfg(test)]

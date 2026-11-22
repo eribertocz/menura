@@ -4,10 +4,9 @@
 //! `Deduplicate`.
 
 use menura_contracts::types::catalog::CatalogSchemaDocument;
-use menura_model::expression::Expression;
 use menura_model::internal_model::{Dataset, InternalModel, NormalizedName};
 use menura_representations::logical_plan::{AggregateComponent, NamedExpression, PlanNode};
-use menura_representations::origin::{Origin, QueryLocation};
+use menura_representations::origin::Origin;
 use menura_representations::paths::Branch;
 use menura_security::AdmittedSecurityContext;
 
@@ -15,7 +14,8 @@ use crate::columns::read_fields;
 use crate::dimensions::ComputedDimensions;
 use crate::error::PlanError;
 use crate::layout::Layout;
-use crate::nodes::{component_expression, compute_dimensions, deduplicate, filter};
+use crate::nodes::{component_expression, compute_dimensions, deduplicate};
+use crate::query_filter::QueryPredicate;
 use crate::to_date::ToDateStep;
 use crate::{followed, joins, policy_visits, scan, visibility};
 
@@ -47,8 +47,8 @@ pub(crate) struct RowsRequest<'request> {
     pub(crate) components: &'request [AggregateComponent],
     /// Other home fields the rows must provide, by normalized name.
     pub(crate) fields: &'request [NormalizedName],
-    /// The query-filter predicate, with the element it comes from.
-    pub(crate) predicate: Option<(Expression, QueryLocation)>,
+    /// The query filter, with the element it comes from.
+    pub(crate) predicate: Option<QueryPredicate>,
     /// The rows that take the place of the visible home rows, built from the home columns
     /// the rows read: the rows added for `missing: zero` (E4-7.6). `None` reads the home
     /// rows.
@@ -106,8 +106,8 @@ pub(crate) fn branch_rows(
         (visibility.visible_rows(scan, home, None)?, identity)
     };
     node = joins::join_instances(node, layout, &read, &visibility)?;
-    if let Some((predicate, location)) = request.predicate {
-        node = filter(node, predicate, Origin::Query(location));
+    if let Some(predicate) = request.predicate {
+        node = predicate.filter(node);
     }
     if let Some(computed) = request.computed {
         node = compute_dimensions(node, computed)?;
@@ -136,11 +136,7 @@ fn rows_read(
     home: &Dataset,
     visibility: &visibility::Visibility<'_>,
 ) -> Result<Vec<NormalizedName>, PlanError> {
-    let mut read = fields_read(
-        request.keys,
-        request.components,
-        request.predicate.as_ref().map(|(predicate, _)| predicate),
-    );
+    let mut read = fields_read(request.keys, request.components, request.predicate.as_ref());
     if let Some(computed) = request.computed {
         read.retain(|name| {
             !computed
@@ -165,7 +161,7 @@ fn rows_read(
 fn fields_read(
     keys: &[NamedExpression],
     components: &[AggregateComponent],
-    query_predicate: Option<&Expression>,
+    query_predicate: Option<&QueryPredicate>,
 ) -> Vec<NormalizedName> {
     let mut read = Vec::new();
     for key in keys {
@@ -174,8 +170,11 @@ fn fields_read(
     for component in components {
         read_fields(&component_expression(component), &mut read);
     }
-    if let Some(predicate) = query_predicate {
-        read_fields(predicate, &mut read);
+    for expression in query_predicate
+        .into_iter()
+        .flat_map(QueryPredicate::expressions)
+    {
+        read_fields(expression, &mut read);
     }
     read
 }

@@ -1,0 +1,20 @@
+id: ctx-prior-timestamp-001
+rules: [E4-8.4, E4-8.6, CTX-3a.2, E6-4.14]
+model: ctx-prior
+security_context: analyst.json
+query:
+  contract: "menura.query"
+  contract_version: "1.1.0"
+  time_zone: "UTC"
+  query:
+    dimensions: ["orders.ordered_at"]
+    metrics:
+      - {"metric": "sales", "alias": "sales"}
+      - {"metric": "sales_prior_year_at", "alias": "sales_prior_year_at"}
+    nonportable_extensions:
+      - {"vendor_name": "COMMON", "data": {"namespace": "menura", "version": 1, "time_grains": [{"dimension": "orders.ordered_at", "grain": "quarter"}], "date_range": {"dimension": "orders.ordered_at", "from": "2024-01-01", "to": "2024-03-31"}}}
+expect:
+  outcome: "plan"
+  sql: "ctx-prior-timestamp-001.sql"
+  row_order: "any"
+  rows: "ctx-prior-timestamp-001.csv"

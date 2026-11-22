@@ -2,6 +2,7 @@
 
 use menura_contracts::types::catalog::CatalogStateDocument;
 use menura_model::internal_model::{NormalizedName, Summary};
+use menura_representations::bound_query::BoundDateRange;
 use menura_representations::logical_plan::PlanNode;
 
 use super::branch::BranchShape;
@@ -92,15 +93,17 @@ fn candidate(
     summary: &Summary,
     context: &RewriteContext<'_>,
 ) -> Result<Candidate, String> {
+    let date_range = BranchShape::of(branch).and_then(|shape| shape.date_range(context.query));
+    let date_range = date_range.as_ref();
     let summary_use = match eligibility(branch, summary, context) {
         Eligibility::Eligible(summary_use) => summary_use,
         Eligibility::Ineligible(SummaryCondition::SameType) => {
-            fresh_state(summary, context)?;
+            fresh_state(summary, context, date_range)?;
             return Err(SummaryCondition::SameType.rule_id().to_owned());
         }
         Eligibility::Ineligible(condition) => return Err(condition.rule_id().to_owned()),
     };
-    let state = fresh_state(summary, context)?;
+    let state = fresh_state(summary, context, date_range)?;
     let row_count_estimate = row_count_estimate(summary, context, state)
         .ok_or_else(|| freshness_condition(FailedCondition::Coverage))?;
     let branch = summary_branch(branch, &summary_use)
@@ -113,10 +116,12 @@ fn candidate(
 }
 
 /// The catalog state when it proves `summary` fresh for the query (SUM-3.7, CAT-7.2), or the
-/// first condition that fails. With no state, the partitions of condition 1 are missing.
+/// first condition that fails, over `date_range`, the range the branch reads (E4-8.9). With no
+/// state, the partitions of condition 1 are missing.
 fn fresh_state<'a>(
     summary: &Summary,
     context: &RewriteContext<'a>,
+    date_range: Option<&BoundDateRange>,
 ) -> Result<&'a CatalogStateDocument, String> {
     let state = context
         .evidence
@@ -128,7 +133,7 @@ fn fresh_state<'a>(
         context.schema,
         state,
         &context.query.time().time_zone,
-        context.query.date_range(),
+        date_range,
     )
     .map_err(freshness_condition)?;
     Ok(state)

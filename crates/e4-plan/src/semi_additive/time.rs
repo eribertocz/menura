@@ -6,7 +6,8 @@ use menura_model::expression::{Expression, Literal};
 use menura_model::internal_model::{MissingHandling, NormalizedName, SemiAdditive};
 use menura_representations::bound_query::BoundDateRange;
 use menura_representations::logical_plan::{
-    NamedExpression, Operation, OutputSchema, PlanNode, SchemaColumn, SnapshotMissing, TimeSnapshot,
+    NamedExpression, Operation, OutputSchema, PeriodShift, PlanNode, SchemaColumn, SnapshotMissing,
+    TimeSnapshot,
 };
 use menura_representations::names::ColumnName;
 use menura_representations::origin::Origin;
@@ -89,20 +90,32 @@ fn unit_of_periods(
 ) -> Result<PlanNode, PlanError> {
     match branch.query.date_range() {
         Some(range) if range.field == branch.declaration.over => {
-            Ok(periods_of_range(range, grain, over_type))
+            let shift = branch
+                .range_shift
+                .filter(|range_shift| range_shift.field == &range.field)
+                .map(|range_shift| range_shift.shift);
+            Ok(periods_of_range(range, grain, over_type, shift))
         }
         _ => periods_with_data(input.clone(), period.clone(), &branch.origin()),
     }
 }
 
 /// The unit of periods of a `date_range` on `over`: every period of `grain` inside it, with
-/// data or not (ADD-4.7, E4-3.14), each the start of its period, typed as `over`.
-fn periods_of_range(range: &BoundDateRange, grain: Grain, over_type: &LogicalType) -> PlanNode {
+/// data or not (ADD-4.7, E4-3.14), each the start of its period, typed as `over`. In a
+/// `prior_period` context query whose `time_dimension` is `over`, the range is shifted
+/// (E4-8.4).
+fn periods_of_range(
+    range: &BoundDateRange,
+    grain: Grain,
+    over_type: &LogicalType,
+    shift: Option<PeriodShift>,
+) -> PlanNode {
     PlanNode::new(
         Operation::Periods {
             from: range.from,
             to: range.to,
             grain,
+            shift,
         },
         OutputSchema::new(vec![SchemaColumn {
             name: ColumnName::new(PERIOD),
@@ -155,8 +168,12 @@ fn snapshot_missing(
 /// predicate on `over` (E4-7.5).
 fn carried_rows(branch: &SemiAdditiveBranch<'_>) -> Result<PlanNode, PlanError> {
     let source = &branch.source;
-    let predicate =
-        query_predicate_outside_range(branch.query, &branch.declaration.over, source.layout)?;
+    let predicate = query_predicate_outside_range(
+        branch.query,
+        &branch.declaration.over,
+        source.layout,
+        branch.range_shift,
+    )?;
     branch_rows(
         source,
         RowsRequest {
@@ -188,7 +205,7 @@ fn added_rows(branch: &SemiAdditiveBranch<'_>, expected: &PlanNode) -> Result<Pl
             computed: branch.computed.as_ref(),
             components: &branch.components,
             fields: &snapshot_fields(branch.declaration),
-            predicate: query_predicate(branch.query, source.layout)?,
+            predicate: query_predicate(branch.query, source.layout, branch.range_shift)?,
             replaced_home: Some(&replaced),
             to_date: None,
         },

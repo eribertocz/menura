@@ -1,0 +1,4 @@
+order_date,sales,sales_prior_month,sales_prior_year
+2024-02-29,40,,10
+2024-03-15,50,,20
+2024-03-31,60,40,30

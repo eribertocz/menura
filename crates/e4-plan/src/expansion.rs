@@ -256,7 +256,8 @@ impl<'model, 'site, 'query> Expansion<'model, 'site, 'query> {
     /// `expression`, from the base at the result rows (E4-8.1) and the base in its context
     /// query, whose components a `Lookup` attaches (E4-8.7). A `share_of_total` divides the
     /// first by the second, a 64-bit float that is NULL when either is NULL or the divisor is
-    /// zero (E4-8.3, CTX-3.4, E6-4.6); a `period_to_date` is the second (E4-8.5).
+    /// zero (E4-8.3, CTX-3.4, E6-4.6); a `period_to_date` and a `prior_period` are the second
+    /// (E4-8.4, E4-8.5).
     fn context(
         &mut self,
         metric: &Metric,

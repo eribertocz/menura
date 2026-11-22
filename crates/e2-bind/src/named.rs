@@ -1,4 +1,4 @@
-//! The model elements a query names, in query order (E2-5.3), which rows 10 to 12c check.
+//! The model elements a query names, in query order (E2-5.3), which rows 10 to 12b check.
 
 use menura_model::internal_model::NormalizedName;
 use menura_representations::bound_query::BoundPath;

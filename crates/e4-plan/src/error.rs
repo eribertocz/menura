@@ -138,9 +138,8 @@ pub enum InvariantViolation {
     UnknownPopulation,
     /// A unit of periods that does not output the period column it is read by (E4-3.12).
     UnknownPeriodColumn,
-    /// A context metric whose modifier E4 does not plan yet (`prior_period`), or one that the
-    /// base of another context metric reads (`E0C-64`); or a semi-additive branch in a
-    /// `period_to_date` context query (`E0C-65`).
+    /// A context metric that the base of another context metric reads (`E0C-64`), or a
+    /// semi-additive branch in a `period_to_date` context query (`E0C-65`).
     ContextMetric,
     /// Context queries other than those the query's context metrics need, in the order of
     /// E4-8.8 (E4-8.2).

@@ -6,6 +6,8 @@ mod lookup;
 mod operation;
 mod population;
 mod schema;
+mod shift;
+mod shift_calendar;
 mod snapshot;
 #[cfg(test)]
 mod snapshot_tests;
@@ -21,6 +23,7 @@ pub use lookup::{LookupColumn, LookupKey};
 pub use operation::Operation;
 pub use population::{Membership, PopulationRule};
 pub use schema::{OutputSchema, SchemaColumn};
+pub use shift::{PeriodShift, ShiftedRange};
 pub use snapshot::{SnapshotMissing, SnapshotOver, SnapshotRule, TimeSnapshot, UnitKey};
 pub use to_date::{ToDateGrains, ToDateRange};
 
@@ -100,6 +103,7 @@ impl PlanNode {
             Operation::Stitch { branches, .. } => branches.iter().collect(),
             Operation::Lookup { result, value, .. } => vec![result, value],
             Operation::Filter { input, .. }
+            | Operation::ShiftedFilter { input, .. }
             | Operation::Deduplicate { input, .. }
             | Operation::ToDate { input, .. }
             | Operation::Aggregate { input, .. }

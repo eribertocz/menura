@@ -52,6 +52,15 @@ impl<'input> StepWriter<'input> {
             Operation::Filter { input, predicate } => {
                 (self.filter(node, input, predicate)?, None, "filter")
             }
+            Operation::ShiftedFilter {
+                input,
+                predicate,
+                range,
+            } => (
+                self.shifted_filter(node, input, predicate.as_ref(), range)?,
+                None,
+                "filter",
+            ),
             Operation::Aggregate {
                 input,
                 keys,
@@ -136,9 +145,7 @@ impl<'input> StepWriter<'input> {
             Operation::Lookup { .. } => Ok((self.lookup_node(node)?, "lookup")),
             Operation::ToDate { .. } => Ok((self.repeat_to_date(node)?, "todate")),
             Operation::Population { .. } => Ok((self.population(node)?, "population")),
-            Operation::Periods { from, to, grain } => {
-                Ok((self.periods(node, *from, *to, *grain)?, "periods"))
-            }
+            Operation::Periods { .. } => Ok((self.periods(node)?, "periods")),
             Operation::Snapshot { .. } => Ok((self.snapshot(node)?, "snapshot")),
             _ => self.check_step(node),
         }
