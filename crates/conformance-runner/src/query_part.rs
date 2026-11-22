@@ -8,7 +8,7 @@ use std::path::Path;
 use duckdb::Connection;
 use menura_core::{
     CompileErrorDocument, CompileOptions, CompileResult, CompiledPlanDocument, Diagnostic, Handle,
-    compile,
+    compile, explain,
 };
 
 use crate::case::{Case, Expectation, Outcome};
