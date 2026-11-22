@@ -9,7 +9,7 @@ use super::{
     MONTHLY, ORDERS, aggregate, and, component, date, date_range_term, join, model, policy,
     query_filter, query_of, scan, semi_join, with_context,
 };
-use crate::rewrites::summaries::eligibility::{Eligibility, eligibility};
+use crate::rewrites::summaries::eligibility::{Eligibility, SummaryUse, eligibility};
 use crate::rewrites::summaries::summary_branch::summary_branch;
 
 /// The rows of `home`, read by `scan`, under the row policy on `region` and the propagated
@@ -55,8 +55,8 @@ fn base_branch() -> PlanNode {
     )
 }
 
-/// The summary branch of `branch` over `ORDERS_MONTHLY`, for the query of `base_branch`.
-fn rewritten(branch: &PlanNode) -> PlanNode {
+/// The use of `ORDERS_MONTHLY` for `branch`, for the query of `base_branch`.
+fn summary_use_of(branch: &PlanNode) -> SummaryUse {
     let plan_model = model();
     let plan_query = query_of(
         &[equals("REGION", "EU")],
@@ -70,7 +70,24 @@ fn rewritten(branch: &PlanNode) -> PlanNode {
     let Eligibility::Eligible(summary_use) = eligibility else {
         panic!("eligible, got {eligibility:?}");
     };
-    summary_branch(branch, &summary_use).expect("a summary branch")
+    summary_use
+}
+
+/// The summary branch of `branch` over `ORDERS_MONTHLY`, for the query of `base_branch`.
+fn rewritten(branch: &PlanNode) -> PlanNode {
+    summary_branch(branch, &summary_use_of(branch)).expect("a summary branch")
+}
+
+#[test]
+fn e5_3_5a_a_home_column_without_a_summary_field_gives_no_summary_branch() {
+    let branch = base_branch();
+    for unmapped in ["CUSTOMER_ID", "REGION"] {
+        let mut summary_use = summary_use_of(&branch);
+        summary_use
+            .renames
+            .retain(|(column, _)| column.as_str() != unmapped);
+        assert_eq!(summary_branch(&branch, &summary_use), None, "{unmapped}");
+    }
 }
 
 #[test]

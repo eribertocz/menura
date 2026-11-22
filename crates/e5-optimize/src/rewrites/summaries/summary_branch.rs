@@ -9,7 +9,7 @@ use menura_representations::origin::Origin;
 
 use super::branch::BranchShape;
 use super::eligibility::SummaryUse;
-use super::expression_map::{column_reference, renamed};
+use super::expression_map::{column_reference, columns_read, renamed};
 
 /// The branch `branch` reading the summary of `summary_use` (E5-3.5a): a `Scan` of the
 /// summary, then the `Filter` of the base's applicable row policies and its propagation
@@ -20,13 +20,14 @@ use super::expression_map::{column_reference, renamed};
 /// types E6 enforces (SUM-3.8).
 ///
 /// `None` when `branch` is not the branch `summary_use` was found eligible for: it is not an
-/// `Aggregate` over the nodes of E4-4, or it has a `Deduplicate` (SUM-3.2).
+/// `Aggregate` over the nodes of E4-4, it has a `Deduplicate` (SUM-3.2), or it reads a column
+/// of its home `Scan` that no summary field maps.
 pub(crate) fn summary_branch(branch: &PlanNode, summary_use: &SummaryUse) -> Option<PlanNode> {
     let shape = BranchShape::of(branch)?;
     if shape.deduplicate || shape.components.len() != summary_use.components.len() {
         return None;
     }
-    let mapping = Mapping { summary_use };
+    let mapping = Mapping::new(summary_use, &shape);
     let mut node = PlanNode::new(
         Operation::Scan {
             dataset: summary_use.summary.clone(),
@@ -36,7 +37,11 @@ pub(crate) fn summary_branch(branch: &PlanNode, summary_use: &SummaryUse) -> Opt
         summary_use.origin.clone(),
     );
     if let Some(policy) = shape.policy_filter {
-        node = filter(node, mapping.expression(policy.value), policy.node.origin());
+        node = filter(
+            node,
+            mapping.expression(policy.value)?,
+            policy.node.origin(),
+        );
     }
     for semi_join in &shape.semi_joins {
         node = mapping.semi_join(node, semi_join.node)?;
@@ -47,30 +52,14 @@ pub(crate) fn summary_branch(branch: &PlanNode, summary_use: &SummaryUse) -> Opt
     if let Some(query_filter) = shape.query_filter {
         node = filter(
             node,
-            mapping.expression(query_filter.value),
+            mapping.expression(query_filter.value)?,
             query_filter.node.origin(),
         );
     }
     if shape.project.is_some() {
         node = mapping.project(node, &shape)?;
     }
-    let keys = shape
-        .keys
-        .iter()
-        .map(|key| NamedExpression {
-            expression: mapping.expression(&key.expression),
-            ..key.clone()
-        })
-        .collect();
-    Some(PlanNode::new(
-        Operation::Aggregate {
-            input: Box::new(node),
-            keys,
-            components: summary_use.components.clone(),
-        },
-        shape.aggregate.schema().clone(),
-        shape.aggregate.origin().clone(),
-    ))
+    mapping.aggregate(node, &shape)
 }
 
 /// `Filter(input, predicate)`, with the schema of `input`.
@@ -89,9 +78,48 @@ fn filter(input: PlanNode, predicate: Expression, origin: &Origin) -> PlanNode {
 /// Maps the columns of the home `Scan` to the summary fields of their dimensions.
 struct Mapping<'input> {
     summary_use: &'input SummaryUse,
+    /// The columns of the home `Scan` of the base branch.
+    home: Vec<ColumnName>,
 }
 
-impl Mapping<'_> {
+impl<'input> Mapping<'input> {
+    fn new(summary_use: &'input SummaryUse, shape: &BranchShape<'_>) -> Self {
+        let home = shape
+            .scan
+            .schema()
+            .columns()
+            .iter()
+            .map(|column| column.name.clone())
+            .collect();
+        Self { summary_use, home }
+    }
+
+    /// The `Aggregate` of the branch over `input`: its keys mapped, the recomposed
+    /// components, and the output schema of the base `Aggregate` (SUM-3.8).
+    fn aggregate(&self, input: PlanNode, shape: &BranchShape<'_>) -> Option<PlanNode> {
+        let keys = shape
+            .keys
+            .iter()
+            .map(|key| {
+                Some(NamedExpression {
+                    expression: self.expression(&key.expression)?,
+                    ..key.clone()
+                })
+            })
+            .collect::<Option<Vec<_>>>()?;
+        Some(PlanNode::new(
+            Operation::Aggregate {
+                input: Box::new(input),
+                keys,
+                components: self.summary_use.components.clone(),
+            },
+            shape.aggregate.schema().clone(),
+            shape.aggregate.origin().clone(),
+        ))
+    }
+
+    /// The summary field of the home `Scan` column `column`; `None` for a column of another
+    /// node, such as a joined `Scan`.
     fn column(&self, column: &str) -> Option<ColumnName> {
         self.summary_use
             .renames
@@ -100,17 +128,35 @@ impl Mapping<'_> {
             .map(|(_, field)| field.clone())
     }
 
-    fn expression(&self, expression: &Expression) -> Expression {
-        renamed(expression, &|column| self.column(column))
+    /// Whether `column` is a column of the home `Scan` that no summary field maps.
+    fn is_unmapped(&self, column: &ColumnName) -> bool {
+        self.home.contains(column) && self.column(column.as_str()).is_none()
     }
 
-    fn conditions(&self, on: &[JoinCondition]) -> Vec<JoinCondition> {
+    /// `expression` with its home columns mapped; `None` when one has no summary field.
+    fn expression(&self, expression: &Expression) -> Option<Expression> {
+        if columns_read(expression)
+            .iter()
+            .any(|column| self.is_unmapped(column))
+        {
+            return None;
+        }
+        Some(renamed(expression, &|column| self.column(column)))
+    }
+
+    /// `on` with its home `from_columns` mapped; `None` when one has no summary field.
+    fn conditions(&self, on: &[JoinCondition]) -> Option<Vec<JoinCondition>> {
         on.iter()
-            .map(|condition| JoinCondition {
-                left: self
-                    .column(condition.left.as_str())
-                    .unwrap_or_else(|| condition.left.clone()),
-                right: condition.right.clone(),
+            .map(|condition| {
+                let left = match self.column(condition.left.as_str()) {
+                    Some(field) => field,
+                    None if self.is_unmapped(&condition.left) => return None,
+                    None => condition.left.clone(),
+                };
+                Some(JoinCondition {
+                    left,
+                    right: condition.right.clone(),
+                })
             })
             .collect()
     }
@@ -132,7 +178,7 @@ impl Mapping<'_> {
             Operation::SemiJoin {
                 input: Box::new(input),
                 relationship: relationship.clone(),
-                on: self.conditions(on),
+                on: self.conditions(on)?,
                 related_all: related_all.clone(),
                 related_visible: related_visible.clone(),
             },
@@ -162,7 +208,7 @@ impl Mapping<'_> {
                 right: right.clone(),
                 relationship: relationship.clone(),
                 kind: *kind,
-                on: self.conditions(on),
+                on: self.conditions(on)?,
                 right_prefix: right_prefix.clone(),
             },
             OutputSchema::new(columns),
@@ -193,7 +239,7 @@ impl Mapping<'_> {
                 .find(|column| column.name == dimension.name)?;
             columns.push(column.clone());
             expressions.push(NamedExpression {
-                expression: self.expression(&dimension.expression),
+                expression: self.expression(&dimension.expression)?,
                 ..dimension.clone()
             });
         }
