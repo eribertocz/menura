@@ -22,9 +22,6 @@ use super::expression_map::{column_reference, renamed};
 /// `None` when `branch` is not the branch `summary_use` was found eligible for: it is not an
 /// `Aggregate` over the nodes of E4-4, or it has a `Deduplicate` (SUM-3.2).
 pub(crate) fn summary_branch(branch: &PlanNode, summary_use: &SummaryUse) -> Option<PlanNode> {
-    if summary_use.summary.as_str() != "" {
-        return None;
-    }
     let shape = BranchShape::of(branch)?;
     if shape.deduplicate || shape.components.len() != summary_use.components.len() {
         return None;

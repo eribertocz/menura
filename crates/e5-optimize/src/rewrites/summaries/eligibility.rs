@@ -62,17 +62,6 @@ pub(crate) fn eligibility(
     summary: &Summary,
     context: &RewriteContext<'_>,
 ) -> Eligibility {
-    if summary.dataset.as_str().is_empty() {
-        return Eligibility::Ineligible(SummaryCondition::Equivalence);
-    }
-    Eligibility::Ineligible(SummaryCondition::Equivalence)
-}
-
-fn unused_entry(
-    branch: &PlanNode,
-    summary: &Summary,
-    context: &RewriteContext<'_>,
-) -> Eligibility {
     match summary_use(branch, summary, context) {
         Ok(summary_use) => Eligibility::Eligible(summary_use),
         Err(condition) => Eligibility::Ineligible(condition),
