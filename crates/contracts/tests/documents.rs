@@ -39,26 +39,137 @@ fn round_trip_of(kind: ContractKind, document: &Value) -> Option<Value> {
     }
 }
 
-#[test]
-fn con_0_1_every_public_contract_has_a_kind() {
-    let readme = include_str!("../../../spec/contracts/README.md");
-    // Both tables (the contracts produced and those planned for 0.8.0) name each contract with
-    // its name or its former name (CON-0.5), in whichever column holds the `contract` value, so
-    // every code span of every table row is read and only the part after the namespace is
-    // compared.
-    let listed: Vec<&str> = readme
-        .lines()
-        .filter(|line| line.starts_with('|'))
-        .flat_map(|line| line.split('`').skip(1).step_by(2))
-        .filter_map(|name| name.split_once('.'))
-        .filter(|(namespace, _)| [NAMESPACE, FORMER_NAMESPACE].contains(namespace))
-        .map(|(_, local_name)| local_name)
-        .collect();
-    let kinds: Vec<&str> = ContractKind::ALL
+/// The tables of a contracts README: the main table (the first one) and the tables under a
+/// heading that starts with "Planned for".
+struct ContractTables<'a> {
+    main: Vec<&'a str>,
+    planned: Vec<&'a str>,
+}
+
+/// Reads the local name of every contract in the main and planned tables of `readme`.
+///
+/// Each table names a contract with its name or its former name (CON-0.5), in whichever column
+/// holds the `contract` value, so every code span of every table row is read and only the part
+/// after the namespace is kept.
+fn contract_tables(readme: &str) -> ContractTables<'_> {
+    let mut tables = ContractTables {
+        main: Vec::new(),
+        planned: Vec::new(),
+    };
+    let mut table_count = 0;
+    let mut in_table = false;
+    let mut under_planned_heading = false;
+    for line in readme.lines() {
+        if let Some(heading) = line.strip_prefix('#') {
+            under_planned_heading = heading
+                .trim_start_matches('#')
+                .trim()
+                .starts_with("Planned for");
+        }
+        let is_row = line.starts_with('|');
+        if is_row && !in_table {
+            table_count += 1;
+        }
+        in_table = is_row;
+        if !is_row {
+            continue;
+        }
+        let target = if table_count == 1 {
+            &mut tables.main
+        } else if under_planned_heading {
+            &mut tables.planned
+        } else {
+            continue;
+        };
+        target.extend(
+            line.split('`')
+                .skip(1)
+                .step_by(2)
+                .filter_map(|name| name.split_once('.'))
+                .filter(|(namespace, _)| [NAMESPACE, FORMER_NAMESPACE].contains(namespace))
+                .map(|(_, local_name)| local_name),
+        );
+    }
+    tables
+}
+
+fn kind_names() -> Vec<&'static str> {
+    ContractKind::ALL
         .iter()
         .map(|kind| kind.local_name())
-        .collect();
-    assert_eq!(listed, kinds);
+        .collect()
+}
+
+/// The contracts of the main table that have no `ContractKind`.
+fn contracts_without_kind<'a>(readme: &'a str, kinds: &[&str]) -> Vec<&'a str> {
+    contract_tables(readme)
+        .main
+        .into_iter()
+        .filter(|name| !kinds.contains(name))
+        .collect()
+}
+
+/// The kinds listed neither in the main table nor in a planned table.
+fn kinds_listed_nowhere<'a>(readme: &str, kinds: &[&'a str]) -> Vec<&'a str> {
+    let tables = contract_tables(readme);
+    kinds
+        .iter()
+        .copied()
+        .filter(|kind| !tables.main.contains(kind) && !tables.planned.contains(kind))
+        .collect()
+}
+
+const CONTRACTS_README: &str = include_str!("../../../spec/contracts/README.md");
+
+/// A README with a produced contract, a planned contract that has a kind and a planned
+/// contract that has none yet.
+const SAMPLE_README: &str = "\
+| Contract | `contract` value |
+|---|---|
+| Query | `menura.query` |
+
+## Planned for 0.9.0
+
+| Contract | `contract` value |
+|---|---|
+| Model diff | `menura.model_diff` |
+| Future thing | `menura.future_thing` |
+";
+
+#[test]
+fn con_0_1_every_public_contract_has_a_kind() {
+    assert_eq!(
+        contracts_without_kind(CONTRACTS_README, &kind_names()),
+        Vec::<&str>::new()
+    );
+    assert_eq!(
+        contracts_without_kind(SAMPLE_README, &["query", "model_diff"]),
+        Vec::<&str>::new(),
+        "a planned contract may have no kind yet"
+    );
+    assert_eq!(
+        contracts_without_kind(SAMPLE_README, &["model_diff"]),
+        vec!["query"],
+        "a main-table contract without a kind is reported"
+    );
+}
+
+#[test]
+fn con_0_1_every_kind_is_listed_as_produced_or_planned() {
+    assert_eq!(
+        kinds_listed_nowhere(CONTRACTS_README, &kind_names()),
+        Vec::<&str>::new()
+    );
+    assert_eq!(
+        kinds_listed_nowhere(SAMPLE_README, &["query", "model_diff"]),
+        Vec::<&str>::new(),
+        "a kind may be listed in the main table or in a planned table"
+    );
+    assert_eq!(
+        kinds_listed_nowhere(SAMPLE_README, &["query", "catalog_state"]),
+        vec!["catalog_state"],
+        "a kind listed nowhere is reported"
+    );
 }
 
 #[test]
