@@ -3,7 +3,7 @@
 use menura_model::expression::{BinaryOperator, CastTarget, DateUnit, Expression, SimpleAggregate};
 use menura_model::internal_model::{
     Additivity, Component, DeclaredAdditivity, DecomposabilityClass, Descriptions, Metric,
-    MetricClassification, ModelParts, NormalizedName, Summary, SummaryDimension,
+    MetricClassification, ModelParts, NormalizedName, Summary, SummaryDimension, SummaryMeasure,
 };
 use menura_representations::bound_query::{
     BoundMetric, BoundMetricKind, BoundQuery, BoundQueryParts, MetricPath,
@@ -185,6 +185,44 @@ fn sum_3_2_a_float_argument_is_excluded() {
         vec![component("total", SimpleAggregate::Sum, "PRICE")],
     );
     assert_eq!(failed(&checked(&plan)), Some(SummaryCondition::Exclusions));
+}
+
+/// The eligibility of the sum of `argument` over the plan columns, with a summary measure
+/// `SUM(base_argument)` over the fields of `ORDERS`.
+fn summed(argument: Expression, base_argument: Expression) -> Option<SummaryCondition> {
+    let mut summary = monthly();
+    summary.measures.push(SummaryMeasure {
+        field: NormalizedName::new("AMOUNT_SUM"),
+        base_aggregate: Some(Expression::Aggregate {
+            call: call(SimpleAggregate::Sum, base_argument),
+            filter: None,
+        }),
+    });
+    let mut summed = component("total", SimpleAggregate::Sum, "AMOUNT");
+    summed.call = call(SimpleAggregate::Sum, argument);
+    let plan = computing(&["AMOUNT"], vec![summed]);
+    failed(&checked_with(&plan, &summary, |_| (), &query()))
+}
+
+#[test]
+fn sum_3_2_an_expression_of_float_type_is_excluded() {
+    let argument = cast(column("AMOUNT"), CastTarget::Double);
+    let base = cast(qualified("orders", "amount"), CastTarget::Double);
+    assert_eq!(summed(argument, base), Some(SummaryCondition::Exclusions));
+}
+
+#[test]
+fn sum_3_2_an_argument_without_a_known_type_is_excluded() {
+    let argument = column("DISCOUNT");
+    let base = qualified("orders", "discount");
+    assert_eq!(summed(argument, base), Some(SummaryCondition::Exclusions));
+}
+
+#[test]
+fn sum_3_2_an_exact_expression_is_not_excluded() {
+    let argument = cast(column("AMOUNT"), CastTarget::BigInteger);
+    let base = cast(qualified("orders", "amount"), CastTarget::BigInteger);
+    assert_eq!(summed(argument, base), None);
 }
 
 #[test]

@@ -2,9 +2,8 @@
 
 use menura_contracts::types::catalog::CatalogSchemaDocument;
 use menura_contracts::types::common::LogicalType;
-use menura_model::expression::{
-    AggregateCall, BinaryOperator, Expression, Literal, Reference, SimpleAggregate,
-};
+use menura_expressions::typing::{Aggregates, Stop, Typed, TypingScope, type_expression};
+use menura_model::expression::{AggregateCall, Expression, Reference};
 use menura_model::internal_model::{
     Dataset, Field, InternalModel, NormalizedName, Summary, ValueType,
 };
@@ -13,100 +12,46 @@ use menura_representations::logical_plan::{AggregateComponent, OutputSchema};
 use menura_representations::bound_query::BoundQuery;
 
 use super::branch::BranchShape;
-use super::equivalence::over_scan;
-use super::expression_map::{any_node, columns_read, field_name, references};
+use super::expression_map::{any_node, field_name, references};
 use super::restricted::reads_restricted_metric;
 
 /// Whether the branch is excluded by SUM-3.2: it still has a `Deduplicate`, one of its
 /// components is read by a non-additive or semi-additive metric of the query,
 /// or one of its components aggregates a float.
-pub(super) fn excluded(
-    shape: &BranchShape<'_>,
-    model: &InternalModel,
-    query: &BoundQuery,
-    summary: &Summary,
-) -> bool {
-    let summary_dataset = model.dataset(&summary.dataset);
+pub(super) fn excluded(shape: &BranchShape<'_>, model: &InternalModel, query: &BoundQuery) -> bool {
     shape.deduplicate
         || reads_restricted_metric(shape, model, query)
-        || shape.components.iter().any(|component| {
-            aggregates_float(component, shape.scan.schema(), summary, summary_dataset)
-        })
+        || shape
+            .components
+            .iter()
+            .any(|component| aggregates_float(component, shape.scan.schema()))
 }
 
 /// Whether the argument of `component` may be a float: a recomposed float sum can differ
-/// from the base (SUM-3.2). A plain column has the type of its `Scan` column. Otherwise the
-/// type is that of a `SUM`, `MIN` or `MAX` measure of the same argument, whose summary field
-/// has the result type of its `base_aggregate` (E0C-57, E0F-5). Otherwise an argument that
-/// reads a float column or literal, or uses a cast, a division or a function, may be a
-/// float: when in doubt, the base is used (SUM-1).
-fn aggregates_float(
-    component: &AggregateComponent,
-    schema: &OutputSchema,
-    summary: &Summary,
-    summary_dataset: Option<&Dataset>,
-) -> bool {
+/// from the base (SUM-3.2). The argument is typed by E0F-5a over the columns of the home
+/// `Scan`; an argument with no known type is excluded too.
+fn aggregates_float(component: &AggregateComponent, schema: &OutputSchema) -> bool {
     let argument = match &component.call {
         AggregateCall::Simple { argument, .. } | AggregateCall::Distinct { argument, .. } => {
             argument.as_ref()
         }
         AggregateCall::CountRows | AggregateCall::Percentile { .. } => return false,
     };
-    let column_type = |name: &str| {
+    let resolve = |reference: &Reference| {
         schema
             .columns()
             .iter()
-            .find(|column| column.name.as_str() == name)
-            .map(|column| &column.logical_type)
+            .find(|column| {
+                reference.qualifier.is_none() && column.name.as_str() == reference.name.text()
+            })
+            .map(|column| Typed::value(column.logical_type.clone(), column.nullable))
+            .ok_or(Stop::ReportedElsewhere)
     };
-    if let Some(column) = columns_read(argument).first()
-        && matches!(argument, Expression::Reference(_))
-    {
-        return column_type(column.as_str()).is_none_or(is_float);
-    }
-    if let Some(measured) = measured_type(argument, summary, summary_dataset) {
-        return is_float(&measured);
-    }
-    any_node(argument, &mut |node| match node {
-        Expression::Reference(reference) => {
-            reference.qualifier.is_some() || column_type(reference.name.text()).is_none_or(is_float)
-        }
-        Expression::Literal(Literal::Float(_))
-        | Expression::Cast { .. }
-        | Expression::Function { .. }
-        | Expression::Binary {
-            operator: BinaryOperator::Divide,
-            ..
-        } => true,
-        _ => false,
-    })
-}
-
-/// The type of `argument` read from the summary field of a `SUM`, `MIN` or `MAX` measure
-/// of it, whose result type is a float exactly when its argument is (E0F-5).
-fn measured_type(
-    argument: &Expression,
-    summary: &Summary,
-    summary_dataset: Option<&Dataset>,
-) -> Option<LogicalType> {
-    let dataset = summary_dataset?;
-    summary.measures.iter().find_map(|measure| {
-        let (call, _) = over_scan(measure.base_aggregate.as_ref()?)?;
-        let AggregateCall::Simple {
-            function: SimpleAggregate::Sum | SimpleAggregate::Minimum | SimpleAggregate::Maximum,
-            argument: measured,
-        } = call
-        else {
-            return None;
-        };
-        if measured.as_ref() != argument {
-            return None;
-        }
-        match &dataset.field(&measure.field)?.typed.as_ref()?.value_type {
-            ValueType::Logical(logical_type) => Some(logical_type.clone()),
-            ValueType::Null => None,
-        }
-    })
+    let scope = TypingScope::new(&resolve, Aggregates::Allowed);
+    type_expression(argument, &scope)
+        .ok()
+        .and_then(|typed| typed.logical().cloned())
+        .is_none_or(|logical_type| is_float(&logical_type))
 }
 
 fn is_float(logical_type: &LogicalType) -> bool {
