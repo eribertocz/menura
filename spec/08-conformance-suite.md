@@ -28,7 +28,7 @@ model: stores                   # folder under models/
 security_context: analyst.json  # required for error, plan, runtime_error and describe; under models/<model-name>/contexts/
 query: { ... }                  # query document, or omitted for load-only cases
 load_options: { ossie_format: development, model_name: shop }  # optional (CS-2.7)
-compile_options: { actor: { id: agent-7 } }  # optional: only actor (CS-2.18)
+compile_options: { actor: agent-7 }  # optional: only actor (CS-2.18)
 expect:
   outcome: error                # load_error | error | plan | runtime_error | describe | integrity_checks
   error: E_AMBIGUOUS_PATH       # the first error code (E2-5.2)
@@ -69,7 +69,7 @@ oracle: expected.oracle.sql      # optional: reference SQL for a differential ca
 | CS-2.15 | `outcome: describe` runs `describe` with the case's `security_context`; `outcome: integrity_checks` runs `integrity_checks` with dialect `duckdb` and needs no security context. Both outcomes require `document`, the golden output document compared as CS-2.10 states, and forbid `query`, `error`, `location`, `sql`, `rows`, `row_order`, `tolerance`, `lineage`, `explanation`, `audit` and `cache_key`. `document` is allowed with no other outcome. A model that fails to load fails the case. |
 | CS-2.16 | From 0.7.0, the runner also runs `explain` with the inputs of every `outcome: plan` case, and the case fails unless the returned document equals the compiled plan member for member, except `contract`, which is `menura.explanation`, and `sql` and `parameters` (architecture section 3.5). From 0.8.0, it runs `explain` for every `outcome: error` case too, and the case fails unless `explain` returns the identical compile error (PLN-8.2). In both outcomes `explain` is called with the case's compile options and `audit: true`, and the case fails if it returns an audit record (PLN-8.3). |
 | CS-2.17 | `alternatives` is allowed only with `outcome: error`. It lists the `alternatives` of the first diagnostic (PLN-5.4), in order: the case passes only when both lists are equal item by item. An empty list asserts that the diagnostic has no `alternatives` member. |
-| CS-2.18 | `compile_options` holds only `actor`, any JSON value (PLN-6.8), and is allowed only with `outcome: error` and `outcome: plan`. The runner passes it to `compile` and `explain`; every other compile option keeps its default, except `audit` (CS-2.13, CS-2.16). An `audit` golden file then holds the `actor` member. |
+| CS-2.18 | `compile_options` holds only `actor`, a string (PLN-6.8), and is allowed only with `outcome: error` and `outcome: plan`. The runner passes it to `compile` and `explain`; every other compile option keeps its default, except `audit` (CS-2.13, CS-2.16). An `audit` golden file then holds the `actor` member. |
 | CS-2.8 | A case whose outcome needs stages not yet implemented is checked in parts. From 0.2.0, the runner checks its load: `load_error` cases fully, and for the other outcomes, that the model loads and reports the expected `warnings`. The query part (`error`, `plan`, `runtime_error`) is checked from the version that implements E1–E6 (0.3.0). Until then the runner reports that part as pending, never as passed, and a version gate counts only the parts that run. From 0.3.0, a query part whose compilation returns `E_NOT_YET_SUPPORTED` stays pending, unless the case expects that code (VS-4). |
 
 ## CS-3 Apache Ossie suites

@@ -1,5 +1,5 @@
 //! The base and the removed fields of context metrics in E0.d: CTX-2.1, CTX-5.1.3, `E0C-60`,
-//! `E0C-63` and `E0C-64`.
+//! `E0C-63`, `E0C-64` and `E0C-65`.
 
 use menura_contracts::types::audit_record::OssieFormat;
 
@@ -123,6 +123,44 @@ fn ctx_5_1_3_e0c_64_a_base_that_is_a_context_metric() {
     assert_eq!(
         rejected(conformance_model("e0-context-nested-001")),
         [pair("E0C-64", &data(BILLED_SHARE))]
+    );
+}
+
+#[test]
+fn ctx_5_1_3_e0c_64_a_base_that_reads_a_context_metric_through_derived_metrics() {
+    assert_eq!(
+        rejected(conformance_model("e0-context-nested-002")),
+        [pair("E0C-64", &data(BILLED_SHARE))]
+    );
+}
+
+#[test]
+fn ctx_5_1_3_e0c_65_a_period_to_date_base_that_is_semi_additive() {
+    assert_eq!(
+        rejected(conformance_model("e0-context-semi-additive-001")),
+        [pair("E0C-65", &data(BILLED_YTD))]
+    );
+}
+
+#[test]
+fn ctx_5_1_3_e0c_65_a_period_to_date_base_that_reads_a_semi_additive_metric() {
+    assert_eq!(
+        rejected(conformance_model("e0-context-semi-additive-002")),
+        [pair("E0C-65", &data(BILLED_YTD))]
+    );
+}
+
+#[test]
+fn ctx_5_1_3_only_period_to_date_rejects_a_semi_additive_base() {
+    let prior = conformance_model("e0-context-semi-additive-001").replacen(
+        r#""base": "balance", "modifier": {"type": "period_to_date", "time_dimension": "invoices.invoice_date", "grain": "year"}"#,
+        r#""base": "balance", "modifier": {"type": "prior_period", "time_dimension": "invoices.invoice_date", "grain": "year", "offset": 1}"#,
+        1,
+    );
+    let context = resolve_in(&prior, OssieFormat::Release).expect("the bases resolve");
+    assert_eq!(
+        bases(&context)[0],
+        (BILLED_YTD, "/semantic_model/0/metrics/6")
     );
 }
 
