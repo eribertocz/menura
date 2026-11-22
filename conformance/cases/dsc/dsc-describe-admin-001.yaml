@@ -1,0 +1,8 @@
+id: dsc-describe-admin-001
+rules: [DSC-1, DSC-2, DSC-3.1, DSC-3.2, DSC-3.2a, DSC-3.3, DSC-3.4, DSC-3.5, DSC-3.6, DSC-3.7, DSC-3.8, DSC-3.9, DSC-3.10, DSC-3.11, DSC-4, DSC-4.1, DSC-4.2, DSC-4.3, DSC-4.4, DSC-4.5]
+model: dsc-describe
+security_context: admin.json
+expect:
+  outcome: "describe"
+  warnings: [W0D-01, W0E-01, W0F-01]
+  document: "dsc-describe-admin-001.describe.json"

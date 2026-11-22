@@ -1,0 +1,7 @@
+id: dsc-describe-analyst-001
+rules: [DSC-1, DSC-2, DSC-3.1, DSC-3.2a, DSC-3.6, DSC-3.7, DSC-3.8, DSC-3.9, DSC-3.10, DSC-3.11, DSC-4.1, DSC-4.4]
+model: dsc-describe
+security_context: analyst.json
+expect:
+  outcome: "describe"
+  document: "dsc-describe-analyst-001.describe.json"

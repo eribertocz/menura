@@ -31,6 +31,7 @@ pub mod case_file;
 mod cells;
 mod csv_rows;
 pub mod database;
+mod describe_part;
 mod diagnostic_check;
 mod differential;
 mod divergences;

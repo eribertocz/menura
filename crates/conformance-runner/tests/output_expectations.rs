@@ -38,14 +38,30 @@ fn cs_2_15_the_integrity_checks_document_matches_its_golden_file() {
 }
 
 #[test]
-fn cs_2_8_cases_that_need_a_missing_core_function_are_pending() {
-    let report = run(&conformance_directory(), Some("next")).unwrap();
-    for case_id in ["next-audit-001", "next-describe-001"] {
-        let status = status(&report, case_id);
-        assert!(
-            matches!(status, Some(CaseStatus::Pending(_))),
-            "{case_id}: {status:?}"
+fn cs_2_15_the_describe_cases_pass() {
+    let report = run(&conformance_directory(), Some("cs")).unwrap();
+    assert_eq!(
+        status(&report, "cs-describe-001"),
+        Some(&CaseStatus::Passed)
+    );
+    let report = run(&conformance_directory(), Some("dsc")).unwrap();
+    for case_id in [
+        "dsc-describe-admin-001",
+        "dsc-describe-analyst-001",
+        "dsc-describe-not-admitted-001",
+    ] {
+        assert_eq!(
+            status(&report, case_id),
+            Some(&CaseStatus::Passed),
+            "{case_id}"
         );
     }
+}
+
+#[test]
+fn cs_2_8_cases_that_need_a_missing_core_function_are_pending() {
+    let report = run(&conformance_directory(), Some("next")).unwrap();
+    let status = status(&report, "next-audit-001");
+    assert!(matches!(status, Some(CaseStatus::Pending(_))), "{status:?}");
     assert!(!report.has_failures());
 }
