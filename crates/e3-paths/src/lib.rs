@@ -11,6 +11,7 @@ mod anchor;
 mod components;
 mod derived;
 mod error;
+mod explanation;
 mod metric_reach;
 mod needed;
 mod path_choice;
@@ -18,6 +19,7 @@ mod reachability;
 mod violation;
 
 pub use error::{PathCode, PathDiagnostic, PathError};
+pub use explanation::explanation;
 pub use violation::InvariantViolation;
 
 use menura_model::internal_model::InternalModel;

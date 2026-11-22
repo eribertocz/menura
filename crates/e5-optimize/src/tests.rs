@@ -129,6 +129,7 @@ fn with_summary_record(outcome: crate::RewriteOutcome) -> crate::OptimizedPlan {
             ),
             outcome,
         }],
+        explanation: Vec::new(),
     }
 }
 

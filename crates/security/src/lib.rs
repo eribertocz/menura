@@ -31,4 +31,4 @@ pub use context::{
 pub use list_attributes::misplaced_list_attributes;
 pub use restrictions::{RestrictionInput, Restrictions, restrictions};
 pub use role::Role;
-pub use row_filter::{RowFilterError, row_filter};
+pub use row_filter::{RowFilterError, policies_in_filter, row_filter};

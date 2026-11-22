@@ -2,8 +2,8 @@
 
 use std::fmt;
 
+use crate::internal_model::{FieldPath, NormalizedName};
 use menura_contracts::types::common::{Decision, Step};
-use menura_model::internal_model::{FieldPath, NormalizedName};
 
 /// The object a decision is about (PLN-7.2), written `<kind>:<name>`.
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
@@ -85,7 +85,7 @@ impl ExplanationEntry {
     ///
     /// ```
     /// use menura_contracts::types::common::Step;
-    /// use menura_representations::explanation::{ExplanationEntry, Subject};
+    /// use menura_model::explanation::{ExplanationEntry, Subject};
     ///
     /// let entry = ExplanationEntry {
     ///     code: "SEC-3.2",

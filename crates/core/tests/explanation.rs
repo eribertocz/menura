@@ -1,6 +1,8 @@
 //! The explanation of the compiled plan (PLN-1, PLN-7, PLN-7.1 to PLN-7.4, E5-2.2, E5-3.8):
 //! the entries every stage records, assembled in step order.
 
+#![cfg(test)]
+
 mod support;
 
 use menura_contracts::types::common::{Decision, Step};
@@ -242,7 +244,7 @@ fn e5_3_8_an_applied_rewrite_is_recorded_after_the_entry_it_changes() {
     );
     assert_eq!(
         codes(&entries),
-        ["DEV-4", "E4-4.0e", "E4-4.1", "E5-3.2", "E5-3.3"]
+        ["DEV-4", "E4-4.0e", "E4-4.1", "E4-6.10", "E5-3.2", "E5-3.3"]
     );
     let applied = entry(&entries, "E5-3.3");
     assert_eq!(
@@ -256,10 +258,9 @@ fn e5_3_8_an_applied_rewrite_is_recorded_after_the_entry_it_changes() {
 fn e5_2_2_a_summary_is_recorded_with_the_authorized_executor_last() {
     let handle = conformance_model!("e5-summary-selection", state).handle();
     let query = query(
-        r#"{"dimensions": ["orders.order_date"],
+        r#"{"dimensions": ["orders.region"],
           "metrics": [{"metric": "total_amount", "alias": "total_amount"}],
-          "nonportable_extensions": [{"vendor_name": "COMMON", "data": {"namespace": "menura",
-            "version": 1, "time_grains": [{"dimension": "orders.order_date", "grain": "day"}]}}]}"#,
+          "filter": "orders.region = 'SOUTH'"}"#,
     );
     let entries = explanation(
         &handle,
@@ -288,7 +289,7 @@ fn e5_3_8_a_folded_branch_is_recorded() {
     let entries = explanation(
         &handle,
         &query,
-        conformance_context!("e5-fold-constants", "clerk.json"),
+        conformance_context!("e5-fold-constants", "guest.json"),
     );
     assert!(
         entries

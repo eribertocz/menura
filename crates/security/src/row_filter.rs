@@ -67,6 +67,38 @@ pub fn row_filter(
     Ok(Some(binary(BinaryOperator::And, grant, restriction)))
 }
 
+/// The row policies of `dataset` that take part in its row filter `G AND R` for the user of
+/// `context` (E4-6.2 to E4-6.4), in CON-5 order of their names: the policies the user is not
+/// exempt from, except the role-scoped ones that grant none of the user's roles while another
+/// one grants. When no role-scoped policy grants, every remaining role-scoped policy is kept:
+/// together they make `G` the constant FALSE.
+#[must_use]
+pub fn policies_in_filter<'model>(
+    dataset: &'model Dataset,
+    context: &AdmittedSecurityContext,
+) -> Vec<&'model RowPolicy> {
+    let user_roles = context.roles();
+    let mut remaining: Vec<&RowPolicy> = dataset
+        .row_policies
+        .iter()
+        .filter(|policy| !holds_any(user_roles, policy.exempt_roles.as_deref()))
+        .collect();
+    remaining.sort_by(|left, right| left.name.cmp(&right.name));
+    let grants = |policy: &RowPolicy| {
+        policy
+            .roles
+            .as_deref()
+            .is_none_or(|granted| holds_any(user_roles, Some(granted)))
+    };
+    let some_scoped_grant = remaining
+        .iter()
+        .any(|policy| policy.roles.is_some() && grants(policy));
+    remaining
+        .into_iter()
+        .filter(|policy| !some_scoped_grant || grants(policy))
+        .collect()
+}
+
 /// Whether the user holds one of `roles`.
 fn holds_any(user_roles: &[Role], roles: Option<&[RoleName]>) -> bool {
     roles.is_some_and(|roles| {

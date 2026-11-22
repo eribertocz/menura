@@ -1,6 +1,7 @@
 //! The compiled plan document of the 0.3.0 slice, with the outputs of VS-5 (PLN-1).
 
 use menura_contracts::ContractKind;
+use menura_contracts::types::common::Decision;
 use menura_contracts::types::compiled_plan::{
     CompiledPlanContract, CompiledPlanDocument, Diagnostic, Limits,
 };
@@ -14,8 +15,16 @@ use crate::compile_options::CompileOptions;
 use crate::handle::Handle;
 use crate::producer::producer;
 
-/// The compiled plan of `plan`, whose SQL is `generated`, for the user of `context`, with
-/// `warnings` (VS-5): `lineage` and `explanation` are empty before 0.7.0.
+/// The members of the compiled plan that the stages gathered, besides the SQL.
+pub(crate) struct PlanOutputs {
+    /// The explanation, assembled in step order (PLN-7).
+    pub(crate) explanation: Vec<Decision>,
+    /// The warnings.
+    pub(crate) warnings: Vec<Diagnostic>,
+}
+
+/// The compiled plan of `plan`, whose SQL is `generated`, for the user of `context`, with the
+/// explanation and warnings of `outputs`; `lineage` is empty before 0.7.0.
 ///
 /// # Errors
 ///
@@ -26,7 +35,7 @@ pub(crate) fn plan_document(
     generated: GeneratedSql,
     context: &AdmittedSecurityContext,
     options: &CompileOptions,
-    warnings: Vec<Diagnostic>,
+    outputs: PlanOutputs,
 ) -> Result<CompiledPlanDocument, InternalError> {
     let data_source = data_source(handle);
     let sources = relations_read(handle, plan)?;
@@ -57,8 +66,8 @@ pub(crate) fn plan_document(
             max_rows: options.max_rows.map(std::num::NonZeroU64::get),
         },
         lineage: Vec::new(),
-        explanation: Vec::new(),
-        warnings,
+        explanation: outputs.explanation,
+        warnings: outputs.warnings,
     })
 }
 

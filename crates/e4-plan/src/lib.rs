@@ -26,6 +26,7 @@ mod derived_inputs;
 mod dimensions;
 mod error;
 mod expansion;
+mod explanation;
 mod followed;
 mod inline_output;
 mod joins;
@@ -49,6 +50,7 @@ mod typing;
 mod visibility;
 
 pub use error::{InvariantViolation, PlanError};
+pub use explanation::explanation;
 pub use population::{PopulationRequest, plan_population};
 
 use menura_contracts::types::catalog::CatalogSchemaDocument;

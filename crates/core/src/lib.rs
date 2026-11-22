@@ -20,6 +20,7 @@ mod cache_key;
 mod catalog_state;
 mod compile;
 mod compile_options;
+mod explanation;
 mod handle;
 mod json;
 mod load;
