@@ -128,7 +128,7 @@ fn branch_plan(
 ) -> Result<PlanNode, PlanError> {
     let home = slice::home_dataset(branch, model)?;
     let layout = Layout::new(branch, home, model)?;
-    let keys = dimensions::dimension_keys(query, &layout)?;
+    let dimensions::BranchKeys { keys, computed } = dimensions::dimension_keys(query, &layout)?;
     let components = metrics::branch_components(branch, metrics, home)?;
     let source = rows::BranchSource {
         branch,
@@ -147,11 +147,13 @@ fn branch_plan(
             metric,
             declaration,
             keys,
+            computed,
             components,
         });
     }
     let request = rows::RowsRequest {
         keys: &keys,
+        computed: computed.as_ref(),
         components: &components,
         fields: &[],
         predicate: query_filter::query_predicate(query, &layout)?,

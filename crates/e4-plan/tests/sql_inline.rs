@@ -36,7 +36,7 @@ fn projected(plan: &PlanNode) -> &[NamedExpression] {
 #[test]
 fn e1_4_2_an_inline_metric_is_evaluated_from_the_components_of_its_terms() {
     let columns = vec![
-        expression_dimension(r#""ORDERS"."REGION""#, "region", 8),
+        expression_dimension(r#"LOWER("ORDERS"."REGION")"#, "region", 8),
         inline(
             r#"CAST(AGG("TOTAL_AMOUNT") AS DOUBLE) / AGG("ORDER_COUNT")"#,
             "per_order",
@@ -46,7 +46,10 @@ fn e1_4_2_an_inline_metric_is_evaluated_from_the_components_of_its_terms() {
 
     let plan = plan(columns, &[2]);
 
-    assert_eq!(kinds(&plan), ["Project", "Project", "Aggregate", "Scan"]);
+    assert_eq!(
+        kinds(&plan),
+        ["Project", "Project", "Aggregate", "Project", "Scan"]
+    );
     assert_eq!(plan.origin(), &Origin::Query(select_item(20)));
     assert_eq!(column_names(&plan), ["region", "per_order"]);
     let per_order = &projected(&plan)[1];

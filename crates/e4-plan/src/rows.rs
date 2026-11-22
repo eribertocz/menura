@@ -1,6 +1,7 @@
 //! The rows of a branch before its aggregation (E4-4 steps 1 to 5): the home `Scan` of its
-//! visible rows, the joins of its join tree, the query-filter `Filter` and, when the branch
-//! joins and has components, the `Deduplicate`.
+//! visible rows, the joins of its join tree, the query-filter `Filter`, the `Project` of the
+//! expression dimensions of the SQL form and, when the branch joins and has components, the
+//! `Deduplicate`.
 
 use menura_contracts::types::catalog::CatalogSchemaDocument;
 use menura_model::expression::Expression;
@@ -11,9 +12,10 @@ use menura_representations::paths::Branch;
 use menura_security::AdmittedSecurityContext;
 
 use crate::columns::read_fields;
+use crate::dimensions::ComputedDimensions;
 use crate::error::PlanError;
 use crate::layout::Layout;
-use crate::nodes::{component_expression, deduplicate, filter};
+use crate::nodes::{component_expression, compute_dimensions, deduplicate, filter};
 use crate::{followed, joins, policy_visits, scan, visibility};
 
 /// Where the rows of a branch are read from.
@@ -38,6 +40,8 @@ pub(crate) struct BranchSource<'input> {
 pub(crate) struct RowsRequest<'request> {
     /// The `Aggregate` keys of the branch.
     pub(crate) keys: &'request [NamedExpression],
+    /// The expression dimensions the keys read, when the query has any.
+    pub(crate) computed: Option<&'request ComputedDimensions>,
     /// The components of the branch.
     pub(crate) components: &'request [AggregateComponent],
     /// Other home fields the rows must provide, by normalized name.
@@ -55,7 +59,8 @@ pub(crate) type ReplacedHome<'build> =
     dyn Fn(&[NormalizedName]) -> Result<PlanNode, PlanError> + 'build;
 
 /// The rows of the branch of `source` for `request`: its visible home rows, joined along its
-/// join tree, filtered by the predicate, then deduplicated per (key values, home row) when the
+/// join tree, filtered by the predicate, with its expression dimensions computed, then
+/// deduplicated per (key values, home row) when the
 /// branch joins and has components (E4-4.0a to E4-4.0f). Replaced home rows are joined and
 /// filtered the same way, and never deduplicated: they have no home row identity.
 ///
@@ -99,6 +104,9 @@ pub(crate) fn branch_rows(
     if let Some((predicate, location)) = request.predicate {
         node = filter(node, predicate, Origin::Query(location));
     }
+    if let Some(computed) = request.computed {
+        node = compute_dimensions(node, computed)?;
+    }
     if let Some(identity) = identity {
         let origin = Origin::Model(home.location.clone());
         node = deduplicate(node, request.keys, identity.clone(), origin);
@@ -106,7 +114,8 @@ pub(crate) fn branch_rows(
     Ok(node)
 }
 
-/// Every column the rows read: the fields of `request`, the join keys, and the fields of the
+/// Every column the rows read: the fields of `request`, those of its expression dimensions
+/// instead of the columns that compute them, the join keys, and the fields of the
 /// row policies of the home dataset and of each join instance.
 fn rows_read(
     request: &RowsRequest<'_>,
@@ -119,6 +128,17 @@ fn rows_read(
         request.components,
         request.predicate.as_ref().map(|(predicate, _)| predicate),
     );
+    if let Some(computed) = request.computed {
+        read.retain(|name| {
+            !computed
+                .expressions
+                .iter()
+                .any(|dimension| dimension.name.as_str() == name.as_str())
+        });
+        for dimension in &computed.expressions {
+            read_fields(&dimension.expression, &mut read);
+        }
+    }
     read.extend(request.fields.iter().cloned());
     read.extend(joins::join_reads(layout));
     read.extend(visibility.fields(home)?);

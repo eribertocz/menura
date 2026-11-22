@@ -161,6 +161,7 @@ fn carried_rows(branch: &SemiAdditiveBranch<'_>) -> Result<PlanNode, PlanError> 
         source,
         RowsRequest {
             keys: &branch.keys,
+            computed: branch.computed.as_ref(),
             components: &branch.components,
             fields: &snapshot_fields(branch.declaration),
             predicate,
@@ -183,6 +184,7 @@ fn added_rows(branch: &SemiAdditiveBranch<'_>, expected: &PlanNode) -> Result<Pl
         source,
         RowsRequest {
             keys: &branch.keys,
+            computed: branch.computed.as_ref(),
             components: &branch.components,
             fields: &snapshot_fields(branch.declaration),
             predicate: query_predicate(branch.query, source.layout)?,

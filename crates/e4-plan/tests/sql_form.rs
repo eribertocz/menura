@@ -12,8 +12,9 @@ use menura_contracts::types::query::{Direction, NullsOrder};
 use menura_e4_plan::{InvariantViolation, PlanError};
 use menura_representations::bound_query::{BoundOrderItem, BoundQueryParts};
 use menura_representations::logical_plan::{Operation, PlanNode};
+use menura_representations::origin::Origin;
 use menura_representations::query_tree::QueryLimit;
-use support::plan::{column_names, kinds, node};
+use support::plan::{column_names, column_reference, kinds, node};
 use support::sql::{SqlColumn, aggregated, expression_dimension, select_item, sql_query};
 use support::{anyone, branches, build_plan, model, tree};
 
@@ -39,15 +40,22 @@ fn by_channel() -> Vec<SqlColumn> {
 }
 
 #[test]
-fn e1_4_1_an_expression_dimension_is_an_aggregate_key_over_the_scan() {
+fn e1_4_1_an_expression_dimension_is_computed_over_the_scan_by_a_project_from_the_query() {
     let plan = plan(by_channel(), BoundQueryParts::default()).expect("a plan");
 
-    assert_eq!(kinds(&plan), ["Project", "Aggregate", "Scan"]);
-    let Operation::Aggregate { keys, .. } = node(&plan, "Aggregate").operation() else {
+    assert_eq!(kinds(&plan), ["Project", "Aggregate", "Project", "Scan"]);
+    let Operation::Aggregate { input, keys, .. } = node(&plan, "Aggregate").operation() else {
         panic!("an Aggregate");
     };
     assert_eq!(keys.len(), 1);
-    assert_eq!(keys[0].expression, tree(r#"UPPER("REGION")"#));
+    assert_eq!(keys[0].expression, column_reference("menura.dimension_1"));
+    assert_eq!(input.origin(), &Origin::Query(select_item(8)));
+    let Operation::Project { expressions, .. } = input.operation() else {
+        panic!("a Project");
+    };
+    let computed = expressions.last().expect("the computed dimension");
+    assert_eq!(computed.name.as_str(), "menura.dimension_1");
+    assert_eq!(computed.expression, tree(r#"UPPER("REGION")"#));
     let r = &plan.schema().columns()[0];
     assert_eq!(r.logical_type, LogicalType::Text);
     assert!(r.nullable);
@@ -101,7 +109,7 @@ fn e4_9_1_order_by_and_limit_sort_the_output_columns_they_name() {
 
     assert_eq!(
         kinds(&plan),
-        ["Limit", "Sort", "Project", "Aggregate", "Scan"]
+        ["Limit", "Sort", "Project", "Aggregate", "Project", "Scan"]
     );
     let Operation::Sort { items, .. } = node(&plan, "Sort").operation() else {
         panic!("a Sort");
