@@ -1,0 +1,20 @@
+id: e5-summary-tie-001
+rules: [E5-4]
+model: e5-summary-tie
+security_context: analyst.json
+query:
+  contract: menura.query
+  contract_version: "1.1.0"
+  time_zone: UTC
+  query:
+    dimensions: [orders.order_date]
+    metrics:
+      - {metric: total_amount, alias: total_amount}
+    nonportable_extensions:
+      - {"vendor_name": "COMMON", "data": {"namespace": "menura", "version": 1, "time_grains": [{"dimension": "orders.order_date", "grain": "month"}]}}
+expect:
+  outcome: plan
+  sql: e5-summary-tie-001.sql
+  rows: e5-summary-tie-001.csv
+  row_order: any
+oracle: e5-summary-tie-001.oracle.sql

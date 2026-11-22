@@ -6,6 +6,7 @@ mod expressions;
 mod grain;
 mod plans;
 mod restricted;
+mod selection;
 mod summary_branch;
 
 pub(super) use plans::{

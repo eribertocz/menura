@@ -23,6 +23,11 @@ impl<'a> Evidence<'a> {
         Self { model, state }
     }
 
+    /// The admitted catalog state, or `None` when there is none or the handle ignored it.
+    pub(crate) fn state(&self) -> Option<&'a CatalogStateDocument> {
+        self.state
+    }
+
     /// Whether the state holds evidence of the check of `kind` for the relationship `target`
     /// (CAT-7.3): a result whose `status` is `passed`, whose `definition_hash` is the current
     /// one (E0H-4.3), and whose `verified` lists exactly the current versions of the relations

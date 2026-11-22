@@ -56,6 +56,17 @@ impl OptimizedPlan {
         &self.records
     }
 
+    /// Whether the plan reads a summary, and so requires the authorized executor: summaries are
+    /// `access: internal`, and only that executor's identity may read their relations (E5-4
+    /// step 5, SUM-4.2). It holds when a record shows a summary used (E5-3.5). Before 0.7.0 the
+    /// mark is not part of the compiled plan (VS-5).
+    #[must_use]
+    pub fn requires_authorized_executor(&self) -> bool {
+        self.records.iter().any(|record| {
+            record.rule == RewriteRule::UseSummary && record.outcome == RewriteOutcome::Applied
+        })
+    }
+
     /// The optimized plan, without the records.
     #[must_use]
     pub fn into_plan(self) -> PlanNode {

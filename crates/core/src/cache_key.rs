@@ -56,7 +56,8 @@ pub(crate) fn cache_key(
 
 /// The versions `state` gives for the relations `sources`, sorted by source then period; `None`
 /// when it gives none for one of them (PLN-3.3). Every period of a partitioned relation is
-/// read, because 0.3.0 prunes no partition.
+/// read, because 0.3.0 prunes no partition. A summary relation's periods are those of its
+/// `aggregate_build.built_from`, all read for the same reason.
 fn data_versions(state: &CatalogStateDocument, sources: &[&str]) -> Option<Vec<DataVersion>> {
     let mut versions = Vec::new();
     for source in sources {
