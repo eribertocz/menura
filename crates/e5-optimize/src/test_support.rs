@@ -26,7 +26,7 @@ pub(crate) const OTHER_HASH: &str =
     "2222222222222222222222222222222222222222222222222222222222222222";
 
 /// A location in the model document.
-fn location(pointer: &str) -> SourceLocation {
+pub(crate) fn location(pointer: &str) -> SourceLocation {
     SourceLocation {
         pointer: pointer.to_owned(),
         line: 1,
@@ -35,12 +35,12 @@ fn location(pointer: &str) -> SourceLocation {
 }
 
 /// A hash from its 64 hexadecimal digits.
-fn hash(text: &str) -> Sha256Hash {
+pub(crate) fn hash(text: &str) -> Sha256Hash {
     Sha256Hash::try_from(text.to_owned()).expect("a valid hash")
 }
 
 /// The dataset `name` of relation `source`, without fields.
-fn dataset(name: &str, source: &str) -> Dataset {
+pub(crate) fn dataset(name: &str, source: &str) -> Dataset {
     Dataset {
         name: NormalizedName::new(name),
         source: source.to_owned(),
