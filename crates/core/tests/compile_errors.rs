@@ -323,7 +323,7 @@ fn pln_5_the_sql_form_keeps_the_former_name_warning() {
         "sql": "SELECT region FROM orders"}"#;
     assert_eq!(
         former_query_error(sql_form),
-        ("E_NOT_YET_SUPPORTED".to_owned(), former_query_warning())
+        ("EQRY-05".to_owned(), former_query_warning())
     );
 }
 

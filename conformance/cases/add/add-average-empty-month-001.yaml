@@ -1,0 +1,17 @@
+id: add-average-empty-month-001
+rules: [E4-7.2, E4-7.6, E4-3.14, ADD-4.7, ADD-4.3]
+model: next-semi-additive
+security_context: analyst.json
+query:
+  contract: "menura.query"
+  contract_version: "1.1.0"
+  time_zone: "UTC"
+  query:
+    metrics:
+      - {"metric": "average_with_zero", "alias": "average_with_zero"}
+    nonportable_extensions:
+      - {"vendor_name": "COMMON", "data": {"namespace": "menura", "version": 1, "date_range": {"dimension": "balances.period", "from": "2026-01-01", "to": "2026-05-31"}}}
+expect:
+  outcome: "plan"
+  rows: "add-average-empty-month-001.csv"
+  row_order: "any"

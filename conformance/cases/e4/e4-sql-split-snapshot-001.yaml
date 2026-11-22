@@ -1,0 +1,17 @@
+id: e4-sql-split-snapshot-001
+rules: [E4-7.8]
+model: next-semi-additive
+security_context: analyst.json
+query:
+  contract: "menura.query"
+  contract_version: "1.1.0"
+  time_zone: "UTC"
+  sql: "SELECT DATE_TRUNC('week', period) AS period_week, AGG(last_global) AS balance FROM next_semi_additive.balances GROUP BY ALL"
+expect:
+  outcome: "error"
+  error: "E4-03"
+  location:
+    document: "query"
+    pointer: "/sql"
+    line: 1
+    column: 8

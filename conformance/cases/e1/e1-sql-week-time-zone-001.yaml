@@ -1,0 +1,13 @@
+id: e1-sql-week-time-zone-001
+rules: [E1-4.4]
+model: slice
+security_context: auditor.json
+query:
+  contract: "menura.query"
+  contract_version: "1.1.0"
+  time_zone: "Pacific/Pago_Pago"
+  sql: "SELECT DATE_TRUNC('week', s.sold_at) AS sold_week, AGG(s.sale_count) AS sale_count FROM slice.sales AS s GROUP BY 1 ORDER BY sold_week"
+expect:
+  outcome: "plan"
+  row_order: "exact"
+  rows: "e1-sql-week-time-zone-001.csv"

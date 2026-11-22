@@ -245,10 +245,10 @@ mod tests {
         status_in_model("slice", case_text, divergences)
     }
 
-    /// Runs the query part of a case of the `sample` model, whose `total_balance` declares
-    /// additivity, a capability outside the 0.4.0 slice.
-    fn sample_status(case_text: &str) -> CaseStatus {
-        status_in_model("sample", case_text, &Divergences::default())
+    /// Runs the query part of a case of the `e0-context` model, whose `billed_share` is a
+    /// context metric, a capability outside the 0.5.0 slice.
+    fn context_status(case_text: &str) -> CaseStatus {
+        status_in_model("e0-context", case_text, &Divergences::default())
     }
 
     /// Runs the query part of a case of the model `model`; the files the case names are under
@@ -258,9 +258,11 @@ mod tests {
         let model_folder = conformance_directory().join("models").join(model);
         let connection = prepare_database(&ModelFixture::read(&model_folder).unwrap()).unwrap();
         let documents = ModelDocuments::read(&model_folder).unwrap();
-        let LoadOutcome::Loaded(handle) =
-            check_load(&case, &documents, &resolve_load_options(None))
-        else {
+        let LoadOutcome::Loaded(handle) = check_load(
+            &case,
+            &documents,
+            &resolve_load_options(case.load_options.as_ref()),
+        ) else {
             panic!("the {model} model loads");
         };
         let context_name = case.security_context.as_deref().unwrap();
@@ -284,16 +286,17 @@ mod tests {
         )
     }
 
-    fn sample_case_text(query: &str, expect: &str) -> String {
+    fn context_case_text(query: &str, expect: &str) -> String {
         format!(
-            "id: cs-unit-002\nrules: [VS-4]\nmodel: sample\nsecurity_context: analyst.json\n\
+            "id: cs-unit-002\nrules: [VS-4]\nmodel: e0-context\n\
+             load_options: {{grant_authenticated_to_all: true}}\nsecurity_context: analyst.json\n\
              query: {{contract: menura.query, contract_version: \"1.1.0\", time_zone: UTC, \
              query: {query}}}\nexpect: {expect}\n"
         )
     }
 
-    /// `total_balance` declares additivity, which is outside the 0.4.0 slice (VS-1b).
-    const OUTSIDE_THE_SLICE: &str = "{metrics: [total_amount, total_balance]}";
+    /// `billed_share` is a context metric, which is outside the 0.5.0 slice (VS-1c).
+    const OUTSIDE_THE_SLICE: &str = "{metrics: [billed, billed_share]}";
 
     const BY_REGION: &str = "{dimensions: [sales.region], metrics: [total_amount, total_quantity, \
                              sale_count]}";
@@ -313,7 +316,7 @@ mod tests {
 
     #[test]
     fn vs_4_a_query_outside_the_slice_is_pending_whatever_the_expectation() {
-        let status = sample_status(&sample_case_text(
+        let status = context_status(&context_case_text(
             OUTSIDE_THE_SLICE,
             "{outcome: plan, rows: cs-plan-rows-001.csv}",
         ));
@@ -332,14 +335,14 @@ mod tests {
             )
         };
         assert_eq!(
-            sample_status(&sample_case_text(
+            context_status(&context_case_text(
                 OUTSIDE_THE_SLICE,
                 &expect("/query/metrics/1")
             )),
             CaseStatus::Passed
         );
         assert_fails(
-            sample_status(&sample_case_text(
+            context_status(&context_case_text(
                 OUTSIDE_THE_SLICE,
                 &expect("/query/metrics/0"),
             )),

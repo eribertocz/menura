@@ -1,6 +1,6 @@
 //! Runs the cases of `conformance/cases/e0/` through `core` (CS-2.8): every `load_error` case
-//! passes, and every other case passes or, when its query needs a capability outside the 0.3.0
-//! slice, is pending (VS-4).
+//! passes, and every other case passes or, when its query needs a context metric, the only
+//! capability outside the 0.5.0 slice (VS-1c), is pending (VS-4).
 
 use std::path::{Path, PathBuf};
 

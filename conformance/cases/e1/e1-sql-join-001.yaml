@@ -1,0 +1,15 @@
+id: e1-sql-join-001
+rules: [E1-4, QRY-5.3]
+model: slice
+security_context: auditor.json
+query:
+  contract: "menura.query"
+  contract_version: "1.1.0"
+  time_zone: "UTC"
+  sql: "SELECT s.region, AGG(s.sale_count) AS n FROM slice.sales AS s JOIN slice.targets AS t ON s.region = t.region GROUP BY s.region"
+expect:
+  outcome: "error"
+  error: "EQRY-05"
+  location:
+    document: "query"
+    pointer: "/sql"

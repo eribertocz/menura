@@ -1,4 +1,4 @@
-//! Runs the query cases of the 0.4.0 slice (CS-2.8): every case compiles through `core`, every
+//! Runs the query cases of the 0.5.0 slice (CS-2.8): every case compiles through `core`, every
 //! plan is executed on `DuckDB` (E6-5.4), and every case passes, including those that expect
 //! `E_NOT_YET_SUPPORTED` (VS-4).
 
@@ -6,7 +6,9 @@ use std::path::{Path, PathBuf};
 
 use menura_conformance_runner::{CaseStatus, run};
 
-const AREAS: [&str; 8] = ["cs", "e1", "e2", "e4", "e6", "multi", "qry", "sec"];
+const AREAS: [&str; 10] = [
+    "add", "cs", "e1", "e2", "e4", "e6", "multi", "pop", "qry", "sec",
+];
 
 fn conformance_directory() -> PathBuf {
     Path::new(env!("CARGO_MANIFEST_DIR")).join("../../conformance")
