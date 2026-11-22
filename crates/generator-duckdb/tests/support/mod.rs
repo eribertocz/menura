@@ -22,6 +22,7 @@ mod plan;
 mod population;
 mod propagation;
 mod stitch;
+mod summary;
 
 pub use expression::{
     expression_sql, query_with_reference_time, query_without_reference_time, reference_time_query,
@@ -60,6 +61,7 @@ pub use stitch::{
     TWO_METRICS, generated, huge_integer, region_amount, region_quantities, stitch,
     two_branch_columns, two_branches,
 };
+pub use summary::{generate_summary, physical_type, summary_generated, summary_scan};
 
 /// The 64-bit signed integer.
 pub fn big_integer() -> LogicalType {

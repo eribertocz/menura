@@ -187,6 +187,7 @@ mod tests {
                     name: ColumnName::new(component),
                     call: AggregateCall::CountRows,
                     filter: None,
+                    recomposition: None,
                 }],
             },
             OutputSchema::new(vec![

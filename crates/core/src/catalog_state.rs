@@ -2,7 +2,7 @@
 //! summary builds of CAT-8.8, which need the model's summaries (SUM-6.1.8).
 
 use menura_contracts::types::catalog::{
-    AggregateBuild, CatalogSchemaDocument, CatalogStateDocument, RelationData,
+    AggregateBuild, CatalogSchemaDocument, CatalogStateDocument, PeriodVersion, RelationData,
 };
 use menura_contracts::types::common::Grain;
 use menura_contracts::types::compiled_plan::{Diagnostic, DiagnosticLocation, InputDocument};
@@ -62,8 +62,9 @@ fn admitted_state(
     Ok(state)
 }
 
-/// CAT-8.8: `aggregate_build` appears only on the relations of the model's summaries, and its
-/// periods have the grain of the summary's coverage dimension.
+/// CAT-8.8: `aggregate_build` appears only on the relations of the model's summaries, its
+/// coverage has the grain of the summary's coverage dimension, and its build and check periods
+/// have a grain from which that grain derives by exact grouping.
 fn check_summary_builds(
     state: &CatalogStateDocument,
     model: &InternalModel,
@@ -85,20 +86,71 @@ fn check_summary_builds(
             ));
         };
         let grain = coverage_grain(summary);
-        if let Some((period_pointer, period)) = period_of_another_grain(build, grain) {
+        if let Some(period) = misplaced_period(build, grain) {
             return Err(warning(
                 RULE_VIOLATION,
-                &format!("{pointer}{period_pointer}"),
+                &format!("{pointer}{}", period.pointer),
                 format!(
-                    "period `{period}` of the summary build of `{}` is not of the grain of the \
-                     summary's coverage dimension ({}); the state is ignored",
+                    "period `{}` of the summary build of `{}` is not of {}; the state is ignored",
+                    period.period,
                     relation.source,
-                    grain_name(grain)
+                    period.expected.describe(grain)
                 ),
             ));
         }
     }
     Ok(())
+}
+
+/// The grain a period of a summary build must have.
+#[derive(Clone, Copy)]
+enum ExpectedGrain {
+    /// A `coverage` period: the grain of the summary's coverage dimension.
+    Coverage,
+    /// A `built_from` or `verified` period: a grain from which that grain derives.
+    Finer,
+}
+
+impl ExpectedGrain {
+    /// Whether a period of `period_grain` is accepted for a summary of `summary_grain`. A
+    /// coverage dimension without a grain accepts no period.
+    fn accepts(self, period_grain: Option<Grain>, summary_grain: Option<Grain>) -> bool {
+        match (self, period_grain, summary_grain) {
+            (_, Some(_), None) | (_, None, _) => false,
+            (Self::Coverage, Some(period), Some(summary)) => period == summary,
+            (Self::Finer, Some(period), Some(summary)) => derives_from(summary, period),
+        }
+    }
+
+    /// The expected grain, in the words of a warning message.
+    fn describe(self, summary_grain: Option<Grain>) -> String {
+        let name = grain_name(summary_grain);
+        match self {
+            Self::Coverage => format!("the grain of the summary's coverage dimension ({name})"),
+            Self::Finer => format!(
+                "a grain from which the grain of the summary's coverage dimension ({name}) \
+                 derives"
+            ),
+        }
+    }
+}
+
+/// A period of a summary build, with its pointer inside the build and the grain it must have.
+struct BuildPeriod<'build> {
+    pointer: String,
+    period: &'build str,
+    expected: ExpectedGrain,
+}
+
+/// Whether `coarse` derives from `fine` by exact grouping (SUM-3.4, CAT-7.2 condition 1).
+fn derives_from(coarse: Grain, fine: Grain) -> bool {
+    match fine {
+        Grain::Day => true,
+        Grain::Week => coarse == Grain::Week,
+        Grain::Month => matches!(coarse, Grain::Month | Grain::Quarter | Grain::Year),
+        Grain::Quarter => matches!(coarse, Grain::Quarter | Grain::Year),
+        Grain::Year => coarse == Grain::Year,
+    }
 }
 
 /// The summary of the model whose dataset has `source`.
@@ -123,35 +175,40 @@ fn coverage_grain(summary: &Summary) -> Option<Grain> {
         .and_then(|dimension| dimension.grain)
 }
 
-/// The first period of `build` whose grain is not `grain`, with its pointer inside the build.
-fn period_of_another_grain(build: &AggregateBuild, grain: Option<Grain>) -> Option<(String, &str)> {
-    let periods = [
-        ("/coverage/from".to_owned(), build.coverage.from.as_str()),
-        ("/coverage/to".to_owned(), build.coverage.to.as_str()),
+/// The first period of `build`, in document order, whose grain is not accepted for a summary
+/// of `grain`.
+fn misplaced_period(build: &AggregateBuild, grain: Option<Grain>) -> Option<BuildPeriod<'_>> {
+    let coverage = [
+        ("/coverage/from", &build.coverage.from),
+        ("/coverage/to", &build.coverage.to),
     ]
     .into_iter()
-    .chain(build.built_from.iter().enumerate().map(|(index, version)| {
-        (
-            format!("/built_from/{index}/period"),
-            version.period.as_str(),
-        )
-    }))
-    .chain(
-        build
-            .integrity_check
-            .verified
-            .iter()
-            .enumerate()
-            .map(|(index, version)| {
-                (
-                    format!("/integrity_check/verified/{index}/period"),
-                    version.period.as_str(),
-                )
-            }),
-    );
-    periods
-        .into_iter()
-        .find(|(_, period)| grain.is_none() || period_grain(period) != grain)
+    .map(|(pointer, period)| BuildPeriod {
+        pointer: pointer.to_owned(),
+        period: period.as_str(),
+        expected: ExpectedGrain::Coverage,
+    });
+    let built_from = listed_periods("/built_from", &build.built_from);
+    let verified = listed_periods("/integrity_check/verified", &build.integrity_check.verified);
+    coverage
+        .chain(built_from)
+        .chain(verified)
+        .find(|period| !period.expected.accepts(period_grain(period.period), grain))
+}
+
+/// The periods of a `built_from` or `verified` list at `list`.
+fn listed_periods<'build>(
+    list: &'build str,
+    versions: &'build [PeriodVersion],
+) -> impl Iterator<Item = BuildPeriod<'build>> {
+    versions
+        .iter()
+        .enumerate()
+        .map(move |(index, version)| BuildPeriod {
+            pointer: format!("{list}/{index}/period"),
+            period: version.period.as_str(),
+            expected: ExpectedGrain::Finer,
+        })
 }
 
 /// The grain a canonical period's shape denotes (CAT-5.1, CAT-8.6). The state is admitted, so
