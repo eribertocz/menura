@@ -6,6 +6,8 @@ mod inner_joins;
 mod merge_scans;
 mod summaries;
 mod unused_joins;
+#[cfg(test)]
+mod unused_joins_tests;
 
 use menura_representations::logical_plan::PlanNode;
 
