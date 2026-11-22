@@ -126,10 +126,8 @@ fn vs_5_the_default_dialect_option_is_duckdb() {
 }
 
 #[test]
-fn vs_5_lineage_and_explanation_are_empty() {
-    let compiled = compiled();
-    assert!(compiled.lineage.is_empty());
-    assert!(compiled.explanation.is_empty());
+fn vs_5_lineage_is_empty() {
+    assert!(compiled().lineage.is_empty());
 }
 
 #[test]

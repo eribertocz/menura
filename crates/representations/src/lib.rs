@@ -4,6 +4,7 @@
 
 pub mod bound_query;
 pub mod columns;
+pub mod explanation;
 pub mod logical_plan;
 pub mod names;
 pub mod origin;
