@@ -10,6 +10,8 @@ pub mod common;
 pub mod compiled_plan;
 pub mod dependencies;
 pub mod descriptions;
+pub mod migration_report;
+pub mod ordered_json;
 pub mod query;
 pub mod security_context;
 
@@ -43,3 +45,4 @@ contract_document!(descriptions::ModelDescriptionDocument, ModelDescription);
 contract_document!(descriptions::IntegrityChecksDocument, IntegrityChecks);
 contract_document!(dependencies::ModelDependenciesDocument, ModelDependencies);
 contract_document!(dependencies::ModelDiffDocument, ModelDiff);
+contract_document!(migration_report::MigrationReportDocument, MigrationReport);

@@ -31,6 +31,8 @@ pub(crate) fn matches_pattern(pattern: &str, text: &str) -> Option<bool> {
         "^policy:.+$" => is_prefixed(text, &["policy"]),
         "^menura\\.[a-z][a-z_]*$" => is_menura_contract_name(text),
         "^(/([^~/]|~[01])*)+$" => is_non_empty_json_pointer(text),
+        // One or more `/`-prefixed tokens of any characters: every text that starts with `/`.
+        "^(/[^/]*)+$" => text.starts_with('/'),
         "^1\\.[01]\\." => text.starts_with("1.0.") || text.starts_with("1.1."),
         _ => return None,
     };
@@ -281,6 +283,11 @@ mod tests {
             matches_pattern(contract, "semantic_compiler.query"),
             Some(false)
         );
+        let any_tokens = "^(/[^/]*)+$";
+        assert_eq!(matches_pattern(any_tokens, "/a/~x/"), Some(true));
+        assert_eq!(matches_pattern(any_tokens, "/"), Some(true));
+        assert_eq!(matches_pattern(any_tokens, "a/b"), Some(false));
+        assert_eq!(matches_pattern(any_tokens, ""), Some(false));
         let pointer = "^(/([^~/]|~[01])*)+$";
         assert_eq!(
             matches_pattern(pointer, "/datasets/0/ai_context"),

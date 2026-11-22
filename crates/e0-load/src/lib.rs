@@ -1,8 +1,8 @@
 //! Stage E0: loads and validates a semantic model.
 //!
 //! The crate exports only the stage function, [`load_model`], its result type,
-//! [`LoadedModel`], and its error type, [`LoadRejection`] (S9); its substages E0.a to E0.h are
-//! private.
+//! [`LoadedModel`], and its error type, [`LoadRejection`] (S9), and the reading entry point of
+//! `migrate`, [`read_model_tree`] (MIG-3.1); its substages E0.a to E0.h are private.
 
 #![forbid(unsafe_code)]
 
@@ -23,4 +23,4 @@ mod stage;
 mod structure;
 mod typing;
 
-pub use stage::{LoadRejection, LoadedModel, load_model};
+pub use stage::{LoadRejection, LoadedModel, load_model, read_model_tree};

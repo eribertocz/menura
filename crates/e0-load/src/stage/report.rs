@@ -123,7 +123,7 @@ impl Report {
 }
 
 /// A location in the model document.
-fn model_location(pointer: &str, line: usize, column: usize) -> DiagnosticLocation {
+pub(super) fn model_location(pointer: &str, line: usize, column: usize) -> DiagnosticLocation {
     DiagnosticLocation {
         document: InputDocument::Model,
         pointer: pointer.to_owned(),

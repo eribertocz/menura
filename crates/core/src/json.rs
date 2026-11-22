@@ -2,8 +2,14 @@
 
 use std::fmt;
 
+use menura_contracts::types::audit_record::AuditRecordDocument;
 use menura_contracts::types::compiled_plan::{CompileErrorDocument, CompiledPlanDocument};
 use menura_contracts::types::dependencies::{ModelDependenciesDocument, ModelDiffDocument};
+use menura_contracts::types::descriptions::{IntegrityChecksDocument, ModelDescriptionDocument};
+use menura_contracts::types::migration_report::MigrationReportDocument;
+use menura_contracts::types::ordered_json::{OrderedJson, OrderedObject};
+
+use crate::ordered_text::pretty_text;
 
 /// An output document could not be written as JSON.
 #[derive(Debug)]
@@ -66,5 +72,61 @@ pub fn dependencies_json(document: &ModelDependenciesDocument) -> Result<String,
 ///
 /// An [`OutputError`] when the document cannot be serialized.
 pub fn diff_json(document: &ModelDiffDocument) -> Result<String, OutputError> {
+    serde_json::to_string_pretty(document).map_err(OutputError)
+}
+
+/// The JSON text of a migration report, indented with two spaces; the model keeps its member
+/// order and its integers their exact digits, whatever their size (MIG-3.3, MIG-3.3a).
+///
+/// # Errors
+///
+/// An [`OutputError`] when the document cannot be serialized.
+pub fn migration_report_json(document: &MigrationReportDocument) -> Result<String, OutputError> {
+    // Every member but `model` is written by its type, then read back in order; the model is
+    // left empty there and put in place as it is.
+    let header = MigrationReportDocument {
+        contract: document.contract,
+        contract_version: document.contract_version,
+        producer: document.producer.clone(),
+        changes: document.changes.clone(),
+        model: OrderedObject::default(),
+    };
+    let text = serde_json::to_string(&header).map_err(OutputError)?;
+    let mut members = serde_json::from_str::<OrderedObject>(&text)
+        .map_err(OutputError)?
+        .members()
+        .to_vec();
+    for (name, value) in &mut members {
+        if name == "model" {
+            *value = OrderedJson::Object(document.model.clone());
+        }
+    }
+    pretty_text(&OrderedJson::Object(OrderedObject::new(members))).map_err(OutputError)
+}
+
+/// The JSON text of a model description, indented with two spaces.
+///
+/// # Errors
+///
+/// An [`OutputError`] when the document cannot be serialized.
+pub fn description_json(document: &ModelDescriptionDocument) -> Result<String, OutputError> {
+    serde_json::to_string_pretty(document).map_err(OutputError)
+}
+
+/// The JSON text of an integrity-check document, indented with two spaces.
+///
+/// # Errors
+///
+/// An [`OutputError`] when the document cannot be serialized.
+pub fn integrity_checks_json(document: &IntegrityChecksDocument) -> Result<String, OutputError> {
+    serde_json::to_string_pretty(document).map_err(OutputError)
+}
+
+/// The JSON text of an audit record, indented with two spaces.
+///
+/// # Errors
+///
+/// An [`OutputError`] when the document cannot be serialized.
+pub fn audit_record_json(document: &AuditRecordDocument) -> Result<String, OutputError> {
     serde_json::to_string_pretty(document).map_err(OutputError)
 }
