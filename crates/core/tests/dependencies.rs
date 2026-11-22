@@ -526,3 +526,10 @@ fn dep_4_3_changes_are_ordered_by_kind_then_object() {
         ]
     );
 }
+
+#[test]
+fn dep_3_10_the_case_of_a_policy_name_does_not_change_its_hash() {
+    let recased = LINEAGE_MODEL.replace(r#""name": "north_only""#, r#""name": "NORTH_ONLY""#);
+    assert_ne!(recased, LINEAGE_MODEL);
+    assert_eq!(changes(LINEAGE_MODEL, &recased), []);
+}

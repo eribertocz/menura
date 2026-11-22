@@ -15,6 +15,7 @@ use menura_model::internal_model::{
 use serde_json::{Value, json};
 
 use crate::json_form::json_value;
+use crate::lineage::policies::normalized_policy_name;
 use menura_model::expression::Expression;
 
 /// The definition hash of `dataset`: its `source`, keys, `access`, populations and summary
@@ -89,10 +90,11 @@ pub(super) fn relationship_hash(
     }))
 }
 
-/// The definition hash of `policy`: its condition, roles and exemptions.
+/// The definition hash of `policy`: its normalized name (E0D-1.4), condition, roles and
+/// exemptions.
 pub(super) fn policy_hash(policy: &RowPolicy) -> Sha256Hash {
     hash_value(&json!({
-        "name": policy.name,
+        "name": normalized_policy_name(&policy.name),
         "condition": tree(policy.condition.as_ref()),
         "roles": policy.roles.as_deref().map(roles),
         "exempt_roles": policy.exempt_roles.as_deref().map(roles),
