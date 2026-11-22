@@ -45,6 +45,38 @@ impl ContextQuery {
         &self.query
     }
 
+    /// Takes the `paths` entry written at `origin` out of the context query, so that it keeps
+    /// only the query's entries its own branches use (E4-8.2). Returns whether it had one.
+    pub fn without_path(&mut self, origin: &QueryLocation) -> bool {
+        let paths = self.query.paths();
+        let Some(position) = paths.iter().position(|path| path.origin() == origin) else {
+            return false;
+        };
+        let mut kept = paths.to_vec();
+        kept.remove(position);
+        let parts = BoundQueryParts {
+            filters: self.query.filters().to_vec(),
+            date_range: self.query.date_range().cloned(),
+            paths: kept,
+            order: Vec::new(),
+            limit: None,
+            authorization: self.query.authorization().to_vec(),
+            subgraph: self.query.subgraph().clone(),
+        };
+        self.query = BoundQuery::new(
+            self.query.columns().clone(),
+            self.query.time().clone(),
+            parts,
+        );
+        true
+    }
+
+    /// Whether `other` is this context query, its `paths` aside: the same base, normalized
+    /// modifier and first context metric.
+    pub(crate) fn is_same_context(&self, other: &ContextQuery) -> bool {
+        self.key == other.key && self.metric == other.metric && self.kept == other.kept
+    }
+
     /// The first context metric that needs it, in the order of E4-8.8.
     pub(crate) fn metric(&self) -> &NormalizedName {
         &self.metric
@@ -95,17 +127,10 @@ struct ContextKey {
 /// A modifier, normalized as E4-8.2 compares it.
 #[derive(Debug, Clone, PartialEq, Eq)]
 enum NormalizedModifier {
-    /// `share_of_total`: the `remove` fields that are query dimensions, or `all`.
-    ShareOfTotal(Removed),
-}
-
-/// The dimensions a `share_of_total` takes out of the grouping (E4-8.3, CTX-3a.5).
-#[derive(Debug, Clone, PartialEq, Eq)]
-enum Removed {
-    /// `remove: "all"`.
-    All,
-    /// The `remove` fields that are query dimensions.
-    Fields(BTreeSet<FieldPath>),
+    /// `share_of_total`: the positions of the query dimensions it keeps, so that two `remove`
+    /// values that take out the same query dimensions, `all` and a list of every query
+    /// dimension included, compare equal (E4-8.2, CTX-3a.5).
+    ShareOfTotal(Vec<usize>),
 }
 
 /// The context queries of one query, in the order of E4-8.8, as the expansion of its metrics
@@ -149,7 +174,7 @@ impl<'query> ContextRegistry<'query> {
             .ok_or(InvariantViolation::ContextMetric)?;
         let modifier = match &context.modifier {
             ContextModifier::ShareOfTotal(removed) => {
-                NormalizedModifier::ShareOfTotal(self.removed(removed))
+                NormalizedModifier::ShareOfTotal(self.kept(removed))
             }
             ContextModifier::PeriodToDate { .. } | ContextModifier::PriorPeriod { .. } => {
                 return Err(InvariantViolation::ContextMetric);
@@ -159,7 +184,7 @@ impl<'query> ContextRegistry<'query> {
         if let Some(position) = self.found.iter().position(|found| found.key == key) {
             return Ok(position);
         }
-        let kept = self.kept(&key.modifier);
+        let NormalizedModifier::ShareOfTotal(kept) = key.modifier.clone();
         let query = self.context_query(&key.base, &kept, origin);
         self.found.push(ContextQuery {
             query,
@@ -171,39 +196,20 @@ impl<'query> ContextRegistry<'query> {
         Ok(self.found.len() - 1)
     }
 
-    /// The `remove` value `removed`, normalized: `all`, or its fields that are query
-    /// dimensions (E4-8.2, CTX-3a.5).
-    fn removed(&self, removed: &RemovedDimensions) -> Removed {
-        match removed {
-            RemovedDimensions::All => Removed::All,
-            RemovedDimensions::Fields(fields) => Removed::Fields(
-                fields
-                    .iter()
-                    .filter(|field| {
-                        self.query
-                            .columns()
-                            .dimensions()
-                            .any(|dimension| dimension_field(dimension) == Some(*field))
-                    })
-                    .cloned()
-                    .collect(),
-            ),
-        }
-    }
-
-    /// The positions of the query dimensions that the context query of `modifier` keeps
-    /// (E4-8.3).
-    fn kept(&self, modifier: &NormalizedModifier) -> Vec<usize> {
-        let NormalizedModifier::ShareOfTotal(removed) = modifier;
+    /// The positions of the query dimensions that a `share_of_total` with the `remove` value
+    /// `removed` keeps: none for `all`, otherwise every dimension that is not a field it
+    /// names; a `remove` field that is not a query dimension has no effect (E4-8.3, CTX-3a.5).
+    fn kept(&self, removed: &RemovedDimensions) -> Vec<usize> {
+        let RemovedDimensions::Fields(fields) = removed else {
+            return Vec::new();
+        };
+        let fields: BTreeSet<&FieldPath> = fields.iter().collect();
         self.query
             .columns()
             .dimensions()
             .enumerate()
-            .filter(|(_, dimension)| match removed {
-                Removed::All => false,
-                Removed::Fields(fields) => {
-                    dimension_field(dimension).is_none_or(|field| !fields.contains(field))
-                }
+            .filter(|(_, dimension)| {
+                dimension_field(dimension).is_none_or(|field| !fields.contains(field))
             })
             .map(|(position, _)| position)
             .collect()

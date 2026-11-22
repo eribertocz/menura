@@ -186,7 +186,8 @@ struct RowSources<'input> {
     catalog: &'input CatalogSchemaDocument,
 }
 
-/// Fails unless `contexts` are the context queries `expected`, in order.
+/// Fails unless `contexts` are the context queries `expected`, in order, their `paths` aside:
+/// the caller takes out the entries a context query does not use (E4-8.2).
 fn check_contexts(
     contexts: &[ContextBranches<'_>],
     expected: &[ContextQuery],
@@ -195,7 +196,7 @@ fn check_contexts(
         && contexts
             .iter()
             .zip(expected)
-            .all(|(given, expected)| given.context == expected);
+            .all(|(given, expected)| given.context.is_same_context(expected));
     if same {
         Ok(())
     } else {

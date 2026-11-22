@@ -9,14 +9,17 @@ use menura_contracts::types::compiled_plan::{
 };
 use menura_e1_parse::{ParseWarning, parse_query};
 use menura_e2_bind::{authorization_decisions, bind};
-use menura_e3_paths::resolve_paths;
-use menura_e4_plan::{ContextBranches, PlanInputs, build_plan_with_contexts, context_queries};
+use menura_e3_paths::{PathCode, PathError, resolve_paths};
+use menura_e4_plan::{
+    ContextBranches, ContextQuery, PlanInputs, build_plan_with_contexts, context_queries,
+};
 use menura_e5_optimize::optimize;
 use menura_generator_duckdb::generate_sql;
 use menura_model::explanation::ExplanationEntry;
 use menura_model::internal_model::InternalModel;
 use menura_representations::bound_query::{AuthorizationDecision, BoundQuery};
 use menura_representations::logical_plan::PlanNode;
+use menura_representations::paths::Branches;
 use menura_representations::query_tree::QueryTree;
 use menura_security::{AdmittedSecurityContext, admit_security_context};
 
@@ -293,10 +296,10 @@ fn logical_plan(
     let model = handle.model();
     let branches = resolve_paths(bound, model).map_err(|error| path_stop(&error))?;
     trace.entries.extend(menura_e3_paths::explanation(bound));
-    let context_queries = context_queries(bound, model).map_err(|error| plan_stop(&error))?;
+    let mut context_queries = context_queries(bound, model).map_err(|error| plan_stop(&error))?;
     let context_branches = context_queries
-        .iter()
-        .map(|context| resolve_paths(context.query(), model))
+        .iter_mut()
+        .map(|context| context_paths(context, model))
         .collect::<Result<Vec<_>, _>>()
         .map_err(|error| path_stop(&error))?;
     let contexts: Vec<ContextBranches<'_>> = context_queries
@@ -316,6 +319,20 @@ fn logical_plan(
             .map_err(|error| plan_stop(&error))?,
     );
     Ok(plan)
+}
+
+/// The branches of the context query `context` (E3). It keeps only the query's `paths`
+/// entries that its own branches use (E4-8.2): each entry E3 reports unused (`E3-01`) is taken
+/// out, and the branches are resolved again.
+fn context_paths(context: &mut ContextQuery, model: &InternalModel) -> Result<Branches, PathError> {
+    loop {
+        match resolve_paths(context.query(), model) {
+            Err(PathError::Diagnostic(diagnostic))
+                if diagnostic.code == PathCode::UnusedPathEntry
+                    && context.without_path(&diagnostic.location) => {}
+            resolved => return resolved,
+        }
+    }
 }
 
 /// Binds `tree` (E2), recording its authorization decisions, also when it fails, and its
