@@ -15,6 +15,7 @@ members = [
     "crates/generator-duckdb",
     "crates/core",
     "crates/cli",
+    "crates/python",
     "crates/conformance-runner",
 ]
 

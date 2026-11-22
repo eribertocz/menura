@@ -1,0 +1,17 @@
+# Wheel build of the Python package (ARC-6.3): one `abi3` wheel per platform for GIL-enabled
+# CPython 3.10 and later, built with maturin.
+[build-system]
+requires = ["maturin==1.16.0"]
+build-backend = "maturin"
+
+[project]
+name = "menura"
+requires-python = ">=3.10"
+license = "Apache-2.0"
+description = "Python package of the Menura semantic compiler."
+classifiers = ["Programming Language :: Rust", "Programming Language :: Python :: Implementation :: CPython"]
+dynamic = ["version"]
+
+[tool.maturin]
+features = ["pyo3/extension-module"]
+module-name = "menura"

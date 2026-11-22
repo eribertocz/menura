@@ -1,0 +1,90 @@
+# The Python package (ARC-6.3): one `abi3` wheel per platform, built with maturin and tested on
+# that platform (`python-wheels`), and the suite run through the package against the CLI
+# (`conformance-wrappers`, ARC-6.9, A4). Publishing the wheels is a maintainer step.
+#
+# Tool versions are pinned so that the same commit always gets the same verdict.
+name: python
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: python-${{ github.event.pull_request.number || github.sha }}
+  cancel-in-progress: true
+
+env:
+  RUST_TOOLCHAIN: "1.97.0"
+  MATURIN_VERSION: "1.16.0"
+  PYYAML_VERSION: "6.0.3"
+  CARGO_TERM_COLOR: always
+
+jobs:
+  python-wheels:
+    name: python-wheels (${{ matrix.platform }})
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { platform: linux-x86_64, runner: ubuntu-24.04 }
+          - { platform: linux-aarch64, runner: ubuntu-24.04-arm }
+          - { platform: macos-x86_64, runner: macos-15-intel }
+          - { platform: macos-arm64, runner: macos-15 }
+          - { platform: windows-x86_64, runner: windows-2025 }
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - name: Check out the commit
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+      - name: Install the Rust toolchain
+        run: |
+          rustup toolchain install "$RUST_TOOLCHAIN" --profile minimal
+          rustup default "$RUST_TOOLCHAIN"
+      - name: Create a virtual environment with maturin
+        run: |
+          "$(command -v python3 || command -v python)" -m venv "$RUNNER_TEMP/venv"
+          if [ -d "$RUNNER_TEMP/venv/Scripts" ]; then bin="$RUNNER_TEMP/venv/Scripts"; else bin="$RUNNER_TEMP/venv/bin"; fi
+          echo "$bin" >> "$GITHUB_PATH"
+          "$bin/python" -m pip install --disable-pip-version-check "maturin==$MATURIN_VERSION"
+      - name: Build the abi3 wheel with maturin (ARC-6.3, Q1)
+        run: maturin build --locked --release --manifest-path crates/python/Cargo.toml --out "$RUNNER_TEMP/wheels"
+      - name: Install the wheel
+        run: python -m pip install --disable-pip-version-check --no-index --find-links "$RUNNER_TEMP/wheels" menura
+      - name: Test the package (ARC-6.3, ARC-6.4, ARC-6.5, ARC-6.5a, A4, Q1)
+        run: python -I -m unittest discover -s crates/python/tests -t crates/python/tests -p "test_*.py" -v
+
+  conformance-wrappers:
+    name: conformance-wrappers
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Check out the commit
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+      - name: Install the Rust toolchain
+        run: |
+          rustup toolchain install "$RUST_TOOLCHAIN" --profile minimal
+          rustup default "$RUST_TOOLCHAIN"
+      - name: Build the CLI
+        run: cargo build --locked --release -p menura-cli
+      - name: Create a virtual environment with maturin and PyYAML
+        run: |
+          python3 -m venv "$RUNNER_TEMP/venv"
+          echo "$RUNNER_TEMP/venv/bin" >> "$GITHUB_PATH"
+          "$RUNNER_TEMP/venv/bin/pip" install --disable-pip-version-check "maturin==$MATURIN_VERSION" "pyyaml==$PYYAML_VERSION"
+      - name: Build and install the wheel
+        run: |
+          maturin build --locked --release --manifest-path crates/python/Cargo.toml --out "$RUNNER_TEMP/wheels"
+          python -m pip install --disable-pip-version-check --no-index --find-links "$RUNNER_TEMP/wheels" menura
+      - name: Run every case through the Python package and the CLI, documents identical (ARC-6.9, A4)
+        env:
+          MENURA_CLI: ${{ github.workspace }}/target/release/menura
+        run: python -m unittest discover -s crates/python/tests/parity -t crates/python/tests/parity -p "test_*.py" -v
