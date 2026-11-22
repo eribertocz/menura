@@ -80,10 +80,12 @@ pub(super) fn capabilities() -> Result<Capabilities, InternalError> {
 
 /// Every public contract the release reads or writes, with the latest version it implements,
 /// sorted by name (DSC-4.3). The explanation has the schema of the compiled plan and the
-/// validation report that of the compile error (architecture section 3.5).
+/// validation report that of the compile error (architecture section 3.5). The migration report
+/// joins the profile with the 0.9.0 version bump, as the 0.8.0 contracts did.
 fn contracts() -> Vec<SupportedContract> {
     let mut contracts: Vec<SupportedContract> = ContractKind::ALL
         .iter()
+        .filter(|kind| **kind != ContractKind::MigrationReport)
         .map(|kind| supported(kind.contract_name(), *kind))
         .chain([
             supported("menura.explanation", ContractKind::CompiledPlan),
@@ -114,7 +116,7 @@ mod tests {
             .map(|entry| entry.contract.as_str())
             .collect();
         assert!(contracts.windows(2).all(|pair| pair[0] < pair[1]));
-        assert_eq!(contracts.len(), 14);
+        assert_eq!(contracts.len(), 13);
         assert!(EXTENSIONS.windows(2).all(|pair| pair[0] < pair[1]));
     }
 
