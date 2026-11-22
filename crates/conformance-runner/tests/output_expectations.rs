@@ -31,14 +31,21 @@ fn cs_2_11_cs_2_12_cs_2_14_the_plan_output_cases_pass() {
 #[test]
 fn cs_2_15_the_describe_cases_pass() {
     let report = run(&conformance_directory(), Some("cs")).unwrap();
-    assert_eq!(status(&report, "cs-describe-001"), &CaseStatus::Passed);
+    assert_eq!(
+        status(&report, "cs-describe-001"),
+        Some(&CaseStatus::Passed)
+    );
     let report = run(&conformance_directory(), Some("dsc")).unwrap();
     for case_id in [
         "dsc-describe-admin-001",
         "dsc-describe-analyst-001",
         "dsc-describe-not-admitted-001",
     ] {
-        assert_eq!(status(&report, case_id), &CaseStatus::Passed, "{case_id}");
+        assert_eq!(
+            status(&report, case_id),
+            Some(&CaseStatus::Passed),
+            "{case_id}"
+        );
     }
 }
 
@@ -48,7 +55,7 @@ fn cs_2_8_cases_that_need_a_missing_core_function_are_pending() {
     for case_id in ["next-audit-001", "next-integrity-checks-001"] {
         let status = status(&report, case_id);
         assert!(
-            matches!(status, CaseStatus::Pending(_)),
+            matches!(status, Some(CaseStatus::Pending(_))),
             "{case_id}: {status:?}"
         );
     }
