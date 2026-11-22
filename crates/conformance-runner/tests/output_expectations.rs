@@ -8,20 +8,23 @@ fn conformance_directory() -> PathBuf {
     Path::new(env!("CARGO_MANIFEST_DIR")).join("../../conformance")
 }
 
-fn status<'report>(report: &'report Report, case_id: &str) -> &'report CaseStatus {
-    &report
+fn status<'report>(report: &'report Report, case_id: &str) -> Option<&'report CaseStatus> {
+    report
         .cases
         .iter()
         .find(|case| case.id.as_str() == case_id)
-        .unwrap_or_else(|| panic!("the case {case_id} runs"))
-        .status
+        .map(|case| &case.status)
 }
 
 #[test]
 fn cs_2_11_cs_2_12_cs_2_14_the_plan_output_cases_pass() {
     let report = run(&conformance_directory(), Some("cs")).unwrap();
     for case_id in ["cs-lineage-001", "cs-explanation-001", "cs-cache-key-001"] {
-        assert_eq!(status(&report, case_id), &CaseStatus::Passed, "{case_id}");
+        assert_eq!(
+            status(&report, case_id),
+            Some(&CaseStatus::Passed),
+            "{case_id}"
+        );
     }
 }
 
@@ -35,7 +38,7 @@ fn cs_2_8_cases_that_need_a_missing_core_function_are_pending() {
     ] {
         let status = status(&report, case_id);
         assert!(
-            matches!(status, CaseStatus::Pending(_)),
+            matches!(status, Some(CaseStatus::Pending(_))),
             "{case_id}: {status:?}"
         );
     }

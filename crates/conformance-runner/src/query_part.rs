@@ -54,10 +54,7 @@ fn compare_query(case: &Case, handle: &Handle, inputs: &QueryInputs<'_>) -> Case
         Ok(query) => query,
         Err(error) => return CaseStatus::Failed(format!("the query is not JSON: {error}")),
     };
-    let options = CompileOptions {
-        audit: case.expect.audit.is_some(),
-        ..CompileOptions::default()
-    };
+    let options = compile_options(case);
     let compile_query = || compile(handle, &query, inputs.security_context, &options);
     let result = compile_query();
     if let Some(reason) = missing_warnings(&case.expect.warnings, warnings_of(&result), Part::Query)
@@ -86,20 +83,37 @@ fn compare_query(case: &Case, handle: &Handle, inputs: &QueryInputs<'_>) -> Case
             "the query does not compile: {}",
             describe(error.errors.first())
         )),
-        (outcome, CompileResult::Plan(plan)) => {
-            if let Some(reason) = plan_mismatch(case, &plan, inputs.case_folder, compile_query) {
-                return CaseStatus::Failed(reason);
-            }
-            if outcome == Outcome::RuntimeError {
-                return check_runtime_error(&case.expect, &plan, inputs.connection);
-            }
-            match check_rows(&case.expect, &plan, inputs) {
-                CaseStatus::Passed if case.oracle.is_some() => {
-                    check_differential(case, &plan, inputs)
-                }
-                status => status,
-            }
-        }
+        (_, CompileResult::Plan(plan)) => check_plan(case, &plan, inputs, compile_query),
+    }
+}
+
+/// Checks a compiled plan before execution, then executes it: a `runtime_error` case must fail
+/// with its code, and any other case must return its rows and, when differential, those of its
+/// oracle.
+fn check_plan(
+    case: &Case,
+    plan: &CompiledPlanDocument,
+    inputs: &QueryInputs<'_>,
+    compile_again: impl FnOnce() -> CompileResult,
+) -> CaseStatus {
+    if let Some(reason) = plan_mismatch(case, plan, inputs.case_folder, compile_again) {
+        return CaseStatus::Failed(reason);
+    }
+    if case.expect.outcome == Outcome::RuntimeError {
+        return check_runtime_error(&case.expect, plan, inputs.connection);
+    }
+    match check_rows(&case.expect, plan, inputs) {
+        CaseStatus::Passed if case.oracle.is_some() => check_differential(case, plan, inputs),
+        status => status,
+    }
+}
+
+/// The compile options of a case: `audit: true` only when it expects an audit record
+/// (CS-2.13).
+fn compile_options(case: &Case) -> CompileOptions {
+    CompileOptions {
+        audit: case.expect.audit.is_some(),
+        ..CompileOptions::default()
     }
 }
 
