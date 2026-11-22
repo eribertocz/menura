@@ -1,7 +1,6 @@
-//! E2-5 row 12c, E2-5.4, E2-5.4a, VS-1b and VS-2: several datasets, `paths` and derived metrics
-//! are in the 0.4.0 slice; the first element that needs additivity, a population or a context
-//! metric is `E_NOT_YET_SUPPORTED`, located at that element, naming the capability whose version
-//! comes first.
+//! E2-5 row 12c, E2-5.4, E2-5.4a, VS-1c and VS-2: several datasets, `paths`, derived metrics,
+//! additivity and populations are in the 0.5.0 slice; the first element that needs a context
+//! metric is `E_NOT_YET_SUPPORTED`, located at that element, naming context metrics and 0.8.0.
 
 #[cfg(test)]
 mod support;
@@ -9,8 +8,8 @@ mod support;
 use menura_contracts::types::common::Grain;
 use menura_e2_bind::{BindCode, BindDiagnostic};
 use menura_model::internal_model::{
-    ContextMetric, ContextModifier, DeclaredAdditivity, DerivedMetric, FieldPath, NullHandling,
-    RemovedDimensions, SemiAdditive, SnapshotAggregation,
+    ContextMetric, ContextModifier, DeclaredAdditivity, DerivedMetric, FieldPath, ModelParts,
+    NullHandling, RemovedDimensions, SemiAdditive, SnapshotAggregation,
 };
 use menura_representations::query_tree::{QueryTree, QueryTreeParts};
 
@@ -211,22 +210,16 @@ fn vs_1b_a_derived_metric_on_two_datasets_is_in_the_slice() {
 }
 
 #[test]
-fn vs_1_an_additivity_declaration_is_0_5_0() {
+fn vs_1c_an_additivity_declaration_is_in_the_slice() {
     let model = model_with(|parts| {
         semantic_metric(parts, "REVENUE").declared_additivity =
             Some(DeclaredAdditivity::NonAdditive);
     });
-    let diagnostic = bind_diagnostic(&revenue_by("orders.region"), &model, ANALYST);
-    assert_not_yet_supported(&diagnostic, "/query/metrics/0", "0.5.0");
-    assert!(
-        diagnostic.message.contains("additivity"),
-        "{}",
-        diagnostic.message
-    );
+    assert_in_the_slice(&revenue_by("orders.region"), &model);
 }
 
 #[test]
-fn vs_1_a_population_is_0_5_0() {
+fn vs_1c_a_semi_additive_metric_with_a_population_is_in_the_slice() {
     let model = model_with(|parts| {
         semantic_metric(parts, "REVENUE").declared_additivity =
             Some(DeclaredAdditivity::SemiAdditive(SemiAdditive {
@@ -240,12 +233,11 @@ fn vs_1_a_population_is_0_5_0() {
                 unexpected: None,
             }));
     });
-    let diagnostic = bind_diagnostic(&revenue_by("orders.region"), &model, ANALYST);
-    assert_not_yet_supported(&diagnostic, "/query/metrics/0", "0.5.0");
+    assert_in_the_slice(&revenue_by("orders.region"), &model);
 }
 
 #[test]
-fn vs_1_a_context_metric_is_0_8_0() {
+fn vs_1c_a_context_metric_is_0_8_0() {
     let model = model_with(|parts| {
         semantic_metric(parts, "COST").context = Some(ContextMetric {
             base: name("REVENUE"),
@@ -266,61 +258,44 @@ fn vs_1_a_context_metric_is_0_8_0() {
     );
 }
 
-#[test]
-fn e2_5_4_the_first_element_in_query_order_outside_the_slice_is_reported() {
-    let model = model_with(|parts| {
-        semantic_metric(parts, "REVENUE").declared_additivity =
-            Some(DeclaredAdditivity::NonAdditive);
-        semantic_metric(parts, "COST").derived = Some(DerivedMetric {
-            inputs: Vec::new(),
-            on_division_by_zero: None,
-        });
+/// Makes COST a context metric over REVENUE.
+fn cost_as_a_context_metric(parts: &mut ModelParts) {
+    semantic_metric(parts, "COST").context = Some(ContextMetric {
+        base: name("REVENUE"),
+        modifier: ContextModifier::ShareOfTotal(RemovedDimensions::All),
     });
-    let query = tree(
-        vec![dimension(0, "orders.region")],
-        vec![metric(0, "revenue"), metric(1, "cost")],
-        QueryTreeParts::default(),
-    );
-    assert_not_yet_supported(
-        &bind_diagnostic(&query, &model, ADMIN),
-        "/query/metrics/0",
-        "0.5.0",
-    );
 }
 
-#[test]
-fn e2_5_4a_a_semi_additive_metric_with_a_population_names_additivity() {
-    let model = model_with(|parts| {
-        semantic_metric(parts, "REVENUE").declared_additivity =
-            Some(DeclaredAdditivity::SemiAdditive(SemiAdditive {
-                over: field("ORDERS", "ORDERED_AT"),
-                entity: vec![field("ORDERS", "CUSTOMER_ID")],
-                aggregation: SnapshotAggregation::Minimum,
-                nulls: NullHandling::Keep,
-                snapshot_grain: None,
-                population: Some(name("ACTIVE_CUSTOMERS")),
-                missing: None,
-                unexpected: None,
-            }));
-    });
-    let diagnostic = bind_diagnostic(&revenue_by("orders.region"), &model, ANALYST);
-    assert_not_yet_supported(&diagnostic, "/query/metrics/0", "0.5.0");
+fn assert_context_metric(diagnostic: &BindDiagnostic, pointer: &str) {
+    assert_not_yet_supported(diagnostic, pointer, "0.8.0");
     assert!(
-        diagnostic.message.contains("additivity"),
+        diagnostic.message.contains("context"),
         "{}",
         diagnostic.message
     );
 }
 
 #[test]
-fn e2_5_4a_paths_do_not_belong_to_the_whole_query_from_0_4_0() {
+fn e2_5_4_the_first_element_in_query_order_outside_the_slice_is_reported() {
     let model = model_with(|parts| {
         semantic_metric(parts, "REVENUE").declared_additivity =
             Some(DeclaredAdditivity::NonAdditive);
+        cost_as_a_context_metric(parts);
     });
     let query = tree(
         vec![dimension(0, "orders.region")],
-        vec![metric(0, "revenue")],
+        vec![metric(0, "revenue"), metric(1, "cost")],
+        QueryTreeParts::default(),
+    );
+    assert_context_metric(&bind_diagnostic(&query, &model, ADMIN), "/query/metrics/1");
+}
+
+#[test]
+fn e2_5_4a_paths_do_not_belong_to_the_whole_query_from_0_5_0() {
+    let model = model_with(cost_as_a_context_metric);
+    let query = tree(
+        vec![dimension(0, "orders.region")],
+        vec![metric(0, "cost")],
         QueryTreeParts {
             paths: vec![path(
                 "/query/nonportable_extensions/0/data/paths/0",
@@ -331,56 +306,33 @@ fn e2_5_4a_paths_do_not_belong_to_the_whole_query_from_0_4_0() {
             ..QueryTreeParts::default()
         },
     );
-    let diagnostic = bind_diagnostic(&query, &model, ADMIN);
-    assert_not_yet_supported(&diagnostic, "/query/metrics/0", "0.5.0");
-    assert!(
-        diagnostic.message.contains("additivity"),
-        "{}",
-        diagnostic.message
-    );
+    assert_context_metric(&bind_diagnostic(&query, &model, ADMIN), "/query/metrics/0");
 }
 
 #[test]
-fn e2_5_4a_several_datasets_do_not_belong_to_the_whole_query_from_0_4_0() {
-    let model = model_with(|parts| {
-        semantic_metric(parts, "REVENUE").declared_additivity =
-            Some(DeclaredAdditivity::NonAdditive);
-    });
+fn e2_5_4a_several_datasets_do_not_belong_to_the_whole_query_from_0_5_0() {
+    let model = model_with(cost_as_a_context_metric);
     let query = tree(
         vec![
             dimension(0, "customers.customer_id"),
             dimension(1, "orders.region"),
         ],
-        vec![metric(0, "revenue")],
+        vec![metric(0, "cost")],
         QueryTreeParts::default(),
     );
-    assert_not_yet_supported(
-        &bind_diagnostic(&query, &model, ADMIN),
-        "/query/metrics/0",
-        "0.5.0",
-    );
+    assert_context_metric(&bind_diagnostic(&query, &model, ADMIN), "/query/metrics/0");
 }
 
 #[test]
-fn e2_5_4a_additivity_comes_before_a_context_metric_in_one_element() {
+fn e2_5_4a_an_element_with_additivity_and_a_context_metric_names_context_metrics() {
     let model = model_with(|parts| {
-        let cost = semantic_metric(parts, "COST");
-        cost.declared_additivity = Some(DeclaredAdditivity::NonAdditive);
-        cost.context = Some(ContextMetric {
-            base: name("REVENUE"),
-            modifier: ContextModifier::ShareOfTotal(RemovedDimensions::All),
-        });
+        cost_as_a_context_metric(parts);
+        semantic_metric(parts, "COST").declared_additivity = Some(DeclaredAdditivity::NonAdditive);
     });
     let query = tree(
         vec![dimension(0, "orders.region")],
         vec![metric(0, "cost")],
         QueryTreeParts::default(),
     );
-    let diagnostic = bind_diagnostic(&query, &model, ADMIN);
-    assert_not_yet_supported(&diagnostic, "/query/metrics/0", "0.5.0");
-    assert!(
-        diagnostic.message.contains("additivity"),
-        "{}",
-        diagnostic.message
-    );
+    assert_context_metric(&bind_diagnostic(&query, &model, ADMIN), "/query/metrics/0");
 }
