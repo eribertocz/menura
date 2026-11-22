@@ -25,6 +25,7 @@ mod join;
 mod join_keys;
 mod output;
 mod parameters;
+mod population;
 mod result_schema;
 mod scan;
 mod semi_join;
