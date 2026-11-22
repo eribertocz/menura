@@ -23,7 +23,9 @@
     reason = "A2: like the command-line wrapper, the conformance runner reads files and runs DuckDB"
 )]
 
+mod audit_check;
 mod calendar;
+mod canonical_json;
 pub mod case;
 pub mod case_file;
 mod cells;
@@ -34,16 +36,22 @@ mod differential;
 mod divergences;
 pub mod error;
 mod execution;
+mod expectation_rules;
 pub mod fixture;
+mod golden_json;
 pub mod load_options;
 mod load_part;
 pub mod ossie;
 mod parameter_values;
+mod pending_parts;
+mod plan_outputs;
 mod query_part;
+pub mod regenerate;
 pub mod report;
 mod row_comparison;
 pub mod runner;
 
 pub use error::{RunnerError, RunnerErrorKind};
+pub use regenerate::{Regeneration, regenerate};
 pub use report::{CaseResult, CaseStatus, Report};
 pub use runner::run;

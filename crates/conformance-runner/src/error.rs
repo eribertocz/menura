@@ -45,6 +45,20 @@ pub enum RunnerErrorKind {
     RepeatedDivergence(String),
     /// An entry of the reviewed file of divergences names no differential case (CS-4.8).
     UnknownDivergence(String),
+    /// An output expectation is given with an outcome that does not allow it (CS-2.11 to
+    /// CS-2.15).
+    ExpectationNotAllowed {
+        /// The member of the case, such as `lineage`.
+        member: &'static str,
+        /// The rule that restricts it.
+        rule: &'static str,
+    },
+    /// A `describe` or `integrity_checks` case names no golden `document` (CS-2.15).
+    MissingDocument,
+    /// A case named for regeneration has no case file under `cases/` (CS-2.10a).
+    UnknownCase(String),
+    /// A golden file cannot be written while regenerating it (CS-2.10a).
+    Unwritable(io::Error),
 }
 
 impl RunnerErrorKind {
@@ -63,6 +77,9 @@ impl RunnerErrorKind {
             Self::DifferentialWithoutPlan
             | Self::RepeatedDivergence(_)
             | Self::UnknownDivergence(_) => "CS-4.8",
+            Self::ExpectationNotAllowed { rule, .. } => rule,
+            Self::MissingDocument => "CS-2.15",
+            Self::UnknownCase(_) | Self::Unwritable(_) => "CS-2.10a",
         }
     }
 }
@@ -107,6 +124,12 @@ impl fmt::Display for RunnerErrorKind {
             Self::UnknownDivergence(case) => {
                 write!(formatter, "entry `{case}` names no differential case")
             }
+            Self::ExpectationNotAllowed { member, .. } => {
+                write!(formatter, "this outcome does not allow `{member}`")
+            }
+            Self::MissingDocument => formatter.write_str("this outcome requires `document`"),
+            Self::UnknownCase(case) => write!(formatter, "no case file for case `{case}`"),
+            Self::Unwritable(error) => write!(formatter, "cannot be written: {error}"),
         }
     }
 }

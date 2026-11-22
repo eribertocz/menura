@@ -1,0 +1,19 @@
+id: cs-explanation-001
+rules: [CS-2.12]
+model: slice
+security_context: auditor.json
+query:
+  contract: "menura.query"
+  contract_version: "1.1.0"
+  time_zone: "UTC"
+  query:
+    dimensions: ["sales.region"]
+    metrics:
+      - {"metric": "total_amount", "alias": "total_amount"}
+      - {"metric": "total_quantity", "alias": "total_quantity"}
+      - {"metric": "sale_count", "alias": "sale_count"}
+expect:
+  outcome: "plan"
+  rows: "cs-plan-rows-001.csv"
+  row_order: "any"
+  explanation: []
