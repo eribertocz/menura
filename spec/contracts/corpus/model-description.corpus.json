@@ -1,0 +1,593 @@
+{
+  "schema": "model-description",
+  "example": "model-description.example.json",
+  "cases": [
+    {
+      "name": "published example",
+      "valid": true,
+      "patch": []
+    },
+    {
+      "name": "menura contract name and version 1.1.0 (CON-0.5)",
+      "valid": true,
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/contract",
+          "value": "menura.model_description"
+        },
+        {
+          "op": "replace",
+          "path": "/contract_version",
+          "value": "1.1.0"
+        }
+      ]
+    },
+    {
+      "name": "former contract name and version 1.0.0 (CON-0.5)",
+      "valid": true,
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/contract",
+          "value": "semantic_compiler.model_description"
+        },
+        {
+          "op": "replace",
+          "path": "/contract_version",
+          "value": "1.0.0"
+        }
+      ]
+    },
+    {
+      "name": "ambiguous paths",
+      "valid": true,
+      "patch": [
+        {
+          "op": "add",
+          "path": "/ambiguous_paths",
+          "value": [
+            {
+              "from": "a",
+              "to": "b",
+              "paths": [
+                [
+                  "r1"
+                ],
+                [
+                  "r2",
+                  "r3"
+                ]
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "null ai_context and labels in version 1.1.0",
+      "valid": true,
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/contract_version",
+          "value": "1.1.0"
+        },
+        {
+          "op": "add",
+          "path": "/metrics/0/ai_context",
+          "value": null
+        },
+        {
+          "op": "add",
+          "path": "/datasets/0/label",
+          "value": "Customers"
+        },
+        {
+          "op": "add",
+          "path": "/datasets/0/fields/0/ai_context",
+          "value": {
+            "synonyms": [
+              "id"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "is_time is text",
+      "valid": false,
+      "keywords": [
+        "type",
+        "properties"
+      ],
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/datasets/0/fields/0/is_time",
+          "value": "yes"
+        }
+      ]
+    },
+    {
+      "name": "another contract",
+      "valid": false,
+      "keywords": [
+        "const"
+      ],
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/contract",
+          "value": "semantic_compiler.compiled_plan"
+        }
+      ]
+    },
+    {
+      "name": "unknown metric kind",
+      "valid": false,
+      "keywords": [
+        "enum",
+        "items"
+      ],
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/metrics/0/kind",
+          "value": "ratio"
+        }
+      ]
+    },
+    {
+      "name": "hourly grain",
+      "valid": false,
+      "keywords": [
+        "enum"
+      ],
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/datasets/1/fields/4/time_grains/0",
+          "value": "hour"
+        }
+      ]
+    },
+    {
+      "name": "metrics missing",
+      "valid": false,
+      "keywords": [
+        "required"
+      ],
+      "patch": [
+        {
+          "op": "remove",
+          "path": "/metrics"
+        }
+      ]
+    },
+    {
+      "name": "unknown dataset member",
+      "valid": false,
+      "keywords": [
+        "additionalProperties"
+      ],
+      "patch": [
+        {
+          "op": "add",
+          "path": "/datasets/0/extra",
+          "value": 1
+        }
+      ]
+    },
+    {
+      "name": "empty dataset name",
+      "valid": false,
+      "keywords": [
+        "minLength"
+      ],
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/datasets/0/name",
+          "value": ""
+        }
+      ]
+    },
+    {
+      "name": "short model hash",
+      "valid": false,
+      "keywords": [
+        "pattern"
+      ],
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/model_hash",
+          "value": "abc"
+        }
+      ]
+    },
+    {
+      "name": "decimal precision 0",
+      "valid": false,
+      "keywords": [
+        "minimum",
+        "$ref",
+        "oneOf"
+      ],
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/metrics/1/logical_type/precision",
+          "value": 0
+        }
+      ]
+    },
+    {
+      "name": "decimal scale 39",
+      "valid": false,
+      "keywords": [
+        "maximum",
+        "oneOf"
+      ],
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/metrics/1/logical_type/scale",
+          "value": 39
+        }
+      ]
+    },
+    {
+      "name": "text with bits",
+      "valid": false,
+      "keywords": [
+        "oneOf"
+      ],
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/metrics/0/logical_type",
+          "value": {
+            "kind": "text",
+            "bits": 8
+          }
+        }
+      ]
+    },
+    {
+      "name": "empty reachable dataset",
+      "valid": false,
+      "keywords": [
+        "items",
+        "minLength"
+      ],
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/metrics/0/reachable_datasets",
+          "value": [
+            ""
+          ]
+        }
+      ]
+    },
+    {
+      "name": "logical type is text",
+      "valid": false,
+      "keywords": [
+        "$ref",
+        "oneOf",
+        "type"
+      ],
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/metrics/0/logical_type",
+          "value": "text"
+        }
+      ]
+    },
+    {
+      "name": "null ai_context in version 1.2.0 (DSC-3.6)",
+      "valid": false,
+      "keywords": [
+        "allOf",
+        "if",
+        "else",
+        "$ref",
+        "type"
+      ],
+      "patch": [
+        {
+          "op": "add",
+          "path": "/metrics/0/ai_context",
+          "value": null
+        }
+      ]
+    },
+    {
+      "name": "dataset ai_context without provenance (DSC-3.6)",
+      "valid": false,
+      "keywords": [
+        "required"
+      ],
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/datasets/0/ai_context",
+          "value": {
+            "value": "x"
+          }
+        }
+      ]
+    },
+    {
+      "name": "unknown ai_context member",
+      "valid": false,
+      "keywords": [
+        "additionalProperties"
+      ],
+      "patch": [
+        {
+          "op": "add",
+          "path": "/datasets/0/ai_context/extra",
+          "value": 1
+        }
+      ]
+    },
+    {
+      "name": "unknown trust label",
+      "valid": false,
+      "keywords": [
+        "enum"
+      ],
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/datasets/0/ai_context/trust",
+          "value": "trusted"
+        }
+      ]
+    },
+    {
+      "name": "relative ai_context pointer",
+      "valid": false,
+      "keywords": [
+        "pattern"
+      ],
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/datasets/0/ai_context/source/pointer",
+          "value": "datasets/1"
+        }
+      ]
+    },
+    {
+      "name": "short ai_context model hash",
+      "valid": false,
+      "keywords": [
+        "pattern"
+      ],
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/datasets/0/ai_context/source/model_hash",
+          "value": "11"
+        }
+      ]
+    },
+    {
+      "name": "metric label",
+      "valid": true,
+      "patch": [
+        {
+          "op": "add",
+          "path": "/metrics/0/label",
+          "value": "Average invoice"
+        }
+      ]
+    },
+    {
+      "name": "numeric metric label",
+      "valid": false,
+      "keywords": [
+        "type"
+      ],
+      "patch": [
+        {
+          "op": "add",
+          "path": "/metrics/0/label",
+          "value": 1
+        }
+      ]
+    },
+    {
+      "name": "no capabilities (1.1.0)",
+      "valid": true,
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/contract_version",
+          "value": "1.1.0"
+        },
+        {
+          "op": "remove",
+          "path": "/capabilities"
+        },
+        {
+          "op": "replace",
+          "path": "/datasets/0/ai_context",
+          "value": "raw"
+        }
+      ]
+    },
+    {
+      "name": "capabilities without limits",
+      "valid": false,
+      "keywords": [
+        "required"
+      ],
+      "patch": [
+        {
+          "op": "remove",
+          "path": "/capabilities/limits"
+        }
+      ]
+    },
+    {
+      "name": "former contract name in capabilities",
+      "valid": false,
+      "keywords": [
+        "pattern"
+      ],
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/capabilities/contracts/0/contract",
+          "value": "semantic_compiler.audit_record"
+        }
+      ]
+    },
+    {
+      "name": "duplicate dialects",
+      "valid": false,
+      "keywords": [
+        "uniqueItems"
+      ],
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/capabilities/dialects",
+          "value": [
+            "duckdb",
+            "duckdb"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "unknown query form",
+      "valid": false,
+      "keywords": [
+        "enum"
+      ],
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/capabilities/query_forms",
+          "value": [
+            "graphql"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "unknown function",
+      "valid": false,
+      "keywords": [
+        "enum"
+      ],
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/capabilities/functions",
+          "value": [
+            "execute"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "extension without versions",
+      "valid": false,
+      "keywords": [
+        "minItems"
+      ],
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/capabilities/extensions/0/versions",
+          "value": []
+        }
+      ]
+    },
+    {
+      "name": "extension version 0",
+      "valid": false,
+      "keywords": [
+        "minimum"
+      ],
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/capabilities/extensions/0/versions",
+          "value": [
+            0
+          ]
+        }
+      ]
+    },
+    {
+      "name": "unknown ossie format",
+      "valid": false,
+      "keywords": [
+        "enum"
+      ],
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/capabilities/ossie/formats",
+          "value": [
+            "draft"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "short ossie tracked commit",
+      "valid": false,
+      "keywords": [
+        "pattern"
+      ],
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/capabilities/ossie/tracked_commit",
+          "value": "aa5"
+        }
+      ]
+    },
+    {
+      "name": "limit 0",
+      "valid": false,
+      "keywords": [
+        "minimum"
+      ],
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/capabilities/limits/max_identifier_length",
+          "value": 0
+        }
+      ]
+    },
+    {
+      "name": "empty dialect",
+      "valid": false,
+      "keywords": [
+        "minLength"
+      ],
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/capabilities/dialects",
+          "value": [
+            ""
+          ]
+        }
+      ]
+    }
+  ]
+}

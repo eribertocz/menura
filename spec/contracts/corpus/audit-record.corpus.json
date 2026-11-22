@@ -1,0 +1,461 @@
+{
+  "schema": "audit-record",
+  "example": "audit-record.example.json",
+  "cases": [
+    {
+      "name": "published example",
+      "valid": true,
+      "patch": []
+    },
+    {
+      "name": "menura contract name and version 1.1.0 (CON-0.5)",
+      "valid": true,
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/contract",
+          "value": "menura.audit_record"
+        },
+        {
+          "op": "replace",
+          "path": "/contract_version",
+          "value": "1.1.0"
+        }
+      ]
+    },
+    {
+      "name": "former contract name and version 1.0.0 (CON-0.5)",
+      "valid": true,
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/contract",
+          "value": "semantic_compiler.audit_record"
+        },
+        {
+          "op": "replace",
+          "path": "/contract_version",
+          "value": "1.0.0"
+        }
+      ]
+    },
+    {
+      "name": "failed outcome",
+      "valid": true,
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/outcome",
+          "value": {
+            "error_codes": [
+              "E_NAME_NOT_FOUND"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "no catalog state",
+      "valid": true,
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/inputs/catalog_state",
+          "value": null
+        }
+      ]
+    },
+    {
+      "name": "model name",
+      "valid": true,
+      "patch": [
+        {
+          "op": "add",
+          "path": "/load_options/model_name",
+          "value": "sales"
+        }
+      ]
+    },
+    {
+      "name": "option is text",
+      "valid": false,
+      "keywords": [
+        "type",
+        "properties"
+      ],
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/load_options/grant_authenticated_to_all",
+          "value": "no"
+        }
+      ]
+    },
+    {
+      "name": "another contract",
+      "valid": false,
+      "keywords": [
+        "const"
+      ],
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/contract",
+          "value": "semantic_compiler.compiled_plan"
+        }
+      ]
+    },
+    {
+      "name": "unknown decision",
+      "valid": false,
+      "keywords": [
+        "enum",
+        "items"
+      ],
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/authorization/0/decision",
+          "value": "maybe"
+        }
+      ]
+    },
+    {
+      "name": "unknown step",
+      "valid": false,
+      "keywords": [
+        "enum"
+      ],
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/decisions/0/step",
+          "value": "E7"
+        }
+      ]
+    },
+    {
+      "name": "subject missing",
+      "valid": false,
+      "keywords": [
+        "required"
+      ],
+      "patch": [
+        {
+          "op": "remove",
+          "path": "/subject"
+        }
+      ]
+    },
+    {
+      "name": "unknown inputs member",
+      "valid": false,
+      "keywords": [
+        "additionalProperties"
+      ],
+      "patch": [
+        {
+          "op": "add",
+          "path": "/inputs/extra",
+          "value": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        }
+      ]
+    },
+    {
+      "name": "numeric contract version",
+      "valid": false,
+      "keywords": [
+        "additionalProperties",
+        "type"
+      ],
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/contract_versions/model",
+          "value": 1
+        }
+      ]
+    },
+    {
+      "name": "no error codes",
+      "valid": false,
+      "keywords": [
+        "oneOf",
+        "minItems"
+      ],
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/outcome",
+          "value": {
+            "error_codes": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "empty subject",
+      "valid": false,
+      "keywords": [
+        "minLength"
+      ],
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/subject",
+          "value": ""
+        }
+      ]
+    },
+    {
+      "name": "short model hash",
+      "valid": false,
+      "keywords": [
+        "pattern"
+      ],
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/inputs/model",
+          "value": "abc"
+        }
+      ]
+    },
+    {
+      "name": "numeric catalog state",
+      "valid": false,
+      "keywords": [
+        "oneOf",
+        "type"
+      ],
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/inputs/catalog_state",
+          "value": 5
+        }
+      ]
+    },
+    {
+      "name": "plan hash and error codes",
+      "valid": false,
+      "keywords": [
+        "oneOf",
+        "additionalProperties"
+      ],
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/outcome",
+          "value": {
+            "plan_hash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "error_codes": [
+              "E_X"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "numeric row policy",
+      "valid": false,
+      "keywords": [
+        "items",
+        "type"
+      ],
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/row_policies",
+          "value": [
+            1
+          ]
+        }
+      ]
+    },
+    {
+      "name": "two-part compiler version",
+      "valid": false,
+      "keywords": [
+        "$ref",
+        "pattern"
+      ],
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/producer/compiler_version",
+          "value": "1.0"
+        }
+      ]
+    },
+    {
+      "name": "security context not admitted (PLN-6.4)",
+      "valid": true,
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/subject",
+          "value": null
+        },
+        {
+          "op": "replace",
+          "path": "/inputs/security_fingerprint",
+          "value": null
+        },
+        {
+          "op": "replace",
+          "path": "/outcome",
+          "value": {
+            "error_codes": [
+              "ESEC-01"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "no actor, compile options or data source (1.1.0)",
+      "valid": true,
+      "patch": [
+        {
+          "op": "remove",
+          "path": "/actor"
+        },
+        {
+          "op": "remove",
+          "path": "/compile_options"
+        },
+        {
+          "op": "remove",
+          "path": "/load_options/data_source"
+        },
+        {
+          "op": "remove",
+          "path": "/decisions/0/code"
+        },
+        {
+          "op": "remove",
+          "path": "/decisions/0/subject"
+        },
+        {
+          "op": "replace",
+          "path": "/decisions/0/step",
+          "value": "E2"
+        }
+      ]
+    },
+    {
+      "name": "short security fingerprint",
+      "valid": false,
+      "keywords": [
+        "oneOf",
+        "pattern"
+      ],
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/inputs/security_fingerprint",
+          "value": "cc"
+        }
+      ]
+    },
+    {
+      "name": "numeric subject",
+      "valid": false,
+      "keywords": [
+        "type"
+      ],
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/subject",
+          "value": 7
+        }
+      ]
+    },
+    {
+      "name": "another compile dialect",
+      "valid": false,
+      "keywords": [
+        "enum"
+      ],
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/compile_options/dialect",
+          "value": "postgres"
+        }
+      ]
+    },
+    {
+      "name": "compile options without dialect",
+      "valid": false,
+      "keywords": [
+        "required"
+      ],
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/compile_options",
+          "value": {}
+        }
+      ]
+    },
+    {
+      "name": "empty data source",
+      "valid": false,
+      "keywords": [
+        "minLength"
+      ],
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/load_options/data_source",
+          "value": ""
+        }
+      ]
+    },
+    {
+      "name": "numeric actor",
+      "valid": false,
+      "keywords": [
+        "type"
+      ],
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/actor",
+          "value": 1
+        }
+      ]
+    },
+    {
+      "name": "empty decision code",
+      "valid": false,
+      "keywords": [
+        "minLength"
+      ],
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/decisions/0/code",
+          "value": ""
+        }
+      ]
+    },
+    {
+      "name": "empty decision subject",
+      "valid": false,
+      "keywords": [
+        "minLength"
+      ],
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/decisions/0/subject",
+          "value": ""
+        }
+      ]
+    }
+  ]
+}

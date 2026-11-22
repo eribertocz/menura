@@ -96,3 +96,7 @@ To be changed by follow-up specification pull requests:
 - the vision non-goals;
 - the architecture module table;
 - backlog entries F29–F33.
+
+## Amendment
+
+Decision 0007 supersedes item D's placement: `menura-mcp` is a crate of this repository, released with Menura from 0.9.0, with one tool per public function and CLI command (ARC-6.1), for authoring only (ARC-6.2).

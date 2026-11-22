@@ -1,0 +1,489 @@
+{
+  "schema": "integrity-checks",
+  "example": "integrity-checks.example.json",
+  "cases": [
+    {
+      "name": "published example",
+      "valid": true,
+      "patch": []
+    },
+    {
+      "name": "menura contract name and version 1.1.0 (CON-0.5)",
+      "valid": true,
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/contract",
+          "value": "menura.integrity_checks"
+        },
+        {
+          "op": "replace",
+          "path": "/contract_version",
+          "value": "1.1.0"
+        }
+      ]
+    },
+    {
+      "name": "former contract name and version 1.0.0 (CON-0.5)",
+      "valid": true,
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/contract",
+          "value": "semantic_compiler.integrity_checks"
+        },
+        {
+          "op": "replace",
+          "path": "/contract_version",
+          "value": "1.0.0"
+        }
+      ]
+    },
+    {
+      "name": "check with a parameter",
+      "valid": true,
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/checks/0/parameters",
+          "value": [
+            {
+              "position": 1,
+              "logical_type": {
+                "kind": "text"
+              },
+              "value": "x"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "no checks",
+      "valid": true,
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/checks",
+          "value": []
+        }
+      ]
+    },
+    {
+      "name": "checks is text",
+      "valid": false,
+      "keywords": [
+        "type",
+        "properties"
+      ],
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/checks",
+          "value": "x"
+        }
+      ]
+    },
+    {
+      "name": "another contract",
+      "valid": false,
+      "keywords": [
+        "const"
+      ],
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/contract",
+          "value": "semantic_compiler.query"
+        }
+      ]
+    },
+    {
+      "name": "unknown kind",
+      "valid": false,
+      "keywords": [
+        "enum",
+        "items"
+      ],
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/checks/0/kind",
+          "value": "freshness"
+        }
+      ]
+    },
+    {
+      "name": "definition hash missing",
+      "valid": false,
+      "keywords": [
+        "required"
+      ],
+      "patch": [
+        {
+          "op": "remove",
+          "path": "/checks/0/definition_hash"
+        }
+      ]
+    },
+    {
+      "name": "unknown check member",
+      "valid": false,
+      "keywords": [
+        "additionalProperties"
+      ],
+      "patch": [
+        {
+          "op": "add",
+          "path": "/checks/0/extra",
+          "value": 1
+        }
+      ]
+    },
+    {
+      "name": "no sources",
+      "valid": false,
+      "keywords": [
+        "minItems"
+      ],
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/checks/0/sources",
+          "value": []
+        }
+      ]
+    },
+    {
+      "name": "empty SQL",
+      "valid": false,
+      "keywords": [
+        "minLength"
+      ],
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/checks/0/sql",
+          "value": ""
+        }
+      ]
+    },
+    {
+      "name": "position 0",
+      "valid": false,
+      "keywords": [
+        "minimum"
+      ],
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/checks/0/parameters",
+          "value": [
+            {
+              "position": 0,
+              "logical_type": {
+                "kind": "text"
+              },
+              "value": "x"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "decimal precision 39",
+      "valid": false,
+      "keywords": [
+        "maximum",
+        "$ref",
+        "oneOf"
+      ],
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/checks/0/parameters",
+          "value": [
+            {
+              "position": 1,
+              "logical_type": {
+                "kind": "decimal",
+                "precision": 39,
+                "scale": 0
+              },
+              "value": "x"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "upper-case definition hash",
+      "valid": false,
+      "keywords": [
+        "pattern"
+      ],
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/checks/0/definition_hash",
+          "value": "DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD"
+        }
+      ]
+    },
+    {
+      "name": "unknown logical kind",
+      "valid": false,
+      "keywords": [
+        "oneOf"
+      ],
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/checks/0/parameters",
+          "value": [
+            {
+              "position": 1,
+              "logical_type": {
+                "kind": "blob"
+              },
+              "value": "x"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "fixed parameter value in a summary check",
+      "valid": true,
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/checks/1/parameters/0",
+          "value": {
+            "position": 1,
+            "logical_type": {
+              "kind": "text"
+            },
+            "value": "UTC"
+          }
+        }
+      ]
+    },
+    {
+      "name": "time zone slot",
+      "valid": true,
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/checks/1/build/parameters/0",
+          "value": {
+            "position": 1,
+            "logical_type": {
+              "kind": "text"
+            },
+            "binding": "time_zone"
+          }
+        }
+      ]
+    },
+    {
+      "name": "summary check without build (CHK-5.4)",
+      "valid": false,
+      "keywords": [
+        "if",
+        "then",
+        "required"
+      ],
+      "patch": [
+        {
+          "op": "remove",
+          "path": "/checks/1/build"
+        }
+      ]
+    },
+    {
+      "name": "build on another kind (CHK-5.4)",
+      "valid": false,
+      "keywords": [
+        "else",
+        "not"
+      ],
+      "patch": [
+        {
+          "op": "add",
+          "path": "/checks/0/build",
+          "value": {
+            "sql": "SELECT 1",
+            "parameters": [],
+            "columns": [
+              "x"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "parameter with value and binding (CHK-7.1)",
+      "valid": false,
+      "keywords": [
+        "oneOf"
+      ],
+      "patch": [
+        {
+          "op": "add",
+          "path": "/checks/1/parameters/0/value",
+          "value": "2024-01"
+        }
+      ]
+    },
+    {
+      "name": "parameter without value or binding (CHK-7.1)",
+      "valid": false,
+      "keywords": [
+        "oneOf"
+      ],
+      "patch": [
+        {
+          "op": "remove",
+          "path": "/checks/1/parameters/0/binding"
+        }
+      ]
+    },
+    {
+      "name": "binding of another type (CHK-7.2)",
+      "valid": false,
+      "keywords": [
+        "if",
+        "then",
+        "const"
+      ],
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/checks/1/parameters/0/logical_type",
+          "value": {
+            "kind": "date"
+          }
+        }
+      ]
+    },
+    {
+      "name": "unknown binding",
+      "valid": false,
+      "keywords": [
+        "enum"
+      ],
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/checks/1/parameters/0/binding",
+          "value": "reference_time"
+        }
+      ]
+    },
+    {
+      "name": "duplicate sources",
+      "valid": false,
+      "keywords": [
+        "uniqueItems"
+      ],
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/checks/0/sources",
+          "value": [
+            "a",
+            "a"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "build without columns",
+      "valid": false,
+      "keywords": [
+        "required"
+      ],
+      "patch": [
+        {
+          "op": "remove",
+          "path": "/checks/1/build/columns"
+        }
+      ]
+    },
+    {
+      "name": "build with empty columns",
+      "valid": false,
+      "keywords": [
+        "minItems"
+      ],
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/checks/1/build/columns",
+          "value": []
+        }
+      ]
+    },
+    {
+      "name": "duplicate build columns",
+      "valid": false,
+      "keywords": [
+        "uniqueItems"
+      ],
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/checks/1/build/columns",
+          "value": [
+            "month",
+            "month"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "empty build SQL",
+      "valid": false,
+      "keywords": [
+        "minLength"
+      ],
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/checks/1/build/sql",
+          "value": ""
+        }
+      ]
+    },
+    {
+      "name": "unknown build member",
+      "valid": false,
+      "keywords": [
+        "additionalProperties"
+      ],
+      "patch": [
+        {
+          "op": "add",
+          "path": "/checks/1/build/extra",
+          "value": 1
+        }
+      ]
+    },
+    {
+      "name": "numeric build parameters",
+      "valid": false,
+      "keywords": [
+        "$ref",
+        "type"
+      ],
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/checks/1/build/parameters",
+          "value": 1
+        }
+      ]
+    }
+  ]
+}

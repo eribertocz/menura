@@ -1,0 +1,362 @@
+{
+  "schema": "compile-error",
+  "example": "compile-error.example.json",
+  "cases": [
+    {
+      "name": "published example",
+      "valid": true,
+      "patch": []
+    },
+    {
+      "name": "menura contract name and version 1.1.0 (CON-0.5)",
+      "valid": true,
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/contract",
+          "value": "menura.compile_error"
+        },
+        {
+          "op": "replace",
+          "path": "/contract_version",
+          "value": "1.1.0"
+        }
+      ]
+    },
+    {
+      "name": "former contract name and version 1.0.0 (CON-0.5)",
+      "valid": true,
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/contract",
+          "value": "semantic_compiler.compile_error"
+        },
+        {
+          "op": "replace",
+          "path": "/contract_version",
+          "value": "1.0.0"
+        }
+      ]
+    },
+    {
+      "name": "empty validation report",
+      "valid": true,
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/contract",
+          "value": "semantic_compiler.validation_report"
+        },
+        {
+          "op": "replace",
+          "path": "/errors",
+          "value": []
+        }
+      ]
+    },
+    {
+      "name": "no location",
+      "valid": true,
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/errors/0/location",
+          "value": null
+        }
+      ]
+    },
+    {
+      "name": "line and column",
+      "valid": true,
+      "patch": [
+        {
+          "op": "add",
+          "path": "/errors/0/location/line",
+          "value": 3
+        },
+        {
+          "op": "add",
+          "path": "/errors/0/location/column",
+          "value": 7
+        }
+      ]
+    },
+    {
+      "name": "compile error without errors",
+      "valid": false,
+      "keywords": [
+        "allOf",
+        "if",
+        "then",
+        "const",
+        "minItems"
+      ],
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/errors",
+          "value": []
+        }
+      ]
+    },
+    {
+      "name": "numeric message",
+      "valid": false,
+      "keywords": [
+        "type",
+        "items",
+        "$ref",
+        "properties"
+      ],
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/errors/0/message",
+          "value": 5
+        }
+      ]
+    },
+    {
+      "name": "location is text",
+      "valid": false,
+      "keywords": [
+        "type"
+      ],
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/errors/0/location",
+          "value": "x"
+        }
+      ]
+    },
+    {
+      "name": "another contract",
+      "valid": false,
+      "keywords": [
+        "enum"
+      ],
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/contract",
+          "value": "semantic_compiler.other"
+        }
+      ]
+    },
+    {
+      "name": "unknown document",
+      "valid": false,
+      "keywords": [
+        "enum"
+      ],
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/errors/0/location/document",
+          "value": "sql"
+        }
+      ]
+    },
+    {
+      "name": "warnings missing",
+      "valid": false,
+      "keywords": [
+        "required"
+      ],
+      "patch": [
+        {
+          "op": "remove",
+          "path": "/warnings"
+        }
+      ]
+    },
+    {
+      "name": "location without pointer",
+      "valid": false,
+      "keywords": [
+        "required"
+      ],
+      "patch": [
+        {
+          "op": "remove",
+          "path": "/errors/0/location/pointer"
+        }
+      ]
+    },
+    {
+      "name": "unknown diagnostic member",
+      "valid": false,
+      "keywords": [
+        "additionalProperties"
+      ],
+      "patch": [
+        {
+          "op": "add",
+          "path": "/errors/0/hint",
+          "value": "x"
+        }
+      ]
+    },
+    {
+      "name": "line 0",
+      "valid": false,
+      "keywords": [
+        "minimum"
+      ],
+      "patch": [
+        {
+          "op": "add",
+          "path": "/errors/0/location/line",
+          "value": 0
+        }
+      ]
+    },
+    {
+      "name": "lower-case code",
+      "valid": false,
+      "keywords": [
+        "pattern"
+      ],
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/errors/0/code",
+          "value": "e_x"
+        }
+      ]
+    },
+    {
+      "name": "incomplete warning",
+      "valid": false,
+      "keywords": [
+        "items",
+        "$ref",
+        "required"
+      ],
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/warnings",
+          "value": [
+            {
+              "code": "W1"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "five alternatives",
+      "valid": true,
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/errors/0/alternatives",
+          "value": [
+            "dataset:a",
+            "field:a.b",
+            "metric:a",
+            "metric:b",
+            "metric:c"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "no alternatives",
+      "valid": true,
+      "patch": [
+        {
+          "op": "remove",
+          "path": "/errors/0/alternatives"
+        }
+      ]
+    },
+    {
+      "name": "alternative of 257 code points",
+      "valid": false,
+      "keywords": [
+        "maxLength",
+        "items"
+      ],
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/errors/0/alternatives",
+          "value": [
+            "metric:xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "alternative of another kind",
+      "valid": false,
+      "keywords": [
+        "pattern"
+      ],
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/errors/0/alternatives",
+          "value": [
+            "column:billed"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "alternative without a name",
+      "valid": false,
+      "keywords": [
+        "pattern"
+      ],
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/errors/0/alternatives",
+          "value": [
+            "metric:"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "six alternatives",
+      "valid": false,
+      "keywords": [
+        "maxItems"
+      ],
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/errors/0/alternatives",
+          "value": [
+            "metric:a",
+            "metric:b",
+            "metric:c",
+            "metric:d",
+            "metric:e",
+            "metric:f"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "empty alternatives",
+      "valid": false,
+      "keywords": [
+        "minItems"
+      ],
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/errors/0/alternatives",
+          "value": []
+        }
+      ]
+    }
+  ]
+}
