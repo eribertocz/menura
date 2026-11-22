@@ -18,6 +18,8 @@ use crate::differential::check_differential;
 use crate::divergences::Divergences;
 use crate::execution::{ExecutionFailure, execute_plan};
 use crate::fixture::read_text;
+use crate::pending_parts::with_pending_parts;
+use crate::plan_outputs::plan_outputs_mismatch;
 use crate::report::CaseStatus;
 use crate::row_comparison::{Comparison, rows_mismatch};
 
@@ -36,8 +38,15 @@ pub(crate) struct QueryInputs<'inputs> {
     pub(crate) divergences: &'inputs Divergences,
 }
 
-/// Compiles the query of `case` over `handle` and compares the result with its expectation.
+/// Compiles the query of `case` over `handle` and compares the result with its expectation. A
+/// part that needs a `core` function this build lacks leaves the case pending (CS-2.8).
 pub(crate) fn check_query(case: &Case, handle: &Handle, inputs: &QueryInputs<'_>) -> CaseStatus {
+    with_pending_parts(case, compare_query(case, handle, inputs))
+}
+
+/// Compiles the query of `case`, with `audit: true` when the case expects an audit record
+/// (CS-2.13), and compares the result with its expectation.
+fn compare_query(case: &Case, handle: &Handle, inputs: &QueryInputs<'_>) -> CaseStatus {
     let Some(query) = &case.query else {
         return CaseStatus::Failed("this outcome requires `query`".to_owned());
     };
@@ -45,7 +54,12 @@ pub(crate) fn check_query(case: &Case, handle: &Handle, inputs: &QueryInputs<'_>
         Ok(query) => query,
         Err(error) => return CaseStatus::Failed(format!("the query is not JSON: {error}")),
     };
-    let result = compile_query(handle, &query, inputs.security_context);
+    let options = CompileOptions {
+        audit: case.expect.audit.is_some(),
+        ..CompileOptions::default()
+    };
+    let compile_query = || compile(handle, &query, inputs.security_context, &options);
+    let result = compile_query();
     if let Some(reason) = missing_warnings(&case.expect.warnings, warnings_of(&result), Part::Query)
     {
         return CaseStatus::Failed(reason);
@@ -73,8 +87,7 @@ pub(crate) fn check_query(case: &Case, handle: &Handle, inputs: &QueryInputs<'_>
             describe(error.errors.first())
         )),
         (outcome, CompileResult::Plan(plan)) => {
-            let compile_again = || compile_query(handle, &query, inputs.security_context);
-            if let Some(reason) = plan_mismatch(case, &plan, inputs.case_folder, compile_again) {
+            if let Some(reason) = plan_mismatch(case, &plan, inputs.case_folder, compile_query) {
                 return CaseStatus::Failed(reason);
             }
             if outcome == Outcome::RuntimeError {
@@ -94,10 +107,6 @@ pub(crate) fn check_query(case: &Case, handle: &Handle, inputs: &QueryInputs<'_>
 /// left pending (VS-4).
 fn expects_not_yet_supported(expect: &Expectation) -> bool {
     expect.outcome == Outcome::Error && expect.error.as_deref() == Some(NOT_YET_SUPPORTED)
-}
-
-fn compile_query(handle: &Handle, query: &[u8], security_context: &[u8]) -> CompileResult {
-    compile(handle, query, security_context, &CompileOptions::default())
 }
 
 fn warnings_of(result: &CompileResult) -> std::slice::Iter<'_, Diagnostic> {
@@ -137,8 +146,8 @@ fn check_error(expect: &Expectation, error: &CompileErrorDocument) -> CaseStatus
 }
 
 /// Why a compiled plan does not meet the checks made before it is executed, or `None`: a second
-/// compilation gives the same plan (P3, PLN-3), and the SQL matches its golden file when the case
-/// gives one (CS-2.3).
+/// compilation gives the same plan (P3, PLN-3), the SQL matches its golden file when the case
+/// gives one (CS-2.3), and the plan meets its output expectations (CS-2.11, CS-2.12, CS-2.14).
 fn plan_mismatch(
     case: &Case,
     plan: &CompiledPlanDocument,
@@ -148,9 +157,11 @@ fn plan_mismatch(
     if !matches!(compile_again(), CompileResult::Plan(again) if *again == *plan) {
         return Some("two compilations of the same inputs give different results".to_owned());
     }
-    let file_name = case.expect.sql.as_ref()?;
+    let Some(file_name) = case.expect.sql.as_ref() else {
+        return plan_outputs_mismatch(&case.expect, plan, case_folder);
+    };
     match read_text(&case_folder.join(file_name)) {
-        Ok(golden) if golden == plan.sql => None,
+        Ok(golden) if golden == plan.sql => plan_outputs_mismatch(&case.expect, plan, case_folder),
         Ok(_) => Some(format!(
             "the SQL differs from the golden file `{file_name}`; the SQL is:\n{}",
             plan.sql
