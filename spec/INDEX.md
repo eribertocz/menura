@@ -116,14 +116,15 @@ Find a rule ID or a section here, then open only that file at that line.
 | [07-roadmap.md](07-roadmap.md#L47) | 47 | rule | VS-1 |
 | [07-roadmap.md](07-roadmap.md#L48) | 48 | rule | VS-1b |
 | [07-roadmap.md](07-roadmap.md#L49) | 49 | rule | VS-1c |
-| [07-roadmap.md](07-roadmap.md#L50) | 50 | rule | VS-2 |
-| [07-roadmap.md](07-roadmap.md#L51) | 51 | rule | VS-3 |
-| [07-roadmap.md](07-roadmap.md#L52) | 52 | rule | VS-4 |
-| [07-roadmap.md](07-roadmap.md#L53) | 53 | rule | VS-5 |
-| [07-roadmap.md](07-roadmap.md#L55) | 55 | section | 7.1b What 1.0.0 guarantees |
-| [07-roadmap.md](07-roadmap.md#L67) | 67 | section | 7.2 After the MVP |
-| [07-roadmap.md](07-roadmap.md#L81) | 81 | section | 7.3 Capability scope |
-| [07-roadmap.md](07-roadmap.md#L103) | 103 | section | 7.4 Backlog after the MVP |
+| [07-roadmap.md](07-roadmap.md#L50) | 50 | rule | VS-1d |
+| [07-roadmap.md](07-roadmap.md#L51) | 51 | rule | VS-2 |
+| [07-roadmap.md](07-roadmap.md#L52) | 52 | rule | VS-3 |
+| [07-roadmap.md](07-roadmap.md#L53) | 53 | rule | VS-4 |
+| [07-roadmap.md](07-roadmap.md#L54) | 54 | rule | VS-5 |
+| [07-roadmap.md](07-roadmap.md#L56) | 56 | section | 7.1b What 1.0.0 guarantees |
+| [07-roadmap.md](07-roadmap.md#L68) | 68 | section | 7.2 After the MVP |
+| [07-roadmap.md](07-roadmap.md#L82) | 82 | section | 7.3 Capability scope |
+| [07-roadmap.md](07-roadmap.md#L104) | 104 | section | 7.4 Backlog after the MVP |
 | [08-conformance-suite.md](08-conformance-suite.md#L1) | 1 | section | 8. Conformance suite |
 | [08-conformance-suite.md](08-conformance-suite.md#L5) | 5 | section | CS-1 Layout |
 | [08-conformance-suite.md](08-conformance-suite.md#L22) | 22 | section | CS-2 Case format |
@@ -226,12 +227,17 @@ Find a rule ID or a section here, then open only that file at that line.
 | [contracts/catalog.md](contracts/catalog.md#L122) | 122 | rule | CAT-7.1.3 |
 | [contracts/catalog.md](contracts/catalog.md#L123) | 123 | rule | CAT-7.1.4 |
 | [contracts/catalog.md](contracts/catalog.md#L124) | 124 | rule | CAT-7.1.5 |
-| [contracts/catalog.md](contracts/catalog.md#L126) | 126 | section | CAT-7.2 Summary validity |
-| [contracts/catalog.md](contracts/catalog.md#L141) | 141 | section | CAT-7.3 Check evidence |
-| [contracts/catalog.md](contracts/catalog.md#L149) | 149 | section | CAT-7.4 Never |
-| [contracts/catalog.md](contracts/catalog.md#L155) | 155 | section | CAT-8 Semantic rules |
-| [contracts/catalog.md](contracts/catalog.md#L167) | 167 | section | CAT-9 Errors |
-| [contracts/catalog.md](contracts/catalog.md#L180) | 180 | rule | CAT-9.1 |
+| [contracts/catalog.md](contracts/catalog.md#L125) | 125 | rule | CAT-7.1.6 |
+| [contracts/catalog.md](contracts/catalog.md#L126) | 126 | rule | CAT-7.1.7 |
+| [contracts/catalog.md](contracts/catalog.md#L127) | 127 | rule | CAT-7.1.8 |
+| [contracts/catalog.md](contracts/catalog.md#L128) | 128 | rule | CAT-7.1.9 |
+| [contracts/catalog.md](contracts/catalog.md#L130) | 130 | section | CAT-7.2 Summary validity |
+| [contracts/catalog.md](contracts/catalog.md#L150) | 150 | rule | CAT-7.2.1 |
+| [contracts/catalog.md](contracts/catalog.md#L152) | 152 | section | CAT-7.3 Check evidence |
+| [contracts/catalog.md](contracts/catalog.md#L160) | 160 | section | CAT-7.4 Never |
+| [contracts/catalog.md](contracts/catalog.md#L166) | 166 | section | CAT-8 Semantic rules |
+| [contracts/catalog.md](contracts/catalog.md#L178) | 178 | section | CAT-9 Errors |
+| [contracts/catalog.md](contracts/catalog.md#L191) | 191 | rule | CAT-9.1 |
 | [contracts/compiled-plan.md](contracts/compiled-plan.md#L1) | 1 | section | Contract: compiled plan and compile error |
 | [contracts/compiled-plan.md](contracts/compiled-plan.md#L7) | 7 | section | PLN-1 Compiled plan |
 | [contracts/compiled-plan.md](contracts/compiled-plan.md#L25) | 25 | section | PLN-2 SQL rules |
@@ -260,11 +266,17 @@ Find a rule ID or a section here, then open only that file at that line.
 | [contracts/integrity-checks.md](contracts/integrity-checks.md#L10) | 10 | section | CHK-2 Document |
 | [contracts/integrity-checks.md](contracts/integrity-checks.md#L23) | 23 | rule | CHK-2.1 |
 | [contracts/integrity-checks.md](contracts/integrity-checks.md#L24) | 24 | rule | CHK-2.2 |
-| [contracts/integrity-checks.md](contracts/integrity-checks.md#L26) | 26 | section | CHK-3 Definition hash |
-| [contracts/integrity-checks.md](contracts/integrity-checks.md#L39) | 39 | rule | CHK-3.1 |
-| [contracts/integrity-checks.md](contracts/integrity-checks.md#L41) | 41 | section | CHK-4 Use of evidence and generation |
-| [contracts/integrity-checks.md](contracts/integrity-checks.md#L45) | 45 | rule | CHK-4.1 |
-| [contracts/integrity-checks.md](contracts/integrity-checks.md#L46) | 46 | rule | CHK-4.2 |
+| [contracts/integrity-checks.md](contracts/integrity-checks.md#L25) | 25 | rule | CHK-2.3 |
+| [contracts/integrity-checks.md](contracts/integrity-checks.md#L27) | 27 | section | CHK-3 Definition hash |
+| [contracts/integrity-checks.md](contracts/integrity-checks.md#L40) | 40 | rule | CHK-3.1 |
+| [contracts/integrity-checks.md](contracts/integrity-checks.md#L42) | 42 | section | CHK-4 Use of evidence and generation |
+| [contracts/integrity-checks.md](contracts/integrity-checks.md#L46) | 46 | rule | CHK-4.1 |
+| [contracts/integrity-checks.md](contracts/integrity-checks.md#L47) | 47 | rule | CHK-4.2 |
+| [contracts/integrity-checks.md](contracts/integrity-checks.md#L49) | 49 | section | CHK-5 Summary build and time zone |
+| [contracts/integrity-checks.md](contracts/integrity-checks.md#L51) | 51 | rule | CHK-5.1 |
+| [contracts/integrity-checks.md](contracts/integrity-checks.md#L52) | 52 | rule | CHK-5.2 |
+| [contracts/integrity-checks.md](contracts/integrity-checks.md#L53) | 53 | rule | CHK-5.3 |
+| [contracts/integrity-checks.md](contracts/integrity-checks.md#L54) | 54 | rule | CHK-5.4 |
 | [contracts/model-description.md](contracts/model-description.md#L1) | 1 | section | Contract: model description |
 | [contracts/model-description.md](contracts/model-description.md#L5) | 5 | section | DSC-1 Purpose |
 | [contracts/model-description.md](contracts/model-description.md#L11) | 11 | section | DSC-2 Content |
@@ -345,6 +357,11 @@ Find a rule ID or a section here, then open only that file at that line.
 | [decisions/0004-strategic-direction.md](decisions/0004-strategic-direction.md#L46) | 46 | section | Decision |
 | [decisions/0004-strategic-direction.md](decisions/0004-strategic-direction.md#L78) | 78 | section | Consequences |
 | [decisions/0004-strategic-direction.md](decisions/0004-strategic-direction.md#L88) | 88 | section | Rules changed |
+| [decisions/0005-summary-evidence-and-e5.md](decisions/0005-summary-evidence-and-e5.md#L1) | 1 | section | 0005 Summary evidence, build time zone and the E5 audit |
+| [decisions/0005-summary-evidence-and-e5.md](decisions/0005-summary-evidence-and-e5.md#L3) | 3 | section | Context |
+| [decisions/0005-summary-evidence-and-e5.md](decisions/0005-summary-evidence-and-e5.md#L11) | 11 | section | Decision |
+| [decisions/0005-summary-evidence-and-e5.md](decisions/0005-summary-evidence-and-e5.md#L30) | 30 | section | Consequences |
+| [decisions/0005-summary-evidence-and-e5.md](decisions/0005-summary-evidence-and-e5.md#L35) | 35 | section | Rules changed |
 | [decisions/README.md](decisions/README.md#L1) | 1 | section | Decision records |
 | [extensions/README.md](extensions/README.md#L1) | 1 | section | Extensions |
 | [extensions/README.md](extensions/README.md#L18) | 18 | section | EXT-1 Runtime failure policies |
@@ -476,25 +493,28 @@ Find a rule ID or a section here, then open only that file at that line.
 | [extensions/summaries.md](extensions/summaries.md#L25) | 25 | section | SUM-3 Conditions for use |
 | [extensions/summaries.md](extensions/summaries.md#L29) | 29 | rule | SUM-3.1 |
 | [extensions/summaries.md](extensions/summaries.md#L30) | 30 | rule | SUM-3.2 |
-| [extensions/summaries.md](extensions/summaries.md#L31) | 31 | rule | SUM-3.3 |
-| [extensions/summaries.md](extensions/summaries.md#L32) | 32 | rule | SUM-3.4 |
-| [extensions/summaries.md](extensions/summaries.md#L33) | 33 | rule | SUM-3.5 |
-| [extensions/summaries.md](extensions/summaries.md#L34) | 34 | rule | SUM-3.6 |
-| [extensions/summaries.md](extensions/summaries.md#L35) | 35 | rule | SUM-3.7 |
-| [extensions/summaries.md](extensions/summaries.md#L37) | 37 | section | SUM-4 Visibility |
-| [extensions/summaries.md](extensions/summaries.md#L39) | 39 | rule | SUM-4.1 |
-| [extensions/summaries.md](extensions/summaries.md#L40) | 40 | rule | SUM-4.2 |
-| [extensions/summaries.md](extensions/summaries.md#L42) | 42 | section | SUM-5 Integrity check |
-| [extensions/summaries.md](extensions/summaries.md#L47) | 47 | section | SUM-6 Validation |
-| [extensions/summaries.md](extensions/summaries.md#L60) | 60 | section | SUM-6.1 Validation details |
-| [extensions/summaries.md](extensions/summaries.md#L64) | 64 | rule | SUM-6.1.1 |
-| [extensions/summaries.md](extensions/summaries.md#L65) | 65 | rule | SUM-6.1.2 |
-| [extensions/summaries.md](extensions/summaries.md#L66) | 66 | rule | SUM-6.1.3 |
-| [extensions/summaries.md](extensions/summaries.md#L67) | 67 | rule | SUM-6.1.4 |
-| [extensions/summaries.md](extensions/summaries.md#L68) | 68 | rule | SUM-6.1.5 |
-| [extensions/summaries.md](extensions/summaries.md#L69) | 69 | rule | SUM-6.1.6 |
-| [extensions/summaries.md](extensions/summaries.md#L70) | 70 | rule | SUM-6.1.7 |
-| [extensions/summaries.md](extensions/summaries.md#L71) | 71 | rule | SUM-6.1.8 |
+| [extensions/summaries.md](extensions/summaries.md#L31) | 31 | rule | SUM-3.2a |
+| [extensions/summaries.md](extensions/summaries.md#L32) | 32 | rule | SUM-3.3 |
+| [extensions/summaries.md](extensions/summaries.md#L33) | 33 | rule | SUM-3.4 |
+| [extensions/summaries.md](extensions/summaries.md#L34) | 34 | rule | SUM-3.3a |
+| [extensions/summaries.md](extensions/summaries.md#L35) | 35 | rule | SUM-3.5 |
+| [extensions/summaries.md](extensions/summaries.md#L36) | 36 | rule | SUM-3.6 |
+| [extensions/summaries.md](extensions/summaries.md#L37) | 37 | rule | SUM-3.7 |
+| [extensions/summaries.md](extensions/summaries.md#L38) | 38 | rule | SUM-3.8 |
+| [extensions/summaries.md](extensions/summaries.md#L40) | 40 | section | SUM-4 Visibility |
+| [extensions/summaries.md](extensions/summaries.md#L42) | 42 | rule | SUM-4.1 |
+| [extensions/summaries.md](extensions/summaries.md#L43) | 43 | rule | SUM-4.2 |
+| [extensions/summaries.md](extensions/summaries.md#L45) | 45 | section | SUM-5 Integrity check |
+| [extensions/summaries.md](extensions/summaries.md#L50) | 50 | section | SUM-6 Validation |
+| [extensions/summaries.md](extensions/summaries.md#L63) | 63 | section | SUM-6.1 Validation details |
+| [extensions/summaries.md](extensions/summaries.md#L67) | 67 | rule | SUM-6.1.1 |
+| [extensions/summaries.md](extensions/summaries.md#L68) | 68 | rule | SUM-6.1.2 |
+| [extensions/summaries.md](extensions/summaries.md#L69) | 69 | rule | SUM-6.1.3 |
+| [extensions/summaries.md](extensions/summaries.md#L70) | 70 | rule | SUM-6.1.4 |
+| [extensions/summaries.md](extensions/summaries.md#L71) | 71 | rule | SUM-6.1.5 |
+| [extensions/summaries.md](extensions/summaries.md#L72) | 72 | rule | SUM-6.1.6 |
+| [extensions/summaries.md](extensions/summaries.md#L73) | 73 | rule | SUM-6.1.7 |
+| [extensions/summaries.md](extensions/summaries.md#L74) | 74 | rule | SUM-6.1.8 |
 | [glossary.md](glossary.md#L1) | 1 | section | Glossary |
 | [ossie-mapping.md](ossie-mapping.md#L1) | 1 | section | Apache Ossie mapping |
 | [stages/E0/README.md](stages/E0/README.md#L1) | 1 | section | E0 Load and validate the model |
@@ -819,17 +839,24 @@ Find a rule ID or a section here, then open only that file at that line.
 | [stages/E5-optimize.md](stages/E5-optimize.md#L3) | 3 | section | E5-1 Purpose |
 | [stages/E5-optimize.md](stages/E5-optimize.md#L9) | 9 | section | E5-2 Input and output |
 | [stages/E5-optimize.md](stages/E5-optimize.md#L16) | 16 | rule | E5-2.1 |
-| [stages/E5-optimize.md](stages/E5-optimize.md#L18) | 18 | section | E5-3 Rewrites |
-| [stages/E5-optimize.md](stages/E5-optimize.md#L24) | 24 | rule | E5-3.1 |
-| [stages/E5-optimize.md](stages/E5-optimize.md#L25) | 25 | rule | E5-3.2 |
-| [stages/E5-optimize.md](stages/E5-optimize.md#L26) | 26 | rule | E5-3.3 |
-| [stages/E5-optimize.md](stages/E5-optimize.md#L27) | 27 | rule | E5-3.4 |
-| [stages/E5-optimize.md](stages/E5-optimize.md#L28) | 28 | rule | E5-3.5 |
-| [stages/E5-optimize.md](stages/E5-optimize.md#L29) | 29 | rule | E5-3.6 |
-| [stages/E5-optimize.md](stages/E5-optimize.md#L31) | 31 | rule | E5-3.7 |
-| [stages/E5-optimize.md](stages/E5-optimize.md#L32) | 32 | rule | E5-3.8 |
-| [stages/E5-optimize.md](stages/E5-optimize.md#L34) | 34 | section | E5-4 Summary selection |
-| [stages/E5-optimize.md](stages/E5-optimize.md#L41) | 41 | section | E5-5 Never |
+| [stages/E5-optimize.md](stages/E5-optimize.md#L17) | 17 | rule | E5-2.2 |
+| [stages/E5-optimize.md](stages/E5-optimize.md#L18) | 18 | rule | E5-2.3 |
+| [stages/E5-optimize.md](stages/E5-optimize.md#L20) | 20 | section | E5-3 Rewrites |
+| [stages/E5-optimize.md](stages/E5-optimize.md#L26) | 26 | rule | E5-3.1 |
+| [stages/E5-optimize.md](stages/E5-optimize.md#L27) | 27 | rule | E5-3.2 |
+| [stages/E5-optimize.md](stages/E5-optimize.md#L28) | 28 | rule | E5-3.3 |
+| [stages/E5-optimize.md](stages/E5-optimize.md#L29) | 29 | rule | E5-3.4 |
+| [stages/E5-optimize.md](stages/E5-optimize.md#L30) | 30 | rule | E5-3.5 |
+| [stages/E5-optimize.md](stages/E5-optimize.md#L31) | 31 | rule | E5-3.6 |
+| [stages/E5-optimize.md](stages/E5-optimize.md#L33) | 33 | rule | E5-3.1a |
+| [stages/E5-optimize.md](stages/E5-optimize.md#L34) | 34 | rule | E5-3.2a |
+| [stages/E5-optimize.md](stages/E5-optimize.md#L35) | 35 | rule | E5-3.3a |
+| [stages/E5-optimize.md](stages/E5-optimize.md#L36) | 36 | rule | E5-3.4a |
+| [stages/E5-optimize.md](stages/E5-optimize.md#L37) | 37 | rule | E5-3.5a |
+| [stages/E5-optimize.md](stages/E5-optimize.md#L38) | 38 | rule | E5-3.7 |
+| [stages/E5-optimize.md](stages/E5-optimize.md#L39) | 39 | rule | E5-3.8 |
+| [stages/E5-optimize.md](stages/E5-optimize.md#L41) | 41 | section | E5-4 Summary selection |
+| [stages/E5-optimize.md](stages/E5-optimize.md#L49) | 49 | section | E5-5 Never |
 | [stages/E6-generate.md](stages/E6-generate.md#L1) | 1 | section | E6 Generate SQL |
 | [stages/E6-generate.md](stages/E6-generate.md#L3) | 3 | section | E6-1 Purpose |
 | [stages/E6-generate.md](stages/E6-generate.md#L8) | 8 | section | E6-2 Input and output |
@@ -856,17 +883,18 @@ Find a rule ID or a section here, then open only that file at that line.
 | [stages/E6-generate.md](stages/E6-generate.md#L40) | 40 | rule | E6-4.12 |
 | [stages/E6-generate.md](stages/E6-generate.md#L41) | 41 | rule | E6-4.13 |
 | [stages/E6-generate.md](stages/E6-generate.md#L42) | 42 | rule | E6-4.14 |
-| [stages/E6-generate.md](stages/E6-generate.md#L44) | 44 | section | E6-5 DuckDB |
-| [stages/E6-generate.md](stages/E6-generate.md#L48) | 48 | rule | E6-5.1 |
-| [stages/E6-generate.md](stages/E6-generate.md#L49) | 49 | rule | E6-5.2 |
-| [stages/E6-generate.md](stages/E6-generate.md#L50) | 50 | rule | E6-5.3 |
-| [stages/E6-generate.md](stages/E6-generate.md#L51) | 51 | rule | E6-5.4 |
-| [stages/E6-generate.md](stages/E6-generate.md#L52) | 52 | rule | E6-5.5 |
-| [stages/E6-generate.md](stages/E6-generate.md#L53) | 53 | rule | E6-5.6 |
-| [stages/E6-generate.md](stages/E6-generate.md#L54) | 54 | rule | E6-5.7 |
-| [stages/E6-generate.md](stages/E6-generate.md#L56) | 56 | section | E6-6 Other outputs |
-| [stages/E6-generate.md](stages/E6-generate.md#L58) | 58 | rule | E6-6.1 |
-| [stages/E6-generate.md](stages/E6-generate.md#L59) | 59 | rule | E6-6.2 |
+| [stages/E6-generate.md](stages/E6-generate.md#L43) | 43 | rule | E6-4.15 |
+| [stages/E6-generate.md](stages/E6-generate.md#L45) | 45 | section | E6-5 DuckDB |
+| [stages/E6-generate.md](stages/E6-generate.md#L49) | 49 | rule | E6-5.1 |
+| [stages/E6-generate.md](stages/E6-generate.md#L50) | 50 | rule | E6-5.2 |
+| [stages/E6-generate.md](stages/E6-generate.md#L51) | 51 | rule | E6-5.3 |
+| [stages/E6-generate.md](stages/E6-generate.md#L52) | 52 | rule | E6-5.4 |
+| [stages/E6-generate.md](stages/E6-generate.md#L53) | 53 | rule | E6-5.5 |
+| [stages/E6-generate.md](stages/E6-generate.md#L54) | 54 | rule | E6-5.6 |
+| [stages/E6-generate.md](stages/E6-generate.md#L55) | 55 | rule | E6-5.7 |
+| [stages/E6-generate.md](stages/E6-generate.md#L57) | 57 | section | E6-6 Other outputs |
+| [stages/E6-generate.md](stages/E6-generate.md#L59) | 59 | rule | E6-6.1 |
+| [stages/E6-generate.md](stages/E6-generate.md#L60) | 60 | rule | E6-6.2 |
 | [stages/README.md](stages/README.md#L1) | 1 | section | Stages |
 | [stages/README.md](stages/README.md#L5) | 5 | section | STG-1 Load |
 | [stages/README.md](stages/README.md#L11) | 11 | section | STG-2 Compile |

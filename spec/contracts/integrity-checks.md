@@ -22,6 +22,7 @@ after each load and report the results in the catalog state (`checks`, `aggregat
 
 - **CHK-2.1** A check passes when its query returns **zero rows**. Returned rows are the violations, for diagnosis.
 - **CHK-2.2** The check queries see all rows: no row policy applies to them. They are run by the pipeline's identity, never by end users.
+- **CHK-2.3** A check whose query does not run to completion has no result; CAT-7.1.6 states how the catalog state reports it. Without a result there is no evidence, so the compiler takes the safe plan (CHK-4.1).
 
 ## CHK-3 Definition hash
 
@@ -44,5 +45,12 @@ Moved from E0H-4 at the 0.2.0 gate, because they are checked by the stages that 
 
 - **CHK-4.1** Without passing evidence for the current data versions, the compiler always takes the safe plan: left joins, deduplication by row identity, base relations. It never assumes referential integrity or cardinality.
 - **CHK-4.2** Checks are logical plans. The `core` crate passes them to the same generator as E6, so a check and a query never translate an expression differently, and E0 never depends on a generator (S7).
+
+## CHK-5 Summary build and time zone
+
+- **CHK-5.1** The compiler generates, for each summary, its **build query**: the read-only query that computes the summary's rows from its base for a range of base periods, from the same logical plan as the summary check (CHK-4.2). A pipeline builds a summary only with this query, so a summary and its check never differ in how they group, truncate or aggregate.
+- **CHK-5.2** The build query and the summary check take the time zone as a bound parameter, used to truncate every time dimension of the summary as E6-5.2 states. The pipeline chooses it, binds the same value to both, and reports it in `aggregate_build.time_zone` (CAT-7.1.7). The time zone is not part of the summary definition hash (E0H-3.3).
+- **CHK-5.3** A summary with a time dimension whose base field is a `timestamp` with time zone serves only queries in the time zone it was built in (CAT-7.2, condition 5). To serve several time zones, a model declares one summary per time zone.
+- **CHK-5.4** The build query and its parameters are part of the integrity-check document from version 0.7.0, with the `integrity_checks` output (VS-5); its fields are added to this contract then, as a minor version.
 
 Schema: [`schemas/integrity-checks.schema.json`](schemas/integrity-checks.schema.json) · Example: [`examples/integrity-checks.example.json`](examples/integrity-checks.example.json)

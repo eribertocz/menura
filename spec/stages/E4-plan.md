@@ -94,7 +94,7 @@ Semi-additive metrics (balances, inventory) are planned as defined by the
 | E4-7.6 | **Rows that do not exist.** A carried row keeps the fields of the row it carries. A row added for `missing: zero` has its `entity` fields from the population, its `over` field set to the first instant of its expected period, and NULL for every other home field; it is not filtered by the home dataset's row policies, because its entity already comes from the visible rows of the population (E2-4.9); it joins like a home row and can fall into the NULL group (E4-4.1). Query filters apply after these rows are added. The periods of a unit are every `snapshot_grain` period of the queried range (ADD-4.7): with a `date_range` on `over`, every period inside it, whether it has data or not; without one, the periods with data (E4-7.3). |
 | E4-7.7 | **Missing under `per_entity`.** With `selection: per_entity`, an entity is missing when it is expected in the last (or first, per `aggregation`) period of the unit and has no row in the unit. |
 | E4-7.8 | **Grain of a plain `over`.** A query dimension `over` without a time grain has grain `day` for a `date` and the source precision for a `timestamp` (ADD-4.9). In the SQL form, `DATE_TRUNC('<grain>', over)` counts as that grain. `E4-03` is located at the `time_grains` entry, else at the dimension, else at the SQL `SELECT` item. |
-| E4-7.9 | **Non-additive.** Before summaries (0.6.0), a non-additive metric plans exactly as its deduced additivity. |
+| E4-7.9 | **Non-additive.** A non-additive metric plans exactly as its deduced additivity. It never uses a summary (SUM-3.2). |
 
 ## E4-8 Context modifiers
 
