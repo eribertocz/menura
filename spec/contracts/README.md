@@ -15,6 +15,8 @@ examples in `examples/`, all checked in CI.
 | Audit record | `menura.audit_record` | Out | [compiled-plan.md](compiled-plan.md) |
 | Model description | `menura.model_description` | Out | [model-description.md](model-description.md) |
 | Integrity checks | `menura.integrity_checks` | Out | [integrity-checks.md](integrity-checks.md) |
+| Model dependencies | `menura.model_dependencies` | Out | [model-dependencies.md](model-dependencies.md) |
+| Model diff | `menura.model_diff` | Out | [model-dependencies.md](model-dependencies.md) |
 
 ## Public contracts
 

@@ -1,0 +1,92 @@
+{
+  "schema": "model-dependencies",
+  "example": "model-dependencies.example.json",
+  "cases": [
+    {
+      "name": "published example",
+      "valid": true,
+      "patch": []
+    },
+    {
+      "name": "unusable metric with its query error code",
+      "valid": true,
+      "patch": [
+        {
+          "op": "add",
+          "path": "/metrics/0/query_error_code",
+          "value": "E0D-05"
+        },
+        {
+          "op": "replace",
+          "path": "/metrics/0/usable",
+          "value": false
+        }
+      ]
+    },
+    {
+      "name": "usable entry with a query error code",
+      "valid": false,
+      "patch": [
+        {
+          "op": "add",
+          "path": "/metrics/0/query_error_code",
+          "value": "E0D-05"
+        }
+      ]
+    },
+    {
+      "name": "unusable entry without a query error code",
+      "valid": false,
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/fields/0/usable",
+          "value": false
+        }
+      ]
+    },
+    {
+      "name": "metric without kind",
+      "valid": false,
+      "patch": [
+        {
+          "op": "remove",
+          "path": "/metrics/0/kind"
+        }
+      ]
+    },
+    {
+      "name": "wrong object kind",
+      "valid": false,
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/fields/0/object",
+          "value": "metric:CUSTOMER_ID"
+        }
+      ]
+    },
+    {
+      "name": "short definition hash",
+      "valid": false,
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/datasets/0/definition_hash",
+          "value": "abc"
+        }
+      ]
+    },
+    {
+      "name": "unknown member",
+      "valid": false,
+      "patch": [
+        {
+          "op": "add",
+          "path": "/extra",
+          "value": 1
+        }
+      ]
+    }
+  ]
+}
