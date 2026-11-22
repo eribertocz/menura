@@ -2,7 +2,7 @@
 //! dataset, checked in the visit order of E4-6.9: `ESEC-02` over every dataset first, then
 //! `EQRY-03` (E4-6.9b, E2-5 row 18).
 
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 
 use menura_model::expression::Expression;
 use menura_model::internal_model::{Dataset, InternalModel, NormalizedName, SourceLocation};
@@ -50,8 +50,34 @@ pub(crate) fn row_filters<'model>(
     context: &AdmittedSecurityContext,
     has_reference_time: bool,
 ) -> Result<RowFilters, PlanError> {
+    row_filters_from(&[home], model, graph, context, has_reference_time)
+}
+
+/// The row filters of each dataset of `roots` and of every dataset it reaches that has row
+/// policies, for the user of `context`, visited root after root: the datasets of each root
+/// in [`visit_order`], skipping a dataset an earlier root already visited (E4-6.9).
+///
+/// # Errors
+///
+/// As [`row_filters`].
+pub(crate) fn row_filters_from<'model>(
+    roots: &[&'model Dataset],
+    model: &'model InternalModel,
+    graph: &PolicyGraph<'model>,
+    context: &AdmittedSecurityContext,
+    has_reference_time: bool,
+) -> Result<RowFilters, PlanError> {
+    let mut visited: BTreeSet<&NormalizedName> = BTreeSet::new();
+    let mut order = Vec::new();
+    for root in roots {
+        for dataset in visit_order(root, model, graph) {
+            if visited.insert(&dataset.name) {
+                order.push(dataset);
+            }
+        }
+    }
     let mut filters = BTreeMap::new();
-    for dataset in visit_order(home, model, graph) {
+    for dataset in order {
         let filter = row_filter(dataset, context).map_err(|error| match error {
             RowFilterError::MissingAttribute { .. } => PlanError::MissingAttribute(error),
             RowFilterError::UnparsedCondition { location } => PlanError::invariant(

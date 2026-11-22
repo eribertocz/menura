@@ -1,12 +1,13 @@
 //! Unit tests of the logical plan (E4-3).
 
-use menura_contracts::types::common::{IntegerBits, LogicalType};
+use menura_contracts::types::common::{Grain, IntegerBits, LogicalType};
 use menura_contracts::types::query::{Direction, NullsOrder};
 use menura_model::expression::{AggregateCall, Expression, Identifier, Reference, SimpleAggregate};
+use menura_model::internal_model::PartialPeriod;
 
 use super::{
-    AggregateComponent, JoinCondition, JoinKind, NamedExpression, Operation, OutputSchema,
-    PlanNode, SchemaColumn, SortItem, StitchColumn,
+    AggregateComponent, JoinCondition, JoinKind, Membership, NamedExpression, Operation,
+    OutputSchema, PlanNode, PopulationRule, SchemaColumn, SortItem, StitchColumn,
 };
 use crate::names::{ColumnName, ColumnPrefix};
 use crate::origin::Origin;
@@ -65,6 +66,7 @@ fn kind_of(operation: &Operation) -> &'static str {
         Operation::SemiJoin { .. } => "SemiJoin",
         Operation::Deduplicate { .. } => "Deduplicate",
         Operation::Aggregate { .. } => "Aggregate",
+        Operation::Population { .. } => "Population",
         Operation::Stitch { .. } => "Stitch",
         Operation::Project { .. } => "Project",
         Operation::Sort { .. } => "Sort",
@@ -285,4 +287,57 @@ fn e4_4_2_a_plan_without_stitch_and_deduplicate_is_simple() {
     );
 
     assert!(join.is_simple_plan());
+}
+
+#[test]
+fn e4_3_12_population_reads_visible_rows_then_periods() {
+    let visible = PlanNode::new(
+        Operation::Filter {
+            input: Box::new(scan("CUSTOMERS")),
+            predicate: true_literal(),
+        },
+        region_schema(),
+        in_model("/semantic_model/0/datasets/1"),
+    );
+    let periods = PlanNode::new(
+        Operation::Scan {
+            dataset: name("BALANCES"),
+            row_identity: None,
+        },
+        OutputSchema::new(vec![column("period", LogicalType::Date, false)]),
+        in_model("/semantic_model/0/datasets/0"),
+    );
+    let population = PlanNode::new(
+        Operation::Population {
+            input: Box::new(visible),
+            dataset: name("CUSTOMERS"),
+            population: name("ACTIVE_CUSTOMERS"),
+            grain: Grain::Month,
+            periods: Box::new(periods),
+            period: ColumnName::new("period"),
+            rule: PopulationRule {
+                entity: vec![ColumnName::new("CUSTOMER_ID")],
+                membership: Membership::Validity {
+                    valid_from: ColumnName::new("VALID_FROM"),
+                    valid_to: ColumnName::new("VALID_TO"),
+                    partial_period: PartialPeriod::PeriodEnd,
+                },
+                required_when: Some(column_reference("IS_BILLABLE")),
+            },
+        },
+        OutputSchema::new(vec![
+            column("CUSTOMER_ID", count_type(), false),
+            column("period", LogicalType::Date, false),
+        ]),
+        in_model("/semantic_model/0/datasets/1/custom_extensions/0"),
+    );
+
+    let kinds: Vec<&str> = population
+        .inputs()
+        .iter()
+        .map(|input| kind_of(input.operation()))
+        .collect();
+    assert_eq!(kinds, ["Filter", "Scan"]);
+    assert_eq!(kind_of(population.operation()), "Population");
+    assert!(population.is_simple_plan());
 }

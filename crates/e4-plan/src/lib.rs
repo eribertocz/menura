@@ -34,6 +34,7 @@ mod nodes;
 mod output;
 mod policy;
 mod policy_visits;
+mod population;
 mod query_filter;
 mod rewrite;
 mod scan;
@@ -43,6 +44,7 @@ mod typing;
 mod visibility;
 
 pub use error::{InvariantViolation, PlanError};
+pub use population::{PopulationRequest, plan_population};
 
 use menura_contracts::types::catalog::CatalogSchemaDocument;
 use menura_model::expression::Expression;
