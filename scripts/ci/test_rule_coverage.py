@@ -173,13 +173,14 @@ class RuleCoverageTest(unittest.TestCase):
         names = check_rule_coverage.rust_test_names(text)
         self.assertEqual(names, ["mig_3_1_reads", "dep_3_2_lists"])
 
-    def test_cs_2_6a_reads_python_test_functions_without_their_test_prefix(self):
+    def test_cs_2_6a_reads_only_python_test_functions_after_their_test_prefix(self):
         text = (
             "def test_arc_6_4_x():\n    pass\n\n"
             "class A:\n    def arc_6_5_y(self):\n        pass\n"
         )
         names = check_rule_coverage.python_test_names(text)
-        self.assertEqual(names, ["arc_6_4_x", "arc_6_5_y"])
+        self.assertEqual(names, ["arc_6_4_x"])
+        self.assertEqual(check_rule_coverage.cited_in_tests(names), {"ARC-6.4"})
 
     def test_cs_2_6a_maps_a_test_name_to_its_rule_id(self):
         rule_of = check_rule_coverage.rule_of_test_name

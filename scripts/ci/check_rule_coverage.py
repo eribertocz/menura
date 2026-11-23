@@ -15,9 +15,9 @@ file, fails the check, so a mistyped entry can never hide a rule.
 
 A rule of the prefixes `ARC-5`, `ARC-6`, `MIG` and `DEP` is also covered by a test function whose
 name starts with the rule ID in lower case, `-` and `.` written `_` (CS-2.6a): a Rust `fn` under
-`#[test]`, or a Python `def` in a `test_*.py` file, whose `test_` prefix is dropped. A rule listed
-in `spec/coverage-exempt.txt` with a reason is covered (CS-2.6b); a listed ID that the index does
-not define, or a line without a reason, fails the check.
+`#[test]`, or a Python `def test_…` in a `test_*.py` file, read after its `test_` prefix. A rule
+listed in `spec/coverage-exempt.txt` with a reason is covered (CS-2.6b); a listed ID that the index
+does not define, or a line without a reason, fails the check.
 
 Usage: python3 scripts/ci/check_rule_coverage.py [repository-root]
 Requires PyYAML.
@@ -176,10 +176,14 @@ def rust_test_names(text):
 
 
 def python_test_names(text):
-    """Names of the `def` functions of a Python test file, without a leading `test_`."""
+    """Names of the `test_` functions of a Python test file, without that prefix.
+
+    A function whose name does not start with `test_` is not a test and is never returned.
+    """
     return [
-        name[len(PYTHON_TEST_PREFIX):] if name.startswith(PYTHON_TEST_PREFIX) else name
+        name[len(PYTHON_TEST_PREFIX):]
         for name in PYTHON_TEST.findall(text)
+        if name.startswith(PYTHON_TEST_PREFIX)
     ]
 
 
