@@ -1,5 +1,6 @@
 //! Reorders the mappings of a JSON document or a YAML flow collection, recursively, keeping the
-//! text of every scalar and the order of every sequence.
+//! text of every scalar, a string that holds a JSON document included, and the order of every
+//! sequence.
 
 use super::permutation::Permutation;
 
@@ -11,33 +12,6 @@ pub(crate) fn reorder_flow(text: &str, permutation: &mut Permutation) -> Option<
     let value = reader.value(permutation)?;
     reader.skip_spaces()?;
     reader.peek().is_none().then_some(value)
-}
-
-/// A single-quoted YAML scalar whose content is a JSON object, with that object's mappings
-/// reordered, quoted again; any other scalar is returned unchanged.
-pub(crate) fn reorder_embedded(scalar: &str, permutation: &mut Permutation) -> String {
-    let Some(content) = scalar
-        .strip_prefix('\'')
-        .and_then(|rest| rest.strip_suffix('\''))
-    else {
-        return scalar.to_owned();
-    };
-    let unquoted = content.replace("''", "'");
-    if !unquoted.trim_start().starts_with('{') {
-        return scalar.to_owned();
-    }
-    match reorder_flow(&unquoted, permutation) {
-        Some(reordered) if same_json(&unquoted, &reordered) => {
-            format!("'{}'", reordered.replace('\'', "''"))
-        }
-        _ => scalar.to_owned(),
-    }
-}
-
-/// Whether both texts are JSON and read as the same value.
-fn same_json(original: &str, reordered: &str) -> bool {
-    let read = |text: &str| serde_json::from_str::<serde_json::Value>(text).ok();
-    matches!((read(original), read(reordered)), (Some(left), Some(right)) if left == right)
 }
 
 /// A cursor over the text of one flow value.
@@ -82,9 +56,7 @@ impl Reader<'_> {
         match self.peek()? {
             '{' => self.mapping(permutation),
             '[' => self.sequence(permutation),
-            _ => self
-                .scalar()
-                .map(|scalar| reorder_embedded(&scalar, permutation)),
+            _ => self.scalar(),
         }
     }
 
@@ -214,7 +186,8 @@ mod tests {
         let text = "{\"a\": 1, \"b\": [3, 2, {\"c\": true, \"d\": null}], \"e\": \"x, y\"}";
         let reordered = reorder(text).unwrap();
         assert_ne!(reordered, text);
-        assert!(same_json(text, &reordered));
+        let read = |text: &str| serde_json::from_str::<serde_json::Value>(text).unwrap();
+        assert_eq!(read(text), read(&reordered));
         assert!(reordered.contains("[3, 2, "));
     }
 
@@ -231,16 +204,5 @@ mod tests {
         assert_eq!(reorder("{a: 1 # comment\n}"), None);
         assert_eq!(reorder("{a: 1"), None);
         assert_eq!(reorder("{a}"), None);
-    }
-
-    #[test]
-    fn pln_2_4_embedded_json_is_reordered_and_quoted_again() {
-        let scalar = "'{\"name\": \"it''s\", \"version\": 1}'";
-        let reordered = reorder_embedded(scalar, &mut Permutation::new(SEED));
-        assert_eq!(reordered, "'{\"version\": 1, \"name\": \"it''s\"}'");
-        assert_eq!(
-            reorder_embedded("'plain'", &mut Permutation::new(SEED)),
-            "'plain'"
-        );
     }
 }

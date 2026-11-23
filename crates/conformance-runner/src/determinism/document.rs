@@ -25,27 +25,9 @@ pub fn reorder_document(bytes: &[u8], permutation: &mut Permutation) -> Option<V
         .then(|| reordered.into_bytes())
 }
 
-/// The data of a document, with every string that holds a JSON object read as that object,
-/// so that a reordered embedded document compares equal.
+/// The data of a document.
 fn read(text: &str) -> Option<Value> {
-    serde_saphyr::from_str::<Value>(text).ok().map(expand)
-}
-
-/// `value` with every string that holds a JSON object read as that object, recursively.
-pub(crate) fn expand(value: Value) -> Value {
-    match value {
-        Value::String(text) if text.trim_start().starts_with('{') => {
-            serde_json::from_str::<Value>(&text).map_or(Value::String(text), expand)
-        }
-        Value::Array(items) => Value::Array(items.into_iter().map(expand).collect()),
-        Value::Object(entries) => Value::Object(
-            entries
-                .into_iter()
-                .map(|(key, value)| (key, expand(value)))
-                .collect(),
-        ),
-        other => other,
-    }
+    serde_saphyr::from_str::<Value>(text).ok()
 }
 
 #[cfg(test)]
@@ -60,6 +42,7 @@ mod tests {
         let reordered = String::from_utf8(reordered).unwrap();
         assert_ne!(reordered, text);
         assert_eq!(read(&reordered), read(text));
+        assert!(reordered.contains("b: '{\"x\": 1, \"y\": 2}'"));
     }
 
     #[test]

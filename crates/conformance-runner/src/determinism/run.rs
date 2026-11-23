@@ -173,13 +173,13 @@ impl fmt::Display for RunDifference {
 pub struct Comparison {
     /// The calls whose documents differ.
     pub differences: Vec<RunDifference>,
-    /// The calls whose documents differ only in parts derived from input order
+    /// The calls whose documents differ only in what the specification defines from the input text
     /// ([`equal_up_to_input_order`]).
     pub input_order_only: usize,
 }
 
 /// Compares the documents of every call of `first` and `second` byte for byte. A document that
-/// differs only in parts the specification derives from input order is counted apart; an audit
+/// differs only in what the specification defines from the input text is counted apart; an audit
 /// record must be byte-identical.
 #[must_use]
 pub fn compare_runs(first: &RunOutputs, second: &RunOutputs) -> Comparison {

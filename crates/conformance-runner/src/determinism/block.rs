@@ -2,7 +2,7 @@
 //! moving whole lines, so that every scalar keeps its text and every sequence its order.
 //! Flow collections on one line are reordered by [`super::flow`].
 
-use super::flow::{reorder_embedded, reorder_flow};
+use super::flow::reorder_flow;
 use super::permutation::Permutation;
 
 /// The lines of `text` with the entries of every mapping reordered, or `None` when the
@@ -174,12 +174,12 @@ fn is_left_unchanged(value: &str) -> bool {
     value.starts_with(['|', '>', '&', '*', '!'])
 }
 
-/// A value on one line: a flow collection, or a scalar that may embed JSON.
+/// A value on one line: a flow collection is reordered, a scalar is kept.
 fn reorder_value(value: &str, permutation: &mut Permutation) -> String {
     if value.starts_with(['{', '[']) {
         reorder_flow(value, permutation).unwrap_or_else(|| value.to_owned())
     } else {
-        reorder_embedded(value, permutation)
+        value.to_owned()
     }
 }
 
