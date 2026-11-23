@@ -32,7 +32,7 @@ macro_rules! corpus_file {
     };
 }
 
-fn corpus_files() -> [CorpusFile; 11] {
+fn corpus_files() -> [CorpusFile; 12] {
     [
         corpus_file!(CatalogSchema, "catalog-schema"),
         corpus_file!(CatalogState, "catalog-state"),
@@ -45,6 +45,7 @@ fn corpus_files() -> [CorpusFile; 11] {
         corpus_file!(IntegrityChecks, "integrity-checks"),
         corpus_file!(ModelDependencies, "model-dependencies"),
         corpus_file!(ModelDiff, "model-diff"),
+        corpus_file!(MigrationReport, "migration-report"),
     ]
 }
 
@@ -86,6 +87,9 @@ fn example_text(file: &str) -> Option<&'static str> {
         }
         "model-diff.example.json" => {
             include_str!("../../../spec/contracts/examples/model-diff.example.json")
+        }
+        "migration-report.example.json" => {
+            include_str!("../../../spec/contracts/examples/migration-report.example.json")
         }
         _ => return None,
     };

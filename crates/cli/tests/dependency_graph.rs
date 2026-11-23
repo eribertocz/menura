@@ -31,7 +31,7 @@ const LAYERS: &[&[&str]] = &[
     ],
     &["generator-duckdb"],
     &["core"],
-    &["cli"],
+    &["cli", "mcp"],
 ];
 
 /// Tools outside the layers of §5.2 (ARC-5.3, R4). No crate may depend on a tool.
@@ -93,6 +93,7 @@ const EXPECTED_EDGES: &[(&str, &str)] = &[
     ("core", "e5-optimize"),
     ("core", "generator-duckdb"),
     ("cli", "core"),
+    ("mcp", "core"),
     ("conformance-runner", "contracts"),
     ("conformance-runner", "core"),
     ("benchmarks", "core"),

@@ -94,23 +94,23 @@ Find a rule ID or a section here, then open only that file at that line.
 | [06-development-workflow.md](06-development-workflow.md#L12) | 12 | section | 6.2 Who does what |
 | [06-development-workflow.md](06-development-workflow.md#L24) | 24 | section | 6.3 Repository rules |
 | [06-development-workflow.md](06-development-workflow.md#L32) | 32 | section | 6.4 Issue format |
-| [06-development-workflow.md](06-development-workflow.md#L43) | 43 | section | 6.5 Pull request checklist |
-| [06-development-workflow.md](06-development-workflow.md#L52) | 52 | section | 6.6 Two sessions, one GitHub identity |
-| [06-development-workflow.md](06-development-workflow.md#L61) | 61 | rule | WF-6.1 |
-| [06-development-workflow.md](06-development-workflow.md#L62) | 62 | rule | WF-6.2 |
-| [06-development-workflow.md](06-development-workflow.md#L63) | 63 | rule | WF-6.3 |
-| [06-development-workflow.md](06-development-workflow.md#L64) | 64 | rule | WF-6.4 |
-| [06-development-workflow.md](06-development-workflow.md#L65) | 65 | rule | WF-6.5 |
-| [06-development-workflow.md](06-development-workflow.md#L70) | 70 | rule | WF-6.6 |
-| [06-development-workflow.md](06-development-workflow.md#L71) | 71 | rule | WF-6.6a |
-| [06-development-workflow.md](06-development-workflow.md#L72) | 72 | rule | WF-6.7 |
-| [06-development-workflow.md](06-development-workflow.md#L74) | 74 | section | 6.7 Pull request review |
-| [06-development-workflow.md](06-development-workflow.md#L83) | 83 | section | 6.8 Who owns the CI rules |
-| [06-development-workflow.md](06-development-workflow.md#L85) | 85 | rule | WF-8.0 |
-| [06-development-workflow.md](06-development-workflow.md#L97) | 97 | section | 6.9 Language |
-| [06-development-workflow.md](06-development-workflow.md#L99) | 99 | rule | WF-9.1 |
-| [06-development-workflow.md](06-development-workflow.md#L100) | 100 | rule | WF-9.2 |
-| [06-development-workflow.md](06-development-workflow.md#L101) | 101 | rule | WF-9.3 |
+| [06-development-workflow.md](06-development-workflow.md#L44) | 44 | section | 6.5 Pull request checklist |
+| [06-development-workflow.md](06-development-workflow.md#L53) | 53 | section | 6.6 Two sessions, one GitHub identity |
+| [06-development-workflow.md](06-development-workflow.md#L62) | 62 | rule | WF-6.1 |
+| [06-development-workflow.md](06-development-workflow.md#L63) | 63 | rule | WF-6.2 |
+| [06-development-workflow.md](06-development-workflow.md#L64) | 64 | rule | WF-6.3 |
+| [06-development-workflow.md](06-development-workflow.md#L65) | 65 | rule | WF-6.4 |
+| [06-development-workflow.md](06-development-workflow.md#L66) | 66 | rule | WF-6.5 |
+| [06-development-workflow.md](06-development-workflow.md#L71) | 71 | rule | WF-6.6 |
+| [06-development-workflow.md](06-development-workflow.md#L72) | 72 | rule | WF-6.6a |
+| [06-development-workflow.md](06-development-workflow.md#L73) | 73 | rule | WF-6.7 |
+| [06-development-workflow.md](06-development-workflow.md#L75) | 75 | section | 6.7 Pull request review |
+| [06-development-workflow.md](06-development-workflow.md#L84) | 84 | section | 6.8 Who owns the CI rules |
+| [06-development-workflow.md](06-development-workflow.md#L86) | 86 | rule | WF-8.0 |
+| [06-development-workflow.md](06-development-workflow.md#L98) | 98 | section | 6.9 Language |
+| [06-development-workflow.md](06-development-workflow.md#L100) | 100 | rule | WF-9.1 |
+| [06-development-workflow.md](06-development-workflow.md#L101) | 101 | rule | WF-9.2 |
+| [06-development-workflow.md](06-development-workflow.md#L102) | 102 | rule | WF-9.3 |
 | [07-roadmap.md](07-roadmap.md#L1) | 1 | section | 7. Roadmap |
 | [07-roadmap.md](07-roadmap.md#L8) | 8 | section | 7.1 Path to the MVP |
 | [07-roadmap.md](07-roadmap.md#L27) | 27 | section | 7.1a Gates |
