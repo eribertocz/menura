@@ -29,10 +29,10 @@ LAYERS = [
     ["e0-load", "e1-parse", "e2-bind", "e3-paths", "e4-plan", "e5-optimize"],
     ["generator-duckdb"],
     ["core"],
-    ["cli", "python"],
+    ["cli", "python", "mcp"],
 ]
 
-WRAPPERS = ["cli", "python"]
+WRAPPERS = ["cli", "python", "mcp"]
 # ARC-5.3: each tool and the only workspace crates it may depend on.
 TOOLS = {"conformance-runner": ["contracts", "core"]}
 WRAPPER_DEPENDENCY = "core"
