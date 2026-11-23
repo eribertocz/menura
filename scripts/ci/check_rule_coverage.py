@@ -13,9 +13,9 @@ scope, or a path followed by rule IDs separated by whitespace, which puts only t
 An entry that names no file of `spec/INDEX.md`, or a rule ID that the index does not define in that
 file, fails the check, so a mistyped entry can never hide a rule.
 
-A rule of the prefixes `ARC-5`, `ARC-6`, `MIG` and `DEP` is also covered by a test function whose
-name starts with the rule ID in lower case, `-` and `.` written `_` (CS-2.6a): a Rust `fn` under
-`#[test]`, or a Python `def test_…` in a `test_*.py` file, read after its `test_` prefix. A rule
+A behavioral rule is also covered by a test function whose name starts with the rule ID in lower
+case, `-` and `.` written `_` (CS-2.6a): a Rust `fn` under `#[test]`, or a Python `def test_…` in a
+`test_*.py` file, read after its `test_` prefix. A process rule is never covered by a test. A rule
 listed in `spec/coverage-exempt.txt` with a reason is covered (CS-2.6b); a listed ID that the index
 does not define, or a line without a reason, fails the check.
 
@@ -44,15 +44,14 @@ RULE_TOKEN = re.compile(
 RANGE_TOKEN = re.compile(r"\b([A-Z]{1,4})(\d+)([a-z]?)\s*[–-]\s*(?:\1)?(\d+)([a-z]?)\b")
 SUFFIX = re.compile(r"(?<=\d)[a-z]$")
 
-# CS-2.6a: the test name of a rule of `ARC-5`, `ARC-6`, `MIG` or `DEP`, e.g. `mig_3_2a_reads_x`.
-TEST_NAME_RULE = re.compile(r"^(arc_[56]|mig|dep)((?:_\d+)*)([a-z]?)(?=_|$)")
+# CS-2.6a: the test name of a rule, e.g. `mig_3_2a_reads_x` or `e0a_1_2_reads_x`.
+TEST_NAME_RULE = re.compile(r"^([a-z]+\d?[a-z]?)((?:_\d+)+)([a-z]?)(?=_|$)")
 RUST_TEST = re.compile(
     r"#\[test\](?:\s*#\[[^\]]*\])*\s*(?:pub(?:\([^)]*\))?\s+)?(?:async\s+)?fn\s+(\w+)"
 )
 PYTHON_TEST = re.compile(r"^\s*(?:async\s+)?def\s+(\w+)", re.MULTILINE)
 PYTHON_TEST_PREFIX = "test_"
 SKIPPED_DIRECTORIES = {"target", "node_modules", "__pycache__"}
-TEST_COVERED = re.compile(r"^(?:ARC-[56](?:\.|$)|(?:MIG|DEP)-)")
 
 
 def index_rules(index_text):
@@ -188,18 +187,16 @@ def python_test_names(text):
 
 
 def rule_of_test_name(name):
-    """The rule ID a test name starts with (CS-2.6a), or `None` for another prefix.
+    """The rule ID a test name starts with (CS-2.6a), or `None` when it starts with none.
 
-    `arc_5_7_reads_x` gives `ARC-5.7` and `mig_3_2a_reads_x` gives `MIG-3.2a`.
+    `arc_5_7_reads_x` gives `ARC-5.7`, `mig_3_2a_reads_x` gives `MIG-3.2a` and `e0a_1_2_reads_x`
+    gives `E0A-1.2`. Whether the rule exists and is behavioral is decided by the caller.
     """
     match = TEST_NAME_RULE.match(name)
     if not match:
         return None
     head, numbers, suffix = match.groups()
-    parts = (head + numbers).split("_")
-    if len(parts) < 2:
-        return None
-    return f"{parts[0].upper()}-{'.'.join(parts[1:])}{suffix}"
+    return f"{head.upper()}-{'.'.join(numbers.split('_')[1:])}{suffix}"
 
 
 def cited_in_tests(test_names):
@@ -240,15 +237,15 @@ def coverage_counts(rules, test_citations, exempt):
 
 
 def is_covered_by_test(rule, test_citations):
-    """Whether a test name covers `rule`: only for the prefixes of CS-2.6a."""
-    return bool(TEST_COVERED.match(rule)) and is_covered(rule, test_citations)
+    """Whether a test name covers `rule`: only a behavioral rule (CS-2.6a)."""
+    return classify(rule) == "behavioral" and is_covered(rule, test_citations)
 
 
 def uncovered(rules, case_citations, process_citations, test_citations=(), exempt=()):
     """The uncovered rule IDs of `(file, rule)` pairs, as `(kind, rule)` pairs in index order.
 
     A rule listed in `exempt` is covered (CS-2.6b); a behavioral rule is also covered by
-    `test_citations` when its prefix allows it (CS-2.6a).
+    `test_citations` (CS-2.6a); a process rule never is.
     """
     test_citations = set(test_citations)
     exempted = {rule for rule, _ in exempt}
