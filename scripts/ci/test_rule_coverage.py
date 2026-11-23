@@ -20,7 +20,7 @@ INDEX = """\
 
 
 class RuleCoverageTest(unittest.TestCase):
-    """T1, CS-2.6."""
+    """T1, CS-2.6, CS-2.6a, CS-2.6b."""
 
     def test_t1_reads_rule_rows_of_the_index_only_with_their_file(self):
         self.assertEqual(
@@ -156,6 +156,82 @@ class RuleCoverageTest(unittest.TestCase):
 
     def test_t1_classifies_vs_rules_as_behavioral(self):
         self.assertEqual(check_rule_coverage.classify("VS-1"), "behavioral")
+
+    def test_t1_classifies_arc_6_mig_and_dep_rules_as_behavioral(self):
+        classify = check_rule_coverage.classify
+        self.assertEqual(classify("ARC-6.5a"), "behavioral")
+        self.assertEqual(classify("MIG-3.2"), "behavioral")
+        self.assertEqual(classify("DEP-4.1"), "behavioral")
+        self.assertEqual(classify("ARC-4.1"), "unclassified")
+
+    def test_cs_2_6a_reads_rust_test_functions(self):
+        text = (
+            "#[test]\nfn mig_3_1_reads() {}\nfn helper() {}\n"
+            "#[cfg(test)]\nmod tests {\n    #[test]\n    #[ignore = \"slow\"]\n"
+            "    fn dep_3_2_lists() {}\n}\n"
+        )
+        names = check_rule_coverage.rust_test_names(text)
+        self.assertEqual(names, ["mig_3_1_reads", "dep_3_2_lists"])
+
+    def test_cs_2_6a_reads_only_python_test_functions_after_their_test_prefix(self):
+        text = (
+            "def test_arc_6_4_x():\n    pass\n\n"
+            "class A:\n    def arc_6_5_y(self):\n        pass\n"
+        )
+        names = check_rule_coverage.python_test_names(text)
+        self.assertEqual(names, ["arc_6_4_x"])
+        self.assertEqual(check_rule_coverage.cited_in_tests(names), {"ARC-6.4"})
+
+    def test_cs_2_6a_maps_a_test_name_to_its_rule_id(self):
+        rule_of = check_rule_coverage.rule_of_test_name
+        self.assertEqual(rule_of("arc_5_7_reads_x"), "ARC-5.7")
+        self.assertEqual(rule_of("arc_6_5a_shares"), "ARC-6.5a")
+        self.assertEqual(rule_of("mig_3_2a_reads_x"), "MIG-3.2a")
+        self.assertEqual(rule_of("dep_4_1"), "DEP-4.1")
+        self.assertEqual(rule_of("arc_5"), "ARC-5")
+        self.assertIsNone(rule_of("arc_50_x"))
+        self.assertIsNone(rule_of("mig_reads"))
+
+    def test_cs_2_6a_test_named_after_a_rule_covers_it_with_item_and_suffix_matching(self):
+        tests = check_rule_coverage.cited_in_tests(["mig_3_3a_keeps_digits", "dep_3_2_1_lists"])
+        rules = [
+            ("spec/m.md", "MIG-3"),
+            ("spec/m.md", "MIG-3.3"),
+            ("spec/m.md", "MIG-3.3a"),
+            ("spec/d.md", "DEP-3.2"),
+        ]
+        findings = check_rule_coverage.uncovered(rules, set(), set(), tests)
+        self.assertEqual(findings, [("behavioral", "MIG-3.3")])
+        self.assertEqual(check_rule_coverage.coverage_counts(rules, tests, []), (3, 0))
+
+    def test_cs_2_6a_test_name_of_another_prefix_does_not_count(self):
+        tests = check_rule_coverage.cited_in_tests(["e3_3_2_resolves", "cat_7_2_reads"])
+        self.assertEqual(tests, set())
+        rules = [("spec/a.md", "E3-3.2"), ("spec/a.md", "CAT-7.2")]
+        findings = check_rule_coverage.uncovered(rules, set(), set(), {"E3-3.2", "CAT-7.2"})
+        self.assertEqual(findings, [("behavioral", "E3-3.2"), ("behavioral", "CAT-7.2")])
+
+    def test_cs_2_6b_reads_exemptions_with_their_reason(self):
+        text = "# Exempt.\n\nCAT-7.2 a definition\nT1\n"
+        self.assertEqual(
+            check_rule_coverage.exempt_rules(text), [("CAT-7.2", "a definition"), ("T1", "")]
+        )
+
+    def test_cs_2_6b_exempt_rule_is_covered(self):
+        rules = check_rule_coverage.index_rules(INDEX)
+        exempt = [("E3-3.2", "a definition"), ("ZZ-1", "superseded")]
+        findings = check_rule_coverage.uncovered(rules, {"CAT-7.2"}, {"T1", "CS-4.2"}, (), exempt)
+        self.assertEqual(findings, [])
+        self.assertEqual(check_rule_coverage.coverage_counts(rules, set(), exempt), (0, 2))
+
+    def test_cs_2_6b_unknown_exemption_or_missing_reason_is_reported(self):
+        rules = check_rule_coverage.index_rules(INDEX)
+        exempt = [("E3-3.2", "a definition"), ("E3-9.9", "typo"), ("T1", "")]
+        self.assertEqual(
+            check_rule_coverage.invalid_exemptions(exempt, rules),
+            [("E3-9.9", "spec/INDEX.md does not define it"), ("T1", "the line gives no reason")],
+        )
+
 
 if __name__ == "__main__":
     unittest.main()

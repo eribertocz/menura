@@ -1,0 +1,19 @@
+id: dev-context-model-metric-001
+rules: [DEV-5]
+model: e0-context-development
+security_context: analyst.json
+query:
+  contract: "menura.query"
+  contract_version: "1.1.0"
+  time_zone: "UTC"
+  query:
+    dimensions: [invoices.customer_id]
+    metrics:
+      - {metric: billed, alias: billed}
+      - {metric: billed_share, alias: billed_share}
+load_options: {ossie_format: development}
+expect:
+  outcome: plan
+  tolerance: 1.0e-12
+  row_order: any
+  rows: dev-context-model-metric-001.csv
