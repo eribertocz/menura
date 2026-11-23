@@ -80,4 +80,4 @@ Out of version 1: predicates on metric values, subtotals, row listings, per-metr
 | `EQRY-11` | `date_range` with `from` after `to` |
 | `EQRY-12` | `paths` relationships that do not chain from `from` to `to`, a step against a relationship's many-to-one direction, a repeated dataset, a self-relationship, or two entries for the same pair |
 | `EQRY-13` | SQL item that is not a plain field and has no alias |
-| `WQRY-01` | Warning: a query or security context uses the former contract name `semantic_compiler.*`, or a query extension uses the former namespace (CON-0.5); read as the new name until 1.0.0 |
+| `WQRY-01` | Warning: a query or security context uses the former contract name `semantic_compiler.*`, or a query extension uses the former namespace (CON-0.5); read as the new name through major version 1 |
