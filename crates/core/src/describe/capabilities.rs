@@ -13,8 +13,8 @@ use crate::producer::{OSSIE_NORMATIVE, OSSIE_TRACKED_COMMIT, producer};
 
 /// The roadmap row whose slice the release compiles (7.1, VS-3).
 const SLICE_VERSION: ContractVersion = ContractVersion {
-    major: 0,
-    minor: 9,
+    major: 1,
+    minor: 0,
     patch: 0,
 };
 

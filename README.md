@@ -4,8 +4,8 @@ A semantic compiler: it turns a question in business terms (metrics, dimensions,
 correct, secure, deterministic SQL. It reads semantic models in the **Apache Ossie** format,
 speaks standard SQL, and never stores or reads data itself.
 
-> Status: pre-1.0. Current release line: **0.9.0**, the release candidate. Before 1.0.0, any minor release may change
-> contracts ([roadmap](spec/07-roadmap.md)).
+> Status: **1.0.0**, the MVP ([roadmap 7.1](spec/07-roadmap.md)). Contracts are frozen at major
+> version 1 and follow [contract evolution, architecture 3.3](spec/architecture/README.md) from now on.
 
 ## What it does today
 
@@ -65,10 +65,26 @@ result = handle.compile(query, security_context)
 print(result.document, result.is_error)
 ```
 
-## What comes next
+## What 1.0.0 guarantees
 
-- 1.0.0: the MVP. Every gate of the roadmap passes, contracts are frozen at major version 1, and
-  a compatibility matrix per implementation and channel is published, backed by suite results.
+From [roadmap 7.1b](spec/07-roadmap.md). What 1.0.0 does not support is rejected with an
+error, never answered differently.
+
+| Guaranteed | Not supported in 1.0.0 |
+|---|---|
+| Every Apache Ossie 0.1.1 model loads, with declared deviations DEV-1–DEV-9 | Development-line models outside `ossie_format: development` |
+| Wide-table queries with full Layer 3 semantics and its suites passing | Predicates on metric values, subtotals, row listings, per-metric filters |
+| SQL form: Layer 2 single-relation subset (E1-4), exact semantics | `JOIN`, `HAVING`, CTEs, subqueries, set operators, window functions in SQL |
+| Additivity, population, derived and context metrics; summaries over integer and decimal sums | Window metrics, ranking, top N per group; summaries over floats, holistic or semi-additive metrics |
+| Dataset, field and row security, deny by default | Value masking |
+| DuckDB SQL, deterministic, session-independent | Other dialects |
+| Contracts frozen at major version 1 | — |
+
+## Supported platforms and channels
+
+Support is claimed only for the rows of the compatibility matrix attached to each release
+(`compatibility-matrix.md` and `compatibility-matrix.json`, CI-4). A combination the matrix does
+not list is unverified, not supported ([continuous integration CI-4.4](spec/09-continuous-integration.md)).
 
 ## Links
 

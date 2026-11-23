@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://menura.invalid/spec/contracts/model-diff/1.0.0",
+  "$id": "https://eribertocz.github.io/menura/spec/contracts/model-diff/1.0.0",
   "title": "Model diff",
   "type": "object",
   "additionalProperties": false,

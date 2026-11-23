@@ -188,9 +188,11 @@ class RuleCoverageTest(unittest.TestCase):
         self.assertEqual(rule_of("arc_6_5a_shares"), "ARC-6.5a")
         self.assertEqual(rule_of("mig_3_2a_reads_x"), "MIG-3.2a")
         self.assertEqual(rule_of("dep_4_1"), "DEP-4.1")
+        self.assertEqual(rule_of("e0a_1_2_reads"), "E0A-1.2")
+        self.assertEqual(rule_of("oss_2_4b_keeps"), "OSS-2.4b")
         self.assertEqual(rule_of("arc_5"), "ARC-5")
-        self.assertIsNone(rule_of("arc_50_x"))
         self.assertIsNone(rule_of("mig_reads"))
+        self.assertIsNone(rule_of("reads_the_model"))
 
     def test_cs_2_6a_test_named_after_a_rule_covers_it_with_item_and_suffix_matching(self):
         tests = check_rule_coverage.cited_in_tests(["mig_3_3a_keeps_digits", "dep_3_2_1_lists"])
@@ -204,12 +206,27 @@ class RuleCoverageTest(unittest.TestCase):
         self.assertEqual(findings, [("behavioral", "MIG-3.3")])
         self.assertEqual(check_rule_coverage.coverage_counts(rules, tests, []), (3, 0))
 
-    def test_cs_2_6a_test_name_of_another_prefix_does_not_count(self):
+    def test_cs_2_6a_test_name_of_any_behavioral_prefix_counts(self):
         tests = check_rule_coverage.cited_in_tests(["e3_3_2_resolves", "cat_7_2_reads"])
-        self.assertEqual(tests, set())
-        rules = [("spec/a.md", "E3-3.2"), ("spec/a.md", "CAT-7.2")]
-        findings = check_rule_coverage.uncovered(rules, set(), set(), {"E3-3.2", "CAT-7.2"})
-        self.assertEqual(findings, [("behavioral", "E3-3.2"), ("behavioral", "CAT-7.2")])
+        self.assertEqual(tests, {"E3-3.2", "CAT-7.2"})
+        rules = [("spec/a.md", "E3-3.2"), ("spec/a.md", "CAT-7.2"), ("spec/a.md", "E0A-1")]
+        findings = check_rule_coverage.uncovered(rules, set(), set(), tests)
+        self.assertEqual(findings, [("behavioral", "E0A-1")])
+
+    def test_cs_2_6a_plain_python_function_named_after_a_rule_does_not_count(self):
+        names = check_rule_coverage.python_test_names("def e3_3_2_resolves():\n    pass\n")
+        self.assertEqual(names, [])
+        rules = [("spec/a.md", "E3-3.2")]
+        findings = check_rule_coverage.uncovered(rules, set(), set(), set())
+        self.assertEqual(findings, [("behavioral", "E3-3.2")])
+
+    def test_cs_2_6a_process_rule_is_never_covered_by_a_test(self):
+        tests = check_rule_coverage.cited_in_tests(["cs_4_2_reads", "wf_6_4_trailer"])
+        self.assertEqual(tests, {"CS-4.2", "WF-6.4"})
+        rules = [("spec/b.md", "CS-4.2"), ("spec/b.md", "WF-6.4")]
+        findings = check_rule_coverage.uncovered(rules, set(), set(), tests)
+        self.assertEqual(findings, [("process", "CS-4.2"), ("process", "WF-6.4")])
+        self.assertEqual(check_rule_coverage.coverage_counts(rules, tests, []), (0, 0))
 
     def test_cs_2_6b_reads_exemptions_with_their_reason(self):
         text = "# Exempt.\n\nCAT-7.2 a definition\nT1\n"
