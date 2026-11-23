@@ -34,8 +34,8 @@ const LAYERS: &[&[&str]] = &[
     &["cli", "mcp"],
 ];
 
-/// Tools outside the layers of §5.2 (ARC-5.3). No crate may depend on a tool.
-const TOOLS: &[&str] = &["conformance-runner"];
+/// Tools outside the layers of §5.2 (ARC-5.3, R4). No crate may depend on a tool.
+const TOOLS: &[&str] = &["conformance-runner", "benchmarks"];
 
 /// The exact set of dependency edges between workspace crates, as `(dependent, dependency)`.
 const EXPECTED_EDGES: &[(&str, &str)] = &[
@@ -96,6 +96,7 @@ const EXPECTED_EDGES: &[(&str, &str)] = &[
     ("mcp", "core"),
     ("conformance-runner", "contracts"),
     ("conformance-runner", "core"),
+    ("benchmarks", "core"),
 ];
 
 fn workspace_root() -> PathBuf {

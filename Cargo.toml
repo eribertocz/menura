@@ -17,6 +17,7 @@ members = [
     "crates/cli",
     "crates/mcp",
     "crates/conformance-runner",
+    "crates/benchmarks",
 ]
 
 [workspace.package]

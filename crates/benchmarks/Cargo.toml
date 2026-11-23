@@ -1,0 +1,13 @@
+[package]
+name = "menura-benchmarks"
+description = "Test tooling (R4): the performance benchmarks of spec/05-engineering-standards.md section 5.6."
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[dependencies]
+menura-core.workspace = true
+
+[lints]
+workspace = true
