@@ -34,6 +34,7 @@ mod compile_options;
 mod csv_rows;
 pub mod database;
 mod describe_part;
+pub mod determinism;
 mod diagnostic_check;
 mod differential;
 mod divergences;

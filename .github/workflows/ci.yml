@@ -1,6 +1,7 @@
 # Checks of spec/09-continuous-integration.md CI-1 that run on every pull request and every
 # push to main (WF-8.0): format, lint, unsafe, test, dependencies, dependency-graph, conformance,
-# ossie-suites, rule-coverage, index, examples, agent-smoke, benchmarks and conformance-wrappers.
+# ossie-suites, rule-coverage, index, examples, agent-smoke, benchmarks, conformance-wrappers and
+# determinism.
 # Every job is named exactly as its check in CI-1.
 #
 # Tool versions are pinned so that the same commit always gets the same verdict.
@@ -277,3 +278,20 @@ jobs:
           --manifest "$RUNNER_TEMP/wrapper-parity.json" --work "$RUNNER_TEMP/wrapper-parity"
       - name: Run every case through the Python package, documents identical to core (ARC-6.4, ARC-6.9, A4)
         run: '"$RUNNER_TEMP/venv/bin/python" -I scripts/ci/check_wrapper_parity.py "$RUNNER_TEMP/wrapper-parity.json"'
+
+  determinism:
+    name: determinism
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the commit
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+      - name: Install the Rust toolchain
+        run: |
+          rustup toolchain install "$RUST_TOOLCHAIN" --profile minimal
+          rustup default "$RUST_TOOLCHAIN"
+      - name: Build the determinism check in release
+        run: cargo build --locked --release -p menura-conformance-runner --bin determinism
+      - name: Compile every case in two processes, keys reordered in the second, byte-identical (PLN-2.4, P3)
+        run: target/release/determinism conformance --work "$RUNNER_TEMP/determinism"
