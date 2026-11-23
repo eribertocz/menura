@@ -130,7 +130,7 @@ their own roadmaps in their own repositories.
 | F21 | Done for the development line: dataset-scoped metrics (QRY-3.2), and `AGG(dataset.metric)` in derived metrics from 0.4.0 (DER-2.2, DER-5.1.2) |
 | F22 | Project-specific `vendor_name` replacing `COMMON` + `namespace` |
 | F23 | Apache Ossie Layer 4 (ontology) |
-| F24 | Done: the project is named Menura (`menura`); the former name is accepted until 1.0.0 (CON-0.5) |
+| F24 | Done: the project is named Menura (`menura`); the former name is accepted through major version 1 of the contracts (CON-0.5) |
 | F26 | Natural-language translator module (separate repository) |
 | F27 | Filling time gaps with an explicit time spine |
 | F28 | Layer 2 SQL growth, one construct per release with its suite cases: many-to-one `JOIN`, `HAVING`, CTEs and subqueries, other join types, set operators, until full Layer 2 conformance |

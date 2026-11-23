@@ -300,3 +300,33 @@ fn mig_3_3_the_report_text_keeps_the_member_order_of_the_model() {
     );
     assert!(text.find("\"pointer\"").unwrap() < text.find("\"rule\"").unwrap());
 }
+
+/// The rule ID of a rewrite; adding a rewrite to the contract breaks this match until the test
+/// below lists it.
+fn rule_id(rule: MigrationRule) -> &'static str {
+    match rule {
+        MigrationRule::FormerNamespace => "MIG-3.2a",
+    }
+}
+
+#[test]
+fn mig_3_2_the_report_lists_exactly_the_rewrites_of_this_version() {
+    let documents = [
+        (release(FORMER), LoadOptions::default()),
+        (
+            development("{namespace: semantic_compiler, version: 1}"),
+            development_options(),
+        ),
+    ];
+    for (model, options) in documents {
+        let report = report(&model, &options);
+        let rules: Vec<&str> = report
+            .changes
+            .iter()
+            .map(|change| rule_id(change.rule))
+            .collect();
+        assert_eq!(rules, ["MIG-3.2a"], "{model}");
+        let document = json(&report);
+        assert_eq!(document["changes"][0]["rule"], "MIG-3.2a");
+    }
+}
