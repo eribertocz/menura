@@ -60,7 +60,7 @@ fn compare_query(case: &Case, handle: &Handle, inputs: &QueryInputs<'_>) -> Case
         return CaseStatus::Failed(reason);
     }
     match (case.expect.outcome, result) {
-        (Outcome::Error, CompileResult::Error(error)) => check_error_and_explain(
+        (_, CompileResult::Error(error)) => check_compile_error(
             case,
             &error,
             audit.as_deref(),
@@ -74,10 +74,6 @@ fn compare_query(case: &Case, handle: &Handle, inputs: &QueryInputs<'_>) -> Case
         (Outcome::LoadError, _) => {
             CaseStatus::Failed("a `load_error` case has no query part".to_owned())
         }
-        (_, CompileResult::Error(error)) => CaseStatus::Failed(format!(
-            "the query does not compile: {}",
-            describe(error.errors.first())
-        )),
         (_, CompileResult::Plan(plan)) => check_plan_and_explain(
             case,
             &plan,
@@ -86,6 +82,28 @@ fn compare_query(case: &Case, handle: &Handle, inputs: &QueryInputs<'_>) -> Case
             || compile_query().result,
             explain_query,
         ),
+    }
+}
+
+/// The status of a compilation that returns `error`: an `error` case compares it with
+/// [`check_error_and_explain`], and every other case fails. No code leaves the part pending:
+/// `E_NOT_YET_SUPPORTED` disappears at 1.0.0 (VS-3).
+fn check_compile_error(
+    case: &Case,
+    error: &CompileErrorDocument,
+    audit: Option<&AuditRecordDocument>,
+    case_folder: &Path,
+    explain_query: impl FnOnce() -> CompileResult,
+) -> CaseStatus {
+    match case.expect.outcome {
+        Outcome::Error => check_error_and_explain(case, error, audit, case_folder, explain_query),
+        Outcome::LoadError => {
+            CaseStatus::Failed("a `load_error` case has no query part".to_owned())
+        }
+        _ => CaseStatus::Failed(format!(
+            "the query does not compile: {}",
+            describe(error.errors.first())
+        )),
     }
 }
 
@@ -330,6 +348,8 @@ mod tests {
     use std::path::PathBuf;
 
     use super::*;
+    use menura_contracts::ContractVersion;
+    use menura_core::CompileErrorContract;
 
     use crate::case_file::parse_case;
     use crate::database::prepare_database;
@@ -401,6 +421,39 @@ mod tests {
     fn cs_2_8_a_plan_case_passes_when_its_rows_match() {
         let expect = "{outcome: plan, rows: cs-plan-rows-001.csv}";
         assert_eq!(status(&case_text(BY_REGION, expect)), CaseStatus::Passed);
+    }
+
+    /// A compile error with the code `E_NOT_YET_SUPPORTED`, built directly: no compilation of
+    /// 1.0.0 returns it (VS-3).
+    fn not_yet_supported() -> CompileErrorDocument {
+        CompileErrorDocument {
+            contract: CompileErrorContract::CompileError,
+            contract_version: ContractVersion::parse("1.1.0").unwrap(),
+            errors: vec![Diagnostic {
+                code: "E_NOT_YET_SUPPORTED".to_owned(),
+                message: "this query needs a capability outside the slice".to_owned(),
+                location: None,
+                alternatives: None,
+            }],
+            warnings: Vec::new(),
+        }
+    }
+
+    #[test]
+    fn vs_3_not_yet_supported_fails_a_case_instead_of_leaving_it_pending() {
+        let folder = conformance_directory().join("cases/cs");
+        let error = not_yet_supported();
+        for expect in [
+            "{outcome: plan, rows: cs-plan-rows-001.csv}",
+            "{outcome: error, error: E_NAME_NOT_FOUND}",
+        ] {
+            let case = parse_case(&case_text(BY_REGION, expect)).unwrap();
+            let explain_query = || CompileResult::Error(not_yet_supported());
+            assert_fails(
+                check_compile_error(&case, &error, None, &folder, explain_query),
+                "E_NOT_YET_SUPPORTED",
+            );
+        }
     }
 
     #[test]
