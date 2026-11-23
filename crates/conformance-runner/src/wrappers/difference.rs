@@ -45,7 +45,7 @@ impl fmt::Display for LineDifference {
 /// use menura_conformance_runner::wrappers::first_difference;
 ///
 /// let difference = first_difference("{\n  \"a\": 1\n}", "{\n  \"a\": 2\n}").unwrap();
-/// assert_eq!((difference.line, difference.column), (2, 9));
+/// assert_eq!((difference.line, difference.column), (2, 8));
 /// assert!(first_difference("same", "same").is_none());
 /// ```
 #[must_use]
