@@ -1,7 +1,6 @@
 //! The query part of a case (CS-2.8): the query is compiled through `core` for the case's
-//! security context, and the result is compared with the expectation. A compilation that returns
-//! `E_NOT_YET_SUPPORTED` leaves the part pending (VS-4), unless the case itself expects that
-//! error, which is then compared like any other.
+//! security context, and the result is compared with the expectation. Every compile error is
+//! compared like any other: `E_NOT_YET_SUPPORTED` disappears at 1.0.0 (VS-3).
 
 use std::path::Path;
 
@@ -25,9 +24,6 @@ use crate::fixture::read_text;
 use crate::plan_outputs::plan_outputs_mismatch;
 use crate::report::CaseStatus;
 use crate::row_comparison::{Comparison, rows_mismatch};
-
-/// The code that leaves a query part pending (VS-4).
-const NOT_YET_SUPPORTED: &str = "E_NOT_YET_SUPPORTED";
 
 /// What the query part of a case reads besides the case and the loaded model.
 pub(crate) struct QueryInputs<'inputs> {
@@ -63,11 +59,8 @@ fn compare_query(case: &Case, handle: &Handle, inputs: &QueryInputs<'_>) -> Case
     {
         return CaseStatus::Failed(reason);
     }
-    if let Some(pending) = pending_status(&case.expect, &result) {
-        return pending;
-    }
     match (case.expect.outcome, result) {
-        (Outcome::Error, CompileResult::Error(error)) => check_error_and_explain(
+        (_, CompileResult::Error(error)) => check_compile_error(
             case,
             &error,
             audit.as_deref(),
@@ -81,10 +74,6 @@ fn compare_query(case: &Case, handle: &Handle, inputs: &QueryInputs<'_>) -> Case
         (Outcome::LoadError, _) => {
             CaseStatus::Failed("a `load_error` case has no query part".to_owned())
         }
-        (_, CompileResult::Error(error)) => CaseStatus::Failed(format!(
-            "the query does not compile: {}",
-            describe(error.errors.first())
-        )),
         (_, CompileResult::Plan(plan)) => check_plan_and_explain(
             case,
             &plan,
@@ -96,20 +85,26 @@ fn compare_query(case: &Case, handle: &Handle, inputs: &QueryInputs<'_>) -> Case
     }
 }
 
-/// The pending status of a compilation that returns `E_NOT_YET_SUPPORTED` when the case does
-/// not expect that error (VS-4), or `None`.
-fn pending_status(expect: &Expectation, result: &CompileResult) -> Option<CaseStatus> {
-    let CompileResult::Error(error) = result else {
-        return None;
-    };
-    (first_code(error) == Some(NOT_YET_SUPPORTED) && !expects_not_yet_supported(expect)).then(
-        || {
-            CaseStatus::Pending(format!(
-                "the query part needs a capability outside this version's slice (VS-4): {}",
-                describe(error.errors.first())
-            ))
-        },
-    )
+/// The status of a compilation that returns `error`: an `error` case compares it with
+/// [`check_error_and_explain`], and every other case fails. No code leaves the part pending:
+/// `E_NOT_YET_SUPPORTED` disappears at 1.0.0 (VS-3).
+fn check_compile_error(
+    case: &Case,
+    error: &CompileErrorDocument,
+    audit: Option<&AuditRecordDocument>,
+    case_folder: &Path,
+    explain_query: impl FnOnce() -> CompileResult,
+) -> CaseStatus {
+    match case.expect.outcome {
+        Outcome::Error => check_error_and_explain(case, error, audit, case_folder, explain_query),
+        Outcome::LoadError => {
+            CaseStatus::Failed("a `load_error` case has no query part".to_owned())
+        }
+        _ => CaseStatus::Failed(format!(
+            "the query does not compile: {}",
+            describe(error.errors.first())
+        )),
+    }
 }
 
 /// The query document of `case` as JSON bytes, and the options it is compiled with (CS-2.13,
@@ -218,12 +213,6 @@ fn check_plan(
         CaseStatus::Passed if case.oracle.is_some() => check_differential(case, plan, inputs),
         status => status,
     }
-}
-
-/// Whether the case itself expects `E_NOT_YET_SUPPORTED`, so that the error is compared, not
-/// left pending (VS-4).
-fn expects_not_yet_supported(expect: &Expectation) -> bool {
-    expect.outcome == Outcome::Error && expect.error.as_deref() == Some(NOT_YET_SUPPORTED)
 }
 
 fn warnings_of(result: &CompileResult) -> std::slice::Iter<'_, Diagnostic> {
@@ -360,7 +349,7 @@ mod tests {
 
     use super::*;
     use menura_contracts::ContractVersion;
-    use menura_core::{CompileErrorContract, DiagnosticLocation, InputDocument};
+    use menura_core::CompileErrorContract;
 
     use crate::case_file::parse_case;
     use crate::database::prepare_database;
@@ -434,69 +423,37 @@ mod tests {
         assert_eq!(status(&case_text(BY_REGION, expect)), CaseStatus::Passed);
     }
 
-    /// The compile error `E_NOT_YET_SUPPORTED` at `/query/metrics/1`, built directly: from
-    /// 0.8.0 no query of the suite is outside the slice (VS-1f), so none can produce it.
+    /// A compile error with the code `E_NOT_YET_SUPPORTED`, built directly: no compilation of
+    /// 1.0.0 returns it (VS-3).
     fn not_yet_supported() -> CompileErrorDocument {
         CompileErrorDocument {
             contract: CompileErrorContract::CompileError,
             contract_version: ContractVersion::parse("1.1.0").unwrap(),
             errors: vec![Diagnostic {
-                code: NOT_YET_SUPPORTED.to_owned(),
+                code: "E_NOT_YET_SUPPORTED".to_owned(),
                 message: "this query needs a capability outside the slice".to_owned(),
-                location: Some(DiagnosticLocation {
-                    document: InputDocument::Query,
-                    pointer: "/query/metrics/1".to_owned(),
-                    line: None,
-                    column: None,
-                }),
+                location: None,
                 alternatives: None,
             }],
             warnings: Vec::new(),
         }
     }
 
-    fn unit_case(expect: &str) -> Case {
-        parse_case(&case_text(BY_REGION, expect)).unwrap()
-    }
-
     #[test]
-    fn vs_4_a_query_outside_the_slice_is_pending_whatever_the_expectation() {
-        let result = CompileResult::Error(not_yet_supported());
+    fn vs_3_not_yet_supported_fails_a_case_instead_of_leaving_it_pending() {
+        let folder = conformance_directory().join("cases/cs");
+        let error = not_yet_supported();
         for expect in [
             "{outcome: plan, rows: cs-plan-rows-001.csv}",
             "{outcome: error, error: E_NAME_NOT_FOUND}",
         ] {
-            let status = pending_status(&unit_case(expect).expect, &result);
-            let Some(CaseStatus::Pending(reason)) = status else {
-                panic!("the case is pending: {status:?}");
-            };
-            assert!(reason.contains(NOT_YET_SUPPORTED), "{reason}");
+            let case = parse_case(&case_text(BY_REGION, expect)).unwrap();
+            let explain_query = || CompileResult::Error(not_yet_supported());
+            assert_fails(
+                check_compile_error(&case, &error, None, &folder, explain_query),
+                "E_NOT_YET_SUPPORTED",
+            );
         }
-    }
-
-    #[test]
-    fn vs_4_a_case_that_expects_not_yet_supported_compares_it() {
-        let expect = |pointer: &str| {
-            unit_case(&format!(
-                "{{outcome: error, error: E_NOT_YET_SUPPORTED, location: {{document: query, \
-                 pointer: {pointer}}}}}"
-            ))
-        };
-        let error = not_yet_supported();
-        let folder = conformance_directory().join("cases/cs");
-        let expected = expect("/query/metrics/1");
-        assert_eq!(
-            pending_status(&expected.expect, &CompileResult::Error(error.clone())),
-            None
-        );
-        assert_eq!(
-            check_error_and_audit(&expected, &error, None, &folder),
-            CaseStatus::Passed
-        );
-        assert_fails(
-            check_error_and_audit(&expect("/query/metrics/0"), &error, None, &folder),
-            "location",
-        );
     }
 
     #[test]

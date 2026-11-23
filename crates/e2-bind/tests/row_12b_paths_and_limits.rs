@@ -201,7 +201,7 @@ fn qry_4_6_a_limit_without_order_by_is_eqry_04() {
 }
 
 #[test]
-fn e2_5_rows_12b_and_12c_eqry_04_comes_before_not_yet_supported() {
+fn e2_5_row_12b_a_limit_with_a_metric_and_without_order_by_is_eqry_04() {
     let query = tree(
         vec![dimension(0, "customers.region")],
         vec![metric(0, "revenue")],

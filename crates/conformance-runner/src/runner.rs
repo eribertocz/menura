@@ -31,8 +31,7 @@ use crate::report::{CaseResult, CaseStatus, Report};
 /// A case whose fixtures cannot be read or whose database cannot be prepared is reported as
 /// failed. Otherwise its load part runs through `core` (CS-2.8): a `load_error` case passes or
 /// fails; any other case fails its load part, or its query part is compiled for its security
-/// context, and a plan is executed on the case's database. A query part whose compilation
-/// returns `E_NOT_YET_SUPPORTED` is reported as pending (VS-4).
+/// context, and a plan is executed on the case's database.
 ///
 /// # Errors
 ///
