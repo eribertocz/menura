@@ -11,13 +11,16 @@ Two commands:
   pass or did not run on the commit, it fails and writes nothing (CI-4.5).
 
 Usage:
-  compatibility_matrix.py summarize conformance REPORT PROFILE --output FILE
+  compatibility_matrix.py summarize conformance REPORT DESCRIPTION --output FILE
   compatibility_matrix.py summarize ossie-suites REPORT --output FILE
   compatibility_matrix.py summarize conformance-wrappers --output FILE
   compatibility_matrix.py summarize python-wheels PLATFORM --output FILE
   compatibility_matrix.py release COMMIT OUTPUT-DIRECTORY
-The summaries read RUNNER_OS and RUNNER_ARCH; `release` reads GITHUB_REPOSITORY, GITHUB_TOKEN
-and RELEASE_TAG. Exit status: 0 on success, 1 otherwise.
+DESCRIPTION is the model description that the `menura` binary built in the same job wrote; its
+capability profile (DSC-4) gives the Menura version and the Apache Ossie normative version and
+tracked commit. The summaries read RUNNER_OS and RUNNER_ARCH; `release` reads GITHUB_REPOSITORY,
+GITHUB_TOKEN and RELEASE_TAG, and does nothing for a tag before 1.0.0 (CI-2 `release-assets`).
+Exit status: 0 on success, 1 otherwise.
 """
 import io
 import json
@@ -61,6 +64,8 @@ CASE_LINE = re.compile(r"^  (\S+) (passed|pending|failed)(?:: (.*))?$")
 TOTAL_LINE = re.compile(r"^(\d+) cases: (\d+) passed, (\d+) pending, (\d+) failed$")
 DUCKDB_LINE = re.compile(r"^DuckDB (v\d+\.\d+\.\d+\S*)$")
 PASSES_WHILE_LISTED = "passes while listed in expected-failures.yaml"
+RELEASE_TAG = re.compile(r"^v?(\d+)\.(\d+)\.(\d+)(-[0-9A-Za-z.-]+)?$")
+FIRST_MATRIX_RELEASE = (1, 0, 0)
 
 
 class MatrixError(Exception):
@@ -100,11 +105,14 @@ def parse_report(text):
     return cases, duckdb
 
 
-def conformance_summary(report, profile, environment):
-    """The summary of `conformance`: counts, DuckDB version and the capability profile values."""
+def conformance_summary(report, description, environment):
+    """The summary of `conformance`: counts, DuckDB version and the capability profile values of
+    the model description the job's own `menura describe` wrote."""
     cases, duckdb = parse_report(report)
-    capabilities = json.loads(profile).get("capabilities", {})
+    capabilities = json.loads(description).get("capabilities", {})
     ossie = capabilities.get("ossie", {})
+    if not (capabilities.get("compiler_version") and ossie.get("normative") and ossie.get("tracked_commit")):
+        raise MatrixError("the model description has no complete capability profile (DSC-4)")
     statuses = [status for status, _ in cases.values()]
     return {
         "job": "conformance",
@@ -420,6 +428,18 @@ def release(api, attach_to, commit, directory):
     return 0
 
 
+def matrix_release(tag):
+    """Whether the release `tag` publishes a matrix: version 1.0.0 or later (CI-2). A pre-release
+    of 1.0.0 comes before 1.0.0. Raises MatrixError for a tag that is not a version."""
+    version = RELEASE_TAG.match(tag)
+    if version is None:
+        raise MatrixError(f"the tag {tag} is not a MAJOR.MINOR.PATCH version")
+    numbers = tuple(int(number) for number in version.groups()[:3])
+    if numbers == FIRST_MATRIX_RELEASE:
+        return version.group(4) is None
+    return numbers > FIRST_MATRIX_RELEASE
+
+
 def main(arguments, environment):
     if len(arguments) >= 2 and arguments[0] == "summarize" and "--output" in arguments:
         position = arguments.index("--output")
@@ -441,6 +461,13 @@ def main(arguments, environment):
         tag = environment.get("RELEASE_TAG")
         if not repository or not token or not tag:
             print("GITHUB_REPOSITORY, GITHUB_TOKEN and RELEASE_TAG are required", file=sys.stderr)
+            return 1
+        try:
+            if not matrix_release(tag):
+                print(f"{tag} is before 1.0.0: no compatibility matrix (CI-2)")
+                return 0
+        except MatrixError as error:
+            print(f"no compatibility matrix: {error}", file=sys.stderr)
             return 1
         try:
             attach_to = MatrixRelease(repository, token, tag)

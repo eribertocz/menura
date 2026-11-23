@@ -137,10 +137,18 @@ jobs:
       - name: Run every case with non-default DuckDB settings and report per rule ID (CS-4.1, CS-4.2, CS-4.3)
         shell: bash
         run: cargo run --locked --quiet -p menura-conformance-runner -- conformance | tee "$RUNNER_TEMP/conformance-report.txt"
+      - name: Describe a model with the built menura binary, for its capability profile (DSC-4, CI-4.3)
+        shell: bash
+        run: >-
+          cargo run --locked --quiet -p menura-cli --bin menura -- describe
+          --model conformance/models/dsc-describe/model.yaml
+          --catalog-schema conformance/models/dsc-describe/catalog-schema.json
+          --security-context conformance/models/dsc-describe/contexts/admin.json
+          > "$RUNNER_TEMP/description.json"
       - name: Summarize the run for the compatibility matrix (CI-4.3)
         run: >-
           python3 -I scripts/ci/compatibility_matrix.py summarize conformance
-          "$RUNNER_TEMP/conformance-report.txt" conformance/cases/dsc/dsc-describe-admin-001.describe.json
+          "$RUNNER_TEMP/conformance-report.txt" "$RUNNER_TEMP/description.json"
           --output "$RUNNER_TEMP/summary/conformance.json"
       - name: Upload the summary for the compatibility matrix (CI-4)
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2

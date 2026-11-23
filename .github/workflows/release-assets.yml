@@ -2,8 +2,9 @@
 # published, or when dispatched by hand with a tag, attach every spec/contracts/schemas/*.schema.json
 # of the release's tag as a release asset, replacing an asset of the same name, then fail if any
 # schema of the tag is missing from the release. Then it attaches the compatibility matrix
-# (CI-4), built from the CI runs of the tag commit; it fails, attaching no matrix, when a job a row
-# depends on did not pass or did not run on that commit (CI-4.5).
+# (CI-4), built from the CI runs of the tag commit, for a tag 1.0.0 or later only; it fails,
+# attaching no matrix, when a job a row depends on did not pass or did not run on that commit
+# (CI-4.5). A tag before 1.0.0 gets the schemas only, as before.
 #
 # The script runs from the workflow's commit; the schemas are read from a checkout of the tag, so a
 # manual run can attach the schemas of a tag older than the script (for example v0.1.0).
@@ -51,7 +52,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: python3 -I scripts/ci/release_assets.py release-tag
-      - name: Build the compatibility matrix of the tag commit from its CI runs and attach it (CI-4)
+      - name: From 1.0.0, build the compatibility matrix of the tag commit from its CI runs and attach it (CI-4)
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: >-

@@ -15,7 +15,7 @@ COMMIT = "0123456789abcdef0123456789abcdef01234567"
 CI_URL = "https://github.com/owner/menura/actions/runs/11"
 PYTHON_URL = "https://github.com/owner/menura/actions/runs/22"
 LINUX = {"RUNNER_OS": "Linux", "RUNNER_ARCH": "X64"}
-PROFILE = json.dumps(
+DESCRIPTION = json.dumps(
     {
         "capabilities": {
             "compiler_version": "1.0.0",
@@ -50,7 +50,7 @@ def archive(document):
 
 def ci_summaries():
     return {
-        "conformance": matrix.conformance_summary(CONFORMANCE_REPORT, PROFILE, LINUX),
+        "conformance": matrix.conformance_summary(CONFORMANCE_REPORT, DESCRIPTION, LINUX),
         "ossie-suites": matrix.ossie_summary(OSSIE_REPORT, LINUX),
         "conformance-wrappers": matrix.wrappers_summary(LINUX),
     }
@@ -117,7 +117,7 @@ class SummaryTest(unittest.TestCase):
     """The summaries the CI jobs upload (CI-4.3)."""
 
     def test_ci_4_3_conformance_summary_counts_each_case_once(self):
-        summary = matrix.conformance_summary(CONFORMANCE_REPORT, PROFILE, LINUX)
+        summary = matrix.conformance_summary(CONFORMANCE_REPORT, DESCRIPTION, LINUX)
         self.assertEqual(summary["cases"], {"passed": 1, "total": 2})
         self.assertEqual(summary["duckdb_version"], "v1.2.0")
         self.assertEqual(summary["platform"], "linux-x86_64")
@@ -130,6 +130,16 @@ class SummaryTest(unittest.TestCase):
     def test_ci_4_5_a_report_without_the_duckdb_version_fails(self):
         with self.assertRaises(matrix.MatrixError):
             matrix.parse_report(CONFORMANCE_REPORT.replace("DuckDB v1.2.0\n", ""))
+
+    def test_ci_4_5_a_description_without_the_capability_profile_fails(self):
+        with self.assertRaises(matrix.MatrixError):
+            matrix.conformance_summary(CONFORMANCE_REPORT, json.dumps({"capabilities": {}}), LINUX)
+
+    def test_ci_4_3_the_profile_values_come_from_the_description_given(self):
+        description = json.loads(DESCRIPTION)
+        description["capabilities"]["compiler_version"] = "1.2.3"
+        summary = matrix.conformance_summary(CONFORMANCE_REPORT, json.dumps(description), LINUX)
+        self.assertEqual(summary["menura_version"], "1.2.3")
 
     def test_ci_4_5_a_wheel_summary_on_another_runner_fails(self):
         with self.assertRaises(matrix.MatrixError):
@@ -226,6 +236,29 @@ class MatrixTest(unittest.TestCase):
         first = matrix.render_json(matrix.build_matrix(full_actions(), COMMIT))
         second = matrix.render_json(matrix.build_matrix(full_actions(), COMMIT))
         self.assertEqual(first, second)
+
+
+class ReleaseTagTest(unittest.TestCase):
+    """CI-2 `release-assets`: the matrix is attached from 1.0.0."""
+
+    def test_ci_4_1_tags_from_1_0_0_publish_a_matrix(self):
+        for tag in ("v1.0.0", "1.0.0", "v1.0.1", "v1.2.0", "v2.0.0-rc1"):
+            self.assertTrue(matrix.matrix_release(tag), tag)
+
+    def test_ci_4_1_tags_before_1_0_0_publish_no_matrix(self):
+        for tag in ("v0.1.0", "v0.9.0", "v0.10.3", "v1.0.0-rc1"):
+            self.assertFalse(matrix.matrix_release(tag), tag)
+
+    def test_ci_4_1_a_tag_that_is_not_a_version_fails(self):
+        with self.assertRaises(matrix.MatrixError):
+            matrix.matrix_release("latest")
+
+    def test_ci_4_1_a_release_before_1_0_0_reads_no_ci_run(self):
+        environment = {"GITHUB_REPOSITORY": "owner/menura", "GITHUB_TOKEN": "token", "RELEASE_TAG": "v0.9.0"}
+        with tempfile.TemporaryDirectory() as directory:
+            output = pathlib.Path(directory) / "out"
+            self.assertEqual(matrix.main(["release", COMMIT, str(output)], environment), 0)
+            self.assertFalse(output.exists())
 
 
 if __name__ == "__main__":
