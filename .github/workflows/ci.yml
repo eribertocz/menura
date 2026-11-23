@@ -198,6 +198,27 @@ jobs:
       - name: Validate the contract corpus with the reference implementation
         run: '"$RUNNER_TEMP/venv/bin/python" -I scripts/check_contract_corpus.py'
 
+  contracts:
+    name: contracts
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the commit with its full history
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Install the check's dependencies
+        run: |
+          python3 -m venv "$RUNNER_TEMP/venv"
+          "$RUNNER_TEMP/venv/bin/pip" install --disable-pip-version-check jsonschema==4.26.0 pyyaml==6.0.3 rfc3339-validator==0.1.4
+      - name: Test the check
+        run: '"$RUNNER_TEMP/venv/bin/python" -m unittest discover -s scripts/ci -p "test_contract_changes.py" -v'
+      # A pull request is compared with the merge base of its base branch; a push to main with the previous commit.
+      - name: Check every changed schema has a bumped version and a changed example (A3, A5, CON-3)
+        env:
+          BASE: ${{ github.event_name == 'pull_request' && github.event.pull_request.base.sha || 'HEAD^1' }}
+        run: '"$RUNNER_TEMP/venv/bin/python" -I scripts/ci/check_contract_changes.py "$BASE"'
+
   agent-smoke:
     name: agent-smoke
     runs-on: ubuntu-latest
