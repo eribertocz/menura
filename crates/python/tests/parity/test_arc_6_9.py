@@ -155,6 +155,49 @@ class Arc69(unittest.TestCase):
             handle.explain(query.read_bytes(), context.read_bytes(), case.compile_options),
         )
 
+    def test_arc_6_9_diff_equals_the_cli(self):
+        for old_path, new_path in zip(CASES, CASES[1:]):
+            subtest = self.subTest(old=old_path.stem, new=new_path.stem)
+            with subtest, tempfile.TemporaryDirectory() as directory:
+                old, new = Case(old_path, directory), Case(new_path, directory)
+                files = [
+                    old.model_file("model.yaml"),
+                    old.model_file("catalog-schema.json"),
+                    new.model_file("model.yaml"),
+                    new.model_file("catalog-schema.json"),
+                ]
+                flags = ["--old-model", files[0], "--old-catalog-schema", files[1]]
+                flags += ["--new-model", files[2], "--new-catalog-schema", files[3]]
+                options = old.load_options
+                if options is not None:
+                    flags += ["--load-options", old.options_file("load.json", options)]
+                self.assert_same(
+                    run_cli("diff", *flags),
+                    menura.diff(*(path.read_bytes() for path in files), options),
+                )
+
+    def test_arc_6_9_with_state_equals_the_cli_catalog_state(self):
+        for path in CASES:
+            with self.subTest(case=path.stem), tempfile.TemporaryDirectory() as directory:
+                case = Case(path, directory)
+                state = case.catalog_state()
+                if state is None or "security_context" not in case.case:
+                    continue
+                try:
+                    handle = menura.Handle.load(
+                        case.model_file("model.yaml").read_bytes(),
+                        case.model_file("catalog-schema.json").read_bytes(),
+                        None,
+                        case.load_options,
+                    )
+                except menura.CompileError:
+                    continue
+                context = case.security_context()
+                self.assert_same(
+                    run_cli("describe", *case.handle_flags(), "--security-context", context),
+                    handle.with_state(state.read_bytes()).describe(context.read_bytes()),
+                )
+
     def test_arc_6_9_usage_errors_carry_the_cli_reason(self):
         model = MODELS / "slice" / "model.yaml"
         schema = MODELS / "slice" / "catalog-schema.json"

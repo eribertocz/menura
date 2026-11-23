@@ -1,6 +1,6 @@
 # The Python package (ARC-6.3): one `abi3` wheel per platform, built with maturin and tested on
 # that platform (`python-wheels`), and the suite run through the package against the CLI
-# (`conformance-wrappers`, ARC-6.9, A4). Publishing the wheels is a maintainer step.
+# (`python-parity`, ARC-6.9, A4). Publishing the wheels is a maintainer step.
 #
 # Tool versions are pinned so that the same commit always gets the same verdict.
 name: python
@@ -61,8 +61,8 @@ jobs:
       - name: Test the package (ARC-6.3, ARC-6.4, ARC-6.5, ARC-6.5a, A4, Q1)
         run: python -I -m unittest discover -s crates/python/tests -t crates/python/tests -p "test_*.py" -v
 
-  conformance-wrappers:
-    name: conformance-wrappers
+  python-parity:
+    name: python-parity
     runs-on: ubuntu-24.04
     steps:
       - name: Check out the commit

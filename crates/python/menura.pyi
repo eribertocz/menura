@@ -5,10 +5,10 @@ read as the CLI reads its option files; an invalid one raises `ValueError`. An o
 passed as `None` is absent.
 """
 
-from typing import Any, Mapping, Optional, Union, final
+from typing import Any, Dict, Optional, Union, final
 
 Document = Union[bytes, str]
-Options = Mapping[str, Any]
+Options = Dict[str, Any]
 
 @final
 class Result:
