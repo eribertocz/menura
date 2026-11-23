@@ -1,7 +1,7 @@
 # Checks of spec/09-continuous-integration.md CI-1 that run on every pull request and every
 # push to main (WF-8.0): format, lint, unsafe, test, dependencies, dependency-graph, conformance,
-# ossie-suites, rule-coverage, index, examples, agent-smoke and benchmarks. Every job is named
-# exactly as its check in CI-1.
+# ossie-suites, rule-coverage, index, examples, agent-smoke, benchmarks and conformance-wrappers.
+# Every job is named exactly as its check in CI-1.
 #
 # Tool versions are pinned so that the same commit always gets the same verdict.
 name: ci
@@ -243,3 +243,37 @@ jobs:
         run: target/release/menura-benchmarks wall-clock
       - name: Count instructions, check the sweep and the baseline (R3, R7)
         run: target/release/menura-benchmarks instructions benchmarks/baseline.json
+
+  conformance-wrappers:
+    name: conformance-wrappers
+    runs-on: ubuntu-24.04
+    env:
+      MATURIN_VERSION: "1.16.0"
+    steps:
+      - name: Check out the commit
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+      - name: Install the Rust toolchain
+        run: |
+          rustup toolchain install "$RUST_TOOLCHAIN" --profile minimal
+          rustup default "$RUST_TOOLCHAIN"
+      - name: Test the Python check
+        run: python3 -m unittest discover -s scripts/ci -p 'test_wrapper_parity.py' -v
+      - name: Build menura, menura-mcp and the parity check in release
+        run: cargo build --locked --release --bin menura --bin menura-mcp --bin wrapper-parity
+      - name: Create a virtual environment with maturin
+        run: |
+          python3 -m venv "$RUNNER_TEMP/venv"
+          "$RUNNER_TEMP/venv/bin/pip" install --disable-pip-version-check "maturin==$MATURIN_VERSION"
+      - name: Build the Linux x86_64 wheel and install it (ARC-6.3)
+        run: |
+          "$RUNNER_TEMP/venv/bin/maturin" build --locked --release --manifest-path crates/python/Cargo.toml --out "$RUNNER_TEMP/wheels"
+          "$RUNNER_TEMP/venv/bin/pip" install --disable-pip-version-check --no-index --find-links "$RUNNER_TEMP/wheels" menura
+      - name: Run every case through the CLI and the MCP server, documents identical to core (ARC-6.9, A4)
+        run: >-
+          target/release/wrapper-parity conformance
+          --cli target/release/menura --mcp target/release/menura-mcp
+          --manifest "$RUNNER_TEMP/wrapper-parity.json" --work "$RUNNER_TEMP/wrapper-parity"
+      - name: Run every case through the Python package, documents identical to core (ARC-6.4, ARC-6.9, A4)
+        run: '"$RUNNER_TEMP/venv/bin/python" -I scripts/ci/check_wrapper_parity.py "$RUNNER_TEMP/wrapper-parity.json"'

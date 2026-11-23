@@ -54,6 +54,7 @@ pub mod regenerate;
 pub mod report;
 mod row_comparison;
 pub mod runner;
+pub mod wrappers;
 
 pub use error::{RunnerError, RunnerErrorKind};
 pub use regenerate::{Regeneration, regenerate};
