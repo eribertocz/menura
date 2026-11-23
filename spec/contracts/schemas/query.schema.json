@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://menura.invalid/spec/contracts/query/1.1.0",
+  "$id": "https://eribertocz.github.io/menura/spec/contracts/query/1.1.0",
   "title": "Query document",
   "type": "object",
   "required": [
