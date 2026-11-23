@@ -61,6 +61,7 @@ allow = [
     "menura-generator-duckdb",
     "menura-core",
     "menura-cli",
+    "menura-python",
     "menura-mcp",
     "menura-conformance-runner",
     "menura-benchmarks",
@@ -86,6 +87,15 @@ allow = [
     "cfg-if",
     "cpufeatures",
     "libc",
+    # Python package (#516, ARC-6.3), approved by the maintainer on 2026-11-22 for menura-python
+    # only: PyO3, allowed at its exact version only, and the crates it is made of. Its build
+    # configuration reads the target with `target-lexicon`; the rest of its tree is listed above.
+    "pyo3@=0.30.1",
+    "pyo3-build-config@=0.30.1",
+    "pyo3-ffi@=0.30.1",
+    "pyo3-macros@=0.30.1",
+    "pyo3-macros-backend@=0.30.1",
+    "target-lexicon",
     # E1 (#229), approved by the maintainer for menura-e1-parse only: the bundled IANA time-zone
     # database of E1-2.3. `jiff` is banned below with `menura-e1-parse` among its wrappers, and is
     # built without its `std` feature, so it has no clock API (A2); allowed here at its exact
