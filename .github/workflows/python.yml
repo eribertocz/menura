@@ -40,21 +40,10 @@ jobs:
       run:
         shell: bash
     steps:
-      # `conformance/cases/con` is a reserved device name on Windows: Git refuses the whole
-      # tree there unless NTFS path protection is off. The sparse checkout below never writes
-      # that folder, so no reserved name reaches the disk.
-      - name: Let Git read the tree on Windows
-        if: runner.os == 'Windows'
-        run: git config --system core.protectNTFS false
       - name: Check out the commit
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         with:
           persist-credentials: false
-          # These tests read no case file, only the models.
-          sparse-checkout: |
-            /*
-            !/conformance/cases/
-          sparse-checkout-cone-mode: false
       - name: Install the Rust toolchain
         run: |
           rustup toolchain install "$RUST_TOOLCHAIN" --profile minimal
