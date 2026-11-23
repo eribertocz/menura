@@ -1,0 +1,2 @@
+# Rules with no observable behavior of their own (spec/08-conformance-suite.md CS-2.6b).
+# One rule ID per line, then its reason. Only the specification session edits this file.
