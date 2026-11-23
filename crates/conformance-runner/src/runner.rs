@@ -176,7 +176,10 @@ fn prepare_case(conformance_directory: &Path, case: &Case) -> Result<PreparedCas
 }
 
 /// The area folders to run, sorted by name.
-fn area_folders(cases_directory: &Path, area: Option<&str>) -> Result<Vec<PathBuf>, RunnerError> {
+pub(crate) fn area_folders(
+    cases_directory: &Path,
+    area: Option<&str>,
+) -> Result<Vec<PathBuf>, RunnerError> {
     if let Some(area) = area {
         let folder = cases_directory.join(area);
         if !folder.is_dir() {
@@ -193,7 +196,7 @@ fn area_folders(cases_directory: &Path, area: Option<&str>) -> Result<Vec<PathBu
 }
 
 /// The `.yaml` case files of an area folder, sorted by name.
-fn case_files(area_folder: &Path) -> Result<Vec<PathBuf>, RunnerError> {
+pub(crate) fn case_files(area_folder: &Path) -> Result<Vec<PathBuf>, RunnerError> {
     let mut files = list_directory(area_folder)?;
     files.retain(|path| path.is_file() && path.extension().is_some_and(|ext| ext == "yaml"));
     Ok(files)
