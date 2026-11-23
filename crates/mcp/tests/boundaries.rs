@@ -1,4 +1,4 @@
-//! A2, A4 and ARC-6.1: `menura-mcp` is a wrapper that depends only on `core` among the
+//! ARC-6.1 (with A2 and A4): `menura-mcp` is a wrapper that depends only on `core` among the
 //! workspace crates, and uses no I/O but standard input and output.
 
 #![cfg(test)]
@@ -32,7 +32,7 @@ fn dependency_names() -> Vec<String> {
 }
 
 #[test]
-fn a4_the_server_depends_only_on_core_among_the_workspace_crates() {
+fn arc_6_1_a4_the_server_depends_only_on_core_among_the_workspace_crates() {
     let workspace: Vec<String> = dependency_names()
         .into_iter()
         .filter(|name| name.starts_with("menura-"))
@@ -50,7 +50,7 @@ fn a4_the_server_adds_no_external_dependency_but_serde_json() {
 }
 
 #[test]
-fn a2_arc_6_1_the_sources_use_no_io_but_standard_input_and_output() {
+fn arc_6_1_a2_the_sources_use_no_io_but_standard_input_and_output() {
     let sources = fs::read_dir(Path::new(env!("CARGO_MANIFEST_DIR")).join("src")).unwrap();
     for entry in sources {
         let path = entry.unwrap().path();
