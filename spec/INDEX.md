@@ -179,6 +179,12 @@ Find a rule ID or a section here, then open only that file at that line.
 | [09-continuous-integration.md](09-continuous-integration.md#L40) | 40 | section | CI-3 Rules |
 | [09-continuous-integration.md](09-continuous-integration.md#L42) | 42 | rule | CI-3.1 |
 | [09-continuous-integration.md](09-continuous-integration.md#L43) | 43 | rule | CI-3.2 |
+| [09-continuous-integration.md](09-continuous-integration.md#L45) | 45 | section | CI-4 Compatibility matrix |
+| [09-continuous-integration.md](09-continuous-integration.md#L49) | 49 | rule | CI-4.1 |
+| [09-continuous-integration.md](09-continuous-integration.md#L50) | 50 | rule | CI-4.2 |
+| [09-continuous-integration.md](09-continuous-integration.md#L51) | 51 | rule | CI-4.3 |
+| [09-continuous-integration.md](09-continuous-integration.md#L52) | 52 | rule | CI-4.4 |
+| [09-continuous-integration.md](09-continuous-integration.md#L53) | 53 | rule | CI-4.5 |
 | [README.md](README.md#L1) | 1 | section | Menura — Specification |
 | [README.md](README.md#L9) | 9 | section | Reading order |
 | [README.md](README.md#L28) | 28 | section | Conventions |
