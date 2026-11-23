@@ -34,8 +34,9 @@ pub struct RunOutputs {
     pub calls: Vec<CallOutput>,
     /// The input documents the run reordered.
     pub reordered: usize,
-    /// The input documents the run passed.
-    pub documents: usize,
+    /// The input documents the run passed unchanged because they cannot be reordered safely,
+    /// as `case: argument`, each distinct one once.
+    pub kept: Vec<String>,
 }
 
 /// Computes every call of the suite in `conformance_directory`; when `reorder` is true, every
@@ -55,7 +56,7 @@ pub fn run_calls(conformance_directory: &Path, reorder: bool) -> Result<RunOutpu
     let mut outputs = RunOutputs {
         calls: Vec::with_capacity(calls.len()),
         reordered: 0,
-        documents: 0,
+        kept: Vec::new(),
     };
     for mut call in calls {
         if reorder {
@@ -70,12 +71,16 @@ pub fn run_calls(conformance_directory: &Path, reorder: bool) -> Result<RunOutpu
 
 /// Reorders every document argument of `call` that can be reordered safely.
 fn reorder_call(call: &mut WrapperCall, permutation: &mut Permutation, outputs: &mut RunOutputs) {
-    for (_, value) in &mut call.arguments {
+    for (argument, value) in &mut call.arguments {
         if let CallValue::Document(document) = value {
-            outputs.documents += 1;
             if let Some(bytes) = reorder_document(&document.bytes, permutation) {
                 document.bytes = bytes;
                 outputs.reordered += 1;
+            } else {
+                let kept = format!("{}: {}", call.case, argument.name());
+                if !outputs.kept.contains(&kept) {
+                    outputs.kept.push(kept);
+                }
             }
         }
     }
@@ -110,8 +115,7 @@ impl RunOutputs {
                 })
             })
             .collect();
-        json!({"calls": calls, "reordered": self.reordered, "documents": self.documents})
-            .to_string()
+        json!({"calls": calls, "reordered": self.reordered, "kept": self.kept}).to_string()
     }
 
     /// The outputs written by [`RunOutputs::to_json`], or `None` when `text` is not such a
@@ -142,7 +146,12 @@ impl RunOutputs {
         Some(Self {
             calls,
             reordered: count("reordered")?,
-            documents: count("documents")?,
+            kept: value
+                .get("kept")?
+                .as_array()?
+                .iter()
+                .map(|kept| kept.as_str().map(str::to_owned))
+                .collect::<Option<Vec<_>>>()?,
         })
     }
 }
@@ -252,7 +261,7 @@ mod tests {
                 audit_record: audit_record.map(str::to_owned),
             }],
             reordered: 1,
-            documents: 2,
+            kept: vec!["e3-sample-001: query".to_owned()],
         }
     }
 
@@ -269,6 +278,20 @@ mod tests {
                  from run 1: document: line 2, column 17: expected `  \"cache_key\": \"a\"`, \
                  found `  \"cache_key\": \"b\"`"
             )
+        );
+    }
+
+    #[test]
+    fn pln_2_4_a_plan_that_differs_only_in_member_order_is_reported() {
+        let plan = "{\n  \"contract\": \"menura.compiled_plan\",\n  \"sql\": \"SELECT 1\"\n}";
+        let reordered = "{\n  \"sql\": \"SELECT 1\",\n  \"contract\": \"menura.compiled_plan\"\n}";
+        let comparison = compare_runs(&outputs(plan, None), &outputs(reordered, None));
+        assert_eq!(comparison.input_order_only, 0);
+        assert_eq!(comparison.differences.len(), 1);
+        assert!(
+            comparison.differences[0]
+                .detail
+                .starts_with("document: line 2")
         );
     }
 

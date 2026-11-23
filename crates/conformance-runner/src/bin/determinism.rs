@@ -88,15 +88,18 @@ fn check(directory: &Path, work: &Path) -> Result<bool, String> {
     let first = run_child(directory, &work.join("run-1.json"), false)?;
     let second = run_child(directory, &work.join("run-2.json"), true)?;
     let comparison = compare_runs(&first, &second);
+    for kept in &second.kept {
+        println!("not reordered (kept as written): {kept}");
+    }
     for difference in &comparison.differences {
         println!("{difference}");
     }
     println!(
-        "{} calls in two processes; run 2 reordered {} of {} input documents; {} calls \
-         byte-identical, {} equal up to input order, {} differences",
+        "{} calls in two processes; run 2 reordered {} input documents and kept {} as written; \
+         {} calls byte-identical, {} equal up to input order, {} differences",
         first.calls.len(),
         second.reordered,
-        second.documents,
+        second.kept.len(),
         first
             .calls
             .len()
