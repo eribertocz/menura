@@ -3,7 +3,7 @@
 Reads `cargo metadata` and fails when a dependency between workspace crates breaks the
 direction of spec/05-engineering-standards.md section 5.2 (S6, S7), when the graph has a
 cycle (S6), when a wrapper depends on a workspace crate other than `core` (S8), or when any
-crate depends on a tool. Tools (the test-tooling crate `conformance-runner`, ARC-5.3) are
+crate depends on a tool. Tools (the test-tooling crates `conformance-runner`, ARC-5.3, and `benchmarks`, R4) are
 outside the layers of section 5.2: nothing may depend on them, and they depend only on the
 crates listed for them.
 Every dependency kind counts: normal, build and dev.
@@ -33,8 +33,8 @@ LAYERS = [
 ]
 
 WRAPPERS = ["cli", "python", "mcp"]
-# ARC-5.3: each tool and the only workspace crates it may depend on.
-TOOLS = {"conformance-runner": ["contracts", "core"]}
+# ARC-5.3, R4: each tool and the only workspace crates it may depend on.
+TOOLS = {"conformance-runner": ["contracts", "core"], "benchmarks": ["core"]}
 WRAPPER_DEPENDENCY = "core"
 
 
