@@ -22,6 +22,8 @@ pub enum Regression {
     },
     /// The scenario has no baseline count.
     MissingBaseline(String),
+    /// The baseline has a count for a scenario that was not measured.
+    StaleBaseline(String),
 }
 
 impl InstructionCounts {
@@ -73,7 +75,8 @@ impl InstructionCounts {
         )
     }
 
-    /// Every scenario of `self` (the measured counts) that fails R7 against `baseline`.
+    /// Every scenario of `self` (the measured counts) that fails R7 against `baseline`, then
+    /// every baseline entry that `self` does not measure.
     ///
     /// # Example
     ///
@@ -99,6 +102,13 @@ impl InstructionCounts {
                 }
                 Some(_) => None,
             })
+            .chain(
+                baseline
+                    .0
+                    .keys()
+                    .filter(|scenario| !self.0.contains_key(*scenario))
+                    .map(|scenario| Regression::StaleBaseline(scenario.clone())),
+            )
             .collect()
     }
 }

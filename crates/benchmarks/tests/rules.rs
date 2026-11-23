@@ -105,7 +105,14 @@ fn r6_percentile_of_200_measured_compilations() {
 
 #[test]
 fn r7_counts_more_than_ten_percent_above_the_baseline_fail() {
-    let baseline = InstructionCounts([("a".to_owned(), 1000), ("b".to_owned(), 1000)].into());
+    let baseline = InstructionCounts(
+        [
+            ("a".to_owned(), 1000),
+            ("b".to_owned(), 1000),
+            ("d".to_owned(), 1000),
+        ]
+        .into(),
+    );
     let measured = InstructionCounts(
         [
             ("a".to_owned(), 1100),
@@ -123,6 +130,7 @@ fn r7_counts_more_than_ten_percent_above_the_baseline_fail() {
                 measured: 1101
             },
             Regression::MissingBaseline("c".to_owned()),
+            Regression::StaleBaseline("d".to_owned()),
         ]
     );
     assert_eq!(

@@ -99,13 +99,17 @@ pub fn instruction_report(
 
 fn sweep_check(counts: &InstructionCounts, report: &mut Report) {
     let shape = ModelShape::reference();
-    let points: Vec<(usize, u64)> = SWEEP_ITEMS
-        .iter()
-        .map(|items| {
-            let name = sweep_query(&shape, *items).name;
-            (*items, counts.0.get(&name).copied().unwrap_or_default())
-        })
-        .collect();
+    let mut points = Vec::with_capacity(SWEEP_ITEMS.len());
+    for items in SWEEP_ITEMS {
+        let name = format!("sweep with {items} dimensions and {items} metrics");
+        match counts.0.get(&sweep_query(&shape, items).name) {
+            Some(count) => points.push((items, *count)),
+            None => report.measure("R3", &name, "not measured", false),
+        }
+    }
+    if points.len() < SWEEP_ITEMS.len() {
+        return;
+    }
     let violations = r3_violations(&points);
     for (items, count) in points {
         let name = format!("sweep with {items} dimensions and {items} metrics");
@@ -124,9 +128,39 @@ fn regression_check(counts: &InstructionCounts, baseline: &InstructionCounts, re
         let base = baseline.0.get(scenario).copied().unwrap_or_default();
         let failed = regressions.iter().any(|regression| match regression {
             Regression::AboveBaseline { scenario: name, .. }
-            | Regression::MissingBaseline(name) => name == scenario,
+            | Regression::MissingBaseline(name)
+            | Regression::StaleBaseline(name) => name == scenario,
         });
         let value = format!("{count} Ir (baseline {base})");
         report.measure("R7", scenario, &value, !failed);
+    }
+    for regression in &regressions {
+        if let Regression::StaleBaseline(scenario) = regression {
+            report.measure("R7", scenario, "baseline entry of no scenario", false);
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{InstructionCounts, Report, regression_check, sweep_check};
+
+    #[test]
+    fn r3_missing_sweep_count_fails() {
+        let mut report = Report::default();
+        sweep_check(&InstructionCounts::default(), &mut report);
+        assert_eq!(report.failures.len(), 7);
+        assert!(report.failures[0].contains("not measured"));
+    }
+
+    #[test]
+    fn r7_stale_baseline_entry_fails() {
+        let baseline = InstructionCounts([("gone".to_owned(), 1)].into());
+        let mut report = Report::default();
+        regression_check(&InstructionCounts::default(), &baseline, &mut report);
+        assert_eq!(
+            report.failures,
+            vec!["R7: gone (baseline entry of no scenario)".to_owned()]
+        );
     }
 }
