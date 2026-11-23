@@ -362,3 +362,20 @@ jobs:
         run: cargo build --locked --release --bin menura
       - name: Run menura between the catalog and executor stubs, every document validated (A6)
         run: '"$RUNNER_TEMP/venv/bin/python" -I scripts/ci/stubs_end_to_end.py target/release/menura'
+
+  determinism:
+    name: determinism
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the commit
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+      - name: Install the Rust toolchain
+        run: |
+          rustup toolchain install "$RUST_TOOLCHAIN" --profile minimal
+          rustup default "$RUST_TOOLCHAIN"
+      - name: Build the determinism check in release
+        run: cargo build --locked --release -p menura-conformance-runner --bin determinism
+      - name: Compile every case in two processes, keys reordered in the second, byte-identical (PLN-2.4, P3)
+        run: target/release/determinism conformance --work "$RUNNER_TEMP/determinism"
