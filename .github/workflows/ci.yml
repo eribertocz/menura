@@ -1,7 +1,6 @@
 # Checks of spec/09-continuous-integration.md CI-1 that run on every pull request and every
 # push to main (WF-8.0): format, lint, unsafe, test, dependencies, dependency-graph, conformance,
-# ossie-suites, rule-coverage, index, examples, agent-smoke, benchmarks, conformance-wrappers and
-# determinism.
+# ossie-suites, rule-coverage, index, examples, agent-smoke, benchmarks and conformance-wrappers.
 # Every job is named exactly as its check in CI-1.
 #
 # Tool versions are pinned so that the same commit always gets the same verdict.
@@ -199,6 +198,27 @@ jobs:
       - name: Validate the contract corpus with the reference implementation
         run: '"$RUNNER_TEMP/venv/bin/python" -I scripts/check_contract_corpus.py'
 
+  contracts:
+    name: contracts
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the commit with its full history
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Install the check's dependencies
+        run: |
+          python3 -m venv "$RUNNER_TEMP/venv"
+          "$RUNNER_TEMP/venv/bin/pip" install --disable-pip-version-check jsonschema==4.26.0 pyyaml==6.0.3 rfc3339-validator==0.1.4
+      - name: Test the check
+        run: '"$RUNNER_TEMP/venv/bin/python" -m unittest discover -s scripts/ci -p "test_contract_changes.py" -v'
+      # A pull request is compared with the merge base of its base branch; a push to main with the previous commit.
+      - name: Check every changed schema has a bumped version and a changed example (A3, A5, CON-3)
+        env:
+          BASE: ${{ github.event_name == 'pull_request' && github.event.pull_request.base.sha || 'HEAD^1' }}
+        run: '"$RUNNER_TEMP/venv/bin/python" -I scripts/ci/check_contract_changes.py "$BASE"'
+
   agent-smoke:
     name: agent-smoke
     runs-on: ubuntu-latest
@@ -278,6 +298,29 @@ jobs:
           --manifest "$RUNNER_TEMP/wrapper-parity.json" --work "$RUNNER_TEMP/wrapper-parity"
       - name: Run every case through the Python package, documents identical to core (ARC-6.4, ARC-6.9, A4)
         run: '"$RUNNER_TEMP/venv/bin/python" -I scripts/ci/check_wrapper_parity.py "$RUNNER_TEMP/wrapper-parity.json"'
+
+  stubs:
+    name: stubs
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the commit
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+      - name: Install the Rust toolchain
+        run: |
+          rustup toolchain install "$RUST_TOOLCHAIN" --profile minimal
+          rustup default "$RUST_TOOLCHAIN"
+      - name: Install the validator of the examples job
+        run: |
+          python3 -m venv "$RUNNER_TEMP/venv"
+          "$RUNNER_TEMP/venv/bin/pip" install --disable-pip-version-check jsonschema==4.26.0 rfc3339-validator==0.1.4
+      - name: Test the stubs
+        run: python3 -m unittest discover -s scripts/ci -p 'test_stubs_end_to_end.py' -v
+      - name: Build menura in release
+        run: cargo build --locked --release --bin menura
+      - name: Run menura between the catalog and executor stubs, every document validated (A6)
+        run: '"$RUNNER_TEMP/venv/bin/python" -I scripts/ci/stubs_end_to_end.py target/release/menura'
 
   determinism:
     name: determinism

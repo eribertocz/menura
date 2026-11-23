@@ -1,6 +1,5 @@
 //! Runs the query cases of the 0.5.0 slice (CS-2.8): every case compiles through `core`, every
-//! plan is executed on `DuckDB` (E6-5.4), and every case passes, including those that expect
-//! `E_NOT_YET_SUPPORTED` (VS-4).
+//! plan is executed on `DuckDB` (E6-5.4), and every case passes.
 
 use std::path::{Path, PathBuf};
 

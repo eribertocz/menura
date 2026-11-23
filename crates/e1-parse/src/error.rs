@@ -28,8 +28,6 @@ pub enum ParseErrorCode {
     E0f01,
     /// `E0F-02`: a filter text uses a construct outside the subset (E1-3.2).
     E0f02,
-    /// `E_NOT_YET_SUPPORTED`: before 0.5.0, the query uses the SQL form (VS-2).
-    NotYetSupported,
     /// `E_EMPTY_AGGREGATION_QUERY`: no dimensions and no metrics (QRY-3.1).
     EmptyAggregationQuery,
 }
@@ -53,7 +51,6 @@ impl ParseErrorCode {
             Self::Eqry13 => "EQRY-13",
             Self::E0f01 => "E0F-01",
             Self::E0f02 => "E0F-02",
-            Self::NotYetSupported => "E_NOT_YET_SUPPORTED",
             Self::EmptyAggregationQuery => "E_EMPTY_AGGREGATION_QUERY",
         }
     }
@@ -181,5 +178,31 @@ impl ParseWarning {
             }),
             alternatives: None,
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::ParseErrorCode;
+
+    #[test]
+    fn vs_3_no_parse_error_code_is_not_yet_supported() {
+        let codes = [
+            ParseErrorCode::InvalidQuery,
+            ParseErrorCode::Eqry08,
+            ParseErrorCode::Eqry01,
+            ParseErrorCode::Eqry02,
+            ParseErrorCode::Eqry05,
+            ParseErrorCode::Eqry06,
+            ParseErrorCode::Eqry13,
+            ParseErrorCode::E0f01,
+            ParseErrorCode::E0f02,
+            ParseErrorCode::EmptyAggregationQuery,
+        ];
+        assert!(
+            codes
+                .iter()
+                .all(|code| code.as_str() != "E_NOT_YET_SUPPORTED")
+        );
     }
 }
