@@ -35,9 +35,19 @@ GitHub Actions (WF-8.0). Blocking checks are required by branch protection.
 | Check name | Schedule | Action |
 |---|---|---|
 | `ossie-watch` | Daily | Opens an `ossie-watch` issue for each Apache Ossie release or specification change (OSS-4.1) |
-| `release-assets` | When a release is published, or dispatched by hand with a tag | Attaches every `spec/contracts/schemas/*.schema.json` of the release's tag as a release asset, replacing an asset of the same name, then fails if any schema of the tag is missing from the release (CON-0.3) |
+| `release-assets` | When a release is published, or dispatched by hand with a tag | Attaches every `spec/contracts/schemas/*.schema.json` of the release's tag as a release asset, replacing an asset of the same name, then fails if any schema of the tag is missing from the release (CON-0.3); from 1.0.0 also attaches the compatibility matrix (CI-4) |
 
 ## CI-3 Rules
 
 - **CI-3.1** A check is added, removed or weakened only through a specification pull request (section 6.8).
 - **CI-3.2** Workflow files live in `.github/workflows/` and are owned by the maintainer (CODEOWNERS).
+
+## CI-4 Compatibility matrix
+
+From 1.0.0 every release publishes a compatibility matrix (roadmap 7.1, row 1.0.0). It states only what CI verified on the release's tag commit, never a universal claim.
+
+- **CI-4.1** **Assets.** The `release-assets` workflow attaches `compatibility-matrix.json` and `compatibility-matrix.md` to the release. It generates both from the results of the CI runs of the tag commit; neither is written by hand. The Markdown file is a table rendering of the JSON file and adds nothing.
+- **CI-4.2** **Rows.** One row per channel and platform that CI built and tested on the tag commit: `core` (the Rust crate's public functions), `cli` (the `menura` binary) and `mcp` (the `menura-mcp` binary) on the platform of the `conformance` and `conformance-wrappers` jobs, and `python` once per wheel platform of ARC-6.3 whose `python-wheels` job installed the wheel and ran the package tests. A channel or platform that no job tested has no row.
+- **CI-4.3** **Columns.** Each row carries the Menura version and the commit; the channel and the platform (operating system and architecture); the dialect and the exact DuckDB version the suite ran on; the Apache Ossie normative version and tracked commit of the capability profile (DSC-4); the conformance cases passed and in total; the Apache Ossie suite outcomes as passed, expected failures and unexpected results (OSS-2.4); for `cli`, `mcp` and `python`, whether `conformance-wrappers` (or, on a wheel platform without it, the package tests) passed; and the URL of each CI run it reports.
+- **CI-4.4** **Claims.** Support is claimed only for the rows of the matrix. Documentation and release notes cite the matrix instead of restating platforms or versions, and a combination it does not list is unverified, not supported.
+- **CI-4.5** **Failure.** The workflow fails, and attaches no matrix, if any job a row depends on did not pass on the tag commit or did not run on it.
