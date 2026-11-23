@@ -17,14 +17,7 @@ examples in `examples/`, all checked in CI.
 | Integrity checks | `menura.integrity_checks` | Out | [integrity-checks.md](integrity-checks.md) |
 | Model dependencies | `menura.model_dependencies` | Out | [model-dependencies.md](model-dependencies.md) |
 | Model diff | `menura.model_diff` | Out | [model-dependencies.md](model-dependencies.md) |
-
-## Planned for 0.9.0
-
-Specified but not produced yet; each joins the table above when the compiler produces it.
-
-| Producing function | `contract` value | Direction | Chapter |
-|---|---|---|---|
-| `migrate` | `menura.migration_report` | Out | [migration-report.md](migration-report.md) |
+| Migration report | `menura.migration_report` | Out | [migration-report.md](migration-report.md) |
 
 ## Public contracts
 
