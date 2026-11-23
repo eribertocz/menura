@@ -1,0 +1,18 @@
+id: dev-derived-model-metric-001
+rules: [DEV-5]
+model: dev-derived-model-metric
+security_context: analyst.json
+query:
+  contract: "menura.query"
+  contract_version: "1.1.0"
+  time_zone: "UTC"
+  query:
+    dimensions: [orders.status]
+    metrics:
+      - {metric: average_sale, alias: average_sale}
+load_options: {ossie_format: development}
+expect:
+  outcome: plan
+  tolerance: 1.0e-12
+  row_order: any
+  rows: dev-derived-model-metric-001.csv

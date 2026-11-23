@@ -1,0 +1,35 @@
+version: "0.3.0.dev0"
+name: dev_derived_model_metric
+description: Development-line model whose derived metric reads model metrics with AGG(metric) (DEV-5)
+nonportable_extensions:
+  - vendor_name: COMMON
+    data: {namespace: menura, version: 1, security_context: {roles: [analyst], attributes: []}}
+datasets:
+  - name: orders
+    source: shop.main.orders
+    primary_key: [order_id]
+    fields:
+      - name: order_id
+        expression: {sql: order_id}
+      - name: status
+        expression: {sql: status}
+      - name: amount
+        expression: {sql: amount}
+    metrics:
+      - name: total_amount
+        expression: {sql: SUM(amount)}
+      - name: order_count
+        expression: {sql: COUNT(*)}
+    nonportable_extensions:
+      - vendor_name: COMMON
+        data: {namespace: menura, version: 1, access: {mode: roles, roles: [analyst]}}
+metrics:
+  - name: sales
+    expression: {sql: AGG(orders.total_amount)}
+  - name: orders_placed
+    expression: {sql: AGG(orders.order_count)}
+  - name: average_sale
+    expression: {sql: AGG(sales) / AGG(orders_placed)}
+    nonportable_extensions:
+      - vendor_name: COMMON
+        data: {namespace: menura, version: 1, derived: {}}

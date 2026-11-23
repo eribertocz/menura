@@ -1,0 +1,13 @@
+id: dev-sql-division-by-zero-001
+rules: [DEV-6, E0F-6.1]
+model: slice
+security_context: auditor.json
+query:
+  contract: "menura.query"
+  contract_version: "1.1.0"
+  time_zone: "UTC"
+  sql: "SELECT region, AGG(total_amount) / (AGG(sale_count) - AGG(sale_count)) AS per_nothing FROM slice.sales GROUP BY region"
+expect:
+  outcome: "plan"
+  row_order: "any"
+  rows: "dev-sql-division-by-zero-001.csv"
