@@ -219,19 +219,18 @@ Find a rule ID or a section here, then open only that file at that line.
 | [architecture/README.md](architecture/README.md#L156) | 156 | rule | A6 |
 | [architecture/README.md](architecture/README.md#L161) | 161 | section | 3.9 Lineage and audit |
 | [contracts/README.md](contracts/README.md#L1) | 1 | section | Contracts |
-| [contracts/README.md](contracts/README.md#L21) | 21 | section | Planned for 0.9.0 |
-| [contracts/README.md](contracts/README.md#L29) | 29 | section | Public contracts |
-| [contracts/README.md](contracts/README.md#L31) | 31 | rule | CON-0.1 |
-| [contracts/README.md](contracts/README.md#L32) | 32 | rule | CON-0.2 |
-| [contracts/README.md](contracts/README.md#L33) | 33 | rule | CON-0.3 |
-| [contracts/README.md](contracts/README.md#L34) | 34 | rule | CON-0.4 |
-| [contracts/README.md](contracts/README.md#L35) | 35 | rule | CON-0.5 |
-| [contracts/README.md](contracts/README.md#L40) | 40 | section | Shared rules |
-| [contracts/README.md](contracts/README.md#L42) | 42 | rule | CON-1 |
-| [contracts/README.md](contracts/README.md#L43) | 43 | rule | CON-2 |
-| [contracts/README.md](contracts/README.md#L44) | 44 | rule | CON-3 |
-| [contracts/README.md](contracts/README.md#L45) | 45 | rule | CON-4 |
-| [contracts/README.md](contracts/README.md#L46) | 46 | rule | CON-5 |
+| [contracts/README.md](contracts/README.md#L22) | 22 | section | Public contracts |
+| [contracts/README.md](contracts/README.md#L24) | 24 | rule | CON-0.1 |
+| [contracts/README.md](contracts/README.md#L25) | 25 | rule | CON-0.2 |
+| [contracts/README.md](contracts/README.md#L26) | 26 | rule | CON-0.3 |
+| [contracts/README.md](contracts/README.md#L27) | 27 | rule | CON-0.4 |
+| [contracts/README.md](contracts/README.md#L28) | 28 | rule | CON-0.5 |
+| [contracts/README.md](contracts/README.md#L33) | 33 | section | Shared rules |
+| [contracts/README.md](contracts/README.md#L35) | 35 | rule | CON-1 |
+| [contracts/README.md](contracts/README.md#L36) | 36 | rule | CON-2 |
+| [contracts/README.md](contracts/README.md#L37) | 37 | rule | CON-3 |
+| [contracts/README.md](contracts/README.md#L38) | 38 | rule | CON-4 |
+| [contracts/README.md](contracts/README.md#L39) | 39 | rule | CON-5 |
 | [contracts/catalog.md](contracts/catalog.md#L1) | 1 | section | Contract: catalog |
 | [contracts/catalog.md](contracts/catalog.md#L5) | 5 | section | CAT-1 Purpose |
 | [contracts/catalog.md](contracts/catalog.md#L10) | 10 | section | CAT-2 Two documents |
