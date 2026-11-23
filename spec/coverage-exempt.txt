@@ -29,3 +29,10 @@ SCY-3.2 scope statement: value masking is out of version 1 and has no syntax
 SCY-4.3 pointer to E4-6
 PLN-2.5 obligation of the executor, not of the compiler
 ARC-5.3 statement of architecture: the conformance runner is test tooling
+ARC-6.2 statement of the audience of the wrappers; the boundary is enforced by deployment (P2)
+SUM-4.2 deployment requirement on the physical relation; the compiler cannot enforce it (P2)
+OSS-2.5 statement of what conformance the project claims
+OSS-2.6 rule for documentation and wording, checked in review
+E2-5.1 statement of architecture: which stage runs which check
+E5-3.1 the rewrite has no observable effect on results; the SQL shape is not normative
+E5-3.1a definition used by E5-3.1

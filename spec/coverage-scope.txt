@@ -65,3 +65,42 @@ spec/extensions/context.md CTX-3.1 CTX-3.2 CTX-3.3 CTX-3.4 CTX-3.5 CTX-3.6 CTX-3
 spec/stages/E4-plan.md E4-3.15 E4-3.16 E4-8.1 E4-8.2 E4-8.3 E4-8.4 E4-8.5 E4-8.6 E4-8.7 E4-8.8 E4-8.9
 spec/contracts/compiled-plan.md PLN-5.4 PLN-5.4a PLN-6.8 PLN-8.2 PLN-8.3
 # 0.9.0 gate (no new rule of the case format: MIG-*, ARC-5.7 to ARC-5.10 and ARC-6.* are covered by the core, cli, mcp and python tests named after them, and by the conformance-wrappers job)
+# 1.0.0 gate (CS-2.6: every file of the specification as a whole)
+spec/01-vision.md
+spec/02-principles.md
+spec/04-ossie-conformance.md
+spec/07-roadmap.md
+spec/README.md
+spec/architecture/README.md
+spec/contracts/README.md
+spec/contracts/catalog.md
+spec/contracts/compiled-plan.md
+spec/contracts/integrity-checks.md
+spec/contracts/migration-report.md
+spec/contracts/model-dependencies.md
+spec/contracts/model-description.md
+spec/contracts/model.md
+spec/contracts/query.md
+spec/contracts/security-context.md
+spec/decisions/0001-security-context-admission.md
+spec/decisions/0002-e1-envelope-and-references.md
+spec/decisions/0003-e2-query-order.md
+spec/decisions/0004-strategic-direction.md
+spec/decisions/0005-summary-evidence-and-e5.md
+spec/decisions/0006-plan-outputs-0-7-0.md
+spec/decisions/0007-agent-channels-and-dependencies.md
+spec/decisions/README.md
+spec/extensions/README.md
+spec/extensions/context.md
+spec/extensions/derived.md
+spec/extensions/security.md
+spec/extensions/summaries.md
+spec/glossary.md
+spec/ossie-mapping.md
+spec/stages/E1-parse.md
+spec/stages/E2-bind.md
+spec/stages/E3-paths.md
+spec/stages/E4-plan.md
+spec/stages/E5-optimize.md
+spec/stages/E6-generate.md
+spec/stages/README.md
