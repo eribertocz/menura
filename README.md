@@ -4,14 +4,14 @@ A semantic compiler: it turns a question in business terms (metrics, dimensions,
 correct, secure, deterministic SQL. It reads semantic models in the **Apache Ossie** format,
 speaks standard SQL, and never stores or reads data itself.
 
-> Status: pre-1.0. Current release line: **0.8.0**. Before 1.0.0, any minor release may change
+> Status: pre-1.0. Current release line: **0.9.0**, the release candidate. Before 1.0.0, any minor release may change
 > contracts ([roadmap](spec/07-roadmap.md)).
 
 ## What it does today
 
 - Pure public functions over JSON contract documents ([contracts](spec/contracts/README.md)):
-  `validate`, `load`, `compile`, `explain`, `describe`, `integrity_checks`, `dependencies` and
-  `diff` ([architecture 3.5](spec/architecture/README.md)).
+  `validate`, `load`, `compile`, `explain`, `describe`, `integrity_checks`, `dependencies`,
+  `diff` and `migrate` ([architecture 3.5](spec/architecture/README.md)).
 - One target dialect: DuckDB.
 - Every query of the model and query contracts compiles (slice VS-1f): wide-table and SQL-form
   queries, several datasets and paths, derived, additivity, population and context metrics
@@ -32,6 +32,9 @@ menura dependencies --model model.yaml --catalog-schema catalog.json
 # Diff the dependencies of two model versions (ARC-5.6).
 menura diff --old-model old.yaml --old-catalog-schema old-catalog.json \
   --new-model new.yaml --new-catalog-schema new-catalog.json
+
+# Write the migration report of a model (`menura.migration_report`).
+menura migrate --model model.yaml
 ```
 
 Each command also accepts `--load-options <path>` and `--help`.
@@ -40,11 +43,32 @@ Each command also accepts `--load-options <path>` and `--help`.
 plan, SQL and policy conditions included. End users and their agents never call Menura
 directly: they query through the platform's semantic service.
 
+## MCP server
+
+`menura-mcp` speaks MCP over standard input and output, revision `2025-06-18` (ARC-6.6). It
+opens no file or network connection: every document arrives as a tool argument. It has one tool
+per CLI command, with the command's name (`-` written `_`): `validate`, `compile`, `explain`,
+`describe`, `integrity_checks`, `dependencies`, `diff` and `migrate` (ARC-6.7). Each tool returns
+the exact text the CLI writes for the same call.
+
+## Python package
+
+The Python package, imported as `menura`, is built with PyO3 as one `abi3` wheel per platform
+for CPython 3.10 and later, with type stubs (ARC-6.3). Documents go in as `bytes` or `str` and
+options as `dict` objects, read as the CLI reads its option files (ARC-6.4).
+
+```python
+import menura
+
+handle = menura.Handle.load(model, catalog_schema)
+result = handle.compile(query, security_context)
+print(result.document, result.is_error)
+```
+
 ## What comes next
 
-- 0.9.0: Python package, complete CLI (`migrate` included), the `menura-mcp` server, performance
-  targets. Release candidate.
-- 1.0.0: the MVP, with contracts frozen at major version 1.
+- 1.0.0: the MVP. Every gate of the roadmap passes, contracts are frozen at major version 1, and
+  a compatibility matrix per implementation and channel is published, backed by suite results.
 
 ## Links
 
