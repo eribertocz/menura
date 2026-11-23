@@ -277,3 +277,26 @@ jobs:
           --manifest "$RUNNER_TEMP/wrapper-parity.json" --work "$RUNNER_TEMP/wrapper-parity"
       - name: Run every case through the Python package, documents identical to core (ARC-6.4, ARC-6.9, A4)
         run: '"$RUNNER_TEMP/venv/bin/python" -I scripts/ci/check_wrapper_parity.py "$RUNNER_TEMP/wrapper-parity.json"'
+
+  stubs:
+    name: stubs
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the commit
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+      - name: Install the Rust toolchain
+        run: |
+          rustup toolchain install "$RUST_TOOLCHAIN" --profile minimal
+          rustup default "$RUST_TOOLCHAIN"
+      - name: Install the validator of the examples job
+        run: |
+          python3 -m venv "$RUNNER_TEMP/venv"
+          "$RUNNER_TEMP/venv/bin/pip" install --disable-pip-version-check jsonschema==4.26.0 rfc3339-validator==0.1.4
+      - name: Test the stubs
+        run: python3 -m unittest discover -s scripts/ci -p 'test_stubs_end_to_end.py' -v
+      - name: Build menura in release
+        run: cargo build --locked --release --bin menura
+      - name: Run menura between the catalog and executor stubs, every document validated (A6)
+        run: '"$RUNNER_TEMP/venv/bin/python" -I scripts/ci/stubs_end_to_end.py target/release/menura'
