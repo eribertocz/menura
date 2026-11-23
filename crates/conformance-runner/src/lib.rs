@@ -45,6 +45,7 @@ pub mod fixture;
 mod golden_json;
 mod inlined_values;
 mod integrity_checks_part;
+mod intended_literals;
 pub mod load_options;
 mod load_part;
 pub mod ossie;

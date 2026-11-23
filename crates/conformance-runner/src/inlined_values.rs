@@ -7,34 +7,15 @@
 //! context's `attributes`. The plan's `sql` is then searched for each value that no parameter
 //! holds, as a string literal and as a number token.
 
-use std::collections::BTreeSet;
-
-use menura_contracts::types::common::{LogicalType, Parameter};
 use menura_contracts::types::compiled_plan::CompiledPlanDocument;
 use serde_json::Value as Json;
 
+use crate::intended_literals::{is_generated_on_purpose, is_generator_constant};
 use crate::sql_literals::{Literal, LiteralKind, literals, normalized_number};
-
-/// The keyword whose integer is a literal on purpose: `LIMIT` integers are values from a closed
-/// set, generated as literals (E6-4.11).
-const LIMIT_KEYWORD: &str = "LIMIT";
 
 /// The members of the query envelope whose values are bound parameters: the query time zone and
 /// the reference time (E6-4.2c).
 const ENVELOPE_VALUES: [&str; 2] = ["time_zone", "reference_time"];
-
-/// The function arguments that are literals on purpose (E6-4.11): the grain name of
-/// `DATE_TRUNC`, the precision of `ROUND` and `TRUNC`, the part number of `SPLIT_PART` and the
-/// fraction of `PERCENTILE_CONT` and `PERCENTILE_DISC`, each as a function and an argument
-/// index from 0.
-const CLOSED_ARGUMENTS: [(&str, usize); 6] = [
-    ("DATE_TRUNC", 0),
-    ("ROUND", 1),
-    ("TRUNC", 1),
-    ("SPLIT_PART", 2),
-    ("PERCENTILE_CONT", 0),
-    ("PERCENTILE_DISC", 0),
-];
 
 /// A value of the query or of the security context that must be a bound parameter (E6-4.2).
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -51,10 +32,10 @@ struct BoundValue {
 /// reason names the value, where it comes from and where the SQL holds it (line and column,
 /// from 1).
 ///
-/// A value is written in the SQL when no parameter holds it and the SQL has a literal equal to
-/// it. A value that a parameter holds is bound: a literal equal to it is a constant of the model
-/// or of the generator (E6-4.11) that happens to have the same value, such as the `1` of
-/// `GROUP BY 1` or the `0` of a division guard.
+/// Every value is searched, even one that a parameter also holds, so that a value bound in one
+/// place and written in another is caught. The literals of the SQL that are written on purpose
+/// are not searched: those of [`is_generated_on_purpose`] and the generator constants of
+/// [`is_generator_constant`].
 pub(crate) fn inlined_value_mismatch(
     query: Option<&Json>,
     security_context: &[u8],
@@ -62,20 +43,18 @@ pub(crate) fn inlined_value_mismatch(
 ) -> Option<String> {
     let mut values = query.map(query_values).unwrap_or_default();
     values.extend(attribute_values(security_context));
-    let bound = bound_values(&plan.parameters);
     let sql_literals: Vec<Literal> = literals(&plan.sql)
         .into_iter()
-        .filter(|literal| !is_generated_on_purpose(literal))
-        .collect();
-    values
-        .iter()
-        .filter(|value| !bound.contains(&(value.kind, value.value.clone())))
-        .find_map(|value| {
-            sql_literals
-                .iter()
-                .find(|literal| writes(literal, value))
-                .map(|literal| describe_leak(value, literal, &plan.sql))
+        .filter(|literal| {
+            !is_generated_on_purpose(literal) && !is_generator_constant(literal, &plan.sql)
         })
+        .collect();
+    values.iter().find_map(|value| {
+        sql_literals
+            .iter()
+            .find(|literal| writes(literal, value))
+            .map(|literal| describe_leak(value, literal, &plan.sql))
+    })
 }
 
 /// Whether the SQL literal `literal` writes `value`: a literal of the same kind and value, or,
@@ -96,53 +75,6 @@ fn is_number(text: &str) -> bool {
     !(integer.is_empty() && fraction.is_empty())
         && integer.bytes().all(|byte| byte.is_ascii_digit())
         && fraction.bytes().all(|byte| byte.is_ascii_digit())
-}
-
-/// The values the parameters hold, each as a kind and a value to compare with [`BoundValue`]:
-/// a string as text, and also as a number when its type is numeric (CON-4 writes a `decimal`
-/// as a string); a number as a number; the items of a list one by one.
-fn bound_values(parameters: &[Parameter]) -> BTreeSet<(LiteralKind, String)> {
-    let mut bound = BTreeSet::new();
-    for parameter in parameters {
-        let numeric = matches!(
-            parameter.logical_type,
-            LogicalType::Integer { .. } | LogicalType::Decimal { .. } | LogicalType::Float { .. }
-        );
-        insert_bound(&parameter.value, numeric, &mut bound);
-    }
-    bound
-}
-
-fn insert_bound(value: &Json, numeric: bool, bound: &mut BTreeSet<(LiteralKind, String)>) {
-    match value {
-        Json::String(text) => {
-            bound.insert((LiteralKind::Text, text.clone()));
-            if numeric {
-                bound.insert((LiteralKind::Number, normalized_number(text)));
-            }
-        }
-        Json::Number(number) => {
-            bound.insert((LiteralKind::Number, normalized_number(&number.to_string())));
-        }
-        Json::Array(items) => {
-            for item in items {
-                insert_bound(item, true, bound);
-                insert_bound(item, false, bound);
-            }
-        }
-        _ => {}
-    }
-}
-
-/// Whether a literal of an expression is written as a literal on purpose rather than bound:
-/// a `LIMIT` integer, an integer argument that fixes a result type or a part, a grain name
-/// (E6-4.11), or the position of a `BY` list item, which names a column rather than a value.
-fn is_generated_on_purpose(literal: &Literal) -> bool {
-    literal.ordinal
-        || literal.preceding_word.as_deref() == Some(LIMIT_KEYWORD)
-        || literal.call.as_ref().is_some_and(|(function, argument)| {
-            CLOSED_ARGUMENTS.contains(&(function.as_str(), *argument))
-        })
 }
 
 fn describe_leak(value: &BoundValue, literal: &Literal, sql: &str) -> String {
@@ -255,30 +187,38 @@ fn attribute_values(security_context: &[u8]) -> Vec<BoundValue> {
         values.extend(
             items
                 .into_iter()
-                .filter_map(|item| scalar_value(item, &source)),
+                .flat_map(|item| scalar_values(item, &source)),
         );
     }
     values
 }
 
-/// A string or a number of the security context as a value to search for; booleans and `null`
-/// are not values a literal could leak.
-fn scalar_value(value: &Json, source: &str) -> Option<BoundValue> {
-    let (kind, value) = match value {
-        Json::String(text) => (LiteralKind::Text, text.clone()),
-        Json::Number(number) => (LiteralKind::Number, normalized_number(&number.to_string())),
-        _ => return None,
-    };
-    Some(BoundValue {
+/// The values to search for of a string or a number of the security context. A string that is
+/// a number, such as a `decimal` or a large integer that CON-4 writes as a string (`"0.50"`), is
+/// also searched as a number token. Booleans and `null` are not searched.
+fn scalar_values(value: &Json, source: &str) -> Vec<BoundValue> {
+    let bound = |kind, value| BoundValue {
         kind,
         value,
         source: source.to_owned(),
-    })
+    };
+    match value {
+        Json::String(text) if is_number(text) => vec![
+            bound(LiteralKind::Text, text.clone()),
+            bound(LiteralKind::Number, normalized_number(text)),
+        ],
+        Json::String(text) => vec![bound(LiteralKind::Text, text.clone())],
+        Json::Number(number) => vec![bound(
+            LiteralKind::Number,
+            normalized_number(&number.to_string()),
+        )],
+        _ => Vec::new(),
+    }
 }
 
 #[cfg(test)]
 mod tests {
-    use menura_contracts::types::common::IntegerBits;
+    use menura_contracts::types::common::{LogicalType, Parameter};
 
     use super::*;
 
@@ -354,18 +294,56 @@ mod tests {
     }
 
     #[test]
-    fn e6_4_2_a_bound_value_equal_to_a_generated_constant_passes() {
-        let mut plan = plan_with_sql("SELECT a FROM t WHERE q = CAST($1 AS BIGINT) GROUP BY 1");
+    fn e6_4_2_a_value_both_bound_and_written_is_caught() {
+        let mut plan = plan_with_sql(
+            "SELECT a FROM t WHERE region = CAST($1 AS VARCHAR) UNION ALL SELECT a FROM u WHERE \
+             region = 'NORTH'",
+        );
         plan.parameters = vec![Parameter {
             position: 1,
-            logical_type: LogicalType::Integer {
-                bits: IntegerBits::SixtyFour,
-                signed: true,
-            },
-            value: serde_json::json!(1),
+            logical_type: LogicalType::Text,
+            value: serde_json::json!("NORTH"),
         }];
-        let query = filtered_query("sales.quantity = 1");
+        let query = filtered_query("sales.region = 'NORTH'");
+        let reason = inlined_value_mismatch(Some(&query), b"{}", &plan).unwrap();
+        assert!(reason.contains("`NORTH`"), "{reason}");
+    }
+
+    #[test]
+    fn e6_4_2_a_decimal_attribute_written_as_a_number_is_caught() {
+        let context = br#"{"attributes": {"rate": "0.50"}}"#;
+        for sql in [
+            "SELECT a FROM t WHERE r = 0.5",
+            "SELECT a FROM t WHERE r = CAST(0.50 AS DECIMAL(2,2))",
+        ] {
+            let reason = inlined_value_mismatch(None, context, &plan_with_sql(sql)).unwrap();
+            assert!(reason.contains("/attributes/rate"), "{reason}");
+        }
+    }
+
+    #[test]
+    fn e6_4_11_the_constants_of_the_generator_are_not_values() {
+        let plan = plan_with_sql(
+            "SELECT CASE WHEN CAST(d AS DOUBLE) = 0 THEN NULL ELSE n / d END, \
+             p + INTERVAL 1 MONTH - INTERVAL 1 DAY, CAST(s AS DECIMAL(38,2)) FROM t GROUP BY 1 \
+             QUALIFY RANK() OVER (PARTITION BY k ORDER BY (p) DESC) = 1",
+        );
+        let query = filtered_query("sales.quantity >= 1 AND sales.amount > 0 AND sales.cost > 2");
         assert_eq!(inlined_value_mismatch(Some(&query), b"{}", &plan), None);
+    }
+
+    #[test]
+    fn e6_4_2_a_one_compared_outside_a_window_is_caught() {
+        let plan = plan_with_sql("SELECT a FROM t WHERE (q) = 1");
+        let query = filtered_query("sales.quantity = 1");
+        assert!(inlined_value_mismatch(Some(&query), b"{}", &plan).is_some());
+    }
+
+    #[test]
+    fn e6_4_2_a_zero_outside_the_division_guard_is_caught() {
+        let plan = plan_with_sql("SELECT CASE WHEN x = 0 THEN 'none' END FROM t");
+        let query = filtered_query("sales.amount > 0");
+        assert!(inlined_value_mismatch(Some(&query), b"{}", &plan).is_some());
     }
 
     #[test]

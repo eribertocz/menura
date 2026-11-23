@@ -2,6 +2,8 @@
 //! tokens, each with its byte offset. It reads both the expressions of a query (its `filter`,
 //! its `filters` and its SQL form) and the `sql` of a compiled plan.
 
+use std::ops::Range;
+
 /// The kind of a literal found in a SQL text.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 pub(crate) enum LiteralKind {
@@ -21,6 +23,8 @@ pub(crate) struct Literal {
     pub(crate) value: String,
     /// The byte offset where it starts in the text.
     pub(crate) offset: usize,
+    /// The byte offset just after it in the text.
+    pub(crate) end: usize,
     /// The keyword or function name written just before it, upper-cased, when there is one:
     /// `LIMIT` before `LIMIT 10`.
     pub(crate) preceding_word: Option<String>,
@@ -81,7 +85,7 @@ impl Lexer {
         self.close_pending_item(item_ended);
         if byte == b'\'' {
             let (value, end) = quoted(text, index, '\'');
-            self.push(LiteralKind::Text, value, index);
+            self.push(LiteralKind::Text, value, index..end);
             return end;
         }
         if byte.is_ascii_digit() || (byte == b'.' && next_is_digit(bytes, index)) {
@@ -90,7 +94,7 @@ impl Lexer {
             self.push(
                 LiteralKind::Number,
                 normalized_number(&text[index..end]),
-                index,
+                index..end,
             );
             if follows_separator {
                 self.pending_item = Some(self.found.len() - 1);
@@ -128,7 +132,7 @@ impl Lexer {
         }
     }
 
-    fn push(&mut self, kind: LiteralKind, value: String, offset: usize) {
+    fn push(&mut self, kind: LiteralKind, value: String, span: Range<usize>) {
         let call = self
             .calls
             .last()
@@ -136,7 +140,8 @@ impl Lexer {
         self.found.push(Literal {
             kind,
             value,
-            offset,
+            offset: span.start,
+            end: span.end,
             preceding_word: self.last_word.take(),
             call,
             ordinal: false,
@@ -304,6 +309,7 @@ mod tests {
         let found = literals("ORDER BY 1 LIMIT 10");
         let last = found.last().unwrap();
         assert_eq!(last.offset, 17);
+        assert_eq!(last.end, 19);
         assert_eq!(last.preceding_word.as_deref(), Some("LIMIT"));
         assert_eq!(literals("ROUND(x, 2)")[0].preceding_word, None);
     }
