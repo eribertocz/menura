@@ -135,7 +135,27 @@ jobs:
       - name: Test the runner (CS-2.1, CS-2.2, CS-4.2, CS-4.3)
         run: cargo test --locked -p menura-conformance-runner
       - name: Run every case with non-default DuckDB settings and report per rule ID (CS-4.1, CS-4.2, CS-4.3)
-        run: cargo run --locked --quiet -p menura-conformance-runner -- conformance
+        shell: bash
+        run: cargo run --locked --quiet -p menura-conformance-runner -- conformance | tee "$RUNNER_TEMP/conformance-report.txt"
+      - name: Describe a model with the built menura binary, for its capability profile (DSC-4, CI-4.3)
+        shell: bash
+        run: >-
+          cargo run --locked --quiet -p menura-cli --bin menura -- describe
+          --model conformance/models/dsc-describe/model.yaml
+          --catalog-schema conformance/models/dsc-describe/catalog-schema.json
+          --security-context conformance/models/dsc-describe/contexts/admin.json
+          > "$RUNNER_TEMP/description.json"
+      - name: Summarize the run for the compatibility matrix (CI-4.3)
+        run: >-
+          python3 -I scripts/ci/compatibility_matrix.py summarize conformance
+          "$RUNNER_TEMP/conformance-report.txt" "$RUNNER_TEMP/description.json"
+          --output "$RUNNER_TEMP/summary/conformance.json"
+      - name: Upload the summary for the compatibility matrix (CI-4)
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: ci-summary-conformance
+          path: ${{ runner.temp }}/summary/conformance.json
+          if-no-files-found: error
 
   ossie-suites:
     name: ossie-suites
@@ -150,7 +170,18 @@ jobs:
           rustup toolchain install "$RUST_TOOLCHAIN" --profile minimal
           rustup default "$RUST_TOOLCHAIN"
       - name: Run the Apache Ossie suites at the tracked commit against expected-failures.yaml (OSS-2.3, OSS-2.4)
-        run: cargo run --locked --quiet -p menura-conformance-runner -- conformance ossie
+        shell: bash
+        run: cargo run --locked --quiet -p menura-conformance-runner -- conformance ossie | tee "$RUNNER_TEMP/ossie-report.txt"
+      - name: Summarize the run for the compatibility matrix (CI-4.3)
+        run: >-
+          python3 -I scripts/ci/compatibility_matrix.py summarize ossie-suites
+          "$RUNNER_TEMP/ossie-report.txt" --output "$RUNNER_TEMP/summary/ossie-suites.json"
+      - name: Upload the summary for the compatibility matrix (CI-4)
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: ci-summary-ossie-suites
+          path: ${{ runner.temp }}/summary/ossie-suites.json
+          if-no-files-found: error
 
   rule-coverage:
     name: rule-coverage
@@ -298,6 +329,16 @@ jobs:
           --manifest "$RUNNER_TEMP/wrapper-parity.json" --work "$RUNNER_TEMP/wrapper-parity"
       - name: Run every case through the Python package, documents identical to core (ARC-6.4, ARC-6.9, A4)
         run: '"$RUNNER_TEMP/venv/bin/python" -I scripts/ci/check_wrapper_parity.py "$RUNNER_TEMP/wrapper-parity.json"'
+      - name: Summarize the run for the compatibility matrix (CI-4.3)
+        run: >-
+          python3 -I scripts/ci/compatibility_matrix.py summarize conformance-wrappers
+          --output "$RUNNER_TEMP/summary/conformance-wrappers.json"
+      - name: Upload the summary for the compatibility matrix (CI-4)
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: ci-summary-conformance-wrappers
+          path: ${{ runner.temp }}/summary/conformance-wrappers.json
+          if-no-files-found: error
 
   stubs:
     name: stubs
@@ -321,3 +362,20 @@ jobs:
         run: cargo build --locked --release --bin menura
       - name: Run menura between the catalog and executor stubs, every document validated (A6)
         run: '"$RUNNER_TEMP/venv/bin/python" -I scripts/ci/stubs_end_to_end.py target/release/menura'
+
+  determinism:
+    name: determinism
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the commit
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+      - name: Install the Rust toolchain
+        run: |
+          rustup toolchain install "$RUST_TOOLCHAIN" --profile minimal
+          rustup default "$RUST_TOOLCHAIN"
+      - name: Build the determinism check in release
+        run: cargo build --locked --release -p menura-conformance-runner --bin determinism
+      - name: Compile every case in two processes, keys reordered in the second, byte-identical (PLN-2.4, P3)
+        run: target/release/determinism conformance --work "$RUNNER_TEMP/determinism"

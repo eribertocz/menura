@@ -27,6 +27,20 @@ pub fn prepare_database(fixture: &ModelFixture) -> Result<Connection, duckdb::Er
     Ok(connection)
 }
 
+/// The version of the `DuckDB` library the runner links against, as `pragma_version()` reports
+/// it (for example `v1.2.0`). The compatibility matrix records it (CI-4.3).
+///
+/// # Errors
+///
+/// Returns the `DuckDB` error when the in-memory database cannot be opened or queried.
+pub fn library_version() -> Result<String, duckdb::Error> {
+    Connection::open_in_memory()?.query_row(
+        "SELECT library_version FROM pragma_version()",
+        [],
+        |row| row.get(0),
+    )
+}
+
 /// The session time zone of CS-4.2. It is not UTC and has no daylight saving time, so the
 /// offset is the same for every timestamp.
 const SESSION_TIME_ZONE: &str = "America/La_Paz";
@@ -54,6 +68,13 @@ mod tests {
             sources: Vec::new(),
             data_script: String::new(),
         }
+    }
+
+    #[test]
+    fn ci_4_3_reports_the_exact_version_of_the_linked_library() {
+        let version = library_version().unwrap();
+        assert!(version.starts_with('v'), "{version}");
+        assert_eq!(version.matches('.').count(), 2, "{version}");
     }
 
     #[test]

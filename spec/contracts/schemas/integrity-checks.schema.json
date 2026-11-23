@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://menura.invalid/spec/contracts/integrity-checks/1.2.0",
+  "$id": "https://eribertocz.github.io/menura/spec/contracts/integrity-checks/1.2.0",
   "title": "Integrity checks document",
   "type": "object",
   "additionalProperties": false,

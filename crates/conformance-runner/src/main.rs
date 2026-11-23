@@ -14,6 +14,7 @@ use std::path::{Path, PathBuf};
 use std::process::ExitCode;
 
 use menura_conformance_runner::case::CaseId;
+use menura_conformance_runner::database::library_version;
 use menura_conformance_runner::{Regeneration, regenerate, run};
 
 const USAGE: &str = "usage: conformance-runner <conformance-directory> [area]\n       \
@@ -50,6 +51,13 @@ fn run_cases(directory: &Path, area: Option<&str>) -> ExitCode {
     match run(directory, area) {
         Ok(report) => {
             print!("{}", report.render());
+            match library_version() {
+                Ok(version) => println!("DuckDB {version}"),
+                Err(error) => {
+                    eprintln!("cannot read the DuckDB version (CI-4.3): {error}");
+                    return ExitCode::from(2);
+                }
+            }
             if report.has_failures() {
                 ExitCode::FAILURE
             } else {
