@@ -810,14 +810,14 @@ checksum = "cf8baf1c55e62ffcace7a9f06f4bd9cd3f0c4beb022d3b367256b91b87513d98"
 
 [[package]]
 name = "menura-benchmarks"
-version = "0.9.0"
+version = "1.0.0"
 dependencies = [
  "menura-core",
 ]
 
 [[package]]
 name = "menura-cli"
-version = "0.9.0"
+version = "1.0.0"
 dependencies = [
  "menura-core",
  "serde_json",
@@ -825,7 +825,7 @@ dependencies = [
 
 [[package]]
 name = "menura-conformance-runner"
-version = "0.9.0"
+version = "1.0.0"
 dependencies = [
  "duckdb",
  "menura-contracts",
@@ -837,7 +837,7 @@ dependencies = [
 
 [[package]]
 name = "menura-contracts"
-version = "0.9.0"
+version = "1.0.0"
 dependencies = [
  "serde",
  "serde_json",
@@ -846,7 +846,7 @@ dependencies = [
 
 [[package]]
 name = "menura-core"
-version = "0.9.0"
+version = "1.0.0"
 dependencies = [
  "menura-contracts",
  "menura-e0-load",
@@ -864,7 +864,7 @@ dependencies = [
 
 [[package]]
 name = "menura-e0-load"
-version = "0.9.0"
+version = "1.0.0"
 dependencies = [
  "granit-parser",
  "menura-contracts",
@@ -877,7 +877,7 @@ dependencies = [
 
 [[package]]
 name = "menura-e1-parse"
-version = "0.9.0"
+version = "1.0.0"
 dependencies = [
  "jiff",
  "jiff-tzdb",
@@ -891,7 +891,7 @@ dependencies = [
 
 [[package]]
 name = "menura-e2-bind"
-version = "0.9.0"
+version = "1.0.0"
 dependencies = [
  "menura-contracts",
  "menura-expressions",
@@ -902,7 +902,7 @@ dependencies = [
 
 [[package]]
 name = "menura-e3-paths"
-version = "0.9.0"
+version = "1.0.0"
 dependencies = [
  "menura-contracts",
  "menura-model",
@@ -912,7 +912,7 @@ dependencies = [
 
 [[package]]
 name = "menura-e4-plan"
-version = "0.9.0"
+version = "1.0.0"
 dependencies = [
  "menura-contracts",
  "menura-expressions",
@@ -923,7 +923,7 @@ dependencies = [
 
 [[package]]
 name = "menura-e5-optimize"
-version = "0.9.0"
+version = "1.0.0"
 dependencies = [
  "menura-contracts",
  "menura-expressions",
@@ -935,7 +935,7 @@ dependencies = [
 
 [[package]]
 name = "menura-expressions"
-version = "0.9.0"
+version = "1.0.0"
 dependencies = [
  "menura-contracts",
  "menura-model",
@@ -943,7 +943,7 @@ dependencies = [
 
 [[package]]
 name = "menura-generator-duckdb"
-version = "0.9.0"
+version = "1.0.0"
 dependencies = [
  "menura-contracts",
  "menura-e5-optimize",
@@ -956,7 +956,7 @@ dependencies = [
 
 [[package]]
 name = "menura-mcp"
-version = "0.9.0"
+version = "1.0.0"
 dependencies = [
  "menura-core",
  "serde_json",
@@ -964,14 +964,14 @@ dependencies = [
 
 [[package]]
 name = "menura-model"
-version = "0.9.0"
+version = "1.0.0"
 dependencies = [
  "menura-contracts",
 ]
 
 [[package]]
 name = "menura-python"
-version = "0.9.0"
+version = "1.0.0"
 dependencies = [
  "menura-core",
  "pyo3",
@@ -980,7 +980,7 @@ dependencies = [
 
 [[package]]
 name = "menura-representations"
-version = "0.9.0"
+version = "1.0.0"
 dependencies = [
  "menura-contracts",
  "menura-model",
@@ -988,7 +988,7 @@ dependencies = [
 
 [[package]]
 name = "menura-security"
-version = "0.9.0"
+version = "1.0.0"
 dependencies = [
  "menura-contracts",
  "menura-model",
