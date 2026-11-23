@@ -17,7 +17,7 @@ conformance/
   ossie/                                   Apache Ossie suites, vendored at the tracked commit
 ```
 
-`<area>` is the rule prefix in lower case: `e0`, `e1`, …, `cat`, `qry`, `sec`, `add`, `ctx`, …. During a version, the area `next` holds the cases that need the next slice, which MAY stay pending (VS-4); the issue that widens the slice moves them to the areas of their rule prefixes, where they must pass like any other case. `multi` is a normal area: its cases must pass.
+`<area>` is the rule prefix in lower case: `e0`, `e1`, …, `cat`, `qry`, `sec`, `add`, `ctx`, …. A prefix whose lower-case form Windows reserves as a file name (`con`, `prn`, `aux`, `nul`, `com1`–`com9`, `lpt1`–`lpt9`) takes its full word instead: the area of `CON` is `contract`. Every path in the repository must check out on Windows. During a version, the area `next` holds the cases that need the next slice, which MAY stay pending (VS-4); the issue that widens the slice moves them to the areas of their rule prefixes, where they must pass like any other case. `multi` is a normal area: its cases must pass.
 
 ## CS-2 Case format
 
