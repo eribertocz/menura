@@ -32,4 +32,4 @@ metrics:
     expression: {sql: AGG(sales) / AGG(orders_placed)}
     nonportable_extensions:
       - vendor_name: COMMON
-        data: {namespace: menura, version: 1, derived: {}}
+        data: {namespace: menura, version: 1, derived: {on_division_by_zero: "null"}}
