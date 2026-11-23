@@ -6,7 +6,7 @@ An entry of `custom_extensions` is a compiler extension only if all of these hol
 
 1. `vendor_name` is `COMMON`;
 2. `data` parses as a JSON object;
-3. `data.namespace` equals the configured namespace (default `menura`), or, until 1.0.0, the former namespace `semantic_compiler` (CON-0.5), which also produces `W0C-02`.
+3. `data.namespace` equals the configured namespace (default `menura`), or, through major version 1 of the contracts, the former namespace `semantic_compiler` (CON-0.5), which also produces `W0C-02`.
 
 - **E0C-1.1** An entry that fails 1 or 3 belongs to someone else: it is kept and never interpreted.
 - **E0C-1.2** A `COMMON` entry whose `data` is not valid JSON is kept, not interpreted, and produces `W0C-01`.
@@ -36,6 +36,6 @@ An entry of `custom_extensions` is a compiler extension only if all of these hol
 | `E0C-05` | Extension key on the wrong object type |
 | `E0C-06` | Member name repeated inside `data` of an entry of ours |
 | `W0C-01` | `COMMON` entry whose `data` is not valid JSON; kept, not interpreted |
-| `W0C-02` | Entry under the former namespace `semantic_compiler`; read as ours until 1.0.0 (CON-0.5) |
+| `W0C-02` | Entry under the former namespace `semantic_compiler`; read as ours through major version 1 (CON-0.5) |
 
 Extension-specific codes are defined in each extension chapter.
