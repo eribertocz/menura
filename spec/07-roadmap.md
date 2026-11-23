@@ -32,7 +32,7 @@ Every version closes only when its gates pass in CI; 1.0.0 needs all of them.
 |---|---|
 | Conformance | The rules of the version are added to the coverage scope (CS-2.6: whole files, or the rules of its slice before 1.0.0) and every rule ID of the scope has a passing case or check (T1); Apache Ossie suites match `expected-failures.yaml` (OSS-2.4) |
 | Security | Every case of `e2-*` authorization and `e4-*` row-policy rules passes, including denied access, exemption, propagation, policy preservation in summaries, and unauthorized names reported as `E_NAME_NOT_FOUND`; no plan in the suite contains a query or attribute value outside its parameters |
-| Determinism | Property tests compile every suite case twice, in separate processes and with shuffled input key order, and get byte-identical plans and hashes |
+| Determinism | Property tests compile every suite case twice, in separate processes and with shuffled input key order, and get byte-identical plans and hashes (`sql`, `parameters`, `cache_key`, plan and audit hashes). The other output documents are compared as data, except for what the specification defines from the input text: `line` and `column` of a location, the document order of diagnostics (E0-4.3) and of migration changes (MIG-3.4), and the member order of the migrated model (MIG-3.3) |
 | Compatibility | Every contract example validates; every schema change bumps its version (A5); documents of the previous minor versions are still accepted |
 | Execution | Every `plan` case executes on DuckDB with non-default session settings and returns its expected rows (E6-5.4) |
 | Performance | R1–R3 (from 0.9.0) |
