@@ -13,6 +13,12 @@ scope, or a path followed by rule IDs separated by whitespace, which puts only t
 An entry that names no file of `spec/INDEX.md`, or a rule ID that the index does not define in that
 file, fails the check, so a mistyped entry can never hide a rule.
 
+A rule of the prefixes `ARC-5`, `ARC-6`, `MIG` and `DEP` is also covered by a test function whose
+name starts with the rule ID in lower case, `-` and `.` written `_` (CS-2.6a): a Rust `fn` under
+`#[test]`, or a Python `def` in a `test_*.py` file, whose `test_` prefix is dropped. A rule listed
+in `spec/coverage-exempt.txt` with a reason is covered (CS-2.6b); a listed ID that the index does
+not define, or a line without a reason, fails the check.
+
 Usage: python3 scripts/ci/check_rule_coverage.py [repository-root]
 Requires PyYAML.
 """
@@ -25,7 +31,7 @@ import yaml
 # Prefixes of spec/README.md Conventions. Backlog items (`F`) are not rules.
 BEHAVIORAL = re.compile(
     r"^(?:E[0-6][A-Z]?-|(?:STG|CAT|QRY|SEC|PLN|DSC|CHK|MDL|CON|ADD|POP|DER|CTX|SCY|SUM|EXT|DEV|VS)-"
-    r"|OSS-[25](?:\.|$)|ARC-5(?:\.|$))"
+    r"|OSS-[25](?:\.|$)|ARC-[56](?:\.|$)|(?:MIG|DEP)-)"
 )
 PROCESS = re.compile(r"^(?:[PASQTR]\d|(?:WF|CS|CI)-|OSS-[134](?:\.|$))")
 BACKLOG = re.compile(r"^F\d")
@@ -37,6 +43,16 @@ RULE_TOKEN = re.compile(
 )
 RANGE_TOKEN = re.compile(r"\b([A-Z]{1,4})(\d+)([a-z]?)\s*[–-]\s*(?:\1)?(\d+)([a-z]?)\b")
 SUFFIX = re.compile(r"(?<=\d)[a-z]$")
+
+# CS-2.6a: the test name of a rule of `ARC-5`, `ARC-6`, `MIG` or `DEP`, e.g. `mig_3_2a_reads_x`.
+TEST_NAME_RULE = re.compile(r"^(arc_[56]|mig|dep)((?:_\d+)*)([a-z]?)(?=_|$)")
+RUST_TEST = re.compile(
+    r"#\[test\](?:\s*#\[[^\]]*\])*\s*(?:pub(?:\([^)]*\))?\s+)?(?:async\s+)?fn\s+(\w+)"
+)
+PYTHON_TEST = re.compile(r"^\s*(?:async\s+)?def\s+(\w+)", re.MULTILINE)
+PYTHON_TEST_PREFIX = "test_"
+SKIPPED_DIRECTORIES = {"target", "node_modules", "__pycache__"}
+TEST_COVERED = re.compile(r"^(?:ARC-[56](?:\.|$)|(?:MIG|DEP)-)")
 
 
 def index_rules(index_text):
@@ -154,12 +170,92 @@ def is_covered(rule, cited):
     )
 
 
-def uncovered(rules, case_citations, process_citations):
-    """The uncovered rule IDs of `(file, rule)` pairs, as `(kind, rule)` pairs in index order."""
+def rust_test_names(text):
+    """Names of the `fn` items under `#[test]` in Rust source text."""
+    return RUST_TEST.findall(text)
+
+
+def python_test_names(text):
+    """Names of the `def` functions of a Python test file, without a leading `test_`."""
+    return [
+        name[len(PYTHON_TEST_PREFIX):] if name.startswith(PYTHON_TEST_PREFIX) else name
+        for name in PYTHON_TEST.findall(text)
+    ]
+
+
+def rule_of_test_name(name):
+    """The rule ID a test name starts with (CS-2.6a), or `None` for another prefix.
+
+    `arc_5_7_reads_x` gives `ARC-5.7` and `mig_3_2a_reads_x` gives `MIG-3.2a`.
+    """
+    match = TEST_NAME_RULE.match(name)
+    if not match:
+        return None
+    head, numbers, suffix = match.groups()
+    parts = (head + numbers).split("_")
+    if len(parts) < 2:
+        return None
+    return f"{parts[0].upper()}-{'.'.join(parts[1:])}{suffix}"
+
+
+def cited_in_tests(test_names):
+    """Rule IDs that the given test names start with (CS-2.6a)."""
+    return {rule for rule in map(rule_of_test_name, test_names) if rule}
+
+
+def exempt_rules(exempt_text):
+    """The entries of `spec/coverage-exempt.txt` as `(rule, reason)` pairs, in file order.
+
+    One entry per line; `#` lines and blanks are ignored. `reason` is empty when the line has none.
+    """
+    entries = []
+    for line in exempt_text.splitlines():
+        fields = line.split(maxsplit=1)
+        if fields and not fields[0].startswith("#"):
+            entries.append((fields[0], fields[1].strip() if len(fields) > 1 else ""))
+    return entries
+
+
+def invalid_exemptions(exempt, rules):
+    """`(rule, problem)` pairs of exemptions the index does not define or that give no reason."""
+    defined = {rule for _, rule in rules}
+    problems = []
+    for rule, reason in exempt:
+        if rule not in defined:
+            problems.append((rule, "spec/INDEX.md does not define it"))
+        elif not reason:
+            problems.append((rule, "the line gives no reason"))
+    return problems
+
+
+def coverage_counts(rules, test_citations, exempt):
+    """How many rule IDs a test covers (CS-2.6a), and how many an exemption covers (CS-2.6b)."""
+    by_test = sum(1 for _, rule in rules if is_covered_by_test(rule, test_citations))
+    by_exemption = len({rule for _, rule in rules} & {rule for rule, _ in exempt})
+    return by_test, by_exemption
+
+
+def is_covered_by_test(rule, test_citations):
+    """Whether a test name covers `rule`: only for the prefixes of CS-2.6a."""
+    return bool(TEST_COVERED.match(rule)) and is_covered(rule, test_citations)
+
+
+def uncovered(rules, case_citations, process_citations, test_citations=(), exempt=()):
+    """The uncovered rule IDs of `(file, rule)` pairs, as `(kind, rule)` pairs in index order.
+
+    A rule listed in `exempt` is covered (CS-2.6b); a behavioral rule is also covered by
+    `test_citations` when its prefix allows it (CS-2.6a).
+    """
+    test_citations = set(test_citations)
+    exempted = {rule for rule, _ in exempt}
     findings = []
     for _, rule in rules:
         kind = classify(rule)
-        if kind == "behavioral" and not is_covered(rule, case_citations):
+        if rule in exempted:
+            continue
+        if kind == "behavioral" and not (
+            is_covered(rule, case_citations) or is_covered_by_test(rule, test_citations)
+        ):
             findings.append((kind, rule))
         elif kind == "process" and not is_covered(rule, process_citations):
             findings.append((kind, rule))
@@ -201,11 +297,38 @@ def citations(root):
     return case_citations, process_citations
 
 
+def is_skipped(directory):
+    """Whether a directory holds build output or is hidden."""
+    return directory in SKIPPED_DIRECTORIES or directory.startswith(".")
+
+
+def repository_files(root, pattern):
+    """Files of the repository matching `pattern`, outside build output and hidden directories."""
+    return [
+        path
+        for path in root.rglob(pattern)
+        if not any(is_skipped(part) for part in path.relative_to(root).parts[:-1])
+    ]
+
+
+def test_citations(root):
+    """Rule IDs that the Rust and Python test functions of the repository start with (CS-2.6a)."""
+    names = []
+    for text in read_texts(repository_files(root, "*.rs")):
+        names.extend(rust_test_names(text))
+    for text in read_texts(repository_files(root, "test_*.py")):
+        names.extend(python_test_names(text))
+    return cited_in_tests(names)
+
+
 def main():
     root = pathlib.Path(sys.argv[1] if len(sys.argv) > 1 else ".")
     rules = index_rules((root / "spec" / "INDEX.md").read_text(encoding="utf-8"))
     scope = scope_files((root / "spec" / "coverage-scope.txt").read_text(encoding="utf-8"))
-    findings = uncovered(rules, *citations(root))
+    exempt_path = root / "spec" / "coverage-exempt.txt"
+    exempt = exempt_rules(exempt_path.read_text(encoding="utf-8")) if exempt_path.is_file() else []
+    tests = test_citations(root)
+    findings = uncovered(rules, *citations(root), tests, exempt)
     blocking = in_scope(findings, rules, scope)
     report(findings, set(blocking))
     unknown_files = unknown_scope_files(scope, rules)
@@ -217,13 +340,21 @@ def main():
             f"::error title=rule-coverage::CS-2.6: scope entry `{path}` lists `{rule}`, "
             "which spec/INDEX.md does not define in that file"
         )
+    problems = invalid_exemptions(exempt, rules)
+    for rule, problem in problems:
+        print(f"::error title=rule-coverage::CS-2.6b: exemption `{rule}`: {problem}")
+    by_test, by_exemption = coverage_counts(rules, tests, exempt)
+    print(
+        f"::notice title=rule-coverage::{by_test} rule IDs covered by tests (CS-2.6a), "
+        f"{by_exemption} by exemption (CS-2.6b)"
+    )
     level = "error" if blocking else "notice"
     print(
         f"::{level} title=rule-coverage::{len(findings)} of {len(rules)} rule IDs uncovered; "
         f"{len(blocking)} in the coverage scope ({len(scope)} entries, "
         f"{len(scope_rules(scope, rules))} rule IDs)"
     )
-    sys.exit(1 if blocking or unknown_files or unknown_rules else 0)
+    sys.exit(1 if blocking or unknown_files or unknown_rules or problems else 0)
 
 
 if __name__ == "__main__":
