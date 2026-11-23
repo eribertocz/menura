@@ -22,6 +22,7 @@ use crate::divergences::Divergences;
 use crate::execution::{ExecutionFailure, execute_plan};
 use crate::explain_part::{explained_error_mismatch, explained_mismatch, runs_explain};
 use crate::fixture::read_text;
+use crate::inlined_values::inlined_value_mismatch;
 use crate::plan_outputs::plan_outputs_mismatch;
 use crate::report::CaseStatus;
 use crate::row_comparison::{Comparison, rows_mismatch};
@@ -199,16 +200,19 @@ fn check_audit(case: &Case, audit: Option<&AuditRecordDocument>, case_folder: &P
     }
 }
 
-/// Checks a compiled plan before execution, then executes it: a `runtime_error` case must fail
-/// with its code, and any other case must return its rows and, when differential, those of its
-/// oracle.
+/// Checks a compiled plan before execution, including that no value of the query or of the
+/// security context is written in its SQL (E6-4.2, roadmap 7.1a), then executes it: a
+/// `runtime_error` case must fail with its code, and any other case must return its rows and,
+/// when differential, those of its oracle.
 fn check_plan(
     case: &Case,
     plan: &CompiledPlanDocument,
     inputs: &QueryInputs<'_>,
     compile_again: impl FnOnce() -> CompileResult,
 ) -> CaseStatus {
-    if let Some(reason) = plan_mismatch(case, plan, inputs.case_folder, compile_again) {
+    let mismatch = plan_mismatch(case, plan, inputs.case_folder, compile_again)
+        .or_else(|| inlined_value_mismatch(case.query.as_ref(), inputs.security_context, plan));
+    if let Some(reason) = mismatch {
         return CaseStatus::Failed(reason);
     }
     if case.expect.outcome == Outcome::RuntimeError {
