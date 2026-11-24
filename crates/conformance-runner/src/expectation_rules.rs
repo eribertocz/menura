@@ -1,12 +1,12 @@
-//! The rules of CS-2.11 to CS-2.15, CS-2.17 and CS-2.18 on which outcomes allow which output
-//! expectations and compile options.
+//! The rules of CS-2.3a, CS-2.11 to CS-2.15, CS-2.17 and CS-2.18 on which outcomes allow which
+//! output expectations and compile options.
 
 use crate::case::{Case, Outcome};
 use crate::error::RunnerErrorKind;
 
 /// Checks that every output expectation of `case` is allowed with its outcome, and that a
-/// `describe` or `integrity_checks` case names its golden `document` (CS-2.11 to CS-2.15,
-/// CS-2.17, CS-2.18).
+/// `describe` or `integrity_checks` case names its golden `document` (CS-2.3a, CS-2.11 to
+/// CS-2.15, CS-2.17, CS-2.18).
 ///
 /// # Errors
 ///
@@ -24,6 +24,7 @@ pub(crate) fn check_output_expectations(case: &Case) -> Result<(), RunnerErrorKi
     if !matches!(outcome, Outcome::Plan | Outcome::Error) {
         refuse_present(&[("compile_options", "CS-2.18", case.compile_options.is_some())])?;
     }
+    check_clickhouse_expectations(case)?;
     if outcome.returns_document() {
         return check_document_case(case);
     }
@@ -40,6 +41,24 @@ pub(crate) fn check_output_expectations(case: &Case) -> Result<(), RunnerErrorKi
         refuse_present(&[("audit", "CS-2.13", expect.audit.is_some())])?;
     }
     refuse_present(&[("document", "CS-2.15", expect.document.is_some())])
+}
+
+/// `sql_clickhouse` and `clickhouse` belong to the cases that run on `ClickHouse`, `plan` and
+/// `runtime_error`, and a case sets `clickhouse` instead of `sql_clickhouse`, never both
+/// (CS-2.3a).
+fn check_clickhouse_expectations(case: &Case) -> Result<(), RunnerErrorKind> {
+    let expect = &case.expect;
+    let members = [
+        ("sql_clickhouse", "CS-2.3a", expect.sql_clickhouse.is_some()),
+        ("clickhouse", "CS-2.3a", expect.clickhouse.is_some()),
+    ];
+    if !matches!(expect.outcome, Outcome::Plan | Outcome::RuntimeError) {
+        refuse_present(&members)?;
+    }
+    if expect.sql_clickhouse.is_some() {
+        refuse_present(&members[1..])?;
+    }
+    Ok(())
 }
 
 /// A `describe` or `integrity_checks` case requires `document` and forbids the members of
@@ -77,6 +96,7 @@ fn refuse_present(members: &[(&'static str, &'static str, bool)]) -> Result<(), 
 
 #[cfg(test)]
 mod tests {
+    use crate::case::ClickhouseExpectation;
     use crate::case_file::parse_case;
     use crate::error::RunnerErrorKind;
 
@@ -331,5 +351,40 @@ expect:
                 );
             }
         }
+    }
+
+    #[test]
+    fn cs_2_3a_plan_and_runtime_error_cases_read_their_clickhouse_expectations() {
+        let golden = with_outcome("plan", "  rows: e.csv\n  sql_clickhouse: e.clickhouse.sql\n");
+        let expect = parse_case(&golden).unwrap().expect;
+        assert_eq!(expect.sql_clickhouse.as_deref(), Some("e.clickhouse.sql"));
+        let runtime = with_outcome("runtime_error", "  error: RADD-01\n  clickhouse: e6_01\n");
+        assert_eq!(
+            parse_case(&runtime).unwrap().expect.clickhouse,
+            Some(ClickhouseExpectation::Inexpressible)
+        );
+    }
+
+    #[test]
+    fn cs_2_3a_rejects_clickhouse_expectations_with_other_outcomes() {
+        let sql = with_outcome("error", "  error: E2-01\n  sql_clickhouse: e.clickhouse.sql\n");
+        assert_eq!(refused(&sql), Some(("sql_clickhouse", "CS-2.3a")));
+        let marker = with_outcome("error", "  error: E2-01\n  clickhouse: e6_01\n");
+        assert_eq!(refused(&marker), Some(("clickhouse", "CS-2.3a")));
+    }
+
+    #[test]
+    fn cs_2_3a_rejects_clickhouse_e6_01_together_with_golden_clickhouse_sql() {
+        let text = with_outcome(
+            "plan",
+            "  rows: e.csv\n  sql_clickhouse: e.clickhouse.sql\n  clickhouse: e6_01\n",
+        );
+        assert_eq!(refused(&text), Some(("clickhouse", "CS-2.3a")));
+    }
+
+    #[test]
+    fn cs_2_3a_rejects_an_unknown_clickhouse_expectation() {
+        let text = with_outcome("plan", "  rows: e.csv\n  clickhouse: e6_02\n");
+        assert!(matches!(parse_case(&text), Err(RunnerErrorKind::Malformed(_))));
     }
 }
