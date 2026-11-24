@@ -158,6 +158,41 @@ fn e6_7_11_the_clickhouse_checks_validate_against_their_schema() {
     assert_eq!(json["dialect"], "clickhouse");
 }
 
+/// The `chk-relationships` model with the `store_code` key of type `time` in both relations,
+/// a type `ClickHouse` cannot express (E6-7.12).
+fn time_key_handle() -> Handle {
+    let text_key = r#""name": "store_code",
+          "logical_type": {
+            "kind": "text"
+          },
+          "physical_type": "VARCHAR""#;
+    let time_key = r#""name": "store_code",
+          "logical_type": {
+            "kind": "time"
+          },
+          "physical_type": "TIME""#;
+    assert_eq!(CHECKS_CATALOG_SCHEMA.matches(text_key).count(), 2);
+    let catalog_schema = CHECKS_CATALOG_SCHEMA.replace(text_key, time_key);
+    load(
+        CHECKS_MODEL.as_bytes(),
+        catalog_schema.as_bytes(),
+        None,
+        &LoadOptions::default(),
+    )
+    .unwrap()
+}
+
+#[test]
+fn e6_7_12_a_check_over_a_time_key_with_clickhouse_is_e6_01_not_an_internal_error() {
+    let handle = time_key_handle();
+    let error = integrity_checks(&handle, Dialect::Clickhouse).unwrap_err();
+    assert_eq!(error.errors.len(), 1);
+    let diagnostic = &error.errors[0];
+    assert_eq!(diagnostic.code, "E6-01", "{diagnostic:?}");
+    assert_ne!(diagnostic.code, "E_INTERNAL");
+    assert!(integrity_checks(&handle, Dialect::Duckdb).is_ok());
+}
+
 #[test]
 fn arc_5_8_the_dialect_argument_accepts_clickhouse_and_duckdb() {
     assert_eq!(parse_dialect("clickhouse"), Ok(Dialect::Clickhouse));
