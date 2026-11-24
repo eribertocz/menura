@@ -1005,6 +1005,22 @@ Find a rule ID or a section here, then open only that file at that line.
 | [stages/E5-optimize.md](stages/E5-optimize.md#L39) | 39 | rule | E5-3.8 |
 | [stages/E5-optimize.md](stages/E5-optimize.md#L50) | 50 | section | E5-4 Summary selection |
 | [stages/E5-optimize.md](stages/E5-optimize.md#L58) | 58 | section | E5-5 Never |
+| [stages/E6-clickhouse.md](stages/E6-clickhouse.md#L1) | 1 | section | E6 Generate SQL: ClickHouse |
+| [stages/E6-clickhouse.md](stages/E6-clickhouse.md#L5) | 5 | section | E6-7 Rules |
+| [stages/E6-clickhouse.md](stages/E6-clickhouse.md#L9) | 9 | rule | E6-7.1 |
+| [stages/E6-clickhouse.md](stages/E6-clickhouse.md#L10) | 10 | rule | E6-7.2 |
+| [stages/E6-clickhouse.md](stages/E6-clickhouse.md#L11) | 11 | rule | E6-7.3 |
+| [stages/E6-clickhouse.md](stages/E6-clickhouse.md#L12) | 12 | rule | E6-7.4 |
+| [stages/E6-clickhouse.md](stages/E6-clickhouse.md#L13) | 13 | rule | E6-7.5 |
+| [stages/E6-clickhouse.md](stages/E6-clickhouse.md#L14) | 14 | rule | E6-7.6 |
+| [stages/E6-clickhouse.md](stages/E6-clickhouse.md#L15) | 15 | rule | E6-7.7 |
+| [stages/E6-clickhouse.md](stages/E6-clickhouse.md#L16) | 16 | rule | E6-7.8 |
+| [stages/E6-clickhouse.md](stages/E6-clickhouse.md#L17) | 17 | rule | E6-7.9 |
+| [stages/E6-clickhouse.md](stages/E6-clickhouse.md#L18) | 18 | rule | E6-7.10 |
+| [stages/E6-clickhouse.md](stages/E6-clickhouse.md#L19) | 19 | rule | E6-7.11 |
+| [stages/E6-clickhouse.md](stages/E6-clickhouse.md#L20) | 20 | rule | E6-7.12 |
+| [stages/E6-clickhouse.md](stages/E6-clickhouse.md#L21) | 21 | rule | E6-7.13 |
+| [stages/E6-clickhouse.md](stages/E6-clickhouse.md#L37) | 37 | section | E6-8 Errors |
 | [stages/E6-generate.md](stages/E6-generate.md#L1) | 1 | section | E6 Generate SQL |
 | [stages/E6-generate.md](stages/E6-generate.md#L3) | 3 | section | E6-1 Purpose |
 | [stages/E6-generate.md](stages/E6-generate.md#L8) | 8 | section | E6-2 Input and output |
