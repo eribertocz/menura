@@ -62,7 +62,8 @@ impl ExpressionWriter<'_, '_> {
                 let count = count_sql(&self.column(count)?);
                 Ok(format!(
                     "CASE WHEN {count} = 0 THEN NULL \
-                     ELSE toFloat64(sum({measure})) / toFloat64({count}) END"
+                     ELSE toFloat64(sum({})) / toFloat64({count}) END",
+                    widened(&measure, integer)
                 ))
             }
         }

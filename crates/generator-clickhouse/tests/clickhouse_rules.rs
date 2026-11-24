@@ -9,9 +9,9 @@ use menura_contracts::types::common::{FloatBits, IntegerBits, LogicalType, Times
 use menura_representations::logical_plan::PlanNode;
 use serde_json::json;
 use support::{
-    SETTINGS, TWO_METRICS, assert_golden, big_integer, column, decimal, filter, from_query,
-    generate, generated, instant, named, project, query, query_with_reference_time, region_count,
-    scan, sort, two_branches,
+    SETTINGS, TWO_METRICS, aggregate, assert_golden, big_integer, column, component, decimal,
+    filter, from_query, generate, generated, instant, named, project, query,
+    query_with_reference_time, region_count, scan, sort, two_branches,
 };
 
 /// The fields of `ORDERS` the expressions read: every one but `SHIPPED_AT`, a `timestamp`
@@ -372,6 +372,35 @@ fn e6_7_15_every_order_key_writes_its_null_order() {
     assert!(
         generated.sql.contains(
             "ORDER BY \"X\" IS NULL ASC NULLS LAST, isNaN(\"X\") DESC NULLS LAST, \"X\" DESC NULLS LAST"
+        ),
+        "{}",
+        generated.sql
+    );
+}
+
+#[test]
+fn e6_7_9_an_integer_average_sums_without_wrapping() {
+    let plan = aggregate(
+        scan("ORDERS", &["QUANTITY", "REGION"]),
+        vec![named("REGION", "REGION")],
+        vec![component("AVERAGE_QUANTITY", "AVG(QUANTITY)", None)],
+        vec![
+            column("REGION", LogicalType::Text, true),
+            column(
+                "AVERAGE_QUANTITY",
+                LogicalType::Float {
+                    bits: FloatBits::SixtyFour,
+                },
+                true,
+            ),
+        ],
+    );
+    let generated = generate(&plan, &query(&["REGION"], &["AVERAGE_QUANTITY"])).expect("SQL");
+    assert!(
+        generated.sql.contains(
+            "CAST(CASE WHEN coalesce(count(\"QUANTITY\"), 0) = 0 THEN NULL \
+             ELSE toFloat64(sum(toInt256(\"QUANTITY\"))) / toFloat64(count(\"QUANTITY\")) END \
+             AS Nullable(Float64)) AS \"AVERAGE_QUANTITY\""
         ),
         "{}",
         generated.sql

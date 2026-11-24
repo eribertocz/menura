@@ -69,9 +69,10 @@ impl ExpressionWriter<'_, '_> {
             SimpleAggregate::Maximum => format!("maxOrNull({})", self.argument(argument, filter)?),
             SimpleAggregate::Average => {
                 let value = self.argument(argument, filter)?;
+                let summed = self.widened_sum(argument, &value);
                 format!(
                     "CASE WHEN coalesce(count({value}), 0) = 0 THEN NULL \
-                     ELSE toFloat64(sum({value})) / toFloat64(count({value})) END"
+                     ELSE toFloat64(sum({summed})) / toFloat64(count({value})) END"
                 )
             }
             SimpleAggregate::Median => {
@@ -167,18 +168,23 @@ impl ExpressionWriter<'_, '_> {
         }
     }
 
-    /// The argument of `SUM`: an integer widened to `Int256` first and checked into the `Int128` of E0F-5,
-    /// so that the sum cannot wrap around.
+    /// The argument of `SUM`: an integer widened to `Int256` first and checked into the
+    /// `Int128` of E0F-5, so that the sum cannot wrap around (E6-7.9).
     fn summed(
         &mut self,
         argument: &Expression,
         filter: Option<&Expression>,
     ) -> Result<String, GenerateError> {
         let value = self.argument(argument, filter)?;
+        Ok(self.widened_sum(argument, &value))
+    }
+
+    /// `value`, the written `argument`, widened to `Int256` when `argument` is an integer.
+    fn widened_sum(&self, argument: &Expression, value: &str) -> String {
         if matches!(self.known_type(argument), Some(LogicalType::Integer { .. })) {
-            Ok(format!("toInt256({value})"))
+            format!("toInt256({value})")
         } else {
-            Ok(value)
+            value.to_owned()
         }
     }
 
