@@ -7,7 +7,8 @@
 //! `ClickHouse` knowledge lives here (E6-3.2). [`generate_check_sql`] writes the query of an
 //! integrity check from its logical plan with the same steps (CHK-4.2, E6-7.11).
 //!
-//! Before any SQL is written, a plan that reads or returns a `time`, an `interval` or a
+//! Before any SQL is written, a plan that scans a relation `source` of three or more parts
+//! stops with `E6-01` (E6-7.1); then a plan that reads or returns a `time`, an `interval` or a
 //! `timestamp` without time zone stops with `E6-01` (E6-7.12).
 //!
 //! The `SETTINGS` clause fixes these settings, the full list of E6-7.8:
@@ -89,10 +90,12 @@ use crate::steps::{StepWriter, pass_through};
 ///
 /// # Errors
 ///
-/// [`GenerateError::InexpressibleType`] (`E6-01`) when the plan reads or returns a value of a
-/// type `ClickHouse` cannot express (E6-7.12), checked before any SQL is written; otherwise a
-/// [`GenerateError::Invariant`] when the input breaks the contract of the stages before E6,
-/// such as a node outside the 0.3.0 slice (VS-1) or a `source` without a catalog relation.
+/// [`GenerateError::InexpressibleSource`] (`E6-01`) when the plan scans a relation `source` of
+/// three or more parts (E6-7.1), then [`GenerateError::InexpressibleType`] (`E6-01`) when it
+/// reads or returns a value of a type `ClickHouse` cannot express (E6-7.12), both checked
+/// before any SQL is written; otherwise a [`GenerateError::Invariant`] when the input breaks
+/// the contract of the stages before E6, such as a node outside the 0.3.0 slice (VS-1) or a
+/// `source` without a catalog relation.
 pub fn generate_sql(
     plan: &PlanNode,
     catalog: &CatalogSchemaDocument,
