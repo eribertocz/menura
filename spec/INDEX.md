@@ -147,32 +147,33 @@ Find a rule ID or a section here, then open only that file at that line.
 | [08-conformance-suite.md](08-conformance-suite.md#L64) | 64 | rule | CS-2.9 |
 | [08-conformance-suite.md](08-conformance-suite.md#L65) | 65 | rule | CS-2.10 |
 | [08-conformance-suite.md](08-conformance-suite.md#L66) | 66 | rule | CS-2.10a |
-| [08-conformance-suite.md](08-conformance-suite.md#L67) | 67 | rule | CS-2.11 |
-| [08-conformance-suite.md](08-conformance-suite.md#L68) | 68 | rule | CS-2.12 |
-| [08-conformance-suite.md](08-conformance-suite.md#L69) | 69 | rule | CS-2.13 |
-| [08-conformance-suite.md](08-conformance-suite.md#L70) | 70 | rule | CS-2.14 |
-| [08-conformance-suite.md](08-conformance-suite.md#L71) | 71 | rule | CS-2.15 |
-| [08-conformance-suite.md](08-conformance-suite.md#L72) | 72 | rule | CS-2.16 |
-| [08-conformance-suite.md](08-conformance-suite.md#L73) | 73 | rule | CS-2.17 |
-| [08-conformance-suite.md](08-conformance-suite.md#L74) | 74 | rule | CS-2.18 |
-| [08-conformance-suite.md](08-conformance-suite.md#L75) | 75 | rule | CS-2.8 |
-| [08-conformance-suite.md](08-conformance-suite.md#L77) | 77 | section | CS-3 Apache Ossie suites |
-| [08-conformance-suite.md](08-conformance-suite.md#L79) | 79 | rule | CS-3.1 |
-| [08-conformance-suite.md](08-conformance-suite.md#L80) | 80 | rule | CS-3.2 |
-| [08-conformance-suite.md](08-conformance-suite.md#L82) | 82 | section | CS-4 Running |
-| [08-conformance-suite.md](08-conformance-suite.md#L84) | 84 | rule | CS-4.1 |
-| [08-conformance-suite.md](08-conformance-suite.md#L85) | 85 | rule | CS-4.2 |
-| [08-conformance-suite.md](08-conformance-suite.md#L86) | 86 | rule | CS-4.3 |
-| [08-conformance-suite.md](08-conformance-suite.md#L87) | 87 | rule | CS-4.4 |
-| [08-conformance-suite.md](08-conformance-suite.md#L88) | 88 | rule | CS-4.5 |
-| [08-conformance-suite.md](08-conformance-suite.md#L89) | 89 | rule | CS-4.6 |
-| [08-conformance-suite.md](08-conformance-suite.md#L90) | 90 | rule | CS-4.7 |
-| [08-conformance-suite.md](08-conformance-suite.md#L91) | 91 | rule | CS-4.8 |
-| [08-conformance-suite.md](08-conformance-suite.md#L93) | 93 | section | CS-5 Producer suite |
-| [08-conformance-suite.md](08-conformance-suite.md#L98) | 98 | rule | CS-5.1 |
-| [08-conformance-suite.md](08-conformance-suite.md#L99) | 99 | rule | CS-5.2 |
-| [08-conformance-suite.md](08-conformance-suite.md#L100) | 100 | rule | CS-5.3 |
-| [08-conformance-suite.md](08-conformance-suite.md#L101) | 101 | rule | CS-5.4 |
+| [08-conformance-suite.md](08-conformance-suite.md#L67) | 67 | rule | CS-2.10b |
+| [08-conformance-suite.md](08-conformance-suite.md#L68) | 68 | rule | CS-2.11 |
+| [08-conformance-suite.md](08-conformance-suite.md#L69) | 69 | rule | CS-2.12 |
+| [08-conformance-suite.md](08-conformance-suite.md#L70) | 70 | rule | CS-2.13 |
+| [08-conformance-suite.md](08-conformance-suite.md#L71) | 71 | rule | CS-2.14 |
+| [08-conformance-suite.md](08-conformance-suite.md#L72) | 72 | rule | CS-2.15 |
+| [08-conformance-suite.md](08-conformance-suite.md#L73) | 73 | rule | CS-2.16 |
+| [08-conformance-suite.md](08-conformance-suite.md#L74) | 74 | rule | CS-2.17 |
+| [08-conformance-suite.md](08-conformance-suite.md#L75) | 75 | rule | CS-2.18 |
+| [08-conformance-suite.md](08-conformance-suite.md#L76) | 76 | rule | CS-2.8 |
+| [08-conformance-suite.md](08-conformance-suite.md#L78) | 78 | section | CS-3 Apache Ossie suites |
+| [08-conformance-suite.md](08-conformance-suite.md#L80) | 80 | rule | CS-3.1 |
+| [08-conformance-suite.md](08-conformance-suite.md#L81) | 81 | rule | CS-3.2 |
+| [08-conformance-suite.md](08-conformance-suite.md#L83) | 83 | section | CS-4 Running |
+| [08-conformance-suite.md](08-conformance-suite.md#L85) | 85 | rule | CS-4.1 |
+| [08-conformance-suite.md](08-conformance-suite.md#L86) | 86 | rule | CS-4.2 |
+| [08-conformance-suite.md](08-conformance-suite.md#L87) | 87 | rule | CS-4.3 |
+| [08-conformance-suite.md](08-conformance-suite.md#L88) | 88 | rule | CS-4.4 |
+| [08-conformance-suite.md](08-conformance-suite.md#L89) | 89 | rule | CS-4.5 |
+| [08-conformance-suite.md](08-conformance-suite.md#L90) | 90 | rule | CS-4.6 |
+| [08-conformance-suite.md](08-conformance-suite.md#L91) | 91 | rule | CS-4.7 |
+| [08-conformance-suite.md](08-conformance-suite.md#L92) | 92 | rule | CS-4.8 |
+| [08-conformance-suite.md](08-conformance-suite.md#L94) | 94 | section | CS-5 Producer suite |
+| [08-conformance-suite.md](08-conformance-suite.md#L99) | 99 | rule | CS-5.1 |
+| [08-conformance-suite.md](08-conformance-suite.md#L100) | 100 | rule | CS-5.2 |
+| [08-conformance-suite.md](08-conformance-suite.md#L101) | 101 | rule | CS-5.3 |
+| [08-conformance-suite.md](08-conformance-suite.md#L102) | 102 | rule | CS-5.4 |
 | [09-continuous-integration.md](09-continuous-integration.md#L1) | 1 | section | 9. Continuous integration |
 | [09-continuous-integration.md](09-continuous-integration.md#L6) | 6 | section | CI-1 On every pull request and every push to `main` |
 | [09-continuous-integration.md](09-continuous-integration.md#L33) | 33 | section | CI-2 Scheduled |
@@ -1005,6 +1006,25 @@ Find a rule ID or a section here, then open only that file at that line.
 | [stages/E5-optimize.md](stages/E5-optimize.md#L39) | 39 | rule | E5-3.8 |
 | [stages/E5-optimize.md](stages/E5-optimize.md#L50) | 50 | section | E5-4 Summary selection |
 | [stages/E5-optimize.md](stages/E5-optimize.md#L58) | 58 | section | E5-5 Never |
+| [stages/E6-clickhouse.md](stages/E6-clickhouse.md#L1) | 1 | section | E6 Generate SQL: ClickHouse |
+| [stages/E6-clickhouse.md](stages/E6-clickhouse.md#L5) | 5 | section | E6-7 Rules |
+| [stages/E6-clickhouse.md](stages/E6-clickhouse.md#L9) | 9 | rule | E6-7.1 |
+| [stages/E6-clickhouse.md](stages/E6-clickhouse.md#L10) | 10 | rule | E6-7.2 |
+| [stages/E6-clickhouse.md](stages/E6-clickhouse.md#L11) | 11 | rule | E6-7.3 |
+| [stages/E6-clickhouse.md](stages/E6-clickhouse.md#L12) | 12 | rule | E6-7.4 |
+| [stages/E6-clickhouse.md](stages/E6-clickhouse.md#L13) | 13 | rule | E6-7.5 |
+| [stages/E6-clickhouse.md](stages/E6-clickhouse.md#L14) | 14 | rule | E6-7.6 |
+| [stages/E6-clickhouse.md](stages/E6-clickhouse.md#L15) | 15 | rule | E6-7.7 |
+| [stages/E6-clickhouse.md](stages/E6-clickhouse.md#L16) | 16 | rule | E6-7.8 |
+| [stages/E6-clickhouse.md](stages/E6-clickhouse.md#L17) | 17 | rule | E6-7.9 |
+| [stages/E6-clickhouse.md](stages/E6-clickhouse.md#L18) | 18 | rule | E6-7.10 |
+| [stages/E6-clickhouse.md](stages/E6-clickhouse.md#L19) | 19 | rule | E6-7.11 |
+| [stages/E6-clickhouse.md](stages/E6-clickhouse.md#L20) | 20 | rule | E6-7.12 |
+| [stages/E6-clickhouse.md](stages/E6-clickhouse.md#L21) | 21 | rule | E6-7.13 |
+| [stages/E6-clickhouse.md](stages/E6-clickhouse.md#L22) | 22 | rule | E6-7.14 |
+| [stages/E6-clickhouse.md](stages/E6-clickhouse.md#L23) | 23 | rule | E6-7.15 |
+| [stages/E6-clickhouse.md](stages/E6-clickhouse.md#L24) | 24 | rule | E6-7.16 |
+| [stages/E6-clickhouse.md](stages/E6-clickhouse.md#L42) | 42 | section | E6-8 Errors |
 | [stages/E6-generate.md](stages/E6-generate.md#L1) | 1 | section | E6 Generate SQL |
 | [stages/E6-generate.md](stages/E6-generate.md#L3) | 3 | section | E6-1 Purpose |
 | [stages/E6-generate.md](stages/E6-generate.md#L8) | 8 | section | E6-2 Input and output |

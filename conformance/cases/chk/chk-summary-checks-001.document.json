@@ -118,7 +118,7 @@
     }
   ],
   "contract": "menura.integrity_checks",
-  "contract_version": "1.2.0",
+  "contract_version": "@schema",
   "dialect": "duckdb",
   "model_hash": "516c2fdbc1ca81a2c47c1fd2434d0b8bdcd6020d58c4fe4b00342e73ba8180a7"
 }

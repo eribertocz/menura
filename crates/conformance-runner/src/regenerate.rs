@@ -15,6 +15,7 @@ use crate::fixture::{read_bytes, security_context_path};
 use crate::load_options::resolve_load_options;
 use crate::load_part::{LoadOutcome, ModelDocuments, check_load};
 use crate::runner::list_directory;
+use crate::schema_versions::with_schema_placeholders;
 
 /// What regenerating one golden file of a case did.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -29,9 +30,9 @@ pub enum Regeneration {
 ///
 /// For an `outcome: plan` case, `sql` is written as the plan's SQL text and `lineage` in stored
 /// form; for an `outcome: plan` or `outcome: error` case, `audit` is written as the audit record
-/// without its `producer`, in stored form (CS-2.13). A golden file whose output `core` cannot
-/// produce yet (`document`), or that the compilation did not produce, is reported as not
-/// written.
+/// without its `producer`, in stored form (CS-2.13), its `contract_version` written `@schema`
+/// (CS-2.10b). A golden file whose output `core` cannot produce yet (`document`), or that the
+/// compilation did not produce, is reported as not written.
 ///
 /// # Errors
 ///
@@ -126,7 +127,7 @@ struct CaseOutputs {
     sql: Result<String, String>,
     /// The plan's `lineage` in stored form.
     lineage: Result<String, String>,
-    /// The audit record without its `producer`, in stored form (CS-2.13).
+    /// The audit record without its `producer`, in stored form (CS-2.13, CS-2.10b).
     audit: Result<String, String>,
 }
 
@@ -157,9 +158,8 @@ fn case_outputs(
     };
     let compilation = compile(&handle, &query, &security_context, &options);
     let audit = match &compilation.audit {
-        Some(record) => {
-            JsonValue::of(record.as_ref()).map(|record| record.without(&[PRODUCER]).stored_form())
-        }
+        Some(record) => JsonValue::of(record.as_ref())
+            .map(|record| with_schema_placeholders(&record.without(&[PRODUCER])).stored_form()),
         None => Err("the compilation returned no audit record".to_owned()),
     };
     let CompileResult::Plan(plan) = compilation.result else {
