@@ -55,9 +55,9 @@ pub(crate) fn check_query(
 }
 
 /// `E6-01` when one of `plans`, the plans an integrity-check statement writes, in the order
-/// it writes them, scans a relation `source` of three or more parts (E6-7.1); then when the
-/// first of them needs such a value, located at the dataset that holds it (E6-7.11,
-/// E6-7.12).
+/// it writes them, scans a relation `source` of three or more parts (E6-7.1); then when one
+/// of them, in the same order, needs such a value, located at the dataset that holds it
+/// (E6-7.11, E6-7.12).
 ///
 /// # Errors
 ///
@@ -76,10 +76,10 @@ pub(crate) fn check_model_plans(
         catalog,
         reference_date: None,
     };
-    match plans.first() {
-        Some(plan) => check_plan(plan, &needs),
-        None => Ok(()),
+    for plan in plans {
+        check_plan(plan, &needs)?;
     }
+    Ok(())
 }
 
 /// The location and subject of the first query element that needs such a value.

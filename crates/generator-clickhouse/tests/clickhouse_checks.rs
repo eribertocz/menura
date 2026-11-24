@@ -20,8 +20,8 @@ use menura_representations::names::OutputName;
 use menura_representations::origin::Origin;
 use menura_representations::time::{QueryTime, TimeZoneName};
 use support::{
-    SETTINGS, at, catalog_for, column, from_model, from_query, generate, instant, model, named,
-    parse, project, query, scan, scan_of,
+    SETTINGS, at, catalog_for, column, from_model, from_query, generate, generate_snapshot,
+    instant, model, model_with_sources, named, parse, project, query, scan, scan_of,
 };
 
 #[test]
@@ -207,4 +207,19 @@ fn e6_7_12_a_returned_time_is_e6_01_at_the_node_that_returns_it() {
     };
     assert_eq!(location.pointer(), "/query/dimensions/0");
     assert!(error.violation().is_none());
+}
+
+#[test]
+fn e6_7_12_a_value_the_population_of_a_snapshot_check_reads_is_e6_01_at_its_dataset() {
+    let model = model_with_sources("main.orders", "main.staged");
+    let rows = scan("ORDERS", &["REGION", "CREATED_AT"]);
+    let population = scan("STAGED", &["REGION", "CREATED_AT", "SHIPPED_AT"]);
+    let error = generate_snapshot(&rows, &population, &model).expect_err("E6-01");
+    assert_eq!(
+        error,
+        GenerateError::InexpressibleType {
+            origin: from_model("/semantic_model/0/datasets/0"),
+            subject: Some("dataset:STAGED".to_owned()),
+        }
+    );
 }
