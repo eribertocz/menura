@@ -57,6 +57,7 @@ pub mod regenerate;
 pub mod report;
 mod row_comparison;
 pub mod runner;
+mod schema_versions;
 mod sql_literals;
 pub mod wrappers;
 

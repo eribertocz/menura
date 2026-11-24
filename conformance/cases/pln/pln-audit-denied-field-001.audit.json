@@ -20,7 +20,7 @@
     "dialect": "duckdb"
   },
   "contract": "menura.audit_record",
-  "contract_version": "1.2.0",
+  "contract_version": "@schema",
   "contract_versions": {
     "catalog_schema": "1.1.0",
     "model": "0.1.1",

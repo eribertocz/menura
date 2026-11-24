@@ -5,6 +5,7 @@ use std::path::Path;
 
 use crate::canonical_json::JsonValue;
 use crate::fixture::read_text;
+use crate::schema_versions::with_schema_versions;
 
 /// Reads the golden JSON file `file_name` next to the case. It fails, naming the file, when the
 /// file cannot be read, is not valid JSON, has a duplicate member name, or is not in stored form
@@ -36,13 +37,16 @@ pub(crate) fn json_mismatch(
 }
 
 /// Why the produced value differs from the golden file `file_name` next to the case, or why
-/// the golden file is not valid, or `None` (CS-2.10).
+/// the golden file is not valid, or `None` (CS-2.10). Each `@schema` of the golden file is
+/// first replaced by the version of its contract's schema (CS-2.10b).
 pub(crate) fn golden_mismatch(
     case_folder: &Path,
     file_name: &str,
     produced: &JsonValue,
 ) -> Option<String> {
-    match read_golden(case_folder, file_name) {
+    let golden = read_golden(case_folder, file_name)
+        .and_then(|golden| with_schema_versions(&golden, file_name));
+    match golden {
         Ok(golden) => json_mismatch(&golden, produced, file_name),
         Err(reason) => Some(reason),
     }
@@ -99,6 +103,55 @@ mod tests {
     fn cs_2_10_a_golden_file_that_is_not_json_fails() {
         let reason = read_golden(&case_folder(), "cs-unit-golden-invalid-001.json").unwrap_err();
         assert!(reason.contains("not valid JSON"), "{reason}");
+    }
+
+    fn audit_document(contract_version: &str) -> JsonValue {
+        produced(&format!(
+            r#"{{"contract": "menura.audit_record", "contract_version": "{contract_version}"}}"#
+        ))
+    }
+
+    fn latest_audit_version() -> String {
+        menura_contracts::ContractKind::AuditRecord
+            .latest_version()
+            .to_string()
+    }
+
+    #[test]
+    fn cs_2_10b_a_substituted_version_matches() {
+        let value = audit_document(&latest_audit_version());
+        assert_eq!(
+            golden_mismatch(&case_folder(), "cs-unit-golden-schema-001.json", &value),
+            None
+        );
+    }
+
+    #[test]
+    fn cs_2_10b_a_literal_stale_version_fails() {
+        let value = audit_document(&latest_audit_version());
+        let reason = golden_mismatch(
+            &case_folder(),
+            "cs-unit-golden-schema-stale-001.json",
+            &value,
+        )
+        .unwrap();
+        assert!(reason.contains("differs"), "{reason}");
+    }
+
+    #[test]
+    fn cs_2_10b_a_placeholder_in_an_unexpected_place_fails() {
+        let value = audit_document(&latest_audit_version());
+        let reason = golden_mismatch(
+            &case_folder(),
+            "cs-unit-golden-schema-misplaced-001.json",
+            &value,
+        )
+        .unwrap();
+        assert!(
+            reason.contains("cs-unit-golden-schema-misplaced-001.json"),
+            "{reason}"
+        );
+        assert!(reason.contains("CS-2.10b"), "{reason}");
     }
 
     #[test]
