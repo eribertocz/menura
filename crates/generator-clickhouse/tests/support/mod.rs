@@ -21,6 +21,7 @@ mod joins;
 mod plan;
 mod population;
 mod propagation;
+mod snapshot;
 mod stitch;
 mod summary;
 
@@ -57,6 +58,7 @@ pub use propagation::{
     generate_propagation, orders_scan, policy, propagation_model, scan_fields, scan_typed,
     semi_join, semi_join_on,
 };
+pub use snapshot::generate_snapshot;
 pub use stitch::{
     TWO_METRICS, generated, huge_integer, region_amount, region_quantities, stitch,
     two_branch_columns, two_branches,

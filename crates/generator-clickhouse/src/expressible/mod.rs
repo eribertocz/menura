@@ -54,26 +54,32 @@ pub(crate) fn check_query(
     check_plan(plan, &needs)
 }
 
-/// `E6-01` when the integrity-check plan `plan` scans a relation `source` of three or more
-/// parts (E6-7.1), then when it needs such a value, located at the dataset that holds it
-/// (E6-7.11, E6-7.12).
+/// `E6-01` when one of `plans`, the plans an integrity-check statement writes, in the order
+/// it writes them, scans a relation `source` of three or more parts (E6-7.1); then when the
+/// first of them needs such a value, located at the dataset that holds it (E6-7.11,
+/// E6-7.12).
 ///
 /// # Errors
 ///
 /// [`GenerateError::InexpressibleSource`] or [`GenerateError::InexpressibleType`] when it
 /// does.
-pub(crate) fn check_model_plan(
-    plan: &PlanNode,
+pub(crate) fn check_model_plans(
+    plans: &[&PlanNode],
     model: &InternalModel,
     catalog: &CatalogSchemaDocument,
 ) -> Result<(), GenerateError> {
-    check_sources(plan, model)?;
+    for plan in plans {
+        check_sources(plan, model)?;
+    }
     let needs = Needs {
         model,
         catalog,
         reference_date: None,
     };
-    check_plan(plan, &needs)
+    match plans.first() {
+        Some(plan) => check_plan(plan, &needs),
+        None => Ok(()),
+    }
 }
 
 /// The location and subject of the first query element that needs such a value.

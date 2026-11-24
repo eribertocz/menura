@@ -12,8 +12,8 @@ use menura_generator_clickhouse::{GenerateError, GeneratedSql, generate_check_sq
 use menura_model::internal_model::InternalModel;
 use menura_representations::logical_plan::PlanNode;
 use support::{
-    catalog_for, column, from_model, from_query, generate_sql, home_scan, joined_scan, left_join,
-    model_with_sources, named, project, query, scan, security,
+    catalog_for, column, from_model, from_query, generate_snapshot, generate_sql, home_scan,
+    joined_scan, left_join, model_with_sources, named, project, query, scan, security,
 };
 
 /// The `Project` of the `REGION` of `dataset`.
@@ -100,6 +100,10 @@ fn e6_7_1_the_source_check_runs_before_the_type_check() {
     let error = generate_over(&region_plan("ORDERS"), &model, &["REGION", "SHIPPED_AT"])
         .expect_err("E6-01");
     assert_eq!(error, source_error("ORDERS"));
+    let model = model_with_sources("main.orders", QUERY_SOURCE);
+    let error = generate_over(&region_plan("ORDERS"), &model, &["REGION", "SHIPPED_AT"])
+        .expect_err("E6-01");
+    assert!(matches!(error, GenerateError::InexpressibleType { .. }));
 }
 
 #[test]
@@ -132,4 +136,18 @@ fn e6_7_1_an_integrity_check_applies_the_same_check() {
     assert_eq!(error, source_error("ORDERS"));
     let model = model_with_sources("main.orders", QUERY_SOURCE);
     assert!(generate_check_sql(&plan, &catalog_for(&model), &model).is_ok());
+}
+
+#[test]
+fn e6_7_1_a_snapshot_check_applies_the_same_check_to_its_population() {
+    let model = model_with_sources("main.orders", "a.main.staged");
+    let rows = scan("ORDERS", &["REGION", "CREATED_AT"]);
+    let population = scan("STAGED", &["REGION", "CREATED_AT"]);
+    let error = generate_snapshot(&rows, &population, &model).expect_err("E6-01");
+    assert_eq!(error, source_error("STAGED"));
+    // `SHIPPED_AT` is a `timestamp` without time zone, which E6-7.12 rejects in the rows: the
+    // source of the population is still checked first.
+    let rows = scan("ORDERS", &["REGION", "CREATED_AT", "SHIPPED_AT"]);
+    let error = generate_snapshot(&rows, &population, &model).expect_err("E6-01");
+    assert_eq!(error, source_error("STAGED"));
 }

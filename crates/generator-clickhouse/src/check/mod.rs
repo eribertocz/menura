@@ -16,7 +16,7 @@ use menura_representations::logical_plan::{Operation, PlanNode};
 
 use crate::body::{SelectBody, statement};
 use crate::error::{GenerateError, InvariantViolation};
-use crate::expressible::check_model_plan;
+use crate::expressible::check_model_plans;
 use crate::expression::Environment;
 use crate::steps::{StepWriter, error, pass_through};
 
@@ -59,7 +59,7 @@ pub fn generate_check_sql(
     catalog: &CatalogSchemaDocument,
     model: &InternalModel,
 ) -> Result<GeneratedCheckSql, GenerateError> {
-    check_model_plan(plan, model, catalog)?;
+    check_model_plans(&[plan], model, catalog)?;
     let environment = environment(CheckInputs { catalog, model });
     let mut writer = StepWriter::new(&environment);
     let written = writer.write(plan)?;
@@ -83,7 +83,7 @@ pub fn generate_validity_check_sql(
     check: &ValidityCheck<'_>,
     inputs: CheckInputs<'_>,
 ) -> Result<GeneratedCheckSql, GenerateError> {
-    check_model_plan(check.rows, inputs.model, inputs.catalog)?;
+    check_model_plans(&[check.rows], inputs.model, inputs.catalog)?;
     let environment = environment(inputs);
     let mut writer = StepWriter::new(&environment);
     let last = writer.validity_check(check)?;
@@ -100,7 +100,7 @@ pub fn generate_periodic_check_sql(
     check: &PeriodicCheck<'_>,
     inputs: CheckInputs<'_>,
 ) -> Result<GeneratedCheckSql, GenerateError> {
-    check_model_plan(check.rows, inputs.model, inputs.catalog)?;
+    check_model_plans(&[check.rows], inputs.model, inputs.catalog)?;
     let environment = environment(inputs);
     let mut writer = StepWriter::new(&environment);
     let last = writer.periodic_check(check)?;
@@ -118,7 +118,9 @@ pub fn generate_snapshot_check_sql(
     check: &SnapshotCheck<'_>,
     inputs: CheckInputs<'_>,
 ) -> Result<GeneratedCheckSql, GenerateError> {
-    check_model_plan(check.rows, inputs.model, inputs.catalog)?;
+    let mut plans = vec![check.rows];
+    plans.extend(check.time.as_ref().map(|time| time.population));
+    check_model_plans(&plans, inputs.model, inputs.catalog)?;
     let environment = environment(inputs);
     let mut writer = StepWriter::new(&environment);
     let last = writer.snapshot_check(check)?;
