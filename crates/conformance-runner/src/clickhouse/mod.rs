@@ -66,10 +66,7 @@ pub fn server_facts(server: &ClickhouseServer) -> Result<ServerFacts, RunnerErro
             "SELECT value FROM system.build_options WHERE name = 'TZDATA_VERSION'",
         )?,
     };
-    if matches!(
-        facts.time_zone.as_str(),
-        "UTC" | "Etc/UTC" | "GMT" | "Etc/GMT" | ""
-    ) {
+    if is_utc(&facts.time_zone) {
         return Err(failed(format!(
             "the server time zone is `{}`; E6-7.10 requires a time zone other than UTC",
             facts.time_zone
@@ -81,6 +78,14 @@ pub fn server_facts(server: &ClickhouseServer) -> Result<ServerFacts, RunnerErro
         ));
     }
     Ok(facts)
+}
+
+/// Whether the server time zone `name` is UTC, or names none, which E6-7.10 refuses.
+fn is_utc(name: &str) -> bool {
+    matches!(
+        name,
+        "" | "UTC" | "Etc/UTC" | "Etc/UCT" | "UCT" | "GMT" | "Etc/GMT" | "Etc/GMT0" | "Zulu"
+    )
 }
 
 /// Runs every `plan` and `runtime_error` case of `conformance_directory/cases/` on `server`.
@@ -204,5 +209,18 @@ fn with_unloaded_sources(status: CaseStatus, not_created: &[String]) -> CaseStat
             not_created.join("; ")
         )),
         status => status,
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn e6_7_10_refuses_a_server_whose_time_zone_is_utc() {
+        for name in ["UTC", "Etc/UTC", "GMT", ""] {
+            assert!(is_utc(name), "{name}");
+        }
+        assert!(!is_utc("America/La_Paz"));
     }
 }

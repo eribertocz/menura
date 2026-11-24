@@ -294,7 +294,7 @@ mod tests {
     }
 
     #[test]
-    fn e6_7_2_creates_columns_with_the_clickhouse_types() {
+    fn e6_7_10_copies_columns_with_the_e6_7_2_types() {
         let integer = LogicalType::Integer {
             bits: IntegerBits::ThirtyTwo,
             signed: false,
