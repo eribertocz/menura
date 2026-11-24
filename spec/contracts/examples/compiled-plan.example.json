@@ -1,6 +1,6 @@
 {
   "contract": "menura.compiled_plan",
-  "contract_version": "1.2.0",
+  "contract_version": "1.3.0",
   "producer": {
     "compiler_version": "1.0.0",
     "ossie_normative": "0.1.1",
