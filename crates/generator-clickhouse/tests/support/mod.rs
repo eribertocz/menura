@@ -21,6 +21,7 @@ mod joins;
 mod plan;
 mod population;
 mod propagation;
+mod snapshot;
 mod stitch;
 mod summary;
 
@@ -57,6 +58,7 @@ pub use propagation::{
     generate_propagation, orders_scan, policy, propagation_model, scan_fields, scan_typed,
     semi_join, semi_join_on,
 };
+pub use snapshot::generate_snapshot;
 pub use stitch::{
     TWO_METRICS, generated, huge_integer, region_amount, region_quantities, stitch,
     two_branch_columns, two_branches,
@@ -207,13 +209,15 @@ fn declarations() -> SecurityContext {
 
 /// A model whose datasets are `ORDERS` over `source` and `STAGED` over a query.
 pub fn model_with_source(source: &str) -> InternalModel {
+    model_with_sources(source, "  select * from \"raw\".\"orders\"")
+}
+
+/// A model whose datasets are `ORDERS` over `orders` and `STAGED` over `staged`.
+pub fn model_with_sources(orders: &str, staged: &str) -> InternalModel {
     let parts = ModelParts {
         name: NormalizedName::new("SALES"),
         descriptions: Descriptions::default(),
-        datasets: vec![
-            dataset("ORDERS", source),
-            dataset("STAGED", "  select * from \"raw\".\"orders\""),
-        ],
+        datasets: vec![dataset("ORDERS", orders), dataset("STAGED", staged)],
         relationships: Vec::new(),
         graph: RelationshipGraph::default(),
         metrics: Vec::new(),

@@ -14,7 +14,6 @@ use menura_e4_plan::{
     ContextBranches, ContextQuery, PlanInputs, build_plan_with_contexts, context_queries,
 };
 use menura_e5_optimize::optimize;
-use menura_generator_duckdb::generate_sql;
 use menura_model::explanation::ExplanationEntry;
 use menura_model::internal_model::InternalModel;
 use menura_representations::bound_query::{AuthorizationDecision, BoundQuery};
@@ -25,6 +24,7 @@ use menura_security::{AdmittedSecurityContext, admit_security_context};
 
 use crate::audit::{AuditFacts, audit_record, error_outcome, plan_outcome};
 use crate::compile_options::CompileOptions;
+use crate::dialect_sql::{Sources, query_sql};
 use crate::explanation::assemble;
 use crate::handle::Handle;
 use crate::lineage::{LineageInputs, row_policies};
@@ -101,7 +101,8 @@ struct Trace {
 ///
 /// [`CompileResult::Error`], the compile error document (PLN-5) with the first error and the
 /// warnings gathered before it: `ESEC-01` or `ESEC-03` for the security context (SEC-3.8,
-/// SEC-3.1); then the errors of E1, E2, E3 and E4, in the order of E2-5; `E_INTERNAL`, without
+/// SEC-3.1); then the errors of E1, E2, E3 and E4, in the order of E2-5; `E6-01` when the
+/// `clickhouse` dialect cannot express a value of the plan (E6-7.12); `E_INTERNAL`, without
 /// location, for a defect of the compiler (PLN-5.1a).
 ///
 /// # Example
@@ -260,8 +261,11 @@ fn compile_stages(
     );
     trace.entries.extend_from_slice(optimized.explanation());
     let plan = optimized.into_plan();
-    let generated = generate_sql(&plan, handle.catalog_schema(), model, &bound, context)
-        .map_err(|error| InternalError::new("E6", format!("{error:?}")))?;
+    let sources = Sources {
+        catalog: handle.catalog_schema(),
+        model,
+    };
+    let generated = query_sql(options.dialect, &plan, sources, &bound, context)?;
     let lineage_inputs = LineageInputs {
         model,
         catalog: handle.catalog_schema(),

@@ -91,7 +91,7 @@ fn chk_3_a_summary_check_carries_the_summary_definition_hash() {
 fn chk_2_4_a_summary_check_reads_the_base_and_the_summary() {
     assert_eq!(
         check(MONTHLY).sources,
-        ["shop.main.orders", "shop.main.orders_monthly"]
+        ["shop.orders", "shop.orders_monthly"]
     );
 }
 

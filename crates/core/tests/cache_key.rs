@@ -22,17 +22,17 @@ fn state(relations: &str) -> String {
 }
 
 /// `orders` partitioned by month, with the periods `2026-09` and `2026-10`.
-const PARTITIONED_ORDERS: &str = r#"{"source": "shop.main.orders", "row_count_estimate": 3,
+const PARTITIONED_ORDERS: &str = r#"{"source": "shop.orders", "row_count_estimate": 3,
     "partitions": {"column": "ORDER_DATE", "grain": "month", "versions": [
         {"period": "2026-09", "version": {"origin": "warehouse:shop", "snapshot": "orders-9"}},
         {"period": "2026-10", "version": {"origin": "warehouse:shop", "snapshot": "orders-10"}}]}}"#;
 
 /// `orders` with one version for the whole relation.
-const UNPARTITIONED_ORDERS: &str = r#"{"source": "shop.main.orders", "row_count_estimate": 3,
+const UNPARTITIONED_ORDERS: &str = r#"{"source": "shop.orders", "row_count_estimate": 3,
     "version": {"origin": "warehouse:shop", "snapshot": "orders-all"}}"#;
 
 /// `customers` with one version for the whole relation.
-const UNPARTITIONED_CUSTOMERS: &str = r#"{"source": "shop.main.customers", "row_count_estimate": 1,
+const UNPARTITIONED_CUSTOMERS: &str = r#"{"source": "shop.customers", "row_count_estimate": 1,
     "version": {"origin": "warehouse:shop", "snapshot": "customers-1"}}"#;
 
 fn compiled_with_state(relations: &str) -> CompiledPlanDocument {
@@ -143,9 +143,9 @@ fn pln_3_3_data_versions_list_every_period_of_a_partitioned_relation_read() {
     assert_eq!(
         data_versions(&compiled),
         json!([
-            {"source": "shop.main.orders", "period": "2026-09",
+            {"source": "shop.orders", "period": "2026-09",
              "version": {"origin": "warehouse:shop", "snapshot": "orders-9"}},
-            {"source": "shop.main.orders", "period": "2026-10",
+            {"source": "shop.orders", "period": "2026-10",
              "version": {"origin": "warehouse:shop", "snapshot": "orders-10"}},
         ])
     );
@@ -157,7 +157,7 @@ fn pln_3_3_an_unpartitioned_relation_read_has_the_period_star() {
     assert_eq!(
         data_versions(&compiled),
         json!([
-            {"source": "shop.main.orders", "period": "*",
+            {"source": "shop.orders", "period": "*",
              "version": {"origin": "warehouse:shop", "snapshot": "orders-all"}},
         ])
     );
@@ -182,10 +182,7 @@ fn pln_3_3_a_dimension_only_query_reads_its_dataset() {
     let handle = with_state(&handle(), state(UNPARTITIONED_ORDERS).as_bytes());
     let dimensions = query(r#"{"dimensions": ["orders.region"]}"#);
     let compiled = plan(compile_default(&handle, &dimensions, &analyst()));
-    assert_eq!(
-        data_versions(&compiled)[0]["source"],
-        json!("shop.main.orders")
-    );
+    assert_eq!(data_versions(&compiled)[0]["source"], json!("shop.orders"));
 }
 
 #[test]
@@ -233,9 +230,9 @@ fn pln_3_3_a_summary_read_lists_the_versions_of_its_built_from() {
         &by_month,
         &context("summaries-analyst", &["analyst"], "{}"),
     ));
-    assert!(compiled.sql.contains(r#""shop"."main"."orders_by_month""#));
+    assert!(compiled.sql.contains(r#""shop"."orders_by_month""#));
     let version = |period: &str| {
-        json!({"source": "shop.main.orders_by_month", "period": period,
+        json!({"source": "shop.orders_by_month", "period": period,
                "version": {"origin": "conformance:catalog", "snapshot": format!("orders-{period}")}})
     };
     assert_eq!(
@@ -268,9 +265,9 @@ fn pln_3_3a_a_date_range_prunes_no_period() {
         &one_day,
         &context("summaries-analyst", &["analyst"], "{}"),
     ));
-    assert!(compiled.sql.contains(r#""shop"."main"."orders""#));
+    assert!(compiled.sql.contains(r#""shop"."orders""#));
     let version = |period: &str| {
-        json!({"source": "shop.main.orders", "period": period,
+        json!({"source": "shop.orders", "period": period,
                "version": {"origin": "conformance:catalog", "snapshot": format!("orders-{period}")}})
     };
     assert_eq!(

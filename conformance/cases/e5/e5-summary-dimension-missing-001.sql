@@ -2,7 +2,7 @@ WITH
   "menura_1_scan" AS (
     SELECT
       "amount" AS "AMOUNT"
-    FROM "shop"."main"."orders"
+    FROM "shop"."orders"
   ),
   "menura_2_filter" AS (
     SELECT

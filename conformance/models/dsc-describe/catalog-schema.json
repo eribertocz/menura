@@ -11,7 +11,7 @@
   },
   "relations": [
     {
-      "source": "shop.main.customers",
+      "source": "shop.customers",
       "columns": [
         {
           "name": "customer_id",
@@ -44,7 +44,7 @@
       ]
     },
     {
-      "source": "shop.main.orders",
+      "source": "shop.orders",
       "columns": [
         {
           "name": "amount",
@@ -135,7 +135,7 @@
       ]
     },
     {
-      "source": "shop.main.orders_monthly",
+      "source": "shop.orders_monthly",
       "columns": [
         {
           "name": "order_month",
@@ -158,7 +158,7 @@
       ]
     },
     {
-      "source": "shop.main.stores",
+      "source": "shop.stores",
       "columns": [
         {
           "name": "city",
@@ -181,7 +181,7 @@
       ]
     },
     {
-      "source": "shop.main.suppliers",
+      "source": "shop.suppliers",
       "columns": [
         {
           "name": "supplier_id",

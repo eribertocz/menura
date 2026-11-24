@@ -91,17 +91,14 @@ fn chk_2_each_check_has_its_kind_target_and_recorded_hash() {
 
 #[test]
 fn chk_2_4_sources_are_the_relations_read_sorted() {
-    assert_eq!(
-        check("population:MEMBERS").sources,
-        ["shop.main.memberships"]
-    );
+    assert_eq!(check("population:MEMBERS").sources, ["shop.memberships"]);
     assert_eq!(
         check("semi_additive:ROSTER_BALANCE").sources,
-        ["shop.main.balances", "shop.main.roster"]
+        ["shop.balances", "shop.roster"]
     );
     assert_eq!(
         check("semi_additive:SNAPSHOT_BALANCE").sources,
-        ["shop.main.balances"]
+        ["shop.balances"]
     );
 }
 

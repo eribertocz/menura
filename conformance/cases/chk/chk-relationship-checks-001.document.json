@@ -2,53 +2,53 @@
   "checks": [
     {
       "check_id": "key_uniqueness:INVOICES_CUSTOMER",
-      "definition_hash": "ef4edc3d7f592caf45f1c44e4622e795e58057dae7261cbe2f03b3542bf48499",
+      "definition_hash": "fe8152d4016daa89fdb6c9b3663a4d6e25347328702ed08c2b30c8c80a96ac7a",
       "kind": "key_uniqueness",
       "parameters": [],
       "sources": [
-        "shop.main.customers"
+        "shop.customers"
       ],
-      "sql": "WITH\n  \"menura_1_scan\" AS (\n    SELECT\n      \"customer_id\" AS \"CUSTOMER_ID\"\n    FROM \"shop\".\"main\".\"customers\"\n  ),\n  \"menura_2_filter\" AS (\n    SELECT\n      \"CUSTOMER_ID\"\n    FROM \"menura_1_scan\"\n    WHERE \"CUSTOMER_ID\" IS NOT NULL\n  ),\n  \"menura_3_aggregate\" AS (\n    SELECT\n      \"CUSTOMER_ID\" AS \"CUSTOMER_ID\",\n      CAST(COUNT(*) AS BIGINT) AS \"menura.row_count\"\n    FROM \"menura_2_filter\"\n    GROUP BY 1\n  ),\n  \"menura_4_filter\" AS (\n    SELECT\n      \"CUSTOMER_ID\",\n      \"menura.row_count\"\n    FROM \"menura_3_aggregate\"\n    WHERE \"menura.row_count\" > 1\n  ),\n  \"menura_5_project\" AS (\n    SELECT\n      \"CUSTOMER_ID\" AS \"CUSTOMER_ID\",\n      \"menura.row_count\" AS \"row_count\"\n    FROM \"menura_4_filter\"\n  )\nSELECT\n  \"CUSTOMER_ID\",\n  \"row_count\"\nFROM \"menura_5_project\"",
+      "sql": "WITH\n  \"menura_1_scan\" AS (\n    SELECT\n      \"customer_id\" AS \"CUSTOMER_ID\"\n    FROM \"shop\".\"customers\"\n  ),\n  \"menura_2_filter\" AS (\n    SELECT\n      \"CUSTOMER_ID\"\n    FROM \"menura_1_scan\"\n    WHERE \"CUSTOMER_ID\" IS NOT NULL\n  ),\n  \"menura_3_aggregate\" AS (\n    SELECT\n      \"CUSTOMER_ID\" AS \"CUSTOMER_ID\",\n      CAST(COUNT(*) AS BIGINT) AS \"menura.row_count\"\n    FROM \"menura_2_filter\"\n    GROUP BY 1\n  ),\n  \"menura_4_filter\" AS (\n    SELECT\n      \"CUSTOMER_ID\",\n      \"menura.row_count\"\n    FROM \"menura_3_aggregate\"\n    WHERE \"menura.row_count\" > 1\n  ),\n  \"menura_5_project\" AS (\n    SELECT\n      \"CUSTOMER_ID\" AS \"CUSTOMER_ID\",\n      \"menura.row_count\" AS \"row_count\"\n    FROM \"menura_4_filter\"\n  )\nSELECT\n  \"CUSTOMER_ID\",\n  \"row_count\"\nFROM \"menura_5_project\"",
       "target": "INVOICES_CUSTOMER"
     },
     {
       "check_id": "key_uniqueness:INVOICES_STORE",
-      "definition_hash": "0f932bc0fbec0f485621376125a65b299db7b304ba70b22d1f3acd3e61f96453",
+      "definition_hash": "463854df9157ae15e0f2bb9375dcaab0d5c00c42ef3c000d2eb9bbf3f088c2c4",
       "kind": "key_uniqueness",
       "parameters": [],
       "sources": [
-        "shop.main.stores"
+        "shop.stores"
       ],
-      "sql": "WITH\n  \"menura_1_scan\" AS (\n    SELECT\n      \"store_code\" AS \"STORE_CODE\"\n    FROM \"shop\".\"main\".\"stores\"\n  ),\n  \"menura_2_filter\" AS (\n    SELECT\n      \"STORE_CODE\"\n    FROM \"menura_1_scan\"\n    WHERE \"STORE_CODE\" IS NOT NULL\n  ),\n  \"menura_3_aggregate\" AS (\n    SELECT\n      \"STORE_CODE\" AS \"STORE_CODE\",\n      CAST(COUNT(*) AS BIGINT) AS \"menura.row_count\"\n    FROM \"menura_2_filter\"\n    GROUP BY 1\n  ),\n  \"menura_4_filter\" AS (\n    SELECT\n      \"STORE_CODE\",\n      \"menura.row_count\"\n    FROM \"menura_3_aggregate\"\n    WHERE \"menura.row_count\" > 1\n  ),\n  \"menura_5_project\" AS (\n    SELECT\n      \"STORE_CODE\" AS \"STORE_CODE\",\n      \"menura.row_count\" AS \"row_count\"\n    FROM \"menura_4_filter\"\n  )\nSELECT\n  \"STORE_CODE\",\n  \"row_count\"\nFROM \"menura_5_project\"",
+      "sql": "WITH\n  \"menura_1_scan\" AS (\n    SELECT\n      \"store_code\" AS \"STORE_CODE\"\n    FROM \"shop\".\"stores\"\n  ),\n  \"menura_2_filter\" AS (\n    SELECT\n      \"STORE_CODE\"\n    FROM \"menura_1_scan\"\n    WHERE \"STORE_CODE\" IS NOT NULL\n  ),\n  \"menura_3_aggregate\" AS (\n    SELECT\n      \"STORE_CODE\" AS \"STORE_CODE\",\n      CAST(COUNT(*) AS BIGINT) AS \"menura.row_count\"\n    FROM \"menura_2_filter\"\n    GROUP BY 1\n  ),\n  \"menura_4_filter\" AS (\n    SELECT\n      \"STORE_CODE\",\n      \"menura.row_count\"\n    FROM \"menura_3_aggregate\"\n    WHERE \"menura.row_count\" > 1\n  ),\n  \"menura_5_project\" AS (\n    SELECT\n      \"STORE_CODE\" AS \"STORE_CODE\",\n      \"menura.row_count\" AS \"row_count\"\n    FROM \"menura_4_filter\"\n  )\nSELECT\n  \"STORE_CODE\",\n  \"row_count\"\nFROM \"menura_5_project\"",
       "target": "INVOICES_STORE"
     },
     {
       "check_id": "orphan_keys:INVOICES_CUSTOMER",
-      "definition_hash": "be73411de5542f1885fba67a5bf075d9f8896cb939d2e9ff454f87dc78a57de1",
+      "definition_hash": "d708eabe00dbce26612e7e1b6e0c349d3b4319d39b67adc1a874304757bc562b",
       "kind": "orphan_keys",
       "parameters": [],
       "sources": [
-        "shop.main.customers",
-        "shop.main.invoices"
+        "shop.customers",
+        "shop.invoices"
       ],
-      "sql": "WITH\n  \"menura_1_scan\" AS (\n    SELECT\n      \"customer_id\" AS \"CUSTOMER_ID\"\n    FROM \"shop\".\"main\".\"invoices\"\n  ),\n  \"menura_2_filter\" AS (\n    SELECT\n      \"CUSTOMER_ID\"\n    FROM \"menura_1_scan\"\n    WHERE \"CUSTOMER_ID\" IS NOT NULL\n  ),\n  \"menura_3_scan\" AS (\n    SELECT\n      \"customer_id\" AS \"INVOICES_CUSTOMER.CUSTOMER_ID\"\n    FROM \"shop\".\"main\".\"customers\"\n  ),\n  \"menura_4_join\" AS (\n    SELECT\n      \"CUSTOMER_ID\",\n      \"INVOICES_CUSTOMER.CUSTOMER_ID\"\n    FROM \"menura_2_filter\"\n    LEFT JOIN \"menura_3_scan\" ON \"menura_2_filter\".\"CUSTOMER_ID\" = \"menura_3_scan\".\"INVOICES_CUSTOMER.CUSTOMER_ID\"\n  ),\n  \"menura_5_filter\" AS (\n    SELECT\n      \"CUSTOMER_ID\",\n      \"INVOICES_CUSTOMER.CUSTOMER_ID\"\n    FROM \"menura_4_join\"\n    WHERE \"INVOICES_CUSTOMER.CUSTOMER_ID\" IS NULL\n  ),\n  \"menura_6_project\" AS (\n    SELECT\n      \"CUSTOMER_ID\" AS \"CUSTOMER_ID\"\n    FROM \"menura_5_filter\"\n  )\nSELECT\n  \"CUSTOMER_ID\"\nFROM \"menura_6_project\"",
+      "sql": "WITH\n  \"menura_1_scan\" AS (\n    SELECT\n      \"customer_id\" AS \"CUSTOMER_ID\"\n    FROM \"shop\".\"invoices\"\n  ),\n  \"menura_2_filter\" AS (\n    SELECT\n      \"CUSTOMER_ID\"\n    FROM \"menura_1_scan\"\n    WHERE \"CUSTOMER_ID\" IS NOT NULL\n  ),\n  \"menura_3_scan\" AS (\n    SELECT\n      \"customer_id\" AS \"INVOICES_CUSTOMER.CUSTOMER_ID\"\n    FROM \"shop\".\"customers\"\n  ),\n  \"menura_4_join\" AS (\n    SELECT\n      \"CUSTOMER_ID\",\n      \"INVOICES_CUSTOMER.CUSTOMER_ID\"\n    FROM \"menura_2_filter\"\n    LEFT JOIN \"menura_3_scan\" ON \"menura_2_filter\".\"CUSTOMER_ID\" = \"menura_3_scan\".\"INVOICES_CUSTOMER.CUSTOMER_ID\"\n  ),\n  \"menura_5_filter\" AS (\n    SELECT\n      \"CUSTOMER_ID\",\n      \"INVOICES_CUSTOMER.CUSTOMER_ID\"\n    FROM \"menura_4_join\"\n    WHERE \"INVOICES_CUSTOMER.CUSTOMER_ID\" IS NULL\n  ),\n  \"menura_6_project\" AS (\n    SELECT\n      \"CUSTOMER_ID\" AS \"CUSTOMER_ID\"\n    FROM \"menura_5_filter\"\n  )\nSELECT\n  \"CUSTOMER_ID\"\nFROM \"menura_6_project\"",
       "target": "INVOICES_CUSTOMER"
     },
     {
       "check_id": "orphan_keys:INVOICES_STORE",
-      "definition_hash": "6f4d55d1f0c1d7e5b7aeb3eba68b08a31d728255a3895a2eaca5dad54fbbecea",
+      "definition_hash": "bc7080555dabebfe349df26f7e832a67dae499e26d433deacd789e13448e5aed",
       "kind": "orphan_keys",
       "parameters": [],
       "sources": [
-        "shop.main.invoices",
-        "shop.main.stores"
+        "shop.invoices",
+        "shop.stores"
       ],
-      "sql": "WITH\n  \"menura_1_scan\" AS (\n    SELECT\n      \"store_code\" AS \"menura.source.STORE_CODE\"\n    FROM \"shop\".\"main\".\"invoices\"\n  ),\n  \"menura_2_filter\" AS (\n    SELECT\n      \"menura.source.STORE_CODE\"\n    FROM \"menura_1_scan\"\n    WHERE \"menura.source.STORE_CODE\" IS NOT NULL\n  ),\n  \"menura_3_scan\" AS (\n    SELECT\n      \"store_code\" AS \"INVOICES_STORE.STORE_CODE\"\n    FROM \"shop\".\"main\".\"stores\"\n  ),\n  \"menura_4_join\" AS (\n    SELECT\n      \"menura.source.STORE_CODE\",\n      \"INVOICES_STORE.STORE_CODE\"\n    FROM \"menura_2_filter\"\n    LEFT JOIN \"menura_3_scan\" ON \"menura_2_filter\".\"menura.source.STORE_CODE\" = \"menura_3_scan\".\"INVOICES_STORE.STORE_CODE\"\n  ),\n  \"menura_5_filter\" AS (\n    SELECT\n      \"menura.source.STORE_CODE\",\n      \"INVOICES_STORE.STORE_CODE\"\n    FROM \"menura_4_join\"\n    WHERE \"INVOICES_STORE.STORE_CODE\" IS NULL\n  ),\n  \"menura_6_project\" AS (\n    SELECT\n      \"menura.source.STORE_CODE\" AS \"STORE_CODE\"\n    FROM \"menura_5_filter\"\n  )\nSELECT\n  \"STORE_CODE\"\nFROM \"menura_6_project\"",
+      "sql": "WITH\n  \"menura_1_scan\" AS (\n    SELECT\n      \"store_code\" AS \"menura.source.STORE_CODE\"\n    FROM \"shop\".\"invoices\"\n  ),\n  \"menura_2_filter\" AS (\n    SELECT\n      \"menura.source.STORE_CODE\"\n    FROM \"menura_1_scan\"\n    WHERE \"menura.source.STORE_CODE\" IS NOT NULL\n  ),\n  \"menura_3_scan\" AS (\n    SELECT\n      \"store_code\" AS \"INVOICES_STORE.STORE_CODE\"\n    FROM \"shop\".\"stores\"\n  ),\n  \"menura_4_join\" AS (\n    SELECT\n      \"menura.source.STORE_CODE\",\n      \"INVOICES_STORE.STORE_CODE\"\n    FROM \"menura_2_filter\"\n    LEFT JOIN \"menura_3_scan\" ON \"menura_2_filter\".\"menura.source.STORE_CODE\" = \"menura_3_scan\".\"INVOICES_STORE.STORE_CODE\"\n  ),\n  \"menura_5_filter\" AS (\n    SELECT\n      \"menura.source.STORE_CODE\",\n      \"INVOICES_STORE.STORE_CODE\"\n    FROM \"menura_4_join\"\n    WHERE \"INVOICES_STORE.STORE_CODE\" IS NULL\n  ),\n  \"menura_6_project\" AS (\n    SELECT\n      \"menura.source.STORE_CODE\" AS \"STORE_CODE\"\n    FROM \"menura_5_filter\"\n  )\nSELECT\n  \"STORE_CODE\"\nFROM \"menura_6_project\"",
       "target": "INVOICES_STORE"
     }
   ],
   "contract": "menura.integrity_checks",
   "contract_version": "@schema",
   "dialect": "duckdb",
-  "model_hash": "9bf5427b9143a8ab4fa8b4d4a7cd726ca812221a721e16950fc425a04d1afcf6"
+  "model_hash": "4ee7d7c330e6bf6abca809e1eee898245923544af1f48e369680e25b09697fd9"
 }

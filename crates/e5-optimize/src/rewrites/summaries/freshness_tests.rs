@@ -21,7 +21,7 @@ fn cat_7_2_a_month_summary_over_day_partitions_is_valid() {
 fn cat_7_2_condition_1_fails_when_the_base_is_not_partitioned() {
     let mut state = fresh_state();
     *base(&mut state) =
-        json!({"source": "shop.main.orders", "row_count_estimate": 10, "version": token("v1")});
+        json!({"source": "shop.orders", "row_count_estimate": 10, "version": token("v1")});
     let result = freshness(&Fixture::new(), state, "UTC", None);
     assert_eq!(result, Err(FailedCondition::Partitions));
 }

@@ -4,13 +4,13 @@ WITH
       "customer_id" AS "CUSTOMER_ID",
       "order_date" AS "ORDER_DATE",
       ROW_NUMBER() OVER () AS "menura.row_identity"
-    FROM "shop"."main"."orders"
+    FROM "shop"."orders"
   ),
   "menura_2_scan" AS (
     SELECT
       "customer_id" AS "ORDERS_CUSTOMERS.CUSTOMER_ID",
       "region" AS "ORDERS_CUSTOMERS.REGION"
-    FROM "shop"."main"."customers"
+    FROM "shop"."customers"
   ),
   "menura_3_join" AS (
     SELECT
@@ -46,13 +46,13 @@ WITH
       "customer_id" AS "CUSTOMER_ID",
       "order_date" AS "ORDER_DATE",
       ROW_NUMBER() OVER () AS "menura.row_identity"
-    FROM "shop"."main"."orders"
+    FROM "shop"."orders"
   ),
   "menura_7_scan" AS (
     SELECT
       "customer_id" AS "ORDERS_CUSTOMERS.CUSTOMER_ID",
       "region" AS "ORDERS_CUSTOMERS.REGION"
-    FROM "shop"."main"."customers"
+    FROM "shop"."customers"
   ),
   "menura_8_join" AS (
     SELECT

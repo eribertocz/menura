@@ -1,5 +1,6 @@
-CREATE TABLE shop.main.memberships (customer_id INTEGER, valid_from DATE, valid_to DATE);
-INSERT INTO shop.main.memberships VALUES
+CREATE SCHEMA shop;
+CREATE TABLE shop.memberships (customer_id INTEGER, valid_from DATE, valid_to DATE);
+INSERT INTO shop.memberships VALUES
   (1, DATE '2026-01-01', DATE '2026-01-31'),
   (1, DATE '2026-01-31', DATE '2026-02-28'),
   (2, DATE '2026-03-10', DATE '2026-03-01'),
@@ -12,12 +13,12 @@ INSERT INTO shop.main.memberships VALUES
   (5, DATE '2026-01-01', NULL),
   (NULL, DATE '2026-01-01', NULL),
   (NULL, DATE '2026-01-01', NULL);
-CREATE TABLE shop.main.stamped_memberships (customer_id INTEGER NOT NULL, valid_from TIMESTAMPTZ NOT NULL, valid_to TIMESTAMPTZ);
-INSERT INTO shop.main.stamped_memberships VALUES
+CREATE TABLE shop.stamped_memberships (customer_id INTEGER NOT NULL, valid_from TIMESTAMPTZ NOT NULL, valid_to TIMESTAMPTZ);
+INSERT INTO shop.stamped_memberships VALUES
   (1, TIMESTAMPTZ '2026-03-01 02:00:00+00', TIMESTAMPTZ '2026-03-31 23:00:00+00'),
   (1, TIMESTAMPTZ '2026-04-01 02:00:00+00', NULL);
-CREATE TABLE shop.main.roster (customer_id INTEGER, period_at DATE);
-INSERT INTO shop.main.roster VALUES
+CREATE TABLE shop.roster (customer_id INTEGER, period_at DATE);
+INSERT INTO shop.roster VALUES
   (1, DATE '2026-03-01'),
   (1, DATE '2026-03-15'),
   (2, DATE '2026-03-01'),
@@ -26,8 +27,8 @@ INSERT INTO shop.main.roster VALUES
   (3, NULL),
   (NULL, DATE '2026-03-01'),
   (NULL, DATE '2026-03-01');
-CREATE TABLE shop.main.balances (customer_id INTEGER, period DATE, snapshot INTEGER, balance INTEGER NOT NULL);
-INSERT INTO shop.main.balances VALUES
+CREATE TABLE shop.balances (customer_id INTEGER, period DATE, snapshot INTEGER, balance INTEGER NOT NULL);
+INSERT INTO shop.balances VALUES
   (1, DATE '2026-01-15', 1, 10),
   (1, DATE '2026-01-20', 1, 20),
   (1, DATE '2026-03-10', 2, 30),

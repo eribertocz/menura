@@ -8,27 +8,27 @@
     "physical_inputs": [
       {
         "column": "customer_id",
-        "source": "shop.main.customers"
+        "source": "shop.customers"
       },
       {
         "column": "segment",
-        "source": "shop.main.customers"
+        "source": "shop.customers"
       },
       {
         "column": "customer_id",
-        "source": "shop.main.orders"
+        "source": "shop.orders"
       },
       {
         "column": "store_id",
-        "source": "shop.main.orders"
+        "source": "shop.orders"
       },
       {
         "column": "region",
-        "source": "shop.main.stores"
+        "source": "shop.stores"
       },
       {
         "column": "store_id",
-        "source": "shop.main.stores"
+        "source": "shop.stores"
       }
     ],
     "security_policies": [
@@ -45,31 +45,31 @@
     "physical_inputs": [
       {
         "column": "customer_id",
-        "source": "shop.main.customers"
+        "source": "shop.customers"
       },
       {
         "column": "segment",
-        "source": "shop.main.customers"
+        "source": "shop.customers"
       },
       {
         "column": "amount",
-        "source": "shop.main.orders"
+        "source": "shop.orders"
       },
       {
         "column": "customer_id",
-        "source": "shop.main.orders"
+        "source": "shop.orders"
       },
       {
         "column": "store_id",
-        "source": "shop.main.orders"
+        "source": "shop.orders"
       },
       {
         "column": "region",
-        "source": "shop.main.stores"
+        "source": "shop.stores"
       },
       {
         "column": "store_id",
-        "source": "shop.main.stores"
+        "source": "shop.stores"
       }
     ],
     "security_policies": [

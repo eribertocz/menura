@@ -3,7 +3,7 @@ WITH
     SELECT
       "amount_sum" AS "AMOUNT_SUM",
       "region" AS "REGION"
-    FROM "shop"."main"."orders_by_region_month"
+    FROM "shop"."orders_by_region_month"
   ),
   "menura_2_filter" AS (
     SELECT

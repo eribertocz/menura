@@ -219,9 +219,9 @@ fn dep_3_4_visibility_inputs_follow_propagation() {
     assert_eq!(
         physical(&orders.physical_inputs),
         [
-            "shop.main.orders.store_id",
-            "shop.main.stores.region",
-            "shop.main.stores.store_id"
+            "shop.orders.store_id",
+            "shop.stores.region",
+            "shop.stores.store_id"
         ]
     );
     assert_eq!(orders.security_policies, ["STORES.NORTH_ONLY"]);
@@ -282,7 +282,7 @@ fn dep_3_6_a_field_depends_on_its_dataset_and_its_columns() {
     );
     assert_eq!(
         physical(&store_id.physical_inputs),
-        ["shop.main.stores.region", "shop.main.stores.store_id"]
+        ["shop.stores.region", "shop.stores.store_id"]
     );
     assert_eq!(store_id.security_policies, ["STORES.NORTH_ONLY"]);
 }
@@ -374,10 +374,7 @@ fn dep_3_8_relationships_and_policies_have_no_security_policies() {
         policy.model_inputs,
         ["dataset:STORES", "field:STORES.REGION"]
     );
-    assert_eq!(
-        physical(&policy.physical_inputs),
-        ["shop.main.stores.region"]
-    );
+    assert_eq!(physical(&policy.physical_inputs), ["shop.stores.region"]);
     assert!(policy.security_policies.is_empty());
 }
 

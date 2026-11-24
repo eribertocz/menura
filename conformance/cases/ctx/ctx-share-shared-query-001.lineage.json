@@ -8,23 +8,23 @@
     "physical_inputs": [
       {
         "column": "customer_id",
-        "source": "shop.main.customers"
+        "source": "shop.customers"
       },
       {
         "column": "region",
-        "source": "shop.main.customers"
+        "source": "shop.customers"
       },
       {
         "column": "amount",
-        "source": "shop.main.orders"
+        "source": "shop.orders"
       },
       {
         "column": "customer_id",
-        "source": "shop.main.orders"
+        "source": "shop.orders"
       },
       {
         "column": "status",
-        "source": "shop.main.orders"
+        "source": "shop.orders"
       }
     ],
     "security_policies": [
@@ -40,19 +40,19 @@
     "physical_inputs": [
       {
         "column": "customer_id",
-        "source": "shop.main.customers"
+        "source": "shop.customers"
       },
       {
         "column": "amount",
-        "source": "shop.main.orders"
+        "source": "shop.orders"
       },
       {
         "column": "customer_id",
-        "source": "shop.main.orders"
+        "source": "shop.orders"
       },
       {
         "column": "status",
-        "source": "shop.main.orders"
+        "source": "shop.orders"
       }
     ],
     "security_policies": [
@@ -70,19 +70,19 @@
     "physical_inputs": [
       {
         "column": "customer_id",
-        "source": "shop.main.customers"
+        "source": "shop.customers"
       },
       {
         "column": "amount",
-        "source": "shop.main.orders"
+        "source": "shop.orders"
       },
       {
         "column": "customer_id",
-        "source": "shop.main.orders"
+        "source": "shop.orders"
       },
       {
         "column": "status",
-        "source": "shop.main.orders"
+        "source": "shop.orders"
       }
     ],
     "security_policies": [
@@ -100,19 +100,19 @@
     "physical_inputs": [
       {
         "column": "customer_id",
-        "source": "shop.main.customers"
+        "source": "shop.customers"
       },
       {
         "column": "amount",
-        "source": "shop.main.orders"
+        "source": "shop.orders"
       },
       {
         "column": "customer_id",
-        "source": "shop.main.orders"
+        "source": "shop.orders"
       },
       {
         "column": "status",
-        "source": "shop.main.orders"
+        "source": "shop.orders"
       }
     ],
     "security_policies": [

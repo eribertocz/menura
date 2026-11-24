@@ -194,7 +194,7 @@ fn arc_6_7_usage_errors_are_minus_32602_with_member_names() {
         (
             "integrity_checks",
             json!({"model": shop_model, "catalog_schema": "{}", "dialect": "postgres"}),
-            "unknown dialect `postgres`; the dialect is `duckdb`",
+            "unknown dialect `postgres`; the dialects are `clickhouse` and `duckdb`",
         ),
     ];
     for (tool, arguments, message) in cases {

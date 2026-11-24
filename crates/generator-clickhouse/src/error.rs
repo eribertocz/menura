@@ -78,6 +78,11 @@ const INEXPRESSIBLE_TYPE: &str = "needs a value the `clickhouse` dialect cannot 
     `time`, an `interval`, a `timestamp` without time zone, a nullable `list`, or a date outside \
     1900-01-01 to 2299-12-31; use the `duckdb` dialect or change the element";
 
+/// The message of `E6-01` for a relation `source` of three or more parts (E6-7.1, E6-8).
+const INEXPRESSIBLE_SOURCE: &str = "reads a relation `source` of three or more parts, which \
+    the `clickhouse` dialect cannot express: `ClickHouse` names a table as `table` or \
+    `database.table`; use the `duckdb` dialect or change the `source`";
+
 /// The error of E6.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum GenerateError {
@@ -89,6 +94,14 @@ pub enum GenerateError {
         origin: Origin,
         /// The element as `field:`, `metric:` or `dataset:` and its name, when it is one.
         subject: Option<String>,
+    },
+    /// `E6-01`: the plan reads a dataset whose relation `source` has three or more parts,
+    /// which `ClickHouse` cannot name (E6-7.1), located at that dataset in the model.
+    InexpressibleSource {
+        /// The dataset in the model.
+        origin: Origin,
+        /// The name of the dataset.
+        dataset: String,
     },
     /// The input breaks the contract of the stages before E6. This is a defect of the
     /// compiler, not a query error, so it has no specification code.
@@ -113,7 +126,7 @@ impl GenerateError {
     #[must_use]
     pub fn violation(&self) -> Option<InvariantViolation> {
         match self {
-            Self::InexpressibleType { .. } => None,
+            Self::InexpressibleType { .. } | Self::InexpressibleSource { .. } => None,
             Self::Invariant { violation, .. } => Some(*violation),
         }
     }
@@ -122,42 +135,56 @@ impl GenerateError {
     #[must_use]
     pub fn origin(&self) -> &Origin {
         match self {
-            Self::InexpressibleType { origin, .. } | Self::Invariant { origin, .. } => origin,
+            Self::InexpressibleType { origin, .. }
+            | Self::InexpressibleSource { origin, .. }
+            | Self::Invariant { origin, .. } => origin,
         }
     }
 
-    /// The diagnostic of the compile error document (PLN-5): `E6-01` at its field or metric,
-    /// in the query or the model; `None` for an internal error.
+    /// The diagnostic of the compile error document (PLN-5): `E6-01` at its field, metric or
+    /// dataset, in the query or the model; `None` for an internal error.
     #[must_use]
     pub fn to_diagnostic(&self) -> Option<Diagnostic> {
-        let Self::InexpressibleType { origin, subject } = self else {
-            return None;
-        };
-        let location = match origin {
-            Origin::Query(location) => {
-                let position = location.position();
-                DiagnosticLocation {
-                    document: InputDocument::Query,
-                    pointer: location.pointer().to_owned(),
-                    line: position.and_then(|position| u64::try_from(position.line()).ok()),
-                    column: position.and_then(|position| u64::try_from(position.column()).ok()),
-                }
-            }
-            Origin::Model(location) => DiagnosticLocation {
-                document: InputDocument::Model,
-                pointer: location.pointer.clone(),
-                line: u64::try_from(location.line).ok(),
-                column: u64::try_from(location.column).ok(),
-            },
+        let (origin, message) = match self {
+            Self::InexpressibleType { origin, subject } => (
+                origin,
+                match subject {
+                    Some(subject) => format!("`{subject}` {INEXPRESSIBLE_TYPE}"),
+                    None => format!("this element {INEXPRESSIBLE_TYPE}"),
+                },
+            ),
+            Self::InexpressibleSource { origin, dataset } => (
+                origin,
+                format!("`dataset:{dataset}` {INEXPRESSIBLE_SOURCE}"),
+            ),
+            Self::Invariant { .. } => return None,
         };
         Some(Diagnostic {
             code: "E6-01".to_owned(),
-            message: match subject {
-                Some(subject) => format!("`{subject}` {INEXPRESSIBLE_TYPE}"),
-                None => format!("this element {INEXPRESSIBLE_TYPE}"),
-            },
-            location: Some(location),
+            message,
+            location: Some(diagnostic_location(origin)),
             alternatives: None,
         })
+    }
+}
+
+/// The location of the diagnostic of an error at `origin`, in the query or the model.
+fn diagnostic_location(origin: &Origin) -> DiagnosticLocation {
+    match origin {
+        Origin::Query(location) => {
+            let position = location.position();
+            DiagnosticLocation {
+                document: InputDocument::Query,
+                pointer: location.pointer().to_owned(),
+                line: position.and_then(|position| u64::try_from(position.line()).ok()),
+                column: position.and_then(|position| u64::try_from(position.column()).ok()),
+            }
+        }
+        Origin::Model(location) => DiagnosticLocation {
+            document: InputDocument::Model,
+            pointer: location.pointer.clone(),
+            line: u64::try_from(location.line).ok(),
+            column: u64::try_from(location.column).ok(),
+        },
     }
 }

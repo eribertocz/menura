@@ -97,6 +97,7 @@ const EXPECTED_EDGES: &[(&str, &str)] = &[
     ("core", "e4-plan"),
     ("core", "e5-optimize"),
     ("core", "generator-duckdb"),
+    ("core", "generator-clickhouse"),
     ("cli", "core"),
     ("python", "core"),
     ("mcp", "core"),

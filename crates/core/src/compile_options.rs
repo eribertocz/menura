@@ -6,6 +6,8 @@ use std::num::NonZeroU64;
 use menura_contracts::types::common::Dialect;
 use serde_json::Value;
 
+use crate::dialect_name::{dialect_named, quoted_dialect_names};
+
 /// The default of `limits.timeout_ms`, in milliseconds (architecture section 3.5).
 const DEFAULT_TIMEOUT_MS: NonZeroU64 = match NonZeroU64::new(30_000) {
     Some(timeout) => timeout,
@@ -28,7 +30,7 @@ const DEFAULT_TIMEOUT_MS: NonZeroU64 = match NonZeroU64::new(30_000) {
 /// ```
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct CompileOptions {
-    /// The target dialect; `duckdb` by default.
+    /// The target dialect, `clickhouse` or `duckdb`; `duckdb` by default.
     pub dialect: Dialect,
     /// Written to `limits.timeout_ms`; 30000 by default.
     pub timeout_ms: NonZeroU64,
@@ -85,7 +87,7 @@ impl CompileOptions {
     ///
     /// A [`CompileOptionsError`] when `bytes` is not UTF-8 JSON, is not an object, has a member
     /// that is not a compile option, or has a value of the wrong type (`null` included):
-    /// `dialect` is `duckdb`, `timeout_ms` and `max_rows` are positive integers, `audit` is a
+    /// `dialect` is `clickhouse` or `duckdb`, `timeout_ms` and `max_rows` are positive integers, `audit` is a
     /// boolean and `actor` a string.
     ///
     /// # Example
@@ -144,12 +146,12 @@ impl CompileOptions {
 }
 
 fn dialect(value: &Value) -> Result<Dialect, CompileOptionsError> {
-    match value.as_str() {
-        Some("duckdb") => Ok(Dialect::Duckdb),
-        _ => Err(CompileOptionsError::new(
-            "the compile option `dialect` must be `duckdb`",
-        )),
-    }
+    value.as_str().and_then(dialect_named).ok_or_else(|| {
+        CompileOptionsError::new(format!(
+            "the compile option `dialect` must be {}",
+            quoted_dialect_names("or")
+        ))
+    })
 }
 
 fn positive_integer(name: &str, value: &Value) -> Result<NonZeroU64, CompileOptionsError> {

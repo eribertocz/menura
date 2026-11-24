@@ -59,7 +59,7 @@ fn on_orders(data: &str) -> String {
 /// A minimal valid document whose orders dataset carries the given `custom_extensions` lines.
 fn on_orders_entries(lines: &str) -> String {
     format!(
-        "version: \"0.1.1\"\nsemantic_model:\n  - name: shop\n    datasets:\n      - name: orders\n        source: shop.main.orders\n        custom_extensions:\n{lines}"
+        "version: \"0.1.1\"\nsemantic_model:\n  - name: shop\n    datasets:\n      - name: orders\n        source: shop.orders\n        custom_extensions:\n{lines}"
     )
 }
 

@@ -11,7 +11,7 @@
   },
   "relations": [
     {
-      "source": "shop.main.customers",
+      "source": "shop.customers",
       "columns": [
         {
           "name": "customer_id",
@@ -58,7 +58,7 @@
       ]
     },
     {
-      "source": "shop.main.account_months",
+      "source": "shop.account_months",
       "columns": [
         {
           "name": "account_id",

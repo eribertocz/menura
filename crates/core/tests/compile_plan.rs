@@ -81,7 +81,7 @@ fn pln_1_data_source_comes_from_the_load_option() {
 #[test]
 fn e6_6_1_sql_parameters_and_result_schema_come_from_e6() {
     let compiled = compiled();
-    assert!(compiled.sql.contains("\"shop\".\"main\".\"orders\""));
+    assert!(compiled.sql.contains("\"shop\".\"orders\""));
     assert_eq!(compiled.parameters.len(), 1);
     assert_eq!(
         compiled.parameters[0].value,

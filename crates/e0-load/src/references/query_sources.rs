@@ -196,16 +196,16 @@ mod tests {
         assert!(!is_query("selecté.main.t"));
         assert!(!is_query("with1.main.t"));
         assert!(is_query("WITH t AS (SELECT 1) SELECT * FROM t"));
-        assert!(!is_query("shop.main.orders"));
+        assert!(!is_query("shop.orders"));
         assert!(!is_query("/* c */ SELECT 1"));
         assert!(!is_query("é"));
     }
 
     #[test]
     fn e0d_3_3_a_single_read_only_select_passes() {
-        assert!(passes("SELECT order_id FROM shop.main.orders"));
-        assert!(passes("SELECT order_id FROM shop.main.orders;"));
-        assert!(passes("SELECT order_id FROM shop.main.orders; -- end\n"));
+        assert!(passes("SELECT order_id FROM shop.orders"));
+        assert!(passes("SELECT order_id FROM shop.orders;"));
+        assert!(passes("SELECT order_id FROM shop.orders; -- end\n"));
         assert!(passes("with t as (select 1 as x) select x from t"));
         assert!(passes(
             "SELECT 'DROP; it' AS \"INSERT\"\"x;\", 2e5 -- DELETE\nFROM t /* UPDATE; */"

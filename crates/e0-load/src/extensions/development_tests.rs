@@ -62,7 +62,7 @@ fn as_development(found: Vec<(&'static str, String)>) -> Vec<(&'static str, Stri
 /// A development-line model whose orders dataset carries one `COMMON` entry with `data`.
 fn on_orders(data: &str) -> String {
     format!(
-        "version: 0.3.0.dev0\nname: shop\ndatasets:\n  - name: orders\n    source: shop.main.orders\n    nonportable_extensions:\n      - vendor_name: COMMON\n        data: {data}\n"
+        "version: 0.3.0.dev0\nname: shop\ndatasets:\n  - name: orders\n    source: shop.orders\n    nonportable_extensions:\n      - vendor_name: COMMON\n        data: {data}\n"
     )
 }
 
@@ -160,7 +160,7 @@ fn der_5_1_1_e0c_05_derived_on_a_dataset_metric() {
 fn e0c_2_3_additivity_is_valid_on_a_dataset_metric_and_context_is_not() {
     let model = |data: &str| {
         format!(
-            "version: 0.3.0.dev0\nname: shop\ndatasets:\n  - name: orders\n    source: shop.main.orders\n    fields:\n      - {{name: amount, expression: {{sql: amount}}}}\n    metrics:\n      - name: total\n        expression: {{sql: SUM(amount)}}\n        nonportable_extensions:\n          - vendor_name: COMMON\n            data: {data}\n"
+            "version: 0.3.0.dev0\nname: shop\ndatasets:\n  - name: orders\n    source: shop.orders\n    fields:\n      - {{name: amount, expression: {{sql: amount}}}}\n    metrics:\n      - name: total\n        expression: {{sql: SUM(amount)}}\n        nonportable_extensions:\n          - vendor_name: COMMON\n            data: {data}\n"
         )
     };
     let additive = model("{namespace: menura, version: 1, additivity: {type: non_additive}}");
@@ -249,7 +249,7 @@ fn e0c_2_8_integers_give_the_code_of_the_same_digits_in_the_release_format() {
 fn e0c_2_8_a_yaml_null_is_the_json_null() {
     let metric = |division: &str| {
         format!(
-            "version: 0.3.0.dev0\nname: shop\ndatasets:\n  - name: orders\n    source: shop.main.orders\nmetrics:\n  - name: rate\n    expression: {{sql: AGG(a) / AGG(b)}}\n    nonportable_extensions:\n      - vendor_name: COMMON\n        data: {{namespace: menura, version: 1, derived: {{on_division_by_zero: {division}}}}}\n"
+            "version: 0.3.0.dev0\nname: shop\ndatasets:\n  - name: orders\n    source: shop.orders\nmetrics:\n  - name: rate\n    expression: {{sql: AGG(a) / AGG(b)}}\n    nonportable_extensions:\n      - vendor_name: COMMON\n        data: {{namespace: menura, version: 1, derived: {{on_division_by_zero: {division}}}}}\n"
         )
     };
     let unquoted = metric("null");

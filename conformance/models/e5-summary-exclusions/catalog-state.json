@@ -11,7 +11,7 @@
   },
   "relations": [
     {
-      "source": "shop.main.orders",
+      "source": "shop.orders",
       "row_count_estimate": 4,
       "partitions": {
         "column": "order_date",
@@ -42,10 +42,10 @@
       }
     },
     {
-      "source": "shop.main.orders_price_by_month",
+      "source": "shop.orders_price_by_month",
       "row_count_estimate": 3,
       "aggregate_build": {
-        "definition_hash": "c2ee6d611a4ab37b340c76c1f9fba73f3625b2ca94f6ae7bc7931acc990ee719",
+        "definition_hash": "f26a5d371f991dade118c85c0d11d6350b9614df52fe82aa191d8dd4b40b4e79",
         "coverage": {
           "from": "2026-10",
           "to": "2026-11"
@@ -75,7 +75,7 @@
         ],
         "integrity_check": {
           "status": "passed",
-          "definition_hash": "c2ee6d611a4ab37b340c76c1f9fba73f3625b2ca94f6ae7bc7931acc990ee719",
+          "definition_hash": "f26a5d371f991dade118c85c0d11d6350b9614df52fe82aa191d8dd4b40b4e79",
           "verified": [
             {
               "period": "2026-10-05",
@@ -104,10 +104,10 @@
       }
     },
     {
-      "source": "shop.main.orders_created_by_month",
+      "source": "shop.orders_created_by_month",
       "row_count_estimate": 2,
       "aggregate_build": {
-        "definition_hash": "dc1e8b5835d6b1a165c5267f13b2eb2d5de9826962b0a6c14b886d454e3bf863",
+        "definition_hash": "2849eeb39fc146a755efb181147762a54d161860ca013b2d279aa0f9e7cb180c",
         "coverage": {
           "from": "2026-10",
           "to": "2026-11"
@@ -137,7 +137,7 @@
         ],
         "integrity_check": {
           "status": "passed",
-          "definition_hash": "dc1e8b5835d6b1a165c5267f13b2eb2d5de9826962b0a6c14b886d454e3bf863",
+          "definition_hash": "2849eeb39fc146a755efb181147762a54d161860ca013b2d279aa0f9e7cb180c",
           "verified": [
             {
               "period": "2026-10-05",

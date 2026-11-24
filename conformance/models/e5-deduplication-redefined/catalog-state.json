@@ -11,7 +11,7 @@
   },
   "relations": [
     {
-      "source": "shop.main.orders",
+      "source": "shop.orders",
       "row_count_estimate": 3,
       "version": {
         "origin": "conformance:catalog",
@@ -19,7 +19,7 @@
       }
     },
     {
-      "source": "shop.main.clients",
+      "source": "shop.clients",
       "row_count_estimate": 2,
       "version": {
         "origin": "conformance:catalog",
@@ -35,7 +35,7 @@
       "status": "passed",
       "verified": [
         {
-          "source": "shop.main.clients",
+          "source": "shop.clients",
           "version": {
             "origin": "conformance:catalog",
             "snapshot": "customers-2"

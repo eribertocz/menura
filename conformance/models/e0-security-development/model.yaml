@@ -6,7 +6,7 @@ nonportable_extensions:
     data: {namespace: menura, version: 1, security_context: {roles: [admin, analyst], attributes: [{name: regions, type: list<text>}]}}
 datasets:
   - name: orders
-    source: shop.main.orders
+    source: shop.orders
     primary_key: [order_id]
     fields:
       - name: order_id
@@ -21,7 +21,7 @@ datasets:
       - vendor_name: COMMON
         data: {namespace: menura, version: 1, access: {mode: roles, roles: [analyst, admin], fields: [{names: [unit_cost], roles: [admin]}]}, row_access: [{name: region_scope, condition: "region IN (USER_ATTRIBUTE('regions'))", roles: [analyst]}]}
   - name: notes
-    source: shop.main.notes
+    source: shop.notes
     primary_key: [note_id]
     fields:
       - name: note_id

@@ -2,7 +2,7 @@ WITH
   "menura_1_scan" AS (
     SELECT
       "region" AS "REGION"
-    FROM "shop"."main"."sales"
+    FROM "shop"."sales"
   ),
   "menura_2_filter" AS (
     SELECT

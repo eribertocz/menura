@@ -7,7 +7,7 @@ semantic_model:
         data: '{"namespace": "menura", "version": 1, "security_context": {"roles": ["analyst"], "attributes": [{"name": "regions", "type": "list<text>"}]}}'
     datasets:
       - name: customers
-        source: shop.main.customers
+        source: shop.customers
         primary_key: [customer_id]
         fields:
           - name: customer_id
@@ -20,7 +20,7 @@ semantic_model:
           - vendor_name: COMMON
             data: '{"namespace": "menura", "version": 1, "access": {"mode": "roles", "roles": ["analyst"]}, "row_access": [{"name": "customers_region_scope", "condition": "region IN (USER_ATTRIBUTE(''regions''))", "roles": ["analyst"]}]}'
       - name: orders
-        source: shop.main.orders
+        source: shop.orders
         primary_key: [order_id]
         fields:
           - name: order_id
@@ -35,7 +35,7 @@ semantic_model:
           - vendor_name: COMMON
             data: '{"namespace": "menura", "version": 1, "access": {"mode": "roles", "roles": ["analyst"]}, "row_access": [{"name": "orders_not_void", "condition": "status <> ''void''"}]}'
       - name: refunds
-        source: shop.main.refunds
+        source: shop.refunds
         primary_key: [refund_id]
         fields:
           - name: refund_id

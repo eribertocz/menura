@@ -11,7 +11,7 @@
   },
   "relations": [
     {
-      "source": "shop.main.orders",
+      "source": "shop.orders",
       "columns": [
         {
           "name": "order_id",
@@ -54,7 +54,7 @@
       ]
     },
     {
-      "source": "SELECT order_id, status, amount FROM shop.main.orders; DELETE FROM shop.main.orders",
+      "source": "SELECT order_id, status, amount FROM shop.orders; DELETE FROM shop.orders",
       "columns": [
         {
           "name": "order_id",

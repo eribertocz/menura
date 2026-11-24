@@ -169,11 +169,11 @@ fn limited(input: PlanNode) -> PlanNode {
     )
 }
 
-/// `shop_model` with the dataset `REGIONS` (`shop.main.regions`) and `SECOND_RELATIONSHIP`
+/// `shop_model` with the dataset `REGIONS` (`shop.regions`) and `SECOND_RELATIONSHIP`
 /// from `CUSTOMERS` to it, each kept in name order, whose `key_uniqueness` check is recorded with `CURRENT_HASH`.
 fn two_join_model() -> InternalModel {
     let mut parts = shop_model().parts().clone();
-    parts.datasets.push(dataset("REGIONS", "shop.main.regions"));
+    parts.datasets.push(dataset("REGIONS", "shop.regions"));
     parts.relationships.insert(
         0,
         Relationship {
@@ -219,7 +219,7 @@ fn customers_unique() -> Value {
         RELATIONSHIP,
         CURRENT_HASH,
         "passed",
-        ("shop.main.customers", "customers-1"),
+        ("shop.customers", "customers-1"),
     )
 }
 
@@ -229,14 +229,14 @@ fn regions_unique() -> Value {
         SECOND_RELATIONSHIP,
         CURRENT_HASH,
         "passed",
-        ("shop.main.regions", "regions-1"),
+        ("shop.regions", "regions-1"),
     )
 }
 
 /// A state where every relation is at version `<name>-1`, with the results `checks`.
 fn state(checks: &[Value]) -> CatalogStateDocument {
     let relation = |name: &str| {
-        json!({"source": format!("shop.main.{name}"), "row_count_estimate": 1,
+        json!({"source": format!("shop.{name}"), "row_count_estimate": 1,
             "version": token(&format!("{name}-1"))})
     };
     serde_json::from_value(json!({
@@ -339,7 +339,7 @@ fn e5_3_2a_failed_evidence_keeps_the_deduplicate() {
         RELATIONSHIP,
         CURRENT_HASH,
         "failed",
-        ("shop.main.customers", "customers-1"),
+        ("shop.customers", "customers-1"),
     );
     let state = state(&[failed_result]);
     let plan = deduplicated(one_join(true));
@@ -356,7 +356,7 @@ fn e5_3_2a_evidence_on_a_stale_version_keeps_the_deduplicate() {
         RELATIONSHIP,
         CURRENT_HASH,
         "passed",
-        ("shop.main.customers", "customers-0"),
+        ("shop.customers", "customers-0"),
     );
     let state = state(&[stale_result]);
     let plan = deduplicated(one_join(true));
@@ -373,7 +373,7 @@ fn e5_3_2a_evidence_of_another_definition_hash_keeps_the_deduplicate() {
         RELATIONSHIP,
         OTHER_HASH,
         "passed",
-        ("shop.main.customers", "customers-1"),
+        ("shop.customers", "customers-1"),
     );
     let state = state(&[other_result]);
     let plan = deduplicated(one_join(true));

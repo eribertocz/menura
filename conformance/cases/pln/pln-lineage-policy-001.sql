@@ -5,18 +5,18 @@ WITH
       "customer_id" AS "CUSTOMER_ID",
       "store_id" AS "STORE_ID",
       ROW_NUMBER() OVER () AS "menura.row_identity"
-    FROM "shop"."main"."orders"
+    FROM "shop"."orders"
   ),
   "menura_2_scan" AS (
     SELECT
       "store_id" AS "STORE_ID"
-    FROM "shop"."main"."stores"
+    FROM "shop"."stores"
   ),
   "menura_3_scan" AS (
     SELECT
       "region" AS "REGION",
       "store_id" AS "STORE_ID"
-    FROM "shop"."main"."stores"
+    FROM "shop"."stores"
   ),
   "menura_4_filter" AS (
     SELECT
@@ -54,7 +54,7 @@ WITH
     SELECT
       "customer_id" AS "ORDERS_CUSTOMERS.CUSTOMER_ID",
       "segment" AS "ORDERS_CUSTOMERS.SEGMENT"
-    FROM "shop"."main"."customers"
+    FROM "shop"."customers"
   ),
   "menura_9_join" AS (
     SELECT
@@ -71,7 +71,7 @@ WITH
     SELECT
       "region" AS "ORDERS_STORES.REGION",
       "store_id" AS "ORDERS_STORES.STORE_ID"
-    FROM "shop"."main"."stores"
+    FROM "shop"."stores"
   ),
   "menura_11_filter" AS (
     SELECT

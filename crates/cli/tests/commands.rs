@@ -297,6 +297,53 @@ fn arc_5_8_integrity_checks_writes_its_document_and_refuses_other_dialects() {
 }
 
 #[test]
+fn arc_5_8_integrity_checks_accepts_the_clickhouse_dialect() {
+    let model = shop("model.yaml");
+    let catalog = shop("catalog-schema.json");
+    let output = run(&[
+        "integrity-checks",
+        "--model",
+        &model,
+        "--catalog-schema",
+        &catalog,
+        "--dialect",
+        "clickhouse",
+    ]);
+    assert_eq!(output.status.code(), Some(0), "{output:?}");
+    assert_eq!(document(&output)["dialect"], "clickhouse");
+    let other = run(&[
+        "integrity-checks",
+        "--model",
+        &model,
+        "--catalog-schema",
+        &catalog,
+        "--dialect",
+        "postgres",
+    ]);
+    assert_usage_error(&other);
+    let reason = String::from_utf8(other.stderr).unwrap();
+    assert!(
+        reason.contains("unknown dialect `postgres`; the dialects are `clickhouse` and `duckdb`"),
+        "{reason}"
+    );
+}
+
+#[test]
+fn arc_5_7_compile_accepts_the_clickhouse_dialect_option() {
+    let test = "compile_clickhouse";
+    let options = scratch_file(test, "options.json", br#"{"dialect": "clickhouse"}"#).unwrap();
+    let output = run_line(&compile_line(
+        test,
+        "compile",
+        &["--compile-options", &options],
+    ));
+    assert_eq!(output.status.code(), Some(0), "{output:?}");
+    let plan = document(&output);
+    assert_eq!(plan["dialect"], "clickhouse");
+    assert!(plan["sql"].as_str().unwrap().contains("SETTINGS"));
+}
+
+#[test]
 fn arc_5_9_migrate_writes_the_migration_report() {
     let model = scratch_file(
         "migrate",

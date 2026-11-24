@@ -42,6 +42,7 @@ command cannot run.
   --compile-options <path>     a JSON object with compile options; an omitted option takes its
                                default
   --audit-record <path>        `compile` with `audit: true`: where the audit record is written
-  --dialect <name>             `integrity-checks`: the dialect, `duckdb` (the default)
+  --dialect <name>             `integrity-checks`: the dialect, `clickhouse` or `duckdb` (the
+                               default)
   --help                       writes this text and exits 0
 ";

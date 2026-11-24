@@ -11,7 +11,7 @@
   },
   "relations": [
     {
-      "source": "shop.main.orders",
+      "source": "shop.orders",
       "columns": [
         {
           "name": "order_id",
@@ -54,7 +54,7 @@
       ]
     },
     {
-      "source": "shop.main.customers",
+      "source": "shop.customers",
       "columns": [
         {
           "name": "customer_id",
@@ -77,7 +77,7 @@
       ]
     },
     {
-      "source": "shop.main.labels",
+      "source": "shop.labels",
       "columns": [
         {
           "name": "label_id",

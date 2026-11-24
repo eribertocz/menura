@@ -3,7 +3,7 @@ WITH
     SELECT
       "order_count" AS "ORDER_COUNT",
       "order_month" AS "ORDER_MONTH"
-    FROM "shop"."main"."orders_price_by_month"
+    FROM "shop"."orders_price_by_month"
   ),
   "menura_2_aggregate" AS (
     SELECT

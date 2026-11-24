@@ -855,6 +855,7 @@ dependencies = [
  "menura-e3-paths",
  "menura-e4-plan",
  "menura-e5-optimize",
+ "menura-generator-clickhouse",
  "menura-generator-duckdb",
  "menura-model",
  "menura-representations",

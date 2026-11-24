@@ -27,10 +27,10 @@ mod summaries;
 
 const MODEL: &str = include_str!("../../../../../conformance/models/e0-typing/model.yaml");
 
-/// The catalog schema of the `e0-typing` model: `shop.main.orders` (`order_id` 32-bit,
+/// The catalog schema of the `e0-typing` model: `shop.orders` (`order_id` 32-bit,
 /// `customer_id` 64-bit, `status` text, `quantity` 32-bit, `price` `decimal(10,2)`, `rate`
 /// `decimal(30,20)`, `discount` nullable 64-bit float, `payload` unsupported, `ordered_on`
-/// date, `ordered_at` nullable timestamp, `note` nullable text) and `shop.main.customers`
+/// date, `ordered_at` nullable timestamp, `note` nullable text) and `shop.customers`
 /// (`customer_id` 32-bit, `customer_code` text, `name` text).
 const CATALOG: &str =
     include_str!("../../../../../conformance/models/e0-typing/catalog-schema.json");
@@ -82,7 +82,7 @@ fn quoted(text: &str) -> String {
     format!("'{}'", text.replace('\'', "''"))
 }
 
-/// A document whose dataset `orders` reads every column of `shop.main.orders` with a field of
+/// A document whose dataset `orders` reads every column of `shop.orders` with a field of
 /// the same name, and has the field `probe` with `field`; the metric `probe` has `metric`.
 fn document(field: &str, metric: &str) -> String {
     let columns = [
@@ -105,7 +105,7 @@ fn document(field: &str, metric: &str) -> String {
     fields.push(element("probe", field));
     format!(
         "version: \"0.1.1\"\nsemantic_model:\n  - name: shop\n    datasets:\n      - name: orders\n        \
-         source: shop.main.orders\n        fields: [{}]\n    metrics: [{}]\n",
+         source: shop.orders\n        fields: [{}]\n    metrics: [{}]\n",
         fields.join(", "),
         element("probe", metric)
     )

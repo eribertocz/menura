@@ -16,7 +16,7 @@ use menura_representations::logical_plan::{Operation, PlanNode};
 
 use crate::body::{SelectBody, statement};
 use crate::error::{GenerateError, InvariantViolation};
-use crate::expressible::check_model_plan;
+use crate::expressible::check_model_plans;
 use crate::expression::Environment;
 use crate::steps::{StepWriter, error, pass_through};
 
@@ -47,9 +47,10 @@ pub struct CheckInputs<'input> {
 ///
 /// # Errors
 ///
-/// [`GenerateError::InexpressibleType`] (`E6-01`) when the plan reads or returns a value of a
-/// type `ClickHouse` cannot express (E6-7.12); otherwise a [`GenerateError`] when the plan
-/// breaks the contract of the generator, or when it needs a
+/// [`GenerateError::InexpressibleSource`] (`E6-01`) when the plan scans a relation `source` of
+/// three or more parts (E6-7.1), then [`GenerateError::InexpressibleType`] (`E6-01`) when it
+/// reads or returns a value of a type `ClickHouse` cannot express (E6-7.12); otherwise a
+/// [`GenerateError`] when the plan breaks the contract of the generator, or when it needs a
 /// value only a query has: a security attribute or the reference time. The time zone of a
 /// check is its `time_zone` slot (CHK-7.3), and the bounds of a `PeriodRange` its
 /// `period_from` and `period_to` slots (CHK-7.4).
@@ -58,7 +59,7 @@ pub fn generate_check_sql(
     catalog: &CatalogSchemaDocument,
     model: &InternalModel,
 ) -> Result<GeneratedCheckSql, GenerateError> {
-    check_model_plan(plan, model, catalog)?;
+    check_model_plans(&[plan], model, catalog)?;
     let environment = environment(CheckInputs { catalog, model });
     let mut writer = StepWriter::new(&environment);
     let written = writer.write(plan)?;
@@ -82,7 +83,7 @@ pub fn generate_validity_check_sql(
     check: &ValidityCheck<'_>,
     inputs: CheckInputs<'_>,
 ) -> Result<GeneratedCheckSql, GenerateError> {
-    check_model_plan(check.rows, inputs.model, inputs.catalog)?;
+    check_model_plans(&[check.rows], inputs.model, inputs.catalog)?;
     let environment = environment(inputs);
     let mut writer = StepWriter::new(&environment);
     let last = writer.validity_check(check)?;
@@ -99,7 +100,7 @@ pub fn generate_periodic_check_sql(
     check: &PeriodicCheck<'_>,
     inputs: CheckInputs<'_>,
 ) -> Result<GeneratedCheckSql, GenerateError> {
-    check_model_plan(check.rows, inputs.model, inputs.catalog)?;
+    check_model_plans(&[check.rows], inputs.model, inputs.catalog)?;
     let environment = environment(inputs);
     let mut writer = StepWriter::new(&environment);
     let last = writer.periodic_check(check)?;
@@ -117,7 +118,9 @@ pub fn generate_snapshot_check_sql(
     check: &SnapshotCheck<'_>,
     inputs: CheckInputs<'_>,
 ) -> Result<GeneratedCheckSql, GenerateError> {
-    check_model_plan(check.rows, inputs.model, inputs.catalog)?;
+    let mut plans = vec![check.rows];
+    plans.extend(check.time.as_ref().map(|time| time.population));
+    check_model_plans(&plans, inputs.model, inputs.catalog)?;
     let environment = environment(inputs);
     let mut writer = StepWriter::new(&environment);
     let last = writer.snapshot_check(check)?;

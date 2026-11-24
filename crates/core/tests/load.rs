@@ -148,7 +148,7 @@ fn arc_5_1_load_returns_a_handle_with_the_load_warnings() {
 
 #[test]
 fn sum_6_1_8_a_summary_build_of_the_coverage_grain_is_admitted() {
-    let state = summaries_state("shop.main.orders_daily", &["2026-10-01", "2026-10-02"]);
+    let state = summaries_state("shop.orders_daily", &["2026-10-01", "2026-10-02"]);
     let handle = with_state(&summaries_handle().unwrap(), state.as_bytes());
     assert!(handle.catalog_state().is_some());
     assert!(warning_codes(&handle).is_empty());
@@ -156,7 +156,7 @@ fn sum_6_1_8_a_summary_build_of_the_coverage_grain_is_admitted() {
 
 #[test]
 fn cat_8_8_a_summary_build_on_a_relation_that_is_not_a_summary_is_ignored_with_wcat_03() {
-    let state = summaries_state("shop.main.orders", &["2026-10-01", "2026-10-02"]);
+    let state = summaries_state("shop.orders", &["2026-10-01", "2026-10-02"]);
     let handle = with_state(&summaries_handle().unwrap(), state.as_bytes());
     assert!(handle.catalog_state().is_none());
     assert_eq!(warning_codes(&handle), ["WCAT-03"]);
@@ -167,7 +167,7 @@ fn cat_8_8_a_summary_build_on_a_relation_that_is_not_a_summary_is_ignored_with_w
 
 #[test]
 fn cat_8_8_a_summary_build_with_periods_of_another_grain_is_ignored_with_wcat_03() {
-    let state = summaries_state("shop.main.orders_daily", &["2026-09", "2026-10"]);
+    let state = summaries_state("shop.orders_daily", &["2026-09", "2026-10"]);
     let handle = with_state(&summaries_handle().unwrap(), state.as_bytes());
     assert!(handle.catalog_state().is_none());
     assert_eq!(warning_codes(&handle), ["WCAT-03"]);
@@ -175,7 +175,7 @@ fn cat_8_8_a_summary_build_with_periods_of_another_grain_is_ignored_with_wcat_03
 
 #[test]
 fn cat_8_8_load_checks_the_summary_builds_of_its_catalog_state() {
-    let state = summaries_state("shop.main.orders", &["2026-10-01"]);
+    let state = summaries_state("shop.orders", &["2026-10-01"]);
     let handle = load(
         SUMMARIES_MODEL.as_bytes(),
         SUMMARIES_CATALOG.as_bytes(),
@@ -264,7 +264,7 @@ fn cat_9_1_a_catalog_state_that_is_not_utf8_is_wcat_01_at_the_empty_pointer() {
 
 #[test]
 fn arc_5_2_a_state_of_another_schema_document_is_wcat_04() {
-    let state = summaries_state("shop.main.orders_daily", &["2026-10-01"])
+    let state = summaries_state("shop.orders_daily", &["2026-10-01"])
         .replace(r#""snapshot": "e0-summaries""#, r#""snapshot": "other""#);
     let handle = with_state(&summaries_handle().unwrap(), state.as_bytes());
     assert_eq!(warning_codes(&handle), ["WCAT-04"]);
@@ -273,7 +273,7 @@ fn arc_5_2_a_state_of_another_schema_document_is_wcat_04() {
 #[test]
 fn arc_5_1_with_state_returns_a_new_handle_and_keeps_the_model() {
     let handle = summaries_handle().unwrap();
-    let state = summaries_state("shop.main.orders_daily", &["2026-10-01"]);
+    let state = summaries_state("shop.orders_daily", &["2026-10-01"]);
     let with = with_state(&handle, state.as_bytes());
     assert!(handle.catalog_state().is_none());
     assert!(with.catalog_state().is_some());

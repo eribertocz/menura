@@ -7,7 +7,7 @@ semantic_model:
         data: '{"namespace": "menura", "version": 1, "security_context": {"roles": ["analyst"], "attributes": []}}'
     datasets:
       - name: orders
-        source: shop.main.orders
+        source: shop.orders
         primary_key: [order_id]
         fields:
           - name: order_id
@@ -23,7 +23,7 @@ semantic_model:
           - vendor_name: COMMON
             data: '{"namespace": "menura", "version": 1, "access": {"mode": "roles", "roles": ["analyst"]}}'
       - name: orders_price_by_month
-        source: shop.main.orders_price_by_month
+        source: shop.orders_price_by_month
         primary_key: [order_month]
         fields:
           - name: order_month
@@ -36,7 +36,7 @@ semantic_model:
           - vendor_name: COMMON
             data: '{"namespace": "menura", "version": 1, "access": {"mode": "internal"}, "aggregate": {"of": "orders", "dimensions": [{"field": "order_month", "base": "order_date", "grain": "month"}], "measures": [{"field": "price_sum", "base_aggregate": "SUM(orders.price)"}, {"field": "order_count", "base_aggregate": "COUNT(orders.order_id)"}], "coverage_field": "order_month"}}'
       - name: orders_created_by_month
-        source: shop.main.orders_created_by_month
+        source: shop.orders_created_by_month
         primary_key: [order_month]
         fields:
           - name: order_month

@@ -1,3 +1,3 @@
 SELECT COUNT(customers.customer_id) AS customer_count
-FROM shop.main.customers AS customers
-JOIN shop.main.stores AS stores ON customers.store_id = stores.store_id
+FROM shop.customers AS customers
+JOIN shop.stores AS stores ON customers.store_id = stores.store_id

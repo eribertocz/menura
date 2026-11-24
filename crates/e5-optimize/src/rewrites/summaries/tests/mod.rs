@@ -138,7 +138,7 @@ pub(super) fn location() -> SourceLocation {
 fn dataset(name: &str) -> Dataset {
     Dataset {
         name: NormalizedName::new(name),
-        source: format!("shop.main.{}", name.to_lowercase()),
+        source: format!("shop.{}", name.to_lowercase()),
         fields: sorted_fields(name)
             .into_iter()
             .map(|(field, expression, logical_type)| Field {
@@ -227,7 +227,7 @@ pub(super) fn schema() -> CatalogSchemaDocument {
     let relations = [ORDERS, MONTHLY, "CUSTOMERS"]
         .into_iter()
         .map(|name| RelationSchema {
-            source: format!("shop.main.{}", name.to_lowercase()),
+            source: format!("shop.{}", name.to_lowercase()),
             columns: fields_of(name)
                 .into_iter()
                 .filter_map(|(_, expression, logical_type)| match expression {

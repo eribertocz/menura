@@ -7,7 +7,7 @@ semantic_model:
         data: '{"namespace": "menura", "version": 1, "security_context": {"roles": ["analyst"], "attributes": []}}'
     datasets:
       - name: '"a"b"'
-        source: shop.main.orders
+        source: shop.orders
         primary_key: [order_id]
         fields:
           - name: order_id

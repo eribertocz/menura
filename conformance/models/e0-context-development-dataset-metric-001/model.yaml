@@ -6,7 +6,7 @@ nonportable_extensions:
     data: {namespace: menura, version: 1, security_context: {roles: [analyst], attributes: []}}
 datasets:
   - name: invoices
-    source: shop.main.invoices
+    source: shop.invoices
     primary_key: [invoice_id]
     fields:
       - name: invoice_id
@@ -27,7 +27,7 @@ datasets:
       - vendor_name: COMMON
         data: {namespace: menura, version: 1, access: {mode: roles, roles: [analyst]}}
   - name: customers
-    source: shop.main.customers
+    source: shop.customers
     primary_key: [customer_id]
     fields:
       - name: customer_id

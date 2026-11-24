@@ -11,7 +11,7 @@
   },
   "relations": [
     {
-      "source": "shop.main.invoices",
+      "source": "shop.invoices",
       "columns": [
         {
           "name": "invoice_id",
@@ -54,7 +54,7 @@
       ]
     },
     {
-      "source": "shop.main.customers",
+      "source": "shop.customers",
       "columns": [
         {
           "name": "customer_id",

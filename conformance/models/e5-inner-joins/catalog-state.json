@@ -11,7 +11,7 @@
   },
   "relations": [
     {
-      "source": "shop.main.customers",
+      "source": "shop.customers",
       "row_count_estimate": 2,
       "version": {
         "origin": "conformance:e5-inner-joins",
@@ -19,7 +19,7 @@
       }
     },
     {
-      "source": "shop.main.orders",
+      "source": "shop.orders",
       "row_count_estimate": 4,
       "version": {
         "origin": "conformance:e5-inner-joins",
@@ -27,7 +27,7 @@
       }
     },
     {
-      "source": "shop.main.stores",
+      "source": "shop.stores",
       "row_count_estimate": 2,
       "version": {
         "origin": "conformance:e5-inner-joins",
@@ -39,18 +39,18 @@
     {
       "target": "ORDERS_CUSTOMERS",
       "check": "orphan_keys",
-      "definition_hash": "966d965dbcfb90a78d70231073f617b876db7edaceb0bdb226a079605f7a9ff5",
+      "definition_hash": "c4c39401313681262409185ecd215261e35f32322d42a87a0a8fcf94d7c1afcf",
       "status": "passed",
       "verified": [
         {
-          "source": "shop.main.orders",
+          "source": "shop.orders",
           "version": {
             "origin": "conformance:e5-inner-joins",
             "snapshot": "orders-1"
           }
         },
         {
-          "source": "shop.main.customers",
+          "source": "shop.customers",
           "version": {
             "origin": "conformance:e5-inner-joins",
             "snapshot": "customers-1"
@@ -61,18 +61,18 @@
     {
       "target": "ORDERS_STORES",
       "check": "orphan_keys",
-      "definition_hash": "981e4df6cbcc35992a1a4a8495e1de586ceb2c7e3d9cc58f921b59dbb827e6ff",
+      "definition_hash": "39caf0e9a58a4bd04d644ff9fd416938d64a19e46e72ef9775fa61db74f8b58f",
       "status": "passed",
       "verified": [
         {
-          "source": "shop.main.orders",
+          "source": "shop.orders",
           "version": {
             "origin": "conformance:e5-inner-joins",
             "snapshot": "orders-1"
           }
         },
         {
-          "source": "shop.main.stores",
+          "source": "shop.stores",
           "version": {
             "origin": "conformance:e5-inner-joins",
             "snapshot": "stores-1"

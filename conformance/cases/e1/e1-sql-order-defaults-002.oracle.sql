@@ -1,6 +1,6 @@
 SELECT
   channel AS channel,
   COUNT(sale_id) AS n
-FROM shop.main.sales
+FROM shop.sales
 GROUP BY channel
 ORDER BY channel DESC NULLS LAST

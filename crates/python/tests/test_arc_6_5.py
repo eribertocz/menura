@@ -84,7 +84,12 @@ class Arc65(unittest.TestCase):
         checks = handle.integrity_checks()
         self.assertEqual(json.loads(checks.document)["contract"], "menura.integrity_checks")
         self.assertEqual(handle.integrity_checks("duckdb").document, checks.document)
-        with self.assertRaisesRegex(ValueError, "^unknown dialect `postgres`; the dialect is `duckdb`$"):
+        self.assertEqual(
+            json.loads(handle.integrity_checks("clickhouse").document)["dialect"], "clickhouse"
+        )
+        with self.assertRaisesRegex(
+            ValueError, "^unknown dialect `postgres`; the dialects are `clickhouse` and `duckdb`$"
+        ):
             handle.integrity_checks("postgres")
         dependencies = handle.dependencies()
         self.assertEqual(

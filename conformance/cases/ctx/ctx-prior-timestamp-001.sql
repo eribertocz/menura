@@ -3,7 +3,7 @@ WITH
     SELECT
       "amount" AS "AMOUNT",
       "ordered_at" AS "ORDERED_AT"
-    FROM "shop"."main"."orders"
+    FROM "shop"."orders"
   ),
   "menura_2_filter" AS (
     SELECT
@@ -33,7 +33,7 @@ WITH
     SELECT
       "amount" AS "AMOUNT",
       "ordered_at" AS "ORDERED_AT"
-    FROM "shop"."main"."orders"
+    FROM "shop"."orders"
   ),
   "menura_6_filter" AS (
     SELECT

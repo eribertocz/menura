@@ -1,12 +1,12 @@
 WITH invoices_branch AS (
   SELECT regions.name AS name, SUM(invoices.collected) AS collected
-  FROM shop.main.invoices AS invoices
-  LEFT JOIN shop.main.regions AS regions ON invoices.region_id = regions.region_id
+  FROM shop.invoices AS invoices
+  LEFT JOIN shop.regions AS regions ON invoices.region_id = regions.region_id
   GROUP BY regions.name
 ), budgets_branch AS (
   SELECT regions.name AS name, SUM(budgets.amount) AS budget_total
-  FROM shop.main.budgets AS budgets
-  LEFT JOIN shop.main.regions AS regions ON budgets.region_id = regions.region_id
+  FROM shop.budgets AS budgets
+  LEFT JOIN shop.regions AS regions ON budgets.region_id = regions.region_id
   GROUP BY regions.name
 ), stitch_keys AS (
   SELECT name FROM invoices_branch UNION SELECT name FROM budgets_branch

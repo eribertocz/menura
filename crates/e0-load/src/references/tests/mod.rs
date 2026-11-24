@@ -35,9 +35,9 @@ macro_rules! conformance_model {
     };
 }
 
-/// The catalog schema of the `e0-references-missing` model: `shop.main.orders`
-/// (`order_id`, `customer_id`, `status`, `amount`), `shop.main.customers` (`customer_id`,
-/// `name`) and `shop.main.labels` (`label_id`, `name`).
+/// The catalog schema of the `e0-references-missing` model: `shop.orders`
+/// (`order_id`, `customer_id`, `status`, `amount`), `shop.customers` (`customer_id`,
+/// `name`) and `shop.labels` (`label_id`, `name`).
 const CATALOG: &str = conformance_file!("e0-references-missing", "catalog-schema.json");
 
 fn resolve(files: (&str, &str)) -> Result<References, ReferenceRejection> {
@@ -109,7 +109,7 @@ fn document(datasets: &str, rest: &str) -> String {
 /// The dataset `orders` with the fields `order_id` and `amount` and the primary key `keys`.
 fn orders(keys: &str, extra_fields: &str) -> String {
     format!(
-        "{{name: orders, source: shop.main.orders, primary_key: [{keys}], fields: [\
+        "{{name: orders, source: shop.orders, primary_key: [{keys}], fields: [\
          {{name: order_id, expression: {{dialects: [{{dialect: ANSI_SQL, expression: order_id}}]}}}},\
          {{name: amount, expression: {{dialects: [{{dialect: ANSI_SQL, expression: amount}}]}}}}{extra_fields}]}}"
     )

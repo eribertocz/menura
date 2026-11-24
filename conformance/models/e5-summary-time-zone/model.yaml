@@ -7,7 +7,7 @@ semantic_model:
         data: '{"namespace": "menura", "version": 1, "security_context": {"roles": ["analyst", "north"], "attributes": []}}'
     datasets:
       - name: orders
-        source: shop.main.orders
+        source: shop.orders
         primary_key: [order_id]
         fields:
           - name: order_id
@@ -26,7 +26,7 @@ semantic_model:
           - vendor_name: COMMON
             data: '{"namespace": "menura", "version": 1, "access": {"mode": "roles", "roles": ["analyst", "north"]}, "row_access": [{"name": "every_region", "condition": "TRUE", "roles": ["analyst"]}, {"name": "north_only", "condition": "region = ''NORTH''", "roles": ["north"]}]}'
       - name: orders_by_created_day
-        source: shop.main.orders_by_created_day
+        source: shop.orders_by_created_day
         primary_key: [order_month, created_day]
         fields:
           - name: order_month

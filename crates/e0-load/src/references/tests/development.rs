@@ -17,7 +17,7 @@ fn development(files: (&str, &str)) -> References {
 /// `amount` and whose dataset metrics are `metrics`, in the YAML flow style.
 fn with_dataset_metrics(metrics: &str) -> String {
     format!(
-        "version: \"0.3.0.dev0\"\nname: shop\ndatasets:\n  - {{name: orders, source: shop.main.orders, \
+        "version: \"0.3.0.dev0\"\nname: shop\ndatasets:\n  - {{name: orders, source: shop.orders, \
          primary_key: [order_id], fields: [{{name: order_id, expression: {{sql: order_id}}}}, \
          {{name: amount, expression: {{sql: amount}}}}], metrics: [{metrics}]}}\n"
     )
@@ -191,7 +191,7 @@ fn e0d_3_4_a_missing_reference_comes_before_an_unlisted_form_in_a_dataset_metric
 #[test]
 fn oss_5_1_the_compiled_sql_variant_is_the_one_resolved() {
     let document = "version: \"0.3.0.dev0\"\nname: shop\ndatasets:\n  - {name: orders, \
-                    source: shop.main.orders, primary_key: [order_id], fields: [\
+                    source: shop.orders, primary_key: [order_id], fields: [\
                     {name: order_id, expression: {sql: order_id}}, \
                     {name: fee, expression: {sql: fee, dialects: [{dialect: ANSI_SQL, expression: amount}]}}]}\n";
     assert_eq!(

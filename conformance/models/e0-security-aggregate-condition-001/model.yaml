@@ -7,7 +7,7 @@ semantic_model:
         data: '{"namespace": "menura", "version": 1, "security_context": {"roles": ["admin", "analyst"], "attributes": [{"name": "regions", "type": "list<text>"}, {"name": "area_id", "type": "integer"}, {"name": "limit", "type": "decimal(18,2)"}]}}'
     datasets:
       - name: orders
-        source: shop.main.orders
+        source: shop.orders
         primary_key: [order_id]
         fields:
           - name: order_id
@@ -24,7 +24,7 @@ semantic_model:
           - vendor_name: COMMON
             data: '{"namespace": "menura", "version": 1, "access": {"mode": "roles", "roles": ["analyst", "admin"], "fields": [{"names": ["unit_cost"], "roles": ["admin"]}]}, "row_access": [{"name": "large_scope", "condition": "SUM(amount) > 100"}]}'
       - name: notes
-        source: shop.main.notes
+        source: shop.notes
         primary_key: [note_id]
         fields:
           - name: note_id

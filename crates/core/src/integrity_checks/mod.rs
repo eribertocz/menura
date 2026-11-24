@@ -19,11 +19,11 @@ use menura_contracts::types::descriptions::{
     BuildQuery, CheckKind as ContractCheckKind, CheckParameter, IntegrityCheck,
     IntegrityChecksContract, IntegrityChecksDocument,
 };
-use menura_generator_duckdb::{GeneratedCheckSql, generate_check_sql};
 use menura_model::internal_model::{CheckKind, NormalizedName, RecordedCheck};
 use menura_representations::logical_plan::PlanNode;
 
 use crate::compile::InternalError;
+use crate::dialect_sql::{CheckShape, CheckSql, Sources, check_sql};
 use crate::handle::Handle;
 use crate::stop::Stop;
 use key_columns::STAGE;
@@ -47,8 +47,9 @@ use summary_compare::summary_check_plan;
 ///
 /// # Errors
 ///
-/// The compile error document (PLN-5) with `E_INTERNAL`, without location, for a defect of the
-/// compiler (PLN-5.1a), with the handle's warnings.
+/// The compile error document (PLN-5), with the handle's warnings: `E6-01` when the
+/// `clickhouse` dialect cannot express a value a check reads (E6-7.11, E6-7.12), `E_INTERNAL`,
+/// without location, for a defect of the compiler (PLN-5.1a).
 ///
 /// # Example
 ///
@@ -68,15 +69,12 @@ pub fn integrity_checks(
     generated_checks(handle, dialect).map_err(|error| CompileErrorDocument {
         contract: CompileErrorContract::CompileError,
         contract_version: ContractKind::CompileError.latest_version(),
-        errors: vec![Stop::from(error).into_diagnostic()],
+        errors: vec![error.into_diagnostic()],
         warnings: handle.warnings().cloned().collect(),
     })
 }
 
-fn generated_checks(
-    handle: &Handle,
-    dialect: Dialect,
-) -> Result<IntegrityChecksDocument, InternalError> {
+fn generated_checks(handle: &Handle, dialect: Dialect) -> Result<IntegrityChecksDocument, Stop> {
     let checks = handle
         .model()
         .parts()
@@ -99,8 +97,7 @@ fn generated_check(
     handle: &Handle,
     dialect: Dialect,
     recorded: &RecordedCheck,
-) -> Result<Option<IntegrityCheck>, InternalError> {
-    let Dialect::Duckdb = dialect;
+) -> Result<Option<IntegrityCheck>, Stop> {
     let model = handle.model();
     let catalog = handle.catalog_schema();
     match recorded.kind {
@@ -109,8 +106,8 @@ fn generated_check(
             relationship_check(handle, dialect, recorded).map(Some)
         }
         CheckKind::Population => {
-            let (generated, dataset) =
-                population_check_sql(model, catalog, &NormalizedName::new(&recorded.target))?;
+            let target = NormalizedName::new(&recorded.target);
+            let (generated, dataset) = population_check_sql(dialect, model, catalog, &target)?;
             let check = row_check(
                 handle,
                 recorded,
@@ -122,7 +119,7 @@ fn generated_check(
         }
         CheckKind::SemiAdditive => {
             let Some((generated, datasets)) =
-                semi_additive_check_sql(model, catalog, &recorded.target)?
+                semi_additive_check_sql(dialect, model, catalog, &recorded.target)?
             else {
                 return Ok(None);
             };
@@ -145,9 +142,9 @@ fn row_check(
     handle: &Handle,
     recorded: &RecordedCheck,
     kind: ContractCheckKind,
-    generated: GeneratedCheckSql,
+    generated: CheckSql,
     read: &[&NormalizedName],
-) -> Result<IntegrityCheck, InternalError> {
+) -> Result<IntegrityCheck, Stop> {
     Ok(IntegrityCheck {
         check_id: recorded.check_id.clone(),
         kind,
@@ -166,7 +163,7 @@ fn summary_check(
     handle: &Handle,
     dialect: Dialect,
     recorded: &RecordedCheck,
-) -> Result<IntegrityCheck, InternalError> {
+) -> Result<IntegrityCheck, Stop> {
     let model = handle.model();
     let summary = model
         .parts()
@@ -207,7 +204,7 @@ fn relationship_check(
     handle: &Handle,
     dialect: Dialect,
     recorded: &RecordedCheck,
-) -> Result<IntegrityCheck, InternalError> {
+) -> Result<IntegrityCheck, Stop> {
     let model = handle.model();
     let catalog = handle.catalog_schema();
     let relationship = model
@@ -233,7 +230,8 @@ fn relationship_check(
             return Err(InternalError::new(
                 STAGE,
                 format!("checks of kind {} are not generated yet", other.as_str()),
-            ));
+            )
+            .into());
         }
     };
     let (sql, parameters) = generated_sql(handle, dialect, &plan)?;
@@ -255,14 +253,13 @@ fn generated_sql(
     handle: &Handle,
     dialect: Dialect,
     plan: &PlanNode,
-) -> Result<(String, Vec<CheckParameter>), InternalError> {
-    match dialect {
-        Dialect::Duckdb => {
-            let generated = generate_check_sql(plan, handle.catalog_schema(), handle.model())
-                .map_err(|error| InternalError::new("E6", format!("{error:?}")))?;
-            Ok((generated.sql, generated.parameters))
-        }
-    }
+) -> Result<(String, Vec<CheckParameter>), Stop> {
+    let sources = Sources {
+        catalog: handle.catalog_schema(),
+        model: handle.model(),
+    };
+    let generated = check_sql(dialect, &CheckShape::Plan(plan), sources)?;
+    Ok((generated.sql, generated.parameters))
 }
 
 /// The `source` of each dataset of `read`, each once, sorted in CON-5 order (CHK-2.4).

@@ -122,8 +122,8 @@ fn der_5_1_1_e0c_36_a_derived_metric_with_additivity() {
 #[test]
 fn der_5_1_1_e0c_05_derived_is_valid_on_metrics_only() {
     let model = with(
-        "      - name: customers\n        source: shop.main.customers\n",
-        "      - name: customers\n        source: shop.main.customers\n        custom_extensions:\n          \
+        "      - name: customers\n        source: shop.customers\n",
+        "      - name: customers\n        source: shop.customers\n        custom_extensions:\n          \
          - vendor_name: COMMON\n            data: '{\"namespace\": \"menura\", \"version\": 1, \"derived\": {}}'\n",
     );
     assert_eq!(

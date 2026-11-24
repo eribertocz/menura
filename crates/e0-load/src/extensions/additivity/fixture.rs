@@ -51,8 +51,8 @@ const MODELS: [(&str, &str); 10] = [
     ),
 ];
 
-/// The catalog schema of every `e0-additivity*` model: `shop.main.debt` (`customer_id` 32-bit,
-/// `period` date, `balance` 32-bit) and `shop.main.customers` (`customer_id` 32-bit,
+/// The catalog schema of every `e0-additivity*` model: `shop.debt` (`customer_id` 32-bit,
+/// `period` date, `balance` 32-bit) and `shop.customers` (`customer_id` 32-bit,
 /// `category` text, `valid_from` date, nullable `valid_to` date).
 pub(crate) const CATALOG: &str =
     include_str!("../../../../../conformance/models/e0-additivity/catalog-schema.json");

@@ -43,7 +43,7 @@ pub(super) fn pair(code: &'static str, pointer: &str) -> (&'static str, String) 
 /// A minimal development-line document, with `field_lines` added to its only field.
 fn minimal(field_lines: &str) -> String {
     format!(
-        "version: 0.3.0.dev0\nname: shop\ndatasets:\n  - name: orders\n    source: shop.main.orders\n    fields:\n      - name: amount\n{field_lines}"
+        "version: 0.3.0.dev0\nname: shop\ndatasets:\n  - name: orders\n    source: shop.orders\n    fields:\n      - name: amount\n{field_lines}"
     )
 }
 
@@ -296,7 +296,7 @@ fn mdl_1_1_the_development_document_without_the_option_fails() {
 
 #[test]
 fn mdl_1_1_a_release_document_fails_with_the_development_option() {
-    let text = "version: \"0.1.1\"\nsemantic_model:\n  - name: shop\n    datasets: [{name: orders, source: shop.main.orders}]\n";
+    let text = "version: \"0.1.1\"\nsemantic_model:\n  - name: shop\n    datasets: [{name: orders, source: shop.orders}]\n";
     assert_eq!(
         errors(text, OssieFormat::Development),
         [

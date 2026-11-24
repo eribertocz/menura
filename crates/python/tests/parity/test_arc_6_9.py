@@ -198,6 +198,22 @@ class Arc69(unittest.TestCase):
                     handle.with_state(state.read_bytes()).describe(context.read_bytes()),
                 )
 
+    def test_arc_6_4_the_clickhouse_dialect_argument_equals_the_cli(self):
+        model = MODELS / "slice" / "model.yaml"
+        schema = MODELS / "slice" / "catalog-schema.json"
+        flags = ["--model", model, "--catalog-schema", schema]
+        handle = menura.Handle.load(model.read_bytes(), schema.read_bytes())
+        self.assert_same(
+            run_cli("integrity-checks", *flags, "--dialect", "clickhouse"),
+            handle.integrity_checks("clickhouse"),
+        )
+        status, output, error = run_cli("integrity-checks", *flags, "--dialect", "postgres")
+        self.assertEqual((status, output), (2, ""))
+        with self.assertRaises(ValueError) as raised:
+            handle.integrity_checks("postgres")
+        reason = error.removeprefix("menura: ").split("\n", 1)[0]
+        self.assertEqual(str(raised.exception), reason)
+
     def test_arc_6_9_usage_errors_carry_the_cli_reason(self):
         model = MODELS / "slice" / "model.yaml"
         schema = MODELS / "slice" / "catalog-schema.json"

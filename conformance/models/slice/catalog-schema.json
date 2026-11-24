@@ -11,7 +11,7 @@
   },
   "relations": [
     {
-      "source": "shop.main.sales",
+      "source": "shop.sales",
       "columns": [
         {
           "name": "sale_id",
@@ -118,7 +118,7 @@
       ]
     },
     {
-      "source": "shop.main.targets",
+      "source": "shop.targets",
       "columns": [
         {
           "name": "region",
@@ -141,7 +141,7 @@
       ]
     },
     {
-      "source": "shop.main.returns",
+      "source": "shop.returns",
       "columns": [
         {
           "name": "return_id",

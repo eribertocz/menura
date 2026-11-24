@@ -28,9 +28,9 @@
     }
   ],
   "inputs": {
-    "catalog_schema": "91880f14f5c474326dab7ce0edce1f6aa5df9eeb70a96352bb07a1c48c54bb22",
+    "catalog_schema": "464ab161675964467fa6511f388a1695880288aab54fcf6b5467c47b4d4635ed",
     "catalog_state": null,
-    "model": "ce65d82cd8213f1180a7ee76fe057a1b0c5600978b01a910b267de57e6232fbe",
+    "model": "c4779ab20d6e18dbcf1834dfb6ec5a9bab4263d718dac49cdf16bab154292bc4",
     "query": "2efeb78aae42408e183e0bf7e3e1e37d25c306a3dcd787d1f476f849373ada54",
     "security_fingerprint": "faceca80cb17680ed7e76414ca277a3367877d395538ce9d3db1a1b82b7a6ed0"
   },

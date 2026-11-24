@@ -31,8 +31,8 @@ mod rules;
 
 const MODEL: &str = include_str!("../../../../../conformance/models/e0-metrics/model.yaml");
 
-/// The catalog schema of the `e0-metrics` models: `shop.main.orders` (`order_id`,
-/// `customer_id`, `status` text, `amount`) and `shop.main.customers` (`customer_id`, `region`
+/// The catalog schema of the `e0-metrics` models: `shop.orders` (`order_id`,
+/// `customer_id`, `status` text, `amount`) and `shop.customers` (`customer_id`, `region`
 /// text, `age`); every integer is 32-bit and no column is nullable.
 const CATALOG: &str =
     include_str!("../../../../../conformance/models/e0-metrics/catalog-schema.json");
@@ -140,8 +140,8 @@ fn document(expression: &str) -> String {
     };
     format!(
         "version: \"0.1.1\"\nsemantic_model:\n  - name: shop\n    datasets:\n      - name: orders\n        \
-         source: shop.main.orders\n        fields: [{}]\n      - name: customers\n        \
-         source: shop.main.customers\n        fields: [{}]\n    metrics:\n      - name: probe\n        \
+         source: shop.orders\n        fields: [{}]\n      - name: customers\n        \
+         source: shop.customers\n        fields: [{}]\n    metrics:\n      - name: probe\n        \
          expression: {{dialects: [{{dialect: ANSI_SQL, expression: '{}'}}]}}\n",
         fields(&["order_id", "customer_id", "status", "amount"]),
         fields(&["customer_id", "region", "age"]),

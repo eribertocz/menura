@@ -7,7 +7,7 @@ semantic_model:
         data: '{"namespace": "menura", "version": 1, "security_context": {"roles": ["analyst"], "attributes": [{"name": "regions", "type": "list<text>"}]}}'
     datasets:
       - name: desks
-        source: shop.main.desks
+        source: shop.desks
         primary_key: [desk_id]
         fields:
           - name: desk_id
@@ -18,7 +18,7 @@ semantic_model:
           - vendor_name: COMMON
             data: '{"namespace": "menura", "version": 1, "access": {"mode": "roles", "roles": ["analyst"]}, "row_access": [{"name": "desks_region_scope", "condition": "region IN (USER_ATTRIBUTE(''regions''))"}]}'
       - name: items
-        source: shop.main.items
+        source: shop.items
         primary_key: [item_id]
         fields:
           - name: item_id
@@ -31,7 +31,7 @@ semantic_model:
           - vendor_name: COMMON
             data: '{"namespace": "menura", "version": 1, "access": {"mode": "roles", "roles": ["analyst"]}}'
       - name: queues
-        source: shop.main.queues
+        source: shop.queues
         primary_key: [queue_id]
         fields:
           - name: queue_id
@@ -42,7 +42,7 @@ semantic_model:
           - vendor_name: COMMON
             data: '{"namespace": "menura", "version": 1, "access": {"mode": "roles", "roles": ["analyst"]}, "row_access": [{"name": "queues_region_scope", "condition": "region IN (USER_ATTRIBUTE(''regions''))"}]}'
       - name: shelves
-        source: shop.main.shelves
+        source: shop.shelves
         primary_key: [site_code, shelf_no]
         fields:
           - name: site_code
@@ -55,7 +55,7 @@ semantic_model:
           - vendor_name: COMMON
             data: '{"namespace": "menura", "version": 1, "access": {"mode": "roles", "roles": ["analyst"]}, "row_access": [{"name": "shelves_region_scope", "condition": "region IN (USER_ATTRIBUTE(''regions''))"}]}'
       - name: tickets
-        source: shop.main.tickets
+        source: shop.tickets
         primary_key: [ticket_id]
         fields:
           - name: ticket_id

@@ -4,7 +4,7 @@ semantic_model:
     description: AGG() outside a derived metric, a derived metric that reads it, and AGG() in a field
     datasets:
       - name: invoices
-        source: shop.main.invoices
+        source: shop.invoices
         primary_key: [invoice_id]
         fields:
           - name: invoice_id

@@ -138,7 +138,7 @@ fn e0_4_3_a_rejection_keeps_its_warnings_in_document_order() {
     let datasets = format!(
         "{}, {}",
         orders("order_id", &field("discount", "discount")),
-        orders("order_id", "").replace("source: shop.main.orders", "source: shop.main.refunds")
+        orders("order_id", "").replace("source: shop.orders", "source: shop.refunds")
     );
     let rejection = rejected((&document(&datasets, ""), CATALOG));
     assert_eq!(
