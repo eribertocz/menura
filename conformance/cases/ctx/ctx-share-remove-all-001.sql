@@ -6,7 +6,7 @@ WITH
       "order_id" AS "ORDER_ID",
       "status" AS "STATUS",
       ROW_NUMBER() OVER () AS "menura.row_identity"
-    FROM "shop"."main"."orders"
+    FROM "shop"."orders"
   ),
   "menura_2_filter" AS (
     SELECT
@@ -22,7 +22,7 @@ WITH
     SELECT
       "customer_id" AS "ORDERS_CUSTOMERS.CUSTOMER_ID",
       "region" AS "ORDERS_CUSTOMERS.REGION"
-    FROM "shop"."main"."customers"
+    FROM "shop"."customers"
   ),
   "menura_4_join" AS (
     SELECT
@@ -61,7 +61,7 @@ WITH
     SELECT
       "amount" AS "AMOUNT",
       "status" AS "STATUS"
-    FROM "shop"."main"."orders"
+    FROM "shop"."orders"
   ),
   "menura_8_filter" AS (
     SELECT
@@ -95,7 +95,7 @@ WITH
     SELECT
       "order_id" AS "ORDER_ID",
       "status" AS "STATUS"
-    FROM "shop"."main"."orders"
+    FROM "shop"."orders"
   ),
   "menura_13_filter" AS (
     SELECT

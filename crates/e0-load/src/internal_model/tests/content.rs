@@ -17,7 +17,7 @@ fn e0h_1_1_the_same_input_builds_equal_models() {
 fn e0h_2_datasets_hold_source_typed_fields_keys_and_access() {
     let model = fixture();
     let orders = model.dataset(&name("orders")).expect("orders");
-    assert_eq!(orders.source, "shop.main.orders");
+    assert_eq!(orders.source, "shop.orders");
     assert_eq!(orders.primary_key, vec![name("order_id")]);
     assert!(!orders.summary);
     let amount = orders.field(&name("amount")).expect("amount");

@@ -7,7 +7,7 @@
     "physical_inputs": [
       {
         "column": "region",
-        "source": "shop.main.sales"
+        "source": "shop.sales"
       }
     ],
     "security_policies": [],
@@ -22,7 +22,7 @@
     "physical_inputs": [
       {
         "column": "amount",
-        "source": "shop.main.sales"
+        "source": "shop.sales"
       }
     ],
     "security_policies": [],
@@ -37,7 +37,7 @@
     "physical_inputs": [
       {
         "column": "quantity",
-        "source": "shop.main.sales"
+        "source": "shop.sales"
       }
     ],
     "security_policies": [],
@@ -52,7 +52,7 @@
     "physical_inputs": [
       {
         "column": "sale_id",
-        "source": "shop.main.sales"
+        "source": "shop.sales"
       }
     ],
     "security_policies": [],

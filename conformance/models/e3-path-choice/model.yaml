@@ -7,7 +7,7 @@ semantic_model:
         data: '{"namespace": "menura", "version": 1, "security_context": {"roles": ["analyst"], "attributes": []}}'
     datasets:
       - name: orders
-        source: shop.main.orders
+        source: shop.orders
         primary_key: [order_id]
         fields:
           - name: order_id
@@ -24,7 +24,7 @@ semantic_model:
           - vendor_name: COMMON
             data: '{"namespace": "menura", "version": 1, "access": {"mode": "roles", "roles": ["analyst"]}}'
       - name: calendar
-        source: shop.main.calendar
+        source: shop.calendar
         primary_key: [day]
         fields:
           - name: day
@@ -38,7 +38,7 @@ semantic_model:
           - vendor_name: COMMON
             data: '{"namespace": "menura", "version": 1, "access": {"mode": "roles", "roles": ["analyst"]}}'
       - name: fiscal_years
-        source: shop.main.fiscal_years
+        source: shop.fiscal_years
         primary_key: [fiscal_year]
         fields:
           - name: fiscal_year
@@ -49,7 +49,7 @@ semantic_model:
           - vendor_name: COMMON
             data: '{"namespace": "menura", "version": 1, "access": {"mode": "roles", "roles": ["analyst"]}}'
       - name: customers
-        source: shop.main.customers
+        source: shop.customers
         primary_key: [customer_id]
         fields:
           - name: customer_id
@@ -60,7 +60,7 @@ semantic_model:
           - vendor_name: COMMON
             data: '{"namespace": "menura", "version": 1, "access": {"mode": "roles", "roles": ["analyst"]}}'
       - name: regions
-        source: shop.main.regions
+        source: shop.regions
         primary_key: [region_id]
         fields:
           - name: region_id

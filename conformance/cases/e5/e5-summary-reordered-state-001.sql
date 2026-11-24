@@ -6,7 +6,7 @@ WITH
       "order_count" AS "ORDER_COUNT",
       "order_month" AS "ORDER_MONTH",
       "region" AS "REGION"
-    FROM "shop"."main"."orders_by_region_month"
+    FROM "shop"."orders_by_region_month"
   ),
   "menura_2_filter" AS (
     SELECT

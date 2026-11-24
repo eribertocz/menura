@@ -12,7 +12,7 @@ semantic_model:
         data: '{"namespace": "menura", "version": 1, "security_context": {"roles": ["analyst"], "attributes": []}}'
     datasets:
       - name: orders
-        source: shop.main.orders
+        source: shop.orders
         primary_key: [order_id]
         fields:
           - name: order_id
@@ -33,7 +33,7 @@ semantic_model:
           - vendor_name: COMMON
             data: '{"namespace": "menura", "version": 1, "access": {"mode": "roles", "roles": ["analyst"]}}'
       - name: customers
-        source: shop.main.customers
+        source: shop.customers
         primary_key: [customer_id]
         fields:
           - name: customer_id
@@ -46,7 +46,7 @@ semantic_model:
           - vendor_name: COMMON
             data: '{"namespace": "menura", "version": 1, "access": {"mode": "roles", "roles": ["analyst"]}}'
       - name: customer_profiles
-        source: shop.main.customer_profiles
+        source: shop.customer_profiles
         primary_key: [customer_id]
         fields:
           - name: customer_id
@@ -57,7 +57,7 @@ semantic_model:
           - vendor_name: COMMON
             data: '{"namespace": "menura", "version": 1, "access": {"mode": "roles", "roles": ["analyst"]}}'
       - name: stores
-        source: shop.main.stores
+        source: shop.stores
         primary_key: [store_id]
         fields:
           - name: store_id
@@ -72,7 +72,7 @@ semantic_model:
           - vendor_name: COMMON
             data: '{"namespace": "menura", "version": 1, "access": {"mode": "roles", "roles": ["analyst"]}}'
       - name: regions
-        source: shop.main.regions
+        source: shop.regions
         primary_key: [region_id]
         fields:
           - name: region_id
@@ -83,7 +83,7 @@ semantic_model:
           - vendor_name: COMMON
             data: '{"namespace": "menura", "version": 1, "access": {"mode": "roles", "roles": ["analyst"]}}'
       - name: calendar
-        source: shop.main.calendar
+        source: shop.calendar
         primary_key: [date_key]
         fields:
           - name: date_key
@@ -92,7 +92,7 @@ semantic_model:
           - vendor_name: COMMON
             data: '{"namespace": "menura", "version": 1, "access": {"mode": "roles", "roles": ["analyst"]}}'
       - name: promotions
-        source: shop.main.promotions
+        source: shop.promotions
         primary_key: [promotion_id]
         fields:
           - name: promotion_id
@@ -105,7 +105,7 @@ semantic_model:
           - vendor_name: COMMON
             data: '{"namespace": "menura", "version": 1, "access": {"mode": "roles", "roles": ["analyst"]}}'
       - name: employees
-        source: shop.main.employees
+        source: shop.employees
         primary_key: [employee_id]
         fields:
           - name: employee_id
@@ -120,7 +120,7 @@ semantic_model:
           - vendor_name: COMMON
             data: '{"namespace": "menura", "version": 1, "access": {"mode": "roles", "roles": ["analyst"]}}'
       - name: exchange_rates
-        source: shop.main.exchange_rates
+        source: shop.exchange_rates
         primary_key: [currency]
         fields:
           - name: currency
@@ -131,7 +131,7 @@ semantic_model:
           - vendor_name: COMMON
             data: '{"namespace": "menura", "version": 1, "access": {"mode": "roles", "roles": ["analyst"]}}'
       - name: orders_by_day
-        source: shop.main.orders_by_day
+        source: shop.orders_by_day
         primary_key: [order_date]
         fields:
           - name: order_date
@@ -142,7 +142,7 @@ semantic_model:
           - vendor_name: COMMON
             data: '{"namespace": "menura", "version": 1, "access": {"mode": "internal"}, "aggregate": {"of": "orders", "dimensions": [{"field": "order_date", "base": "order_date", "grain": "day"}], "measures": [{"field": "amount", "base_aggregate": "SUM(orders.amount)"}], "coverage_field": "order_date"}}'
       - name: deliveries
-        source: shop.main.deliveries
+        source: shop.deliveries
         primary_key: [delivery_id]
         fields:
           - name: delivery_id
@@ -157,7 +157,7 @@ semantic_model:
           - vendor_name: COMMON
             data: '{"namespace": "menura", "version": 1, "access": {"mode": "roles", "roles": ["analyst"]}}'
       - name: store_days
-        source: shop.main.store_days
+        source: shop.store_days
         primary_key: [store_id, date_key]
         fields:
           - name: store_id

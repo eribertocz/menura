@@ -119,10 +119,10 @@ fn chk_6_3_equal_rows_among_many_rows_are_each_an_overlap_and_no_row_overlaps_it
     let connection = database();
     connection
         .execute_batch(
-            "DELETE FROM shop.main.memberships;
-             INSERT INTO shop.main.memberships
+            "DELETE FROM shop.memberships;
+             INSERT INTO shop.memberships
                SELECT i, DATE '2026-01-01', DATE '2026-01-31' FROM range(10, 300010) AS t(i);
-             INSERT INTO shop.main.memberships VALUES
+             INSERT INTO shop.memberships VALUES
                (6, DATE '2026-02-01', NULL),
                (6, DATE '2026-02-01', NULL),
                (6, DATE '2026-02-01', NULL),
@@ -209,12 +209,12 @@ fn chk_2_1_checks_over_data_without_violations_return_no_row() {
     let connection = database();
     connection
         .execute_batch(
-            "DELETE FROM shop.main.memberships WHERE customer_id IN (1, 2, 5);
-             DELETE FROM shop.main.stamped_memberships WHERE valid_to IS NULL;
-             DELETE FROM shop.main.roster WHERE period_at = DATE '2026-03-15';
-             INSERT INTO shop.main.roster VALUES (4, DATE '2026-03-01');
-             DELETE FROM shop.main.balances WHERE period < DATE '2026-03-01';
-             INSERT INTO shop.main.balances VALUES (2, DATE '2026-03-31', 6, 80);",
+            "DELETE FROM shop.memberships WHERE customer_id IN (1, 2, 5);
+             DELETE FROM shop.stamped_memberships WHERE valid_to IS NULL;
+             DELETE FROM shop.roster WHERE period_at = DATE '2026-03-15';
+             INSERT INTO shop.roster VALUES (4, DATE '2026-03-01');
+             DELETE FROM shop.balances WHERE period < DATE '2026-03-01';
+             INSERT INTO shop.balances VALUES (2, DATE '2026-03-31', 6, 80);",
         )
         .unwrap();
     for check in &document.checks {

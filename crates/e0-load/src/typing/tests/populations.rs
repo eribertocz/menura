@@ -16,9 +16,9 @@ use crate::structure::validate_structure;
 use crate::typing::populations::type_populations;
 use crate::typing::type_expressions;
 
-/// The catalog schema of every `e0-populations*` model: `shop.main.customers`
+/// The catalog schema of every `e0-populations*` model: `shop.customers`
 /// (`customer_id` 32-bit, `segment` text, `active` boolean, `valid_from` date, nullable
-/// `valid_to` date) and `shop.main.account_months` (`account_id` 32-bit, `period_start` date,
+/// `valid_to` date) and `shop.account_months` (`account_id` 32-bit, `period_start` date,
 /// `balance` 32-bit).
 const CATALOG: &str =
     include_str!("../../../../../conformance/models/e0-populations/catalog-schema.json");

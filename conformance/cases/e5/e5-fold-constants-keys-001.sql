@@ -5,7 +5,7 @@ WITH
       "customer_id" AS "CUSTOMER_ID",
       "order_id" AS "ORDER_ID",
       ROW_NUMBER() OVER () AS "menura.row_identity"
-    FROM "shop"."main"."orders"
+    FROM "shop"."orders"
   ),
   "menura_2_filter" AS (
     SELECT
@@ -20,7 +20,7 @@ WITH
     SELECT
       "customer_id" AS "ORDERS_CUSTOMERS.CUSTOMER_ID",
       "segment" AS "ORDERS_CUSTOMERS.SEGMENT"
-    FROM "shop"."main"."customers"
+    FROM "shop"."customers"
   ),
   "menura_4_filter" AS (
     SELECT

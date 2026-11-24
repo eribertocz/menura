@@ -11,7 +11,7 @@
   },
   "relations": [
     {
-      "source": "shop.main.payments",
+      "source": "shop.payments",
       "columns": [
         {
           "name": "payment_id",

@@ -10,7 +10,7 @@ semantic_model:
         data: '{"namespace": "menura", "version": 1, "security_context": {"roles": ["analyst", "guest"], "attributes": []}}'
     datasets:
       - name: orders
-        source: shop.main.orders
+        source: shop.orders
         primary_key: [order_id]
         fields:
           - name: order_id
@@ -28,7 +28,7 @@ semantic_model:
           - vendor_name: COMMON
             data: '{"namespace": "menura", "version": 1, "access": {"mode": "roles", "roles": ["analyst", "guest"]}}'
       - name: customers
-        source: shop.main.customers
+        source: shop.customers
         primary_key: [customer_id]
         fields:
           - name: customer_id
@@ -41,7 +41,7 @@ semantic_model:
           - vendor_name: COMMON
             data: '{"namespace": "menura", "version": 1, "access": {"mode": "roles", "roles": ["analyst", "guest"], "fields": [{"names": ["region_id"], "roles": ["analyst"]}]}}'
       - name: regions
-        source: shop.main.regions
+        source: shop.regions
         primary_key: [region_id]
         fields:
           - name: region_id
@@ -52,7 +52,7 @@ semantic_model:
           - vendor_name: COMMON
             data: '{"namespace": "menura", "version": 1, "access": {"mode": "roles", "roles": ["analyst", "guest"]}}'
       - name: returns
-        source: shop.main.returns
+        source: shop.returns
         primary_key: [return_id]
         fields:
           - name: return_id
@@ -70,7 +70,7 @@ semantic_model:
           - vendor_name: COMMON
             data: '{"namespace": "menura", "version": 1, "access": {"mode": "roles", "roles": ["analyst", "guest"]}}'
       - name: warehouses
-        source: shop.main.warehouses
+        source: shop.warehouses
         primary_key: [warehouse_id]
         fields:
           - name: warehouse_id
@@ -81,7 +81,7 @@ semantic_model:
           - vendor_name: COMMON
             data: '{"namespace": "menura", "version": 1, "access": {"mode": "roles", "roles": ["analyst", "guest"]}}'
       - name: accounts
-        source: shop.main.accounts
+        source: shop.accounts
         primary_key: [account_id]
         fields:
           - name: account_id
@@ -92,7 +92,7 @@ semantic_model:
           - vendor_name: COMMON
             data: '{"namespace": "menura", "version": 1, "access": {"mode": "roles", "roles": ["analyst", "guest"]}}'
       - name: profiles
-        source: shop.main.profiles
+        source: shop.profiles
         primary_key: [account_id]
         fields:
           - name: account_id

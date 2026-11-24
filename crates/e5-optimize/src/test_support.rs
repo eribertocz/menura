@@ -68,15 +68,15 @@ fn check(kind: CheckKind) -> RecordedCheck {
     }
 }
 
-/// The model: `ORDERS` (`shop.main.orders`) related to `CUSTOMERS` (`shop.main.customers`)
+/// The model: `ORDERS` (`shop.orders`) related to `CUSTOMERS` (`shop.customers`)
 /// by `RELATIONSHIP`, whose `key_uniqueness` and `orphan_keys` checks are recorded.
 pub(crate) fn shop_model() -> InternalModel {
     let parts = ModelParts {
         name: NormalizedName::new("SHOP"),
         descriptions: Descriptions::default(),
         datasets: vec![
-            dataset("CUSTOMERS", "shop.main.customers"),
-            dataset("ORDERS", "shop.main.orders"),
+            dataset("CUSTOMERS", "shop.customers"),
+            dataset("ORDERS", "shop.orders"),
         ],
         relationships: vec![Relationship {
             name: NormalizedName::new(RELATIONSHIP),
@@ -110,9 +110,9 @@ pub(crate) fn shop_schema() -> CatalogSchemaDocument {
             "document_id": {{"origin": "warehouse:shop", "snapshot": "schema-1"}},
             "engine": {{"name": "duckdb", "version": "2.0.0"}},
             "relations": [
-              {{"source": "shop.main.customers", "columns": [{{"name": "CUSTOMER_ID",
+              {{"source": "shop.customers", "columns": [{{"name": "CUSTOMER_ID",
                 "logical_type": {integer}, "physical_type": "INTEGER", "nullable": false}}]}},
-              {{"source": "shop.main.orders", "columns": [{{"name": "CUSTOMER_ID",
+              {{"source": "shop.orders", "columns": [{{"name": "CUSTOMER_ID",
                 "logical_type": {integer}, "physical_type": "INTEGER", "nullable": false}}]}}
             ]}}"#
     );

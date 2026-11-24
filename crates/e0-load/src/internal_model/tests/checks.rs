@@ -86,7 +86,7 @@ fn chk_3_a_summary_check_carries_the_summary_definition_hash() {
 fn chk_3_a_field_the_check_does_not_read_leaves_its_hash_unchanged() {
     let original = fixture();
     let unrelated = load(&edited("'region'", "'UPPER(region)'"), CATALOG);
-    let read = load(MODEL, &widened(CATALOG, "shop.main.orders", "customer_id"));
+    let read = load(MODEL, &widened(CATALOG, "shop.orders", "customer_id"));
     for check_id in [
         "key_uniqueness:ORDERS_CUSTOMER",
         "orphan_keys:ORDERS_CUSTOMER",

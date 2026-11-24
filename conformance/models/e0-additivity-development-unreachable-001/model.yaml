@@ -3,7 +3,7 @@ name: e0_additivity_development
 description: Development-line model whose dataset metric on customers declares over and entity that its own dataset does not reach
 datasets:
   - name: debt
-    source: shop.main.debt
+    source: shop.debt
     primary_key: [customer_id, period]
     fields:
       - name: customer_id
@@ -19,7 +19,7 @@ datasets:
           - vendor_name: COMMON
             data: {namespace: menura, version: 1, additivity: {type: semi_additive, over: debt.period, entity: [debt.customer_id], aggregation: last, selection: global_period, snapshot_grain: month, population: active_customers, missing: carry_forward, max_carry_forward: 2, on_stale: error, unexpected: exclude, nulls: as_missing}}
   - name: customers
-    source: shop.main.customers
+    source: shop.customers
     primary_key: [customer_id]
     fields:
       - name: customer_id

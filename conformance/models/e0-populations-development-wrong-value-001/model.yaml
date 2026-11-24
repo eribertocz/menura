@@ -3,7 +3,7 @@ name: e0_populations_development_wrong_value_001
 description: Development-line model whose validity population has a partial_period outside its set
 datasets:
   - name: customers
-    source: shop.main.customers
+    source: shop.customers
     primary_key: [customer_id, valid_from]
     fields:
       - name: customer_id
@@ -20,7 +20,7 @@ datasets:
       - vendor_name: COMMON
         data: {namespace: menura, version: 1, populations: [{name: active_customers, mode: validity, entity: [customer_id], valid_from: valid_from, valid_to: valid_to, partial_period: some_day, required_when: active}]}
   - name: account_months
-    source: shop.main.account_months
+    source: shop.account_months
     primary_key: [account_id, period_start]
     fields:
       - name: account_id

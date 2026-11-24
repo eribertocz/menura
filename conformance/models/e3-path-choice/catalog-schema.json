@@ -11,7 +11,7 @@
   },
   "relations": [
     {
-      "source": "shop.main.calendar",
+      "source": "shop.calendar",
       "columns": [
         {
           "name": "day",
@@ -42,7 +42,7 @@
       ]
     },
     {
-      "source": "shop.main.customers",
+      "source": "shop.customers",
       "columns": [
         {
           "name": "customer_id",
@@ -67,7 +67,7 @@
       ]
     },
     {
-      "source": "shop.main.fiscal_years",
+      "source": "shop.fiscal_years",
       "columns": [
         {
           "name": "fiscal_year",
@@ -90,7 +90,7 @@
       ]
     },
     {
-      "source": "shop.main.orders",
+      "source": "shop.orders",
       "columns": [
         {
           "name": "order_id",
@@ -141,7 +141,7 @@
       ]
     },
     {
-      "source": "shop.main.regions",
+      "source": "shop.regions",
       "columns": [
         {
           "name": "region_id",

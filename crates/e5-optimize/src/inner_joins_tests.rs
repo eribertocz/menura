@@ -63,7 +63,7 @@ fn model_with(change: impl Fn(&mut Field)) -> InternalModel {
     };
     let mut regions = parts.datasets[0].clone();
     regions.name = NormalizedName::new("REGIONS");
-    regions.source = "shop.main.regions".to_owned();
+    regions.source = "shop.regions".to_owned();
     regions.fields = vec![column_field(&template, "REGION_ID", false)];
     parts.datasets[0].fields = vec![
         column_field(&template, "CUSTOMER_ID", false),
@@ -113,8 +113,8 @@ fn orphan_keys(target: &str, from: &str, to: &str) -> Value {
         "definition_hash": CURRENT_HASH,
         "status": "passed",
         "verified": [
-            {"source": format!("shop.main.{from}"), "version": token(from)},
-            {"source": format!("shop.main.{to}"), "version": token(to)}
+            {"source": format!("shop.{from}"), "version": token(from)},
+            {"source": format!("shop.{to}"), "version": token(to)}
         ]
     })
 }
@@ -123,7 +123,7 @@ fn orphan_keys(target: &str, from: &str, to: &str) -> Value {
 /// relationships.
 fn state() -> CatalogStateDocument {
     let relation = |name: &str| {
-        json!({"source": format!("shop.main.{name}"), "row_count_estimate": 2,
+        json!({"source": format!("shop.{name}"), "row_count_estimate": 2,
             "version": token(name)})
     };
     serde_json::from_value(json!({

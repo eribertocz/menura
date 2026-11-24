@@ -4,7 +4,7 @@ WITH
       "amount" AS "AMOUNT",
       "region" AS "REGION",
       "sale_id" AS "SALE_ID"
-    FROM "shop"."main"."sales"
+    FROM "shop"."sales"
   ),
   "menura_2_filter" AS (
     SELECT

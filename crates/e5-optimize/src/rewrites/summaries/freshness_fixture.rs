@@ -150,10 +150,10 @@ impl Fixture {
             name: NormalizedName::new("SHOP"),
             descriptions: Descriptions::default(),
             datasets: vec![
-                dataset("ORDERS", "shop.main.orders", base_fields, false),
+                dataset("ORDERS", "shop.orders", base_fields, false),
                 dataset(
                     "ORDERS_BY_MONTH",
-                    "shop.main.orders_by_month",
+                    "shop.orders_by_month",
                     vec![column_field("MONTH", date_type())],
                     true,
                 ),
@@ -181,11 +181,11 @@ impl Fixture {
             "document_id": {"origin": "warehouse:shop", "snapshot": "schema-1"},
             "engine": {"name": "duckdb", "version": "2.0.0"},
             "relations": [
-                {"source": "shop.main.orders", "columns": [
+                {"source": "shop.orders", "columns": [
                     column(self.column_name, &self.column_type, self.nullable),
                     column("SHIPPED_DATE", &date_type(), false)
                 ]},
-                {"source": "shop.main.orders_by_month", "columns": [
+                {"source": "shop.orders_by_month", "columns": [
                     column("MONTH", &date_type(), false)
                 ]}
             ]
@@ -218,9 +218,9 @@ pub(super) fn fresh_state() -> Value {
         "document_id": {"origin": "warehouse:shop", "snapshot": "state-1"},
         "schema_document_id": {"origin": "warehouse:shop", "snapshot": "schema-1"},
         "relations": [
-            {"source": "shop.main.orders", "row_count_estimate": 10, "partitions": {
+            {"source": "shop.orders", "row_count_estimate": 10, "partitions": {
                 "column": "ORDER_DATE", "grain": "day", "versions": versions(&DAYS)}},
-            {"source": "shop.main.orders_by_month", "row_count_estimate": 2, "aggregate_build": {
+            {"source": "shop.orders_by_month", "row_count_estimate": 2, "aggregate_build": {
                 "definition_hash": CURRENT_HASH,
                 "coverage": {"from": "2026-09", "to": "2026-10"},
                 "built_from": versions(&DAYS),

@@ -64,7 +64,7 @@ fn mdl_2_4_nonportable_extensions_are_read_with_object_data() {
 fn mdl_2_4_extensions_of_every_object_are_read() {
     let entry = "[{vendor_name: COMMON, data: {namespace: menura, version: 1}}]";
     let text = format!(
-        "version: 0.3.0.dev0\nname: shop\ndatasets:\n  - name: orders\n    source: shop.main.orders\n    fields:\n      - {{name: a, expression: {{sql: a}}, nonportable_extensions: {entry}}}\n    metrics:\n      - {{name: n, expression: {{sql: COUNT(*)}}, nonportable_extensions: {entry}}}\nrelationships:\n  - {{name: r, from: orders, to: orders, from_columns: [a], to_columns: [a], nonportable_extensions: {entry}}}\n"
+        "version: 0.3.0.dev0\nname: shop\ndatasets:\n  - name: orders\n    source: shop.orders\n    fields:\n      - {{name: a, expression: {{sql: a}}, nonportable_extensions: {entry}}}\n    metrics:\n      - {{name: n, expression: {{sql: COUNT(*)}}, nonportable_extensions: {entry}}}\nrelationships:\n  - {{name: r, from: orders, to: orders, from_columns: [a], to_columns: [a], nonportable_extensions: {entry}}}\n"
     );
     let document = read(text.as_bytes());
     let structure = load(&document);
@@ -88,7 +88,7 @@ fn mdl_2_4_extensions_of_every_object_are_read() {
 
 #[test]
 fn mdl_2_4_the_development_form_needs_the_option_and_object_data() {
-    let release = "version: \"0.1.1\"\nsemantic_model:\n  - name: shop\n    datasets:\n      - name: orders\n        source: shop.main.orders\n        nonportable_extensions: [{vendor_name: COMMON, data: {namespace: menura, version: 1}}]\n";
+    let release = "version: \"0.1.1\"\nsemantic_model:\n  - name: shop\n    datasets:\n      - name: orders\n        source: shop.orders\n        nonportable_extensions: [{vendor_name: COMMON, data: {namespace: menura, version: 1}}]\n";
     assert_eq!(
         errors(release, OssieFormat::Release),
         [pair(
@@ -117,7 +117,7 @@ fn mdl_2_4_the_development_form_needs_the_option_and_object_data() {
 
 #[test]
 fn oss_5_1_a_release_model_keeps_no_nonportable_extensions() {
-    let text = "version: \"0.1.1\"\nsemantic_model:\n  - name: shop\n    datasets: [{name: orders, source: shop.main.orders}]\n";
+    let text = "version: \"0.1.1\"\nsemantic_model:\n  - name: shop\n    datasets: [{name: orders, source: shop.orders}]\n";
     let document = read(text.as_bytes());
     let structure = validate_structure(&document, OssieFormat::Release, None).expect("loads");
     assert_eq!(structure.format, OssieFormat::Release);

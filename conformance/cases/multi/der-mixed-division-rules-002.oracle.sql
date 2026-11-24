@@ -2,14 +2,14 @@ WITH invoices_branch AS (
   SELECT regions.name AS name,
     CASE WHEN SUM(invoices.billed) = 0 THEN NULL
       ELSE CAST(SUM(invoices.collected) AS DOUBLE) / CAST(SUM(invoices.billed) AS DOUBLE) END AS collection_rate
-  FROM shop.main.invoices AS invoices
-  LEFT JOIN shop.main.regions AS regions ON invoices.region_id = regions.region_id
+  FROM shop.invoices AS invoices
+  LEFT JOIN shop.regions AS regions ON invoices.region_id = regions.region_id
   WHERE regions.name <> 'WEST'
   GROUP BY regions.name
 ), budgets_branch AS (
   SELECT regions.name AS name, SUM(budgets.amount) AS budget_total
-  FROM shop.main.budgets AS budgets
-  LEFT JOIN shop.main.regions AS regions ON budgets.region_id = regions.region_id
+  FROM shop.budgets AS budgets
+  LEFT JOIN shop.regions AS regions ON budgets.region_id = regions.region_id
   WHERE regions.name <> 'WEST'
   GROUP BY regions.name
 ), stitch_keys AS (

@@ -3,7 +3,7 @@ WITH
     SELECT
       "customer_id" AS "CUSTOMER_ID",
       "paid" AS "PAID"
-    FROM "shop"."main"."balances"
+    FROM "shop"."balances"
   ),
   "menura_2_project" AS (
     SELECT
@@ -24,7 +24,7 @@ WITH
       "balance" AS "BALANCE",
       "customer_id" AS "CUSTOMER_ID",
       "period" AS "PERIOD"
-    FROM "shop"."main"."balances"
+    FROM "shop"."balances"
   ),
   "menura_5_project" AS (
     SELECT
@@ -39,14 +39,14 @@ WITH
       "customer_id" AS "CUSTOMER_ID",
       "valid_from" AS "VALID_FROM",
       "valid_to" AS "VALID_TO"
-    FROM "shop"."main"."members"
+    FROM "shop"."members"
   ),
   "menura_7_scan" AS (
     SELECT
       "balance" AS "BALANCE",
       "customer_id" AS "CUSTOMER_ID",
       "period" AS "PERIOD"
-    FROM "shop"."main"."balances"
+    FROM "shop"."balances"
   ),
   "menura_8_project" AS (
     SELECT
@@ -76,7 +76,7 @@ WITH
       "balance" AS "BALANCE",
       "customer_id" AS "CUSTOMER_ID",
       "period" AS "PERIOD"
-    FROM "shop"."main"."balances"
+    FROM "shop"."balances"
   ),
   "menura_12_project" AS (
     SELECT

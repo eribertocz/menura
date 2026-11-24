@@ -4,13 +4,13 @@ WITH
       "customer_id" AS "CUSTOMER_ID",
       "paid" AS "PAID",
       ROW_NUMBER() OVER () AS "menura.row_identity"
-    FROM "shop"."main"."balances"
+    FROM "shop"."balances"
   ),
   "menura_2_scan" AS (
     SELECT
       "category" AS "BALANCES_CUSTOMERS.CATEGORY",
       "customer_id" AS "BALANCES_CUSTOMERS.CUSTOMER_ID"
-    FROM "shop"."main"."customers"
+    FROM "shop"."customers"
   ),
   "menura_3_join" AS (
     SELECT
@@ -46,13 +46,13 @@ WITH
       "customer_id" AS "CUSTOMER_ID",
       "period" AS "PERIOD",
       ROW_NUMBER() OVER () AS "menura.row_identity"
-    FROM "shop"."main"."balances"
+    FROM "shop"."balances"
   ),
   "menura_7_scan" AS (
     SELECT
       "category" AS "BALANCES_CUSTOMERS.CATEGORY",
       "customer_id" AS "BALANCES_CUSTOMERS.CUSTOMER_ID"
-    FROM "shop"."main"."customers"
+    FROM "shop"."customers"
   ),
   "menura_8_join" AS (
     SELECT
@@ -81,7 +81,7 @@ WITH
       "customer_id" AS "CUSTOMER_ID",
       "valid_from" AS "VALID_FROM",
       "valid_to" AS "VALID_TO"
-    FROM "shop"."main"."members"
+    FROM "shop"."members"
   ),
   "menura_11_scan" AS (
     SELECT
@@ -89,13 +89,13 @@ WITH
       "customer_id" AS "CUSTOMER_ID",
       "period" AS "PERIOD",
       ROW_NUMBER() OVER () AS "menura.row_identity"
-    FROM "shop"."main"."balances"
+    FROM "shop"."balances"
   ),
   "menura_12_scan" AS (
     SELECT
       "category" AS "BALANCES_CUSTOMERS.CATEGORY",
       "customer_id" AS "BALANCES_CUSTOMERS.CUSTOMER_ID"
-    FROM "shop"."main"."customers"
+    FROM "shop"."customers"
   ),
   "menura_13_join" AS (
     SELECT

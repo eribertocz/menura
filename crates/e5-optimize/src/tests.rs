@@ -10,10 +10,10 @@ use crate::{RewriteRule, optimize};
 /// A state with two relations, listed in reverse order when `reversed`; the members of the
 /// two relation objects are written in different orders.
 fn state_in_order(reversed: bool) -> CatalogStateDocument {
-    let orders = json!({"source": "shop.main.orders", "row_count_estimate": 10,
+    let orders = json!({"source": "shop.orders", "row_count_estimate": 10,
         "version": {"origin": "warehouse:shop", "snapshot": "orders-1"}});
     let customers = json!({"version": {"snapshot": "customers-1", "origin": "warehouse:shop"},
-        "row_count_estimate": 2, "source": "shop.main.customers"});
+        "row_count_estimate": 2, "source": "shop.customers"});
     let relations = if reversed {
         json!([customers, orders])
     } else {

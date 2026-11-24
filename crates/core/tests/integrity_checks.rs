@@ -92,11 +92,11 @@ fn chk_3_definition_hash_is_the_recorded_hash() {
 fn chk_2_4_sources_are_the_relations_read_sorted() {
     assert_eq!(
         check("key_uniqueness:INVOICES_CUSTOMER").sources,
-        ["shop.main.customers"]
+        ["shop.customers"]
     );
     assert_eq!(
         check("orphan_keys:INVOICES_CUSTOMER").sources,
-        ["shop.main.customers", "shop.main.invoices"]
+        ["shop.customers", "shop.invoices"]
     );
 }
 

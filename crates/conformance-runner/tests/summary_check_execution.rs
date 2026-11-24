@@ -117,7 +117,7 @@ fn chk_6_6_a_built_summary_passes_its_check_and_corrupted_rows_fail_it() {
     let check = sql(&document, MONTHLY, false);
     build_into(
         &connection,
-        "shop.main.orders_monthly (month_start, order_count, region, total_amount)",
+        "shop.orders_monthly (month_start, order_count, region, total_amount)",
         &sql(&document, MONTHLY, true),
         &OCTOBER_TO_NOVEMBER,
     );
@@ -125,9 +125,9 @@ fn chk_6_6_a_built_summary_passes_its_check_and_corrupted_rows_fail_it() {
     assert!(rows(&connection, &check, &OCTOBER_TO_NOVEMBER).is_empty());
     connection
         .execute_batch(
-            "UPDATE shop.main.orders_monthly SET total_amount = 111.00 WHERE region = 'NORTH';
-             DELETE FROM shop.main.orders_monthly WHERE region = 'SOUTH' AND month_start = DATE '2026-11-01';
-             INSERT INTO shop.main.orders_monthly VALUES ('EAST', DATE '2026-10-01', 1.00, 1);",
+            "UPDATE shop.orders_monthly SET total_amount = 111.00 WHERE region = 'NORTH';
+             DELETE FROM shop.orders_monthly WHERE region = 'SOUTH' AND month_start = DATE '2026-11-01';
+             INSERT INTO shop.orders_monthly VALUES ('EAST', DATE '2026-10-01', 1.00, 1);",
         )
         .unwrap();
     assert_eq!(
@@ -172,7 +172,7 @@ fn chk_5_3_a_summary_passes_its_check_only_in_the_time_zone_it_was_built_in() {
     let la_paz = ["America/La_Paz", "2026-11-01", "2026-11-02"];
     build_into(
         &connection,
-        "shop.main.orders_daily_local (day_start, large_amount)",
+        "shop.orders_daily_local (day_start, large_amount)",
         &sql(&document, DAILY, true),
         &la_paz,
     );

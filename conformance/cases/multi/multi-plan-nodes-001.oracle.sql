@@ -1,24 +1,24 @@
 WITH visible_ids AS (
   SELECT customer_id
-  FROM shop.main.customers
+  FROM shop.customers
   GROUP BY customer_id
   HAVING bool_and(region IN ('NORTH'))
 ),
 visible_customers AS (
   SELECT DISTINCT customers.customer_id, customers.city
-  FROM shop.main.customers AS customers
+  FROM shop.customers AS customers
   JOIN visible_ids ON customers.customer_id = visible_ids.customer_id
 ),
 order_totals AS (
   SELECT visible_customers.city AS city, SUM(orders.amount) AS order_total
-  FROM shop.main.orders AS orders
+  FROM shop.orders AS orders
   JOIN visible_customers ON orders.customer_id = visible_customers.customer_id
   WHERE orders.status <> 'void'
   GROUP BY visible_customers.city
 ),
 refund_totals AS (
   SELECT visible_customers.city AS city, SUM(refunds.amount) AS refund_total
-  FROM shop.main.refunds AS refunds
+  FROM shop.refunds AS refunds
   JOIN visible_customers ON refunds.customer_id = visible_customers.customer_id
   GROUP BY visible_customers.city
 ),

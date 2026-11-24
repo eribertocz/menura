@@ -7,7 +7,7 @@ semantic_model:
         data: '{"namespace": "menura", "version": 1, "security_context": {"roles": ["admin", "analyst"], "attributes": []}}'
     datasets:
       - name: orders
-        source: shop.main.orders
+        source: shop.orders
         primary_key: [order_id]
         fields:
           - name: order_id
@@ -22,7 +22,7 @@ semantic_model:
           - vendor_name: COMMON
             data: '{"namespace": "menura", "version": 1, "access": {"mode": "roles", "roles": ["admin", "analyst"]}, "row_access": [{"name": "not_void", "condition": "status <> ''void''", "exempt_roles": ["admin"]}]}'
       - name: returns
-        source: shop.main.returns
+        source: shop.returns
         primary_key: [return_id]
         fields:
           - name: return_id
@@ -35,7 +35,7 @@ semantic_model:
           - vendor_name: COMMON
             data: '{"namespace": "menura", "version": 1, "access": {"mode": "roles", "roles": ["admin", "analyst"]}}'
       - name: customers
-        source: shop.main.customers
+        source: shop.customers
         primary_key: [customer_id]
         fields:
           - name: customer_id

@@ -7,7 +7,7 @@ semantic_model:
         data: '{"namespace": "menura", "version": 1, "security_context": {"roles": ["analyst"], "attributes": []}}'
     datasets:
       - name: balances
-        source: shop.main.balances
+        source: shop.balances
         primary_key: [customer_id, period]
         fields:
           - name: customer_id
@@ -21,7 +21,7 @@ semantic_model:
           - vendor_name: COMMON
             data: '{"namespace": "menura", "version": 1, "access": {"mode": "roles", "roles": ["analyst"]}}'
       - name: memberships
-        source: shop.main.memberships
+        source: shop.memberships
         fields:
           - name: customer_id
             expression: {dialects: [{dialect: ANSI_SQL, expression: 'customer_id'}]}
@@ -35,7 +35,7 @@ semantic_model:
           - vendor_name: COMMON
             data: '{"namespace": "menura", "version": 1, "access": {"mode": "roles", "roles": ["analyst"]}, "populations": [{"name": "full_period_members", "mode": "validity", "entity": ["customer_id"], "valid_from": "valid_from", "valid_to": "valid_to", "partial_period": "full_period"}, {"name": "period_end_members", "mode": "validity", "entity": ["customer_id"], "valid_from": "valid_from", "valid_to": "valid_to", "partial_period": "period_end"}]}'
       - name: roster
-        source: shop.main.roster
+        source: shop.roster
         fields:
           - name: customer_id
             expression: {dialects: [{dialect: ANSI_SQL, expression: 'customer_id'}]}
@@ -46,7 +46,7 @@ semantic_model:
           - vendor_name: COMMON
             data: '{"namespace": "menura", "version": 1, "access": {"mode": "roles", "roles": ["analyst"]}, "populations": [{"name": "monthly_roster", "mode": "periodic", "entity": ["customer_id"], "period": "period_at", "grain": "month"}]}'
       - name: stamped_memberships
-        source: shop.main.stamped_memberships
+        source: shop.stamped_memberships
         fields:
           - name: customer_id
             expression: {dialects: [{dialect: ANSI_SQL, expression: 'customer_id'}]}

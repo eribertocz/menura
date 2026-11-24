@@ -79,8 +79,8 @@ const MODELS: [(&str, &str); 18] = [
     ),
 ];
 
-/// The catalog schema of every `e0-context*` model, in both formats: `shop.main.invoices`
-/// (`invoice_id`, `customer_id`, `invoice_date` date, `billed`) and `shop.main.customers`
+/// The catalog schema of every `e0-context*` model, in both formats: `shop.invoices`
+/// (`invoice_id`, `customer_id`, `invoice_date` date, `billed`) and `shop.customers`
 /// (`customer_id`, `region` text); every integer is 32-bit and no column is nullable.
 pub(crate) const CATALOG: &str =
     include_str!("../../../../../conformance/models/e0-context/catalog-schema.json");

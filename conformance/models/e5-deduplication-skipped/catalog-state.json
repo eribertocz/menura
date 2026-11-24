@@ -11,7 +11,7 @@
   },
   "relations": [
     {
-      "source": "shop.main.orders",
+      "source": "shop.orders",
       "row_count_estimate": 3,
       "version": {
         "origin": "conformance:catalog",
@@ -19,7 +19,7 @@
       }
     },
     {
-      "source": "shop.main.customers",
+      "source": "shop.customers",
       "row_count_estimate": 2,
       "version": {
         "origin": "conformance:catalog",
@@ -31,11 +31,11 @@
     {
       "target": "ORDERS_CUSTOMERS",
       "check": "key_uniqueness",
-      "definition_hash": "921db00fd28ab0cefeb7cee564f448ab5c2001818d15b6da8702728d4c4c7957",
+      "definition_hash": "f8597d6b488e89cd9afa2546e6b1e90cc9aa60057ff24233032f0c50bc8d1b6b",
       "status": "passed",
       "verified": [
         {
-          "source": "shop.main.customers",
+          "source": "shop.customers",
           "version": {
             "origin": "conformance:catalog",
             "snapshot": "customers-2"

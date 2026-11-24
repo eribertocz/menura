@@ -11,7 +11,7 @@
   },
   "relations": [
     {
-      "source": "shop.main.shelves",
+      "source": "shop.shelves",
       "columns": [
         {
           "name": "site_code",
@@ -42,7 +42,7 @@
       ]
     },
     {
-      "source": "shop.main.items",
+      "source": "shop.items",
       "columns": [
         {
           "name": "item_id",
@@ -75,7 +75,7 @@
       ]
     },
     {
-      "source": "shop.main.desks",
+      "source": "shop.desks",
       "columns": [
         {
           "name": "desk_id",
@@ -98,7 +98,7 @@
       ]
     },
     {
-      "source": "shop.main.queues",
+      "source": "shop.queues",
       "columns": [
         {
           "name": "queue_id",
@@ -121,7 +121,7 @@
       ]
     },
     {
-      "source": "shop.main.tickets",
+      "source": "shop.tickets",
       "columns": [
         {
           "name": "ticket_id",

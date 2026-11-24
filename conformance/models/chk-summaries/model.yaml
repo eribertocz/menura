@@ -7,7 +7,7 @@ semantic_model:
         data: '{"namespace": "menura", "version": 1, "security_context": {"roles": ["analyst"], "attributes": []}}'
     datasets:
       - name: orders
-        source: shop.main.orders
+        source: shop.orders
         primary_key: [order_id]
         fields:
           - name: order_id
@@ -24,7 +24,7 @@ semantic_model:
           - vendor_name: COMMON
             data: '{"namespace": "menura", "version": 1, "access": {"mode": "roles", "roles": ["analyst"]}}'
       - name: orders_monthly
-        source: shop.main.orders_monthly
+        source: shop.orders_monthly
         fields:
           - name: region
             expression: {dialects: [{dialect: ANSI_SQL, expression: region}]}
@@ -38,7 +38,7 @@ semantic_model:
           - vendor_name: COMMON
             data: '{"namespace": "menura", "version": 1, "access": {"mode": "internal"}, "aggregate": {"of": "orders", "dimensions": [{"field": "month", "base": "order_date", "grain": "month"}, {"field": "region", "base": "region"}], "measures": [{"field": "total_amount", "base_aggregate": "SUM(orders.amount)"}, {"field": "order_count", "base_aggregate": "COUNT(orders.order_id)"}], "coverage_field": "month"}}'
       - name: orders_daily_local
-        source: shop.main.orders_daily_local
+        source: shop.orders_daily_local
         fields:
           - name: day
             expression: {dialects: [{dialect: ANSI_SQL, expression: day_start}]}

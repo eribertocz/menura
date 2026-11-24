@@ -3,7 +3,7 @@ name: e0_additivity_development
 description: Development-line model with a non_additive declaration that has the key over
 datasets:
   - name: debt
-    source: shop.main.debt
+    source: shop.debt
     primary_key: [customer_id, period]
     fields:
       - name: customer_id
@@ -13,7 +13,7 @@ datasets:
       - name: balance
         expression: {sql: balance}
   - name: customers
-    source: shop.main.customers
+    source: shop.customers
     primary_key: [customer_id]
     fields:
       - name: customer_id

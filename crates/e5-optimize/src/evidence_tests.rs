@@ -16,7 +16,7 @@ fn token(snapshot: &str) -> Value {
 /// (`orders-10`).
 fn partitioned_orders() -> Value {
     json!({
-        "source": "shop.main.orders",
+        "source": "shop.orders",
         "row_count_estimate": 10,
         "partitions": {
             "column": "ORDER_DATE",
@@ -31,15 +31,15 @@ fn partitioned_orders() -> Value {
 
 /// The `customers` relation, not partitioned, at version `customers-1`.
 fn customers() -> Value {
-    json!({"source": "shop.main.customers", "row_count_estimate": 2, "version": token("customers-1")})
+    json!({"source": "shop.customers", "row_count_estimate": 2, "version": token("customers-1")})
 }
 
 /// The verified versions that match `partitioned_orders` and `customers`.
 fn current_verified() -> Value {
     json!([
-        {"source": "shop.main.customers", "version": token("customers-1")},
-        {"source": "shop.main.orders", "version": token("orders-9"), "period": "2026-09"},
-        {"source": "shop.main.orders", "version": token("orders-10"), "period": "2026-10"}
+        {"source": "shop.customers", "version": token("customers-1")},
+        {"source": "shop.orders", "version": token("orders-9"), "period": "2026-09"},
+        {"source": "shop.orders", "version": token("orders-10"), "period": "2026-10"}
     ])
 }
 
@@ -154,8 +154,8 @@ fn cat_7_3_a_check_of_another_target_is_not_evidence() {
 #[test]
 fn cat_7_3_a_missing_verified_period_is_not_evidence() {
     let verified = json!([
-        {"source": "shop.main.customers", "version": token("customers-1")},
-        {"source": "shop.main.orders", "version": token("orders-9"), "period": "2026-09"}
+        {"source": "shop.customers", "version": token("customers-1")},
+        {"source": "shop.orders", "version": token("orders-9"), "period": "2026-09"}
     ]);
     let state = state_with(result("orphan_keys", CURRENT_HASH, "passed", verified));
 
@@ -165,9 +165,9 @@ fn cat_7_3_a_missing_verified_period_is_not_evidence() {
 #[test]
 fn cat_7_3_a_different_verified_period_version_is_not_evidence() {
     let verified = json!([
-        {"source": "shop.main.customers", "version": token("customers-1")},
-        {"source": "shop.main.orders", "version": token("orders-9"), "period": "2026-09"},
-        {"source": "shop.main.orders", "version": token("orders-10b"), "period": "2026-10"}
+        {"source": "shop.customers", "version": token("customers-1")},
+        {"source": "shop.orders", "version": token("orders-9"), "period": "2026-09"},
+        {"source": "shop.orders", "version": token("orders-10b"), "period": "2026-10"}
     ]);
     let state = state_with(result("orphan_keys", CURRENT_HASH, "passed", verified));
 
@@ -177,10 +177,10 @@ fn cat_7_3_a_different_verified_period_version_is_not_evidence() {
 #[test]
 fn cat_7_3_a_verified_period_the_relation_no_longer_has_is_a_difference() {
     let verified = json!([
-        {"source": "shop.main.customers", "version": token("customers-1")},
-        {"source": "shop.main.orders", "version": token("orders-8"), "period": "2026-08"},
-        {"source": "shop.main.orders", "version": token("orders-9"), "period": "2026-09"},
-        {"source": "shop.main.orders", "version": token("orders-10"), "period": "2026-10"}
+        {"source": "shop.customers", "version": token("customers-1")},
+        {"source": "shop.orders", "version": token("orders-8"), "period": "2026-08"},
+        {"source": "shop.orders", "version": token("orders-9"), "period": "2026-09"},
+        {"source": "shop.orders", "version": token("orders-10"), "period": "2026-10"}
     ]);
     let state = state_with(result("orphan_keys", CURRENT_HASH, "passed", verified));
 
@@ -190,8 +190,8 @@ fn cat_7_3_a_verified_period_the_relation_no_longer_has_is_a_difference() {
 #[test]
 fn cat_7_3_key_uniqueness_reads_only_the_to_relation() {
     let verified = json!([
-        {"source": "shop.main.customers", "version": token("customers-1")},
-        {"source": "shop.main.orders", "version": token("orders-8"), "period": "2026-08"}
+        {"source": "shop.customers", "version": token("customers-1")},
+        {"source": "shop.orders", "version": token("orders-8"), "period": "2026-08"}
     ]);
     let state = state_with(result("key_uniqueness", CURRENT_HASH, "passed", verified));
 
@@ -201,8 +201,8 @@ fn cat_7_3_key_uniqueness_reads_only_the_to_relation() {
 #[test]
 fn cat_7_3_orphan_keys_reads_the_from_relation_too() {
     let verified = json!([
-        {"source": "shop.main.customers", "version": token("customers-1")},
-        {"source": "shop.main.orders", "version": token("orders-8"), "period": "2026-08"}
+        {"source": "shop.customers", "version": token("customers-1")},
+        {"source": "shop.orders", "version": token("orders-8"), "period": "2026-08"}
     ]);
     let state = state_with(result("orphan_keys", CURRENT_HASH, "passed", verified));
 
@@ -212,8 +212,8 @@ fn cat_7_3_orphan_keys_reads_the_from_relation_too() {
 #[test]
 fn cat_7_3_a_missing_non_partitioned_version_is_not_evidence() {
     let verified = json!([
-        {"source": "shop.main.orders", "version": token("orders-9"), "period": "2026-09"},
-        {"source": "shop.main.orders", "version": token("orders-10"), "period": "2026-10"}
+        {"source": "shop.orders", "version": token("orders-9"), "period": "2026-09"},
+        {"source": "shop.orders", "version": token("orders-10"), "period": "2026-10"}
     ]);
     let state = state_with(result("key_uniqueness", CURRENT_HASH, "passed", verified));
 
@@ -223,9 +223,9 @@ fn cat_7_3_a_missing_non_partitioned_version_is_not_evidence() {
 #[test]
 fn cat_7_3_a_different_non_partitioned_version_is_not_evidence() {
     let verified = json!([
-        {"source": "shop.main.customers", "version": token("customers-2")},
-        {"source": "shop.main.orders", "version": token("orders-9"), "period": "2026-09"},
-        {"source": "shop.main.orders", "version": token("orders-10"), "period": "2026-10"}
+        {"source": "shop.customers", "version": token("customers-2")},
+        {"source": "shop.orders", "version": token("orders-9"), "period": "2026-09"},
+        {"source": "shop.orders", "version": token("orders-10"), "period": "2026-10"}
     ]);
     let state = state_with(result("key_uniqueness", CURRENT_HASH, "passed", verified));
 
@@ -235,9 +235,9 @@ fn cat_7_3_a_different_non_partitioned_version_is_not_evidence() {
 #[test]
 fn cat_7_3_a_period_on_a_non_partitioned_relation_is_a_difference() {
     let verified = json!([
-        {"source": "shop.main.customers", "version": token("customers-1"), "period": "2026-10"},
-        {"source": "shop.main.orders", "version": token("orders-9"), "period": "2026-09"},
-        {"source": "shop.main.orders", "version": token("orders-10"), "period": "2026-10"}
+        {"source": "shop.customers", "version": token("customers-1"), "period": "2026-10"},
+        {"source": "shop.orders", "version": token("orders-9"), "period": "2026-09"},
+        {"source": "shop.orders", "version": token("orders-10"), "period": "2026-10"}
     ]);
     let state = state_with(result("key_uniqueness", CURRENT_HASH, "passed", verified));
 
@@ -246,10 +246,11 @@ fn cat_7_3_a_period_on_a_non_partitioned_relation_is_a_difference() {
 
 #[test]
 fn cat_7_3_two_non_partitioned_relations_need_both_versions() {
-    let orders = json!({"source": "shop.main.orders", "row_count_estimate": 10, "version": token("orders-1")});
+    let orders =
+        json!({"source": "shop.orders", "row_count_estimate": 10, "version": token("orders-1")});
     let verified = json!([
-        {"source": "shop.main.customers", "version": token("customers-1")},
-        {"source": "shop.main.orders", "version": token("orders-1")}
+        {"source": "shop.customers", "version": token("customers-1")},
+        {"source": "shop.orders", "version": token("orders-1")}
     ]);
     let check = result("key_uniqueness", CURRENT_HASH, "passed", verified);
     let state = state(json!([orders, customers()]), json!([check]));
@@ -280,9 +281,9 @@ fn cat_7_3_one_passing_result_among_several_is_evidence() {
 #[test]
 fn cat_7_4_tokens_are_compared_by_both_fields_never_interpreted() {
     let verified = json!([
-        {"source": "shop.main.customers", "version": {"origin": "warehouse:other", "snapshot": "customers-1"}},
-        {"source": "shop.main.orders", "version": token("orders-9"), "period": "2026-09"},
-        {"source": "shop.main.orders", "version": token("orders-10"), "period": "2026-10"}
+        {"source": "shop.customers", "version": {"origin": "warehouse:other", "snapshot": "customers-1"}},
+        {"source": "shop.orders", "version": token("orders-9"), "period": "2026-09"},
+        {"source": "shop.orders", "version": token("orders-10"), "period": "2026-10"}
     ]);
     let state = state_with(result("key_uniqueness", CURRENT_HASH, "passed", verified));
 
@@ -292,11 +293,11 @@ fn cat_7_4_tokens_are_compared_by_both_fields_never_interpreted() {
 #[test]
 fn cat_7_4_a_numeric_looking_token_is_not_parsed() {
     let customers =
-        json!({"source": "shop.main.customers", "row_count_estimate": 2, "version": token("10")});
+        json!({"source": "shop.customers", "row_count_estimate": 2, "version": token("10")});
     let verified = json!([
-        {"source": "shop.main.customers", "version": token("010")},
-        {"source": "shop.main.orders", "version": token("orders-9"), "period": "2026-09"},
-        {"source": "shop.main.orders", "version": token("orders-10"), "period": "2026-10"}
+        {"source": "shop.customers", "version": token("010")},
+        {"source": "shop.orders", "version": token("orders-9"), "period": "2026-09"},
+        {"source": "shop.orders", "version": token("orders-10"), "period": "2026-10"}
     ]);
     let check = result("key_uniqueness", CURRENT_HASH, "passed", verified);
     let state = state(json!([partitioned_orders(), customers]), json!([check]));

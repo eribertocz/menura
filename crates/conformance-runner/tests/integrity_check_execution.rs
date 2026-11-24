@@ -96,8 +96,8 @@ fn chk_2_1_a_check_over_data_without_violations_returns_no_row() {
     assert!(violations(&connection, &document, "key_uniqueness:INVOICES_STORE").is_empty());
     connection
         .execute_batch(
-            "DELETE FROM shop.main.customers WHERE region = 'EAST';
-             DELETE FROM shop.main.invoices WHERE customer_id = 3;",
+            "DELETE FROM shop.customers WHERE region = 'EAST';
+             DELETE FROM shop.invoices WHERE customer_id = 3;",
         )
         .unwrap();
     for check in &document.checks {

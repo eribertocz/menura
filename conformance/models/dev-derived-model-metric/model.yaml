@@ -6,7 +6,7 @@ nonportable_extensions:
     data: {namespace: menura, version: 1, security_context: {roles: [analyst], attributes: []}}
 datasets:
   - name: orders
-    source: shop.main.orders
+    source: shop.orders
     primary_key: [order_id]
     fields:
       - name: order_id

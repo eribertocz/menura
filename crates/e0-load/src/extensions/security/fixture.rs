@@ -97,8 +97,8 @@ const MODELS: [(&str, &str); 20] = [
     ),
 ];
 
-/// The catalog schema of every `e0-security*` model, in both formats: `shop.main.orders`
-/// (`order_id`, `region` text, `amount`, `unit_cost`) and `shop.main.notes` (`note_id`,
+/// The catalog schema of every `e0-security*` model, in both formats: `shop.orders`
+/// (`order_id`, `region` text, `amount`, `unit_cost`) and `shop.notes` (`note_id`,
 /// `body` text); every integer is 32-bit and no column is nullable.
 pub(crate) const CATALOG: &str =
     include_str!("../../../../../conformance/models/e0-security/catalog-schema.json");

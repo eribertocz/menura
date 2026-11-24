@@ -4,7 +4,7 @@ semantic_model:
     description: A non_additive declaration with the key over
     datasets:
       - name: debt
-        source: shop.main.debt
+        source: shop.debt
         primary_key: [customer_id, period]
         fields:
           - name: customer_id
@@ -14,7 +14,7 @@ semantic_model:
           - name: balance
             expression: {dialects: [{dialect: ANSI_SQL, expression: balance}]}
       - name: customers
-        source: shop.main.customers
+        source: shop.customers
         primary_key: [customer_id]
         fields:
           - name: customer_id

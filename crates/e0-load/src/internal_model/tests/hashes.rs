@@ -108,7 +108,7 @@ fn e0h_2_1_other_dialects_and_foreign_extensions_never_change_the_hash() {
 
 #[test]
 fn e0h_2_2_a_type_change_in_the_catalog_schema_changes_the_hash() {
-    let catalog = widened(CATALOG, "shop.main.orders", "amount");
+    let catalog = widened(CATALOG, "shop.orders", "amount");
     assert_ne!(load(MODEL, &catalog).hash().as_str(), hash_of(MODEL));
 }
 
@@ -165,7 +165,7 @@ fn e0h_3_4_moving_the_text_keeps_every_hash() {
 fn e0h_3_3_a_summary_hash_follows_the_fields_it_refers_to() {
     let original = load(SUMMARIES_MODEL, SUMMARIES_CATALOG);
     let expression = SUMMARIES_MODEL.replacen("'amount'", "'amount + 1'", 1);
-    let catalog = widened(SUMMARIES_CATALOG, "shop.main.orders", "amount");
+    let catalog = widened(SUMMARIES_CATALOG, "shop.orders", "amount");
     assert_ne!(
         summary_hash(&load(&expression, SUMMARIES_CATALOG)),
         summary_hash(&original)

@@ -11,7 +11,7 @@ fn e0c_2_6_e0_4_3_diagnostics_are_located_and_follow_document_order() {
         "  - name: shop\n",
         "    datasets:\n",
         "      - name: orders\n",
-        "        source: shop.main.orders\n",
+        "        source: shop.orders\n",
         "        custom_extensions:\n",
         "          - {vendor_name: COMMON, data: '{\"namespace\": \"menura\", \"version\": 1, \"owner\": 1}'}\n",
         "          - {vendor_name: COMMON, data: '{\"namespace\": \"menura\", \"version\": 2}'}\n",

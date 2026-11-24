@@ -4,7 +4,7 @@ WITH
       "amount" AS "AMOUNT",
       "order_date" AS "ORDER_DATE",
       "region" AS "REGION"
-    FROM "shop"."main"."orders"
+    FROM "shop"."orders"
   ),
   "menura_2_filter" AS (
     SELECT

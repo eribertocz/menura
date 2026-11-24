@@ -194,7 +194,7 @@
     {
       "ai_context": {
         "source": {
-          "model_hash": "43104f91c345f9b9af88b8f59d7d51187bd887bfb74ae3a970363a4965e46224",
+          "model_hash": "4054a252c70983d961fa4939ba68174e13c3b693b16c5ae96f304e514de6eda9",
           "pointer": "/semantic_model/0/datasets/0/ai_context"
         },
         "trust": "untrusted_model_content",
@@ -205,7 +205,7 @@
         {
           "ai_context": {
             "source": {
-              "model_hash": "43104f91c345f9b9af88b8f59d7d51187bd887bfb74ae3a970363a4965e46224",
+              "model_hash": "4054a252c70983d961fa4939ba68174e13c3b693b16c5ae96f304e514de6eda9",
               "pointer": "/semantic_model/0/datasets/0/fields/6/ai_context"
             },
             "trust": "untrusted_model_content",
@@ -378,7 +378,7 @@
     {
       "ai_context": {
         "source": {
-          "model_hash": "43104f91c345f9b9af88b8f59d7d51187bd887bfb74ae3a970363a4965e46224",
+          "model_hash": "4054a252c70983d961fa4939ba68174e13c3b693b16c5ae96f304e514de6eda9",
           "pointer": "/semantic_model/0/metrics/0/ai_context"
         },
         "trust": "untrusted_model_content",
@@ -413,6 +413,6 @@
       "reference": "TOTAL_MARGIN"
     }
   ],
-  "model_hash": "43104f91c345f9b9af88b8f59d7d51187bd887bfb74ae3a970363a4965e46224",
+  "model_hash": "4054a252c70983d961fa4939ba68174e13c3b693b16c5ae96f304e514de6eda9",
   "security_fingerprint": "b84359465f0581c0c9b2ac0be2913637e58d478f9fe1e6307d9e75eca1490ad0"
 }

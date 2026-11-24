@@ -53,14 +53,14 @@ const MODELS: [(&str, &str); 12] = [
     ),
 ];
 
-/// The catalog schema of every release-format `e0-derived*` model: `shop.main.invoices`
-/// (`invoice_id`, `customer_id`, `billed`, `collected`) and `shop.main.customers`
+/// The catalog schema of every release-format `e0-derived*` model: `shop.invoices`
+/// (`invoice_id`, `customer_id`, `billed`, `collected`) and `shop.customers`
 /// (`customer_id`, `region` text); every integer is 32-bit and no column is nullable.
 pub(crate) const CATALOG: &str =
     include_str!("../../../../../conformance/models/e0-derived/catalog-schema.json");
 
-/// The catalog schema of the `e0-derived-development` model: `shop.main.orders` (`order_id`,
-/// `customer_id`, `status` text, `amount`) and `shop.main.customers`.
+/// The catalog schema of the `e0-derived-development` model: `shop.orders` (`order_id`,
+/// `customer_id`, `status` text, `amount`) and `shop.customers`.
 pub(crate) const DEVELOPMENT_CATALOG: &str =
     include_str!("../../../../../conformance/models/e0-derived-development/catalog-schema.json");
 

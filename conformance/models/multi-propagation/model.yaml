@@ -7,7 +7,7 @@ semantic_model:
         data: '{"namespace": "menura", "version": 1, "security_context": {"roles": ["analyst", "auditor"], "attributes": [{"name": "cities", "type": "list<text>"}, {"name": "regions", "type": "list<text>"}]}}'
     datasets:
       - name: stores
-        source: shop.main.stores
+        source: shop.stores
         primary_key: [store_id]
         fields:
           - name: store_id
@@ -18,7 +18,7 @@ semantic_model:
           - vendor_name: COMMON
             data: '{"namespace": "menura", "version": 1, "access": {"mode": "roles", "roles": ["analyst", "auditor"]}, "row_access": [{"name": "stores_region_scope", "condition": "region IN (USER_ATTRIBUTE(''regions''))", "roles": ["analyst"], "exempt_roles": ["auditor"]}]}'
       - name: customers
-        source: shop.main.customers
+        source: shop.customers
         primary_key: [customer_id]
         fields:
           - name: customer_id
@@ -31,7 +31,7 @@ semantic_model:
           - vendor_name: COMMON
             data: '{"namespace": "menura", "version": 1, "access": {"mode": "roles", "roles": ["analyst", "auditor"]}}'
       - name: orders
-        source: shop.main.orders
+        source: shop.orders
         primary_key: [order_id]
         fields:
           - name: order_id
@@ -44,7 +44,7 @@ semantic_model:
           - vendor_name: COMMON
             data: '{"namespace": "menura", "version": 1, "access": {"mode": "roles", "roles": ["analyst", "auditor"]}}'
       - name: suppliers
-        source: shop.main.suppliers
+        source: shop.suppliers
         primary_key: [supplier_id]
         fields:
           - name: supplier_id
@@ -55,7 +55,7 @@ semantic_model:
           - vendor_name: COMMON
             data: '{"namespace": "menura", "version": 1, "access": {"mode": "roles", "roles": ["auditor"]}, "row_access": [{"name": "suppliers_region_scope", "condition": "region IN (USER_ATTRIBUTE(''regions''))", "roles": ["analyst"], "exempt_roles": ["auditor"]}]}'
       - name: products
-        source: shop.main.products
+        source: shop.products
         primary_key: [product_id]
         fields:
           - name: product_id
@@ -66,7 +66,7 @@ semantic_model:
           - vendor_name: COMMON
             data: '{"namespace": "menura", "version": 1, "access": {"mode": "roles", "roles": ["analyst", "auditor"]}}'
       - name: warehouses
-        source: shop.main.warehouses
+        source: shop.warehouses
         primary_key: [warehouse_id]
         fields:
           - name: warehouse_id
@@ -77,7 +77,7 @@ semantic_model:
           - vendor_name: COMMON
             data: '{"namespace": "menura", "version": 1, "access": {"mode": "roles", "roles": ["analyst", "auditor"]}}'
       - name: lines
-        source: shop.main.lines
+        source: shop.lines
         primary_key: [line_id]
         fields:
           - name: line_id
@@ -92,7 +92,7 @@ semantic_model:
           - vendor_name: COMMON
             data: '{"namespace": "menura", "version": 1, "access": {"mode": "roles", "roles": ["analyst", "auditor"]}}'
       - name: teams
-        source: shop.main.teams
+        source: shop.teams
         primary_key: [team_id]
         fields:
           - name: team_id
@@ -105,7 +105,7 @@ semantic_model:
           - vendor_name: COMMON
             data: '{"namespace": "menura", "version": 1, "access": {"mode": "roles", "roles": ["analyst", "auditor"]}, "row_access": [{"name": "teams_region_scope", "condition": "region IN (USER_ATTRIBUTE(''regions''))", "roles": ["analyst"], "exempt_roles": ["auditor"]}]}'
       - name: people
-        source: shop.main.people
+        source: shop.people
         primary_key: [person_id]
         fields:
           - name: person_id
@@ -116,7 +116,7 @@ semantic_model:
           - vendor_name: COMMON
             data: '{"namespace": "menura", "version": 1, "access": {"mode": "roles", "roles": ["analyst", "auditor"]}}'
       - name: zones
-        source: shop.main.zones
+        source: shop.zones
         fields:
           - name: zone_code
             expression: {dialects: [{dialect: ANSI_SQL, expression: 'zone_code'}]}
@@ -126,7 +126,7 @@ semantic_model:
           - vendor_name: COMMON
             data: '{"namespace": "menura", "version": 1, "access": {"mode": "roles", "roles": ["analyst", "auditor"]}, "row_access": [{"name": "zones_region_scope", "condition": "region IN (USER_ATTRIBUTE(''regions''))", "roles": ["analyst"], "exempt_roles": ["auditor"]}]}'
       - name: visits
-        source: shop.main.visits
+        source: shop.visits
         primary_key: [visit_id]
         fields:
           - name: visit_id
@@ -137,7 +137,7 @@ semantic_model:
           - vendor_name: COMMON
             data: '{"namespace": "menura", "version": 1, "access": {"mode": "roles", "roles": ["analyst", "auditor"]}}'
       - name: cities
-        source: shop.main.cities
+        source: shop.cities
         primary_key: [city_id]
         fields:
           - name: city_id
@@ -148,7 +148,7 @@ semantic_model:
           - vendor_name: COMMON
             data: '{"namespace": "menura", "version": 1, "access": {"mode": "roles", "roles": ["analyst", "auditor"]}, "row_access": [{"name": "cities_city_scope", "condition": "region IN (USER_ATTRIBUTE(''cities''))"}]}'
       - name: venues
-        source: shop.main.venues
+        source: shop.venues
         primary_key: [venue_id]
         fields:
           - name: venue_id
@@ -161,7 +161,7 @@ semantic_model:
           - vendor_name: COMMON
             data: '{"namespace": "menura", "version": 1, "access": {"mode": "roles", "roles": ["analyst", "auditor"]}, "row_access": [{"name": "venues_opened_scope", "condition": "opened_on <= CURRENT_DATE"}]}'
       - name: events
-        source: shop.main.events
+        source: shop.events
         primary_key: [event_id]
         fields:
           - name: event_id

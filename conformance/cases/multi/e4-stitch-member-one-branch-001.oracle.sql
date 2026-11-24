@@ -1,13 +1,13 @@
 WITH sales_branch AS (
   SELECT regions.name AS name, SUM(sales.amount) AS total_sales
-  FROM shop.main.sales AS sales
-  LEFT JOIN shop.main.regions AS regions ON sales.region_id = regions.region_id
+  FROM shop.sales AS sales
+  LEFT JOIN shop.regions AS regions ON sales.region_id = regions.region_id
   WHERE regions.name <> 'NORTH'
   GROUP BY regions.name
 ), budgets_branch AS (
   SELECT regions.name AS name, SUM(budgets.amount) AS budget_total
-  FROM shop.main.budgets AS budgets
-  LEFT JOIN shop.main.regions AS regions ON budgets.region_id = regions.region_id
+  FROM shop.budgets AS budgets
+  LEFT JOIN shop.regions AS regions ON budgets.region_id = regions.region_id
   WHERE regions.name <> 'NORTH'
   GROUP BY regions.name
 ), stitch_keys AS (

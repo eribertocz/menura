@@ -7,7 +7,7 @@ semantic_model:
         data: '{"namespace": "menura", "version": 1, "security_context": {"roles": ["analyst"], "attributes": []}}'
     datasets:
       - name: budgets
-        source: shop.main.budgets
+        source: shop.budgets
         primary_key: [budget_id]
         fields:
           - name: budget_id
@@ -20,7 +20,7 @@ semantic_model:
           - vendor_name: COMMON
             data: '{"namespace": "menura", "version": 1, "access": {"mode": "roles", "roles": ["analyst"]}}'
       - name: regions
-        source: shop.main.regions
+        source: shop.regions
         primary_key: [region_id]
         fields:
           - name: region_id
@@ -31,7 +31,7 @@ semantic_model:
           - vendor_name: COMMON
             data: '{"namespace": "menura", "version": 1, "access": {"mode": "roles", "roles": ["analyst"]}}'
       - name: sales
-        source: shop.main.sales
+        source: shop.sales
         primary_key: [sale_id]
         fields:
           - name: sale_id
