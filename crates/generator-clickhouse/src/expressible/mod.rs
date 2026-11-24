@@ -1,6 +1,6 @@
 //! The checks of E6-7.1 and E6-7.12, before any SQL is written: a plan that scans a relation
-//! `source` of three or more parts stops with `E6-01` at its dataset; then a plan that reads, computes or returns a value `ClickHouse` cannot
-//! express stops with `E6-01` before any SQL is written.
+//! `source` of three or more parts stops with `E6-01` at its dataset; then a plan that reads,
+//! computes or returns a value `ClickHouse` cannot express stops with `E6-01`.
 //!
 //! The error is located at the first query element, in the order E2 checks them (E2-5.3),
 //! whose evaluation needs such a value: the dimensions, the metrics, the `filters` items, then

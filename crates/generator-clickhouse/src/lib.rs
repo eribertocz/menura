@@ -93,9 +93,9 @@ use crate::steps::{StepWriter, pass_through};
 /// [`GenerateError::InexpressibleSource`] (`E6-01`) when the plan scans a relation `source` of
 /// three or more parts (E6-7.1), then [`GenerateError::InexpressibleType`] (`E6-01`) when it
 /// reads or returns a value of a type `ClickHouse` cannot express (E6-7.12), both checked
-/// before any SQL is written; otherwise a
-/// [`GenerateError::Invariant`] when the input breaks the contract of the stages before E6,
-/// such as a node outside the 0.3.0 slice (VS-1) or a `source` without a catalog relation.
+/// before any SQL is written; otherwise a [`GenerateError::Invariant`] when the input breaks
+/// the contract of the stages before E6, such as a node outside the 0.3.0 slice (VS-1) or a
+/// `source` without a catalog relation.
 pub fn generate_sql(
     plan: &PlanNode,
     catalog: &CatalogSchemaDocument,
