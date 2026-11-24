@@ -9,6 +9,7 @@ use menura_core::{CompileResult, CompiledPlanDocument, Handle, compile, parse_di
 use super::parameters::parameter_texts;
 use super::results::result_cells;
 use super::server::{ServerFailure, Session};
+use super::settings::settings_mismatch;
 use crate::case::{Case, ClickhouseExpectation, Outcome};
 use crate::compile_options::compile_options;
 use crate::csv_rows::parse_csv;
@@ -86,7 +87,8 @@ fn compile_for_clickhouse(
     Ok(compile(handle, &query, security_context, &options).result)
 }
 
-/// Checks a `ClickHouse` plan: its golden SQL (CS-2.3a), that no value is written in its SQL
+/// Checks a `ClickHouse` plan: its `SETTINGS` clause against the reversed session settings
+/// (E6-7.10), its golden SQL (CS-2.3a), that no value is written in its SQL
 /// (E6-4.2), and its execution. The plan is executed even when its golden SQL is missing or
 /// differs, and both results are reported.
 fn check_plan(
@@ -94,6 +96,9 @@ fn check_plan(
     plan: &CompiledPlanDocument,
     inputs: &ClickhouseInputs<'_>,
 ) -> CaseStatus {
+    if let Some(reason) = settings_mismatch(&plan.sql) {
+        return CaseStatus::Failed(reason);
+    }
     let golden = golden_mismatch(case, plan, inputs.case_folder);
     if let Some(reason) = inlined_value_mismatch(case.query.as_ref(), inputs.security_context, plan)
     {

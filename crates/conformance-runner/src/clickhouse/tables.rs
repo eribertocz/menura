@@ -253,42 +253,89 @@ fn fraction_digits(precision: TimestampPrecision) -> u8 {
     }
 }
 
-/// The rows `duckdb` holds for the relation `parts`, as `TabSeparated` data of `columns`: each
-/// value is read as text, an instant in `UTC`.
-fn duckdb_rows(duckdb: &Connection, parts: &[&str], columns: &[&Column]) -> Result<String, String> {
-    let selected: Vec<String> = columns.iter().map(|column| text_of(column)).collect();
+/// The rows `duckdb` holds for the relation `parts`, as `TabSeparated` data of `columns`.
+fn duckdb_rows(
+    duckdb: &Connection,
+    parts: &[&str],
+    columns: &[&Column],
+) -> Result<Vec<u8>, String> {
+    let selected: Vec<String> = columns
+        .iter()
+        .map(|column| read_expression(column))
+        .collect();
     let relation: Vec<String> = parts.iter().map(|part| quote(part)).collect();
     let statement = format!("SELECT {} FROM {}", selected.join(", "), relation.join("."));
     let result = execute_sql(duckdb, &statement, &[])
         .map_err(|failure| format!("the fixture cannot be read from DuckDB: {failure:?}"))?;
-    let mut data = String::new();
+    let mut data = Vec::new();
     for row in &result.rows {
-        let fields: Vec<String> = row.iter().map(field_of).collect::<Result<_, _>>()?;
-        data.push_str(&fields.join("\t"));
-        data.push('\n');
+        for (index, value) in row.iter().enumerate() {
+            if index > 0 {
+                data.push(b'\t');
+            }
+            data.extend(field_of(value)?);
+        }
+        data.push(b'\n');
     }
     Ok(data)
 }
 
-/// The `DuckDB` expression that reads `column` as the text `ClickHouse` reads for its type.
-fn text_of(column: &Column) -> String {
+/// The `DuckDB` expression that reads `column` as the value `ClickHouse` reads for its type:
+/// an instant as its `UTC` text with every fraction digit of its precision, binary data as its
+/// bytes, and any other value as text.
+fn read_expression(column: &Column) -> String {
     let name = quote(&column.name);
     match column.logical_type {
         LogicalType::Timestamp {
+            precision,
             with_time_zone: true,
-            ..
-        } => format!("strftime(timezone('UTC', {name}), '%Y-%m-%d %H:%M:%S.%f')"),
+        } => format!(
+            "strftime(timezone('UTC', {name}), '%Y-%m-%d %H:%M:%S{}')",
+            fraction_format(precision)
+        ),
+        LogicalType::Binary => name,
         _ => format!("CAST({name} AS VARCHAR)"),
     }
 }
 
-/// The escaped `TabSeparated` field of a value read as text.
-fn field_of(value: &Value) -> Result<String, String> {
-    match value {
-        Value::Null => Ok("\\N".to_owned()),
-        Value::Text(text) => Ok(escape(text)),
-        other => Err(format!("the fixture value {other:?} was not read as text")),
+/// The `strftime` fraction of a timestamp precision: none, milliseconds, microseconds or
+/// nanoseconds.
+fn fraction_format(precision: TimestampPrecision) -> &'static str {
+    match precision {
+        TimestampPrecision::S => "",
+        TimestampPrecision::Ms => ".%g",
+        TimestampPrecision::Us => ".%f",
+        TimestampPrecision::Ns => ".%n",
     }
+}
+
+/// The escaped `TabSeparated` field of a value read as text or as bytes.
+fn field_of(value: &Value) -> Result<Vec<u8>, String> {
+    match value {
+        Value::Null => Ok(b"\\N".to_vec()),
+        Value::Text(text) => Ok(escape(text).into_bytes()),
+        Value::Blob(bytes) => Ok(escape_bytes(bytes)),
+        other => Err(format!(
+            "the fixture value {other:?} was not read as text or bytes"
+        )),
+    }
+}
+
+/// `bytes` with the escapes of `ClickHouse`'s escaped text form; every other byte is written
+/// as it is.
+fn escape_bytes(bytes: &[u8]) -> Vec<u8> {
+    let mut escaped = Vec::with_capacity(bytes.len());
+    for byte in bytes {
+        match byte {
+            b'\\' => escaped.extend_from_slice(b"\\\\"),
+            b'\t' => escaped.extend_from_slice(b"\\t"),
+            b'\n' => escaped.extend_from_slice(b"\\n"),
+            b'\r' => escaped.extend_from_slice(b"\\r"),
+            0 => escaped.extend_from_slice(b"\\0"),
+            other => escaped.push(*other),
+        }
+    }
+    escaped
 }
 
 /// `name` as a quoted identifier, with every double quote doubled. It is valid in both engines.
@@ -370,25 +417,42 @@ mod tests {
     }
 
     #[test]
-    fn e6_7_10_reads_an_instant_of_duckdb_in_utc() {
+    fn e6_7_10_reads_an_instant_of_duckdb_in_utc_with_its_precision() {
         let instant = LogicalType::Timestamp {
             precision: TimestampPrecision::Us,
             with_time_zone: true,
         };
         assert_eq!(
-            text_of(&column(instant, false)),
+            read_expression(&column(instant, false)),
             "strftime(timezone('UTC', \"c\"), '%Y-%m-%d %H:%M:%S.%f')"
         );
+        let nanoseconds = LogicalType::Timestamp {
+            precision: TimestampPrecision::Ns,
+            with_time_zone: true,
+        };
+        assert!(read_expression(&column(nanoseconds, false)).ends_with(".%n')"));
+    }
+
+    #[test]
+    fn e6_7_10_copies_binary_values_as_their_bytes() {
         assert_eq!(
-            text_of(&column(LogicalType::Text, false)),
+            read_expression(&column(LogicalType::Binary, false)),
+            "\"c\""
+        );
+        assert_eq!(
+            read_expression(&column(LogicalType::Text, false)),
             "CAST(\"c\" AS VARCHAR)"
         );
     }
 
     #[test]
     fn e6_7_10_writes_fixture_values_as_escaped_fields() {
-        assert_eq!(field_of(&Value::Null).unwrap(), "\\N");
-        assert_eq!(field_of(&Value::Text("a\tb".to_owned())).unwrap(), "a\\tb");
+        assert_eq!(field_of(&Value::Null).unwrap(), b"\\N");
+        assert_eq!(field_of(&Value::Text("a\tb".to_owned())).unwrap(), b"a\\tb");
+        assert_eq!(
+            field_of(&Value::Blob(vec![0xff, b'\t', 0, b'\\'])).unwrap(),
+            b"\xff\\t\\0\\\\"
+        );
         assert!(field_of(&Value::Int(1)).is_err());
     }
 }

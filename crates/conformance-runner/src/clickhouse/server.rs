@@ -3,23 +3,7 @@
 //! (E6-7.10).
 
 use super::http::{Endpoint, post};
-
-/// The settings the generated SQL fixes in its `SETTINGS` clause (E6-7.8), each set at the
-/// session level to the value opposite to the one the statement needs, so that a statement
-/// that does not fix one of them returns other rows (E6-7.10). The list follows the one the
-/// generator crate documents; the runner keeps its own copy because it depends on no stage's
-/// internals.
-pub(crate) const OPPOSITE_SETTINGS: [(&str, &str); 9] = [
-    ("join_use_nulls", "0"),
-    ("transform_null_in", "1"),
-    ("prefer_column_name_to_alias", "0"),
-    ("enable_positional_arguments", "0"),
-    ("short_circuit_function_evaluation", "'disable'"),
-    ("enable_extended_results_for_datetime_functions", "0"),
-    ("aggregate_functions_null_for_empty", "0"),
-    ("decimal_check_overflow", "0"),
-    ("use_variant_as_common_type", "1"),
-];
+use super::settings::REVERSED_SETTINGS;
 
 /// How many seconds an idle session lives on the server.
 const SESSION_TIMEOUT_SECONDS: &str = "600";
@@ -68,8 +52,8 @@ impl ClickhouseServer {
     /// Opens the fresh session `id` with the opposite settings of E6-7.10.
     pub(crate) fn open_session(&self, id: String) -> Result<Session<'_>, ServerFailure> {
         let session = Session { server: self, id };
-        for (name, value) in OPPOSITE_SETTINGS {
-            session.execute(&format!("SET {name} = {value}"), &[])?;
+        for setting in REVERSED_SETTINGS {
+            session.execute(&format!("SET {} = {}", setting.name, setting.session), &[])?;
         }
         Ok(session)
     }
@@ -124,10 +108,10 @@ impl Session<'_> {
     }
 
     /// Runs `statement`, an `INSERT … FORMAT TabSeparated`, with `data` as its rows.
-    pub(crate) fn insert(&self, statement: &str, data: &str) -> Result<(), ServerFailure> {
+    pub(crate) fn insert(&self, statement: &str, data: &[u8]) -> Result<(), ServerFailure> {
         let mut query = self.session_pairs();
         query.push(("query", statement));
-        self.server.send(&query, data.as_bytes()).map(|_| ())
+        self.server.send(&query, data).map(|_| ())
     }
 
     fn session_pairs(&self) -> Vec<(&str, &str)> {
@@ -141,28 +125,6 @@ impl Session<'_> {
 #[cfg(test)]
 mod tests {
     use super::*;
-
-    #[test]
-    fn e6_7_10_sets_every_setting_of_e6_7_8_to_its_opposite() {
-        let names: Vec<&str> = OPPOSITE_SETTINGS.iter().map(|(name, _)| *name).collect();
-        for required in [
-            "join_use_nulls",
-            "transform_null_in",
-            "aggregate_functions_null_for_empty",
-            "enable_extended_results_for_datetime_functions",
-            "prefer_column_name_to_alias",
-            "short_circuit_function_evaluation",
-        ] {
-            assert!(names.contains(&required), "{required}");
-        }
-        assert!(OPPOSITE_SETTINGS.contains(&("join_use_nulls", "0")));
-        assert!(OPPOSITE_SETTINGS.contains(&("transform_null_in", "1")));
-    }
-
-    #[test]
-    fn e6_7_10_reverses_use_variant_as_common_type() {
-        assert!(OPPOSITE_SETTINGS.contains(&("use_variant_as_common_type", "1")));
-    }
 
     #[test]
     fn e6_7_10_an_engine_failure_names_clickhouse() {

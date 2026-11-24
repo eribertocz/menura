@@ -11,6 +11,7 @@ mod http;
 mod parameters;
 mod results;
 mod server;
+mod settings;
 mod tables;
 
 use std::path::Path;
@@ -37,7 +38,7 @@ use tables::{drop_fixture, load_fixture};
 pub struct ServerFacts {
     /// The exact server version, as `version()` returns it.
     pub version: String,
-    /// The server time zone, as `timezone()` returns it.
+    /// The server time zone, as `serverTimezone()` returns it.
     pub time_zone: String,
     /// The version of the server's embedded time-zone data (`TZDATA_VERSION`).
     pub time_zone_data_version: String,
@@ -61,7 +62,7 @@ pub fn server_facts(server: &ClickhouseServer) -> Result<ServerFacts, RunnerErro
     };
     let facts = ServerFacts {
         version: read("SELECT version()")?,
-        time_zone: read("SELECT timezone()")?,
+        time_zone: read("SELECT serverTimezone()")?,
         time_zone_data_version: read(
             "SELECT value FROM system.build_options WHERE name = 'TZDATA_VERSION'",
         )?,
