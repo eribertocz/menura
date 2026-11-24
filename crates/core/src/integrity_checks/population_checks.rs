@@ -3,10 +3,8 @@
 //! columns of each role.
 
 use menura_contracts::types::catalog::CatalogSchemaDocument;
-use menura_generator_duckdb::{
-    CheckInputs, GeneratedCheckSql, PeriodicCheck, ValidityCheck, generate_periodic_check_sql,
-    generate_validity_check_sql,
-};
+use menura_contracts::types::common::Dialect;
+use menura_generator_duckdb::{PeriodicCheck, ValidityCheck};
 use menura_model::internal_model::{
     Dataset, InternalModel, NormalizedName, Population, PopulationMode, ValueType,
 };
@@ -18,13 +16,17 @@ use super::key_columns::{STAGE, key_columns};
 use super::plan_nodes::scan;
 use super::result_names::added_column_name;
 use crate::compile::InternalError;
+use crate::dialect_sql::{CheckShape, CheckSql, Sources, check_sql};
+use crate::stop::Stop;
 
-/// The SQL of the `population` check of the population `target`, and the dataset it reads.
+/// The SQL of the `population` check of the population `target` in `dialect`, and the dataset
+/// it reads.
 pub(super) fn population_check_sql(
+    dialect: Dialect,
     model: &InternalModel,
     catalog: &CatalogSchemaDocument,
     target: &NormalizedName,
-) -> Result<(GeneratedCheckSql, NormalizedName), InternalError> {
+) -> Result<(CheckSql, NormalizedName), Stop> {
     let (dataset, population) = declared(model, target)?;
     let rows = population_rows(dataset, population, catalog)?;
     let entity = columns(&population.entity);
@@ -33,8 +35,7 @@ pub(super) fn population_check_sql(
         .iter()
         .map(|name| name.as_str().to_owned())
         .collect();
-    let inputs = CheckInputs { catalog, model };
-    let generated = match &population.mode {
+    let shape = match &population.mode {
         PopulationMode::Validity {
             valid_from,
             valid_to,
@@ -48,7 +49,7 @@ pub(super) fn population_check_sql(
                 valid_to: ColumnName::new(valid_to.as_str()),
                 result_columns: fields,
             };
-            generate_validity_check_sql(&check, inputs)
+            CheckShape::Validity(check)
         }
         PopulationMode::Periodic { period, grain } => {
             fields.push(added_column_name("row_count", &fields));
@@ -59,10 +60,10 @@ pub(super) fn population_check_sql(
                 grain: *grain,
                 result_columns: fields,
             };
-            generate_periodic_check_sql(&check, inputs)
+            CheckShape::Periodic(check)
         }
-    }
-    .map_err(|error| InternalError::new("E6", format!("{error:?}")))?;
+    };
+    let generated = check_sql(dialect, &shape, Sources { catalog, model })?;
     Ok((generated, dataset.name.clone()))
 }
 

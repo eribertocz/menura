@@ -179,6 +179,8 @@ pub enum Grain {
 pub enum Dialect {
     /// `DuckDB`.
     Duckdb,
+    /// `ClickHouse`, from 1.1.0 (E6-7).
+    Clickhouse,
 }
 
 /// A compiler stage that takes a decision.

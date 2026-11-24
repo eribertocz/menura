@@ -18,6 +18,7 @@ menura-e3-paths.workspace = true
 menura-e4-plan.workspace = true
 menura-e5-optimize.workspace = true
 menura-generator-duckdb.workspace = true
+menura-generator-clickhouse.workspace = true
 serde_json = "1"
 
 [lints]

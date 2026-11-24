@@ -74,6 +74,7 @@
       }
     ],
     "dialects": [
+      "clickhouse",
       "duckdb"
     ],
     "extensions": [

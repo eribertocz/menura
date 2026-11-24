@@ -48,7 +48,7 @@ pub(crate) fn tool_description(command: CommandName) -> &'static str {
             "Returns the model description a security context sees, or the compile error."
         }
         CommandName::IntegrityChecks => {
-            "Returns the integrity-check document of a dialect (`duckdb`, the default), or the compile error."
+            "Returns the integrity-check document of a dialect (`clickhouse` or `duckdb`, the default), or the compile error."
         }
         CommandName::Dependencies => {
             "Returns the model-dependency document of a model, or the compile error."
@@ -73,7 +73,7 @@ pub(crate) fn member_description(argument: Argument) -> &'static str {
         Argument::LoadOptions => "The load options; an omitted option takes its default.",
         Argument::CompileOptions => "The compile options; an omitted option takes its default.",
         Argument::AuditRecord => "",
-        Argument::Dialect => "The dialect, `duckdb` (the default).",
+        Argument::Dialect => "The dialect, `clickhouse` or `duckdb` (the default).",
         Argument::OldModel => "The old model document as text.",
         Argument::OldCatalogSchema => "The catalog schema of the old model as text.",
         Argument::NewModel => "The new model document as text.",
