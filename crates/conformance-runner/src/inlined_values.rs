@@ -7,9 +7,11 @@
 //! context's `attributes`. The plan's `sql` is then searched for each value that no parameter
 //! holds, as a string literal and as a number token.
 
+use menura_contracts::types::common::Dialect;
 use menura_contracts::types::compiled_plan::CompiledPlanDocument;
 use serde_json::Value as Json;
 
+use crate::clickhouse_literals::is_clickhouse_constant;
 use crate::intended_literals::{is_generated_on_purpose, is_generator_constant};
 use crate::sql_literals::{Literal, LiteralKind, literals, normalized_number};
 
@@ -46,7 +48,10 @@ pub(crate) fn inlined_value_mismatch(
     let sql_literals: Vec<Literal> = literals(&plan.sql)
         .into_iter()
         .filter(|literal| {
-            !is_generated_on_purpose(literal) && !is_generator_constant(literal, &plan.sql)
+            !(is_generated_on_purpose(literal)
+                || is_generator_constant(literal, &plan.sql)
+                || (plan.dialect == Dialect::Clickhouse
+                    && is_clickhouse_constant(literal, &plan.sql)))
         })
         .collect();
     values.iter().find_map(|value| {
