@@ -26,9 +26,13 @@ use support::{
 const BALANCE_FIELDS: [&str; 4] = ["CUSTOMER_ID", "BALANCE_DATE", "BRANCH", "BALANCE"];
 const CUSTOMER_FIELDS: [&str; 3] = ["CUSTOMER_ID", "VALID_FROM", "VALID_TO"];
 
-/// The last `SUM(BALANCE)` of the global period per `BRANCH` and `CUSTOMER_ID`, across the
-/// month of `BALANCE_DATE`, with `nulls` and `missing`.
-fn snapshot_rule(nulls: NullHandling, missing: SnapshotMissing) -> SnapshotRule {
+/// The `aggregation` of `SUM(BALANCE)` per `BRANCH` and `CUSTOMER_ID`, across the month of
+/// `BALANCE_DATE`, with `nulls` and `missing`.
+fn snapshot_rule(
+    aggregation: SnapshotAggregation,
+    nulls: NullHandling,
+    missing: SnapshotMissing,
+) -> SnapshotRule {
     let expected = population_over(
         population_scan("CUSTOMERS", &CUSTOMER_FIELDS),
         "CUSTOMERS",
@@ -41,7 +45,7 @@ fn snapshot_rule(nulls: NullHandling, missing: SnapshotMissing) -> SnapshotRule 
         keys: vec![named("BRANCH", "BRANCH")],
         entity: vec![named("CUSTOMER_ID", "CUSTOMER_ID")],
         components: vec![component("BALANCE", "SUM(BALANCE)", None)],
-        aggregation: SnapshotAggregation::Last(Selection::GlobalPeriod),
+        aggregation,
         nulls,
         over: SnapshotOver::Time(TimeSnapshot {
             period: parse("DATE_TRUNC('month', BALANCE_DATE)"),
@@ -63,12 +67,24 @@ fn carry_forward() -> SnapshotMissing {
     }
 }
 
+/// The last value of the global period.
+const LAST: SnapshotAggregation = SnapshotAggregation::Last(Selection::GlobalPeriod);
+
 #[cfg(test)]
 fn sql_of(nulls: NullHandling, missing: SnapshotMissing) -> String {
+    sql_with(LAST, nulls, missing)
+}
+
+#[cfg(test)]
+fn sql_with(
+    aggregation: SnapshotAggregation,
+    nulls: NullHandling,
+    missing: SnapshotMissing,
+) -> String {
     let plan = PlanNode::new(
         Operation::Snapshot {
             input: Box::new(population_scan("BALANCES", &BALANCE_FIELDS)),
-            rule: snapshot_rule(nulls, missing),
+            rule: snapshot_rule(aggregation, nulls, missing),
         },
         OutputSchema::new(vec![
             column("BRANCH", LogicalType::Text, true),
@@ -133,7 +149,30 @@ fn e6_7_5_the_raising_row_has_the_column_types_of_the_values() {
 }
 
 #[test]
-fn e6_7_8_no_common_type_of_two_branches_is_a_variant() {
+fn e6_7_5_every_reduction_casts_its_keys_and_entity_to_the_column_types() {
+    let reductions = [
+        (LAST, "\"menura_candidate\"."),
+        (SnapshotAggregation::Minimum, ""),
+        (SnapshotAggregation::Last(Selection::PerEntity), ""),
+    ];
+    for (aggregation, alias) in reductions {
+        let sql = sql_with(aggregation, NullHandling::Error, SnapshotMissing::Exclude);
+        let snapshot = step(&sql, "snapshot");
+        assert_eq!(
+            snapshot[1..3],
+            [
+                format!("CAST({alias}\"BRANCH\" AS Nullable(String)) AS \"BRANCH\","),
+                format!(
+                    "accurateCast({alias}\"CUSTOMER_ID\", 'Nullable(Int64)') AS \"CUSTOMER_ID\","
+                ),
+            ],
+            "{snapshot:#?}"
+        );
+    }
+}
+
+#[test]
+fn e6_7_8_the_settings_forbid_a_variant_as_a_common_type() {
     let sql = sql_of(NullHandling::Error, SnapshotMissing::Exclude);
     assert!(sql.contains("\n  use_variant_as_common_type = 0"), "{sql}");
 }

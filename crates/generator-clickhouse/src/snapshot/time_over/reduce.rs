@@ -8,7 +8,7 @@ use menura_model::internal_model::{
 use super::Steps;
 use menura_representations::logical_plan::SnapshotMissing;
 
-use super::frame::{EXPECTED, Frame, PERIOD, STALE, VIOLATION, qualified};
+use super::frame::{EXPECTED, Frame, PERIOD, STALE, VIOLATION};
 use super::values::{VALUE, expected_join};
 use crate::additivity_error::AdditivityCondition;
 use crate::body::{SelectBody, union_all};
@@ -93,8 +93,7 @@ impl StepWriter<'_> {
             .map(|key| join_equal(&format!("{CANDIDATE}.{key}"), &format!("{SELECTED}.{key}")))
             .collect();
         condition.push(format!("{CANDIDATE}.{PERIOD} = {SELECTED}.{PERIOD}"));
-        let mut items = qualified(CANDIDATE, &frame.keys);
-        items.extend(qualified(CANDIDATE, &frame.entity));
+        let mut items = cast_grouping(frame, |name| format!("{CANDIDATE}.{name}"))?;
         items.extend(cast_components(frame, |name| {
             format!("{CANDIDATE}.{name}")
         })?);
@@ -116,6 +115,24 @@ fn select(columns: &[String], from: &str) -> SelectBody {
         from: from.to_owned(),
         clauses: Vec::new(),
     }
+}
+
+/// Each key, then each entity column, cast to its column type in the node, its value written
+/// by `value`: every branch the reduction unites has the same types, so `UNION ALL` never
+/// infers a common type (E6-7.8).
+fn cast_grouping(
+    frame: &Frame<'_>,
+    value: impl Fn(&str) -> String,
+) -> Result<Vec<String>, GenerateError> {
+    let rule = frame.rule;
+    let columns = rule.keys.iter().chain(&rule.entity).map(|item| &item.name);
+    columns
+        .zip(frame.keys.iter().chain(&frame.entity))
+        .map(|(column, name)| {
+            let cast = cast_column(frame.node, column.as_str(), &value(name))?;
+            Ok(format!("{cast} AS {name}"))
+        })
+        .collect()
 }
 
 /// Each component, cast to its column type in the node (E6-4.5), its value written by `value`.
@@ -141,7 +158,7 @@ fn combined(
     candidates: &str,
     function: &str,
 ) -> Result<SelectBody, GenerateError> {
-    let mut items: Vec<String> = frame.keys.iter().chain(&frame.entity).cloned().collect();
+    let mut items = cast_grouping(frame, str::to_owned)?;
     let grouped = items.len();
     items.extend(cast_components(frame, |name| {
         format!("{function}({name})")
@@ -159,8 +176,9 @@ fn per_entity(
     candidates: &str,
     direction: &str,
 ) -> Result<SelectBody, GenerateError> {
-    let mut items: Vec<String> = frame.keys.iter().chain(&frame.entity).cloned().collect();
-    let partition = items.join(", ");
+    let grouping: Vec<String> = frame.keys.iter().chain(&frame.entity).cloned().collect();
+    let partition = grouping.join(", ");
+    let mut items = cast_grouping(frame, str::to_owned)?;
     items.extend(cast_components(frame, str::to_owned)?);
     Ok(SelectBody {
         items,
@@ -222,17 +240,11 @@ fn violations(frame: &Frame<'_>, steps: &Steps) -> Vec<SelectBody> {
 /// One row, when a condition is met, whose components raise the first one in code order: the
 /// texts sort in code order (E6-4.6b), and `throwIf` takes a constant message, so each
 /// condition is raised when it is the first (E6-7.5). The keys, the entity and the components
-/// are then NULL, each cast to its column type in the node, the type the reduction gives it,
-/// so that `UNION ALL` never infers a common type (E6-7.8).
+/// are then NULL, each cast to its column type in the node, as in the reduction, so that
+/// `UNION ALL` never infers a common type (E6-7.8).
 fn raise(frame: &Frame<'_>, violations: &str) -> Result<SelectBody, GenerateError> {
-    let rule = frame.rule;
-    let grouping = rule.keys.iter().chain(&rule.entity).map(|item| &item.name);
-    let mut items = Vec::new();
-    for (column, name) in grouping.zip(frame.keys.iter().chain(&frame.entity)) {
-        let null = cast_column(frame.node, column.as_str(), "NULL")?;
-        items.push(format!("{null} AS {name}"));
-    }
-    let metric = &rule.metric;
+    let mut items = cast_grouping(frame, |_| "NULL".to_owned())?;
+    let metric = &frame.rule.metric;
     let raised: Vec<String> = AdditivityCondition::ALL
         .iter()
         .map(|condition| {

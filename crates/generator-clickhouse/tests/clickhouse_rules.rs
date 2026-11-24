@@ -286,6 +286,17 @@ fn e6_7_7_a_list_keeps_standard_null_semantics() {
 }
 
 #[test]
+fn e6_7_7_membership_in_an_empty_list_attribute_is_false() {
+    let (sql, _) = item("REGION IN (USER_ATTRIBUTE('regions'))", boolean());
+    assert!(
+        sql.starts_with(
+            "CAST(CASE WHEN empty({p1:Array(String)}) THEN FALSE WHEN \"REGION\" IS NULL"
+        ),
+        "{sql}"
+    );
+}
+
+#[test]
 fn e6_7_7_a_list_attribute_is_an_array_parameter() {
     let (sql, parameters) = item("REGION NOT IN (USER_ATTRIBUTE('regions'))", boolean());
     assert_eq!(
