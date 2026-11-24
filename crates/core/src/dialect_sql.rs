@@ -9,6 +9,7 @@ use menura_generator_clickhouse as clickhouse;
 use menura_generator_duckdb as duckdb;
 use menura_model::internal_model::InternalModel;
 use menura_representations::bound_query::BoundQuery;
+use menura_representations::check_shapes::{PeriodicCheck, SnapshotCheck, ValidityCheck};
 use menura_representations::logical_plan::PlanNode;
 use menura_security::AdmittedSecurityContext;
 
@@ -47,11 +48,11 @@ pub(crate) enum CheckShape<'plan> {
     /// A check that is one logical plan.
     Plan(&'plan PlanNode),
     /// The `population` check with `mode: validity`.
-    Validity(duckdb::ValidityCheck<'plan>),
+    Validity(ValidityCheck<'plan>),
     /// The `population` check with `mode: periodic`.
-    Periodic(duckdb::PeriodicCheck<'plan>),
+    Periodic(PeriodicCheck<'plan>),
     /// The `semi_additive` check.
-    Snapshot(duckdb::SnapshotCheck<'plan>),
+    Snapshot(SnapshotCheck<'plan>),
 }
 
 /// The SQL of `plan`, the optimized plan of `query`, in `dialect`, for the user of `security`.
@@ -140,58 +141,9 @@ fn clickhouse_check_sql(
         CheckShape::Plan(plan) => {
             clickhouse::generate_check_sql(plan, sources.catalog, sources.model)
         }
-        CheckShape::Validity(check) => {
-            clickhouse::generate_validity_check_sql(&clickhouse_validity(check), inputs)
-        }
-        CheckShape::Periodic(check) => {
-            clickhouse::generate_periodic_check_sql(&clickhouse_periodic(check), inputs)
-        }
-        CheckShape::Snapshot(check) => {
-            clickhouse::generate_snapshot_check_sql(&clickhouse_snapshot(check), inputs)
-        }
-    }
-}
-
-/// The `clickhouse` form of the validity check `check`: the same members.
-fn clickhouse_validity<'plan>(
-    check: &duckdb::ValidityCheck<'plan>,
-) -> clickhouse::ValidityCheck<'plan> {
-    clickhouse::ValidityCheck {
-        rows: check.rows,
-        entity: check.entity.clone(),
-        valid_from: check.valid_from.clone(),
-        valid_to: check.valid_to.clone(),
-        result_columns: check.result_columns.clone(),
-    }
-}
-
-/// The `clickhouse` form of the periodic check `check`: the same members.
-fn clickhouse_periodic<'plan>(
-    check: &duckdb::PeriodicCheck<'plan>,
-) -> clickhouse::PeriodicCheck<'plan> {
-    clickhouse::PeriodicCheck {
-        rows: check.rows,
-        entity: check.entity.clone(),
-        period: check.period.clone(),
-        grain: check.grain,
-        result_columns: check.result_columns.clone(),
-    }
-}
-
-/// The `clickhouse` form of the snapshot check `check`: the same members.
-fn clickhouse_snapshot<'plan>(
-    check: &duckdb::SnapshotCheck<'plan>,
-) -> clickhouse::SnapshotCheck<'plan> {
-    clickhouse::SnapshotCheck {
-        rows: check.rows,
-        entity: check.entity.clone(),
-        over: check.over.clone(),
-        time: check.time.as_ref().map(|time| clickhouse::SnapshotTime {
-            grain: time.grain,
-            population: time.population,
-            rule: time.rule,
-        }),
-        result_columns: check.result_columns.clone(),
+        CheckShape::Validity(check) => clickhouse::generate_validity_check_sql(check, inputs),
+        CheckShape::Periodic(check) => clickhouse::generate_periodic_check_sql(check, inputs),
+        CheckShape::Snapshot(check) => clickhouse::generate_snapshot_check_sql(check, inputs),
     }
 }
 

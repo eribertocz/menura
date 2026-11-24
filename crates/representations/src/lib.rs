@@ -3,6 +3,7 @@
 #![forbid(unsafe_code)]
 
 pub mod bound_query;
+pub mod check_shapes;
 pub mod columns;
 pub mod logical_plan;
 pub mod names;

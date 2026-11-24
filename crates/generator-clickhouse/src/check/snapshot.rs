@@ -4,7 +4,6 @@
 
 use menura_contracts::types::common::Grain;
 
-use super::shapes::{SnapshotCheck, SnapshotTime};
 use super::sql::{
     aliased, all_equal, all_not_null, column, expect_names, known_columns, ordinals, synthesized,
     violation,
@@ -17,6 +16,7 @@ use crate::population::membership::column_type;
 use crate::population::{PERIOD, ROW};
 use crate::steps::{StepWriter, error, pass_through};
 use crate::types::nullable_type;
+use menura_representations::check_shapes::{SnapshotCheck, SnapshotTime};
 
 /// The alias of an expected pair.
 const EXPECTED: &str = "\"menura_expected\"";

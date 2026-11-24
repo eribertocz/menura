@@ -4,7 +4,6 @@
 //! periods (CHK-6.3–CHK-6.5), write their last steps over the step of their rows' plan.
 
 mod periodic;
-mod shapes;
 mod snapshot;
 mod sql;
 mod validity;
@@ -19,7 +18,9 @@ use crate::error::{GenerateError, InvariantViolation};
 use crate::expression::Environment;
 use crate::steps::{StepWriter, error, pass_through};
 
-pub use shapes::{PeriodicCheck, SnapshotCheck, SnapshotTime, ValidityCheck};
+pub use menura_representations::check_shapes::{
+    PeriodicCheck, SnapshotCheck, SnapshotTime, ValidityCheck,
+};
 
 /// The SQL of an integrity-check plan and the parameters it binds (CHK-2, CHK-7.1).
 #[derive(Debug, Clone, PartialEq)]

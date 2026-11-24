@@ -23,6 +23,7 @@
 //! | `enable_extended_results_for_datetime_functions` | `1` |
 //! | `aggregate_functions_null_for_empty` | `1` |
 //! | `decimal_check_overflow` | `1` |
+//! | `use_variant_as_common_type` | `0` |
 //!
 //! The reason for each is documented with the clause, in the `settings` module.
 

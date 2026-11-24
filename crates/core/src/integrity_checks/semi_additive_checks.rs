@@ -4,10 +4,10 @@
 
 use menura_contracts::types::catalog::CatalogSchemaDocument;
 use menura_contracts::types::common::{Dialect, Grain, LogicalType};
-use menura_generator_duckdb::{SnapshotCheck, SnapshotTime};
 use menura_model::internal_model::{
     DeclaredAdditivity, FieldPath, InternalModel, Metric, NormalizedName, SemiAdditive,
 };
+use menura_representations::check_shapes::{SnapshotCheck, SnapshotTime};
 use menura_representations::logical_plan::{PlanNode, PopulationRule};
 use menura_representations::names::ColumnName;
 use menura_representations::origin::Origin;
