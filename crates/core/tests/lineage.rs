@@ -117,10 +117,10 @@ fn pln_4_5_physical_inputs_include_join_and_policy_reads() {
     assert_eq!(
         physical(&lineage[1]),
         [
-            "shop.main.orders.amount",
-            "shop.main.orders.store_id",
-            "shop.main.stores.region",
-            "shop.main.stores.store_id",
+            "shop.orders.amount",
+            "shop.orders.store_id",
+            "shop.stores.region",
+            "shop.stores.store_id",
         ]
     );
 }
@@ -133,7 +133,7 @@ fn pln_4_5_a_summary_branch_reads_the_summary_relation() {
     );
     assert_eq!(
         physical(&lineage[1]),
-        ["shop.main.orders_by_region_month.amount_sum"]
+        ["shop.orders_by_region_month.amount_sum"]
     );
     assert_eq!(
         lineage[1].model_inputs,
@@ -150,8 +150,8 @@ fn pln_4_5_a_recomposed_average_reads_the_summary_count_column() {
     assert_eq!(
         physical(&lineage[1]),
         [
-            "shop.main.orders_by_region_month.amount_count",
-            "shop.main.orders_by_region_month.amount_sum",
+            "shop.orders_by_region_month.amount_count",
+            "shop.orders_by_region_month.amount_sum",
         ]
     );
 }
@@ -197,7 +197,7 @@ fn pln_4_7_only_applicable_policies_are_listed() {
 #[test]
 fn pln_4_8_a_metric_reads_only_the_branches_of_its_components() {
     let lineage = lineage_of(&lineage_handle(), BY_SEGMENT);
-    assert_eq!(physical(&lineage[2]), ["shop.main.customers.customer_id"]);
+    assert_eq!(physical(&lineage[2]), ["shop.customers.customer_id"]);
     assert!(lineage[2].security_policies.is_empty());
     assert_eq!(lineage[3].security_policies, ["STORES.NORTH_ONLY"]);
 }
@@ -208,12 +208,12 @@ fn pln_4_8_a_dimension_reads_every_branch() {
     assert_eq!(
         physical(&lineage[0]),
         [
-            "shop.main.customers.customer_id",
-            "shop.main.customers.segment",
-            "shop.main.orders.customer_id",
-            "shop.main.orders.store_id",
-            "shop.main.stores.region",
-            "shop.main.stores.store_id",
+            "shop.customers.customer_id",
+            "shop.customers.segment",
+            "shop.orders.customer_id",
+            "shop.orders.store_id",
+            "shop.stores.region",
+            "shop.stores.store_id",
         ]
     );
     assert_eq!(lineage[0].security_policies, ["STORES.NORTH_ONLY"]);

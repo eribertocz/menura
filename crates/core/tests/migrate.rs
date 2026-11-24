@@ -16,7 +16,7 @@ const CURRENT: &str = r#"'{"namespace": "menura", "version": 1}'"#;
 /// A release-format model whose `orders` dataset carries one `COMMON` entry with `data`.
 fn release(data: &str) -> String {
     format!(
-        "version: \"0.1.1\"\nsemantic_model:\n  - name: shop\n    datasets:\n      - name: orders\n        source: shop.main.orders\n        custom_extensions:\n          - vendor_name: COMMON\n            data: {data}\n"
+        "version: \"0.1.1\"\nsemantic_model:\n  - name: shop\n    datasets:\n      - name: orders\n        source: shop.orders\n        custom_extensions:\n          - vendor_name: COMMON\n            data: {data}\n"
     )
 }
 
@@ -118,7 +118,7 @@ fn mig_3_2a_the_release_format_replaces_only_the_namespace_token() {
 
 #[test]
 fn mig_3_2a_the_development_format_points_at_the_namespace_member() {
-    let model = "version: 0.3.0.dev0\nname: shop\ndatasets:\n  - name: orders\n    source: shop.main.orders\n    nonportable_extensions:\n      - vendor_name: COMMON\n        data: {namespace: semantic_compiler, version: 1}\n";
+    let model = "version: 0.3.0.dev0\nname: shop\ndatasets:\n  - name: orders\n    source: shop.orders\n    nonportable_extensions:\n      - vendor_name: COMMON\n        data: {namespace: semantic_compiler, version: 1}\n";
     let options = LoadOptions {
         ossie_format: OssieFormat::Development,
         ..LoadOptions::default()
@@ -181,7 +181,7 @@ fn mig_3_2a_every_other_entry_is_left_unchanged() {
 #[test]
 fn mig_3_3_an_alias_expanded_twice_gives_two_changes() {
     let model = format!(
-        "version: \"0.1.1\"\nsemantic_model:\n  - name: shop\n    custom_extensions: &entries\n      - vendor_name: COMMON\n        data: {FORMER}\n    datasets:\n      - name: orders\n        source: shop.main.orders\n        custom_extensions: *entries\n"
+        "version: \"0.1.1\"\nsemantic_model:\n  - name: shop\n    custom_extensions: &entries\n      - vendor_name: COMMON\n        data: {FORMER}\n    datasets:\n      - name: orders\n        source: shop.orders\n        custom_extensions: *entries\n"
     );
     let report = report(&model, &LoadOptions::default());
     assert_eq!(
@@ -208,7 +208,7 @@ fn mig_3_3_members_keep_their_order_and_the_format_is_kept() {
 #[test]
 fn mig_3_4_changes_are_in_document_order() {
     let model = format!(
-        "version: \"0.1.1\"\nsemantic_model:\n  - name: shop\n    metrics:\n      - name: m\n        expression: {{dialects: [{{dialect: ANSI_SQL, expression: COUNT(*)}}]}}\n        custom_extensions:\n          - vendor_name: COMMON\n            data: {FORMER}\n    datasets:\n      - name: orders\n        source: shop.main.orders\n        custom_extensions:\n          - vendor_name: DBT\n            data: x\n          - vendor_name: COMMON\n            data: {FORMER}\n"
+        "version: \"0.1.1\"\nsemantic_model:\n  - name: shop\n    metrics:\n      - name: m\n        expression: {{dialects: [{{dialect: ANSI_SQL, expression: COUNT(*)}}]}}\n        custom_extensions:\n          - vendor_name: COMMON\n            data: {FORMER}\n    datasets:\n      - name: orders\n        source: shop.orders\n        custom_extensions:\n          - vendor_name: DBT\n            data: x\n          - vendor_name: COMMON\n            data: {FORMER}\n"
     );
     let report = report(&model, &LoadOptions::default());
     assert_eq!(
@@ -255,7 +255,7 @@ fn mig_3_6_the_same_document_and_options_give_the_same_report() {
 /// A development-format model whose `orders` entry has `data` written `data`.
 fn development(data: &str) -> String {
     format!(
-        "version: 0.3.0.dev0\nname: shop\ndatasets:\n  - name: orders\n    source: shop.main.orders\n    nonportable_extensions:\n      - vendor_name: COMMON\n        data: {data}\n"
+        "version: 0.3.0.dev0\nname: shop\ndatasets:\n  - name: orders\n    source: shop.orders\n    nonportable_extensions:\n      - vendor_name: COMMON\n        data: {data}\n"
     )
 }
 

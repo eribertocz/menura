@@ -15,19 +15,19 @@ const STATE: &str = r#"{
   "document_id": {"origin": "warehouse:shop", "snapshot": "state-1"},
   "schema_document_id": {"origin": "warehouse:shop", "snapshot": "schema-1"},
   "relations": [
-    {"source": "shop.main.orders", "row_count_estimate": 3,
+    {"source": "shop.orders", "row_count_estimate": 3,
      "partitions": {"column": "ORDER_DATE", "grain": "month", "versions": [
        {"period": "2026-09", "version": {"origin": "warehouse:shop", "snapshot": "orders-9"}},
        {"period": "2026-10", "version": {"origin": "warehouse:shop", "snapshot": "orders-10"}}]}},
-    {"source": "shop.main.customers", "row_count_estimate": 1,
+    {"source": "shop.customers", "row_count_estimate": 1,
      "version": {"origin": "warehouse:shop", "snapshot": "customers-1"}}
   ],
   "checks": [
     {"target": "ORDERS_TO_CUSTOMERS", "check": "key_uniqueness",
      "definition_hash": "1111111111111111111111111111111111111111111111111111111111111111",
      "status": "passed", "verified": [
-       {"source": "shop.main.customers", "version": {"origin": "warehouse:shop", "snapshot": "customers-1"}},
-       {"source": "shop.main.orders", "period": "2026-09", "version": {"origin": "warehouse:shop", "snapshot": "orders-9"}}]}
+       {"source": "shop.customers", "version": {"origin": "warehouse:shop", "snapshot": "customers-1"}},
+       {"source": "shop.orders", "period": "2026-09", "version": {"origin": "warehouse:shop", "snapshot": "orders-9"}}]}
   ]
 }"#;
 
@@ -36,20 +36,20 @@ const STATE: &str = r#"{
 const SHUFFLED_STATE: &str = r#"{
   "checks": [
     {"verified": [
-       {"version": {"snapshot": "orders-9", "origin": "warehouse:shop"}, "period": "2026-09", "source": "shop.main.orders"},
-       {"version": {"snapshot": "customers-1", "origin": "warehouse:shop"}, "source": "shop.main.customers"}],
+       {"version": {"snapshot": "orders-9", "origin": "warehouse:shop"}, "period": "2026-09", "source": "shop.orders"},
+       {"version": {"snapshot": "customers-1", "origin": "warehouse:shop"}, "source": "shop.customers"}],
      "status": "passed",
      "definition_hash": "1111111111111111111111111111111111111111111111111111111111111111",
      "check": "key_uniqueness", "target": "ORDERS_TO_CUSTOMERS"}
   ],
   "relations": [
     {"version": {"snapshot": "customers-1", "origin": "warehouse:shop"},
-     "row_count_estimate": 1, "source": "shop.main.customers"},
+     "row_count_estimate": 1, "source": "shop.customers"},
     {"partitions": {"versions": [
        {"version": {"snapshot": "orders-10", "origin": "warehouse:shop"}, "period": "2026-10"},
        {"version": {"snapshot": "orders-9", "origin": "warehouse:shop"}, "period": "2026-09"}],
        "grain": "month", "column": "ORDER_DATE"},
-     "row_count_estimate": 3, "source": "shop.main.orders"}
+     "row_count_estimate": 3, "source": "shop.orders"}
   ],
   "schema_document_id": {"snapshot": "schema-1", "origin": "warehouse:shop"},
   "document_id": {"snapshot": "state-1", "origin": "warehouse:shop"},

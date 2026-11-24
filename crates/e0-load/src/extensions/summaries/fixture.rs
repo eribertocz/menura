@@ -65,9 +65,9 @@ const MODELS: [(&str, &str); 14] = [
 /// `orders_daily` (`order_date`, `region`, `total_amount`, `order_count`).
 pub(crate) const MODEL: &str = MODELS[0].1;
 
-/// The catalog schema of every model but `e0-summary-kind-001`: `shop.main.orders`
+/// The catalog schema of every model but `e0-summary-kind-001`: `shop.orders`
 /// (`order_id` 32-bit, `region` text, `order_date` date, `amount` 32-bit) and
-/// `shop.main.orders_daily` (`order_date` date, `region` text, `total_amount` and
+/// `shop.orders_daily` (`order_date` date, `region` text, `total_amount` and
 /// `order_count` 64-bit).
 pub(crate) const CATALOG: &str =
     include_str!("../../../../../conformance/models/e0-summaries/catalog-schema.json");

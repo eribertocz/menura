@@ -138,7 +138,7 @@ fn e0d_1_5_catalog_columns_match_regular_references_normalized_and_delimited_one
     let payments = |keys: &str, fields: &str| {
         document(
             &format!(
-                "{{name: payments, source: shop.main.payments, primary_key: [{keys}], fields: [\
+                "{{name: payments, source: shop.payments, primary_key: [{keys}], fields: [\
                  {{name: payment_id, expression: {{dialects: [{{dialect: ANSI_SQL, expression: payment_id}}]}}}}{fields}]}}"
             ),
             "",
@@ -213,7 +213,7 @@ fn e0d_1_4_e0d_01_every_kind_of_declared_name_can_be_malformed() {
 fn e0d_1_4_e0d_01_a_malformed_relationship_column_is_rejected() {
     let relationships = document(
         &format!(
-            "{}, {{name: customers, source: shop.main.customers, primary_key: [customer_id], fields: [\
+            "{}, {{name: customers, source: shop.customers, primary_key: [customer_id], fields: [\
              {{name: customer_id, expression: {{dialects: [{{dialect: ANSI_SQL, expression: customer_id}}]}}}}]}}",
             orders("order_id", &field("customer_id", "customer_id"))
         ),

@@ -55,7 +55,7 @@ fn pair(code: &'static str, pointer: &str) -> (&'static str, String) {
 /// A minimal valid document, with `dataset_lines` added to its only dataset.
 fn minimal(dataset_lines: &str) -> String {
     format!(
-        "version: \"0.1.1\"\nsemantic_model:\n  - name: shop\n    datasets:\n      - name: orders\n        source: shop.main.orders\n{dataset_lines}"
+        "version: \"0.1.1\"\nsemantic_model:\n  - name: shop\n    datasets:\n      - name: orders\n        source: shop.orders\n{dataset_lines}"
     )
 }
 
