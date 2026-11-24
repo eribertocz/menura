@@ -64,9 +64,9 @@ pub(crate) fn load_fixture(
     let mut loaded = LoadedFixture::default();
     for relation in &catalog.relations {
         let parts: Vec<&str> = relation.source.split('.').collect();
-        let [database, table] = parts.as_slice() else {
+        let Some((database, table)) = clickhouse_name(&parts) else {
             loaded.not_created.push(format!(
-                "`{}`: ClickHouse names a table with two parts, `database.table` (E6-7.1)",
+                "`{}`: ClickHouse names a table with at most two parts (E6-7.1)",
                 relation.source
             ));
             continue;
@@ -101,6 +101,19 @@ pub(crate) fn load_fixture(
     Ok(loaded)
 }
 
+/// The `ClickHouse` database and table of a source of one part, `table` in the session's
+/// database `default`, or two parts, `database.table` (E6-7.1); `None` for more parts.
+fn clickhouse_name<'source>(parts: &[&'source str]) -> Option<(&'source str, &'source str)> {
+    match parts {
+        [table] => Some((DEFAULT_DATABASE, table)),
+        [database, table] => Some((database, table)),
+        _ => None,
+    }
+}
+
+/// The database a statement reads when a name has no database part.
+const DEFAULT_DATABASE: &str = "default";
+
 /// Drops the tables and the databases `loaded` created, so that the next case starts from an
 /// empty server.
 pub(crate) fn drop_fixture(session: &Session<'_>, loaded: &LoadedFixture) -> Result<(), String> {
@@ -114,7 +127,7 @@ pub(crate) fn drop_fixture(session: &Session<'_>, loaded: &LoadedFixture) -> Res
         session
             .execute(&statement, &[])
             .map_err(|failure| failure.describe())?;
-        if database != "default" && !databases.contains(&database.as_str()) {
+        if database != DEFAULT_DATABASE && !databases.contains(&database.as_str()) {
             databases.push(database);
         }
     }
@@ -321,6 +334,16 @@ mod tests {
         assert_eq!(column_type(&column(wall_clock, false)), None);
         assert_eq!(column_type(&column(LogicalType::Time, true)), None);
         assert_eq!(column_type(&column(LogicalType::Unsupported, true)), None);
+    }
+
+    #[test]
+    fn e6_7_10_copies_a_source_under_the_same_database_and_table() {
+        assert_eq!(
+            clickhouse_name(&["main", "orders"]),
+            Some(("main", "orders"))
+        );
+        assert_eq!(clickhouse_name(&["orders"]), Some(("default", "orders")));
+        assert_eq!(clickhouse_name(&["shop", "main", "orders"]), None);
     }
 
     #[test]
