@@ -7,7 +7,7 @@ semantic_model:
         data: '{"namespace": "menura", "version": 1, "security_context": {"roles": ["analyst"], "attributes": []}}'
     datasets:
       - name: balances
-        source: shop.main.balances
+        source: shop.balances
         primary_key: [customer_id, period]
         fields:
           - name: customer_id
@@ -23,7 +23,7 @@ semantic_model:
           - vendor_name: COMMON
             data: '{"namespace": "menura", "version": 1, "access": {"mode": "roles", "roles": ["analyst"]}}'
       - name: customers
-        source: shop.main.customers
+        source: shop.customers
         primary_key: [customer_id]
         fields:
           - name: customer_id
@@ -34,7 +34,7 @@ semantic_model:
           - vendor_name: COMMON
             data: '{"namespace": "menura", "version": 1, "access": {"mode": "roles", "roles": ["analyst"]}}'
       - name: members
-        source: shop.main.members
+        source: shop.members
         fields:
           - name: customer_id
             expression: {dialects: [{dialect: ANSI_SQL, expression: 'customer_id'}]}
@@ -48,7 +48,7 @@ semantic_model:
           - vendor_name: COMMON
             data: '{"namespace": "menura", "version": 1, "access": {"mode": "roles", "roles": ["analyst"]}, "populations": [{"name": "active_members", "mode": "validity", "entity": ["customer_id"], "valid_from": "valid_from", "valid_to": "valid_to", "partial_period": "any_day"}]}'
       - name: stock
-        source: shop.main.stock
+        source: shop.stock
         primary_key: [warehouse, product]
         fields:
           - name: warehouse

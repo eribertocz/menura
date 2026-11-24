@@ -7,7 +7,7 @@
     "physical_inputs": [
       {
         "column": "region",
-        "source": "shop.main.orders_by_region_month"
+        "source": "shop.orders_by_region_month"
       }
     ],
     "security_policies": [
@@ -23,7 +23,7 @@
     "physical_inputs": [
       {
         "column": "order_month",
-        "source": "shop.main.orders_by_region_month"
+        "source": "shop.orders_by_region_month"
       }
     ],
     "security_policies": [
@@ -40,7 +40,7 @@
     "physical_inputs": [
       {
         "column": "amount_sum",
-        "source": "shop.main.orders_by_region_month"
+        "source": "shop.orders_by_region_month"
       }
     ],
     "security_policies": [
@@ -57,7 +57,7 @@
     "physical_inputs": [
       {
         "column": "order_count",
-        "source": "shop.main.orders_by_region_month"
+        "source": "shop.orders_by_region_month"
       }
     ],
     "security_policies": [
@@ -74,11 +74,11 @@
     "physical_inputs": [
       {
         "column": "amount_count",
-        "source": "shop.main.orders_by_region_month"
+        "source": "shop.orders_by_region_month"
       },
       {
         "column": "amount_sum",
-        "source": "shop.main.orders_by_region_month"
+        "source": "shop.orders_by_region_month"
       }
     ],
     "security_policies": [

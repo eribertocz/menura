@@ -4,18 +4,18 @@ WITH
       "amount" AS "AMOUNT",
       "store_id" AS "STORE_ID",
       ROW_NUMBER() OVER () AS "menura.row_identity"
-    FROM "shop"."main"."orders"
+    FROM "shop"."orders"
   ),
   "menura_2_scan" AS (
     SELECT
       "store_id" AS "STORE_ID"
-    FROM "shop"."main"."stores"
+    FROM "shop"."stores"
   ),
   "menura_3_scan" AS (
     SELECT
       "region" AS "REGION",
       "store_id" AS "STORE_ID"
-    FROM "shop"."main"."stores"
+    FROM "shop"."stores"
   ),
   "menura_4_filter" AS (
     SELECT
@@ -52,7 +52,7 @@ WITH
     SELECT
       "region" AS "ORDERS_STORES.REGION",
       "store_id" AS "ORDERS_STORES.STORE_ID"
-    FROM "shop"."main"."stores"
+    FROM "shop"."stores"
   ),
   "menura_9_filter" AS (
     SELECT

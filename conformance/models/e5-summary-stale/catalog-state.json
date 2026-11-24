@@ -11,7 +11,7 @@
   },
   "relations": [
     {
-      "source": "shop.main.orders",
+      "source": "shop.orders",
       "row_count_estimate": 6,
       "partitions": {
         "column": "order_date",
@@ -49,7 +49,7 @@
       }
     },
     {
-      "source": "shop.main.orders_by_month",
+      "source": "shop.orders_by_month",
       "row_count_estimate": 2,
       "aggregate_build": {
         "definition_hash": "ddb8e3acde250f4054e4299b8a269c8fa6283d4caecea3fc1e68c4c8321913ef",

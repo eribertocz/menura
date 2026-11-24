@@ -6,7 +6,7 @@ WITH
       "sale_date" AS "SALE_DATE",
       "sale_id" AS "SALE_ID",
       "voided" AS "VOIDED"
-    FROM "shop"."main"."sales"
+    FROM "shop"."sales"
   ),
   "menura_2_filter" AS (
     SELECT

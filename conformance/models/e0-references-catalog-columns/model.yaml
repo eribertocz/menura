@@ -7,7 +7,7 @@ semantic_model:
         data: '{"namespace": "menura", "version": 1, "security_context": {"roles": ["analyst"], "attributes": []}}'
     datasets:
       - name: payments
-        source: shop.main.payments
+        source: shop.payments
         primary_key: [payment_id]
         fields:
           - name: payment_id

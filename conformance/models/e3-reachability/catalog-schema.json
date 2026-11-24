@@ -11,7 +11,7 @@
   },
   "relations": [
     {
-      "source": "shop.main.orders",
+      "source": "shop.orders",
       "columns": [
         {
           "name": "order_id",
@@ -62,7 +62,7 @@
       ]
     },
     {
-      "source": "shop.main.customers",
+      "source": "shop.customers",
       "columns": [
         {
           "name": "customer_id",
@@ -95,7 +95,7 @@
       ]
     },
     {
-      "source": "shop.main.regions",
+      "source": "shop.regions",
       "columns": [
         {
           "name": "region_id",
@@ -118,7 +118,7 @@
       ]
     },
     {
-      "source": "shop.main.returns",
+      "source": "shop.returns",
       "columns": [
         {
           "name": "return_id",
@@ -169,7 +169,7 @@
       ]
     },
     {
-      "source": "shop.main.warehouses",
+      "source": "shop.warehouses",
       "columns": [
         {
           "name": "warehouse_id",
@@ -192,7 +192,7 @@
       ]
     },
     {
-      "source": "shop.main.accounts",
+      "source": "shop.accounts",
       "columns": [
         {
           "name": "account_id",
@@ -215,7 +215,7 @@
       ]
     },
     {
-      "source": "shop.main.profiles",
+      "source": "shop.profiles",
       "columns": [
         {
           "name": "account_id",

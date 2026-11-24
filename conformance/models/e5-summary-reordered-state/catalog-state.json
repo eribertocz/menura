@@ -74,7 +74,7 @@
         "definition_hash": "ddb8e3acde250f4054e4299b8a269c8fa6283d4caecea3fc1e68c4c8321913ef"
       },
       "row_count_estimate": 5,
-      "source": "shop.main.orders_by_month"
+      "source": "shop.orders_by_month"
     },
     {
       "aggregate_build": {
@@ -150,7 +150,7 @@
         "definition_hash": "ce1e1c079bbcc2a0ba3a7b3277c56e9e281151a2995527ae319257365f27781c"
       },
       "row_count_estimate": 4,
-      "source": "shop.main.orders_by_region_month"
+      "source": "shop.orders_by_region_month"
     },
     {
       "partitions": {
@@ -188,7 +188,7 @@
         "column": "order_date"
       },
       "row_count_estimate": 6,
-      "source": "shop.main.orders"
+      "source": "shop.orders"
     }
   ],
   "schema_document_id": {

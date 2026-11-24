@@ -7,7 +7,7 @@ semantic_model:
         data: '{"namespace": "menura", "version": 1, "security_context": {"roles": ["analyst", "auditor", "guest", "manager", "viewer"], "attributes": [{"name": "regions", "type": "list<text>"}, {"name": "blocked_channels", "type": "list<text>"}, {"name": "team_id", "type": "integer"}]}}'
     datasets:
       - name: sales
-        source: shop.main.sales
+        source: shop.sales
         primary_key: [sale_id]
         fields:
           - name: sale_id
@@ -41,7 +41,7 @@ semantic_model:
           - vendor_name: COMMON
             data: '{"namespace": "menura", "version": 1, "access": {"mode": "roles", "roles": ["analyst", "auditor", "guest", "manager", "viewer"], "fields": [{"names": ["cost"], "roles": ["manager"]}]}, "row_access": [{"name": "channel_scope", "condition": "channel NOT IN (USER_ATTRIBUTE(''blocked_channels''))", "roles": ["manager"], "exempt_roles": ["auditor"]}, {"name": "not_voided", "condition": "voided = FALSE", "exempt_roles": ["auditor"]}, {"name": "region_scope", "condition": "region IN (USER_ATTRIBUTE(''regions''))", "roles": ["analyst"], "exempt_roles": ["auditor"]}, {"name": "team_scope", "condition": "team_id = USER_ATTRIBUTE(''team_id'')", "roles": ["viewer"], "exempt_roles": ["auditor"]}]}'
       - name: targets
-        source: shop.main.targets
+        source: shop.targets
         primary_key: [region]
         fields:
           - name: region
@@ -52,7 +52,7 @@ semantic_model:
           - vendor_name: COMMON
             data: '{"namespace": "menura", "version": 1, "access": {"mode": "roles", "roles": ["manager"]}}'
       - name: returns
-        source: shop.main.returns
+        source: shop.returns
         primary_key: [return_id]
         fields:
           - name: return_id

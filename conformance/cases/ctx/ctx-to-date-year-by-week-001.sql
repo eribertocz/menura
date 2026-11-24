@@ -3,7 +3,7 @@ WITH
     SELECT
       "amount" AS "AMOUNT",
       "order_date" AS "ORDER_DATE"
-    FROM "shop"."main"."orders"
+    FROM "shop"."orders"
   ),
   "menura_2_aggregate" AS (
     SELECT
@@ -17,7 +17,7 @@ WITH
     SELECT
       "amount" AS "AMOUNT",
       "order_date" AS "ORDER_DATE"
-    FROM "shop"."main"."orders"
+    FROM "shop"."orders"
   ),
   "menura_4_todate" AS (
     SELECT

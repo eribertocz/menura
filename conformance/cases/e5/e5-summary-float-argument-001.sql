@@ -3,7 +3,7 @@ WITH
     SELECT
       "order_date" AS "ORDER_DATE",
       "price" AS "PRICE"
-    FROM "shop"."main"."orders"
+    FROM "shop"."orders"
   ),
   "menura_2_aggregate" AS (
     SELECT

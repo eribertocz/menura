@@ -11,7 +11,7 @@
   },
   "relations": [
     {
-      "source": "shop.main.orders",
+      "source": "shop.orders",
       "columns": [
         {
           "name": "order_id",
@@ -80,7 +80,7 @@
       ]
     },
     {
-      "source": "shop.main.customers",
+      "source": "shop.customers",
       "columns": [
         {
           "name": "customer_id",
@@ -113,7 +113,7 @@
       ]
     },
     {
-      "source": "shop.main.customer_profiles",
+      "source": "shop.customer_profiles",
       "columns": [
         {
           "name": "customer_id",
@@ -136,7 +136,7 @@
       ]
     },
     {
-      "source": "shop.main.stores",
+      "source": "shop.stores",
       "columns": [
         {
           "name": "store_id",
@@ -179,7 +179,7 @@
       ]
     },
     {
-      "source": "shop.main.regions",
+      "source": "shop.regions",
       "columns": [
         {
           "name": "region_id",
@@ -202,7 +202,7 @@
       ]
     },
     {
-      "source": "shop.main.calendar",
+      "source": "shop.calendar",
       "columns": [
         {
           "name": "date_key",
@@ -215,7 +215,7 @@
       ]
     },
     {
-      "source": "shop.main.promotions",
+      "source": "shop.promotions",
       "columns": [
         {
           "name": "promotion_id",
@@ -246,7 +246,7 @@
       ]
     },
     {
-      "source": "shop.main.employees",
+      "source": "shop.employees",
       "columns": [
         {
           "name": "employee_id",
@@ -289,7 +289,7 @@
       ]
     },
     {
-      "source": "shop.main.exchange_rates",
+      "source": "shop.exchange_rates",
       "columns": [
         {
           "name": "currency",
@@ -312,7 +312,7 @@
       ]
     },
     {
-      "source": "shop.main.orders_by_day",
+      "source": "shop.orders_by_day",
       "columns": [
         {
           "name": "order_date",
@@ -335,7 +335,7 @@
       ]
     },
     {
-      "source": "shop.main.deliveries",
+      "source": "shop.deliveries",
       "columns": [
         {
           "name": "delivery_id",
@@ -378,7 +378,7 @@
       ]
     },
     {
-      "source": "shop.main.store_days",
+      "source": "shop.store_days",
       "columns": [
         {
           "name": "store_id",

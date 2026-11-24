@@ -4,7 +4,7 @@ WITH
       "amount" AS "AMOUNT",
       "customer_id" AS "CUSTOMER_ID",
       "order_id" AS "ORDER_ID"
-    FROM "shop"."main"."orders"
+    FROM "shop"."orders"
   ),
   "menura_2_filter" AS (
     SELECT

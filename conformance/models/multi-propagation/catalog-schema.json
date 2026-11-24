@@ -11,7 +11,7 @@
   },
   "relations": [
     {
-      "source": "shop.main.stores",
+      "source": "shop.stores",
       "columns": [
         {
           "name": "store_id",
@@ -34,7 +34,7 @@
       ]
     },
     {
-      "source": "shop.main.customers",
+      "source": "shop.customers",
       "columns": [
         {
           "name": "customer_id",
@@ -67,7 +67,7 @@
       ]
     },
     {
-      "source": "shop.main.orders",
+      "source": "shop.orders",
       "columns": [
         {
           "name": "order_id",
@@ -102,7 +102,7 @@
       ]
     },
     {
-      "source": "shop.main.suppliers",
+      "source": "shop.suppliers",
       "columns": [
         {
           "name": "supplier_id",
@@ -125,7 +125,7 @@
       ]
     },
     {
-      "source": "shop.main.products",
+      "source": "shop.products",
       "columns": [
         {
           "name": "product_id",
@@ -150,7 +150,7 @@
       ]
     },
     {
-      "source": "shop.main.warehouses",
+      "source": "shop.warehouses",
       "columns": [
         {
           "name": "warehouse_id",
@@ -175,7 +175,7 @@
       ]
     },
     {
-      "source": "shop.main.lines",
+      "source": "shop.lines",
       "columns": [
         {
           "name": "line_id",
@@ -220,7 +220,7 @@
       ]
     },
     {
-      "source": "shop.main.teams",
+      "source": "shop.teams",
       "columns": [
         {
           "name": "team_id",
@@ -253,7 +253,7 @@
       ]
     },
     {
-      "source": "shop.main.people",
+      "source": "shop.people",
       "columns": [
         {
           "name": "person_id",
@@ -278,7 +278,7 @@
       ]
     },
     {
-      "source": "shop.main.zones",
+      "source": "shop.zones",
       "columns": [
         {
           "name": "zone_code",
@@ -299,7 +299,7 @@
       ]
     },
     {
-      "source": "shop.main.visits",
+      "source": "shop.visits",
       "columns": [
         {
           "name": "visit_id",
@@ -322,7 +322,7 @@
       ]
     },
     {
-      "source": "shop.main.cities",
+      "source": "shop.cities",
       "columns": [
         {
           "name": "city_id",
@@ -345,7 +345,7 @@
       ]
     },
     {
-      "source": "shop.main.venues",
+      "source": "shop.venues",
       "columns": [
         {
           "name": "venue_id",
@@ -378,7 +378,7 @@
       ]
     },
     {
-      "source": "shop.main.events",
+      "source": "shop.events",
       "columns": [
         {
           "name": "event_id",

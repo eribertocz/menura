@@ -4,7 +4,7 @@ semantic_model:
     description: 'No security_context: no roles or attributes are declared'
     datasets:
       - name: orders
-        source: shop.main.orders
+        source: shop.orders
         primary_key: [order_id]
         fields:
           - name: order_id
@@ -21,7 +21,7 @@ semantic_model:
           - vendor_name: COMMON
             data: '{"namespace": "menura", "version": 1, "access": {"mode": "authenticated"}}'
       - name: notes
-        source: shop.main.notes
+        source: shop.notes
         primary_key: [note_id]
         fields:
           - name: note_id

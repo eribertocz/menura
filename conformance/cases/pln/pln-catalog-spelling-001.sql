@@ -2,7 +2,7 @@ WITH
   "menura_1_scan" AS (
     SELECT
       "Amount" AS "AMOUNT_EXACT"
-    FROM "shop"."main"."payments"
+    FROM "shop"."payments"
   ),
   "menura_2_aggregate" AS (
     SELECT

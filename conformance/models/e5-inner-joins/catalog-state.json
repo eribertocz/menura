@@ -11,7 +11,7 @@
   },
   "relations": [
     {
-      "source": "shop.main.customers",
+      "source": "shop.customers",
       "row_count_estimate": 2,
       "version": {
         "origin": "conformance:e5-inner-joins",
@@ -19,7 +19,7 @@
       }
     },
     {
-      "source": "shop.main.orders",
+      "source": "shop.orders",
       "row_count_estimate": 4,
       "version": {
         "origin": "conformance:e5-inner-joins",
@@ -27,7 +27,7 @@
       }
     },
     {
-      "source": "shop.main.stores",
+      "source": "shop.stores",
       "row_count_estimate": 2,
       "version": {
         "origin": "conformance:e5-inner-joins",
@@ -43,14 +43,14 @@
       "status": "passed",
       "verified": [
         {
-          "source": "shop.main.orders",
+          "source": "shop.orders",
           "version": {
             "origin": "conformance:e5-inner-joins",
             "snapshot": "orders-1"
           }
         },
         {
-          "source": "shop.main.customers",
+          "source": "shop.customers",
           "version": {
             "origin": "conformance:e5-inner-joins",
             "snapshot": "customers-1"
@@ -65,14 +65,14 @@
       "status": "passed",
       "verified": [
         {
-          "source": "shop.main.orders",
+          "source": "shop.orders",
           "version": {
             "origin": "conformance:e5-inner-joins",
             "snapshot": "orders-1"
           }
         },
         {
-          "source": "shop.main.stores",
+          "source": "shop.stores",
           "version": {
             "origin": "conformance:e5-inner-joins",
             "snapshot": "stores-1"

@@ -11,7 +11,7 @@
   },
   "relations": [
     {
-      "source": "shop.main.orders",
+      "source": "shop.orders",
       "row_count_estimate": 3,
       "partitions": {
         "column": "order_date",
@@ -35,7 +35,7 @@
       }
     },
     {
-      "source": "shop.main.customers",
+      "source": "shop.customers",
       "row_count_estimate": 1,
       "version": {
         "origin": "conformance:catalog",

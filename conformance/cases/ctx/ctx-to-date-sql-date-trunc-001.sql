@@ -3,7 +3,7 @@ WITH
     SELECT
       "amount" AS "AMOUNT",
       "order_date" AS "ORDER_DATE"
-    FROM "shop"."main"."orders"
+    FROM "shop"."orders"
   ),
   "menura_2_project" AS (
     SELECT
@@ -24,7 +24,7 @@ WITH
     SELECT
       "amount" AS "AMOUNT",
       "order_date" AS "ORDER_DATE"
-    FROM "shop"."main"."orders"
+    FROM "shop"."orders"
   ),
   "menura_5_project" AS (
     SELECT

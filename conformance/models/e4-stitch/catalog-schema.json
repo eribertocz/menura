@@ -11,7 +11,7 @@
   },
   "relations": [
     {
-      "source": "shop.main.budgets",
+      "source": "shop.budgets",
       "columns": [
         {
           "name": "budget_id",
@@ -46,7 +46,7 @@
       ]
     },
     {
-      "source": "shop.main.regions",
+      "source": "shop.regions",
       "columns": [
         {
           "name": "region_id",
@@ -69,7 +69,7 @@
       ]
     },
     {
-      "source": "shop.main.sales",
+      "source": "shop.sales",
       "columns": [
         {
           "name": "sale_id",

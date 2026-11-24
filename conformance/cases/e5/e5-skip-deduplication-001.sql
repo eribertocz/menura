@@ -3,13 +3,13 @@ WITH
     SELECT
       "amount" AS "AMOUNT",
       "customer_id" AS "CUSTOMER_ID"
-    FROM "shop"."main"."orders"
+    FROM "shop"."orders"
   ),
   "menura_2_scan" AS (
     SELECT
       "customer_id" AS "ORDERS_CUSTOMERS.CUSTOMER_ID",
       "region" AS "ORDERS_CUSTOMERS.REGION"
-    FROM "shop"."main"."customers"
+    FROM "shop"."customers"
   ),
   "menura_3_join" AS (
     SELECT

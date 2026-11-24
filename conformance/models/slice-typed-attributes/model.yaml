@@ -7,7 +7,7 @@ semantic_model:
         data: '{"namespace": "menura", "version": 1, "security_context": {"roles": ["viewer"], "attributes": [{"name": "min_amount", "type": "decimal(10,2)"}, {"name": "since", "type": "date"}, {"name": "show_voided", "type": "boolean"}]}}'
     datasets:
       - name: sales
-        source: shop.main.sales
+        source: shop.sales
         primary_key: [sale_id]
         fields:
           - name: sale_id

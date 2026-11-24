@@ -11,7 +11,7 @@
   },
   "relations": [
     {
-      "source": "shop.main.orders",
+      "source": "shop.orders",
       "row_count_estimate": 6,
       "partitions": {
         "column": "order_date",
@@ -49,7 +49,7 @@
       }
     },
     {
-      "source": "shop.main.orders_by_region_month",
+      "source": "shop.orders_by_region_month",
       "row_count_estimate": 4,
       "aggregate_build": {
         "definition_hash": "ce1e1c079bbcc2a0ba3a7b3277c56e9e281151a2995527ae319257365f27781c",
@@ -125,7 +125,7 @@
       }
     },
     {
-      "source": "shop.main.orders_by_month",
+      "source": "shop.orders_by_month",
       "row_count_estimate": 5,
       "aggregate_build": {
         "definition_hash": "ddb8e3acde250f4054e4299b8a269c8fa6283d4caecea3fc1e68c4c8321913ef",

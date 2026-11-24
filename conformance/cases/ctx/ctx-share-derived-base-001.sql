@@ -5,7 +5,7 @@ WITH
       "customer_id" AS "CUSTOMER_ID",
       "status" AS "STATUS",
       ROW_NUMBER() OVER () AS "menura.row_identity"
-    FROM "shop"."main"."orders"
+    FROM "shop"."orders"
   ),
   "menura_2_filter" AS (
     SELECT
@@ -20,7 +20,7 @@ WITH
     SELECT
       "customer_id" AS "ORDERS_CUSTOMERS.CUSTOMER_ID",
       "region" AS "ORDERS_CUSTOMERS.REGION"
-    FROM "shop"."main"."customers"
+    FROM "shop"."customers"
   ),
   "menura_4_join" AS (
     SELECT
@@ -57,13 +57,13 @@ WITH
       "customer_id" AS "CUSTOMER_ID",
       "refund" AS "REFUND",
       ROW_NUMBER() OVER () AS "menura.row_identity"
-    FROM "shop"."main"."returns"
+    FROM "shop"."returns"
   ),
   "menura_8_scan" AS (
     SELECT
       "customer_id" AS "RETURNS_CUSTOMERS.CUSTOMER_ID",
       "region" AS "RETURNS_CUSTOMERS.REGION"
-    FROM "shop"."main"."customers"
+    FROM "shop"."customers"
   ),
   "menura_9_join" AS (
     SELECT
@@ -133,7 +133,7 @@ WITH
     SELECT
       "amount" AS "AMOUNT",
       "status" AS "STATUS"
-    FROM "shop"."main"."orders"
+    FROM "shop"."orders"
   ),
   "menura_17_filter" AS (
     SELECT
@@ -150,7 +150,7 @@ WITH
   "menura_19_scan" AS (
     SELECT
       "refund" AS "REFUND"
-    FROM "shop"."main"."returns"
+    FROM "shop"."returns"
   ),
   "menura_20_aggregate" AS (
     SELECT

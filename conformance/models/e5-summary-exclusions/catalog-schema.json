@@ -11,7 +11,7 @@
   },
   "relations": [
     {
-      "source": "shop.main.orders",
+      "source": "shop.orders",
       "columns": [
         {
           "name": "order_id",
@@ -53,7 +53,7 @@
       ]
     },
     {
-      "source": "shop.main.orders_price_by_month",
+      "source": "shop.orders_price_by_month",
       "columns": [
         {
           "name": "order_month",
@@ -85,7 +85,7 @@
       ]
     },
     {
-      "source": "shop.main.orders_created_by_month",
+      "source": "shop.orders_created_by_month",
       "columns": [
         {
           "name": "order_month",

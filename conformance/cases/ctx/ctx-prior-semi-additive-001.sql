@@ -4,7 +4,7 @@ WITH
       "balance" AS "BALANCE",
       "customer_id" AS "CUSTOMER_ID",
       "period" AS "PERIOD"
-    FROM "shop"."main"."balances"
+    FROM "shop"."balances"
   ),
   "menura_2_filter" AS (
     SELECT
@@ -19,7 +19,7 @@ WITH
       "customer_id" AS "CUSTOMER_ID",
       "valid_from" AS "VALID_FROM",
       "valid_to" AS "VALID_TO"
-    FROM "shop"."main"."members"
+    FROM "shop"."members"
   ),
   "menura_4_periods" AS (
     SELECT
@@ -87,7 +87,7 @@ WITH
       "balance" AS "BALANCE",
       "customer_id" AS "CUSTOMER_ID",
       "period" AS "PERIOD"
-    FROM "shop"."main"."balances"
+    FROM "shop"."balances"
   ),
   "menura_12_filter" AS (
     SELECT
@@ -102,7 +102,7 @@ WITH
       "customer_id" AS "CUSTOMER_ID",
       "valid_from" AS "VALID_FROM",
       "valid_to" AS "VALID_TO"
-    FROM "shop"."main"."members"
+    FROM "shop"."members"
   ),
   "menura_14_periods" AS (
     SELECT
