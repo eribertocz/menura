@@ -13,6 +13,7 @@ members = [
     "crates/e4-plan",
     "crates/e5-optimize",
     "crates/generator-duckdb",
+    "crates/generator-clickhouse",
     "crates/core",
     "crates/cli",
     "crates/python",
