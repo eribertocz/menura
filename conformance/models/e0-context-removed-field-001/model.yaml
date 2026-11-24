@@ -4,7 +4,7 @@ semantic_model:
     description: A share_of_total modifier that removes a field that does not exist
     datasets:
       - name: invoices
-        source: shop.main.invoices
+        source: shop.invoices
         primary_key: [invoice_id]
         fields:
           - name: invoice_id
@@ -16,7 +16,7 @@ semantic_model:
           - name: billed
             expression: {dialects: [{dialect: ANSI_SQL, expression: billed}]}
       - name: customers
-        source: shop.main.customers
+        source: shop.customers
         primary_key: [customer_id]
         fields:
           - name: customer_id

@@ -7,7 +7,7 @@ semantic_model:
         data: '{"namespace": "menura", "version": 1, "security_context": {"roles": ["analyst"], "attributes": []}}'
     datasets:
       - name: balances
-        source: shop.main.balances
+        source: shop.balances
         fields:
           - name: account_id
             expression: {dialects: [{dialect: ANSI_SQL, expression: account_id}]}
@@ -19,7 +19,7 @@ semantic_model:
           - vendor_name: COMMON
             data: '{"namespace": "menura", "version": 1, "access": {"mode": "roles", "roles": ["analyst"]}}'
       - name: accounts
-        source: shop.main.accounts
+        source: shop.accounts
         primary_key: [account_id]
         fields:
           - name: account_id

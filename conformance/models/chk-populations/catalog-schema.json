@@ -11,7 +11,7 @@
   },
   "relations": [
     {
-      "source": "shop.main.balances",
+      "source": "shop.balances",
       "columns": [
         {
           "name": "customer_id",
@@ -54,7 +54,7 @@
       ]
     },
     {
-      "source": "shop.main.memberships",
+      "source": "shop.memberships",
       "columns": [
         {
           "name": "customer_id",
@@ -85,7 +85,7 @@
       ]
     },
     {
-      "source": "shop.main.roster",
+      "source": "shop.roster",
       "columns": [
         {
           "name": "customer_id",
@@ -108,7 +108,7 @@
       ]
     },
     {
-      "source": "shop.main.stamped_memberships",
+      "source": "shop.stamped_memberships",
       "columns": [
         {
           "name": "customer_id",

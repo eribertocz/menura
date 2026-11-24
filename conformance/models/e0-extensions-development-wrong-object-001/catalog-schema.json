@@ -11,7 +11,7 @@
   },
   "relations": [
     {
-      "source": "shop.main.orders",
+      "source": "shop.orders",
       "columns": [
         {
           "name": "order_id",
@@ -44,7 +44,7 @@
       ]
     },
     {
-      "source": "shop.main.balances",
+      "source": "shop.balances",
       "columns": [
         {
           "name": "branch",

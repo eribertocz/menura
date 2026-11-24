@@ -11,7 +11,7 @@
   },
   "relations": [
     {
-      "source": "shop.main.orders",
+      "source": "shop.orders",
       "columns": [
         {
           "name": "order_id",
@@ -62,7 +62,7 @@
       ]
     },
     {
-      "source": "shop.main.orders_daily_local",
+      "source": "shop.orders_daily_local",
       "columns": [
         {
           "name": "day_start",
@@ -87,7 +87,7 @@
       ]
     },
     {
-      "source": "shop.main.orders_monthly",
+      "source": "shop.orders_monthly",
       "columns": [
         {
           "name": "region",

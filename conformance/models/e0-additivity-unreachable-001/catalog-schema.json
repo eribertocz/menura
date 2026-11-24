@@ -11,7 +11,7 @@
   },
   "relations": [
     {
-      "source": "shop.main.debt",
+      "source": "shop.debt",
       "columns": [
         {
           "name": "customer_id",
@@ -44,7 +44,7 @@
       ]
     },
     {
-      "source": "shop.main.customers",
+      "source": "shop.customers",
       "columns": [
         {
           "name": "customer_id",

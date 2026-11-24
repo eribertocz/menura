@@ -4,7 +4,7 @@ semantic_model:
     description: Model whose periodic population repeats the name of the validity population
     datasets:
       - name: customers
-        source: shop.main.customers
+        source: shop.customers
         primary_key: [customer_id, valid_from]
         fields:
           - name: customer_id
@@ -21,7 +21,7 @@ semantic_model:
           - vendor_name: COMMON
             data: '{"namespace": "menura", "version": 1, "populations": [{"name": "active_customers", "mode": "validity", "entity": ["customer_id"], "valid_from": "valid_from", "valid_to": "valid_to", "partial_period": "any_day", "required_when": "active"}]}'
       - name: account_months
-        source: shop.main.account_months
+        source: shop.account_months
         primary_key: [account_id, period_start]
         fields:
           - name: account_id
