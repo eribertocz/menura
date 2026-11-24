@@ -23,7 +23,7 @@ WITH
       "SALE_ID",
       "VOIDED"
     FROM "menura_3_scan"
-    WHERE (CASE WHEN "REGION" IS NULL THEN NULL WHEN has({p1:Array(String)}, assumeNotNull("REGION")) THEN TRUE WHEN has({p1:Array(String)}, NULL) THEN NULL ELSE FALSE END) AND ("VOIDED" = FALSE)
+    WHERE (CASE WHEN empty({p1:Array(String)}) THEN FALSE WHEN "REGION" IS NULL THEN NULL WHEN has({p1:Array(String)}, assumeNotNull("REGION")) THEN TRUE WHEN has({p1:Array(String)}, NULL) THEN NULL ELSE FALSE END) AND ("VOIDED" = FALSE)
   ),
   "menura_5_related" AS (
     SELECT
@@ -41,8 +41,8 @@ WITH
   ),
   "menura_7_semijoin" AS (
     SELECT
-      "menura_row"."REFUND",
-      "menura_row"."SALE_ID"
+      "menura_row"."REFUND" AS "REFUND",
+      "menura_row"."SALE_ID" AS "SALE_ID"
     FROM "menura_1_scan" AS "menura_row"
     JOIN "menura_5_related" AS "menura_related" ON "menura_row"."SALE_ID" = "menura_related"."menura.key_1"
     LEFT JOIN "menura_6_visible" AS "menura_visible" ON "menura_row"."SALE_ID" = "menura_visible"."menura.key_1"
@@ -69,4 +69,5 @@ SETTINGS
   short_circuit_function_evaluation = 'force_enable',
   enable_extended_results_for_datetime_functions = 1,
   aggregate_functions_null_for_empty = 1,
-  decimal_check_overflow = 1
+  decimal_check_overflow = 1,
+  use_variant_as_common_type = 0

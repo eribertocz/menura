@@ -52,8 +52,8 @@ WITH
   ),
   "menura_8_checked" AS (
     SELECT
-      "menura_value"."entity_1",
-      "menura_value"."menura.period",
+      "menura_value"."entity_1" AS "entity_1",
+      "menura_value"."menura.period" AS "menura.period",
       "menura_value"."metric_1_component_1" AS "metric_1_component_1"
     FROM "menura_7_values" AS "menura_value"
     LEFT JOIN "menura_5_population" AS "menura_expected" ON "menura_value"."entity_1" = "menura_expected"."CUSTOMER_ID" AND "menura_value"."menura.period" = "menura_expected"."period"
@@ -84,9 +84,9 @@ WITH
   ),
   "menura_12_carry" AS (
     SELECT
-      "menura_fill"."entity_1",
-      "menura_missing"."menura.period",
-      "menura_fill"."metric_1_component_1"
+      "menura_fill"."entity_1" AS "entity_1",
+      "menura_missing"."menura.period" AS "menura.period",
+      "menura_fill"."metric_1_component_1" AS "metric_1_component_1"
     FROM "menura_10_missing" AS "menura_missing"
     JOIN "menura_11_carried" AS "menura_fill" ON "menura_fill"."entity_1" = "menura_missing"."entity_1"
     WHERE "menura_fill"."menura.period" < "menura_missing"."menura.period"
@@ -112,7 +112,7 @@ WITH
   ),
   "menura_15_snapshot" AS (
     SELECT
-      "menura_candidate"."entity_1",
+      accurateCast("menura_candidate"."entity_1", 'Nullable(Int32)') AS "entity_1",
       accurateCast("menura_candidate"."metric_1_component_1", 'Nullable(Int128)') AS "metric_1_component_1"
     FROM "menura_13_candidates" AS "menura_candidate"
     JOIN "menura_14_selected" AS "menura_selected" ON "menura_candidate"."menura.period" = "menura_selected"."menura.period"
@@ -138,4 +138,5 @@ SETTINGS
   short_circuit_function_evaluation = 'force_enable',
   enable_extended_results_for_datetime_functions = 1,
   aggregate_functions_null_for_empty = 1,
-  decimal_check_overflow = 1
+  decimal_check_overflow = 1,
+  use_variant_as_common_type = 0

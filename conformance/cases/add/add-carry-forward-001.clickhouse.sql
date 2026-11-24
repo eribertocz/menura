@@ -52,8 +52,8 @@ WITH
   ),
   "menura_8_checked" AS (
     SELECT
-      "menura_value"."entity_1",
-      "menura_value"."menura.period",
+      "menura_value"."entity_1" AS "entity_1",
+      "menura_value"."menura.period" AS "menura.period",
       "menura_value"."metric_1_component_1" AS "metric_1_component_1"
     FROM "menura_7_values" AS "menura_value"
     LEFT JOIN "menura_5_population" AS "menura_expected" ON "menura_value"."entity_1" = "menura_expected"."CUSTOMER_ID" AND "menura_value"."menura.period" = "menura_expected"."period"
@@ -84,9 +84,9 @@ WITH
   ),
   "menura_12_carry" AS (
     SELECT
-      "menura_fill"."entity_1",
-      "menura_missing"."menura.period",
-      "menura_fill"."metric_1_component_1",
+      "menura_fill"."entity_1" AS "entity_1",
+      "menura_missing"."menura.period" AS "menura.period",
+      "menura_fill"."metric_1_component_1" AS "metric_1_component_1",
       dateDiff('month', "menura_fill"."menura.period", "menura_missing"."menura.period") > 4 AS "menura.stale"
     FROM "menura_10_missing" AS "menura_missing"
     JOIN "menura_11_carried" AS "menura_fill" ON "menura_fill"."entity_1" = "menura_missing"."entity_1"
@@ -119,14 +119,14 @@ WITH
   ),
   "menura_16_snapshot" AS (
     SELECT
-      "menura_candidate"."entity_1",
+      accurateCast("menura_candidate"."entity_1", 'Nullable(Int32)') AS "entity_1",
       accurateCast("menura_candidate"."metric_1_component_1", 'Nullable(Int128)') AS "metric_1_component_1"
     FROM "menura_13_candidates" AS "menura_candidate"
     JOIN "menura_14_selected" AS "menura_selected" ON "menura_candidate"."menura.period" = "menura_selected"."menura.period"
     UNION ALL
     SELECT
-      NULL AS "entity_1",
-      nullIf(throwIf(ifNull(min("menura.violation") = 'RADD-01: missing: error and an expected entity has no row in metric CARRIED_BALANCE', 0), 'RADD-01: missing: error and an expected entity has no row in metric CARRIED_BALANCE') + throwIf(ifNull(min("menura.violation") = 'RADD-02: unexpected: error and an unexpected row exists in metric CARRIED_BALANCE', 0), 'RADD-02: unexpected: error and an unexpected row exists in metric CARRIED_BALANCE') + throwIf(ifNull(min("menura.violation") = 'RADD-03: nulls: error and a NULL value exists in metric CARRIED_BALANCE', 0), 'RADD-03: nulls: error and a NULL value exists in metric CARRIED_BALANCE') + throwIf(ifNull(min("menura.violation") = 'RADD-04: on_stale: error and a carried value is too old in metric CARRIED_BALANCE', 0), 'RADD-04: on_stale: error and a carried value is too old in metric CARRIED_BALANCE'), 0) AS "metric_1_component_1"
+      accurateCast(NULL, 'Nullable(Int32)') AS "entity_1",
+      accurateCast(nullIf(throwIf(ifNull(min("menura.violation") = 'RADD-01: missing: error and an expected entity has no row in metric CARRIED_BALANCE', 0), 'RADD-01: missing: error and an expected entity has no row in metric CARRIED_BALANCE') + throwIf(ifNull(min("menura.violation") = 'RADD-02: unexpected: error and an unexpected row exists in metric CARRIED_BALANCE', 0), 'RADD-02: unexpected: error and an unexpected row exists in metric CARRIED_BALANCE') + throwIf(ifNull(min("menura.violation") = 'RADD-03: nulls: error and a NULL value exists in metric CARRIED_BALANCE', 0), 'RADD-03: nulls: error and a NULL value exists in metric CARRIED_BALANCE') + throwIf(ifNull(min("menura.violation") = 'RADD-04: on_stale: error and a carried value is too old in metric CARRIED_BALANCE', 0), 'RADD-04: on_stale: error and a carried value is too old in metric CARRIED_BALANCE'), 0), 'Nullable(Int128)') AS "metric_1_component_1"
     FROM "menura_15_violations"
     HAVING min("menura.violation") IS NOT NULL
   ),
@@ -151,4 +151,5 @@ SETTINGS
   short_circuit_function_evaluation = 'force_enable',
   enable_extended_results_for_datetime_functions = 1,
   aggregate_functions_null_for_empty = 1,
-  decimal_check_overflow = 1
+  decimal_check_overflow = 1,
+  use_variant_as_common_type = 0

@@ -2,7 +2,7 @@ WITH
   "menura_1_scan" AS (
     SELECT
       "order_id" AS "ORDER_ID",
-      CAST("amount_text" AS Nullable(Decimal(10, 1))) AS "ROUNDED_AMOUNT"
+      CAST(round(CAST("amount_text" AS Nullable(Decimal(76, 2))), 1) AS Nullable(Decimal(10, 1))) AS "ROUNDED_AMOUNT"
     FROM "shop"."orders"
   ),
   "menura_2_aggregate" AS (
@@ -30,4 +30,5 @@ SETTINGS
   short_circuit_function_evaluation = 'force_enable',
   enable_extended_results_for_datetime_functions = 1,
   aggregate_functions_null_for_empty = 1,
-  decimal_check_overflow = 1
+  decimal_check_overflow = 1,
+  use_variant_as_common_type = 0

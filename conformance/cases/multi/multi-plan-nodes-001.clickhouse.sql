@@ -32,7 +32,7 @@ WITH
       "CUSTOMER_ID",
       "REGION"
     FROM "menura_4_scan"
-    WHERE (CASE WHEN "REGION" IS NULL THEN NULL WHEN has({p1:Array(String)}, assumeNotNull("REGION")) THEN TRUE WHEN has({p1:Array(String)}, NULL) THEN NULL ELSE FALSE END) AND TRUE
+    WHERE (CASE WHEN empty({p1:Array(String)}) THEN FALSE WHEN "REGION" IS NULL THEN NULL WHEN has({p1:Array(String)}, assumeNotNull("REGION")) THEN TRUE WHEN has({p1:Array(String)}, NULL) THEN NULL ELSE FALSE END) AND TRUE
   ),
   "menura_6_related" AS (
     SELECT
@@ -50,10 +50,10 @@ WITH
   ),
   "menura_8_semijoin" AS (
     SELECT
-      "menura_row"."AMOUNT",
-      "menura_row"."CUSTOMER_ID",
-      "menura_row"."STATUS",
-      "menura_row"."menura.row_identity"
+      "menura_row"."AMOUNT" AS "AMOUNT",
+      "menura_row"."CUSTOMER_ID" AS "CUSTOMER_ID",
+      "menura_row"."STATUS" AS "STATUS",
+      "menura_row"."menura.row_identity" AS "menura.row_identity"
     FROM "menura_2_filter" AS "menura_row"
     JOIN "menura_6_related" AS "menura_related" ON CAST("menura_row"."CUSTOMER_ID" AS Nullable(Int128)) = CAST("menura_related"."menura.key_1" AS Nullable(Int128))
     LEFT JOIN "menura_7_visible" AS "menura_visible" ON CAST("menura_row"."CUSTOMER_ID" AS Nullable(Int128)) = CAST("menura_visible"."menura.key_1" AS Nullable(Int128))
@@ -72,7 +72,7 @@ WITH
       "ORDERS_CUSTOMERS.CUSTOMER_ID",
       "ORDERS_CUSTOMERS.REGION"
     FROM "menura_9_scan"
-    WHERE (CASE WHEN "ORDERS_CUSTOMERS.REGION" IS NULL THEN NULL WHEN has({p1:Array(String)}, assumeNotNull("ORDERS_CUSTOMERS.REGION")) THEN TRUE WHEN has({p1:Array(String)}, NULL) THEN NULL ELSE FALSE END) AND TRUE
+    WHERE (CASE WHEN empty({p1:Array(String)}) THEN FALSE WHEN "ORDERS_CUSTOMERS.REGION" IS NULL THEN NULL WHEN has({p1:Array(String)}, assumeNotNull("ORDERS_CUSTOMERS.REGION")) THEN TRUE WHEN has({p1:Array(String)}, NULL) THEN NULL ELSE FALSE END) AND TRUE
   ),
   "menura_11_join" AS (
     SELECT
@@ -128,7 +128,7 @@ WITH
       "CUSTOMER_ID",
       "REGION"
     FROM "menura_16_scan"
-    WHERE (CASE WHEN "REGION" IS NULL THEN NULL WHEN has({p1:Array(String)}, assumeNotNull("REGION")) THEN TRUE WHEN has({p1:Array(String)}, NULL) THEN NULL ELSE FALSE END) AND TRUE
+    WHERE (CASE WHEN empty({p1:Array(String)}) THEN FALSE WHEN "REGION" IS NULL THEN NULL WHEN has({p1:Array(String)}, assumeNotNull("REGION")) THEN TRUE WHEN has({p1:Array(String)}, NULL) THEN NULL ELSE FALSE END) AND TRUE
   ),
   "menura_18_related" AS (
     SELECT
@@ -146,9 +146,9 @@ WITH
   ),
   "menura_20_semijoin" AS (
     SELECT
-      "menura_row"."AMOUNT",
-      "menura_row"."CUSTOMER_ID",
-      "menura_row"."menura.row_identity"
+      "menura_row"."AMOUNT" AS "AMOUNT",
+      "menura_row"."CUSTOMER_ID" AS "CUSTOMER_ID",
+      "menura_row"."menura.row_identity" AS "menura.row_identity"
     FROM "menura_14_scan" AS "menura_row"
     JOIN "menura_18_related" AS "menura_related" ON "menura_row"."CUSTOMER_ID" = "menura_related"."menura.key_1"
     LEFT JOIN "menura_19_visible" AS "menura_visible" ON "menura_row"."CUSTOMER_ID" = "menura_visible"."menura.key_1"
@@ -167,7 +167,7 @@ WITH
       "REFUNDS_CUSTOMERS.CUSTOMER_ID",
       "REFUNDS_CUSTOMERS.REGION"
     FROM "menura_21_scan"
-    WHERE (CASE WHEN "REFUNDS_CUSTOMERS.REGION" IS NULL THEN NULL WHEN has({p1:Array(String)}, assumeNotNull("REFUNDS_CUSTOMERS.REGION")) THEN TRUE WHEN has({p1:Array(String)}, NULL) THEN NULL ELSE FALSE END) AND TRUE
+    WHERE (CASE WHEN empty({p1:Array(String)}) THEN FALSE WHEN "REFUNDS_CUSTOMERS.REGION" IS NULL THEN NULL WHEN has({p1:Array(String)}, assumeNotNull("REFUNDS_CUSTOMERS.REGION")) THEN TRUE WHEN has({p1:Array(String)}, NULL) THEN NULL ELSE FALSE END) AND TRUE
   ),
   "menura_23_join" AS (
     SELECT
@@ -268,4 +268,5 @@ SETTINGS
   short_circuit_function_evaluation = 'force_enable',
   enable_extended_results_for_datetime_functions = 1,
   aggregate_functions_null_for_empty = 1,
-  decimal_check_overflow = 1
+  decimal_check_overflow = 1,
+  use_variant_as_common_type = 0

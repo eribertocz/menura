@@ -45,8 +45,8 @@ WITH
   ),
   "menura_7_checked" AS (
     SELECT
-      "menura_value"."entity_1",
-      "menura_value"."menura.period",
+      "menura_value"."entity_1" AS "entity_1",
+      "menura_value"."menura.period" AS "menura.period",
       "menura_value"."metric_1_component_1" AS "metric_1_component_1"
     FROM "menura_6_values" AS "menura_value"
     LEFT JOIN "menura_5_population" AS "menura_expected" ON "menura_value"."entity_1" = "menura_expected"."CUSTOMER_ID" AND "menura_value"."menura.period" = "menura_expected"."period"
@@ -54,7 +54,7 @@ WITH
   ),
   "menura_8_snapshot" AS (
     SELECT
-      "entity_1",
+      accurateCast("entity_1", 'Nullable(Int32)') AS "entity_1",
       accurateCast("metric_1_component_1", 'Nullable(Int128)') AS "metric_1_component_1"
     FROM "menura_7_checked"
     QUALIFY ROW_NUMBER() OVER (PARTITION BY "entity_1" ORDER BY "menura.period" ASC NULLS LAST) = 1
@@ -80,4 +80,5 @@ SETTINGS
   short_circuit_function_evaluation = 'force_enable',
   enable_extended_results_for_datetime_functions = 1,
   aggregate_functions_null_for_empty = 1,
-  decimal_check_overflow = 1
+  decimal_check_overflow = 1,
+  use_variant_as_common_type = 0

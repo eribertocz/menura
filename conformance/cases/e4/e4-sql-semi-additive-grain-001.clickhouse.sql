@@ -62,9 +62,9 @@ WITH
   ),
   "menura_9_checked" AS (
     SELECT
-      "menura_value"."dimension_1",
-      "menura_value"."entity_1",
-      "menura_value"."menura.period",
+      "menura_value"."dimension_1" AS "dimension_1",
+      "menura_value"."entity_1" AS "entity_1",
+      "menura_value"."menura.period" AS "menura.period",
       "menura_value"."metric_1_component_1" AS "metric_1_component_1"
     FROM "menura_8_values" AS "menura_value"
     LEFT JOIN "menura_7_population" AS "menura_expected" ON "menura_value"."entity_1" = "menura_expected"."CUSTOMER_ID" AND "menura_value"."menura.period" = "menura_expected"."period"
@@ -79,8 +79,8 @@ WITH
   ),
   "menura_11_snapshot" AS (
     SELECT
-      "menura_candidate"."dimension_1",
-      "menura_candidate"."entity_1",
+      CAST("menura_candidate"."dimension_1" AS Nullable(Date32)) AS "dimension_1",
+      accurateCast("menura_candidate"."entity_1", 'Nullable(Int32)') AS "entity_1",
       accurateCast("menura_candidate"."metric_1_component_1", 'Nullable(Int128)') AS "metric_1_component_1"
     FROM "menura_9_checked" AS "menura_candidate"
     JOIN "menura_10_selected" AS "menura_selected" ON isNotDistinctFrom("menura_candidate"."dimension_1", "menura_selected"."dimension_1") AND "menura_candidate"."menura.period" = "menura_selected"."menura.period"
@@ -118,4 +118,5 @@ SETTINGS
   short_circuit_function_evaluation = 'force_enable',
   enable_extended_results_for_datetime_functions = 1,
   aggregate_functions_null_for_empty = 1,
-  decimal_check_overflow = 1
+  decimal_check_overflow = 1,
+  use_variant_as_common_type = 0

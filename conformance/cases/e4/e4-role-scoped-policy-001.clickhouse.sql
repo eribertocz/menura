@@ -14,7 +14,7 @@ WITH
       "SALE_ID",
       "VOIDED"
     FROM "menura_1_scan"
-    WHERE (CASE WHEN "REGION" IS NULL THEN NULL WHEN has({p1:Array(String)}, assumeNotNull("REGION")) THEN TRUE WHEN has({p1:Array(String)}, NULL) THEN NULL ELSE FALSE END) AND ("VOIDED" = FALSE)
+    WHERE (CASE WHEN empty({p1:Array(String)}) THEN FALSE WHEN "REGION" IS NULL THEN NULL WHEN has({p1:Array(String)}, assumeNotNull("REGION")) THEN TRUE WHEN has({p1:Array(String)}, NULL) THEN NULL ELSE FALSE END) AND ("VOIDED" = FALSE)
   ),
   "menura_3_aggregate" AS (
     SELECT
@@ -44,4 +44,5 @@ SETTINGS
   short_circuit_function_evaluation = 'force_enable',
   enable_extended_results_for_datetime_functions = 1,
   aggregate_functions_null_for_empty = 1,
-  decimal_check_overflow = 1
+  decimal_check_overflow = 1,
+  use_variant_as_common_type = 0

@@ -48,8 +48,8 @@ WITH
   ),
   "menura_7_checked" AS (
     SELECT
-      "menura_value"."entity_1",
-      "menura_value"."menura.period",
+      "menura_value"."entity_1" AS "entity_1",
+      "menura_value"."menura.period" AS "menura.period",
       "menura_value"."metric_1_component_1" AS "metric_1_component_1",
       "menura_value"."metric_1_component_2" AS "metric_1_component_2"
     FROM "menura_6_values" AS "menura_value"
@@ -63,7 +63,7 @@ WITH
   ),
   "menura_9_snapshot" AS (
     SELECT
-      "menura_candidate"."entity_1",
+      accurateCast("menura_candidate"."entity_1", 'Nullable(Int32)') AS "entity_1",
       accurateCast("menura_candidate"."metric_1_component_1", 'Nullable(Int128)') AS "metric_1_component_1",
       accurateCast("menura_candidate"."metric_1_component_2", 'Nullable(Int64)') AS "metric_1_component_2"
     FROM "menura_7_checked" AS "menura_candidate"
@@ -91,4 +91,5 @@ SETTINGS
   short_circuit_function_evaluation = 'force_enable',
   enable_extended_results_for_datetime_functions = 1,
   aggregate_functions_null_for_empty = 1,
-  decimal_check_overflow = 1
+  decimal_check_overflow = 1,
+  use_variant_as_common_type = 0

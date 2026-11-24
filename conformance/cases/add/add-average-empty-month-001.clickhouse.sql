@@ -81,8 +81,8 @@ WITH
   ),
   "menura_12_checked" AS (
     SELECT
-      "menura_value"."entity_1",
-      "menura_value"."menura.period",
+      "menura_value"."entity_1" AS "entity_1",
+      "menura_value"."menura.period" AS "menura.period",
       "menura_value"."metric_1_component_1" AS "metric_1_component_1"
     FROM "menura_11_values" AS "menura_value"
     LEFT JOIN "menura_5_population" AS "menura_expected" ON "menura_value"."entity_1" = "menura_expected"."CUSTOMER_ID" AND "menura_value"."menura.period" = "menura_expected"."period"
@@ -111,8 +111,8 @@ WITH
   ),
   "menura_16_zero" AS (
     SELECT
-      "menura_fill"."entity_1",
-      "menura_fill"."menura.period",
+      "menura_fill"."entity_1" AS "entity_1",
+      "menura_fill"."menura.period" AS "menura.period",
       accurateCast(0, 'Nullable(Int128)') AS "metric_1_component_1"
     FROM "menura_15_added" AS "menura_fill"
     JOIN "menura_14_missing" AS "menura_missing" ON "menura_fill"."entity_1" = "menura_missing"."entity_1" AND "menura_fill"."menura.period" = "menura_missing"."menura.period"
@@ -132,7 +132,7 @@ WITH
   ),
   "menura_18_snapshot" AS (
     SELECT
-      "entity_1",
+      accurateCast("entity_1", 'Nullable(Int32)') AS "entity_1",
       accurateCast(AVG("metric_1_component_1"), 'Nullable(Int128)') AS "metric_1_component_1"
     FROM "menura_17_candidates"
     GROUP BY 1
@@ -158,4 +158,5 @@ SETTINGS
   short_circuit_function_evaluation = 'force_enable',
   enable_extended_results_for_datetime_functions = 1,
   aggregate_functions_null_for_empty = 1,
-  decimal_check_overflow = 1
+  decimal_check_overflow = 1,
+  use_variant_as_common_type = 0

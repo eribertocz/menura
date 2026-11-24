@@ -21,7 +21,7 @@ WITH
       "VALID_FROM",
       "VALID_TO"
     FROM "menura_2_scan"
-    WHERE (CASE WHEN "REGION" IS NULL THEN NULL WHEN has({p1:Array(String)}, assumeNotNull("REGION")) THEN TRUE WHEN has({p1:Array(String)}, NULL) THEN NULL ELSE FALSE END) AND TRUE
+    WHERE (CASE WHEN empty({p1:Array(String)}) THEN FALSE WHEN "REGION" IS NULL THEN NULL WHEN has({p1:Array(String)}, assumeNotNull("REGION")) THEN TRUE WHEN has({p1:Array(String)}, NULL) THEN NULL ELSE FALSE END) AND TRUE
   ),
   "menura_4_scan" AS (
     SELECT
@@ -60,7 +60,7 @@ WITH
       "VALID_FROM",
       "VALID_TO"
     FROM "menura_7_scan"
-    WHERE (CASE WHEN "REGION" IS NULL THEN NULL WHEN has({p1:Array(String)}, assumeNotNull("REGION")) THEN TRUE WHEN has({p1:Array(String)}, NULL) THEN NULL ELSE FALSE END) AND TRUE
+    WHERE (CASE WHEN empty({p1:Array(String)}) THEN FALSE WHEN "REGION" IS NULL THEN NULL WHEN has({p1:Array(String)}, assumeNotNull("REGION")) THEN TRUE WHEN has({p1:Array(String)}, NULL) THEN NULL ELSE FALSE END) AND TRUE
   ),
   "menura_9_scan" AS (
     SELECT
@@ -101,8 +101,8 @@ WITH
   ),
   "menura_14_checked" AS (
     SELECT
-      "menura_value"."entity_1",
-      "menura_value"."menura.period",
+      "menura_value"."entity_1" AS "entity_1",
+      "menura_value"."menura.period" AS "menura.period",
       "menura_value"."metric_1_component_1" AS "metric_1_component_1"
     FROM "menura_13_values" AS "menura_value"
     LEFT JOIN "menura_6_population" AS "menura_expected" ON "menura_value"."entity_1" = "menura_expected"."CUSTOMER_ID" AND "menura_value"."menura.period" = "menura_expected"."period"
@@ -131,8 +131,8 @@ WITH
   ),
   "menura_18_zero" AS (
     SELECT
-      "menura_fill"."entity_1",
-      "menura_fill"."menura.period",
+      "menura_fill"."entity_1" AS "entity_1",
+      "menura_fill"."menura.period" AS "menura.period",
       accurateCast(0, 'Nullable(Int32)') AS "metric_1_component_1"
     FROM "menura_17_added" AS "menura_fill"
     JOIN "menura_16_missing" AS "menura_missing" ON "menura_fill"."entity_1" = "menura_missing"."entity_1" AND "menura_fill"."menura.period" = "menura_missing"."menura.period"
@@ -157,7 +157,7 @@ WITH
   ),
   "menura_21_snapshot" AS (
     SELECT
-      "menura_candidate"."entity_1",
+      accurateCast("menura_candidate"."entity_1", 'Nullable(Int32)') AS "entity_1",
       accurateCast("menura_candidate"."metric_1_component_1", 'Nullable(Int32)') AS "metric_1_component_1"
     FROM "menura_19_candidates" AS "menura_candidate"
     JOIN "menura_20_selected" AS "menura_selected" ON "menura_candidate"."menura.period" = "menura_selected"."menura.period"
@@ -183,4 +183,5 @@ SETTINGS
   short_circuit_function_evaluation = 'force_enable',
   enable_extended_results_for_datetime_functions = 1,
   aggregate_functions_null_for_empty = 1,
-  decimal_check_overflow = 1
+  decimal_check_overflow = 1,
+  use_variant_as_common_type = 0
