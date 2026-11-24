@@ -59,6 +59,8 @@ pub enum RunnerErrorKind {
     UnknownCase(String),
     /// A golden file cannot be written while regenerating it (CS-2.10a).
     Unwritable(io::Error),
+    /// The `ClickHouse` server cannot be reached or does not run as E6-7.10 requires.
+    ClickhouseServer(String),
 }
 
 impl RunnerErrorKind {
@@ -80,6 +82,7 @@ impl RunnerErrorKind {
             Self::ExpectationNotAllowed { rule, .. } => rule,
             Self::MissingDocument => "CS-2.15",
             Self::UnknownCase(_) | Self::Unwritable(_) => "CS-2.10a",
+            Self::ClickhouseServer(_) => "E6-7.10",
         }
     }
 }
@@ -130,6 +133,9 @@ impl fmt::Display for RunnerErrorKind {
             Self::MissingDocument => formatter.write_str("this outcome requires `document`"),
             Self::UnknownCase(case) => write!(formatter, "no case file for case `{case}`"),
             Self::Unwritable(error) => write!(formatter, "cannot be written: {error}"),
+            Self::ClickhouseServer(message) => {
+                write!(formatter, "the ClickHouse server: {message}")
+            }
         }
     }
 }
