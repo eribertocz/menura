@@ -3,6 +3,7 @@
 
 #![cfg(test)]
 
+use menura_contracts::ContractKind;
 use menura_contracts::types::descriptions::{CheckKind, IntegrityCheck, IntegrityChecksContract};
 use menura_core::{Dialect, Handle, IntegrityChecksDocument, LoadOptions, integrity_checks, load};
 
@@ -37,7 +38,10 @@ fn chk_2_document_names_the_contract_model_and_dialect() {
     let handle = handle();
     let document = integrity_checks(&handle, Dialect::Duckdb).unwrap();
     assert_eq!(document.contract, IntegrityChecksContract::IntegrityChecks);
-    assert_eq!(document.contract_version.to_string(), "1.2.0");
+    assert_eq!(
+        document.contract_version,
+        ContractKind::IntegrityChecks.latest_version()
+    );
     assert_eq!(document.model_hash, *handle.model().hash());
     assert_eq!(document.dialect, Dialect::Duckdb);
 }
