@@ -1,6 +1,7 @@
 //! The conditional functions (E0F-10.4), each branch cast to the result type of the CASE rule
 //! (E0F-5a).
 
+use menura_contracts::types::common::LogicalType;
 use menura_model::expression::{Expression, ScalarFunction};
 
 use super::ExpressionWriter;
@@ -12,7 +13,7 @@ impl ExpressionWriter<'_, '_> {
         &mut self,
         function: ScalarFunction,
         arguments: &[Expression],
-        result: &str,
+        result: &LogicalType,
     ) -> Result<String, GenerateError> {
         match function {
             ScalarFunction::If => {
@@ -54,7 +55,12 @@ impl ExpressionWriter<'_, '_> {
     }
 
     /// `CAST(branch AS result)`.
-    fn cast_branch(&mut self, branch: &Expression, result: &str) -> Result<String, GenerateError> {
-        Ok(format!("CAST({} AS {result})", self.write(branch)?))
+    fn cast_branch(
+        &mut self,
+        branch: &Expression,
+        result: &LogicalType,
+    ) -> Result<String, GenerateError> {
+        let value = self.write(branch)?;
+        self.cast_value(&value, result)
     }
 }

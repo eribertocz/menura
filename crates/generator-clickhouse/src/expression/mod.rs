@@ -20,6 +20,7 @@ mod time;
 
 use menura_contracts::normalize_unquoted_identifier;
 use menura_contracts::types::catalog::{CatalogSchemaDocument, Column, RelationSchema};
+use menura_contracts::types::common::LogicalType;
 use menura_model::expression::{Expression, Identifier, Literal, Reference};
 use menura_model::internal_model::InternalModel;
 use menura_representations::logical_plan::OutputSchema;
@@ -30,6 +31,7 @@ use menura_security::AdmittedSecurityContext;
 use crate::error::{GenerateError, InvariantViolation};
 use crate::identifiers::quote;
 use crate::parameters::Parameters;
+use crate::types::is_inexpressible;
 use crate::values::{literal_sql, literal_value};
 use division::ZeroDivisor;
 
@@ -210,8 +212,7 @@ impl<'input, 'statement> ExpressionWriter<'input, 'statement> {
             Literals::QueryDates => !matches!(literal, Literal::Date(_)),
         };
         if written || *literal == Literal::Null {
-            return literal_sql(literal)
-                .ok_or_else(|| self.error(InvariantViolation::UnsupportedType));
+            return literal_sql(literal).ok_or_else(|| self.inexpressible());
         }
         let logical_type = self.literal_type(literal)?;
         let value =
@@ -243,6 +244,25 @@ impl<'input, 'statement> ExpressionWriter<'input, 'statement> {
     /// The error `violation` in this node.
     fn error(&self, violation: InvariantViolation) -> GenerateError {
         GenerateError::new(violation, self.origin)
+    }
+
+    /// The error of a value of `logical_type` without a `ClickHouse` type: `E6-01` at this
+    /// node when E6-7.12 says the dialect cannot express it, which the check before any SQL
+    /// reports first; an internal error for `unsupported`.
+    pub(crate) fn type_error(&self, logical_type: &LogicalType) -> GenerateError {
+        if is_inexpressible(logical_type) {
+            self.inexpressible()
+        } else {
+            self.error(InvariantViolation::UnsupportedType)
+        }
+    }
+
+    /// `E6-01` at this node (E6-7.12).
+    pub(crate) fn inexpressible(&self) -> GenerateError {
+        GenerateError::InexpressibleType {
+            origin: self.origin.clone(),
+            subject: None,
+        }
     }
 }
 

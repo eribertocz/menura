@@ -10,10 +10,18 @@ use menura_contracts::types::common::LogicalType;
 use menura_contracts::types::compiled_plan::InputDocument;
 use menura_contracts::types::descriptions::{Binding, CheckParameter};
 use menura_generator_clickhouse::{GenerateError, generate_check_sql};
+use menura_model::internal_model::{FieldPath, NormalizedName};
+use menura_representations::bound_query::{
+    BoundDimension, BoundDimensionKind, BoundFilter, BoundQuery, BoundQueryParts,
+};
+use menura_representations::columns::Columns;
+use menura_representations::logical_plan::PlanNode;
+use menura_representations::names::OutputName;
 use menura_representations::origin::Origin;
+use menura_representations::time::{QueryTime, TimeZoneName};
 use support::{
-    SETTINGS, catalog_for, column, from_model, from_query, generate, instant, model, named,
-    project, query, scan, scan_of,
+    SETTINGS, at, catalog_for, column, from_model, from_query, generate, instant, model, named,
+    parse, project, query, scan, scan_of,
 };
 
 #[test]
@@ -35,7 +43,7 @@ fn e6_7_11_an_integrity_check_query_follows_the_same_rules() {
   ),
   "menura_2_project" AS (
     SELECT
-      CAST(toTimeZone(toDateTime64(toDate32(toTimeZone("CREATED_AT", {{p1:String}})), 6, {{p1:String}}), 'UTC') AS Nullable(DateTime64(6, 'UTC'))) AS "DAY"
+      CAST(toTimeZone(toDateTime64(toDate32("CREATED_AT", {{p1:String}}), 6, {{p1:String}}), 'UTC') AS Nullable(DateTime64(6, 'UTC'))) AS "DAY"
     FROM "menura_1_scan"
   )
 SELECT
@@ -50,8 +58,118 @@ FROM "menura_2_project"
     ));
 }
 
+/// The query of the dimensions `names`, the dimension at index n located at
+/// `/query/dimensions/n`, with `filters`, each `(text, pointer)` over `ORDERS`.
+#[cfg(test)]
+fn located_query(names: &[&str], filters: &[(&str, &str)]) -> BoundQuery {
+    let dimensions = names
+        .iter()
+        .enumerate()
+        .map(|(index, name)| BoundDimension {
+            kind: BoundDimensionKind::Field {
+                field: FieldPath {
+                    dataset: NormalizedName::new("ORDERS"),
+                    field: NormalizedName::new(name),
+                },
+                time_grain: None,
+                time_grain_origin: None,
+            },
+            output_name: OutputName::new(name),
+            origin: at(&format!("/query/dimensions/{index}")),
+        })
+        .collect();
+    let parts = BoundQueryParts {
+        filters: filters
+            .iter()
+            .map(|(text, pointer)| BoundFilter {
+                expression: parse(text),
+                datasets: vec![NormalizedName::new("ORDERS")],
+                origin: at(pointer),
+            })
+            .collect(),
+        ..BoundQueryParts::default()
+    };
+    let time = QueryTime {
+        time_zone: TimeZoneName::new("Europe/Madrid"),
+        reference_time: None,
+        reference_date: None,
+    };
+    BoundQuery::new(
+        Columns::dimensions_then_metrics(dimensions, Vec::new()),
+        time,
+        parts,
+    )
+}
+
+/// The `Project` of the `REGION` of `ORDERS`, the plan the queries below would have.
+fn region_plan() -> PlanNode {
+    project(
+        scan("ORDERS", &["REGION"]),
+        vec![named("REGION", "REGION")],
+        vec![column("REGION", LogicalType::Text, true)],
+        from_query("/query/dimensions/0"),
+    )
+}
+
 #[test]
-fn e6_7_12_a_timestamp_without_time_zone_is_e6_01_at_its_field() {
+fn e6_7_12_a_field_without_time_zone_is_e6_01_at_its_dimension() {
+    let query = located_query(&["REGION", "SHIPPED_AT"], &[]);
+    let error = generate(&region_plan(), &query).expect_err("E6-01");
+    assert_eq!(
+        error,
+        GenerateError::InexpressibleType {
+            origin: from_query("/query/dimensions/1"),
+            subject: Some("field:ORDERS.SHIPPED_AT".to_owned()),
+        }
+    );
+    let diagnostic = error.to_diagnostic().expect("a diagnostic");
+    assert_eq!(diagnostic.code, "E6-01");
+    assert!(
+        diagnostic
+            .message
+            .starts_with("`field:ORDERS.SHIPPED_AT` needs a value")
+    );
+    let location = diagnostic.location.expect("a location");
+    assert_eq!(location.document, InputDocument::Query);
+    assert_eq!(location.pointer, "/query/dimensions/1");
+}
+
+#[test]
+fn e6_7_12_a_value_inside_an_expression_is_e6_01_at_its_element() {
+    let query = located_query(
+        &["REGION"],
+        &[
+            ("REGION = 'north'", "/query/filters/0"),
+            ("CREATED_AT < CURRENT_TIMESTAMP", "/query/filters/1"),
+        ],
+    );
+    let error = generate(&region_plan(), &query).expect_err("E6-01");
+    assert_eq!(
+        error,
+        GenerateError::InexpressibleType {
+            origin: from_query("/query/filters/1"),
+            subject: None,
+        }
+    );
+}
+
+#[test]
+fn e6_7_12_a_date_parameter_outside_date32_is_e6_01() {
+    let query = located_query(
+        &["REGION"],
+        &[("ORDERED_ON > DATE '1899-12-31'", "/query/filters/0")],
+    );
+    let error = generate(&region_plan(), &query).expect_err("E6-01");
+    assert_eq!(error.origin(), &from_query("/query/filters/0"));
+    let query = located_query(
+        &["REGION"],
+        &[("ORDERED_ON > DATE '1900-01-01'", "/query/filters/0")],
+    );
+    assert!(generate(&region_plan(), &query).is_ok());
+}
+
+#[test]
+fn e6_7_12_a_value_only_the_model_reads_is_e6_01_at_its_dataset() {
     let plan = project(
         scan("ORDERS", &["REGION", "SHIPPED_AT"]),
         vec![named("REGION", "REGION")],
@@ -63,13 +181,16 @@ fn e6_7_12_a_timestamp_without_time_zone_is_e6_01_at_its_field() {
         error,
         GenerateError::InexpressibleType {
             origin: from_model("/semantic_model/0/datasets/0"),
+            subject: Some("dataset:ORDERS".to_owned()),
         }
     );
-    let diagnostic = error.to_diagnostic().expect("a diagnostic");
-    assert_eq!(diagnostic.code, "E6-01");
-    let location = diagnostic.location.expect("a location");
-    assert_eq!(location.document, InputDocument::Model);
-    assert_eq!(location.pointer, "/semantic_model/0/datasets/0");
+    let location = error
+        .to_diagnostic()
+        .and_then(|diagnostic| diagnostic.location);
+    assert_eq!(
+        location.map(|location| location.document),
+        Some(InputDocument::Model)
+    );
 }
 
 #[test]

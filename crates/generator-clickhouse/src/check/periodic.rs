@@ -32,7 +32,7 @@ impl<'input> StepWriter<'input> {
         let entity = known_columns(rows, &check.entity.iter().collect::<Vec<_>>())?;
         let mut values = entity.clone();
         values.push(column(None, &period_name));
-        values.push("CAST(count() AS Int64)".to_owned());
+        values.push("CAST(coalesce(count(), 0) AS Int64)".to_owned());
         let mut present = entity;
         present.push(column(None, check.period.as_str()));
         Ok(SelectBody {

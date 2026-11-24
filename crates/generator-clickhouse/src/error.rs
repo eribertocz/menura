@@ -74,17 +74,21 @@ pub enum InvariantViolation {
 }
 
 /// The message of `E6-01` (E6-7.12, E6-8).
-const INEXPRESSIBLE_TYPE: &str = "this value is a `time`, an `interval` or a `timestamp` without \
-    time zone, which the `clickhouse` dialect cannot express";
+const INEXPRESSIBLE_TYPE: &str = "needs a value the `clickhouse` dialect cannot express: a \
+    `time`, an `interval`, a `timestamp` without time zone, a nullable `list`, or a date outside \
+    1900-01-01 to 2299-12-31; use the `duckdb` dialect or change the element";
 
 /// The error of E6.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum GenerateError {
-    /// `E6-01`: the plan reads or returns a value whose logical type `ClickHouse` cannot
-    /// express (E6-7.12), located at the origin of the first field or metric of that type.
+    /// `E6-01`: the plan reads, computes or returns a value `ClickHouse` cannot express
+    /// (E6-7.12), located at the first query element whose evaluation needs it, or at the
+    /// dataset that holds the model expression that needs it.
     InexpressibleType {
-        /// The origin of the field or metric.
+        /// The query element, or the dataset in the model.
         origin: Origin,
+        /// The element as `field:`, `metric:` or `dataset:` and its name, when it is one.
+        subject: Option<String>,
     },
     /// The input breaks the contract of the stages before E6. This is a defect of the
     /// compiler, not a query error, so it has no specification code.
@@ -118,7 +122,7 @@ impl GenerateError {
     #[must_use]
     pub fn origin(&self) -> &Origin {
         match self {
-            Self::InexpressibleType { origin } | Self::Invariant { origin, .. } => origin,
+            Self::InexpressibleType { origin, .. } | Self::Invariant { origin, .. } => origin,
         }
     }
 
@@ -126,7 +130,7 @@ impl GenerateError {
     /// in the query or the model; `None` for an internal error.
     #[must_use]
     pub fn to_diagnostic(&self) -> Option<Diagnostic> {
-        let Self::InexpressibleType { origin } = self else {
+        let Self::InexpressibleType { origin, subject } = self else {
             return None;
         };
         let location = match origin {
@@ -148,7 +152,10 @@ impl GenerateError {
         };
         Some(Diagnostic {
             code: "E6-01".to_owned(),
-            message: INEXPRESSIBLE_TYPE.to_owned(),
+            message: match subject {
+                Some(subject) => format!("`{subject}` {INEXPRESSIBLE_TYPE}"),
+                None => format!("this element {INEXPRESSIBLE_TYPE}"),
+            },
             location: Some(location),
             alternatives: None,
         })

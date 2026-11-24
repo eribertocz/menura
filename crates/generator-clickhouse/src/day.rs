@@ -12,7 +12,7 @@ use crate::types::digits;
 
 impl<'input> StepWriter<'input> {
     /// The day of `value`, a time value of `logical_type` read by `node` from `input`, as a
-    /// `Date32`: `toDate32(toTimeZone(x, tz))` for a timestamp with time zone (E6-7.6).
+    /// `Date32`: `toDate32(x, tz)` for a timestamp with time zone (E6-7.6).
     ///
     /// # Errors
     ///
@@ -33,7 +33,7 @@ impl<'input> StepWriter<'input> {
                 let zone = self
                     .writer(node, Columns::Input(input.schema()))
                     .time_zone();
-                Ok(format!("toDate32(toTimeZone({value}, {zone}))"))
+                Ok(format!("toDate32({value}, {zone})"))
             }
             _ => Err(error(InvariantViolation::UnsupportedType, node)),
         }

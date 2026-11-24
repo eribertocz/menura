@@ -9,7 +9,7 @@ use crate::body::SelectBody;
 use crate::day::periods_between;
 use crate::error::{GenerateError, InvariantViolation};
 use crate::expression::Columns;
-use crate::steps::{StepWriter, column_type, error};
+use crate::steps::{StepWriter, cast_column, error};
 
 /// The alias of a missing pair.
 const MISSING: &str = "\"menura_missing\"";
@@ -166,9 +166,9 @@ fn zero_values(frame: &Frame<'_>, missing: &str, added: &str) -> Result<SelectBo
     items.extend(qualified(FILL, &frame.entity));
     items.push(format!("{FILL}.{PERIOD}"));
     for component in &frame.rule.components {
-        let result_type = column_type(frame.node, component.name.as_str())?;
+        let zero = cast_column(frame.node, component.name.as_str(), "0")?;
         items.push(format!(
-            "CAST(0 AS {result_type}) AS {}",
+            "{zero} AS {}",
             crate::identifiers::quote(component.name.as_str())
         ));
     }

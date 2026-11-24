@@ -6,7 +6,7 @@ use menura_model::expression::{Expression, Literal, ScalarFunction, UnaryOperato
 
 use super::ExpressionWriter;
 use crate::error::{GenerateError, InvariantViolation};
-use crate::types::nullable_type;
+use crate::types::cast_sql;
 
 impl ExpressionWriter<'_, '_> {
     /// `CAST(<call> AS <result type>)` for the call `expression` of `function`.
@@ -17,14 +17,15 @@ impl ExpressionWriter<'_, '_> {
         arguments: &[Expression],
     ) -> Result<String, GenerateError> {
         let result_type = self.type_of(expression)?;
-        let result = self.cast_type(&result_type)?;
         let call = match family(function) {
             Family::Date => self.date_function(function, arguments)?,
             Family::Text => self.text_function(function, arguments)?,
-            Family::Number => self.number_function(expression, function, arguments, &result)?,
-            Family::Conditional => self.conditional_function(function, arguments, &result)?,
+            Family::Number => {
+                self.number_function(expression, function, arguments, &result_type)?
+            }
+            Family::Conditional => self.conditional_function(function, arguments, &result_type)?,
         };
-        Ok(format!("CAST({call} AS {result})"))
+        self.cast_value(&call, &result_type)
     }
 
     /// `CAST(<sql> AS <type of expression>)`: the result type of E0F-10 enforced (E6-4.10).
@@ -33,14 +34,16 @@ impl ExpressionWriter<'_, '_> {
         expression: &Expression,
         sql: &str,
     ) -> Result<String, GenerateError> {
-        let result = self.cast_type(&self.type_of(expression)?)?;
-        Ok(format!("CAST({sql} AS {result})"))
+        self.cast_value(sql, &self.type_of(expression)?)
     }
 
-    /// The `ClickHouse` type a value of `logical_type` is cast to: its name of E6-7.2 inside
-    /// `Nullable`, since a cast of a NULL value to a plain type fails (E6-7.9).
-    pub(crate) fn cast_type(&self, logical_type: &LogicalType) -> Result<String, GenerateError> {
-        nullable_type(logical_type).ok_or_else(|| self.error(InvariantViolation::UnsupportedType))
+    /// `value` cast to `logical_type` as E6-7.9 states: checked for an integer.
+    pub(crate) fn cast_value(
+        &self,
+        value: &str,
+        logical_type: &LogicalType,
+    ) -> Result<String, GenerateError> {
+        cast_sql(value, logical_type).ok_or_else(|| self.type_error(logical_type))
     }
 
     /// The `N` arguments of a call that takes exactly `N`.

@@ -14,8 +14,8 @@ impl ExpressionWriter<'_, '_> {
     /// `x` truncated to `unit` in the query time zone (E6-7.6, E6-4.10). A date is truncated
     /// with the `ClickHouse` truncation function of its grain, ISO weeks starting on Monday
     /// (`toMonday`), and read as a `Date32` again. A timestamp with time zone is read in the
-    /// query time zone, truncated there, and converted back to UTC: a grain of a day or more
-    /// gives the local midnight of the first day of the period.
+    /// query time zone, the zone passed to every call, truncated there, and converted back to
+    /// UTC: a grain of a day or more gives the local midnight of the first day of the period.
     pub(super) fn date_trunc(
         &mut self,
         unit: DateUnit,
@@ -30,15 +30,14 @@ impl ExpressionWriter<'_, '_> {
                 with_time_zone: true,
             } => {
                 let zone = self.time_zone();
-                let local = format!("toTimeZone({value}, {zone})");
                 let start = match day_truncation(unit) {
                     Some(function) => {
                         format!(
-                            "toDateTime64({function}({local}), {}, {zone})",
+                            "toDateTime64({function}({value}, {zone}), {}, {zone})",
                             digits(precision)
                         )
                     }
-                    None => format!("{}({local})", time_truncation(unit)),
+                    None => format!("{}({value}, {zone})", time_truncation(unit)),
                 };
                 Ok(format!("toTimeZone({start}, 'UTC')"))
             }

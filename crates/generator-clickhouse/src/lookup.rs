@@ -16,7 +16,7 @@ use crate::body::SelectBody;
 use crate::error::{GenerateError, InvariantViolation};
 use crate::identifiers::quote;
 use crate::null_safe::join_equal;
-use crate::steps::{StepWriter, column_type, error};
+use crate::steps::{StepWriter, cast_column, error};
 use crate::stitch::{has_column, presence_column, present_rows};
 use crate::values::literal_sql;
 
@@ -136,11 +136,11 @@ fn attached_item(
         return Err(error(InvariantViolation::UnknownColumn, node));
     }
     let empty = match &column.empty_value {
-        Some(literal) => format!(
-            "CAST({} AS {})",
-            literal_sql(literal).ok_or_else(|| error(InvariantViolation::UnsupportedType, node))?,
-            column_type(node, column.name.as_str())?
-        ),
+        Some(literal) => {
+            let value = literal_sql(literal)
+                .ok_or_else(|| error(InvariantViolation::UnsupportedType, node))?;
+            cast_column(node, column.name.as_str(), &value)?
+        }
         None => "NULL".to_owned(),
     };
     Ok(format!(

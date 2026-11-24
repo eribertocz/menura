@@ -9,8 +9,9 @@ use menura_contracts::types::common::{FloatBits, IntegerBits, LogicalType, Times
 use menura_representations::logical_plan::PlanNode;
 use serde_json::json;
 use support::{
-    SETTINGS, TWO_METRICS, assert_golden, column, decimal, filter, from_query, generate, generated,
-    instant, named, project, query, query_with_reference_time, region_count, scan, two_branches,
+    SETTINGS, TWO_METRICS, assert_golden, big_integer, column, decimal, filter, from_query,
+    generate, generated, instant, named, project, query, query_with_reference_time, region_count,
+    scan, sort, two_branches,
 };
 
 /// The fields of `ORDERS` the expressions read: every one but `SHIPPED_AT`, a `timestamp`
@@ -85,7 +86,7 @@ fn named_types() -> Vec<(LogicalType, bool, &'static str)> {
             LogicalType::List {
                 element: Box::new(LogicalType::Text),
             },
-            true,
+            false,
             "Array(String)",
         ),
     ]
@@ -245,7 +246,7 @@ fn e6_7_6_a_timestamp_is_truncated_in_the_query_time_zone() {
     let (sql, parameters) = item("DATE_TRUNC('month', CREATED_AT)", instant());
     assert_eq!(
         sql,
-        "CAST(toTimeZone(toDateTime64(toStartOfMonth(toTimeZone(\"CREATED_AT\", {p1:String})), \
+        "CAST(toTimeZone(toDateTime64(toStartOfMonth(\"CREATED_AT\", {p1:String}), \
          6, {p1:String}), 'UTC') AS Nullable(DateTime64(6, 'UTC'))) AS \"X\""
     );
     assert_eq!(
@@ -255,7 +256,7 @@ fn e6_7_6_a_timestamp_is_truncated_in_the_query_time_zone() {
     let (sql, _) = item("DATE_TRUNC('hour', CREATED_AT)", instant());
     assert_eq!(
         sql,
-        "CAST(toTimeZone(toStartOfHour(toTimeZone(\"CREATED_AT\", {p1:String})), 'UTC') \
+        "CAST(toTimeZone(toStartOfHour(\"CREATED_AT\", {p1:String}), 'UTC') \
          AS Nullable(DateTime64(6, 'UTC'))) AS \"X\""
     );
 }
@@ -290,7 +291,8 @@ fn e6_7_7_a_list_attribute_is_an_array_parameter() {
     assert_eq!(
         sql,
         "CAST(NOT (CASE WHEN \"REGION\" IS NULL THEN NULL \
-         ELSE has({p1:Array(String)}, assumeNotNull(\"REGION\")) END) AS Nullable(Bool)) AS \"X\""
+         WHEN has({p1:Array(String)}, assumeNotNull(\"REGION\")) THEN TRUE \
+         WHEN has({p1:Array(String)}, NULL) THEN NULL ELSE FALSE END) AS Nullable(Bool)) AS \"X\""
     );
     assert_eq!(
         parameters,
@@ -325,11 +327,53 @@ fn e6_7_9_a_narrowing_cast_rounds_half_away_from_zero() {
     let (sql, _) = item("CAST(AMOUNT AS INTEGER)", integer);
     assert_eq!(
         sql,
-        "CAST(CAST(round(\"AMOUNT\", 0) AS Nullable(Int32)) AS Nullable(Int32)) AS \"X\""
+        "accurateCast(accurateCast(round(\"AMOUNT\", 0), 'Nullable(Int32)'), 'Nullable(Int32)') AS \"X\""
     );
     let (sql, _) = item("CAST(QUANTITY AS DECIMAL(12,2))", decimal(12, 2));
     assert_eq!(
         sql,
         "CAST(CAST(\"QUANTITY\" AS Nullable(Decimal(12, 2))) AS Nullable(Decimal(12, 2))) AS \"X\""
+    );
+}
+
+#[test]
+fn e6_7_9_integer_arithmetic_is_checked_instead_of_wrapping() {
+    let (sql, _) = item("QUANTITY * QUANTITY", big_integer());
+    assert_eq!(
+        sql,
+        "accurateCast(accurateCast(toInt256(\"QUANTITY\") * toInt256(\"QUANTITY\"), \
+         'Nullable(Int128)'), 'Nullable(Int64)') AS \"X\""
+    );
+}
+
+#[test]
+fn e6_7_14_float_comparisons_treat_nan_as_duckdb_does() {
+    let (sql, _) = item("CAST(AMOUNT AS DOUBLE) > 1.5", boolean());
+    assert_eq!(
+        sql,
+        "CAST(CASE WHEN CAST(\"AMOUNT\" AS Nullable(Float64)) IS NULL OR {p1:Decimal(2, 1)} IS NULL \
+         THEN NULL ELSE (isNaN(CAST(\"AMOUNT\" AS Nullable(Float64))), \
+         if(isNaN(CAST(\"AMOUNT\" AS Nullable(Float64))), 0, CAST(\"AMOUNT\" AS Nullable(Float64)))) \
+         > (isNaN({p1:Decimal(2, 1)}), if(isNaN({p1:Decimal(2, 1)}), 0, {p1:Decimal(2, 1)})) END \
+         AS Nullable(Bool)) AS \"X\""
+    );
+}
+
+#[test]
+fn e6_7_15_every_order_key_writes_its_null_order() {
+    let ratio = LogicalType::Float {
+        bits: FloatBits::SixtyFour,
+    };
+    let plan = sort(
+        projected("CAST(AMOUNT AS DOUBLE)", ratio),
+        &[("X", true, false)],
+    );
+    let generated = generate(&plan, &query_with_reference_time()).expect("SQL");
+    assert!(
+        generated.sql.contains(
+            "ORDER BY \"X\" IS NULL ASC NULLS LAST, isNaN(\"X\") DESC NULLS LAST, \"X\" DESC NULLS LAST"
+        ),
+        "{}",
+        generated.sql
     );
 }

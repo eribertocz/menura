@@ -6,7 +6,7 @@ use menura_contracts::types::common::LogicalType;
 use serde_json::Value;
 
 use super::ExpressionWriter;
-use crate::error::{GenerateError, InvariantViolation};
+use crate::error::GenerateError;
 use crate::parameters::SharedValue;
 
 impl ExpressionWriter<'_, '_> {
@@ -16,9 +16,8 @@ impl ExpressionWriter<'_, '_> {
         logical_type: LogicalType,
         value: Value,
     ) -> Result<String, GenerateError> {
-        self.parameters
-            .bind(logical_type, value)
-            .ok_or_else(|| self.error(InvariantViolation::UnsupportedType))
+        let error = self.type_error(&logical_type);
+        self.parameters.bind(logical_type, value).ok_or(error)
     }
 
     /// `{pn:<type>}` for the parameter of `shared`, bound to `logical_type` and `value` at its
@@ -29,8 +28,9 @@ impl ExpressionWriter<'_, '_> {
         logical_type: LogicalType,
         value: Value,
     ) -> Result<String, GenerateError> {
+        let error = self.type_error(&logical_type);
         self.parameters
             .bind_shared(shared, logical_type, value)
-            .ok_or_else(|| self.error(InvariantViolation::UnsupportedType))
+            .ok_or(error)
     }
 }

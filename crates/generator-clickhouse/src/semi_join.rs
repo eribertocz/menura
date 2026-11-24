@@ -161,7 +161,7 @@ fn key_counts(on: &[JoinCondition], related: &str) -> SelectBody {
     let groups: Vec<String> = (1..=items.len())
         .map(|ordinal| ordinal.to_string())
         .collect();
-    items.push(format!("count() AS {ROWS}"));
+    items.push(format!("coalesce(count(), 0) AS {ROWS}"));
     SelectBody {
         items,
         from: related.to_owned(),

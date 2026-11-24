@@ -12,9 +12,10 @@ use crate::error::{GenerateError, InvariantViolation};
 use crate::expression::{Columns, Environment, ExpressionWriter};
 use crate::identifiers::quote;
 use crate::join::JoinInputs;
+use crate::ordering::sort_terms;
 use crate::parameters::Parameters;
 use crate::scan::ScanRole;
-use crate::types::nullable_type;
+use crate::types::cast_sql;
 
 /// A node already written: the name of its step and the `ORDER BY` its rows keep.
 #[derive(Debug, Clone)]
@@ -193,11 +194,8 @@ impl<'input> StepWriter<'input> {
                 }
                 None => writer.aggregate(&component.call, component.filter.as_ref())?,
             };
-            let result_type = column_type(node, component.name.as_str())?;
-            items.push(format!(
-                "CAST({call} AS {result_type}) AS {}",
-                quote(component.name.as_str())
-            ));
+            let value = cast_column(node, component.name.as_str(), &call)?;
+            items.push(format!("{value} AS {}", quote(component.name.as_str())));
         }
         let clauses = if keys.is_empty() {
             Vec::new()
@@ -236,10 +234,7 @@ impl<'input> StepWriter<'input> {
             let value = writer.write(&named.expression)?;
             let value = match named.expression {
                 Expression::Reference(_) => value,
-                _ => format!(
-                    "CAST({value} AS {})",
-                    column_type(node, named.name.as_str())?
-                ),
+                _ => cast_column(node, named.name.as_str(), &value)?,
             };
             items.push(format!("{value} AS {}", quote(named.name.as_str())));
         }
@@ -344,19 +339,20 @@ pub(crate) fn pass_through(
         .collect()
 }
 
-/// `"column" ASC NULLS FIRST`: the NULL order is always written (E6-4.8).
+/// `"column" ASC NULLS FIRST`: the NULL order is always written (E6-4.8, E6-7.15); a float or
+/// a `uuid` sorts as E6-7.14 states.
 fn sort_term(
     node: &PlanNode,
     input: &OutputSchema,
     item: &SortItem,
 ) -> Result<String, GenerateError> {
-    if !input
+    let Some(column) = input
         .columns()
         .iter()
-        .any(|column| column.name == item.column)
-    {
+        .find(|column| column.name == item.column)
+    else {
         return Err(error(InvariantViolation::UnknownColumn, node));
-    }
+    };
     let direction = match item.direction {
         Direction::Asc => "ASC",
         Direction::Desc => "DESC",
@@ -365,22 +361,28 @@ fn sort_term(
         NullsOrder::First => "NULLS FIRST",
         NullsOrder::Last => "NULLS LAST",
     };
-    Ok(format!(
-        "{} {direction} {nulls}",
-        quote(item.column.as_str())
+    Ok(sort_terms(
+        &quote(item.column.as_str()),
+        &column.logical_type,
+        direction,
+        nulls,
     ))
 }
 
-/// The `ClickHouse` type a value of the column `name` of `node` is cast to: its name inside
-/// `Nullable` (E6-7.2, E6-7.9).
-pub(crate) fn column_type(node: &PlanNode, name: &str) -> Result<String, GenerateError> {
+/// `value` cast to the type of the column `name` of `node`, NULL kept and an integer checked
+/// (E6-7.2, E6-7.9).
+pub(crate) fn cast_column(
+    node: &PlanNode,
+    name: &str,
+    value: &str,
+) -> Result<String, GenerateError> {
     let column = node
         .schema()
         .columns()
         .iter()
         .find(|column| column.name.as_str() == name)
         .ok_or_else(|| error(InvariantViolation::UnknownColumn, node))?;
-    nullable_type(&column.logical_type)
+    cast_sql(value, &column.logical_type)
         .ok_or_else(|| error(InvariantViolation::UnsupportedType, node))
 }
 

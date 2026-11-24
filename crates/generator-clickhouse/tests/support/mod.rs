@@ -71,7 +71,8 @@ pub const SETTINGS: &str = "SETTINGS
   enable_positional_arguments = 1,
   short_circuit_function_evaluation = 'force_enable',
   enable_extended_results_for_datetime_functions = 1,
-  aggregate_functions_null_for_empty = 0";
+  aggregate_functions_null_for_empty = 1,
+  decimal_check_overflow = 1";
 
 /// The 64-bit signed integer.
 pub fn big_integer() -> LogicalType {

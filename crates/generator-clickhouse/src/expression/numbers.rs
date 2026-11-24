@@ -26,7 +26,7 @@ impl ExpressionWriter<'_, '_> {
         expression: &Expression,
         function: ScalarFunction,
         arguments: &[Expression],
-        result: &str,
+        result: &LogicalType,
     ) -> Result<String, GenerateError> {
         match function {
             ScalarFunction::Absolute => self.absolute(expression, arguments),
@@ -246,7 +246,7 @@ impl ExpressionWriter<'_, '_> {
         &mut self,
         name: &str,
         arguments: &[Expression],
-        result: &str,
+        result: &LogicalType,
     ) -> Result<String, GenerateError> {
         let written = arguments
             .iter()
@@ -258,8 +258,8 @@ impl ExpressionWriter<'_, '_> {
             .collect();
         let casts: Vec<String> = written
             .iter()
-            .map(|text| format!("CAST({text} AS {result})"))
-            .collect();
+            .map(|text| self.cast_value(text, result))
+            .collect::<Result<_, _>>()?;
         Ok(format!(
             "CASE WHEN {} THEN NULL ELSE {name}({}) END",
             tests.join(" OR "),

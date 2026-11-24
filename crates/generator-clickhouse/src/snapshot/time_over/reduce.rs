@@ -15,7 +15,7 @@ use crate::body::{SelectBody, union_all};
 use crate::error::GenerateError;
 use crate::null_safe::join_equal;
 use crate::snapshot::group_by;
-use crate::steps::{StepWriter, column_type};
+use crate::steps::{StepWriter, cast_column};
 
 /// The alias of a candidate value.
 const CANDIDATE: &str = "\"menura_candidate\"";
@@ -129,8 +129,8 @@ fn cast_components(
         .iter()
         .zip(&frame.components)
         .map(|(component, name)| {
-            let result_type = column_type(frame.node, component.name.as_str())?;
-            Ok(format!("CAST({} AS {result_type}) AS {name}", value(name)))
+            let cast = cast_column(frame.node, component.name.as_str(), &value(name))?;
+            Ok(format!("{cast} AS {name}"))
         })
         .collect()
 }

@@ -3,8 +3,10 @@
 //! `ClickHouse` has no `FILTER (WHERE …)`: a filtered aggregate reads
 //! `if(ifNull(condition, 0), x, NULL)`, which every aggregate skips where the condition does
 //! not hold. Over no value, an aggregate other than `COUNT` is NULL as ISO 9075 states, where
-//! `ClickHouse` returns a default value or `nan`: `-OrNull` combinators or a count guard say so
-//! explicitly, whatever `aggregate_functions_null_for_empty` holds (E6-7.8).
+//! `ClickHouse` returns a default value or `nan`: `aggregate_functions_null_for_empty = 1`
+//! (E6-7.8) makes it NULL, and the `-OrNull` combinators and count guards say so explicitly as
+//! well. A count over no value is 0, read through `coalesce` whatever that setting does to
+//! `count`.
 
 use menura_contracts::types::common::LogicalType;
 use menura_model::expression::{
@@ -24,8 +26,11 @@ impl ExpressionWriter<'_, '_> {
     ) -> Result<String, GenerateError> {
         match call {
             AggregateCall::CountRows => match filter {
-                Some(condition) => Ok(format!("countIf(ifNull({}, 0))", self.write(condition)?)),
-                None => Ok("count()".to_owned()),
+                Some(condition) => Ok(format!(
+                    "coalesce(countIf(ifNull({}, 0)), 0)",
+                    self.write(condition)?
+                )),
+                None => Ok("coalesce(count(), 0)".to_owned()),
             },
             AggregateCall::Simple { function, argument } => {
                 self.simple(*function, argument, filter)
@@ -34,9 +39,9 @@ impl ExpressionWriter<'_, '_> {
                 let value = self.summed(argument, filter)?;
                 Ok(match function {
                     DistinctAggregate::Sum => format!(
-                        "CASE WHEN count({value}) = 0 THEN NULL ELSE sum(DISTINCT {value}) END"
+                        "CASE WHEN coalesce(count({value}), 0) = 0 THEN NULL ELSE sum(DISTINCT {value}) END"
                     ),
-                    DistinctAggregate::Count => format!("count(DISTINCT {value})"),
+                    DistinctAggregate::Count => format!("coalesce(count(DISTINCT {value}), 0)"),
                 })
             }
             AggregateCall::Percentile {
@@ -56,14 +61,16 @@ impl ExpressionWriter<'_, '_> {
         filter: Option<&Expression>,
     ) -> Result<String, GenerateError> {
         Ok(match function {
-            SimpleAggregate::Count => format!("count({})", self.argument(argument, filter)?),
+            SimpleAggregate::Count => {
+                format!("coalesce(count({}), 0)", self.argument(argument, filter)?)
+            }
             SimpleAggregate::Sum => format!("sumOrNull({})", self.summed(argument, filter)?),
             SimpleAggregate::Minimum => format!("minOrNull({})", self.argument(argument, filter)?),
             SimpleAggregate::Maximum => format!("maxOrNull({})", self.argument(argument, filter)?),
             SimpleAggregate::Average => {
                 let value = self.argument(argument, filter)?;
                 format!(
-                    "CASE WHEN count({value}) = 0 THEN NULL \
+                    "CASE WHEN coalesce(count({value}), 0) = 0 THEN NULL \
                      ELSE toFloat64(sum({value})) / toFloat64(count({value})) END"
                 )
             }
@@ -187,7 +194,7 @@ impl ExpressionWriter<'_, '_> {
 
 /// `call`, NULL when `value` has fewer than `minimum` values that are not NULL.
 fn at_least(value: &str, minimum: u8, call: &str) -> String {
-    format!("CASE WHEN count({value}) < {minimum} THEN NULL ELSE {call} END")
+    format!("CASE WHEN coalesce(count({value}), 0) < {minimum} THEN NULL ELSE {call} END")
 }
 
 /// A validated percentile fraction `numerator / denominator`, the denominator a power of ten.

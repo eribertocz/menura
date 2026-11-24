@@ -7,15 +7,15 @@ pub(crate) fn join_equal(left: &str, right: &str) -> String {
     format!("isNotDistinctFrom({left}, {right})")
 }
 
-/// The null-safe equality of `left` and `right` anywhere else, never NULL: `left = right` when
-/// both are known, true when both are NULL, false when only one is.
-pub(crate) fn not_distinct(left: &str, right: &str) -> String {
-    format!("coalesce({left} = {right}, {left} IS NULL AND {right} IS NULL)")
+/// The null-safe equality of `left` and `right` anywhere else, never NULL: `equal`, their
+/// equality, when both are known, true when both are NULL, false when only one is.
+pub(crate) fn not_distinct_by(equal: &str, left: &str, right: &str) -> String {
+    format!("coalesce({equal}, {left} IS NULL AND {right} IS NULL)")
 }
 
 #[cfg(test)]
 mod tests {
-    use super::{join_equal, not_distinct};
+    use super::{join_equal, not_distinct_by};
 
     #[test]
     fn e6_7_4_keys_are_compared_null_safe() {
@@ -24,7 +24,7 @@ mod tests {
             "isNotDistinctFrom(\"a\", \"b\")"
         );
         assert_eq!(
-            not_distinct("\"a\"", "\"b\""),
+            not_distinct_by("\"a\" = \"b\"", "\"a\"", "\"b\""),
             "coalesce(\"a\" = \"b\", \"a\" IS NULL AND \"b\" IS NULL)"
         );
     }

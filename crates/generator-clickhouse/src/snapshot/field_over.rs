@@ -11,7 +11,7 @@ use crate::body::SelectBody;
 use crate::error::{GenerateError, InvariantViolation};
 use crate::expression::Columns;
 use crate::identifiers::quote;
-use crate::steps::{StepWriter, column_type, error};
+use crate::steps::{StepWriter, cast_column, error};
 
 /// The synthesized column of the `over` value (E6-4.12).
 const OVER: &str = "\"menura.over\"";
@@ -59,10 +59,12 @@ impl<'input> StepWriter<'input> {
             .collect();
         for component in &rule.components {
             let name = quote(component.name.as_str());
-            let result_type = column_type(node, component.name.as_str())?;
-            items.push(format!(
-                "CAST({function}({name}) AS {result_type}) AS {name}"
-            ));
+            let value = cast_column(
+                node,
+                component.name.as_str(),
+                &format!("{function}({name})"),
+            )?;
+            items.push(format!("{value} AS {name}"));
         }
         Ok(SelectBody {
             items,

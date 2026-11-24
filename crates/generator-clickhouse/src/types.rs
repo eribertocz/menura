@@ -50,6 +50,17 @@ pub(crate) fn nullable_type(logical_type: &LogicalType) -> Option<String> {
     })
 }
 
+/// `value` cast to `logical_type`, NULL kept (E6-7.9): `accurateCast(value, 'Nullable(<T>)')`
+/// for an integer, which raises an error when the value does not fit where `CAST` would wrap
+/// around, and `CAST(value AS Nullable(<T>))` otherwise. `None` when the type has no name.
+pub(crate) fn cast_sql(value: &str, logical_type: &LogicalType) -> Option<String> {
+    let name = nullable_type(logical_type)?;
+    Some(match logical_type {
+        LogicalType::Integer { .. } => format!("accurateCast({value}, '{name}')"),
+        _ => format!("CAST({value} AS {name})"),
+    })
+}
+
 /// The name of a column of `logical_type`: [`nullable_type`] when it is `nullable`, the plain
 /// name otherwise (E6-7.2).
 pub(crate) fn column_type(logical_type: &LogicalType, nullable: bool) -> Option<String> {
@@ -73,6 +84,13 @@ pub(crate) fn is_inexpressible(logical_type: &LogicalType) -> bool {
         LogicalType::List { element } => is_inexpressible(element),
         _ => false,
     }
+}
+
+/// Whether a value of `logical_type`, NULL when `nullable`, has no `ClickHouse` type
+/// (E6-7.12): a type of [`is_inexpressible`], or a nullable list, since `ClickHouse` has no
+/// `Nullable(Array(…))`.
+pub(crate) fn is_inexpressible_value(logical_type: &LogicalType, nullable: bool) -> bool {
+    is_inexpressible(logical_type) || (nullable && matches!(logical_type, LogicalType::List { .. }))
 }
 
 /// The number of fraction digits of a timestamp of `precision`: 0, 3, 6 or 9 (E6-7.2).

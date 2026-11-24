@@ -20,7 +20,8 @@
 //! | `enable_positional_arguments` | `1` |
 //! | `short_circuit_function_evaluation` | `'force_enable'` |
 //! | `enable_extended_results_for_datetime_functions` | `1` |
-//! | `aggregate_functions_null_for_empty` | `0` |
+//! | `aggregate_functions_null_for_empty` | `1` |
+//! | `decimal_check_overflow` | `1` |
 //!
 //! The reason for each is documented with the clause, in the `settings` module.
 
@@ -32,14 +33,15 @@ mod check;
 mod day;
 mod deduplicate;
 mod error;
+mod expressible;
 mod expression;
 mod full_join;
 mod identifiers;
-mod inexpressible;
 mod join;
 mod join_keys;
 mod lookup;
 mod null_safe;
+mod ordering;
 mod output;
 mod parameters;
 mod period_range;
@@ -74,8 +76,8 @@ use menura_representations::logical_plan::PlanNode;
 use menura_security::AdmittedSecurityContext;
 
 use crate::body::{SelectBody, statement};
+use crate::expressible::check_query;
 use crate::expression::Environment;
-use crate::inexpressible::check_expressible;
 use crate::steps::{StepWriter, pass_through};
 
 /// Generates the `ClickHouse` SQL of `plan`, the optimized plan of `query`, over `model` and its
@@ -98,7 +100,7 @@ pub fn generate_sql(
     query: &BoundQuery,
     security: &AdmittedSecurityContext,
 ) -> Result<GeneratedSql, GenerateError> {
-    check_expressible(plan)?;
+    check_query(plan, query, model, catalog)?;
     let environment = Environment {
         catalog,
         model,

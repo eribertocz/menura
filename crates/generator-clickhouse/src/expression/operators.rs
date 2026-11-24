@@ -5,7 +5,8 @@ use menura_model::expression::{BinaryOperator, CaseBranch, CastTarget, Expressio
 
 use super::ExpressionWriter;
 use crate::error::GenerateError;
-use crate::null_safe::not_distinct;
+use crate::null_safe::not_distinct_by;
+use crate::ordering::{Comparison, compared};
 
 impl ExpressionWriter<'_, '_> {
     pub(super) fn unary(
@@ -86,9 +87,13 @@ impl ExpressionWriter<'_, '_> {
         right: &Expression,
         negated: bool,
     ) -> Result<String, GenerateError> {
+        let comparison = Comparison::of(
+            self.known_type(left).as_ref(),
+            self.known_type(right).as_ref(),
+        );
         let left = self.operand(left)?;
         let right = self.operand(right)?;
-        let same = not_distinct(&left, &right);
+        let same = not_distinct_by(&compared(comparison, &left, "=", &right), &left, &right);
         if negated {
             Ok(same)
         } else {
@@ -107,20 +112,22 @@ impl ExpressionWriter<'_, '_> {
         list: &[Expression],
         negated: bool,
     ) -> Result<String, GenerateError> {
+        let comparison = Comparison::of(self.known_type(operand).as_ref(), None);
         let operand = self.operand(operand)?;
         let membership = match list {
             [Expression::UserAttribute(name)] if self.is_list_attribute(name)? => {
                 let items = self.list_attribute(name)?;
                 format!(
                     "CASE WHEN {operand} IS NULL THEN NULL \
-                     ELSE has({items}, assumeNotNull({operand})) END"
+                     WHEN has({items}, assumeNotNull({operand})) THEN TRUE \
+                     WHEN has({items}, NULL) THEN NULL ELSE FALSE END"
                 )
             }
             _ => {
                 let equalities: Vec<String> = self
                     .written_list(list)?
                     .iter()
-                    .map(|item| format!("{operand} = {item}"))
+                    .map(|item| compared(comparison, &operand, "=", item))
                     .collect();
                 equalities.join(" OR ")
             }
@@ -140,11 +147,24 @@ impl ExpressionWriter<'_, '_> {
         negated: bool,
     ) -> Result<String, GenerateError> {
         let operand_type = self.known_type(operand);
+        let comparison = Comparison::of(operand_type.as_ref(), None);
         let operand = self.operand(operand)?;
         let low = self.comparand(low, operand_type.as_ref())?;
         let high = self.comparand(high, operand_type.as_ref())?;
-        let keyword = if negated { "NOT BETWEEN" } else { "BETWEEN" };
-        Ok(format!("{operand} {keyword} {low} AND {high}"))
+        if comparison == Comparison::Plain {
+            let keyword = if negated { "NOT BETWEEN" } else { "BETWEEN" };
+            return Ok(format!("{operand} {keyword} {low} AND {high}"));
+        }
+        let within = format!(
+            "{} AND {}",
+            compared(comparison, &operand, ">=", &low),
+            compared(comparison, &operand, "<=", &high)
+        );
+        Ok(if negated {
+            format!("NOT ({within})")
+        } else {
+            within
+        })
     }
 
     pub(super) fn case(
@@ -177,9 +197,8 @@ impl ExpressionWriter<'_, '_> {
         let source = self.known_type(operand);
         let operand = self.write(operand)?;
         let target_type = cast_target_type(target);
-        let name = self.cast_type(&target_type)?;
         let rounded = rounded_for(source.as_ref(), &target_type, &operand);
-        Ok(format!("CAST({rounded} AS {name})"))
+        self.cast_value(&rounded, &target_type)
     }
 
     fn written_list(&mut self, list: &[Expression]) -> Result<Vec<String>, GenerateError> {

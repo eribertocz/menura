@@ -28,6 +28,6 @@ impl ExpressionWriter<'_, '_> {
     /// query time zone, a `time` or a `timestamp` without time zone, which `ClickHouse` cannot
     /// express (E6-7.12).
     pub(super) fn current_instant(&self) -> GenerateError {
-        self.error(InvariantViolation::UnsupportedType)
+        self.inexpressible()
     }
 }

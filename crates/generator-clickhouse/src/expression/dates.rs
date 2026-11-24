@@ -29,7 +29,8 @@ impl ExpressionWriter<'_, '_> {
             ScalarFunction::ToDate => return Ok(format!("toDate32({})", self.write(value)?)),
             // `TO_TIMESTAMP` gives a timestamp without time zone, which `ClickHouse` cannot
             // express (E6-7.12).
-            _ => return Err(self.error(InvariantViolation::UnsupportedType)),
+            ScalarFunction::ToTimestamp => return Err(self.inexpressible()),
+            _ => return Err(self.error(InvariantViolation::MalformedFunctionCall)),
         };
         self.date_part(part, value)
     }
@@ -75,20 +76,36 @@ impl ExpressionWriter<'_, '_> {
         start: &Expression,
         end: &Expression,
     ) -> Result<String, GenerateError> {
-        let end = self.local(end)?;
-        let start = self.local(start)?;
+        let zone = self.zone_of(&[start, end]);
+        let end_zone = self.zone_of(&[end]);
+        let start_zone = self.zone_of(&[start]);
+        let end = self.operand(end)?;
+        let start = self.operand(start)?;
         let difference = match unit {
-            DateUnit::Week => {
-                format!("intDiv(dateDiff('day', toMonday({start}), toMonday({end})), 7)")
-            }
-            _ => format!("dateDiff('{}', {start}, {end})", unit_name(unit)),
+            DateUnit::Week => format!(
+                "intDiv(dateDiff('day', toMonday({start}{start_zone}), \
+                 toMonday({end}{end_zone})), 7)"
+            ),
+            _ => format!("dateDiff('{}', {start}, {end}{zone})", unit_name(unit)),
         };
         self.typed(expression, &difference)
     }
 
-    /// `function(x)`, `x` read in the query time zone.
+    /// `function(x, tz)` for a timestamp with time zone, read in the query time zone;
+    /// `function(x)` for a date.
     fn date_part(&mut self, function: &str, operand: &Expression) -> Result<String, GenerateError> {
-        Ok(format!("{function}({})", self.local(operand)?))
+        let zone = self.zone_of(&[operand]);
+        Ok(format!("{function}({}{zone})", self.operand(operand)?))
+    }
+
+    /// `, tz`, the time-zone argument of a call that reads `operands`, when one of them is a
+    /// timestamp with time zone (E6-7.6); nothing otherwise.
+    fn zone_of(&mut self, operands: &[&Expression]) -> String {
+        if operands.iter().any(|operand| self.is_zoned(operand)) {
+            format!(", {}", self.time_zone())
+        } else {
+            String::new()
+        }
     }
 
     /// `x`, or for a timestamp with time zone `toTimeZone(x, tz)`, whose parts and calendar

@@ -1,16 +1,18 @@
 //! Comparisons, with the `date` bounds of a `timestamp` converted to the start of their day
-//! (E6-4.2b).
+//! (E6-4.2b), and floats and UUIDs compared as `DuckDB` compares them (E6-7.14).
 
 use menura_contracts::types::common::LogicalType;
 use menura_model::expression::{BinaryOperator, Expression, Literal};
 
 use super::operators::operator_sql;
 use super::{ExpressionWriter, Literals};
-use crate::error::{GenerateError, InvariantViolation};
+use crate::error::GenerateError;
+use crate::ordering::{Comparison, compared};
 use crate::types::digits;
 
 impl ExpressionWriter<'_, '_> {
-    /// `l op r`, each side converted when it is a `date` parameter and the other a timestamp.
+    /// `l op r`, each side converted when it is a `date` parameter and the other a timestamp,
+    /// floats and UUIDs compared as E6-7.14 states.
     pub(super) fn comparison(
         &mut self,
         operator: BinaryOperator,
@@ -21,7 +23,8 @@ impl ExpressionWriter<'_, '_> {
         let right_type = self.known_type(right);
         let left = self.comparand(left, right_type.as_ref())?;
         let right = self.comparand(right, left_type.as_ref())?;
-        Ok(format!("{left} {} {right}", operator_sql(operator)))
+        let comparison = Comparison::of(left_type.as_ref(), right_type.as_ref());
+        Ok(compared(comparison, &left, operator_sql(operator), &right))
     }
 
     /// `expression` as an operand compared with a value of `other` type: a `date` parameter,
@@ -50,9 +53,7 @@ impl ExpressionWriter<'_, '_> {
                     digits(*precision)
                 ))
             }
-            Some(LogicalType::Timestamp { .. }) if date_parameter => {
-                Err(self.error(InvariantViolation::UnsupportedType))
-            }
+            Some(LogicalType::Timestamp { .. }) if date_parameter => Err(self.inexpressible()),
             _ => Ok(text),
         }
     }

@@ -16,8 +16,8 @@ use menura_representations::logical_plan::{Operation, PlanNode};
 
 use crate::body::{SelectBody, statement};
 use crate::error::{GenerateError, InvariantViolation};
+use crate::expressible::check_model_plan;
 use crate::expression::Environment;
-use crate::inexpressible::check_expressible;
 use crate::steps::{StepWriter, error, pass_through};
 
 pub use shapes::{PeriodicCheck, SnapshotCheck, SnapshotTime, ValidityCheck};
@@ -58,7 +58,7 @@ pub fn generate_check_sql(
     catalog: &CatalogSchemaDocument,
     model: &InternalModel,
 ) -> Result<GeneratedCheckSql, GenerateError> {
-    check_expressible(plan)?;
+    check_model_plan(plan, model, catalog)?;
     let environment = environment(CheckInputs { catalog, model });
     let mut writer = StepWriter::new(&environment);
     let written = writer.write(plan)?;
@@ -82,7 +82,7 @@ pub fn generate_validity_check_sql(
     check: &ValidityCheck<'_>,
     inputs: CheckInputs<'_>,
 ) -> Result<GeneratedCheckSql, GenerateError> {
-    check_expressible(check.rows)?;
+    check_model_plan(check.rows, inputs.model, inputs.catalog)?;
     let environment = environment(inputs);
     let mut writer = StepWriter::new(&environment);
     let last = writer.validity_check(check)?;
@@ -99,7 +99,7 @@ pub fn generate_periodic_check_sql(
     check: &PeriodicCheck<'_>,
     inputs: CheckInputs<'_>,
 ) -> Result<GeneratedCheckSql, GenerateError> {
-    check_expressible(check.rows)?;
+    check_model_plan(check.rows, inputs.model, inputs.catalog)?;
     let environment = environment(inputs);
     let mut writer = StepWriter::new(&environment);
     let last = writer.periodic_check(check)?;
@@ -117,7 +117,7 @@ pub fn generate_snapshot_check_sql(
     check: &SnapshotCheck<'_>,
     inputs: CheckInputs<'_>,
 ) -> Result<GeneratedCheckSql, GenerateError> {
-    check_expressible(check.rows)?;
+    check_model_plan(check.rows, inputs.model, inputs.catalog)?;
     let environment = environment(inputs);
     let mut writer = StepWriter::new(&environment);
     let last = writer.snapshot_check(check)?;
