@@ -11,5 +11,6 @@ query:
     metrics: ["sale_count"]
 expect:
   outcome: "plan"
+  sql_clickhouse: e1-output-name-001.clickhouse.sql
   rows: "e1-output-name-001.csv"
   row_order: "any"

@@ -14,6 +14,7 @@ query:
       - {"metric": "sale_count", "alias": "sale_count"}
 expect:
   outcome: "plan"
+  sql_clickhouse: cs-cache-key-001.clickhouse.sql
   rows: "cs-plan-rows-001.csv"
   row_order: "any"
   cache_key: "7250d95368b8c0caf11bf52e03795f62faea9e47294ede96d83fd451da10ffc6"

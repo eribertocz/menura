@@ -13,6 +13,7 @@ query:
       - {"metric": "collection_percent", "alias": "collection_percent"}
 expect:
   outcome: "plan"
+  sql_clickhouse: der-derived-over-derived-001.clickhouse.sql
   row_order: "any"
   rows: "der-derived-over-derived-001.csv"
   tolerance: 1.0e-9

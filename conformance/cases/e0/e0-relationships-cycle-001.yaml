@@ -13,5 +13,6 @@ query:
       - {metric: employee_count, alias: employee_count}
 expect:
   outcome: plan
+  sql_clickhouse: e0-relationships-cycle-001.clickhouse.sql
   rows: e0-relationships-cycle-001.csv
   row_order: any

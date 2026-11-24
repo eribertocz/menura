@@ -13,6 +13,7 @@ query:
       - {metric: total_quantity, alias: total_quantity}
 expect:
   outcome: plan
+  sql_clickhouse: e0-typing-key-types-001.clickhouse.sql
   warnings: [W0F-01]
   rows: e0-typing-key-types-001.csv
   row_order: any

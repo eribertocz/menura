@@ -10,5 +10,6 @@ query:
     dimensions: ["targets.region"]
 expect:
   outcome: "plan"
+  sql_clickhouse: e4-dimension-listing-001.clickhouse.sql
   row_order: "any"
   rows: "e4-dimension-listing-001.csv"

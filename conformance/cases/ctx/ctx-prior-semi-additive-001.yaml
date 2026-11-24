@@ -15,6 +15,7 @@ query:
       - {"vendor_name": "COMMON", "data": {"namespace": "menura", "version": 1, "time_grains": [{"dimension": "balances.period", "grain": "month"}], "date_range": {"dimension": "balances.period", "from": "2026-02-01", "to": "2026-03-31"}}}
 expect:
   outcome: "plan"
+  sql_clickhouse: ctx-prior-semi-additive-001.clickhouse.sql
   sql: "ctx-prior-semi-additive-001.sql"
   row_order: "any"
   rows: "ctx-prior-semi-additive-001.csv"

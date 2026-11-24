@@ -15,5 +15,6 @@ query:
       - {"vendor_name": "COMMON", "data": {"namespace": "menura", "version": 1, "paths": [{"from": "orders", "to": "calendar", "relationships": ["order_date"]}, {"from": "orders", "to": "fiscal_years", "relationships": ["ship_date", "calendar_fiscal_year"]}]}}
 expect:
   outcome: "plan"
+  sql_clickhouse: e3-role-playing-001.clickhouse.sql
   rows: "e3-role-playing-001.csv"
   row_order: "any"

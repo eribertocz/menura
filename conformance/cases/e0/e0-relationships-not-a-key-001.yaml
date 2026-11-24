@@ -13,6 +13,7 @@ query:
       - {metric: total_amount, alias: total_amount}
 expect:
   outcome: plan
+  sql_clickhouse: e0-relationships-not-a-key-001.clickhouse.sql
   warnings: [W0E-02]
   rows: e0-relationships-not-a-key-001.csv
   row_order: any

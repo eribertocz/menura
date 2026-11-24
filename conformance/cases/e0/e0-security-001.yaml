@@ -13,6 +13,7 @@ query:
       - {metric: total_amount, alias: total_amount}
 expect:
   outcome: plan
+  sql_clickhouse: e0-security-001.clickhouse.sql
   warnings: [W0C-41]
   rows: e0-security-001.csv
   row_order: any

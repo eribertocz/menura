@@ -12,5 +12,6 @@ query:
       - {metric: total_amount, alias: total_amount}
 expect:
   outcome: plan
+  sql_clickhouse: cat-state-summary-built-from-days-001.clickhouse.sql
   rows: cat-state-summary-built-from-days-001.csv
   row_order: any

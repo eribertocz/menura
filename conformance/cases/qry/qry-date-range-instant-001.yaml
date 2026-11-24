@@ -14,5 +14,6 @@ query:
       - {"vendor_name": "COMMON", "data": {"namespace": "menura", "version": 1, "date_range": {"dimension": "sales.sold_at", "from": "2026-02-01", "to": "2026-02-10"}}}
 expect:
   outcome: "plan"
+  sql_clickhouse: qry-date-range-instant-001.clickhouse.sql
   rows: "qry-date-range-instant-001.csv"
   row_order: "any"

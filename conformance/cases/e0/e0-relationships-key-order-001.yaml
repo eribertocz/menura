@@ -13,5 +13,6 @@ query:
       - {metric: total_packages, alias: total_packages}
 expect:
   outcome: plan
+  sql_clickhouse: e0-relationships-key-order-001.clickhouse.sql
   rows: e0-relationships-key-order-001.csv
   row_order: any

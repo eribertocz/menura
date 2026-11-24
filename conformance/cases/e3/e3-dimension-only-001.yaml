@@ -10,6 +10,7 @@ query:
     dimensions: ["sales.region"]
 expect:
   outcome: "plan"
+  sql_clickhouse: e3-dimension-only-001.clickhouse.sql
   sql: "e3-dimension-only-001.sql"
   row_order: "any"
   rows: "e3-dimension-only-001.csv"

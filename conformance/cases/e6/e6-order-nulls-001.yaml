@@ -14,5 +14,6 @@ query:
       - {"vendor_name": "COMMON", "data": {"namespace": "menura", "version": 1, "order_by": [{"output": "channel", "direction": "asc", "nulls": "first"}]}}
 expect:
   outcome: "plan"
+  sql_clickhouse: e6-order-nulls-001.clickhouse.sql
   row_order: "exact"
   rows: "e6-order-nulls-001.csv"

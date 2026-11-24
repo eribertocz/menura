@@ -13,5 +13,6 @@ query:
       - {metric: total_rate, alias: total_rate}
 expect:
   outcome: plan
+  sql_clickhouse: e0-relationships-unconnected-001.clickhouse.sql
   rows: e0-relationships-unconnected-001.csv
   row_order: any

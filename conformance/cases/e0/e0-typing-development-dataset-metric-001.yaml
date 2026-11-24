@@ -16,6 +16,7 @@ query:
 load_options: {ossie_format: development}
 expect:
   outcome: plan
+  sql_clickhouse: e0-typing-development-dataset-metric-001.clickhouse.sql
   warnings: [W0F-01]
   rows: e0-typing-development-dataset-metric-001.csv
   row_order: any

@@ -12,5 +12,6 @@ query:
       - {"metric": "sale_count", "alias": "sale_count"}
 expect:
   outcome: "plan"
+  sql_clickhouse: sec-undeclared-role-002.clickhouse.sql
   rows: "sec-undeclared-role-002.csv"
   row_order: "any"

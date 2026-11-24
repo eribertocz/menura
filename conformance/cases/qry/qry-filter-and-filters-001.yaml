@@ -15,5 +15,6 @@ query:
       - {"vendor_name": "COMMON", "data": {"namespace": "menura", "version": 1, "filters": ["sales.channel = 'web'"]}}
 expect:
   outcome: "plan"
+  sql_clickhouse: qry-filter-and-filters-001.clickhouse.sql
   row_order: "any"
   rows: "qry-filter-and-filters-001.csv"

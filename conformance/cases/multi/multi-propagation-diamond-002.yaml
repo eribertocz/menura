@@ -12,5 +12,6 @@ query:
       - {"metric": "line_quantity", "alias": "line_quantity"}
 expect:
   outcome: "plan"
+  sql_clickhouse: multi-propagation-diamond-002.clickhouse.sql
   row_order: "any"
   rows: "multi-propagation-diamond-002.csv"

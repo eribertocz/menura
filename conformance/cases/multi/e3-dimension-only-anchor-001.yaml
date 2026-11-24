@@ -10,5 +10,6 @@ query:
     dimensions: ["customers.customer_name", "orders.status"]
 expect:
   outcome: "plan"
+  sql_clickhouse: e3-dimension-only-anchor-001.clickhouse.sql
   row_order: "any"
   rows: "e3-dimension-only-anchor-001.csv"

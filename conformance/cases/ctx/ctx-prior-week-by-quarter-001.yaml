@@ -15,5 +15,6 @@ query:
       - {"vendor_name": "COMMON", "data": {"namespace": "menura", "version": 1, "time_grains": [{"dimension": "orders.order_date", "grain": "week"}], "date_range": {"dimension": "orders.order_date", "from": "2024-02-26", "to": "2024-03-31"}}}
 expect:
   outcome: "plan"
+  sql_clickhouse: ctx-prior-week-by-quarter-001.clickhouse.sql
   row_order: "any"
   rows: "ctx-prior-week-by-quarter-001.csv"

@@ -13,6 +13,7 @@ query:
     filter: "orders.order_date >= DATE '2026-10-10'"
 expect:
   outcome: plan
+  sql_clickhouse: e5-summary-truncated-filter-001.clickhouse.sql
   sql: e5-summary-truncated-filter-001.sql
   rows: e5-summary-truncated-filter-001.csv
   row_order: any

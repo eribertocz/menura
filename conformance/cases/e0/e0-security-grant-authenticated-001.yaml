@@ -13,5 +13,6 @@ query:
 load_options: {grant_authenticated_to_all: true}
 expect:
   outcome: plan
+  sql_clickhouse: e0-security-grant-authenticated-001.clickhouse.sql
   rows: e0-security-grant-authenticated-001.csv
   row_order: any

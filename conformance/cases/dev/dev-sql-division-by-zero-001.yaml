@@ -9,5 +9,6 @@ query:
   sql: "SELECT region, AGG(total_amount) / (AGG(sale_count) - AGG(sale_count)) AS per_nothing FROM slice.sales GROUP BY region"
 expect:
   outcome: "plan"
+  sql_clickhouse: dev-sql-division-by-zero-001.clickhouse.sql
   row_order: "any"
   rows: "dev-sql-division-by-zero-001.csv"

@@ -9,5 +9,6 @@ query:
   sql: "SELECT DATE_TRUNC('week', s.sold_at) AS sold_week, AGG(s.sale_count) AS sale_count FROM slice.sales AS s GROUP BY 1 ORDER BY sold_week"
 expect:
   outcome: "plan"
+  sql_clickhouse: e1-sql-week-time-zone-001.clickhouse.sql
   row_order: "exact"
   rows: "e1-sql-week-time-zone-001.csv"

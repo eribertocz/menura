@@ -13,6 +13,7 @@ query:
       - {metric: padded_quantity, alias: padded_quantity}
 expect:
   outcome: plan
+  sql_clickhouse: e0-typing-null-operand-001.clickhouse.sql
   warnings: [W0F-01]
   rows: e0-typing-null-operand-001.csv
   row_order: any

@@ -14,5 +14,6 @@ query:
       - {"vendor_name": "COMMON", "data": {"namespace": "menura", "version": 1, "limit": 2, "order_by": [{"output": "total_amount", "direction": "desc", "nulls": "last"}, {"output": "region", "direction": "asc", "nulls": "last"}]}}
 expect:
   outcome: "plan"
+  sql_clickhouse: qry-limit-001.clickhouse.sql
   row_order: "exact"
   rows: "qry-limit-001.csv"

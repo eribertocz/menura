@@ -11,5 +11,6 @@ query:
       - {"metric": "unexpected_excluded", "alias": "unexpected_excluded"}
 expect:
   outcome: "plan"
+  sql_clickhouse: add-unexpected-exclude-001.clickhouse.sql
   rows: "add-unexpected-exclude-001.csv"
   row_order: "any"

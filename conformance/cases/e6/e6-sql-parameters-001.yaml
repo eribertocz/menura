@@ -9,6 +9,7 @@ query:
   sql: "SELECT CASE WHEN customer_id = 1 THEN 'one' ELSE 'other' END AS bucket, AGG(carried_balance) + 1000 AS carried, AGG(total_paid) AS paid FROM next_semi_additive.balances GROUP BY ALL ORDER BY bucket"
 expect:
   outcome: "plan"
+  sql_clickhouse: e6-sql-parameters-001.clickhouse.sql
   sql: "e6-sql-parameters-001.sql"
   rows: "e6-sql-parameters-001.csv"
   row_order: "exact"

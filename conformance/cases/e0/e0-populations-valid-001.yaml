@@ -14,5 +14,6 @@ query:
       - {metric: customer_count, alias: customer_count}
 expect:
   outcome: plan
+  sql_clickhouse: e0-populations-valid-001.clickhouse.sql
   rows: e0-populations-valid-001.csv
   row_order: any

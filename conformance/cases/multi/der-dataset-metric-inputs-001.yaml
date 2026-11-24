@@ -13,6 +13,7 @@ query:
 load_options: {ossie_format: development}
 expect:
   outcome: "plan"
+  sql_clickhouse: der-dataset-metric-inputs-001.clickhouse.sql
   row_order: "any"
   rows: "der-dataset-metric-inputs-001.csv"
   tolerance: 1.0e-9

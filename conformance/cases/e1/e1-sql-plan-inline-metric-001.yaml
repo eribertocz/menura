@@ -10,6 +10,7 @@ query:
   sql: "SELECT CAST(AGG(total_amount) AS DOUBLE) / AGG(total_quantity) AS per_unit, region, COALESCE(AGG(sale_count), 0) * 2 AS doubled FROM slice.sales GROUP BY region ORDER BY region"
 expect:
   outcome: "plan"
+  sql_clickhouse: e1-sql-plan-inline-metric-001.clickhouse.sql
   tolerance: 1e-12
   row_order: "exact"
   rows: "e1-sql-plan-inline-metric-001.csv"

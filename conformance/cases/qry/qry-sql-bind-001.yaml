@@ -9,5 +9,6 @@ query:
   sql: "SELECT UPPER(s.channel) AS c, AGG(s.total_amount) AS amount FROM slice.sales AS s WHERE sales.region = 'NORTH' GROUP BY UPPER(s.channel) ORDER BY c"
 expect:
   outcome: "plan"
+  sql_clickhouse: qry-sql-bind-001.clickhouse.sql
   row_order: "exact"
   rows: "qry-sql-bind-001.csv"

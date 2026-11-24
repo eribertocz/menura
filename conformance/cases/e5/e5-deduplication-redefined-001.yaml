@@ -12,6 +12,7 @@ query:
       - {"metric": "total_amount", "alias": "total_amount"}
 expect:
   outcome: "plan"
+  sql_clickhouse: e5-deduplication-redefined-001.clickhouse.sql
   rows: "e5-deduplication-redefined-001.csv"
   row_order: "any"
   explanation: [DEV-4, E4-4.0e, E4-4.1, E5-3.2, E5-3.3]

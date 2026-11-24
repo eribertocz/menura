@@ -13,6 +13,7 @@ query:
 load_options: {ossie_format: development}
 expect:
   outcome: plan
+  sql_clickhouse: e6-empty-filter-001.clickhouse.sql
   warnings: [W0G-01]
   rows: e6-empty-filter-001.csv
   row_order: any
