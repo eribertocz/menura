@@ -1020,7 +1020,10 @@ Find a rule ID or a section here, then open only that file at that line.
 | [stages/E6-clickhouse.md](stages/E6-clickhouse.md#L19) | 19 | rule | E6-7.11 |
 | [stages/E6-clickhouse.md](stages/E6-clickhouse.md#L20) | 20 | rule | E6-7.12 |
 | [stages/E6-clickhouse.md](stages/E6-clickhouse.md#L21) | 21 | rule | E6-7.13 |
-| [stages/E6-clickhouse.md](stages/E6-clickhouse.md#L37) | 37 | section | E6-8 Errors |
+| [stages/E6-clickhouse.md](stages/E6-clickhouse.md#L22) | 22 | rule | E6-7.14 |
+| [stages/E6-clickhouse.md](stages/E6-clickhouse.md#L23) | 23 | rule | E6-7.15 |
+| [stages/E6-clickhouse.md](stages/E6-clickhouse.md#L24) | 24 | rule | E6-7.16 |
+| [stages/E6-clickhouse.md](stages/E6-clickhouse.md#L42) | 42 | section | E6-8 Errors |
 | [stages/E6-generate.md](stages/E6-generate.md#L1) | 1 | section | E6 Generate SQL |
 | [stages/E6-generate.md](stages/E6-generate.md#L3) | 3 | section | E6-1 Purpose |
 | [stages/E6-generate.md](stages/E6-generate.md#L8) | 8 | section | E6-2 Input and output |
