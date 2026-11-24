@@ -131,7 +131,8 @@ mod tests {
     fn e6_4_2_period_counts_and_empty_counts_are_constants() {
         let sql =
             "SELECT addDays(addMonths(p, 1), -1), coalesce(count(x), 0), coalesce(y, 0) FROM t";
-        assert_eq!(constants(sql, "1"), vec![true]);
+        // The `1` of `addMonths` and the `-1` of `addDays`, whose token is the number 1.
+        assert_eq!(constants(sql, "1"), vec![true, true]);
         assert_eq!(constants(sql, "0"), vec![true, false]);
     }
 }
