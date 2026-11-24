@@ -27,7 +27,7 @@ LAYERS = [
     ["representations"],
     ["security"],
     ["e0-load", "e1-parse", "e2-bind", "e3-paths", "e4-plan", "e5-optimize"],
-    ["generator-duckdb"],
+    ["generator-duckdb", "generator-clickhouse"],
     ["core"],
     ["cli", "python", "mcp"],
 ]
