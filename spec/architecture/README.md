@@ -84,7 +84,7 @@ All functions are pure. Inputs and outputs are the contract documents of `spec/c
 
 | Compile option | Meaning | Default |
 |---|---|---|
-| `dialect` | Target dialect | `duckdb` |
+| `dialect` | Target dialect: `duckdb`, or from 1.1.0 `clickhouse` (E6-7) | `duckdb` |
 | `timeout_ms` | Written to `limits.timeout_ms` | 30000 |
 | `max_rows` | Written to `limits.max_rows` | `null` |
 | `audit` | Also return the audit record | `false` |
