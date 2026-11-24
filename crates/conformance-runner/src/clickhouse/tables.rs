@@ -62,7 +62,11 @@ pub(crate) fn load_fixture(
     let catalog: CatalogRelations =
         serde_json::from_str(&text).map_err(|error| format!("{}: {error}", path.display()))?;
     let mut loaded = LoadedFixture::default();
-    for relation in &catalog.relations {
+    for relation in catalog
+        .relations
+        .iter()
+        .filter(|relation| !is_query(&relation.source))
+    {
         let parts: Vec<&str> = relation.source.split('.').collect();
         let Some((database, table)) = clickhouse_name(&parts) else {
             loaded.not_created.push(format!(
@@ -99,6 +103,17 @@ pub(crate) fn load_fixture(
             .map_err(|failure| failure.describe())?;
     }
     Ok(loaded)
+}
+
+/// Whether a catalog `source` is a query rather than a relation name (E6-4.3): a query is not
+/// copied, the relations it reads are.
+fn is_query(source: &str) -> bool {
+    let first_word: String = source
+        .trim_start()
+        .chars()
+        .take_while(char::is_ascii_alphabetic)
+        .collect();
+    first_word.eq_ignore_ascii_case("SELECT") || first_word.eq_ignore_ascii_case("WITH")
 }
 
 /// The `ClickHouse` database and table of a source of one part, `table` in the session's
@@ -344,6 +359,14 @@ mod tests {
         );
         assert_eq!(clickhouse_name(&["orders"]), Some(("default", "orders")));
         assert_eq!(clickhouse_name(&["shop", "main", "orders"]), None);
+    }
+
+    #[test]
+    fn e6_7_10_copies_no_query_source() {
+        assert!(is_query("SELECT order_id FROM shop.orders"));
+        assert!(is_query("  with x AS (SELECT 1) SELECT * FROM x"));
+        assert!(!is_query("shop.orders"));
+        assert!(!is_query("selections.orders"));
     }
 
     #[test]
