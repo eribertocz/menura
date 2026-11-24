@@ -2,7 +2,7 @@
   "checks": [
     {
       "check_id": "key_uniqueness:RETURNS_SALES",
-      "definition_hash": "1f6832404854e96bacad211202519db5c4b6a6ca0390ba716f15dc002d3ddac3",
+      "definition_hash": "78ec6b13371798d8e2a26a64b969b77dea3ea2600a2f2c7c2a2bb8eae852cb5c",
       "kind": "key_uniqueness",
       "parameters": [],
       "sources": [
@@ -13,7 +13,7 @@
     },
     {
       "check_id": "key_uniqueness:SALES_TARGETS",
-      "definition_hash": "e73821e972aeced2ca4b9e4b9057f60ca226920613ee98cdee15b6d4222e098f",
+      "definition_hash": "3a8b271f110e17c7a3d42e3f6e5688ef84e46255c35b358493b455e6730a7fe3",
       "kind": "key_uniqueness",
       "parameters": [],
       "sources": [
@@ -24,7 +24,7 @@
     },
     {
       "check_id": "orphan_keys:RETURNS_SALES",
-      "definition_hash": "50452ed0d75f176905beda3370401335435fce3a0b8520c5a5db4c5ef664e9bb",
+      "definition_hash": "8c4a5155a147dbcd7451aafff2e4c23c54aa8faffab68cbe9db8575ca8114b5c",
       "kind": "orphan_keys",
       "parameters": [],
       "sources": [
@@ -36,7 +36,7 @@
     },
     {
       "check_id": "orphan_keys:SALES_TARGETS",
-      "definition_hash": "8a6443d7daba0dd1e3416cea243cacd32fb35d4faaa788bc03da968821ca7d41",
+      "definition_hash": "f971deaee441e90523bf9154cce3381fce8e509cecbba8117444d5afb889bf51",
       "kind": "orphan_keys",
       "parameters": [],
       "sources": [
@@ -50,5 +50,5 @@
   "contract": "menura.integrity_checks",
   "contract_version": "@schema",
   "dialect": "duckdb",
-  "model_hash": "ce65d82cd8213f1180a7ee76fe057a1b0c5600978b01a910b267de57e6232fbe"
+  "model_hash": "c4779ab20d6e18dbcf1834dfb6ec5a9bab4263d718dac49cdf16bab154292bc4"
 }

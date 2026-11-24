@@ -16,4 +16,4 @@ expect:
   outcome: plan
   rows: pln-unpruned-periods-001.csv
   row_order: any
-  cache_key: "038caf6f1f86798b3adb07640d6b9055983d58fee7bf3cc2fc975ad470ba7de5"
+  cache_key: "73e041365c5327af1889e833bb33a0b9371b25562f71a5fb9e272be5d0193feb"

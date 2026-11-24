@@ -52,7 +52,7 @@
       "source": "shop.orders_by_region_month",
       "row_count_estimate": 4,
       "aggregate_build": {
-        "definition_hash": "ce1e1c079bbcc2a0ba3a7b3277c56e9e281151a2995527ae319257365f27781c",
+        "definition_hash": "674bdad4b7c7d04b2f7cd92fa3607c217e5a00f6e6b313807645f85ddccf2844",
         "coverage": {
           "from": "2026-10",
           "to": "2026-11"
@@ -89,7 +89,7 @@
         ],
         "integrity_check": {
           "status": "passed",
-          "definition_hash": "ce1e1c079bbcc2a0ba3a7b3277c56e9e281151a2995527ae319257365f27781c",
+          "definition_hash": "674bdad4b7c7d04b2f7cd92fa3607c217e5a00f6e6b313807645f85ddccf2844",
           "verified": [
             {
               "period": "2026-10-05",
@@ -128,7 +128,7 @@
       "source": "shop.orders_by_month",
       "row_count_estimate": 4,
       "aggregate_build": {
-        "definition_hash": "ddb8e3acde250f4054e4299b8a269c8fa6283d4caecea3fc1e68c4c8321913ef",
+        "definition_hash": "2dadf3ea3d22ffefe38377502f14114a71b0775b9c13da39023fff734e5ee61a",
         "coverage": {
           "from": "2026-10",
           "to": "2026-11"
@@ -165,7 +165,7 @@
         ],
         "integrity_check": {
           "status": "passed",
-          "definition_hash": "ddb8e3acde250f4054e4299b8a269c8fa6283d4caecea3fc1e68c4c8321913ef",
+          "definition_hash": "2dadf3ea3d22ffefe38377502f14114a71b0775b9c13da39023fff734e5ee61a",
           "verified": [
             {
               "period": "2026-10-05",

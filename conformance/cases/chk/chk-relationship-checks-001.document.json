@@ -2,7 +2,7 @@
   "checks": [
     {
       "check_id": "key_uniqueness:INVOICES_CUSTOMER",
-      "definition_hash": "ef4edc3d7f592caf45f1c44e4622e795e58057dae7261cbe2f03b3542bf48499",
+      "definition_hash": "fe8152d4016daa89fdb6c9b3663a4d6e25347328702ed08c2b30c8c80a96ac7a",
       "kind": "key_uniqueness",
       "parameters": [],
       "sources": [
@@ -13,7 +13,7 @@
     },
     {
       "check_id": "key_uniqueness:INVOICES_STORE",
-      "definition_hash": "0f932bc0fbec0f485621376125a65b299db7b304ba70b22d1f3acd3e61f96453",
+      "definition_hash": "463854df9157ae15e0f2bb9375dcaab0d5c00c42ef3c000d2eb9bbf3f088c2c4",
       "kind": "key_uniqueness",
       "parameters": [],
       "sources": [
@@ -24,7 +24,7 @@
     },
     {
       "check_id": "orphan_keys:INVOICES_CUSTOMER",
-      "definition_hash": "be73411de5542f1885fba67a5bf075d9f8896cb939d2e9ff454f87dc78a57de1",
+      "definition_hash": "d708eabe00dbce26612e7e1b6e0c349d3b4319d39b67adc1a874304757bc562b",
       "kind": "orphan_keys",
       "parameters": [],
       "sources": [
@@ -36,7 +36,7 @@
     },
     {
       "check_id": "orphan_keys:INVOICES_STORE",
-      "definition_hash": "6f4d55d1f0c1d7e5b7aeb3eba68b08a31d728255a3895a2eaca5dad54fbbecea",
+      "definition_hash": "bc7080555dabebfe349df26f7e832a67dae499e26d433deacd789e13448e5aed",
       "kind": "orphan_keys",
       "parameters": [],
       "sources": [
@@ -50,5 +50,5 @@
   "contract": "menura.integrity_checks",
   "contract_version": "@schema",
   "dialect": "duckdb",
-  "model_hash": "9bf5427b9143a8ab4fa8b4d4a7cd726ca812221a721e16950fc425a04d1afcf6"
+  "model_hash": "4ee7d7c330e6bf6abca809e1eee898245923544af1f48e369680e25b09697fd9"
 }

@@ -52,7 +52,7 @@
       "source": "shop.orders_by_created_day",
       "row_count_estimate": 4,
       "aggregate_build": {
-        "definition_hash": "44a6a7a4400250d13878632ab76e6302d0e1a872a27d097253ba8d486f1483c9",
+        "definition_hash": "a91a6913191c1b47d2c3cc31415b84ae2b46a4508c33fbae210d3581f4f0454e",
         "coverage": {
           "from": "2026-10",
           "to": "2026-11"
@@ -89,7 +89,7 @@
         ],
         "integrity_check": {
           "status": "passed",
-          "definition_hash": "44a6a7a4400250d13878632ab76e6302d0e1a872a27d097253ba8d486f1483c9",
+          "definition_hash": "a91a6913191c1b47d2c3cc31415b84ae2b46a4508c33fbae210d3581f4f0454e",
           "verified": [
             {
               "period": "2026-10-05",

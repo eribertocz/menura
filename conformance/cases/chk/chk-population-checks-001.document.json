@@ -2,7 +2,7 @@
   "checks": [
     {
       "check_id": "population:MEMBERS",
-      "definition_hash": "9c4a8a6abfac2dd70052567b61fe6c24678b2a57fd13369584c99d77c127518f",
+      "definition_hash": "d741b3e6a08311f7d72d633f9897af743cc287e18fe144ecf065944af894ffa9",
       "kind": "population",
       "parameters": [],
       "sources": [
@@ -13,7 +13,7 @@
     },
     {
       "check_id": "population:MONTHLY_ROSTER",
-      "definition_hash": "adfff77cb187e1c7bd193fa88908a9fce6ecdf767b1a49220d20a4c7308cde0f",
+      "definition_hash": "2584bf04add1de0cea972c760e987f49dbeb6298d8646b84457a44019cabefb9",
       "kind": "population",
       "parameters": [],
       "sources": [
@@ -24,7 +24,7 @@
     },
     {
       "check_id": "population:STAMPED_MEMBERS",
-      "definition_hash": "10f0160a52529f058047cd70e5e237a3776bbdf8e4611bb88da602a68b348915",
+      "definition_hash": "4e75fdb93ba2058f2b417d7b842878eeddae88d7d5b779a4dc0051ddfd0d26e1",
       "kind": "population",
       "parameters": [
         {
@@ -43,7 +43,7 @@
     },
     {
       "check_id": "semi_additive:ROSTER_BALANCE",
-      "definition_hash": "9bc7adc7f0fb13fb5238df10493d50f9b1a15b3423a620647f7e993729088b41",
+      "definition_hash": "f3b015d163fa1240ef2f405694dd6908e2b3317a02516825544ae7915db1d367",
       "kind": "semi_additive",
       "parameters": [],
       "sources": [
@@ -55,7 +55,7 @@
     },
     {
       "check_id": "semi_additive:SNAPSHOT_BALANCE",
-      "definition_hash": "5ebdf26f5353d470c938ca957298e0a3b1bf392aabf6acf0d1dde9adc59b4c2e",
+      "definition_hash": "96859ec414a1b6317506be5b6f33c8891b6d22e15cd12df11bddd46d78c7e328",
       "kind": "semi_additive",
       "parameters": [],
       "sources": [
@@ -68,5 +68,5 @@
   "contract": "menura.integrity_checks",
   "contract_version": "@schema",
   "dialect": "duckdb",
-  "model_hash": "f4c3d33cf8e08ae2d7e813b4db3f7cee658452f0e06a2de05274b35fdafe316a"
+  "model_hash": "a9da2b5f2586475e8a632859320ecd1ad52ab3a5b09b692ef28d697a06693f8f"
 }

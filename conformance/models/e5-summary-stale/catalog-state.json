@@ -52,7 +52,7 @@
       "source": "shop.orders_by_month",
       "row_count_estimate": 2,
       "aggregate_build": {
-        "definition_hash": "ddb8e3acde250f4054e4299b8a269c8fa6283d4caecea3fc1e68c4c8321913ef",
+        "definition_hash": "2dadf3ea3d22ffefe38377502f14114a71b0775b9c13da39023fff734e5ee61a",
         "coverage": {
           "from": "2026-10",
           "to": "2026-11"
@@ -89,7 +89,7 @@
         ],
         "integrity_check": {
           "status": "passed",
-          "definition_hash": "ddb8e3acde250f4054e4299b8a269c8fa6283d4caecea3fc1e68c4c8321913ef",
+          "definition_hash": "2dadf3ea3d22ffefe38377502f14114a71b0775b9c13da39023fff734e5ee61a",
           "verified": [
             {
               "period": "2026-10-05",

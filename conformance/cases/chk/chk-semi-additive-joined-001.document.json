@@ -2,7 +2,7 @@
   "checks": [
     {
       "check_id": "key_uniqueness:BALANCES_ACCOUNTS",
-      "definition_hash": "06f9203cc78e57dfc24c4aaa14e1dc670b77c0da4a95f6056ab4e9fe987a4a49",
+      "definition_hash": "d512b5e8e51d8a1c06041b10e4d5de41a4d6106ff74107638ec4d191783a479c",
       "kind": "key_uniqueness",
       "parameters": [],
       "sources": [
@@ -13,7 +13,7 @@
     },
     {
       "check_id": "orphan_keys:BALANCES_ACCOUNTS",
-      "definition_hash": "c23a278295201278715b6463d24c49f2a846b91db3539b6ad958f2ed0832d317",
+      "definition_hash": "087d081414859da535c7b7d55ffc31d962618d90ccbbdeaeaf3e8cf78f522cf5",
       "kind": "orphan_keys",
       "parameters": [],
       "sources": [
@@ -25,7 +25,7 @@
     },
     {
       "check_id": "semi_additive:ACCOUNT_BALANCE",
-      "definition_hash": "2359ccf6a1a0b706c029f4ff72f163c6fd4ffc699f141d78c7b3c40c6fd3f163",
+      "definition_hash": "12c84ffd3a386dc0fc089621ed4f20587643e3210d1d87a7d199ee5f0fd0e773",
       "kind": "semi_additive",
       "parameters": [],
       "sources": [
@@ -38,5 +38,5 @@
   "contract": "menura.integrity_checks",
   "contract_version": "@schema",
   "dialect": "duckdb",
-  "model_hash": "21923b1eca4e49575532d7ae0e3690a4057a3e6ad294bf30ae24bea81aab8765"
+  "model_hash": "2ce146da9c1a7021e3ee25ef03f7a8eb281cbd46c724c477fa59dfe5aee2e64d"
 }
