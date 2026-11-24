@@ -246,7 +246,8 @@ fn cat_7_3_a_period_on_a_non_partitioned_relation_is_a_difference() {
 
 #[test]
 fn cat_7_3_two_non_partitioned_relations_need_both_versions() {
-    let orders = json!({"source": "shop.orders", "row_count_estimate": 10, "version": token("orders-1")});
+    let orders =
+        json!({"source": "shop.orders", "row_count_estimate": 10, "version": token("orders-1")});
     let verified = json!([
         {"source": "shop.customers", "version": token("customers-1")},
         {"source": "shop.orders", "version": token("orders-1")}

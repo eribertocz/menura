@@ -374,10 +374,7 @@ fn dep_3_8_relationships_and_policies_have_no_security_policies() {
         policy.model_inputs,
         ["dataset:STORES", "field:STORES.REGION"]
     );
-    assert_eq!(
-        physical(&policy.physical_inputs),
-        ["shop.stores.region"]
-    );
+    assert_eq!(physical(&policy.physical_inputs), ["shop.stores.region"]);
     assert!(policy.security_policies.is_empty());
 }
 

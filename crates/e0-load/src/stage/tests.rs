@@ -46,8 +46,7 @@ const UNKNOWN_EXTENSION_KEY: (&str, &str) = (
       - name: balances"#,
 );
 /// The source of `balances` is not in the catalog schema (`E0D-02`, rejects in E0.d).
-const SOURCE_NOT_IN_CATALOG: (&str, &str) =
-    ("source: shop.balances", "source: shop.missing");
+const SOURCE_NOT_IN_CATALOG: (&str, &str) = ("source: shop.balances", "source: shop.missing");
 /// The additivity `over` names a field `balances` does not have (`E0C-16`, an extension check
 /// of E0.e).
 const UNREACHABLE_OVER: (&str, &str) = (

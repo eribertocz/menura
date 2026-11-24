@@ -182,10 +182,7 @@ fn pln_3_3_a_dimension_only_query_reads_its_dataset() {
     let handle = with_state(&handle(), state(UNPARTITIONED_ORDERS).as_bytes());
     let dimensions = query(r#"{"dimensions": ["orders.region"]}"#);
     let compiled = plan(compile_default(&handle, &dimensions, &analyst()));
-    assert_eq!(
-        data_versions(&compiled)[0]["source"],
-        json!("shop.orders")
-    );
+    assert_eq!(data_versions(&compiled)[0]["source"], json!("shop.orders"));
 }
 
 #[test]
