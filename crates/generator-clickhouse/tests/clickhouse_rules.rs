@@ -338,6 +338,26 @@ fn e6_7_9_a_narrowing_cast_rounds_half_away_from_zero() {
 }
 
 #[test]
+fn e6_7_9_a_cast_from_text_rounds_half_away_from_zero() {
+    let (sql, _) = item("CAST(REGION AS DECIMAL(12,2))", decimal(12, 2));
+    assert_eq!(
+        sql,
+        "CAST(CAST(round(CAST(\"REGION\" AS Nullable(Decimal(76, 3))), 2) AS Nullable(Decimal(12, 2))) \
+         AS Nullable(Decimal(12, 2))) AS \"X\""
+    );
+    let integer = LogicalType::Integer {
+        bits: IntegerBits::ThirtyTwo,
+        signed: true,
+    };
+    let (sql, _) = item("CAST(REGION AS INTEGER)", integer);
+    assert_eq!(
+        sql,
+        "accurateCast(accurateCast(round(CAST(\"REGION\" AS Nullable(Decimal(76, 1))), 0), \
+         'Nullable(Int32)'), 'Nullable(Int32)') AS \"X\""
+    );
+}
+
+#[test]
 fn e6_7_9_integer_arithmetic_is_checked_instead_of_wrapping() {
     let (sql, _) = item("QUANTITY * QUANTITY", big_integer());
     assert_eq!(

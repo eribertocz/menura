@@ -256,10 +256,16 @@ fn cast_target_type(target: CastTarget) -> LogicalType {
     }
 }
 
+/// The precision a text is read with before it is rounded: the widest `ClickHouse` decimal.
+const TEXT_READ_PRECISION: u8 = 76;
+
 /// `operand` rounded half away from zero to the scale of `target` when a cast from `source`
-/// drops digits: `ClickHouse` truncates them, where E0F-8 rounds (E6-7.9). A decimal is
-/// rounded with `round`, which rounds a `Decimal` half away from zero; a float with
+/// drops digits: `ClickHouse` truncates them, where E0F-8 and E0F-11.2 round (E6-7.9). A
+/// decimal is rounded with `round`, which rounds a `Decimal` half away from zero; a float with
 /// `sign(x) * floor(abs(x) * 10^s + 0.5) / 10^s`, since `round` rounds a float half to even.
+/// A text is first read as a `Decimal(76, s + 1)`, which keeps the digit that decides the
+/// rounding and holds the integer part of every value that fits `target`, then rounded: a
+/// text that is not a number still raises an error, never NULL (E0F-11.2).
 fn rounded_for(source: Option<&LogicalType>, target: &LogicalType, operand: &str) -> String {
     let scale = match target {
         LogicalType::Integer { .. } => 0,
@@ -276,6 +282,12 @@ fn rounded_for(source: Option<&LogicalType>, target: &LogicalType, operand: &str
         }
         Some(LogicalType::Float { .. }) => {
             format!("sign({operand}) * floor(abs({operand}) * 1e{scale} + 0.5) / 1e{scale}")
+        }
+        Some(LogicalType::Text) => {
+            let read_scale = u16::from(scale) + 1;
+            format!(
+                "round(CAST({operand} AS Nullable(Decimal({TEXT_READ_PRECISION}, {read_scale}))), {scale})"
+            )
         }
         _ => operand.to_owned(),
     }
