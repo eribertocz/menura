@@ -355,7 +355,10 @@ expect:
 
     #[test]
     fn cs_2_3a_plan_and_runtime_error_cases_read_their_clickhouse_expectations() {
-        let golden = with_outcome("plan", "  rows: e.csv\n  sql_clickhouse: e.clickhouse.sql\n");
+        let golden = with_outcome(
+            "plan",
+            "  rows: e.csv\n  sql_clickhouse: e.clickhouse.sql\n",
+        );
         let expect = parse_case(&golden).unwrap().expect;
         assert_eq!(expect.sql_clickhouse.as_deref(), Some("e.clickhouse.sql"));
         let runtime = with_outcome("runtime_error", "  error: RADD-01\n  clickhouse: e6_01\n");
@@ -367,7 +370,10 @@ expect:
 
     #[test]
     fn cs_2_3a_rejects_clickhouse_expectations_with_other_outcomes() {
-        let sql = with_outcome("error", "  error: E2-01\n  sql_clickhouse: e.clickhouse.sql\n");
+        let sql = with_outcome(
+            "error",
+            "  error: E2-01\n  sql_clickhouse: e.clickhouse.sql\n",
+        );
         assert_eq!(refused(&sql), Some(("sql_clickhouse", "CS-2.3a")));
         let marker = with_outcome("error", "  error: E2-01\n  clickhouse: e6_01\n");
         assert_eq!(refused(&marker), Some(("clickhouse", "CS-2.3a")));
@@ -385,6 +391,9 @@ expect:
     #[test]
     fn cs_2_3a_rejects_an_unknown_clickhouse_expectation() {
         let text = with_outcome("plan", "  rows: e.csv\n  clickhouse: e6_02\n");
-        assert!(matches!(parse_case(&text), Err(RunnerErrorKind::Malformed(_))));
+        assert!(matches!(
+            parse_case(&text),
+            Err(RunnerErrorKind::Malformed(_))
+        ));
     }
 }
