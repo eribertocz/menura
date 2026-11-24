@@ -4,7 +4,6 @@
 use menura_representations::logical_plan::PlanNode;
 use menura_representations::names::ColumnName;
 
-use super::shapes::ValidityCheck;
 use super::sql::{
     aliased, all_equal, all_not_null, column, column_names, expect_names, known_columns,
     synthesized, violation,
@@ -13,6 +12,7 @@ use crate::body::{SelectBody, union_all};
 use crate::error::GenerateError;
 use crate::population::membership::column_type;
 use crate::steps::{StepWriter, pass_through};
+use menura_representations::check_shapes::ValidityCheck;
 
 /// The alias of a row that overlaps another.
 const ROW: &str = "\"menura_row\"";

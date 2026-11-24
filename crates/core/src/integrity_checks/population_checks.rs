@@ -4,10 +4,10 @@
 
 use menura_contracts::types::catalog::CatalogSchemaDocument;
 use menura_contracts::types::common::Dialect;
-use menura_generator_duckdb::{PeriodicCheck, ValidityCheck};
 use menura_model::internal_model::{
     Dataset, InternalModel, NormalizedName, Population, PopulationMode, ValueType,
 };
+use menura_representations::check_shapes::{PeriodicCheck, ValidityCheck};
 use menura_representations::logical_plan::{Membership, PlanNode, PopulationRule};
 use menura_representations::names::ColumnName;
 use menura_representations::origin::Origin;
