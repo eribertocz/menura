@@ -45,12 +45,12 @@ SCHEMA_FILES = {
 INTEGER = {"kind": "integer", "bits": 32, "signed": True}
 TEXT = {"kind": "text"}
 RELATIONS = [
-    ("shop.main.orders", [
+    ("shop.orders", [
         ("order_id", INTEGER, "INTEGER", False),
         ("status", TEXT, "VARCHAR", False),
         ("amount", INTEGER, "INTEGER", False),
     ]),
-    ("shop.main.balances", [
+    ("shop.balances", [
         ("branch", TEXT, "VARCHAR", False),
         ("customer_id", INTEGER, "INTEGER", False),
         ("balance", INTEGER, "INTEGER", True),
@@ -201,7 +201,6 @@ def execute(plan, rows_sql):
     import duckdb  # Only when installed: see `duckdb_available`.
 
     connection = duckdb.connect()
-    connection.execute("ATTACH ':memory:' AS shop")
     for statement in rows_sql.split(";"):
         if statement.strip():
             connection.execute(statement)
