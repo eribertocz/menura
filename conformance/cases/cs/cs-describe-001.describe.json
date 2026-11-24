@@ -5,59 +5,59 @@
     "contracts": [
       {
         "contract": "menura.audit_record",
-        "version": "1.2.0"
+        "version": "@schema"
       },
       {
         "contract": "menura.catalog_schema",
-        "version": "1.1.0"
+        "version": "@schema"
       },
       {
         "contract": "menura.catalog_state",
-        "version": "1.1.0"
+        "version": "@schema"
       },
       {
         "contract": "menura.compile_error",
-        "version": "1.2.0"
+        "version": "@schema"
       },
       {
         "contract": "menura.compiled_plan",
-        "version": "1.2.0"
+        "version": "@schema"
       },
       {
         "contract": "menura.explanation",
-        "version": "1.2.0"
+        "version": "@schema"
       },
       {
         "contract": "menura.integrity_checks",
-        "version": "1.2.0"
+        "version": "@schema"
       },
       {
         "contract": "menura.migration_report",
-        "version": "1.0.0"
+        "version": "@schema"
       },
       {
         "contract": "menura.model_dependencies",
-        "version": "1.0.0"
+        "version": "@schema"
       },
       {
         "contract": "menura.model_description",
-        "version": "1.2.0"
+        "version": "@schema"
       },
       {
         "contract": "menura.model_diff",
-        "version": "1.0.0"
+        "version": "@schema"
       },
       {
         "contract": "menura.query",
-        "version": "1.1.0"
+        "version": "@schema"
       },
       {
         "contract": "menura.security_context",
-        "version": "1.1.0"
+        "version": "@schema"
       },
       {
         "contract": "menura.validation_report",
-        "version": "1.2.0"
+        "version": "@schema"
       }
     ],
     "dialects": [
@@ -142,7 +142,7 @@
     "slice_version": "1.0.0"
   },
   "contract": "menura.model_description",
-  "contract_version": "1.2.0",
+  "contract_version": "@schema",
   "datasets": [
     {
       "fields": [

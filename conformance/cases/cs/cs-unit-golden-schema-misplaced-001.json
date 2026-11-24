@@ -1,0 +1,5 @@
+{
+  "contract": "menura.audit_record",
+  "contract_version": "@schema",
+  "subject": "@schema"
+}

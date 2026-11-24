@@ -1,6 +1,6 @@
 {
   "contract": "menura.compile_error",
-  "contract_version": "1.2.0",
+  "contract_version": "@schema",
   "errors": [
     {
       "code": "ESEC-01",
