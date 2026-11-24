@@ -108,3 +108,32 @@ fn e6_7_1_carried_values_keep_their_column_names() {
         "{carry:#?}"
     );
 }
+
+#[test]
+fn e6_7_5_the_raising_row_has_the_column_types_of_the_values() {
+    let sql = sql_of(NullHandling::Error, SnapshotMissing::Exclude);
+    let snapshot = step(&sql, "snapshot");
+    let raising: Vec<&str> = snapshot
+        .iter()
+        .skip_while(|line| **line != "UNION ALL")
+        .copied()
+        .collect();
+    assert_eq!(raising[1], "SELECT", "{snapshot:#?}");
+    assert_eq!(raising[2], "CAST(NULL AS Nullable(String)) AS \"BRANCH\",");
+    assert_eq!(
+        raising[3],
+        "accurateCast(NULL, 'Nullable(Int64)') AS \"CUSTOMER_ID\","
+    );
+    assert!(
+        raising[4].starts_with("CAST(nullIf(throwIf(")
+            && raising[4].ends_with(", 0) AS Nullable(Decimal(38, 2))) AS \"BALANCE\""),
+        "{}",
+        raising[4]
+    );
+}
+
+#[test]
+fn e6_7_8_no_common_type_of_two_branches_is_a_variant() {
+    let sql = sql_of(NullHandling::Error, SnapshotMissing::Exclude);
+    assert!(sql.contains("\n  use_variant_as_common_type = 0"), "{sql}");
+}

@@ -65,7 +65,7 @@ impl StepWriter<'_> {
         let (first, others) = branches.split_at(1);
         let violations = union_all(first[0].clone(), others);
         let violations = self.push_step("violations", violations);
-        Ok(union_all(body, &[raise(frame, &violations)]))
+        Ok(union_all(body, &[raise(frame, &violations)?]))
     }
 
     /// The value of each entity in the last (`MAX`) or first (`MIN`) period with data of its
@@ -221,15 +221,18 @@ fn violations(frame: &Frame<'_>, steps: &Steps) -> Vec<SelectBody> {
 
 /// One row, when a condition is met, whose components raise the first one in code order: the
 /// texts sort in code order (E6-4.6b), and `throwIf` takes a constant message, so each
-/// condition is raised when it is the first (E6-7.5). The components are then NULL.
-fn raise(frame: &Frame<'_>, violations: &str) -> SelectBody {
-    let mut items: Vec<String> = frame
-        .keys
-        .iter()
-        .chain(&frame.entity)
-        .map(|name| format!("NULL AS {name}"))
-        .collect();
-    let metric = &frame.rule.metric;
+/// condition is raised when it is the first (E6-7.5). The keys, the entity and the components
+/// are then NULL, each cast to its column type in the node, the type the reduction gives it,
+/// so that `UNION ALL` never infers a common type (E6-7.8).
+fn raise(frame: &Frame<'_>, violations: &str) -> Result<SelectBody, GenerateError> {
+    let rule = frame.rule;
+    let grouping = rule.keys.iter().chain(&rule.entity).map(|item| &item.name);
+    let mut items = Vec::new();
+    for (column, name) in grouping.zip(frame.keys.iter().chain(&frame.entity)) {
+        let null = cast_column(frame.node, column.as_str(), "NULL")?;
+        items.push(format!("{null} AS {name}"));
+    }
+    let metric = &rule.metric;
     let raised: Vec<String> = AdditivityCondition::ALL
         .iter()
         .map(|condition| {
@@ -238,12 +241,10 @@ fn raise(frame: &Frame<'_>, violations: &str) -> SelectBody {
         })
         .collect();
     let value = format!("nullIf({}, 0)", raised.join(" + "));
-    for name in &frame.components {
-        items.push(format!("{value} AS {name}"));
-    }
-    SelectBody {
+    items.extend(cast_components(frame, |_| value.clone())?);
+    Ok(SelectBody {
         items,
         from: violations.to_owned(),
         clauses: vec![format!("HAVING min({VIOLATION}) IS NOT NULL")],
-    }
+    })
 }
