@@ -290,7 +290,8 @@ fn e6_7_7_a_list_attribute_is_an_array_parameter() {
     let (sql, parameters) = item("REGION NOT IN (USER_ATTRIBUTE('regions'))", boolean());
     assert_eq!(
         sql,
-        "CAST(NOT (CASE WHEN \"REGION\" IS NULL THEN NULL \
+        "CAST(NOT (CASE WHEN empty({p1:Array(String)}) THEN FALSE \
+         WHEN \"REGION\" IS NULL THEN NULL \
          WHEN has({p1:Array(String)}, assumeNotNull(\"REGION\")) THEN TRUE \
          WHEN has({p1:Array(String)}, NULL) THEN NULL ELSE FALSE END) AS Nullable(Bool)) AS \"X\""
     );

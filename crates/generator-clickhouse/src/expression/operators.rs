@@ -103,9 +103,10 @@ impl ExpressionWriter<'_, '_> {
 
     /// `x [NOT] IN (a, b)` with standard NULL semantics (E6-7.7): `x = a OR x = b`, NULL when
     /// `x` is NULL or when no item matches and one is NULL, and its negation; `ClickHouse`'s
-    /// own `IN` returns false for NULL instead, and needs constant items. A list attribute,
-    /// bound as an array (E6-7.3), holds no NULL item: `x` is in it when `has` finds it, and the
-    /// result is NULL when `x` is NULL.
+    /// own `IN` returns false for NULL instead, and needs constant items. A list attribute is
+    /// bound as an array (E6-7.3): `x` is never in it when it is empty, whatever `x` is, so
+    /// `NULL NOT IN` an empty list is true; otherwise the result is NULL when `x` is NULL, and
+    /// `x` is in it when `has` finds it.
     pub(super) fn in_list(
         &mut self,
         operand: &Expression,
@@ -118,7 +119,8 @@ impl ExpressionWriter<'_, '_> {
             [Expression::UserAttribute(name)] if self.is_list_attribute(name)? => {
                 let items = self.list_attribute(name)?;
                 format!(
-                    "CASE WHEN {operand} IS NULL THEN NULL \
+                    "CASE WHEN empty({items}) THEN FALSE \
+                     WHEN {operand} IS NULL THEN NULL \
                      WHEN has({items}, assumeNotNull({operand})) THEN TRUE \
                      WHEN has({items}, NULL) THEN NULL ELSE FALSE END"
                 )
