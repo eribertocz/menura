@@ -1,6 +1,6 @@
 # Contract: integrity checks
 
-**Contract version:** 1.2.0 · **Owner:** `menura` · **Producer:** compiler (`integrity_checks`) · **Consumer:** data pipelines
+**Contract version:** 1.3.0 · **Owner:** `menura` · **Producer:** compiler (`integrity_checks`) · **Consumer:** data pipelines
 
 ## CHK-1 Purpose
 

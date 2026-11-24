@@ -1,6 +1,6 @@
 {
   "contract": "menura.audit_record",
-  "contract_version": "1.2.0",
+  "contract_version": "1.3.0",
   "subject": "user-7f3a",
   "inputs": {
     "model": "1111111111111111111111111111111111111111111111111111111111111111",
