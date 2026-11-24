@@ -5,7 +5,6 @@ use menura_contracts::types::common::Grain;
 use menura_representations::logical_plan::PlanNode;
 use menura_representations::names::ColumnName;
 
-use super::shapes::PeriodicCheck;
 use super::sql::{
     aliased, all_not_null, column, column_names, expect_names, known_columns, ordinals, synthesized,
 };
@@ -14,6 +13,7 @@ use crate::day::grain_name;
 use crate::error::GenerateError;
 use crate::population::membership::column_type;
 use crate::steps::{StepWriter, pass_through};
+use menura_representations::check_shapes::PeriodicCheck;
 
 impl<'input> StepWriter<'input> {
     /// The groups of rows with a whole entity and the same non-NULL `period` truncated to

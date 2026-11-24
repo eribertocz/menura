@@ -1,9 +1,10 @@
-//! What the checks that are not a single plan read (CHK-6.3–CHK-6.5): the plan of their rows,
-//! the columns of each role and the names of their result columns (CHK-2.6).
+//! What the integrity checks that are not a single plan read (CHK-6.3–CHK-6.5): the plan of
+//! their rows, the columns of each role and the names of their result columns (CHK-2.6). Both
+//! dialect generators take these shapes (E6-6.2, E6-7.11).
 
+use crate::logical_plan::{PlanNode, PopulationRule};
+use crate::names::ColumnName;
 use menura_contracts::types::common::Grain;
-use menura_representations::logical_plan::{PlanNode, PopulationRule};
-use menura_representations::names::ColumnName;
 
 /// The `population` check with `mode: validity` (CHK-6.3).
 #[derive(Debug, Clone)]
