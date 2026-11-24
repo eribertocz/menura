@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://eribertocz.github.io/menura/spec/contracts/audit-record/1.2.0",
+  "$id": "https://eribertocz.github.io/menura/spec/contracts/audit-record/1.3.0",
   "title": "Audit record",
   "type": "object",
   "additionalProperties": false,
@@ -252,6 +252,7 @@
       "properties": {
         "dialect": {
           "enum": [
+            "clickhouse",
             "duckdb"
           ]
         }

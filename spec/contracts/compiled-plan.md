@@ -1,6 +1,6 @@
 # Contract: compiled plan and compile error
 
-**Contract version:** 1.2.0 · **Owner:** `menura` · **Producer:** compiler · **Consumers:** hosts, executors
+**Contract version:** 1.3.0 · **Owner:** `menura` · **Producer:** compiler · **Consumers:** hosts, executors
 
 `compile` returns exactly one document: a compiled plan, or a compile error.
 
