@@ -9,7 +9,7 @@ use super::http::{Endpoint, post};
 /// that does not fix one of them returns other rows (E6-7.10). The list follows the one the
 /// generator crate documents; the runner keeps its own copy because it depends on no stage's
 /// internals.
-pub(crate) const OPPOSITE_SETTINGS: [(&str, &str); 8] = [
+pub(crate) const OPPOSITE_SETTINGS: [(&str, &str); 9] = [
     ("join_use_nulls", "0"),
     ("transform_null_in", "1"),
     ("prefer_column_name_to_alias", "0"),
@@ -18,6 +18,7 @@ pub(crate) const OPPOSITE_SETTINGS: [(&str, &str); 8] = [
     ("enable_extended_results_for_datetime_functions", "0"),
     ("aggregate_functions_null_for_empty", "0"),
     ("decimal_check_overflow", "0"),
+    ("use_variant_as_common_type", "1"),
 ];
 
 /// How many seconds an idle session lives on the server.
@@ -156,6 +157,11 @@ mod tests {
         }
         assert!(OPPOSITE_SETTINGS.contains(&("join_use_nulls", "0")));
         assert!(OPPOSITE_SETTINGS.contains(&("transform_null_in", "1")));
+    }
+
+    #[test]
+    fn e6_7_10_reverses_use_variant_as_common_type() {
+        assert!(OPPOSITE_SETTINGS.contains(&("use_variant_as_common_type", "1")));
     }
 
     #[test]
