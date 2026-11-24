@@ -9,6 +9,7 @@ use menura_contracts::types::capabilities::{
 use menura_contracts::{ContractKind, ContractVersion, compare_names};
 
 use crate::compile::InternalError;
+use crate::dialect_name::dialect_names;
 use crate::producer::{OSSIE_NORMATIVE, OSSIE_TRACKED_COMMIT, producer};
 
 /// The roadmap row whose slice the release compiles (7.1, VS-3).
@@ -52,7 +53,7 @@ pub(super) fn capabilities() -> Result<Capabilities, InternalError> {
             formats: vec![OssieFormat::Development, OssieFormat::Release],
         },
         contracts: contracts(),
-        dialects: vec!["duckdb".to_owned()],
+        dialects: dialect_names().map(str::to_owned).collect(),
         query_forms: vec![QueryFormName::Sql, QueryFormName::WideTable],
         extensions: EXTENSIONS
             .iter()

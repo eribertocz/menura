@@ -3,10 +3,8 @@
 //! a time `over` every row of the dataset of its population.
 
 use menura_contracts::types::catalog::CatalogSchemaDocument;
-use menura_contracts::types::common::{Grain, LogicalType};
-use menura_generator_duckdb::{
-    CheckInputs, GeneratedCheckSql, SnapshotCheck, SnapshotTime, generate_snapshot_check_sql,
-};
+use menura_contracts::types::common::{Dialect, Grain, LogicalType};
+use menura_generator_duckdb::{SnapshotCheck, SnapshotTime};
 use menura_model::internal_model::{
     DeclaredAdditivity, FieldPath, InternalModel, Metric, NormalizedName, SemiAdditive,
 };
@@ -19,15 +17,19 @@ use super::plan_nodes::scan;
 use super::population_checks::{declared, expected_population_rows, population_rule};
 use super::result_names::added_column_name;
 use crate::compile::InternalError;
+use crate::dialect_sql::{CheckShape, CheckSql, Sources, check_sql};
+use crate::stop::Stop;
 
-/// The SQL of the `semi_additive` check of the metric `target`, and the datasets it reads:
-/// the home dataset, then, with a time `over`, the dataset of the population. `None` when
-/// `over` or an `entity` field is not a field of the home dataset: that check is left out.
+/// The SQL of the `semi_additive` check of the metric `target` in `dialect`, and the datasets
+/// it reads: the home dataset, then, with a time `over`, the dataset of the population. `None`
+/// when `over` or an `entity` field is not a field of the home dataset: that check is left
+/// out.
 pub(super) fn semi_additive_check_sql(
+    dialect: Dialect,
     model: &InternalModel,
     catalog: &CatalogSchemaDocument,
     target: &str,
-) -> Result<Option<(GeneratedCheckSql, Vec<NormalizedName>)>, InternalError> {
+) -> Result<Option<(CheckSql, Vec<NormalizedName>)>, Stop> {
     let (metric, keys) = semi_additive_metric(model, target)?;
     let Some(home_name) = home_dataset(metric, keys, target)? else {
         return Ok(None);
@@ -70,8 +72,11 @@ pub(super) fn semi_additive_check_sql(
         }),
         result_columns,
     };
-    let generated = generate_snapshot_check_sql(&check, CheckInputs { catalog, model })
-        .map_err(|error| InternalError::new("E6", format!("{error:?}")))?;
+    let generated = check_sql(
+        dialect,
+        &CheckShape::Snapshot(check),
+        Sources { catalog, model },
+    )?;
     Ok(Some((generated, datasets)))
 }
 

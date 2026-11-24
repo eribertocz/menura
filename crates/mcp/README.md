@@ -45,7 +45,7 @@ text; options are members of type `object`.
 | `compile` | `model`, `catalog_schema`, `query`, `security_context` | `catalog_state`, `compile_options`, `load_options` | Compiles a query and returns the compiled plan, or the compile error; with the compile option `audit: true`, the audit record follows. |
 | `explain` | `model`, `catalog_schema`, `query`, `security_context` | `catalog_state`, `compile_options`, `load_options` | Returns the explanation of a query: the compiled plan without SQL or parameters, or the compile error. |
 | `describe` | `model`, `catalog_schema`, `security_context` | `catalog_state`, `load_options` | Returns the model description a security context sees, or the compile error. |
-| `integrity_checks` | `model`, `catalog_schema` | `dialect`, `load_options` | Returns the integrity-check document of a dialect (`duckdb`, the default), or the compile error. |
+| `integrity_checks` | `model`, `catalog_schema` | `dialect`, `load_options` | Returns the integrity-check document of a dialect (`clickhouse` or `duckdb`, the default), or the compile error. |
 | `dependencies` | `model`, `catalog_schema` | `load_options` | Returns the model-dependency document of a model, or the compile error. |
 | `migrate` | `model` | `load_options` | Rewrites the deprecated forms of a model and returns the migration report, or the compile error; it takes no catalog. |
 | `diff` | `old_model`, `old_catalog_schema`, `new_model`, `new_catalog_schema` | `load_options` | Loads two models with the same load options, old first, and returns the diff of their dependencies, or the compile error. |
@@ -206,7 +206,7 @@ keeps it equal to the server's:
       "name": "describe"
     },
     {
-      "description": "Returns the integrity-check document of a dialect (`duckdb`, the default), or the compile error.",
+      "description": "Returns the integrity-check document of a dialect (`clickhouse` or `duckdb`, the default), or the compile error.",
       "inputSchema": {
         "additionalProperties": false,
         "properties": {
@@ -215,7 +215,7 @@ keeps it equal to the server's:
             "type": "string"
           },
           "dialect": {
-            "description": "The dialect, `duckdb` (the default).",
+            "description": "The dialect, `clickhouse` or `duckdb` (the default).",
             "type": "string"
           },
           "load_options": {

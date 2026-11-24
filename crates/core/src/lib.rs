@@ -24,6 +24,8 @@ mod compile;
 mod compile_options;
 mod dependencies;
 mod describe;
+mod dialect_name;
+mod dialect_sql;
 mod explain;
 mod explanation;
 mod handle;

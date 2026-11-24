@@ -3,6 +3,7 @@
 use std::fmt;
 
 use super::argument::Argument;
+use crate::dialect_name::quoted_dialect_names;
 
 /// A call that does not follow the syntax of its command, or whose options object is not one
 /// (ARC-5.5, ARC-5.7, ARC-5.8). The CLI exits `2` with its message; the MCP server answers
@@ -75,7 +76,10 @@ impl UsageError {
             UsageReason::MissingValue => format!("{name} needs a value"),
             UsageReason::InvalidOptions(detail) => format!("{name}: {detail}"),
             UsageReason::UnknownDialect(dialect) => {
-                format!("unknown dialect `{dialect}`; the dialect is `duckdb`")
+                format!(
+                    "unknown dialect `{dialect}`; the dialects are {}",
+                    quoted_dialect_names("and")
+                )
             }
             UsageReason::AuditWithoutRecord => format!(
                 "the compile option `audit: true` needs `{}`",

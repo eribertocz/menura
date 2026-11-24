@@ -219,3 +219,26 @@ fn arc_6_9_the_audit_record_equals_the_one_the_cli_writes() {
         assert_eq!(items[1], written.strip_suffix('\n').unwrap());
     }
 }
+
+#[test]
+fn arc_6_7_the_clickhouse_dialect_member_equals_the_cli() {
+    let test = "clickhouse";
+    let mut inputs = shop_inputs(test, QUERY);
+    inputs.push(Input {
+        member: "compile_options",
+        path: scratch(test, "options.json", r#"{"dialect": "clickhouse"}"#),
+        value: json!({"dialect": "clickhouse"}),
+    });
+    assert_parity("compile", &inputs);
+    assert_parity("explain", &inputs);
+    let checks = vec![
+        document("model", &shop_path("model.yaml")).unwrap(),
+        document("catalog_schema", &shop_path("catalog-schema.json")).unwrap(),
+        Input {
+            member: "dialect",
+            path: PathBuf::from("clickhouse"),
+            value: json!("clickhouse"),
+        },
+    ];
+    assert_parity("integrity_checks", &checks);
+}

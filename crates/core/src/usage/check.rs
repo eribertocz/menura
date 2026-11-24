@@ -6,6 +6,7 @@ use menura_contracts::types::common::Dialect;
 use super::argument::Argument;
 use super::error::{UsageError, UsageReason};
 use crate::compile_options::CompileOptions;
+use crate::dialect_name::dialect_named;
 use crate::load_options::LoadOptions;
 
 /// The load options of `bytes`, a JSON object of load options (ARC-5.5).
@@ -26,7 +27,7 @@ pub fn parse_compile_options(bytes: &[u8]) -> Result<CompileOptions, UsageError>
     CompileOptions::from_json(bytes).map_err(|error| invalid(Argument::CompileOptions, &error))
 }
 
-/// The dialect named `name`: only `duckdb` (ARC-5.8).
+/// The dialect named `name`: `clickhouse` or `duckdb` (ARC-5.8, E6-7).
 ///
 /// # Errors
 ///
@@ -36,16 +37,16 @@ pub fn parse_compile_options(bytes: &[u8]) -> Result<CompileOptions, UsageError>
 /// use menura_core::{Dialect, parse_dialect};
 ///
 /// assert_eq!(parse_dialect("duckdb"), Ok(Dialect::Duckdb));
+/// assert_eq!(parse_dialect("clickhouse"), Ok(Dialect::Clickhouse));
 /// assert!(parse_dialect("postgres").is_err());
 /// ```
 pub fn parse_dialect(name: &str) -> Result<Dialect, UsageError> {
-    match name {
-        "duckdb" => Ok(Dialect::Duckdb),
-        _ => Err(UsageError::new(
+    dialect_named(name).ok_or_else(|| {
+        UsageError::new(
             Some(Argument::Dialect),
             UsageReason::UnknownDialect(name.to_owned()),
-        )),
-    }
+        )
+    })
 }
 
 /// Checks that the CLI's `compile` names an audit record exactly when `options` ask for one

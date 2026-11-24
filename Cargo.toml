@@ -41,6 +41,7 @@ menura-e3-paths = { path = "crates/e3-paths" }
 menura-e4-plan = { path = "crates/e4-plan" }
 menura-e5-optimize = { path = "crates/e5-optimize" }
 menura-generator-duckdb = { path = "crates/generator-duckdb" }
+menura-generator-clickhouse = { path = "crates/generator-clickhouse" }
 menura-core = { path = "crates/core" }
 jiff = { version = "1.0.1", default-features = false, features = ["alloc", "tzdb-bundle-always"] }
 jiff-tzdb = "1.0.0"

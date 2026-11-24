@@ -244,3 +244,9 @@ fn dsc_4_1_the_capability_profile_is_always_present_and_independent_of_the_conte
     let admin = description(ADMIN).capabilities.unwrap();
     assert_eq!(Some(admin), description(ANALYST).capabilities);
 }
+
+#[test]
+fn dsc_4_the_capability_profile_lists_both_dialects_in_order() {
+    let capabilities = description(ADMIN).capabilities.unwrap();
+    assert_eq!(capabilities.dialects, vec!["clickhouse", "duckdb"]);
+}

@@ -73,7 +73,7 @@ pub(crate) struct HandleFiles {
 pub(crate) struct IntegrityChecksFiles {
     /// `--model`, `--catalog-schema` and `--load-options`.
     pub(crate) model: ModelFiles,
-    /// `--dialect`; `duckdb` by default.
+    /// `--dialect`: `clickhouse` or `duckdb`; `duckdb` by default.
     pub(crate) dialect: Dialect,
 }
 

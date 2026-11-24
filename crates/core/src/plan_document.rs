@@ -5,7 +5,6 @@ use menura_contracts::types::common::Decision;
 use menura_contracts::types::compiled_plan::{
     CompiledPlanContract, CompiledPlanDocument, Diagnostic, Limits,
 };
-use menura_generator_duckdb::GeneratedSql;
 use menura_representations::bound_query::BoundQuery;
 use menura_representations::logical_plan::{Operation, PlanNode};
 use menura_security::AdmittedSecurityContext;
@@ -13,6 +12,7 @@ use menura_security::AdmittedSecurityContext;
 use crate::cache_key::{HashedPlan, cache_key};
 use crate::compile::InternalError;
 use crate::compile_options::CompileOptions;
+use crate::dialect_sql::QuerySql;
 use crate::handle::Handle;
 use crate::lineage::{LineageInputs, lineage};
 use crate::producer::producer;
@@ -36,7 +36,7 @@ pub(crate) fn plan_document(
     handle: &Handle,
     plan: &PlanNode,
     query: &BoundQuery,
-    generated: GeneratedSql,
+    generated: QuerySql,
     context: &AdmittedSecurityContext,
     options: &CompileOptions,
     outputs: PlanOutputs,
