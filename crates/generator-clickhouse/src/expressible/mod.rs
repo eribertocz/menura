@@ -1,4 +1,5 @@
-//! The check of E6-7.12: a plan that reads, computes or returns a value `ClickHouse` cannot
+//! The checks of E6-7.1 and E6-7.12, before any SQL is written: a plan that scans a relation
+//! `source` of three or more parts stops with `E6-01` at its dataset; then a plan that reads, computes or returns a value `ClickHouse` cannot
 //! express stops with `E6-01` before any SQL is written.
 //!
 //! The error is located at the first query element, in the order E2 checks them (E2-5.3),
@@ -7,6 +8,7 @@
 //! model expression, and the error is located at the dataset that holds it.
 
 mod needs;
+mod sources;
 mod walk;
 
 use menura_contracts::types::catalog::CatalogSchemaDocument;
@@ -21,19 +23,23 @@ use menura_representations::origin::{Origin, QueryLocation};
 use crate::error::GenerateError;
 use crate::types::is_inexpressible_value;
 use needs::{Needs, Scope, after_nanosecond_range, is_nanosecond_timestamp, outside_date32};
+use sources::check_sources;
 
-/// `E6-01` when `plan`, the plan of `query` over `model` and `catalog`, needs a value
-/// `ClickHouse` cannot express, located as E6-7.12 states.
+/// `E6-01` when `plan`, the plan of `query` over `model` and `catalog`, scans a relation
+/// `source` of three or more parts (E6-7.1), then when it needs a value `ClickHouse` cannot
+/// express, located as E6-7.12 states.
 ///
 /// # Errors
 ///
-/// [`GenerateError::InexpressibleType`] when it does.
+/// [`GenerateError::InexpressibleSource`] or [`GenerateError::InexpressibleType`] when it
+/// does.
 pub(crate) fn check_query(
     plan: &PlanNode,
     query: &BoundQuery,
     model: &InternalModel,
     catalog: &CatalogSchemaDocument,
 ) -> Result<(), GenerateError> {
+    check_sources(plan, model)?;
     let needs = Needs {
         model,
         catalog,
@@ -48,17 +54,20 @@ pub(crate) fn check_query(
     check_plan(plan, &needs)
 }
 
-/// `E6-01` when the integrity-check plan `plan` needs such a value, located at the dataset
-/// that holds it (E6-7.11, E6-7.12).
+/// `E6-01` when the integrity-check plan `plan` scans a relation `source` of three or more
+/// parts (E6-7.1), then when it needs such a value, located at the dataset that holds it
+/// (E6-7.11, E6-7.12).
 ///
 /// # Errors
 ///
-/// [`GenerateError::InexpressibleType`] when it does.
+/// [`GenerateError::InexpressibleSource`] or [`GenerateError::InexpressibleType`] when it
+/// does.
 pub(crate) fn check_model_plan(
     plan: &PlanNode,
     model: &InternalModel,
     catalog: &CatalogSchemaDocument,
 ) -> Result<(), GenerateError> {
+    check_sources(plan, model)?;
     let needs = Needs {
         model,
         catalog,

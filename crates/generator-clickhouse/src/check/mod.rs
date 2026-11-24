@@ -47,8 +47,9 @@ pub struct CheckInputs<'input> {
 ///
 /// # Errors
 ///
-/// [`GenerateError::InexpressibleType`] (`E6-01`) when the plan reads or returns a value of a
-/// type `ClickHouse` cannot express (E6-7.12); otherwise a [`GenerateError`] when the plan
+/// [`GenerateError::InexpressibleSource`] (`E6-01`) when the plan scans a relation `source` of
+/// three or more parts (E6-7.1), then [`GenerateError::InexpressibleType`] (`E6-01`) when it
+/// reads or returns a value of a type `ClickHouse` cannot express (E6-7.12); otherwise a [`GenerateError`] when the plan
 /// breaks the contract of the generator, or when it needs a
 /// value only a query has: a security attribute or the reference time. The time zone of a
 /// check is its `time_zone` slot (CHK-7.3), and the bounds of a `PeriodRange` its
