@@ -164,7 +164,7 @@ jobs:
       clickhouse:
         # The pinned long-term-support release of E6-7.10. `TZ` gives the server a time zone
         # other than UTC; the runner checks it before any case runs.
-        image: clickhouse/clickhouse-server:26.3
+        image: clickhouse/clickhouse-server:26.3.71.3@sha256:232a7ff4126e858736e54ad25541decda3afe68e28ea45853bd5d1b6248ce6dc
         env:
           TZ: America/La_Paz
           CLICKHOUSE_SKIP_USER_SETUP: "1"
@@ -184,8 +184,6 @@ jobs:
         run: |
           rustup toolchain install "$RUST_TOOLCHAIN" --profile minimal
           rustup default "$RUST_TOOLCHAIN"
-      - name: Build the ClickHouse runner
-        run: cargo build --locked --release -p menura-conformance-runner --bin conformance-clickhouse
       # `cargo run` puts the downloaded libduckdb on the library path, as in the `conformance` job.
       - name: Run every plan case on ClickHouse with the E6-7.8 settings reversed in the session (E6-7.10, CS-2.3a)
         shell: bash
