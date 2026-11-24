@@ -1,0 +1,1 @@
+CASE WHEN toFloat64("ORDERS") = 0 THEN NULL ELSE toFloat64("REVENUE") / toFloat64("ORDERS") END

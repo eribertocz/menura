@@ -1,0 +1,72 @@
+//! Comparisons, with the `date` bounds of a `timestamp` converted to the start of their day
+//! (E6-4.2b), and floats and UUIDs compared as `DuckDB` compares them (E6-7.14).
+
+use menura_contracts::types::common::LogicalType;
+use menura_model::expression::{BinaryOperator, Expression, Literal};
+
+use super::operators::operator_sql;
+use super::{ExpressionWriter, Literals};
+use crate::error::GenerateError;
+use crate::ordering::{Comparison, compared};
+use crate::types::digits;
+
+impl ExpressionWriter<'_, '_> {
+    /// `l op r`, each side converted when it is a `date` parameter and the other a timestamp,
+    /// floats and UUIDs compared as E6-7.14 states.
+    pub(super) fn comparison(
+        &mut self,
+        operator: BinaryOperator,
+        left: &Expression,
+        right: &Expression,
+    ) -> Result<String, GenerateError> {
+        let left_type = self.known_type(left);
+        let right_type = self.known_type(right);
+        let left = self.comparand(left, right_type.as_ref())?;
+        let right = self.comparand(right, left_type.as_ref())?;
+        let comparison = Comparison::of(left_type.as_ref(), right_type.as_ref());
+        Ok(compared(comparison, &left, operator_sql(operator), &right))
+    }
+
+    /// `expression` as an operand compared with a value of `other` type: a `date` parameter,
+    /// or a `date` computed from one such as a shifted `date_range` bound (E4-8.4, E6-4.14),
+    /// compared with a timestamp with time zone becomes the start of that day in the query
+    /// time zone, `toTimeZone(toDateTime64(d, <precision>, tz), 'UTC')` (E6-4.2b, E6-4.10).
+    pub(super) fn comparand(
+        &mut self,
+        expression: &Expression,
+        other: Option<&LogicalType>,
+    ) -> Result<String, GenerateError> {
+        let text = self.operand(expression)?;
+        let date_parameter = match self.literals {
+            Literals::Bound => matches!(expression, Expression::Literal(Literal::Date(_))),
+            Literals::QueryDates => is_date_bound(expression),
+            Literals::Written => false,
+        };
+        match other {
+            Some(LogicalType::Timestamp {
+                precision,
+                with_time_zone: true,
+            }) if date_parameter => {
+                let zone = self.time_zone();
+                Ok(format!(
+                    "toTimeZone(toDateTime64({text}, {}, {zone}), 'UTC')",
+                    digits(*precision)
+                ))
+            }
+            Some(LogicalType::Timestamp { .. }) if date_parameter => Err(self.inexpressible()),
+            _ => Ok(text),
+        }
+    }
+}
+
+/// Whether `expression` is a `date` parameter, or a `DATEADD` or `DATE_TRUNC` of one: a bound
+/// of a shifted `date_range` (E4-8.4), written with [`Literals::QueryDates`].
+fn is_date_bound(expression: &Expression) -> bool {
+    match expression {
+        Expression::Literal(Literal::Date(_)) => true,
+        Expression::DateAdd { operand, .. } | Expression::DateTrunc { operand, .. } => {
+            is_date_bound(operand)
+        }
+        _ => false,
+    }
+}

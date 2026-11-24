@@ -942,6 +942,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "menura-generator-clickhouse"
+version = "1.0.0"
+dependencies = [
+ "menura-contracts",
+ "menura-expressions",
+ "menura-model",
+ "menura-representations",
+ "menura-security",
+ "serde_json",
+]
+
+[[package]]
 name = "menura-generator-duckdb"
 version = "1.0.0"
 dependencies = [
