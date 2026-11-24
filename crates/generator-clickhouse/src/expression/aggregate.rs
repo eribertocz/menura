@@ -167,7 +167,7 @@ impl ExpressionWriter<'_, '_> {
         }
     }
 
-    /// The argument of `SUM`: an integer widened to `Int128` first, the result type of E0F-5,
+    /// The argument of `SUM`: an integer widened to `Int256` first and checked into the `Int128` of E0F-5,
     /// so that the sum cannot wrap around.
     fn summed(
         &mut self,
@@ -176,7 +176,7 @@ impl ExpressionWriter<'_, '_> {
     ) -> Result<String, GenerateError> {
         let value = self.argument(argument, filter)?;
         if matches!(self.known_type(argument), Some(LogicalType::Integer { .. })) {
-            Ok(format!("toInt128({value})"))
+            Ok(format!("toInt256({value})"))
         } else {
             Ok(value)
         }

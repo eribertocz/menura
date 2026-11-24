@@ -10,7 +10,7 @@ mod needs;
 mod walk;
 
 use menura_contracts::types::catalog::CatalogSchemaDocument;
-use menura_model::internal_model::{Dataset, InternalModel};
+use menura_model::internal_model::{Dataset, InternalModel, TypedValue, ValueType};
 use menura_representations::bound_query::{
     BoundDimensionKind, BoundMetricKind, BoundQuery, MetricPath,
 };
@@ -20,7 +20,7 @@ use menura_representations::origin::{Origin, QueryLocation};
 
 use crate::error::GenerateError;
 use crate::types::is_inexpressible_value;
-use needs::{Needs, Scope, outside_date32};
+use needs::{Needs, Scope, after_nanosecond_range, is_nanosecond_timestamp, outside_date32};
 
 /// `E6-01` when `plan`, the plan of `query` over `model` and `catalog`, needs a value
 /// `ClickHouse` cannot express, located as E6-7.12 states.
@@ -103,7 +103,11 @@ fn first_query_element(
             Needs::field_named(dataset, &range.field.field).map(|field| (dataset, field))
         });
     let field_needs = field.is_some_and(|(dataset, field)| needs.field(dataset, field, 0));
-    (field_needs || outside_date32(range.from) || outside_date32(range.to)).then(|| {
+    let nanoseconds = field.is_some_and(|(_, field)| {
+        matches!(&field.typed, Some(TypedValue { value_type: ValueType::Logical(logical_type), .. }) if is_nanosecond_timestamp(logical_type))
+    });
+    let outside = |date| outside_date32(date) || (nanoseconds && after_nanosecond_range(date));
+    (field_needs || outside(range.from) || outside(range.to)).then(|| {
         (
             range.origin.clone(),
             Some(format!(

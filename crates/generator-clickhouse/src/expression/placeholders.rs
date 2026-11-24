@@ -8,6 +8,7 @@ use serde_json::Value;
 use super::ExpressionWriter;
 use crate::error::GenerateError;
 use crate::parameters::SharedValue;
+use crate::types::{nullable_type, physical_type};
 
 impl ExpressionWriter<'_, '_> {
     /// Binds `value` as a new parameter of `logical_type` and returns `{pn:<type>}`.
@@ -16,8 +17,8 @@ impl ExpressionWriter<'_, '_> {
         logical_type: LogicalType,
         value: Value,
     ) -> Result<String, GenerateError> {
-        let error = self.type_error(&logical_type);
-        self.parameters.bind(logical_type, value).ok_or(error)
+        let name = self.parameter_type(&logical_type, &value)?;
+        Ok(self.parameters.bind(logical_type, value, &name))
     }
 
     /// `{pn:<type>}` for the parameter of `shared`, bound to `logical_type` and `value` at its
@@ -28,9 +29,24 @@ impl ExpressionWriter<'_, '_> {
         logical_type: LogicalType,
         value: Value,
     ) -> Result<String, GenerateError> {
-        let error = self.type_error(&logical_type);
-        self.parameters
-            .bind_shared(shared, logical_type, value)
-            .ok_or(error)
+        let name = self.parameter_type(&logical_type, &value)?;
+        Ok(self
+            .parameters
+            .bind_shared(shared, logical_type, value, &name))
+    }
+
+    /// The `ClickHouse` name of a parameter of `logical_type` holding `value`: `Nullable` for
+    /// a NULL value (E6-7.3, E6-7.2).
+    fn parameter_type(
+        &self,
+        logical_type: &LogicalType,
+        value: &Value,
+    ) -> Result<String, GenerateError> {
+        let name = if value.is_null() {
+            nullable_type(logical_type)
+        } else {
+            physical_type(logical_type)
+        };
+        name.ok_or_else(|| self.type_error(logical_type))
     }
 }

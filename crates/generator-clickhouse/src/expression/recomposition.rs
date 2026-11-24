@@ -81,13 +81,14 @@ impl ExpressionWriter<'_, '_> {
 
 /// The recomposed count of the summary measure `measure`: `0` over no rows (SUM-3.1).
 fn count_sql(measure: &str) -> String {
-    format!("coalesce(sum(toInt128({measure})), 0)")
+    format!("coalesce(sum(toInt256({measure})), 0)")
 }
 
-/// `measure` widened to `Int128` when it is an integer, so that its sum cannot wrap around.
+/// `measure` widened to `Int256` when it is an integer, so that its sum cannot wrap around
+/// before it is checked into its type (E6-7.9).
 fn widened(measure: &str, integer: bool) -> String {
     if integer {
-        format!("toInt128({measure})")
+        format!("toInt256({measure})")
     } else {
         measure.to_owned()
     }

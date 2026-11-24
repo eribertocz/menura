@@ -10,8 +10,6 @@ use menura_contracts::types::descriptions::{
 use menura_representations::origin::Origin;
 use serde_json::Value;
 
-use crate::types::{nullable_type, physical_type};
-
 /// A value bound once and referenced wherever it appears: the query time zone, the reference
 /// date and time, an attribute, or a slot of a check.
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
@@ -50,34 +48,33 @@ pub(crate) struct Parameters {
 }
 
 impl Parameters {
-    /// Binds a new parameter and returns its placeholder, such as `{p3:Int64}`, or `None` when
-    /// its type has no `ClickHouse` name (E6-7.12).
-    fn bind_new(&mut self, logical_type: LogicalType, value: Value) -> Option<String> {
+    /// Binds a new parameter and returns its placeholder `{pn:<name>}`, such as `{p3:Int64}`.
+    fn bind_new(&mut self, logical_type: LogicalType, value: Value, name: &str) -> String {
         let position = self.next_position();
-        let written = placeholder(position, &logical_type, &value)?;
         self.bound.push(Parameter {
             position,
             logical_type,
             value,
         });
-        Some(written)
+        placeholder(position, name)
     }
 
     /// The placeholder of `shared`, bound to `logical_type` and `value` at its first
-    /// appearance and reused afterwards.
+    /// appearance and reused afterwards; `name` is the `ClickHouse` name of its type (E6-7.3).
     pub(crate) fn bind_shared(
         &mut self,
         shared: SharedValue,
         logical_type: LogicalType,
         value: Value,
-    ) -> Option<String> {
+        name: &str,
+    ) -> String {
         if let Some(position) = self.shared.get(&shared) {
-            return placeholder(*position, &logical_type, &value);
+            return placeholder(*position, name);
         }
         let position = self.next_position();
-        let written = self.bind_new(logical_type, value)?;
+        let written = self.bind_new(logical_type, value, name);
         self.shared.insert(shared, position);
-        Some(written)
+        written
     }
 
     /// The placeholder of the slot `binding`, a `text` value the pipeline binds at run time
@@ -119,12 +116,12 @@ impl Parameters {
     /// The placeholder, such as `{p3:Int64}`, of the next query literal of the current node, of
     /// `logical_type` and `value`: the parameter of the same occurrence when an earlier node
     /// bound it to the same value, a new parameter otherwise (E6-4.2).
-    /// `None` when its type has no `ClickHouse` name (E6-7.12).
-    pub(crate) fn bind(&mut self, logical_type: LogicalType, value: Value) -> Option<String> {
+    /// `name` is the `ClickHouse` name of its type (E6-7.3).
+    pub(crate) fn bind(&mut self, logical_type: LogicalType, value: Value, name: &str) -> String {
         let ordinal = self.node_literals;
         self.node_literals += 1;
         let Some(element) = self.node_element.clone() else {
-            return self.bind_new(logical_type, value);
+            return self.bind_new(logical_type, value, name);
         };
         let occurrence = (element, ordinal);
         if let Some(position) = self.occurrences.get(&occurrence).copied() {
@@ -134,13 +131,13 @@ impl Parameters {
                     && parameter.value == value
             });
             if same {
-                return placeholder(position, &logical_type, &value);
+                return placeholder(position, name);
             }
         }
         let position = self.next_position();
-        let written = self.bind_new(logical_type, value)?;
+        let written = self.bind_new(logical_type, value, name);
         self.occurrences.insert(occurrence, position);
-        Some(written)
+        written
     }
 
     /// The parameters with a value, by position. A query binds no slot.
@@ -168,15 +165,9 @@ impl Parameters {
     }
 }
 
-/// `{pn:<type>}`, the type the `ClickHouse` name of `logical_type`, `Nullable` for a NULL
-/// value (E6-7.3, E6-7.2), or `None` when the type has no name.
-fn placeholder(position: u64, logical_type: &LogicalType, value: &Value) -> Option<String> {
-    let name = if value.is_null() {
-        nullable_type(logical_type)?
-    } else {
-        physical_type(logical_type)?
-    };
-    Some(format!("{{p{position}:{name}}}"))
+/// `{pn:<name>}`, `name` the `ClickHouse` name of the parameter's type (E6-7.3).
+fn placeholder(position: u64, name: &str) -> String {
+    format!("{{p{position}:{name}}}")
 }
 
 /// The placeholder of a `text` slot: `{pn:String}` (E6-7.3).

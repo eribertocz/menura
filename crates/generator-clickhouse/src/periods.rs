@@ -77,9 +77,7 @@ impl<'input> StepWriter<'input> {
 
     /// The typed parameter of the query date `date` (E6-4.2a, E6-4.2c).
     pub(crate) fn date_parameter(&mut self, date: DateValue) -> String {
-        // `date` always has a `ClickHouse` name, so the binding never fails.
         self.parameters
-            .bind(LogicalType::Date, Value::String(date_text(date)))
-            .unwrap_or_default()
+            .bind(LogicalType::Date, Value::String(date_text(date)), "Date32")
     }
 }

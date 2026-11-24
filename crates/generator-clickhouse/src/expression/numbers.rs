@@ -56,7 +56,7 @@ impl ExpressionWriter<'_, '_> {
 
     /// `x % y`, and `MOD(x, y)`: NULL when `y = 0`, or `RDER-01` inside a derived metric with
     /// `on_division_by_zero: error` (E6-4.6, E6-4.6a); NULL when `y` is NULL; the operands
-    /// widened to `Int128` when the result is a 128-bit integer (E0F-5a). The divisor is
+    /// widened to `Int256` when the result is a 128-bit integer (E0F-5a). The divisor is
     /// written first, where it first appears.
     pub(super) fn modulo(
         &mut self,
@@ -68,7 +68,7 @@ impl ExpressionWriter<'_, '_> {
         let divisor_text = self.operand(divisor)?;
         let dividend_text = self.operand(dividend)?;
         let remainder = if huge {
-            format!("toInt128({dividend_text}) % toInt128({divisor_text})")
+            format!("toInt256({dividend_text}) % toInt256({divisor_text})")
         } else {
             format!("{dividend_text} % {divisor_text}")
         };
@@ -78,7 +78,7 @@ impl ExpressionWriter<'_, '_> {
         ))
     }
 
-    /// `abs(x)`, an integer widened to `Int128` first so its absolute value fits.
+    /// `abs(x)`, an integer widened to `Int256` first so its absolute value fits.
     fn absolute(
         &mut self,
         expression: &Expression,
@@ -130,7 +130,7 @@ impl ExpressionWriter<'_, '_> {
         }
         let widened = self.widened(value)?;
         let unit = format!(
-            "toInt128('1{}')",
+            "toInt256('1{}')",
             "0".repeat(usize::try_from(dropped).unwrap_or(0))
         );
         let remainder = format!("{widened} % {unit}");

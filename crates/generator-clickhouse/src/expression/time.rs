@@ -54,14 +54,12 @@ impl ExpressionWriter<'_, '_> {
             return self.parameters.bind_slot(Binding::TimeZone);
         };
         let name = time.time_zone.as_str().to_owned();
-        // `text` always has a `ClickHouse` name, so the binding never fails.
-        self.parameters
-            .bind_shared(
-                SharedValue::TimeZone,
-                LogicalType::Text,
-                serde_json::Value::String(name),
-            )
-            .unwrap_or_default()
+        self.parameters.bind_shared(
+            SharedValue::TimeZone,
+            LogicalType::Text,
+            serde_json::Value::String(name),
+            "String",
+        )
     }
 
     /// The logical type of a literal, as E0.f types it (E0F-9.3).

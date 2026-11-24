@@ -9,7 +9,7 @@ WITH
     SELECT
       "REGION" AS "REGION",
       accurateCast(coalesce(count(), 0), 'Nullable(Int64)') AS "ORDER_COUNT",
-      accurateCast(sumOrNull(toInt128("QUANTITY")), 'Nullable(Int128)') AS "TOTAL_QUANTITY"
+      accurateCast(sumOrNull(toInt256("QUANTITY")), 'Nullable(Int128)') AS "TOTAL_QUANTITY"
     FROM "menura_1_scan"
     GROUP BY 1
   ),

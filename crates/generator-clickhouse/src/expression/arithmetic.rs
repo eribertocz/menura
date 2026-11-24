@@ -50,13 +50,10 @@ impl ExpressionWriter<'_, '_> {
             .filter(|logical_type| matches!(logical_type, LogicalType::Integer { .. }))
     }
 
-    /// `operand` cast to `Int128`, unless it already is one.
+    /// `operand` cast to `Int256`, which holds every intermediate result of 128-bit operands; the
+    /// result is checked into its type afterwards (E6-7.9).
     pub(super) fn widened(&mut self, operand: &Expression) -> Result<String, GenerateError> {
-        if self.is_huge_integer(operand) {
-            self.operand(operand)
-        } else {
-            Ok(format!("toInt128({})", self.write(operand)?))
-        }
+        Ok(format!("toInt256({})", self.write(operand)?))
     }
 
     pub(super) fn is_huge_integer(&self, expression: &Expression) -> bool {
