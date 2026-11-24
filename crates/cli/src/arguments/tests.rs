@@ -131,7 +131,7 @@ fn arc_5_7_compile_reads_its_eight_flags_and_explain_refuses_audit_record() {
 }
 
 #[test]
-fn arc_5_8_integrity_checks_takes_only_the_duckdb_dialect() {
+fn arc_5_8_integrity_checks_defaults_to_duckdb_and_rejects_an_unknown_dialect() {
     let base = ["integrity-checks", "--model", "m", "--catalog-schema", "c"];
     let Command::IntegrityChecks(files) = parse(&arguments(&base)).unwrap() else {
         panic!("integrity-checks");
