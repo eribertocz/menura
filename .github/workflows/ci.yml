@@ -186,10 +186,12 @@ jobs:
           rustup default "$RUST_TOOLCHAIN"
       - name: Build the ClickHouse runner
         run: cargo build --locked --release -p menura-conformance-runner --bin conformance-clickhouse
+      # `cargo run` puts the downloaded libduckdb on the library path, as in the `conformance` job.
       - name: Run every plan case on ClickHouse with the E6-7.8 settings reversed in the session (E6-7.10, CS-2.3a)
         shell: bash
         run: >-
-          target/release/conformance-clickhouse conformance http://localhost:8123
+          cargo run --locked --release --quiet -p menura-conformance-runner --bin conformance-clickhouse --
+          conformance http://localhost:8123
           "$RUNNER_TEMP/summary/conformance-clickhouse.json"
           | tee "$RUNNER_TEMP/conformance-clickhouse-report.txt"
       - name: Upload the summary with the ClickHouse and time-zone data versions (CI-4.3, E6-7.16)
