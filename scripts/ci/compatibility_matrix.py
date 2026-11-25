@@ -20,9 +20,10 @@ Usage:
 DESCRIPTION is the model description that the `menura` binary built in the same job wrote; its
 capability profile (DSC-4) gives the Menura version and the Apache Ossie normative version and
 tracked commit. RUN-SUMMARY is the JSON file the ClickHouse conformance runner wrote, with the
-server and time-zone data versions it read from the server (E6-7.16). The summaries read RUNNER_OS and RUNNER_ARCH; `release` reads GITHUB_REPOSITORY,
-GITHUB_TOKEN and RELEASE_TAG, and does nothing for a tag before 1.0.0 (CI-2 `release-assets`). From 1.1.0 the matrix also has
-the `core` row of the dialect `clickhouse` (CI-4.2).
+server and time-zone data versions it read from the server (E6-7.16). The summaries read
+RUNNER_OS and RUNNER_ARCH; `release` reads GITHUB_REPOSITORY, GITHUB_TOKEN and RELEASE_TAG, and
+does nothing for a tag before 1.0.0 (CI-2 `release-assets`). From 1.1.0 the matrix also has the
+`core` row of the dialect `clickhouse` (CI-4.2).
 Exit status: 0 on success, 1 otherwise.
 """
 import io
@@ -163,20 +164,29 @@ def wheel_summary(platform, environment):
     return {"job": "python-wheels", "platform": platform, "package_tests": "passed"}
 
 
+def is_count(value):
+    """Whether `value` is a non-negative integer; a JSON boolean is not one."""
+    return isinstance(value, int) and not isinstance(value, bool) and value >= 0
+
+
 def clickhouse_summary(run_summary, environment):
     """The summary of `conformance-clickhouse`: the runner's own summary of the run, checked, with
     the runner's platform. The server and time-zone data versions are the ones the runner read
     from the server it ran on (E6-7.16), never written here."""
     run = json.loads(run_summary)
+    if not isinstance(run, dict):
+        raise MatrixError("the ClickHouse run summary is not a JSON object")
     if run.get("job") != CLICKHOUSE_JOB or run.get("dialect") != CLICKHOUSE_DIALECT:
         raise MatrixError("the ClickHouse run summary is not one of conformance-clickhouse")
     versions = {key: run.get(key) for key in ("clickhouse_version", "clickhouse_time_zone_data_version")}
     for key, value in versions.items():
         if not isinstance(value, str) or not value:
             raise MatrixError(f"the ClickHouse run summary has no {key}")
-    cases = run.get("cases", {})
+    cases = run.get("cases")
+    if not isinstance(cases, dict):
+        raise MatrixError("the ClickHouse run summary has no case counts object")
     passed, total = cases.get("passed"), cases.get("total")
-    if not (isinstance(passed, int) and isinstance(total, int) and 0 <= passed <= total):
+    if not (is_count(passed) and is_count(total) and passed <= total):
         raise MatrixError("the ClickHouse run summary has no valid case counts")
     summary = {"job": CLICKHOUSE_JOB, "platform": runner_platform(environment), "dialect": CLICKHOUSE_DIALECT}
     summary.update(versions)
@@ -309,6 +319,7 @@ def duckdb_columns(summaries):
         raise MatrixError("conformance and ossie-suites ran on different DuckDB versions")
     return {
         "dialect": require(summaries, "conformance", "dialect"),
+        "duckdb_version": require(summaries, "conformance", "duckdb_version"),
         "engine": {"name": DIALECT, "version": require(summaries, "conformance", "duckdb_version")},
         "conformance": {
             "passed": require(summaries, "conformance", "cases", "passed"),

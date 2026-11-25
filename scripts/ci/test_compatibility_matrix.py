@@ -6,6 +6,7 @@ import sys
 import tempfile
 import unittest
 import zipfile
+from unittest import mock
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
 
@@ -107,10 +108,24 @@ def all_ci_jobs():
     return {name: "success" for name in matrix.CI_JOBS + (matrix.CLICKHOUSE_JOB,)}
 
 
-def full_actions(platforms=matrix.WHEEL_PLATFORMS, ci_jobs=None):
+def full_actions(platforms=matrix.WHEEL_PLATFORMS, ci_jobs=None, summaries=None):
     jobs = ci_jobs or all_ci_jobs()
     wheel_jobs = {f"python-wheels ({platform})": "success" for platform in platforms}
-    return FakeActions(jobs, wheel_jobs, ci_summaries(), wheel_summaries(platforms))
+    return FakeActions(jobs, wheel_jobs, summaries or ci_summaries(), wheel_summaries(platforms))
+
+
+def summaries_before_1_1_0():
+    """The CI summaries of a tag commit that has no `conformance-clickhouse` job."""
+    summaries = ci_summaries()
+    del summaries[matrix.CLICKHOUSE_JOB]
+    return summaries
+
+
+# The row fields of the matrix asset as released in 1.0.0; later releases only add fields.
+FIELDS_OF_1_0_0 = {
+    "channel", "platform", "menura_version", "commit", "dialect", "duckdb_version", "ossie",
+    "conformance", "ossie_suites", "runs",
+}
 
 
 class FakeRelease:
@@ -182,6 +197,16 @@ class SummaryTest(unittest.TestCase):
             self.assertEqual(matrix.main(arguments, LINUX), 0)
             summary = json.loads(output.read_text(encoding="utf-8"))
         self.assertEqual(summary, matrix.clickhouse_summary(CLICKHOUSE_RUN, LINUX))
+
+    def test_ci_4_5_a_clickhouse_run_with_malformed_case_counts_fails(self):
+        for cases in (None, [], "40", {"passed": True, "total": 40}, {"passed": 40, "total": False},
+                      {"passed": 41, "total": 40}, {"passed": -1, "total": 40}, {"total": 40}):
+            run = json.loads(CLICKHOUSE_RUN)
+            run["cases"] = cases
+            with self.assertRaises(matrix.MatrixError, msg=repr(cases)):
+                matrix.clickhouse_summary(json.dumps(run), LINUX)
+        with self.assertRaises(matrix.MatrixError):
+            matrix.clickhouse_summary("[]", LINUX)
 
     def test_ci_4_5_a_clickhouse_run_of_another_dialect_fails(self):
         run = json.loads(CLICKHOUSE_RUN)
@@ -259,8 +284,21 @@ class MatrixTest(unittest.TestCase):
 
     def test_ci_4_2_before_1_1_0_there_is_no_clickhouse_row_and_no_dependency_on_its_job(self):
         jobs = {name: "success" for name in matrix.CI_JOBS}
-        document = matrix.build_matrix(full_actions(ci_jobs=jobs), COMMIT, False)
+        actions = full_actions(ci_jobs=jobs, summaries=summaries_before_1_1_0())
+        document = matrix.build_matrix(actions, COMMIT, False)
         self.assertNotIn("clickhouse", [row["dialect"] for row in document["rows"]])
+        self.assertEqual(len(document["rows"]), 3 + len(matrix.WHEEL_PLATFORMS))
+
+    def test_ci_4_3_the_duckdb_rows_keep_every_field_of_1_0_0_and_add_the_engine(self):
+        document = matrix.build_matrix(full_actions(), COMMIT, True)
+        for entry in document["rows"]:
+            self.assertIn("engine", entry)
+            if entry["dialect"] == "duckdb":
+                self.assertLessEqual(FIELDS_OF_1_0_0, set(entry), entry["channel"])
+                self.assertEqual(entry["duckdb_version"], "v1.2.0")
+                self.assertEqual(entry["engine"], {"name": "duckdb", "version": entry["duckdb_version"]})
+            else:
+                self.assertNotIn("duckdb_version", entry)
 
     def test_ci_4_5_a_clickhouse_job_that_did_not_run_fails_from_1_1_0(self):
         jobs = {name: "success" for name in matrix.CI_JOBS}
@@ -367,6 +405,38 @@ class ReleaseTagTest(unittest.TestCase):
     def test_ci_4_1_a_tag_that_is_not_a_version_fails(self):
         with self.assertRaises(matrix.MatrixError):
             matrix.matrix_release("latest")
+
+    def release_with_tag(self, tag, actions):
+        """Drives `main release` with RELEASE_TAG `tag` against `actions`; the exit status and
+        the dialects of the rows attached."""
+        environment = {"GITHUB_REPOSITORY": "owner/menura", "GITHUB_TOKEN": "token", "RELEASE_TAG": tag}
+        attached = FakeRelease()
+        with tempfile.TemporaryDirectory() as directory, \
+                mock.patch.object(matrix, "ActionsApi", return_value=actions), \
+                mock.patch.object(matrix, "MatrixRelease", return_value=attached):
+            status = matrix.main(["release", COMMIT, str(pathlib.Path(directory) / "out")], environment)
+        rows = json.loads(attached.assets[matrix.JSON_ASSET])["rows"] if attached.assets else []
+        return status, [entry["dialect"] for entry in rows]
+
+    def test_ci_4_2_main_with_a_1_0_x_tag_attaches_no_clickhouse_row_without_its_job(self):
+        jobs = {name: "success" for name in matrix.CI_JOBS}
+        for tag in ("v1.0.0", "v1.0.3", "v1.1.0-rc1"):
+            actions = full_actions(ci_jobs=jobs, summaries=summaries_before_1_1_0())
+            status, dialects = self.release_with_tag(tag, actions)
+            self.assertEqual(status, 0, tag)
+            self.assertEqual(set(dialects), {"duckdb"}, tag)
+
+    def test_ci_4_2_main_with_a_1_1_0_tag_attaches_the_clickhouse_row(self):
+        status, dialects = self.release_with_tag("v1.1.0", full_actions())
+        self.assertEqual(status, 0)
+        self.assertEqual(dialects.count("clickhouse"), 1)
+
+    def test_ci_4_5_main_with_a_1_1_0_tag_fails_without_the_clickhouse_job(self):
+        jobs = {name: "success" for name in matrix.CI_JOBS}
+        actions = full_actions(ci_jobs=jobs, summaries=summaries_before_1_1_0())
+        status, dialects = self.release_with_tag("v1.1.0", actions)
+        self.assertEqual(status, 1)
+        self.assertEqual(dialects, [])
 
     def test_ci_4_1_a_release_before_1_0_0_reads_no_ci_run(self):
         environment = {"GITHUB_REPOSITORY": "owner/menura", "GITHUB_TOKEN": "token", "RELEASE_TAG": "v0.9.0"}
