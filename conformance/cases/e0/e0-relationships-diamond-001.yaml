@@ -20,6 +20,7 @@ query:
             - {from: orders, to: regions, relationships: [orders_customers, customers_regions]}
 expect:
   outcome: plan
+  sql_clickhouse: e0-relationships-diamond-001.clickhouse.sql
   warnings: [W0E-01]
   rows: e0-relationships-diamond-001.csv
   row_order: any

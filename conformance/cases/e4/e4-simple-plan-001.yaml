@@ -13,6 +13,7 @@ query:
       - {"metric": "sale_count", "alias": "sale_count"}
 expect:
   outcome: "plan"
+  sql_clickhouse: e4-simple-plan-001.clickhouse.sql
   sql: "e4-simple-plan-001.sql"
   row_order: "any"
   rows: "e4-simple-plan-001.csv"

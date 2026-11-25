@@ -10,5 +10,6 @@ query:
   sql: "SELECT channel, AGG(total_amount) / AGG(total_quantity) AS per_unit FROM slice.sales WHERE quantity = 0 GROUP BY channel"
 expect:
   outcome: "plan"
+  sql_clickhouse: e1-sql-plan-inline-division-001.clickhouse.sql
   row_order: "any"
   rows: "e1-sql-plan-inline-division-001.csv"

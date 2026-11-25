@@ -9,6 +9,7 @@ query:
   sql: "SELECT DATE_TRUNC('month', order_date) AS order_month, AGG(sales) AS sales, AGG(sales_ytd) AS sales_ytd FROM ctx_to_date.orders GROUP BY ALL"
 expect:
   outcome: "plan"
+  sql_clickhouse: ctx-to-date-sql-date-trunc-001.clickhouse.sql
   sql: "ctx-to-date-sql-date-trunc-001.sql"
   row_order: "any"
   rows: "ctx-to-date-sql-date-trunc-001.csv"

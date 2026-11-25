@@ -20,6 +20,10 @@ deny:
 conformance area="":
     cargo run --locked --quiet -p menura-conformance-runner -- conformance "{{area}}"
 
+# Run every plan case on the ClickHouse server at `url`, `http://host:port` (E6-7.10).
+conformance-clickhouse url="http://localhost:8123":
+    cargo run --locked --quiet -p menura-conformance-runner --bin conformance-clickhouse -- conformance "{{url}}" target/conformance-clickhouse.json
+
 # List rule IDs without a conformance case, CI check or review item (T1); fails only for the
 # files of spec/coverage-scope.txt (CS-2.6). Requires PyYAML.
 rule-coverage:

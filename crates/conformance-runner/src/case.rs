@@ -129,6 +129,11 @@ pub struct Expectation {
     pub location: Option<ExpectedLocation>,
     /// Golden SQL file next to the case, compared byte for byte (CS-2.3).
     pub sql: Option<String>,
+    /// Golden `ClickHouse` SQL file next to the case, compared like `sql` (CS-2.3a).
+    pub sql_clickhouse: Option<String>,
+    /// What compiling with `dialect: clickhouse` returns instead of golden `ClickHouse` SQL
+    /// (CS-2.3a).
+    pub clickhouse: Option<ClickhouseExpectation>,
     /// Expected rows file next to the case, compared as CS-2.4 says.
     pub rows: Option<String>,
     /// How the order of `rows` is compared.
@@ -191,6 +196,16 @@ impl Outcome {
     pub fn returns_document(self) -> bool {
         matches!(self, Self::Describe | Self::IntegrityChecks)
     }
+}
+
+/// What a case expects when compiled with `dialect: clickhouse`, when it has no golden
+/// `ClickHouse` SQL (CS-2 `expect.clickhouse`, CS-2.3a).
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Deserialize)]
+pub enum ClickhouseExpectation {
+    /// The query needs a value `ClickHouse` cannot express, so compilation returns `E6-01`
+    /// (E6-7.12).
+    #[serde(rename = "e6_01")]
+    Inexpressible,
 }
 
 /// How the order of expected rows is compared (CS-2 `expect.row_order`).

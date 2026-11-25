@@ -14,6 +14,7 @@ query:
       - {"metric": "sale_count", "alias": "sale_count"}
 expect:
   outcome: "plan"
+  sql_clickhouse: pln-audit-plan-001.clickhouse.sql
   rows: "pln-audit-plan-001.csv"
   row_order: "any"
   audit: "pln-audit-plan-001.audit.json"

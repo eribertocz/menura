@@ -11,4 +11,5 @@ query:
       - {"metric": "nulls_error", "alias": "nulls_error"}
 expect:
   outcome: "runtime_error"
+  sql_clickhouse: add-nulls-error-001.clickhouse.sql
   error: "RADD-03"

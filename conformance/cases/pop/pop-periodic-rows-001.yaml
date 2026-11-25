@@ -13,5 +13,6 @@ query:
       - {"vendor_name": "COMMON", "data": {"namespace": "menura", "version": 1, "date_range": {"dimension": "balances.period", "from": "2026-03-01", "to": "2026-03-31"}}}
 expect:
   outcome: "plan"
+  sql_clickhouse: pop-periodic-rows-001.clickhouse.sql
   rows: "pop-periodic-rows-001.csv"
   row_order: "any"

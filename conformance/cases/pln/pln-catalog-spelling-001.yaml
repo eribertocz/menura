@@ -11,6 +11,7 @@ query:
       - {"metric": "total_exact", "alias": "total_exact"}
 expect:
   outcome: "plan"
+  sql_clickhouse: pln-catalog-spelling-001.clickhouse.sql
   warnings: [W0D-01]
   sql: "pln-catalog-spelling-001.sql"
   row_order: "any"

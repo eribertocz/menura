@@ -13,6 +13,7 @@ query:
       - {"metric": "collected_to_budget", "alias": "collected_to_budget"}
 expect:
   outcome: "plan"
+  sql_clickhouse: der-ratio-two-datasets-001.clickhouse.sql
   row_order: "any"
   rows: "der-ratio-two-datasets-001.csv"
   tolerance: 1.0e-9

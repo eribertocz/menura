@@ -13,5 +13,6 @@ query:
       - {metric: total_amount, alias: total_amount}
 expect:
   outcome: plan
+  sql_clickhouse: e0-references-query-source-002.clickhouse.sql
   rows: e0-references-query-source-002.csv
   row_order: any

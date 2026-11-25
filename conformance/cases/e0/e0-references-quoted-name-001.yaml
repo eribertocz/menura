@@ -14,6 +14,7 @@ query:
       - {metric: total_mixed_case, alias: total_mixed_case}
 expect:
   outcome: plan
+  sql_clickhouse: e0-references-quoted-name-001.clickhouse.sql
   warnings: [W0D-01]
   rows: e0-references-quoted-name-001.csv
   row_order: any

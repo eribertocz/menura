@@ -13,5 +13,6 @@ query:
     filter: "sales.quantity > 1"
 expect:
   outcome: "plan"
+  sql_clickhouse: e6-parameter-filter-001.clickhouse.sql
   rows: "e6-parameter-filter-001.csv"
   row_order: "any"

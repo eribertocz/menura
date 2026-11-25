@@ -13,5 +13,6 @@ query:
     filter: "sales.amount >= 10.50 AND sales.sale_date >= DATE '2026-01-20'"
 expect:
   outcome: "plan"
+  sql_clickhouse: con-decimal-date-parameters-001.clickhouse.sql
   row_order: "any"
   rows: "con-decimal-date-parameters-001.csv"

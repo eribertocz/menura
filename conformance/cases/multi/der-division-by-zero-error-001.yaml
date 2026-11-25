@@ -12,4 +12,5 @@ query:
       - {"metric": "strict_collection_rate", "alias": "strict_collection_rate"}
 expect:
   outcome: "runtime_error"
+  sql_clickhouse: der-division-by-zero-error-001.clickhouse.sql
   error: "RDER-01"

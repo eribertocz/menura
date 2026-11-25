@@ -12,5 +12,6 @@ query:
       - {"metric": "total_cost", "alias": "total_cost"}
 expect:
   outcome: "plan"
+  sql_clickhouse: e2-restricted-metric-granted-001.clickhouse.sql
   rows: "e2-restricted-metric-granted-001.csv"
   row_order: "any"

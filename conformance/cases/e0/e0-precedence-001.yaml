@@ -13,5 +13,6 @@ query:
       - {metric: left_associative_amount, alias: left_associative_amount}
 expect:
   outcome: plan
+  sql_clickhouse: e0-precedence-001.clickhouse.sql
   rows: e0-precedence-001.csv
   row_order: any

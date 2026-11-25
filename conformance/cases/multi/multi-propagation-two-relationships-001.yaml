@@ -12,5 +12,6 @@ query:
       - {"metric": "ticket_count", "alias": "ticket_count"}
 expect:
   outcome: "plan"
+  sql_clickhouse: multi-propagation-two-relationships-001.clickhouse.sql
   row_order: "any"
   rows: "multi-propagation-two-relationships-001.csv"

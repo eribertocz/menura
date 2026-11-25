@@ -12,4 +12,5 @@ query:
       - {"metric": "strict_rate_per_budget", "alias": "strict_rate_per_budget"}
 expect:
   outcome: "runtime_error"
+  sql_clickhouse: der-mixed-division-rules-001.clickhouse.sql
   error: "RDER-01"

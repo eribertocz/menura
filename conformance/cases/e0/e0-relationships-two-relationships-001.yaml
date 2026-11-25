@@ -20,6 +20,7 @@ query:
             - {from: orders, to: calendar, relationships: [orders_ship_date]}
 expect:
   outcome: plan
+  sql_clickhouse: e0-relationships-two-relationships-001.clickhouse.sql
   warnings: [W0E-01]
   rows: e0-relationships-two-relationships-001.csv
   row_order: any

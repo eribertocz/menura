@@ -13,6 +13,7 @@ query:
       - {metric: total_amount, alias: total_amount}
 expect:
   outcome: plan
+  sql_clickhouse: cat-schema-former-name-001.clickhouse.sql
   warnings: [WCAT-05]
   rows: cat-schema-former-name-001.csv
   row_order: any

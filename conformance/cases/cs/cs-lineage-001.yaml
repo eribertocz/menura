@@ -14,6 +14,7 @@ query:
       - {"metric": "sale_count", "alias": "sale_count"}
 expect:
   outcome: "plan"
+  sql_clickhouse: cs-lineage-001.clickhouse.sql
   rows: "cs-plan-rows-001.csv"
   row_order: "any"
   lineage: "cs-lineage-001.lineage.json"

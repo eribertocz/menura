@@ -13,5 +13,6 @@ query:
       - {"metric": "budget_count", "alias": "budget_count"}
 expect:
   outcome: "plan"
+  sql_clickhouse: e4-stitch-no-dimensions-001.clickhouse.sql
   row_order: "any"
   rows: "e4-stitch-no-dimensions-001.csv"

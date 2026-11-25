@@ -14,6 +14,7 @@ query:
       - {metric: amount_per_customer, alias: amount_per_customer}
 expect:
   outcome: plan
+  sql_clickhouse: pln-lineage-branches-001.clickhouse.sql
   sql: pln-lineage-branches-001.sql
   rows: pln-lineage-branches-001.csv
   row_order: any

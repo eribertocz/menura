@@ -13,6 +13,7 @@ query:
       - {"metric": "total_amount", "alias": "total_amount"}
 expect:
   outcome: "plan"
+  sql_clickhouse: e5-fold-constants-joined-001.clickhouse.sql
   sql: "e5-fold-constants-joined-001.sql"
   rows: "e5-fold-constants-joined-001.csv"
   row_order: "any"

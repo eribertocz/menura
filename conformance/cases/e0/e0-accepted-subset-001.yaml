@@ -13,5 +13,6 @@ query:
       - {metric: positive_amount, alias: positive_amount}
 expect:
   outcome: plan
+  sql_clickhouse: e0-accepted-subset-001.clickhouse.sql
   rows: e0-accepted-subset-001.csv
   row_order: any

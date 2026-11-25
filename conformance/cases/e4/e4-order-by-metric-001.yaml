@@ -14,5 +14,6 @@ query:
       - {"vendor_name": "COMMON", "data": {"namespace": "menura", "version": 1, "order_by": [{"output": "total_amount", "direction": "asc", "nulls": "last"}]}}
 expect:
   outcome: "plan"
+  sql_clickhouse: e4-order-by-metric-001.clickhouse.sql
   row_order: "exact"
   rows: "e4-order-by-metric-001.csv"

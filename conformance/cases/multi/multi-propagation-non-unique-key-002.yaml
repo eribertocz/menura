@@ -12,5 +12,6 @@ query:
       - {"metric": "visit_count", "alias": "visit_count"}
 expect:
   outcome: "plan"
+  sql_clickhouse: multi-propagation-non-unique-key-002.clickhouse.sql
   row_order: "any"
   rows: "multi-propagation-non-unique-key-002.csv"

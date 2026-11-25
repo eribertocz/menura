@@ -10,5 +10,6 @@ query:
   sql: "SELECT channel, AGG(sale_count) AS n FROM slice.sales GROUP BY channel ORDER BY channel"
 expect:
   outcome: "plan"
+  sql_clickhouse: e1-sql-order-defaults-001.clickhouse.sql
   row_order: "exact"
   rows: "e1-sql-order-defaults-001.csv"

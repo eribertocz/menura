@@ -11,5 +11,6 @@ query:
       - {"metric": "closing_balance", "alias": "closing_balance"}
 expect:
   outcome: "plan"
+  sql_clickhouse: pop-population-under-policy-north-001.clickhouse.sql
   rows: "pop-population-under-policy-north-001.csv"
   row_order: "any"

@@ -15,5 +15,6 @@ query:
       - {"vendor_name": "COMMON", "data": {"namespace": "menura", "version": 1, "date_range": {"dimension": "orders.order_date", "from": "2026-01-01", "to": "2026-03-31"}}}
 expect:
   outcome: "plan"
+  sql_clickhouse: ctx-to-date-month-by-day-001.clickhouse.sql
   row_order: "any"
   rows: "ctx-to-date-month-by-day-001.csv"

@@ -16,6 +16,7 @@ query:
       - {"vendor_name": "COMMON", "data": {"namespace": "menura", "version": 1, "time_grains": [{"dimension": "orders.order_date", "grain": "month"}]}}
 expect:
   outcome: plan
+  sql_clickhouse: pln-lineage-summary-001.clickhouse.sql
   sql: pln-lineage-summary-001.sql
   rows: pln-lineage-summary-001.csv
   row_order: any

@@ -15,5 +15,6 @@ query:
       - {metric: open_prefix_orders, alias: open_prefix_orders}
 expect:
   outcome: plan
+  sql_clickhouse: e0-functions-and-cast-001.clickhouse.sql
   rows: e0-functions-and-cast-001.csv
   row_order: any

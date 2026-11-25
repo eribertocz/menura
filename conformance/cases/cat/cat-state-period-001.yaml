@@ -12,6 +12,7 @@ query:
       - {metric: total_amount, alias: total_amount}
 expect:
   outcome: plan
+  sql_clickhouse: cat-state-period-001.clickhouse.sql
   warnings: [WCAT-03]
   rows: cat-state-period-001.csv
   row_order: any

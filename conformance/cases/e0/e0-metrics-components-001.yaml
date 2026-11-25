@@ -16,6 +16,7 @@ query:
       - {metric: open_amount, alias: open_amount}
 expect:
   outcome: plan
+  sql_clickhouse: e0-metrics-components-001.clickhouse.sql
   warnings: [W0G-01]
   rows: e0-metrics-components-001.csv
   row_order: any

@@ -13,6 +13,7 @@ query:
       - {metric: orders, alias: order_count}
 expect:
   outcome: plan
+  sql_clickhouse: e0-references-metric-named-like-dataset-001.clickhouse.sql
   warnings: [W0D-01]
   rows: e0-references-metric-named-like-dataset-001.csv
   row_order: any

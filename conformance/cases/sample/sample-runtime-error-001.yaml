@@ -12,4 +12,5 @@ query:
       - {metric: total_balance, alias: total_balance}
 expect:
   outcome: runtime_error
+  sql_clickhouse: sample-runtime-error-001.clickhouse.sql
   error: RADD-03

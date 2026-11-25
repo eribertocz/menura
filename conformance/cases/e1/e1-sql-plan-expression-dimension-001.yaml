@@ -10,5 +10,6 @@ query:
   sql: "SELECT CASE WHEN s.channel = 'web' THEN 'online' ELSE 'offline' END AS kind, AGG(s.total_amount) AS amount FROM slice.sales AS s WHERE s.quantity > 0 GROUP BY 1 ORDER BY kind"
 expect:
   outcome: "plan"
+  sql_clickhouse: e1-sql-plan-expression-dimension-001.clickhouse.sql
   row_order: "exact"
   rows: "e1-sql-plan-expression-dimension-001.csv"

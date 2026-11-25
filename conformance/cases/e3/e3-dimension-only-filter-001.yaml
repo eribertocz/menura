@@ -11,5 +11,6 @@ query:
     filter: "sales.region = 'NORTH'"
 expect:
   outcome: "plan"
+  sql_clickhouse: e3-dimension-only-filter-001.clickhouse.sql
   row_order: "any"
   rows: "e3-dimension-only-filter-001.csv"

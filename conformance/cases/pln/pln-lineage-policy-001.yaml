@@ -13,6 +13,7 @@ query:
     filter: "customers.segment = 'RETAIL'"
 expect:
   outcome: plan
+  sql_clickhouse: pln-lineage-policy-001.clickhouse.sql
   sql: pln-lineage-policy-001.sql
   rows: pln-lineage-policy-001.csv
   row_order: any

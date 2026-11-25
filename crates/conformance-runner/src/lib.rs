@@ -30,6 +30,8 @@ mod canonical_json;
 pub mod case;
 pub mod case_file;
 mod cells;
+pub mod clickhouse;
+mod clickhouse_literals;
 mod compile_options;
 mod csv_rows;
 pub mod database;

@@ -12,5 +12,6 @@ query:
       - {"metric": "sale_count", "alias": "sale_count"}
 expect:
   outcome: "plan"
+  sql_clickhouse: e4-empty-list-not-in-001.clickhouse.sql
   rows: "e4-empty-list-not-in-001.csv"
   row_order: "any"

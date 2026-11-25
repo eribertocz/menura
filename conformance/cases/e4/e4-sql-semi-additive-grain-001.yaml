@@ -10,5 +10,6 @@ query:
   sql: "SELECT DATE_TRUNC('year', period) AS period_year, AGG(last_global) AS balance FROM next_semi_additive.balances GROUP BY ALL ORDER BY period_year"
 expect:
   outcome: "plan"
+  sql_clickhouse: e4-sql-semi-additive-grain-001.clickhouse.sql
   row_order: "exact"
   rows: "e4-sql-semi-additive-grain-001.csv"

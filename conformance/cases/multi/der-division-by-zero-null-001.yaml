@@ -13,6 +13,7 @@ query:
       - {"metric": "collection_rate", "alias": "collection_rate"}
 expect:
   outcome: "plan"
+  sql_clickhouse: der-division-by-zero-null-001.clickhouse.sql
   row_order: "any"
   rows: "der-division-by-zero-null-001.csv"
   tolerance: 1.0e-9

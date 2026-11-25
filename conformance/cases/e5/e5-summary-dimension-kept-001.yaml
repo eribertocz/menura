@@ -13,6 +13,7 @@ query:
     filter: "orders.region = 'SOUTH'"
 expect:
   outcome: plan
+  sql_clickhouse: e5-summary-dimension-kept-001.clickhouse.sql
   sql: e5-summary-dimension-kept-001.sql
   rows: e5-summary-dimension-kept-001.csv
   row_order: any

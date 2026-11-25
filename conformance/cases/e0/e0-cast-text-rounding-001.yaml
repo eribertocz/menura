@@ -13,5 +13,6 @@ query:
       - {metric: order_count, alias: order_count}
 expect:
   outcome: plan
+  sql_clickhouse: e0-cast-text-rounding-001.clickhouse.sql
   rows: e0-cast-text-rounding-001.csv
   row_order: any

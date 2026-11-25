@@ -14,5 +14,6 @@ query:
     filter: "sales.entered_at < CURRENT_TIMESTAMP"
 expect:
   outcome: "plan"
+  clickhouse: e6_01
   rows: "e6-current-timestamp-001.csv"
   row_order: "any"

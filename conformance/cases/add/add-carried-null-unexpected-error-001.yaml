@@ -13,4 +13,5 @@ query:
       - {"vendor_name": "COMMON", "data": {"namespace": "menura", "version": 1, "date_range": {"dimension": "balances.period", "from": "2026-01-01", "to": "2026-03-31"}}}
 expect:
   outcome: "runtime_error"
+  sql_clickhouse: add-carried-null-unexpected-error-001.clickhouse.sql
   error: "RADD-02"
