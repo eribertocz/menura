@@ -58,7 +58,7 @@ fn cell(field: &str, logical_type: &LogicalType) -> Result<Cell, String> {
 }
 
 /// `field` without the escapes of `ClickHouse`'s escaped text form.
-fn unescape(field: &str) -> String {
+pub(crate) fn unescape(field: &str) -> String {
     let mut text = String::with_capacity(field.len());
     let mut characters = field.chars();
     while let Some(character) = characters.next() {

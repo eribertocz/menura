@@ -13,6 +13,7 @@ use duckdb::types::Value;
 use menura_contracts::types::common::{FloatBits, IntegerBits, LogicalType, TimestampPrecision};
 use serde::Deserialize;
 
+use super::copy_check::{CopiedColumn, CopiedTable};
 use super::parameters::escape;
 use super::server::{ServerFailure, Session};
 use crate::execution::execute_sql;
@@ -40,8 +41,8 @@ struct Column {
 /// What loading the fixture of a case created, so that it can be dropped afterwards.
 #[derive(Debug, Default)]
 pub(crate) struct LoadedFixture {
-    /// The `ClickHouse` tables created, as `(database, table)`.
-    tables: Vec<(String, String)>,
+    /// The `ClickHouse` tables created, with the columns copied into each.
+    pub(crate) tables: Vec<CopiedTable>,
     /// The sources that cannot be created on `ClickHouse`, with the reason.
     pub(crate) not_created: Vec<String>,
 }
@@ -84,9 +85,11 @@ pub(crate) fn load_fixture(
             ));
             continue;
         }
-        loaded
-            .tables
-            .push(((*database).to_owned(), (*table).to_owned()));
+        loaded.tables.push(CopiedTable {
+            database: (*database).to_owned(),
+            table: (*table).to_owned(),
+            columns: created.iter().copied().map(copied_column).collect(),
+        });
         let rows = duckdb_rows(duckdb, &parts, &created)?;
         let statement = format!(
             "INSERT INTO {}.{} ({}) FORMAT TabSeparated",
@@ -133,7 +136,10 @@ const DEFAULT_DATABASE: &str = "default";
 /// empty server.
 pub(crate) fn drop_fixture(session: &Session<'_>, loaded: &LoadedFixture) -> Result<(), String> {
     let mut databases: Vec<&str> = Vec::new();
-    for (database, table) in &loaded.tables {
+    for CopiedTable {
+        database, table, ..
+    } in &loaded.tables
+    {
         let statement = format!(
             "DROP TABLE IF EXISTS {}.{} SYNC",
             quote(database),
@@ -155,6 +161,15 @@ pub(crate) fn drop_fixture(session: &Session<'_>, loaded: &LoadedFixture) -> Res
     Ok(())
 }
 
+/// What the copy check reads of a catalog column the loader created on `ClickHouse`.
+fn copied_column(column: &Column) -> CopiedColumn {
+    CopiedColumn {
+        name: column.name.clone(),
+        logical_type: column.logical_type.clone(),
+        nullable: column.nullable,
+    }
+}
+
 /// Creates the table `database.table` with every column that has a `ClickHouse` type, after
 /// dropping any table of that name; returns the columns created, in catalog order.
 fn create_table<'columns>(
@@ -165,7 +180,9 @@ fn create_table<'columns>(
 ) -> Result<Vec<&'columns Column>, ServerFailure> {
     let typed: Vec<(&Column, String)> = columns
         .iter()
-        .filter_map(|column| column_type(column).map(|name| (column, name)))
+        .filter_map(|column| {
+            column_type(&column.logical_type, column.nullable).map(|name| (column, name))
+        })
         .collect();
     if typed.is_empty() {
         return Ok(Vec::new());
@@ -192,9 +209,9 @@ fn create_table<'columns>(
 
 /// The `ClickHouse` type of a catalog column (E6-7.2), `Nullable` when the column is, or `None`
 /// when its logical type has none (E6-7.12) or is a list, which no fixture holds.
-fn column_type(column: &Column) -> Option<String> {
-    let scalar = scalar_type(&column.logical_type)?;
-    Some(if column.nullable {
+pub(crate) fn column_type(logical_type: &LogicalType, nullable: bool) -> Option<String> {
+    let scalar = scalar_type(logical_type)?;
+    Some(if nullable {
         format!("Nullable({scalar})")
     } else {
         scalar
@@ -361,16 +378,13 @@ mod tests {
             bits: IntegerBits::ThirtyTwo,
             signed: false,
         };
-        assert_eq!(
-            column_type(&column(integer, false)).as_deref(),
-            Some("UInt32")
-        );
+        assert_eq!(column_type(&integer, false).as_deref(), Some("UInt32"));
         let decimal = LogicalType::Decimal {
             precision: 10,
             scale: 2,
         };
         assert_eq!(
-            column_type(&column(decimal, true)).as_deref(),
+            column_type(&decimal, true).as_deref(),
             Some("Nullable(Decimal(10, 2))")
         );
         let instant = LogicalType::Timestamp {
@@ -378,11 +392,11 @@ mod tests {
             with_time_zone: true,
         };
         assert_eq!(
-            column_type(&column(instant, false)).as_deref(),
+            column_type(&instant, false).as_deref(),
             Some("DateTime64(6, 'UTC')")
         );
         assert_eq!(
-            column_type(&column(LogicalType::Date, false)).as_deref(),
+            column_type(&LogicalType::Date, false).as_deref(),
             Some("Date32")
         );
     }
@@ -393,9 +407,9 @@ mod tests {
             precision: TimestampPrecision::Us,
             with_time_zone: false,
         };
-        assert_eq!(column_type(&column(wall_clock, false)), None);
-        assert_eq!(column_type(&column(LogicalType::Time, true)), None);
-        assert_eq!(column_type(&column(LogicalType::Unsupported, true)), None);
+        assert_eq!(column_type(&wall_clock, false), None);
+        assert_eq!(column_type(&LogicalType::Time, true), None);
+        assert_eq!(column_type(&LogicalType::Unsupported, true), None);
     }
 
     #[test]
