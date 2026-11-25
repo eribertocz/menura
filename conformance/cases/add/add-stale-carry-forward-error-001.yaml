@@ -13,4 +13,5 @@ query:
       - {"vendor_name": "COMMON", "data": {"namespace": "menura", "version": 1, "date_range": {"dimension": "balances.period", "from": "2026-01-01", "to": "2026-04-30"}}}
 expect:
   outcome: "runtime_error"
+  sql_clickhouse: add-stale-carry-forward-error-001.clickhouse.sql
   error: "RADD-04"

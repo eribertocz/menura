@@ -11,4 +11,5 @@ query:
       - {"metric": "unexpected_error", "alias": "unexpected_error"}
 expect:
   outcome: "runtime_error"
+  sql_clickhouse: add-unexpected-error-001.clickhouse.sql
   error: "RADD-02"

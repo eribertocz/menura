@@ -11,4 +11,5 @@ query:
       - {"metric": "strict_balance", "alias": "strict_balance"}
 expect:
   outcome: "runtime_error"
+  sql_clickhouse: add-missing-error-visible-entity-001.clickhouse.sql
   error: "RADD-01"
