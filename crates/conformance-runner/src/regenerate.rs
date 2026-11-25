@@ -8,7 +8,7 @@ use menura_core::{CompileOptions, CompileResult, compile};
 
 use crate::audit_check::PRODUCER;
 use crate::canonical_json::JsonValue;
-use crate::case::{Case, CaseId, Outcome};
+use crate::case::{Case, CaseId, Expectation, Outcome};
 use crate::case_file::read_case;
 use crate::error::{RunnerError, RunnerErrorKind};
 use crate::fixture::{read_bytes, security_context_path};
@@ -84,17 +84,11 @@ fn regenerate_case(
             )
         })
         .collect();
-    let has_plan = matches!(expect.outcome, Outcome::Plan | Outcome::RuntimeError);
-    let lineage = expect
-        .lineage
-        .as_ref()
-        .filter(|_| expect.outcome == Outcome::Plan);
-    let sql = expect.sql.as_ref().filter(|_| has_plan);
-    let audit = expect
-        .audit
-        .as_ref()
-        .filter(|_| matches!(expect.outcome, Outcome::Plan | Outcome::Error));
-    let golden_files: Vec<&String> = [sql, lineage, audit].into_iter().flatten().collect();
+    let [sql, lineage, data_versions, audit] = golden_file_names(expect);
+    let golden_files: Vec<&String> = [sql, lineage, data_versions, audit]
+        .into_iter()
+        .flatten()
+        .collect();
     if golden_files.is_empty() {
         return Ok(regenerations);
     }
@@ -103,6 +97,7 @@ fn regenerate_case(
             for (file_name, text) in [
                 (sql, outputs.sql),
                 (lineage, outputs.lineage),
+                (data_versions, outputs.data_versions),
                 (audit, outputs.audit),
             ] {
                 let Some(file_name) = file_name else {
@@ -121,12 +116,31 @@ fn regenerate_case(
     Ok(regenerations)
 }
 
+/// The golden files of a case its outcome allows, in the order `sql`, `lineage`,
+/// `data_versions`, `audit` (CS-2.3, CS-2.11, CS-2.13); `None` where the case names none.
+fn golden_file_names(expect: &Expectation) -> [Option<&String>; 4] {
+    let outcome = expect.outcome;
+    let has_plan = matches!(outcome, Outcome::Plan | Outcome::RuntimeError);
+    let plan_only = outcome == Outcome::Plan;
+    [
+        expect.sql.as_ref().filter(|_| has_plan),
+        expect.lineage.as_ref().filter(|_| plan_only),
+        expect.data_versions.as_ref().filter(|_| plan_only),
+        expect
+            .audit
+            .as_ref()
+            .filter(|_| matches!(outcome, Outcome::Plan | Outcome::Error)),
+    ]
+}
+
 /// The produced text of each golden file of a case, or why it was not produced.
 struct CaseOutputs {
     /// The plan's SQL text, unchanged.
     sql: Result<String, String>,
     /// The plan's `lineage` in stored form.
     lineage: Result<String, String>,
+    /// The plan's `cache_key.data_versions` in stored form (CS-2.11).
+    data_versions: Result<String, String>,
     /// The audit record without its `producer`, in stored form (CS-2.13, CS-2.10b).
     audit: Result<String, String>,
 }
@@ -167,12 +181,15 @@ fn case_outputs(
         return Ok(Ok(CaseOutputs {
             sql: reason(),
             lineage: reason(),
+            data_versions: reason(),
             audit,
         }));
     };
     Ok(Ok(CaseOutputs {
         sql: Ok(plan.sql.clone()),
         lineage: JsonValue::of(&plan.lineage).map(|lineage| lineage.stored_form()),
+        data_versions: JsonValue::of(&plan.cache_key.data_versions)
+            .map(|data_versions| data_versions.stored_form()),
         audit,
     }))
 }

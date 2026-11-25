@@ -1,0 +1,20 @@
+id: pln-partial-state-omitted-001
+rules: [PLN-3.3, PLN-3.3a, CAT-8.4]
+model: pln-partial-state
+security_context: analyst.json
+query:
+  contract: menura.query
+  contract_version: "1.1.0"
+  time_zone: UTC
+  query:
+    dimensions: [customers.region]
+    metrics:
+      - {metric: total_amount, alias: total_amount}
+expect:
+  outcome: plan
+  sql_clickhouse: pln-partial-state-omitted-001.clickhouse.sql
+  rows: pln-partial-state-omitted-001.csv
+  row_order: any
+  data_versions: pln-partial-state-omitted-001.data-versions.json
+  audit: pln-partial-state-omitted-001.audit.json
+  cache_key: "b1a8c59e865ce592ee649fc0d0cbca8d04e4740175d4b4a5f1b66882121c4adb"

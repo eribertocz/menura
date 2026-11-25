@@ -1,0 +1,58 @@
+{
+  "authorization": [
+    {
+      "decision": "granted",
+      "object": "dataset:ORDERS",
+      "rule": "access:roles"
+    },
+    {
+      "decision": "granted",
+      "object": "field:ORDERS.CUSTOMER_ID",
+      "rule": "no_field_restriction"
+    },
+    {
+      "decision": "granted",
+      "object": "metric:TOTAL_AMOUNT",
+      "rule": "metric_components"
+    }
+  ],
+  "compile_options": {
+    "dialect": "duckdb"
+  },
+  "contract": "menura.audit_record",
+  "contract_version": "@schema",
+  "contract_versions": {
+    "catalog_schema": "1.1.0",
+    "catalog_state": "1.1.0",
+    "model": "0.1.1",
+    "query": "1.1.0",
+    "security_context": "1.1.0"
+  },
+  "decisions": [
+    {
+      "code": "DEV-4",
+      "decision": "datasets without access are inaccessible",
+      "reason": "grant_authenticated_to_all is false",
+      "step": "E0",
+      "subject": "load_option:grant_authenticated_to_all"
+    }
+  ],
+  "inputs": {
+    "catalog_schema": "bc266e5de1d5db6ad88fe9adae623d19a03b5e650c2da3551da0ab204d880cf8",
+    "catalog_state": "6c1950c2a313d106b1ea64defb5a3eeffd8ea739f438eb542b70a2699416d535",
+    "model": "401727b070e38d4c4bc7bfbaa6a4d8a593786b4ecfd72c1fc4c2ef21ccbb65fc",
+    "query": "9686b0bc0d22f4e7bf4e374b2eaf9a43e926aa7274e0811b1287bdf3dd6a4b17",
+    "security_fingerprint": "30d13aa6c87ba32c75378137b7255651b50380b708ed9ce366602a029f97d286"
+  },
+  "load_options": {
+    "data_source": "conformance:catalog",
+    "grant_authenticated_to_all": false,
+    "namespace": "menura",
+    "ossie_format": "release"
+  },
+  "outcome": {
+    "plan_hash": "10f119e26f714a3402779d46be7792484f85a87fccac423ea5aaf3bd772b8ac7"
+  },
+  "row_policies": [],
+  "subject": "partial-state-analyst"
+}

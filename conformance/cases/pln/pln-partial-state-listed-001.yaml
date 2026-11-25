@@ -1,0 +1,20 @@
+id: pln-partial-state-listed-001
+rules: [PLN-3.3]
+model: pln-partial-state
+security_context: analyst.json
+query:
+  contract: menura.query
+  contract_version: "1.1.0"
+  time_zone: UTC
+  query:
+    dimensions: [orders.customer_id]
+    metrics:
+      - {metric: total_amount, alias: total_amount}
+expect:
+  outcome: plan
+  sql_clickhouse: pln-partial-state-listed-001.clickhouse.sql
+  rows: pln-partial-state-listed-001.csv
+  row_order: any
+  data_versions: pln-partial-state-listed-001.data-versions.json
+  audit: pln-partial-state-listed-001.audit.json
+  cache_key: "e3b8bf2b892d270752739a93e3322596cf56ee36c598d8831a028661f5b92012"
