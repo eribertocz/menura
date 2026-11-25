@@ -13,6 +13,7 @@ use duckdb::types::Value;
 use menura_contracts::types::common::{FloatBits, IntegerBits, LogicalType, TimestampPrecision};
 use serde::Deserialize;
 
+use super::copy_check::{CopiedColumn, CopiedTable};
 use super::parameters::escape;
 use super::server::{ServerFailure, Session};
 use crate::execution::execute_sql;
@@ -40,8 +41,8 @@ struct Column {
 /// What loading the fixture of a case created, so that it can be dropped afterwards.
 #[derive(Debug, Default)]
 pub(crate) struct LoadedFixture {
-    /// The `ClickHouse` tables created, as `(database, table)`.
-    tables: Vec<(String, String)>,
+    /// The `ClickHouse` tables created, with the columns copied into each.
+    pub(crate) tables: Vec<CopiedTable>,
     /// The sources that cannot be created on `ClickHouse`, with the reason.
     pub(crate) not_created: Vec<String>,
 }
@@ -84,9 +85,11 @@ pub(crate) fn load_fixture(
             ));
             continue;
         }
-        loaded
-            .tables
-            .push(((*database).to_owned(), (*table).to_owned()));
+        loaded.tables.push(CopiedTable {
+            database: (*database).to_owned(),
+            table: (*table).to_owned(),
+            columns: created.iter().copied().map(copied_column).collect(),
+        });
         let rows = duckdb_rows(duckdb, &parts, &created)?;
         let statement = format!(
             "INSERT INTO {}.{} ({}) FORMAT TabSeparated",
@@ -133,7 +136,10 @@ const DEFAULT_DATABASE: &str = "default";
 /// empty server.
 pub(crate) fn drop_fixture(session: &Session<'_>, loaded: &LoadedFixture) -> Result<(), String> {
     let mut databases: Vec<&str> = Vec::new();
-    for (database, table) in &loaded.tables {
+    for CopiedTable {
+        database, table, ..
+    } in &loaded.tables
+    {
         let statement = format!(
             "DROP TABLE IF EXISTS {}.{} SYNC",
             quote(database),
@@ -153,6 +159,15 @@ pub(crate) fn drop_fixture(session: &Session<'_>, loaded: &LoadedFixture) -> Res
             .map_err(|failure| failure.describe())?;
     }
     Ok(())
+}
+
+/// What the copy check reads of a catalog column the loader created on `ClickHouse`.
+fn copied_column(column: &Column) -> CopiedColumn {
+    CopiedColumn {
+        name: column.name.clone(),
+        logical_type: column.logical_type.clone(),
+        nullable: column.nullable,
+    }
 }
 
 /// Creates the table `database.table` with every column that has a `ClickHouse` type, after
