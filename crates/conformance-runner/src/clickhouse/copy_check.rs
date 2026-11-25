@@ -1,6 +1,6 @@
 //! Checks the tables the runner copied into `ClickHouse` (E6-7.10) against the case's catalog
 //! schema: each column's type, as `system.columns` reports it, is mapped as E6-7.13 states, and
-//! the result must equal what E6-7.13 gives for the E6-7.2 type of the catalog column. That is
+//! the result must equal what E6-7.13 gives for the E6-7.2 type of the catalog column, which is
 //! the catalog type itself, except `binary`, which E6-7.2 writes as `String` and E6-7.13 reads
 //! back as `text`.
 
@@ -9,6 +9,7 @@ use menura_contracts::types::common::LogicalType;
 use super::parameters::escape;
 use super::results::unescape;
 use super::server::Session;
+use super::tables::column_type;
 use super::type_mapping::{MappedType, map_clickhouse_type};
 
 /// The statement that lists the columns of one table, in their order, with bound parameters.
@@ -110,16 +111,17 @@ fn table_mismatch(table: &CopiedTable, read_back: &[(String, String)]) -> Option
         })
 }
 
-/// What E6-7.13 gives for the E6-7.2 type of `column`: its own logical type and nullability,
-/// except that `binary`, written `String`, reads back as `text`.
+/// What E6-7.13 gives for the E6-7.2 type of `column`, computed from the very writer the copy
+/// uses, so that the two cannot drift: its own logical type and nullability, except that
+/// `binary`, written `String`, reads back as `text`. A column without an E6-7.2 type is never
+/// copied; should one appear, it is expected as `unsupported`, which no copied type maps to.
 fn expected_mapping(column: &CopiedColumn) -> MappedType {
-    let logical_type = match &column.logical_type {
-        LogicalType::Binary => LogicalType::Text,
-        other => other.clone(),
-    };
-    MappedType {
-        logical_type,
-        nullable: column.nullable,
+    match column_type(&column.logical_type, column.nullable) {
+        Some(written) => map_clickhouse_type(&written),
+        None => MappedType {
+            logical_type: LogicalType::Unsupported,
+            nullable: column.nullable,
+        },
     }
 }
 

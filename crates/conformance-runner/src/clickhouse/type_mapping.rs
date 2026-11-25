@@ -8,6 +8,10 @@ use menura_contracts::types::common::{FloatBits, IntegerBits, LogicalType, Times
 /// The largest decimal precision E6-7.13 maps; a wider `Decimal` is `unsupported`.
 const MAXIMUM_DECIMAL_PRECISION: u8 = 38;
 
+/// The deepest nesting of `Array(…)` the mapping reads. A deeper type is `unsupported`, so that
+/// a hostile or corrupt type name cannot exhaust the stack; no fixture comes near it.
+const MAXIMUM_ARRAY_DEPTH: usize = 16;
+
 /// The logical type and nullability of a `ClickHouse` column type (E6-7.13).
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(crate) struct MappedType {
@@ -20,15 +24,20 @@ pub(crate) struct MappedType {
 /// The mapping of the `ClickHouse` type `physical_type`, as `system.columns` writes it
 /// (E6-7.13).
 pub(crate) fn map_clickhouse_type(physical_type: &str) -> MappedType {
+    mapped_type(physical_type, 0)
+}
+
+/// The mapping of `physical_type` found inside `depth` enclosing `Array(…)` types.
+fn mapped_type(physical_type: &str, depth: usize) -> MappedType {
     let name = physical_type.trim();
     let name = wrapped("LowCardinality", name).unwrap_or(name);
     match wrapped("Nullable", name) {
         Some(inner) => MappedType {
-            logical_type: inner_logical_type(inner),
+            logical_type: inner_logical_type(inner, depth),
             nullable: true,
         },
         None => MappedType {
-            logical_type: inner_logical_type(name),
+            logical_type: inner_logical_type(name, depth),
             nullable: false,
         },
     }
@@ -44,10 +53,10 @@ fn wrapped<'name>(wrapper: &str, name: &'name str) -> Option<&'name str> {
 }
 
 /// The logical type of a type without the `LowCardinality` and `Nullable` wrappers of the
-/// column itself.
-fn inner_logical_type(name: &str) -> LogicalType {
+/// column itself, found inside `depth` enclosing `Array(…)` types.
+fn inner_logical_type(name: &str, depth: usize) -> LogicalType {
     if let Some(element) = wrapped("Array", name) {
-        return list_type(element);
+        return list_type(element, depth + 1);
     }
     let parameterized = [
         decimal_type as fn(&str) -> Option<LogicalType>,
@@ -64,9 +73,13 @@ fn inner_logical_type(name: &str) -> LogicalType {
 
 /// `Array(T)` as a `list` whose element is the mapping of `T`, read through its own wrappers:
 /// E6-7.2 writes `Nullable(<T>)` elements when they may be NULL, and a list has no element
-/// nullability. A list of an `unsupported` element is itself `unsupported`.
-fn list_type(element: &str) -> LogicalType {
-    match map_clickhouse_type(element).logical_type {
+/// nullability. A list of an `unsupported` element is itself `unsupported`, and so is a list
+/// nested more than [`MAXIMUM_ARRAY_DEPTH`] deep.
+fn list_type(element: &str, depth: usize) -> LogicalType {
+    if depth > MAXIMUM_ARRAY_DEPTH {
+        return LogicalType::Unsupported;
+    }
+    match mapped_type(element, depth).logical_type {
         LogicalType::Unsupported => LogicalType::Unsupported,
         element => LogicalType::List {
             element: Box::new(element),
@@ -119,6 +132,8 @@ fn is_time_zone(argument: &str) -> bool {
         .is_some_and(|zone| !zone.is_empty() && !zone.contains('\''))
 }
 
+/// The logical type of an instant (`timestamp` with time zone) of `precision`, which every
+/// `DateTime` and `DateTime64` with an explicit time zone maps to.
 fn instant(precision: TimestampPrecision) -> LogicalType {
     LogicalType::Timestamp {
         precision,

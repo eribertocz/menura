@@ -1,6 +1,6 @@
 use menura_contracts::types::common::{FloatBits, IntegerBits, LogicalType, TimestampPrecision};
 
-use super::{MappedType, map_clickhouse_type};
+use super::{MAXIMUM_ARRAY_DEPTH, MappedType, map_clickhouse_type};
 use crate::clickhouse::tables::column_type;
 
 fn logical(physical_type: &str) -> LogicalType {
@@ -188,6 +188,20 @@ fn e6_7_13_maps_an_array_to_a_list_of_the_element_mapping() {
             })
         }
     );
+}
+
+#[test]
+fn e6_7_13_maps_an_array_nested_too_deep_to_unsupported() {
+    let nested = |depth: usize| format!("{}Int64{}", "Array(".repeat(depth), ")".repeat(depth));
+    assert!(matches!(
+        logical(&nested(MAXIMUM_ARRAY_DEPTH)),
+        LogicalType::List { .. }
+    ));
+    assert_eq!(
+        logical(&nested(MAXIMUM_ARRAY_DEPTH + 1)),
+        LogicalType::Unsupported
+    );
+    assert_eq!(logical(&nested(100_000)), LogicalType::Unsupported);
 }
 
 #[test]
