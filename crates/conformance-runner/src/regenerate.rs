@@ -89,12 +89,19 @@ fn regenerate_case(
         .lineage
         .as_ref()
         .filter(|_| expect.outcome == Outcome::Plan);
+    let data_versions = expect
+        .data_versions
+        .as_ref()
+        .filter(|_| expect.outcome == Outcome::Plan);
     let sql = expect.sql.as_ref().filter(|_| has_plan);
     let audit = expect
         .audit
         .as_ref()
         .filter(|_| matches!(expect.outcome, Outcome::Plan | Outcome::Error));
-    let golden_files: Vec<&String> = [sql, lineage, audit].into_iter().flatten().collect();
+    let golden_files: Vec<&String> = [sql, lineage, data_versions, audit]
+        .into_iter()
+        .flatten()
+        .collect();
     if golden_files.is_empty() {
         return Ok(regenerations);
     }
@@ -103,6 +110,7 @@ fn regenerate_case(
             for (file_name, text) in [
                 (sql, outputs.sql),
                 (lineage, outputs.lineage),
+                (data_versions, outputs.data_versions),
                 (audit, outputs.audit),
             ] {
                 let Some(file_name) = file_name else {
@@ -127,6 +135,8 @@ struct CaseOutputs {
     sql: Result<String, String>,
     /// The plan's `lineage` in stored form.
     lineage: Result<String, String>,
+    /// The plan's `cache_key.data_versions` in stored form (CS-2.11).
+    data_versions: Result<String, String>,
     /// The audit record without its `producer`, in stored form (CS-2.13, CS-2.10b).
     audit: Result<String, String>,
 }
@@ -167,12 +177,15 @@ fn case_outputs(
         return Ok(Ok(CaseOutputs {
             sql: reason(),
             lineage: reason(),
+            data_versions: reason(),
             audit,
         }));
     };
     Ok(Ok(CaseOutputs {
         sql: Ok(plan.sql.clone()),
         lineage: JsonValue::of(&plan.lineage).map(|lineage| lineage.stored_form()),
+        data_versions: JsonValue::of(&plan.cache_key.data_versions)
+            .map(|data_versions| data_versions.stored_form()),
         audit,
     }))
 }
