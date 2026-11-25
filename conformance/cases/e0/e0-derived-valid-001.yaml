@@ -16,6 +16,7 @@ query:
       - {metric: billed_per_customer, alias: billed_per_customer}
 expect:
   outcome: plan
+  sql_clickhouse: e0-derived-valid-001.clickhouse.sql
   rows: e0-derived-valid-001.csv
   row_order: any
   tolerance: 1.0e-9

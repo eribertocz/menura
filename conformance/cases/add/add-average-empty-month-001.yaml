@@ -13,5 +13,6 @@ query:
       - {"vendor_name": "COMMON", "data": {"namespace": "menura", "version": 1, "date_range": {"dimension": "balances.period", "from": "2026-01-01", "to": "2026-05-31"}}}
 expect:
   outcome: "plan"
+  sql_clickhouse: add-average-empty-month-001.clickhouse.sql
   rows: "add-average-empty-month-001.csv"
   row_order: "any"

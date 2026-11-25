@@ -13,5 +13,6 @@ query:
       - {"metric": "order_total", "alias": "order_total"}
 expect:
   outcome: "plan"
+  sql_clickhouse: multi-propagation-null-key-001.clickhouse.sql
   row_order: "any"
   rows: "multi-propagation-null-key-001.csv"

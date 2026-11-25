@@ -12,6 +12,7 @@ query:
       - {metric: total_cost, alias: total_cost}
 expect:
   outcome: plan
+  sql_clickhouse: e0-security-restricted-field-001.clickhouse.sql
   warnings: [W0C-41]
   rows: e0-security-restricted-field-001.csv
   row_order: any

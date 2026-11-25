@@ -13,5 +13,6 @@ query:
       - {"metric": "customer_count", "alias": "customer_count"}
 expect:
   outcome: "plan"
+  sql_clickhouse: multi-propagation-joined-001.clickhouse.sql
   row_order: "any"
   rows: "multi-propagation-joined-001.csv"

@@ -11,5 +11,6 @@ query:
     dimensions: ["customers.name"]
 expect:
   outcome: "plan"
+  sql_clickhouse: multi-propagation-dimension-only-002.clickhouse.sql
   row_order: "any"
   rows: "multi-propagation-dimension-only-002.csv"

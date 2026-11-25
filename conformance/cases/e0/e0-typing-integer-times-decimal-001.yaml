@@ -13,6 +13,7 @@ query:
       - {metric: total_line_price, alias: total_line_price}
 expect:
   outcome: plan
+  sql_clickhouse: e0-typing-integer-times-decimal-001.clickhouse.sql
   warnings: [W0F-01]
   rows: e0-typing-integer-times-decimal-001.csv
   row_order: any

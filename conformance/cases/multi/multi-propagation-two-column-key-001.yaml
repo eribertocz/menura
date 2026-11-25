@@ -12,5 +12,6 @@ query:
       - {"metric": "item_count", "alias": "item_count"}
 expect:
   outcome: "plan"
+  sql_clickhouse: multi-propagation-two-column-key-001.clickhouse.sql
   row_order: "any"
   rows: "multi-propagation-two-column-key-001.csv"

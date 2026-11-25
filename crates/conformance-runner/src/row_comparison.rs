@@ -36,23 +36,43 @@ pub(crate) fn rows_mismatch(
     expected: &CsvRows,
     comparison: Comparison,
 ) -> Option<String> {
-    let names: Vec<&str> = schema.iter().map(|column| column.name.as_str()).collect();
-    if names != expected.header {
-        return Some(format!(
-            "the output names are [{}], expected [{}]",
-            names.join(", "),
-            expected.header.join(", ")
-        ));
+    if let Some(reason) = names_mismatch(schema, expected) {
+        return Some(reason);
     }
-    let actual = match cells_of_actual(schema, actual) {
-        Ok(actual) => actual,
-        Err(reason) => return Some(reason),
-    };
+    match cells_of_actual(schema, actual) {
+        Ok(actual) => cell_rows_mismatch(schema, &actual, expected, comparison),
+        Err(reason) => Some(reason),
+    }
+}
+
+/// Why the actual rows, already reduced to cells by the logical types of `schema`, differ from
+/// the expected ones, or `None` when they match.
+pub(crate) fn cell_rows_mismatch(
+    schema: &[ResultColumn],
+    actual: &[Vec<Cell>],
+    expected: &CsvRows,
+    comparison: Comparison,
+) -> Option<String> {
+    if let Some(reason) = names_mismatch(schema, expected) {
+        return Some(reason);
+    }
     let expected = match cells_of_expected(schema, &expected.rows) {
         Ok(expected) => expected,
         Err(reason) => return Some(reason),
     };
-    cells_mismatch(&actual, &expected, comparison)
+    cells_mismatch(actual, &expected, comparison)
+}
+
+/// Why the output names of `schema` differ from the header of the `rows` file, or `None`.
+fn names_mismatch(schema: &[ResultColumn], expected: &CsvRows) -> Option<String> {
+    let names: Vec<&str> = schema.iter().map(|column| column.name.as_str()).collect();
+    (names != expected.header).then(|| {
+        format!(
+            "the output names are [{}], expected [{}]",
+            names.join(", "),
+            expected.header.join(", ")
+        )
+    })
 }
 
 /// Why the rows of a plan differ from those its oracle returns (CS-4.7), or `None` when they

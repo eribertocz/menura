@@ -14,5 +14,6 @@ query:
 load_options: {ossie_format: development}
 expect:
   outcome: plan
+  sql_clickhouse: e0-summary-development-001.clickhouse.sql
   rows: e0-summary-development-001.csv
   row_order: any

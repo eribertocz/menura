@@ -11,5 +11,6 @@ query:
       - {"metric": "peak_stock", "alias": "peak_stock"}
 expect:
   outcome: "plan"
+  sql_clickhouse: add-non-time-over-001.clickhouse.sql
   rows: "add-non-time-over-001.csv"
   row_order: "any"

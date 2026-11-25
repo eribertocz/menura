@@ -15,6 +15,7 @@ query:
       - {"vendor_name": "COMMON", "data": {"namespace": "menura", "version": 1, "time_grains": [{"dimension": "sales.sale_date", "grain": "month"}], "order_by": [{"output": "sale_date", "direction": "asc", "nulls": "last"}], "limit": 2}}
 expect:
   outcome: "plan"
+  sql_clickhouse: e6-literals-002.clickhouse.sql
   sql: "e6-literals-002.sql"
   row_order: "exact"
   rows: "e6-literals-002.csv"

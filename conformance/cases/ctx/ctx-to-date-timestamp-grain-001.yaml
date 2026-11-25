@@ -15,5 +15,6 @@ query:
       - {"vendor_name": "COMMON", "data": {"namespace": "menura", "version": 1, "time_grains": [{"dimension": "orders.placed_at", "grain": "quarter"}]}}
 expect:
   outcome: "plan"
+  clickhouse: e6_01
   row_order: "any"
   rows: "ctx-to-date-timestamp-grain-001.csv"

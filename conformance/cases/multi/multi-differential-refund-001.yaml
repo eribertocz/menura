@@ -13,5 +13,6 @@ query:
       - {"metric": "total_refund", "alias": "total_refund"}
 expect:
   outcome: "plan"
+  sql_clickhouse: multi-differential-refund-001.clickhouse.sql
   row_order: "any"
   rows: "multi-differential-refund-001.csv"

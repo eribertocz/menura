@@ -15,5 +15,6 @@ query:
       - {"metric": "sale_count", "alias": "sale_count"}
 expect:
   outcome: "plan"
+  sql_clickhouse: cs-differential-plan-001.clickhouse.sql
   row_order: "any"
   rows: "cs-differential-plan-001.csv"

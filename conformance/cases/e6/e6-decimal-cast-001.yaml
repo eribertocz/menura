@@ -12,5 +12,6 @@ query:
       - {"metric": "total_whole_amount", "alias": "total_whole_amount"}
 expect:
   outcome: "plan"
+  sql_clickhouse: e6-decimal-cast-001.clickhouse.sql
   rows: "e6-decimal-cast-001.csv"
   row_order: "any"

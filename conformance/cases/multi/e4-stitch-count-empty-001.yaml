@@ -14,5 +14,6 @@ query:
       - {"metric": "total_sales", "alias": "total_sales"}
 expect:
   outcome: "plan"
+  sql_clickhouse: e4-stitch-count-empty-001.clickhouse.sql
   row_order: "any"
   rows: "e4-stitch-count-empty-001.csv"

@@ -14,6 +14,7 @@ query:
       - {"metric": "paid_rows", "alias": "paid_rows"}
 expect:
   outcome: "plan"
+  sql_clickhouse: e5-merge-scans-semi-additive-kept-001.clickhouse.sql
   sql: "e5-merge-scans-semi-additive-kept-001.sql"
   rows: "e5-merge-scans-semi-additive-kept-001.csv"
   row_order: "any"

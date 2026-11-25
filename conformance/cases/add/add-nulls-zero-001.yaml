@@ -11,5 +11,6 @@ query:
       - {"metric": "nulls_zero", "alias": "nulls_zero"}
 expect:
   outcome: "plan"
+  sql_clickhouse: add-nulls-zero-001.clickhouse.sql
   rows: "add-nulls-zero-001.csv"
   row_order: "any"

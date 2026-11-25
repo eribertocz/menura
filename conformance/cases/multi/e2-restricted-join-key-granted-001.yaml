@@ -14,5 +14,6 @@ query:
       - {"vendor_name": "COMMON", "data": {"namespace": "menura", "version": 1, "paths": [{"from": "orders", "to": "customers", "relationships": ["orders_customers"]}]}}
 expect:
   outcome: "plan"
+  sql_clickhouse: e2-restricted-join-key-granted-001.clickhouse.sql
   rows: "e2-restricted-join-key-granted-001.csv"
   row_order: "any"

@@ -14,6 +14,7 @@ query:
       - {"vendor_name": "COMMON", "data": {"namespace": "menura", "version": 1, "date_range": {"dimension": "orders.order_date", "from": "2026-10-05", "to": "2026-11-30"}}}
 expect:
   outcome: plan
+  sql_clickhouse: e5-summary-range-unaligned-001.clickhouse.sql
   sql: e5-summary-range-unaligned-001.sql
   rows: e5-summary-range-unaligned-001.csv
   row_order: any

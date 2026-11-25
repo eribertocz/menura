@@ -14,5 +14,6 @@ query:
       - {"vendor_name": "COMMON", "data": {"namespace": "menura", "version": 1, "time_grains": [{"dimension": "sales.sale_date", "grain": "month"}], "date_range": {"dimension": "sales.sale_date", "from": "2026-01-01", "to": "2026-02-28"}, "filters": ["sales.channel = 'web'"], "order_by": [{"output": "sale_date", "direction": "desc", "nulls": "last"}], "limit": 1}}
 expect:
   outcome: "plan"
+  sql_clickhouse: e1-extensions-001.clickhouse.sql
   row_order: "exact"
   rows: "e1-extensions-001.csv"

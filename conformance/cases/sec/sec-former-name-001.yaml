@@ -12,6 +12,7 @@ query:
       - {"metric": "sale_count", "alias": "sale_count"}
 expect:
   outcome: "plan"
+  sql_clickhouse: sec-former-name-001.clickhouse.sql
   warnings: ["WQRY-01", "WQRY-01"]
   rows: "sec-former-name-001.csv"
   row_order: "any"

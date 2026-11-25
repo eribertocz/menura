@@ -14,6 +14,7 @@ query:
 load_options: {ossie_format: development}
 expect:
   outcome: plan
+  sql_clickhouse: e2-slice-derived-development-001.clickhouse.sql
   rows: e2-slice-derived-development-001.csv
   row_order: any
   tolerance: 1.0e-9

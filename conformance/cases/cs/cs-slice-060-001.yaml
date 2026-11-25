@@ -14,6 +14,7 @@ query:
       - {"vendor_name": "COMMON", "data": {"namespace": "menura", "version": 1, "time_grains": [{"dimension": "orders.order_date", "grain": "month"}]}}
 expect:
   outcome: plan
+  sql_clickhouse: cs-slice-060-001.clickhouse.sql
   sql: cs-slice-060-001.sql
   rows: cs-slice-060-001.csv
   row_order: any

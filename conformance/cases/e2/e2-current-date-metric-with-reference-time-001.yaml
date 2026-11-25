@@ -13,5 +13,6 @@ query:
       - {metric: amount_to_date, alias: amount_to_date}
 expect:
   outcome: plan
+  sql_clickhouse: e2-current-date-metric-with-reference-time-001.clickhouse.sql
   rows: e2-current-date-metric-with-reference-time-001.csv
   row_order: any

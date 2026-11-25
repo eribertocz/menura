@@ -14,5 +14,6 @@ query:
       - {metric: total_amount_reformatted, alias: total_amount_reformatted}
 expect:
   outcome: plan
+  sql_clickhouse: e0-format-does-not-change-the-tree-001.clickhouse.sql
   rows: e0-format-does-not-change-the-tree-001.csv
   row_order: any

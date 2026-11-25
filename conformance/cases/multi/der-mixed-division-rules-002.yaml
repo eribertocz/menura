@@ -14,6 +14,7 @@ query:
     filter: "regions.name <> 'WEST'"
 expect:
   outcome: "plan"
+  sql_clickhouse: der-mixed-division-rules-002.clickhouse.sql
   row_order: "any"
   rows: "der-mixed-division-rules-002.csv"
   tolerance: 1.0e-9

@@ -14,5 +14,6 @@ query:
       - {metric: billed, alias: billed}
 expect:
   outcome: plan
+  sql_clickhouse: e0-context-valid-001.clickhouse.sql
   rows: e0-context-valid-001.csv
   row_order: any

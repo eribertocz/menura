@@ -13,6 +13,7 @@ query:
       - {"metric": "sales_share_of_all", "alias": "sales_share_of_all"}
 expect:
   outcome: "plan"
+  sql_clickhouse: ctx-share-remove-all-equivalent-001.clickhouse.sql
   sql: "ctx-share-remove-all-equivalent-001.sql"
   explanation: ["DEV-4", "E4-4.0e", "E4-4.1", "E4-8.2", "E5-3.2", "E5-3.3"]
   tolerance: 1e-12

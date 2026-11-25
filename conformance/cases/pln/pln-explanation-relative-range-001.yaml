@@ -15,6 +15,7 @@ query:
       - {"vendor_name": "COMMON", "data": {"namespace": "menura", "version": 1, "date_range": {"dimension": "sales.sale_date", "relative": {"unit": "month", "count": 1}}}}
 expect:
   outcome: "plan"
+  sql_clickhouse: pln-explanation-relative-range-001.clickhouse.sql
   rows: "pln-explanation-relative-range-001.csv"
   row_order: "any"
   explanation: [DEV-4, QRY-4.2]

@@ -13,6 +13,7 @@ query:
       - {"metric": "total_amount", "alias": "total_amount"}
 expect:
   outcome: "plan"
+  sql_clickhouse: pln-explanation-fold-constants-001.clickhouse.sql
   rows: "pln-explanation-fold-constants-001.csv"
   row_order: "any"
   explanation: [DEV-4, E4-4.0e, E4-4.1, E4-6.10, E5-3.2, E5-3.6]

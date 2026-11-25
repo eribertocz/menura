@@ -14,6 +14,7 @@ query:
 load_options: {ossie_format: development}
 expect:
   outcome: plan
+  sql_clickhouse: dev-context-model-metric-001.clickhouse.sql
   tolerance: 1.0e-12
   row_order: any
   rows: dev-context-model-metric-001.csv

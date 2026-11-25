@@ -157,6 +157,49 @@ jobs:
           path: ${{ runner.temp }}/summary/conformance.json
           if-no-files-found: error
 
+  conformance-clickhouse:
+    name: conformance-clickhouse
+    runs-on: ubuntu-latest
+    services:
+      clickhouse:
+        # The pinned long-term-support release of E6-7.10. `TZ` gives the server a time zone
+        # other than UTC; the runner checks it before any case runs.
+        image: clickhouse/clickhouse-server:26.3.71.3@sha256:232a7ff4126e858736e54ad25541decda3afe68e28ea45853bd5d1b6248ce6dc
+        env:
+          TZ: America/La_Paz
+          CLICKHOUSE_SKIP_USER_SETUP: "1"
+        ports:
+          - 8123:8123
+        options: >-
+          --health-cmd "clickhouse client --query 'SELECT 1'"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 30
+    steps:
+      - name: Check out the commit
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+      - name: Install the Rust toolchain
+        run: |
+          rustup toolchain install "$RUST_TOOLCHAIN" --profile minimal
+          rustup default "$RUST_TOOLCHAIN"
+      # `cargo run` puts the downloaded libduckdb on the library path, as in the `conformance` job.
+      - name: Run every plan case on ClickHouse with the E6-7.8 settings reversed in the session (E6-7.10, CS-2.3a)
+        shell: bash
+        run: >-
+          cargo run --locked --release --quiet -p menura-conformance-runner --bin conformance-clickhouse --
+          conformance http://localhost:8123
+          "$RUNNER_TEMP/summary/conformance-clickhouse.json"
+          | tee "$RUNNER_TEMP/conformance-clickhouse-report.txt"
+      - name: Upload the summary with the ClickHouse and time-zone data versions (CI-4.3, E6-7.16)
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: ci-summary-conformance-clickhouse
+          path: ${{ runner.temp }}/summary/conformance-clickhouse.json
+          if-no-files-found: error
+
   ossie-suites:
     name: ossie-suites
     runs-on: ubuntu-latest

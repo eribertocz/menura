@@ -11,5 +11,6 @@ query:
       - {"metric": "strict_balance", "alias": "strict_balance"}
 expect:
   outcome: "plan"
+  sql_clickhouse: add-missing-error-hidden-entity-001.clickhouse.sql
   rows: "add-missing-error-hidden-entity-001.csv"
   row_order: "any"

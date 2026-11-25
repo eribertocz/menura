@@ -11,5 +11,6 @@ query:
       - {"metric": "total_refund", "alias": "total_refund"}
 expect:
   outcome: "plan"
+  sql_clickhouse: e2-policy-join-001.clickhouse.sql
   row_order: "any"
   rows: "e2-policy-join-001.csv"
