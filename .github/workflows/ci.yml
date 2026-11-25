@@ -190,8 +190,14 @@ jobs:
         run: >-
           cargo run --locked --release --quiet -p menura-conformance-runner --bin conformance-clickhouse --
           conformance http://localhost:8123
-          "$RUNNER_TEMP/summary/conformance-clickhouse.json"
+          "$RUNNER_TEMP/conformance-clickhouse-run.json"
           | tee "$RUNNER_TEMP/conformance-clickhouse-report.txt"
+      - name: Summarize the run with its platform and the versions the runner read from the server (CI-4.3, E6-7.16)
+        if: always()
+        run: >-
+          python3 -I scripts/ci/compatibility_matrix.py summarize conformance-clickhouse
+          "$RUNNER_TEMP/conformance-clickhouse-run.json"
+          --output "$RUNNER_TEMP/summary/conformance-clickhouse.json"
       - name: Upload the summary with the ClickHouse and time-zone data versions (CI-4.3, E6-7.16)
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
