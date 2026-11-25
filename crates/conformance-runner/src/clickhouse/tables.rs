@@ -165,7 +165,9 @@ fn create_table<'columns>(
 ) -> Result<Vec<&'columns Column>, ServerFailure> {
     let typed: Vec<(&Column, String)> = columns
         .iter()
-        .filter_map(|column| column_type(column).map(|name| (column, name)))
+        .filter_map(|column| {
+            column_type(&column.logical_type, column.nullable).map(|name| (column, name))
+        })
         .collect();
     if typed.is_empty() {
         return Ok(Vec::new());
@@ -192,9 +194,9 @@ fn create_table<'columns>(
 
 /// The `ClickHouse` type of a catalog column (E6-7.2), `Nullable` when the column is, or `None`
 /// when its logical type has none (E6-7.12) or is a list, which no fixture holds.
-fn column_type(column: &Column) -> Option<String> {
-    let scalar = scalar_type(&column.logical_type)?;
-    Some(if column.nullable {
+pub(crate) fn column_type(logical_type: &LogicalType, nullable: bool) -> Option<String> {
+    let scalar = scalar_type(logical_type)?;
+    Some(if nullable {
         format!("Nullable({scalar})")
     } else {
         scalar
@@ -361,16 +363,13 @@ mod tests {
             bits: IntegerBits::ThirtyTwo,
             signed: false,
         };
-        assert_eq!(
-            column_type(&column(integer, false)).as_deref(),
-            Some("UInt32")
-        );
+        assert_eq!(column_type(&integer, false).as_deref(), Some("UInt32"));
         let decimal = LogicalType::Decimal {
             precision: 10,
             scale: 2,
         };
         assert_eq!(
-            column_type(&column(decimal, true)).as_deref(),
+            column_type(&decimal, true).as_deref(),
             Some("Nullable(Decimal(10, 2))")
         );
         let instant = LogicalType::Timestamp {
@@ -378,11 +377,11 @@ mod tests {
             with_time_zone: true,
         };
         assert_eq!(
-            column_type(&column(instant, false)).as_deref(),
+            column_type(&instant, false).as_deref(),
             Some("DateTime64(6, 'UTC')")
         );
         assert_eq!(
-            column_type(&column(LogicalType::Date, false)).as_deref(),
+            column_type(&LogicalType::Date, false).as_deref(),
             Some("Date32")
         );
     }
@@ -393,9 +392,9 @@ mod tests {
             precision: TimestampPrecision::Us,
             with_time_zone: false,
         };
-        assert_eq!(column_type(&column(wall_clock, false)), None);
-        assert_eq!(column_type(&column(LogicalType::Time, true)), None);
-        assert_eq!(column_type(&column(LogicalType::Unsupported, true)), None);
+        assert_eq!(column_type(&wall_clock, false), None);
+        assert_eq!(column_type(&LogicalType::Time, true), None);
+        assert_eq!(column_type(&LogicalType::Unsupported, true), None);
     }
 
     #[test]
