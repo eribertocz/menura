@@ -1,7 +1,7 @@
 {
   "ambiguous_paths": [],
   "capabilities": {
-    "compiler_version": "1.0.0",
+    "compiler_version": "1.1.0",
     "contracts": [
       {
         "contract": "menura.audit_record",
@@ -140,7 +140,7 @@
       "sql",
       "wide_table"
     ],
-    "slice_version": "1.0.0"
+    "slice_version": "1.1.0"
   },
   "contract": "menura.model_description",
   "contract_version": "@schema",
