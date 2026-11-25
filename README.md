@@ -4,15 +4,15 @@ A semantic compiler: it turns a question in business terms (metrics, dimensions,
 correct, secure, deterministic SQL. It reads semantic models in the **Apache Ossie** format,
 speaks standard SQL, and never stores or reads data itself.
 
-> Status: **1.0.0**, the MVP ([roadmap 7.1](spec/07-roadmap.md)). Contracts are frozen at major
-> version 1 and follow [contract evolution, architecture 3.3](spec/architecture/README.md) from now on.
+> Status: **1.1.0**, the ClickHouse dialect ([roadmap 7.2](spec/07-roadmap.md)). Contracts are
+> frozen at major version 1 and follow [contract evolution, architecture 3.3](spec/architecture/README.md).
 
 ## What it does today
 
 - Pure public functions over JSON contract documents ([contracts](spec/contracts/README.md)):
   `validate`, `load`, `compile`, `explain`, `describe`, `integrity_checks`, `dependencies`,
   `diff` and `migrate` ([architecture 3.5](spec/architecture/README.md)).
-- One target dialect: DuckDB.
+- Two target dialects, chosen with the `dialect` compile option: `duckdb` and `clickhouse`.
 - Every query of the model and query contracts compiles (slice VS-1f): wide-table and SQL-form
   queries, several datasets and paths, derived, additivity, population and context metrics
   (period to date, prior period, share of total), evidence-based rewrites and summaries,
@@ -80,11 +80,26 @@ error, never answered differently.
 | DuckDB SQL, deterministic, session-independent | Other dialects |
 | Contracts frozen at major version 1 | — |
 
+## What 1.1.0 adds
+
+The `clickhouse` dialect ([E6 ClickHouse](spec/stages/E6-clickhouse.md)) compiles the same plans
+as DuckDB and returns the same rows; only the SQL text, the physical type names and the parameter
+form differ. What ClickHouse cannot express fails with `E6-01`, never with an internal error or a
+different answer:
+
+- a relation `source` of three or more parts, since ClickHouse names a table with at most
+  `database.table` (E6-7.1);
+- a value of type `time`, `interval`, `timestamp` without time zone or a nullable `list`, and a
+  `date` or `timestamp` parameter outside the range of its ClickHouse type (E6-7.12).
+
+Everything 1.0.0 guarantees for DuckDB still holds.
+
 ## Supported platforms and channels
 
 Support is claimed only for the rows of the compatibility matrix attached to each release
 (`compatibility-matrix.md` and `compatibility-matrix.json`, CI-4). A combination the matrix does
 not list is unverified, not supported ([continuous integration CI-4.4](spec/09-continuous-integration.md)).
+This holds for ClickHouse too: only the ClickHouse release the matrix records is verified.
 
 ## Links
 
