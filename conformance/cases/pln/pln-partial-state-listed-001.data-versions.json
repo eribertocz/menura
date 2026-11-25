@@ -1,0 +1,18 @@
+[
+  {
+    "period": "2026-10-05",
+    "source": "shop.orders",
+    "version": {
+      "origin": "conformance:catalog",
+      "snapshot": "orders-2026-10-05"
+    }
+  },
+  {
+    "period": "2026-10-20",
+    "source": "shop.orders",
+    "version": {
+      "origin": "conformance:catalog",
+      "snapshot": "orders-2026-10-20"
+    }
+  }
+]

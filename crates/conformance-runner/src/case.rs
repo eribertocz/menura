@@ -142,6 +142,8 @@ pub struct Expectation {
     pub tolerance: Option<f64>,
     /// Golden JSON file of the plan's `lineage` (CS-2.11).
     pub lineage: Option<String>,
+    /// Golden JSON file of the plan's `data_versions`, a JSON array or `null` (CS-2.11).
+    pub data_versions: Option<String>,
     /// The `code` of every entry of the plan's `explanation`, in order (CS-2.12).
     pub explanation: Option<Vec<String>>,
     /// Golden JSON file of the audit record, without its `producer` (CS-2.13).

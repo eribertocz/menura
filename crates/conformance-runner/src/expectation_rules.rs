@@ -25,6 +25,13 @@ pub(crate) fn check_output_expectations(case: &Case) -> Result<(), RunnerErrorKi
         refuse_present(&[("compile_options", "CS-2.18", case.compile_options.is_some())])?;
     }
     check_clickhouse_expectations(case)?;
+    if outcome != Outcome::Plan {
+        refuse_present(&[(
+            "data_versions",
+            "CS-2.11",
+            case.expect.data_versions.is_some(),
+        )])?;
+    }
     if outcome.returns_document() {
         return check_document_case(case);
     }
@@ -175,6 +182,19 @@ expect:
     fn cs_2_11_lineage_is_allowed_only_with_a_plan() {
         let text = with_outcome("error", "  error: E2-01\n  lineage: l.json\n");
         assert_eq!(refused(&text), Some(("lineage", "CS-2.11")));
+    }
+
+    #[test]
+    fn cs_2_11_data_versions_is_allowed_only_with_a_plan() {
+        let plan = with_outcome("plan", "  rows: e.csv\n  data_versions: d.json\n");
+        let expect = parse_case(&plan).unwrap().expect;
+        assert_eq!(expect.data_versions.as_deref(), Some("d.json"));
+        let error = with_outcome("error", "  error: E2-01\n  data_versions: d.json\n");
+        assert_eq!(refused(&error), Some(("data_versions", "CS-2.11")));
+        let describe = "id: cs-unit-001\nrules: [CS-2.11]\nmodel: slice\n\
+                        security_context: auditor.json\n\
+                        expect: {outcome: describe, document: d.json, data_versions: v.json}\n";
+        assert_eq!(refused(describe), Some(("data_versions", "CS-2.11")));
     }
 
     #[test]

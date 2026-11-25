@@ -1,5 +1,6 @@
-//! The output expectations of a compiled plan: `lineage` (CS-2.11), `explanation` (CS-2.12)
-//! and `cache_key` (CS-2.14), and the comparison of `explain` with the plan (CS-2.16).
+//! The output expectations of a compiled plan: `lineage` and `data_versions` (CS-2.11),
+//! `explanation` (CS-2.12) and `cache_key` (CS-2.14), and the comparison of `explain` with the
+//! plan (CS-2.16).
 
 use std::path::Path;
 
@@ -15,14 +16,15 @@ const EXPLANATION_CONTRACT: &str = "menura.explanation";
 /// The plan members the comparison of `explain` with the plan leaves out (CS-2.16).
 const NOT_EXPLAINED: [&str; 3] = ["contract", "sql", "parameters"];
 
-/// Why the plan does not meet the `lineage`, `explanation` or `cache_key` expectations of the
-/// case, or `None`.
+/// Why the plan does not meet the `lineage`, `data_versions`, `explanation` or `cache_key`
+/// expectations of the case, or `None`.
 pub(crate) fn plan_outputs_mismatch(
     expect: &Expectation,
     plan: &CompiledPlanDocument,
     case_folder: &Path,
 ) -> Option<String> {
     lineage_mismatch(expect, plan, case_folder)
+        .or_else(|| data_versions_mismatch(expect, plan, case_folder))
         .or_else(|| explanation_mismatch(expect, plan))
         .or_else(|| cache_key_mismatch(expect, plan))
 }
@@ -37,6 +39,22 @@ fn lineage_mismatch(
     match JsonValue::of(&plan.lineage) {
         Ok(lineage) => golden_mismatch(case_folder, file_name, &lineage),
         Err(reason) => Some(format!("the lineage cannot be read as JSON: {reason}")),
+    }
+}
+
+/// The plan's `cache_key.data_versions`, a JSON array or `null`, compared with its golden file
+/// (CS-2.11).
+fn data_versions_mismatch(
+    expect: &Expectation,
+    plan: &CompiledPlanDocument,
+    case_folder: &Path,
+) -> Option<String> {
+    let file_name = expect.data_versions.as_deref()?;
+    match JsonValue::of(&plan.cache_key.data_versions) {
+        Ok(data_versions) => golden_mismatch(case_folder, file_name, &data_versions),
+        Err(reason) => Some(format!(
+            "the data versions cannot be read as JSON: {reason}"
+        )),
     }
 }
 
@@ -129,6 +147,10 @@ mod tests {
         PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../conformance/cases/cs")
     }
 
+    fn fixture_folder() -> PathBuf {
+        PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("tests/fixtures")
+    }
+
     fn entry(code: Option<&str>) -> Decision {
         Decision {
             code: code.map(str::to_owned),
@@ -155,6 +177,43 @@ mod tests {
             reason.contains("cs-unit-lineage-001.lineage.json"),
             "{reason}"
         );
+    }
+
+    #[test]
+    fn cs_2_11_null_data_versions_match_a_null_golden_file() {
+        let mut plan = plan();
+        plan.cache_key.data_versions = None;
+        let expect = expectation("  data_versions: cs-unit-data-versions-null-001.json\n");
+        assert_eq!(
+            plan_outputs_mismatch(&expect, &plan, &fixture_folder()),
+            None
+        );
+    }
+
+    #[test]
+    fn cs_2_11_data_versions_match_their_golden_file() {
+        let mut plan = plan();
+        plan.cache_key.data_versions = Some(Vec::new());
+        let expect = expectation("  data_versions: cs-unit-data-versions-empty-001.json\n");
+        assert_eq!(
+            plan_outputs_mismatch(&expect, &plan, &fixture_folder()),
+            None
+        );
+    }
+
+    #[test]
+    fn cs_2_11_listed_data_versions_never_match_a_null_golden_file() {
+        let mut plan = plan();
+        plan.cache_key.data_versions = Some(Vec::new());
+        let expect = expectation("  data_versions: cs-unit-data-versions-null-001.json\n");
+        let reason = plan_outputs_mismatch(&expect, &plan, &fixture_folder()).unwrap();
+        assert!(
+            reason.contains("cs-unit-data-versions-null-001.json"),
+            "{reason}"
+        );
+        plan.cache_key.data_versions = None;
+        let empty = expectation("  data_versions: cs-unit-data-versions-empty-001.json\n");
+        assert!(plan_outputs_mismatch(&empty, &plan, &fixture_folder()).is_some());
     }
 
     #[test]
