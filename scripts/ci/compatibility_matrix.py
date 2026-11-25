@@ -14,12 +14,16 @@ Usage:
   compatibility_matrix.py summarize conformance REPORT DESCRIPTION --output FILE
   compatibility_matrix.py summarize ossie-suites REPORT --output FILE
   compatibility_matrix.py summarize conformance-wrappers --output FILE
+  compatibility_matrix.py summarize conformance-clickhouse RUN-SUMMARY --output FILE
   compatibility_matrix.py summarize python-wheels PLATFORM --output FILE
   compatibility_matrix.py release COMMIT OUTPUT-DIRECTORY
 DESCRIPTION is the model description that the `menura` binary built in the same job wrote; its
 capability profile (DSC-4) gives the Menura version and the Apache Ossie normative version and
-tracked commit. The summaries read RUNNER_OS and RUNNER_ARCH; `release` reads GITHUB_REPOSITORY,
-GITHUB_TOKEN and RELEASE_TAG, and does nothing for a tag before 1.0.0 (CI-2 `release-assets`).
+tracked commit. RUN-SUMMARY is the JSON file the ClickHouse conformance runner wrote, with the
+server and time-zone data versions it read from the server (E6-7.16). The summaries read
+RUNNER_OS and RUNNER_ARCH; `release` reads GITHUB_REPOSITORY, GITHUB_TOKEN and RELEASE_TAG, and
+does nothing for a tag before 1.0.0 (CI-2 `release-assets`). From 1.1.0 the matrix also has the
+`core` row of the dialect `clickhouse` (CI-4.2).
 Exit status: 0 on success, 1 otherwise.
 """
 import io
@@ -43,6 +47,7 @@ JSON_ASSET = "compatibility-matrix.json"
 MARKDOWN_ASSET = "compatibility-matrix.md"
 SUMMARY_PREFIX = "ci-summary-"
 DIALECT = "duckdb"
+CLICKHOUSE_DIALECT = "clickhouse"
 
 # The wheel platforms of ARC-6.3, in the order their rows are written.
 WHEEL_PLATFORMS = ("linux-x86_64", "linux-aarch64", "macos-x86_64", "macos-arm64", "windows-x86_64")
@@ -58,6 +63,8 @@ RUNNER_PLATFORMS = {
 CI_WORKFLOW = "ci.yml"
 PYTHON_WORKFLOW = "python.yml"
 CI_JOBS = ("conformance", "ossie-suites", "conformance-wrappers")
+# The job of ci.yml that the `clickhouse` row depends on, from 1.1.0 (CI-4.2, E6-7.10).
+CLICKHOUSE_JOB = "conformance-clickhouse"
 WHEEL_JOB = re.compile(r"^python-wheels \(([a-z0-9_-]+)\)$")
 
 CASE_LINE = re.compile(r"^  (\S+) (passed|pending|failed)(?:: (.*))?$")
@@ -66,6 +73,7 @@ DUCKDB_LINE = re.compile(r"^DuckDB (v\d+\.\d+\.\d+\S*)$")
 PASSES_WHILE_LISTED = "passes while listed in expected-failures.yaml"
 RELEASE_TAG = re.compile(r"^v?(\d+)\.(\d+)\.(\d+)(-[0-9A-Za-z.-]+)?$")
 FIRST_MATRIX_RELEASE = (1, 0, 0)
+FIRST_CLICKHOUSE_RELEASE = (1, 1, 0)
 
 
 class MatrixError(Exception):
@@ -156,6 +164,36 @@ def wheel_summary(platform, environment):
     return {"job": "python-wheels", "platform": platform, "package_tests": "passed"}
 
 
+def is_count(value):
+    """Whether `value` is a non-negative integer; a JSON boolean is not one."""
+    return isinstance(value, int) and not isinstance(value, bool) and value >= 0
+
+
+def clickhouse_summary(run_summary, environment):
+    """The summary of `conformance-clickhouse`: the runner's own summary of the run, checked, with
+    the runner's platform. The server and time-zone data versions are the ones the runner read
+    from the server it ran on (E6-7.16), never written here."""
+    run = json.loads(run_summary)
+    if not isinstance(run, dict):
+        raise MatrixError("the ClickHouse run summary is not a JSON object")
+    if run.get("job") != CLICKHOUSE_JOB or run.get("dialect") != CLICKHOUSE_DIALECT:
+        raise MatrixError("the ClickHouse run summary is not one of conformance-clickhouse")
+    versions = {key: run.get(key) for key in ("clickhouse_version", "clickhouse_time_zone_data_version")}
+    for key, value in versions.items():
+        if not isinstance(value, str) or not value:
+            raise MatrixError(f"the ClickHouse run summary has no {key}")
+    cases = run.get("cases")
+    if not isinstance(cases, dict):
+        raise MatrixError("the ClickHouse run summary has no case counts object")
+    passed, total = cases.get("passed"), cases.get("total")
+    if not (is_count(passed) and is_count(total) and passed <= total):
+        raise MatrixError("the ClickHouse run summary has no valid case counts")
+    summary = {"job": CLICKHOUSE_JOB, "platform": runner_platform(environment), "dialect": CLICKHOUSE_DIALECT}
+    summary.update(versions)
+    summary["cases"] = {"passed": passed, "total": total}
+    return summary
+
+
 def summarize(arguments, environment):
     """Builds the summary of the job named first in `arguments`."""
     job, *values = arguments
@@ -166,6 +204,8 @@ def summarize(arguments, environment):
         return ossie_summary(pathlib.Path(values[0]).read_text(encoding="utf-8"), environment)
     if job == "conformance-wrappers" and not values:
         return wrappers_summary(environment)
+    if job == CLICKHOUSE_JOB and len(values) == 1:
+        return clickhouse_summary(pathlib.Path(values[0]).read_text(encoding="utf-8"), environment)
     if job == "python-wheels" and len(values) == 1:
         return wheel_summary(values[0], environment)
     raise MatrixError(f"bad summarize arguments: {' '.join(arguments)}")
@@ -235,29 +275,52 @@ def platform_fields(name):
     return {"os": operating_system, "arch": architecture}
 
 
-def build_matrix(api, commit):
-    """The matrix document of `commit` (CI-4.2, CI-4.3); raises MatrixError per CI-4.5."""
+def build_matrix(api, commit, with_clickhouse):
+    """The matrix document of `commit` (CI-4.2, CI-4.3); raises MatrixError per CI-4.5.
+    `with_clickhouse` adds the `core` row of the dialect `clickhouse`, for a tag 1.1.0 or later."""
     ci_run = latest_run(api, CI_WORKFLOW, commit)
     python_run = latest_run(api, PYTHON_WORKFLOW, commit)
     ci_jobs = run_jobs(api, ci_run)
-    for name in CI_JOBS:
+    for name in CI_JOBS + ((CLICKHOUSE_JOB,) if with_clickhouse else ()):
         require_passed(ci_jobs, name, commit)
     summaries = run_summaries(api, ci_run)
     platform = require(summaries, "conformance", "platform")
     for name in ("ossie-suites", "conformance-wrappers"):
         if require(summaries, name, "platform") != platform:
             raise MatrixError(f"{name} did not run on the platform of conformance ({platform})")
-    if require(summaries, "ossie-suites", "duckdb_version") != require(summaries, "conformance", "duckdb_version"):
-        raise MatrixError("conformance and ossie-suites ran on different DuckDB versions")
-    common = {
+    profile = release_profile(summaries, commit)
+    common = dict(profile, **duckdb_columns(summaries))
+    require(summaries, "conformance-wrappers", "parity")
+    rows = [row(common, "core", platform, None, [ci_run["html_url"]])]
+    if with_clickhouse:
+        rows.append(clickhouse_row(summaries, profile, ci_run["html_url"]))
+    rows.append(row(common, "cli", platform, "conformance-wrappers", [ci_run["html_url"]]))
+    rows.append(row(common, "mcp", platform, "conformance-wrappers", [ci_run["html_url"]]))
+    rows.extend(python_rows(api, python_run, common, platform, ci_run["html_url"], commit))
+    return {"rows": rows}
+
+
+def release_profile(summaries, commit):
+    """The columns every row shares: Menura version, commit and the capability profile (DSC-4)
+    of the model description that `conformance` wrote on that commit."""
+    return {
         "menura_version": require(summaries, "conformance", "menura_version"),
         "commit": commit,
-        "dialect": require(summaries, "conformance", "dialect"),
-        "duckdb_version": require(summaries, "conformance", "duckdb_version"),
         "ossie": {
             "normative": require(summaries, "conformance", "ossie", "normative"),
             "tracked_commit": require(summaries, "conformance", "ossie", "tracked_commit"),
         },
+    }
+
+
+def duckdb_columns(summaries):
+    """The dialect, engine, conformance and Apache Ossie suite columns of the `duckdb` rows."""
+    if require(summaries, "ossie-suites", "duckdb_version") != require(summaries, "conformance", "duckdb_version"):
+        raise MatrixError("conformance and ossie-suites ran on different DuckDB versions")
+    return {
+        "dialect": require(summaries, "conformance", "dialect"),
+        "duckdb_version": require(summaries, "conformance", "duckdb_version"),
+        "engine": {"name": DIALECT, "version": require(summaries, "conformance", "duckdb_version")},
         "conformance": {
             "passed": require(summaries, "conformance", "cases", "passed"),
             "total": require(summaries, "conformance", "cases", "total"),
@@ -267,14 +330,28 @@ def build_matrix(api, commit):
             for key in ("passed", "expected_failures", "unexpected")
         },
     }
-    require(summaries, "conformance-wrappers", "parity")
-    rows = [
-        row(common, "core", platform, None, [ci_run["html_url"]]),
-        row(common, "cli", platform, "conformance-wrappers", [ci_run["html_url"]]),
-        row(common, "mcp", platform, "conformance-wrappers", [ci_run["html_url"]]),
-    ]
-    rows.extend(python_rows(api, python_run, common, platform, ci_run["html_url"], commit))
-    return {"rows": rows}
+
+
+def clickhouse_row(summaries, profile, ci_url):
+    """The `core` row of the dialect `clickhouse` on the platform of `conformance-clickhouse`
+    (CI-4.2). Its Apache Ossie suite outcomes are null: the suites run on DuckDB only (CI-4.3)."""
+    if require(summaries, CLICKHOUSE_JOB, "dialect") != CLICKHOUSE_DIALECT:
+        raise MatrixError(f"summary {CLICKHOUSE_JOB} is not of the dialect {CLICKHOUSE_DIALECT}")
+    columns = dict(profile)
+    columns.update({
+        "dialect": CLICKHOUSE_DIALECT,
+        "engine": {
+            "name": CLICKHOUSE_DIALECT,
+            "version": require(summaries, CLICKHOUSE_JOB, "clickhouse_version"),
+            "time_zone_data_version": require(summaries, CLICKHOUSE_JOB, "clickhouse_time_zone_data_version"),
+        },
+        "conformance": {
+            "passed": require(summaries, CLICKHOUSE_JOB, "cases", "passed"),
+            "total": require(summaries, CLICKHOUSE_JOB, "cases", "total"),
+        },
+        "ossie_suites": None,
+    })
+    return row(columns, "core", require(summaries, CLICKHOUSE_JOB, "platform"), None, [ci_url])
 
 
 def python_rows(api, python_run, common, wrappers_platform, ci_url, commit):
@@ -314,17 +391,37 @@ def render_json(matrix):
 
 
 MARKDOWN_HEADER = (
-    "| Channel | Platform | Menura | Commit | Dialect | DuckDB | Apache Ossie | Ossie tracked commit "
+    "| Channel | Platform | Menura | Commit | Dialect | Engine | Apache Ossie | Ossie tracked commit "
     "| Conformance | Ossie suites | Wrappers | CI runs |\n"
     "|---|---|---|---|---|---|---|---|---|---|---|---|\n"
 )
+
+
+ENGINE_NAMES = {DIALECT: "DuckDB", CLICKHOUSE_DIALECT: "ClickHouse"}
+
+
+def render_engine(engine):
+    """The engine cell: its name and exact version, then its time-zone data version if any."""
+    text = f"{ENGINE_NAMES[engine['name']]} {engine['version']}"
+    if "time_zone_data_version" in engine:
+        text += f", time-zone data {engine['time_zone_data_version']}"
+    return text
+
+
+def render_suites(suites):
+    """The Apache Ossie suites cell; empty when the outcomes are null (CI-4.3)."""
+    if suites is None:
+        return ""
+    return (
+        f"{suites['passed']} passed, {suites['expected_failures']} expected failures, "
+        f"{suites['unexpected']} unexpected"
+    )
 
 
 def render_markdown(matrix):
     """The Markdown asset: the rows of the JSON asset as a table, and nothing else (CI-4.1)."""
     lines = ["# Compatibility matrix\n\n", MARKDOWN_HEADER]
     for entry in matrix["rows"]:
-        suites = entry["ossie_suites"]
         wrappers = entry.get("wrappers")
         cells = [
             entry["channel"],
@@ -332,12 +429,11 @@ def render_markdown(matrix):
             entry["menura_version"],
             entry["commit"],
             entry["dialect"],
-            entry["duckdb_version"],
+            render_engine(entry["engine"]),
             entry["ossie"]["normative"],
             entry["ossie"]["tracked_commit"],
             f"{entry['conformance']['passed']} / {entry['conformance']['total']}",
-            f"{suites['passed']} passed, {suites['expected_failures']} expected failures, "
-            f"{suites['unexpected']} unexpected",
+            render_suites(entry["ossie_suites"]),
             f"{wrappers['check']} passed" if wrappers else "",
             " ".join(f"<{url}>" for url in entry["runs"]),
         ]
@@ -410,10 +506,11 @@ class MatrixRelease(release_assets.ReleaseApi):
         self.call("POST", url, data=content, content_type=content_type)
 
 
-def release(api, attach_to, commit, directory):
-    """Builds the matrix of `commit`, writes it to `directory` and attaches it; exit status."""
+def release(api, attach_to, commit, directory, with_clickhouse):
+    """Builds the matrix of `commit`, writes it to `directory` and attaches it; exit status.
+    `with_clickhouse` is whether the tag is 1.1.0 or later (CI-4.2)."""
     try:
-        matrix = build_matrix(api, commit)
+        matrix = build_matrix(api, commit, with_clickhouse)
     except MatrixError as error:
         print(f"no compatibility matrix (CI-4.5): {error}", file=sys.stderr)
         return 1
@@ -428,16 +525,26 @@ def release(api, attach_to, commit, directory):
     return 0
 
 
-def matrix_release(tag):
-    """Whether the release `tag` publishes a matrix: version 1.0.0 or later (CI-2). A pre-release
-    of 1.0.0 comes before 1.0.0. Raises MatrixError for a tag that is not a version."""
-    version = RELEASE_TAG.match(tag)
-    if version is None:
+def at_or_after(tag, version):
+    """Whether the release `tag` is `version` or later by SemVer precedence: a pre-release of
+    `version` comes before it. Raises MatrixError for a tag that is not a version."""
+    match = RELEASE_TAG.match(tag)
+    if match is None:
         raise MatrixError(f"the tag {tag} is not a MAJOR.MINOR.PATCH version")
-    numbers = tuple(int(number) for number in version.groups()[:3])
-    if numbers == FIRST_MATRIX_RELEASE:
-        return version.group(4) is None
-    return numbers > FIRST_MATRIX_RELEASE
+    numbers = tuple(int(number) for number in match.groups()[:3])
+    if numbers == version:
+        return match.group(4) is None
+    return numbers > version
+
+
+def matrix_release(tag):
+    """Whether the release `tag` publishes a matrix: version 1.0.0 or later (CI-2)."""
+    return at_or_after(tag, FIRST_MATRIX_RELEASE)
+
+
+def clickhouse_release(tag):
+    """Whether the matrix of the release `tag` has the `clickhouse` row: 1.1.0 or later (CI-4.2)."""
+    return at_or_after(tag, FIRST_CLICKHOUSE_RELEASE)
 
 
 def main(arguments, environment):
@@ -466,12 +573,14 @@ def main(arguments, environment):
             if not matrix_release(tag):
                 print(f"{tag} is before 1.0.0: no compatibility matrix (CI-2)")
                 return 0
+            with_clickhouse = clickhouse_release(tag)
         except MatrixError as error:
             print(f"no compatibility matrix: {error}", file=sys.stderr)
             return 1
         try:
             attach_to = MatrixRelease(repository, token, tag)
-            return release(ActionsApi(repository, token), attach_to, arguments[1], pathlib.Path(arguments[2]))
+            directory = pathlib.Path(arguments[2])
+            return release(ActionsApi(repository, token), attach_to, arguments[1], directory, with_clickhouse)
         except urllib.error.HTTPError as error:
             print(f"GitHub REST API error {error.code} on {error.url}: {error.reason}", file=sys.stderr)
             return 1
