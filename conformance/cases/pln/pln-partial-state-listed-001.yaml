@@ -15,5 +15,6 @@ expect:
   sql_clickhouse: pln-partial-state-listed-001.clickhouse.sql
   rows: pln-partial-state-listed-001.csv
   row_order: any
+  data_versions: pln-partial-state-listed-001.data-versions.json
   audit: pln-partial-state-listed-001.audit.json
   cache_key: "e3b8bf2b892d270752739a93e3322596cf56ee36c598d8831a028661f5b92012"
