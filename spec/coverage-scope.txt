@@ -91,3 +91,5 @@ spec/stages/E4-plan.md
 spec/stages/E5-optimize.md
 spec/stages/E6-generate.md
 spec/stages/README.md
+# 1.1.0 gate
+spec/stages/E6-clickhouse.md
