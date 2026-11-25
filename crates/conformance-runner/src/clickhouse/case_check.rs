@@ -116,17 +116,16 @@ fn check_plan(
     }
 }
 
-/// Why the SQL differs from the golden `ClickHouse` SQL file, or why the case has none, or `None`
-/// (CS-2.3a). A `runtime_error` case may omit the file, as it may omit `sql` (CS-2.3).
+/// Why the SQL differs from the golden `ClickHouse` SQL file, or why the case has none, or
+/// `None`: every `plan` and `runtime_error` case names one or sets `clickhouse: e6_01`
+/// (CS-2.3a).
 fn golden_mismatch(case: &Case, plan: &CompiledPlanDocument, case_folder: &Path) -> Option<String> {
     let Some(file_name) = case.expect.sql_clickhouse.as_ref() else {
-        return (case.expect.outcome == Outcome::Plan).then(|| {
-            format!(
-                "an `outcome: plan` case names its golden ClickHouse SQL with `sql_clickhouse` \
-                 or sets `clickhouse: e6_01` (CS-2.3a); the SQL is:\n{}",
-                plan.sql
-            )
-        });
+        return Some(format!(
+            "a `plan` or `runtime_error` case names its golden ClickHouse SQL with \
+             `sql_clickhouse` or sets `clickhouse: e6_01` (CS-2.3a); the SQL is:\n{}",
+            plan.sql
+        ));
     };
     match read_text(&case_folder.join(file_name)) {
         Ok(golden) if golden == plan.sql => None,
