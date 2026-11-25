@@ -12,6 +12,7 @@ query:
       - {metric: total_amount, alias: total_amount}
 expect:
   outcome: plan
+  sql_clickhouse: pln-partial-state-omitted-001.clickhouse.sql
   rows: pln-partial-state-omitted-001.csv
   row_order: any
   audit: pln-partial-state-omitted-001.audit.json
