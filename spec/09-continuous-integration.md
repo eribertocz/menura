@@ -15,6 +15,7 @@ GitHub Actions (WF-8.0). Blocking checks are required by branch protection.
 | `dependency-graph` | Workspace graph test: direction of chapter 5.2, no cycles, wrappers depend only on `core` | S6–S8, A4 | Yes |
 | `conformance` | `just conformance` with non-default DuckDB settings | T1–T4, E6-5.4 | Yes |
 | `conformance-wrappers` | The suite run through the Python package, the CLI and the MCP server, results identical to `core` (ARC-6.9) | A4 | Yes |
+| `conformance-clickhouse` | From 1.1.0: every `plan` and `runtime_error` case run with `dialect: clickhouse` on the pinned ClickHouse release, with the E6-7.8 settings reversed at session level and a server time zone that is not UTC (E6-7.10, CS-2.3a) | T3, E6-7.10 | Yes |
 | `agent-smoke` | From 0.9.0: one scripted client that uses only `menura-mcp` (discover with `describe`, `compile`, a typed error, a refused metric), against a deterministic stub; never blocks a release (7.1) | ARC-6.7 | No |
 | `ossie-suites` | Apache Ossie suites at the tracked commit against `expected-failures.yaml` | OSS-2.3, OSS-2.4 | Layer 3 from 0.7.0; Layer 2 never until it blocks (OSS-2.3) |
 | `rule-coverage` | Every behavioral rule ID of the coverage scope (CS-2.6) is cited by a case, and every process rule ID of the scope by a CI check or review item; the rest is reported | T1, CS-2.6 | Yes |
