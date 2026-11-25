@@ -3,16 +3,19 @@
 //! For each case the runner prepares the case's `DuckDB` database as CS-4.2 says, loads its
 //! model through `core` (CS-2.8), opens a fresh `ClickHouse` session whose settings of E6-7.8
 //! are the opposite of those the generated SQL needs, copies the fixture's relations into that
-//! session, compiles the query with `dialect: clickhouse`, and checks the plan. The server's
-//! own time zone must not be UTC (E6-7.10).
+//! session, checks that every copied column reads back with the type E6-7.13 maps to the
+//! catalog schema's, compiles the query with `dialect: clickhouse`, and checks the plan. The
+//! server's own time zone must not be UTC (E6-7.10).
 
 mod case_check;
+mod copy_check;
 mod http;
 mod parameters;
 mod results;
 mod server;
 mod settings;
 mod tables;
+mod type_mapping;
 
 use std::path::Path;
 
@@ -31,6 +34,7 @@ use crate::load_part::{LoadOutcome, ModelDocuments, check_load};
 use crate::report::{CaseResult, CaseStatus, Report};
 use crate::runner::{area_folders, case_files};
 use case_check::{ClickhouseInputs, check_on_clickhouse};
+use copy_check::copy_mismatch;
 use tables::{drop_fixture, load_fixture};
 
 /// What the compatibility matrix records about the server (CI-4.3, E6-7.16).
@@ -151,10 +155,14 @@ fn run_case(
         security_context: &prepared.security_context,
         session: &session,
     };
-    let status = with_unloaded_sources(
-        check_on_clickhouse(case, &prepared.handle, &inputs),
-        &loaded.not_created,
-    );
+    let status = match copy_mismatch(&session, &loaded.tables) {
+        Ok(None) => with_unloaded_sources(
+            check_on_clickhouse(case, &prepared.handle, &inputs),
+            &loaded.not_created,
+        ),
+        Ok(Some(mismatch)) => CaseStatus::Failed(mismatch),
+        Err(reason) => CaseStatus::Failed(format!("the copied tables cannot be checked: {reason}")),
+    };
     match drop_fixture(&session, &loaded) {
         Ok(()) => status,
         Err(reason) => CaseStatus::Failed(format!("the fixture cannot be dropped: {reason}")),
