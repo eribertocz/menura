@@ -1,0 +1,91 @@
+{
+  "authorization": [
+    {
+      "decision": "granted",
+      "object": "dataset:CUSTOMERS",
+      "rule": "access:roles"
+    },
+    {
+      "decision": "granted",
+      "object": "field:CUSTOMERS.REGION",
+      "rule": "no_field_restriction"
+    },
+    {
+      "decision": "granted",
+      "object": "dataset:ORDERS",
+      "rule": "access:roles"
+    },
+    {
+      "decision": "granted",
+      "object": "metric:TOTAL_AMOUNT",
+      "rule": "metric_components"
+    }
+  ],
+  "compile_options": {
+    "dialect": "duckdb"
+  },
+  "contract": "menura.audit_record",
+  "contract_version": "@schema",
+  "contract_versions": {
+    "catalog_schema": "1.1.0",
+    "catalog_state": "1.1.0",
+    "model": "0.1.1",
+    "query": "1.1.0",
+    "security_context": "1.1.0"
+  },
+  "decisions": [
+    {
+      "code": "DEV-4",
+      "decision": "datasets without access are inaccessible",
+      "reason": "grant_authenticated_to_all is false",
+      "step": "E0",
+      "subject": "load_option:grant_authenticated_to_all"
+    },
+    {
+      "code": "E4-4.0e",
+      "decision": "deduplication by (group, row identity)",
+      "reason": "the branch joins other datasets and computes metric components, so a home row counts once in each group it matches",
+      "step": "E4",
+      "subject": "dataset:ORDERS"
+    },
+    {
+      "code": "E4-4.1",
+      "decision": "the plan can produce a NULL group",
+      "reason": "left join: a row of ORDERS without a visible match in CUSTOMERS falls into the NULL group of the dimensions read through it",
+      "step": "E4",
+      "subject": "relationship:ORDERS_CUSTOMERS"
+    },
+    {
+      "code": "E5-3.2",
+      "decision": "rejected",
+      "reason": "condition not met: no passing key_uniqueness evidence for relationship ORDERS_CUSTOMERS (E5-3.2a)",
+      "step": "E5",
+      "subject": "dataset:ORDERS"
+    },
+    {
+      "code": "E5-3.3",
+      "decision": "rejected",
+      "reason": "condition not met: passing `orphan_keys` evidence for the relationship (CAT-7.3)",
+      "step": "E5",
+      "subject": "relationship:ORDERS_CUSTOMERS"
+    }
+  ],
+  "inputs": {
+    "catalog_schema": "bc266e5de1d5db6ad88fe9adae623d19a03b5e650c2da3551da0ab204d880cf8",
+    "catalog_state": "6c1950c2a313d106b1ea64defb5a3eeffd8ea739f438eb542b70a2699416d535",
+    "model": "401727b070e38d4c4bc7bfbaa6a4d8a593786b4ecfd72c1fc4c2ef21ccbb65fc",
+    "query": "5a31255dac20a6f0264f1212391d81cdb0c5e663962831aa53ca589fa4e1cc66",
+    "security_fingerprint": "30d13aa6c87ba32c75378137b7255651b50380b708ed9ce366602a029f97d286"
+  },
+  "load_options": {
+    "data_source": "conformance:catalog",
+    "grant_authenticated_to_all": false,
+    "namespace": "menura",
+    "ossie_format": "release"
+  },
+  "outcome": {
+    "plan_hash": "481fd869ca2802dbbcd094f9359dc50bdc317317e65198463995b8087f814e2b"
+  },
+  "row_policies": [],
+  "subject": "partial-state-analyst"
+}
