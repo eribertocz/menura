@@ -15,6 +15,7 @@ mod model;
 
 use std::ffi::OsString;
 use std::fs;
+use std::io::{self, Write};
 use std::path::Path;
 use std::process::ExitCode;
 
@@ -33,8 +34,10 @@ pub(crate) fn run() -> ExitCode {
     let arguments: Vec<OsString> = std::env::args_os().skip(1).collect();
     let outcome = match parse(&arguments) {
         Ok(Command::Help) => {
-            print!("{USAGE}");
-            return ExitCode::SUCCESS;
+            return write_bytes(USAGE.as_bytes()).map_or_else(
+                |UsageError(message)| cannot_run(&message),
+                |()| ExitCode::SUCCESS,
+            );
         }
         Ok(Command::Validate(files)) => model::run_validate(&files),
         Ok(Command::Compile(files)) => compile::run_compile(&files),
@@ -92,14 +95,26 @@ fn load_handle(files: &HandleFiles) -> Result<Loaded, UsageError> {
     )
 }
 
-/// Writes `text`, an output document, on standard output and returns `status` (ARC-5.4).
+/// Writes `text`, an output document, and a line feed on standard output and returns `status`
+/// (ARC-5.4, PLT-1.4).
 fn write_document(
     text: Result<String, OutputError>,
     status: ExitCode,
 ) -> Result<ExitCode, UsageError> {
-    let text = text.map_err(|error| UsageError(error.to_string()))?;
-    println!("{text}");
+    let mut text = text.map_err(|error| UsageError(error.to_string()))?;
+    text.push('\n');
+    write_bytes(text.as_bytes())?;
     Ok(status)
+}
+
+/// Writes `bytes` on standard output exactly as given: a line feed is never translated, on
+/// any platform (PLT-1.4).
+fn write_bytes(bytes: &[u8]) -> Result<(), UsageError> {
+    let mut output = io::stdout().lock();
+    output
+        .write_all(bytes)
+        .and_then(|()| output.flush())
+        .map_err(|error| UsageError(format!("cannot write standard output: {error}")))
 }
 
 /// Writes `error`, a compile error, and returns `1` (ARC-5.4).
