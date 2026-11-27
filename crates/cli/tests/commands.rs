@@ -422,3 +422,33 @@ fn mig_3_3a_migrate_with_a_number_without_a_json_form_exits_1_with_emig_01() {
     assert_eq!(output.status.code(), Some(1));
     assert_eq!(document(&output)["errors"][0]["code"], "EMIG-01");
 }
+
+/// Runs `menura` with `arguments` and its standard output on `/dev/full`, where every write
+/// fails.
+#[cfg(target_os = "linux")]
+fn run_on_a_full_device(arguments: &[String]) -> Output {
+    let full = fs::OpenOptions::new()
+        .write(true)
+        .open("/dev/full")
+        .unwrap();
+    Command::new(env!("CARGO_BIN_EXE_menura"))
+        .args(arguments)
+        .stdout(full)
+        .output()
+        .unwrap()
+}
+
+#[cfg(target_os = "linux")]
+#[test]
+fn arc_5_4_a_command_that_cannot_write_its_output_exits_2_with_a_message() {
+    let help = vec!["--help".to_owned()];
+    for line in [compile_line("full_device", "compile", &[]), help] {
+        let output = run_on_a_full_device(&line);
+        assert_eq!(output.status.code(), Some(2), "{line:?}: {output:?}");
+        let message = String::from_utf8(output.stderr).unwrap();
+        assert!(
+            message.starts_with("menura: cannot write standard output"),
+            "{message}"
+        );
+    }
+}
