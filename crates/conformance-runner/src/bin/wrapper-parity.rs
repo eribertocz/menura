@@ -161,7 +161,13 @@ fn run_wrappers(
     match &arguments.digests {
         Digests::Ignored => {}
         Digests::Write(path) => write_digests(path, &digests)?,
-        Digests::Check(path) => mismatches.extend(digest_differences(path, &digests)?),
+        Digests::Check(path) => {
+            let differences = digest_differences(path, &digests)?;
+            if differences.is_empty() {
+                println!("{} CLI digests identical to Linux", digests.len());
+            }
+            mismatches.extend(differences);
+        }
     }
     Ok(mismatches)
 }
