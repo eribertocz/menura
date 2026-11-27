@@ -177,16 +177,16 @@ Find a rule ID or a section here, then open only that file at that line.
 | [08-conformance-suite.md](08-conformance-suite.md#L104) | 104 | rule | CS-5.4 |
 | [09-continuous-integration.md](09-continuous-integration.md#L1) | 1 | section | 9. Continuous integration |
 | [09-continuous-integration.md](09-continuous-integration.md#L6) | 6 | section | CI-1 On every pull request and every push to `main` |
-| [09-continuous-integration.md](09-continuous-integration.md#L34) | 34 | section | CI-2 Scheduled |
-| [09-continuous-integration.md](09-continuous-integration.md#L41) | 41 | section | CI-3 Rules |
-| [09-continuous-integration.md](09-continuous-integration.md#L43) | 43 | rule | CI-3.1 |
-| [09-continuous-integration.md](09-continuous-integration.md#L44) | 44 | rule | CI-3.2 |
-| [09-continuous-integration.md](09-continuous-integration.md#L46) | 46 | section | CI-4 Compatibility matrix |
-| [09-continuous-integration.md](09-continuous-integration.md#L50) | 50 | rule | CI-4.1 |
-| [09-continuous-integration.md](09-continuous-integration.md#L51) | 51 | rule | CI-4.2 |
-| [09-continuous-integration.md](09-continuous-integration.md#L52) | 52 | rule | CI-4.3 |
-| [09-continuous-integration.md](09-continuous-integration.md#L53) | 53 | rule | CI-4.4 |
-| [09-continuous-integration.md](09-continuous-integration.md#L54) | 54 | rule | CI-4.5 |
+| [09-continuous-integration.md](09-continuous-integration.md#L35) | 35 | section | CI-2 Scheduled |
+| [09-continuous-integration.md](09-continuous-integration.md#L42) | 42 | section | CI-3 Rules |
+| [09-continuous-integration.md](09-continuous-integration.md#L44) | 44 | rule | CI-3.1 |
+| [09-continuous-integration.md](09-continuous-integration.md#L45) | 45 | rule | CI-3.2 |
+| [09-continuous-integration.md](09-continuous-integration.md#L47) | 47 | section | CI-4 Compatibility matrix |
+| [09-continuous-integration.md](09-continuous-integration.md#L51) | 51 | rule | CI-4.1 |
+| [09-continuous-integration.md](09-continuous-integration.md#L52) | 52 | rule | CI-4.2 |
+| [09-continuous-integration.md](09-continuous-integration.md#L53) | 53 | rule | CI-4.3 |
+| [09-continuous-integration.md](09-continuous-integration.md#L54) | 54 | rule | CI-4.4 |
+| [09-continuous-integration.md](09-continuous-integration.md#L55) | 55 | rule | CI-4.5 |
 | [README.md](README.md#L1) | 1 | section | Menura — Specification |
 | [README.md](README.md#L9) | 9 | section | Reading order |
 | [README.md](README.md#L28) | 28 | section | Conventions |
@@ -228,6 +228,14 @@ Find a rule ID or a section here, then open only that file at that line.
 | [architecture/README.md](architecture/README.md#L155) | 155 | rule | A5 |
 | [architecture/README.md](architecture/README.md#L156) | 156 | rule | A6 |
 | [architecture/README.md](architecture/README.md#L161) | 161 | section | 3.9 Lineage and audit |
+| [architecture/platforms.md](architecture/platforms.md#L1) | 1 | section | Platforms |
+| [architecture/platforms.md](architecture/platforms.md#L7) | 7 | section | PLT-1 Supported platforms |
+| [architecture/platforms.md](architecture/platforms.md#L11) | 11 | rule | PLT-1.1 |
+| [architecture/platforms.md](architecture/platforms.md#L12) | 12 | rule | PLT-1.2 |
+| [architecture/platforms.md](architecture/platforms.md#L13) | 13 | rule | PLT-1.3 |
+| [architecture/platforms.md](architecture/platforms.md#L14) | 14 | rule | PLT-1.4 |
+| [architecture/platforms.md](architecture/platforms.md#L15) | 15 | rule | PLT-1.5 |
+| [architecture/platforms.md](architecture/platforms.md#L16) | 16 | rule | PLT-1.6 |
 | [contracts/README.md](contracts/README.md#L1) | 1 | section | Contracts |
 | [contracts/README.md](contracts/README.md#L22) | 22 | section | Public contracts |
 | [contracts/README.md](contracts/README.md#L24) | 24 | rule | CON-0.1 |
