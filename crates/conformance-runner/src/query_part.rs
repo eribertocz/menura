@@ -17,6 +17,7 @@ use crate::diagnostic_check::{Part, describe, location_mismatch, missing_warning
 use crate::explain_part::{explained_error_mismatch, explained_mismatch, runs_explain};
 use crate::fixture::read_text;
 use crate::inlined_values::inlined_value_mismatch;
+#[cfg(feature = "duckdb")]
 use crate::plan_execution::{CaseDatabase, check_execution};
 use crate::plan_outputs::plan_outputs_mismatch;
 use crate::report::CaseStatus;
@@ -27,8 +28,10 @@ pub(crate) struct QueryInputs<'inputs> {
     pub(crate) case_folder: &'inputs Path,
     /// The security context document, as bytes.
     pub(crate) security_context: &'inputs [u8],
-    /// The prepared database of the case (CS-4.2) and the classified divergences (CS-4.8).
-    pub(crate) database: CaseDatabase<'inputs>,
+    /// The prepared database of the case (CS-4.2) and the classified divergences (CS-4.8), or
+    /// `None` when the plan is only compiled and checked against its golden files (PLT-1.2).
+    #[cfg(feature = "duckdb")]
+    pub(crate) database: Option<CaseDatabase<'inputs>>,
 }
 
 /// Compiles the query of `case` over `handle` and compares the result with its expectation.
@@ -189,9 +192,10 @@ fn check_audit(case: &Case, audit: Option<&AuditRecordDocument>, case_folder: &P
 }
 
 /// Checks a compiled plan before execution, including that no value of the query or of the
-/// security context is written in its SQL (E6-4.2, roadmap 7.1a), then executes it: a
-/// `runtime_error` case must fail with its code, and any other case must return its rows and,
-/// when differential, those of its oracle.
+/// security context is written in its SQL (E6-4.2, roadmap 7.1a), then executes it on the
+/// case's database when it has one: a `runtime_error` case must fail with its code, and any
+/// other case must return its rows and, when differential, those of its oracle. Without a
+/// database, a plan that meets these checks passes the compile-only check (PLT-1.2).
 fn check_plan(
     case: &Case,
     plan: &CompiledPlanDocument,
@@ -203,7 +207,11 @@ fn check_plan(
     if let Some(reason) = mismatch {
         return CaseStatus::Failed(reason);
     }
-    check_execution(case, plan, inputs.case_folder, &inputs.database)
+    #[cfg(feature = "duckdb")]
+    if let Some(database) = &inputs.database {
+        return check_execution(case, plan, inputs.case_folder, database);
+    }
+    CaseStatus::Passed
 }
 
 fn warnings_of(result: &CompileResult) -> std::slice::Iter<'_, Diagnostic> {
@@ -275,6 +283,7 @@ fn plan_mismatch(
 }
 
 #[cfg(test)]
+#[cfg(feature = "duckdb")]
 mod tests {
     use std::path::PathBuf;
 
@@ -324,10 +333,10 @@ mod tests {
         let inputs = QueryInputs {
             case_folder: &case_folder,
             security_context: &security_context,
-            database: CaseDatabase {
+            database: Some(CaseDatabase {
                 connection: &connection,
                 divergences,
-            },
+            }),
         };
         check_query(&case, &handle, &inputs)
     }

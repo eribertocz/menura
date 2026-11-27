@@ -10,10 +10,27 @@ default-run = "menura-conformance-runner"
 [dependencies]
 menura-contracts.workspace = true
 menura-core.workspace = true
-duckdb = { version = "=1.20000.2", default-features = false, features = ["download-lib"] }
+duckdb = { version = "=1.20000.2", default-features = false, features = ["download-lib"], optional = true }
 serde = { version = "1", features = ["derive"] }
 serde_json = { version = "1", features = ["float_roundtrip"] }
 serde-saphyr = "2.1.1"
+
+[features]
+default = ["duckdb"]
+# Executes every plan on DuckDB (E6-5.4). Without it the runner links no libduckdb: only the
+# compile-only check, the wrapper parity check and the determinism check are built, for the
+# `platforms` job (PLT-1.2).
+duckdb = ["dep:duckdb"]
+
+[[bin]]
+name = "menura-conformance-runner"
+path = "src/main.rs"
+required-features = ["duckdb"]
+
+[[bin]]
+name = "conformance-clickhouse"
+path = "src/bin/conformance-clickhouse.rs"
+required-features = ["duckdb"]
 
 [lints]
 workspace = true

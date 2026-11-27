@@ -1,27 +1,47 @@
 //! Finds the cases of a conformance directory (CS-1), runs each one (CS-4.1, CS-4.2) and
-//! collects the report (CS-4.3).
+//! collects the report (CS-4.3). A compile-only run checks every case without executing any
+//! plan, and needs no `DuckDB` (PLT-1.2).
 
+#[cfg(feature = "duckdb")]
 use std::collections::BTreeSet;
 use std::fs;
 use std::path::{Path, PathBuf};
 
+#[cfg(feature = "duckdb")]
 use duckdb::Connection;
 use menura_core::LoadOptions;
 
 use crate::case::{Case, Outcome};
 use crate::case_file::read_case;
+#[cfg(feature = "duckdb")]
 use crate::database::prepare_database;
 use crate::describe_part::check_describe;
+#[cfg(feature = "duckdb")]
 use crate::divergences::{DIFFERENTIAL_FOLDER, DIVERGENCES_FILE, Divergences, read_divergences};
 use crate::error::{RunnerError, RunnerErrorKind};
-use crate::fixture::{ModelFixture, read_bytes, security_context_path};
+#[cfg(feature = "duckdb")]
+use crate::fixture::ModelFixture;
+use crate::fixture::{read_bytes, security_context_path};
 use crate::integrity_checks_part::integrity_checks_part;
 use crate::load_options::resolve_load_options;
 use crate::load_part::{LoadOutcome, ModelDocuments, check_load};
+#[cfg(feature = "duckdb")]
 use crate::ossie::{OSSIE_AREA, check_layout, run_suites};
+#[cfg(feature = "duckdb")]
 use crate::plan_execution::CaseDatabase;
 use crate::query_part::{QueryInputs, check_query};
 use crate::report::{CaseResult, CaseStatus, Report};
+
+/// How the cases of a run are checked.
+enum Checks {
+    /// Every plan is executed on the case's fresh database, with the reviewed divergences of
+    /// the differential cases (CS-4.2, CS-4.8, E6-5.4).
+    #[cfg(feature = "duckdb")]
+    Executed(Divergences),
+    /// Every case is loaded, compiled and compared with its golden files, but no plan is
+    /// executed and no database is prepared (PLT-1.2).
+    CompileOnly,
+}
 
 /// Runs every case of `conformance_directory/cases/`, or only those of `area` (CS-4.1).
 ///
@@ -38,6 +58,7 @@ use crate::report::{CaseResult, CaseStatus, Report};
 ///
 /// Returns a [`RunnerError`] when the layout cannot be read, the area does not exist, a case
 /// file breaks CS-1 or CS-2, or the layout of `ossie/` breaks OSS-2.4 or CS-4.5.
+#[cfg(feature = "duckdb")]
 pub fn run(conformance_directory: &Path, area: Option<&str>) -> Result<Report, RunnerError> {
     let ossie_directory = conformance_directory.join(OSSIE_AREA);
     let mut report = Report::default();
@@ -58,18 +79,44 @@ pub fn run(conformance_directory: &Path, area: Option<&str>) -> Result<Report, R
     Ok(report)
 }
 
-/// Runs the cases of `cases/`, or only those of `area`.
+/// Checks every case of `conformance_directory/cases/` as `run` does, but executes no plan:
+/// each case is loaded and compiled through `core`, and every output it gives (SQL, plan,
+/// error, description and check documents) is compared with its golden files (PLT-1.2). A case
+/// that only execution decides (its rows, its runtime error, its oracle) passes once its plan
+/// meets every check made before execution. The Apache Ossie suites, which execute their
+/// queries, are not run.
+///
+/// # Errors
+///
+/// Returns a [`RunnerError`] when the layout cannot be read or a case file breaks CS-1 or CS-2.
+pub fn run_compile_only(conformance_directory: &Path) -> Result<Report, RunnerError> {
+    Ok(Report {
+        cases: check_cases(conformance_directory, None, &Checks::CompileOnly)?,
+    })
+}
+
+/// Runs the cases of `cases/`, or only those of `area`, executing their plans.
+#[cfg(feature = "duckdb")]
 fn run_cases(
     conformance_directory: &Path,
     area: Option<&str>,
 ) -> Result<Vec<CaseResult>, RunnerError> {
     let divergences = read_divergences(conformance_directory)?;
     check_divergence_cases(conformance_directory, &divergences)?;
+    check_cases(conformance_directory, area, &Checks::Executed(divergences))
+}
+
+/// Checks the cases of `cases/`, or only those of `area`, with `checks`.
+fn check_cases(
+    conformance_directory: &Path,
+    area: Option<&str>,
+    checks: &Checks,
+) -> Result<Vec<CaseResult>, RunnerError> {
     let mut results = Vec::new();
     for area_folder in area_folders(&conformance_directory.join("cases"), area)? {
         for case_path in case_files(&area_folder)? {
             let case = read_case(&case_path)?;
-            let status = run_case(conformance_directory, &area_folder, &case, &divergences);
+            let status = run_case(conformance_directory, &area_folder, &case, checks);
             results.push(CaseResult {
                 id: case.id,
                 rules: case.rules,
@@ -82,6 +129,7 @@ fn run_cases(
 
 /// Checks that every entry of the reviewed file of divergences names a differential case of
 /// `cases/`, whichever area runs (CS-4.8).
+#[cfg(feature = "duckdb")]
 fn check_divergence_cases(
     conformance_directory: &Path,
     divergences: &Divergences,
@@ -114,10 +162,10 @@ fn run_case(
     conformance_directory: &Path,
     case_folder: &Path,
     case: &Case,
-    divergences: &Divergences,
+    checks: &Checks,
 ) -> CaseStatus {
     let model_folder = conformance_directory.join("models").join(&case.model);
-    let prepared = prepare_case(conformance_directory, case).and_then(|prepared| {
+    let prepared = prepare_case(conformance_directory, case, checks).and_then(|prepared| {
         ModelDocuments::read(&model_folder).map(|documents| (prepared, documents))
     });
     let (prepared, documents) = match prepared {
@@ -139,42 +187,87 @@ fn run_case(
             let inputs = QueryInputs {
                 case_folder,
                 security_context,
-                database: CaseDatabase {
-                    connection: &prepared.connection,
-                    divergences,
-                },
+                #[cfg(feature = "duckdb")]
+                database: case_database(checks, &prepared),
             };
             check_query(case, &handle, &inputs)
         }
     }
 }
 
-/// What a case runs with once its fixtures are read and its database is prepared.
+/// What a case runs with once its fixtures are read and, when its plan is executed, its
+/// database is prepared.
 struct PreparedCase {
     /// The load options its model is loaded with (CS-2.7).
     load_options: LoadOptions,
     /// Its security context document, as bytes, when it names one.
     security_context: Option<Vec<u8>>,
-    /// Its fresh database (CS-4.2).
-    connection: Connection,
+    /// Its fresh database (CS-4.2), when its plan is executed.
+    #[cfg(feature = "duckdb")]
+    connection: Option<Connection>,
 }
 
-/// Checks the fixtures of `case`, reads its security context and prepares its database.
-fn prepare_case(conformance_directory: &Path, case: &Case) -> Result<PreparedCase, RunnerError> {
+/// Reads the security context of `case` and, when `checks` executes plans, checks its fixtures
+/// and prepares its database.
+#[cfg_attr(
+    not(feature = "duckdb"),
+    expect(
+        unused_variables,
+        reason = "without the `duckdb` feature every run is compile-only: no database is prepared"
+    )
+)]
+fn prepare_case(
+    conformance_directory: &Path,
+    case: &Case,
+    checks: &Checks,
+) -> Result<PreparedCase, RunnerError> {
     let model_folder = conformance_directory.join("models").join(&case.model);
-    let fixture = ModelFixture::read(&model_folder)?;
+    #[cfg(feature = "duckdb")]
+    let connection = prepared_database(checks, &model_folder)?;
     let security_context = case
         .security_context
         .as_ref()
         .map(|file_name| read_bytes(&security_context_path(&model_folder, file_name)))
         .transpose()?;
-    let connection = prepare_database(&fixture)
-        .map_err(|error| RunnerError::new(RunnerErrorKind::Database(error), &model_folder))?;
     Ok(PreparedCase {
         load_options: resolve_load_options(case.load_options.as_ref()),
         security_context,
+        #[cfg(feature = "duckdb")]
         connection,
     })
+}
+
+/// The fresh database of a case of the model in `model_folder` when `checks` executes plans
+/// (CS-4.2), after its fixtures are checked; `None` for a compile-only run.
+#[cfg(feature = "duckdb")]
+fn prepared_database(
+    checks: &Checks,
+    model_folder: &Path,
+) -> Result<Option<Connection>, RunnerError> {
+    match checks {
+        Checks::Executed(_) => {
+            let fixture = ModelFixture::read(model_folder)?;
+            prepare_database(&fixture)
+                .map(Some)
+                .map_err(|error| RunnerError::new(RunnerErrorKind::Database(error), model_folder))
+        }
+        Checks::CompileOnly => Ok(None),
+    }
+}
+
+/// What the plan of a prepared case is executed with, or `None` for a compile-only run.
+#[cfg(feature = "duckdb")]
+fn case_database<'run>(
+    checks: &'run Checks,
+    prepared: &'run PreparedCase,
+) -> Option<CaseDatabase<'run>> {
+    match (checks, &prepared.connection) {
+        (Checks::Executed(divergences), Some(connection)) => Some(CaseDatabase {
+            connection,
+            divergences,
+        }),
+        _ => None,
+    }
 }
 
 /// The area folders to run, sorted by name.
@@ -240,7 +333,7 @@ expect: {outcome: load_error, error: E0D-02}
             "model: sample\nload_options: {ossie_format: development}",
         );
         let case = parse_case(&text).unwrap();
-        let options = prepare_case(&conformance_directory(), &case)
+        let options = prepare_case(&conformance_directory(), &case, &Checks::CompileOnly)
             .unwrap()
             .load_options;
         assert_eq!(options.ossie_format, OssieFormat::Development);
@@ -251,9 +344,67 @@ expect: {outcome: load_error, error: E0D-02}
     #[test]
     fn cs_2_7_a_case_without_load_options_is_loaded_with_the_defaults() {
         let case = parse_case(LOAD_ERROR_CASE).unwrap();
-        let options = prepare_case(&conformance_directory(), &case)
+        let options = prepare_case(&conformance_directory(), &case, &Checks::CompileOnly)
             .unwrap()
             .load_options;
         assert_eq!(options, resolve_load_options(None));
+    }
+
+    /// A `plan` case of the `slice` model whose files are under `cases/cs/`, expecting `expect`.
+    fn plan_case(expect: &str) -> Case {
+        parse_case(&format!(
+            "id: cs-unit-001\nrules: [CS-2.8]\nmodel: slice\nsecurity_context: auditor.json\n\
+             query: {{contract: menura.query, contract_version: \"1.1.0\", time_zone: UTC, \
+             query: {{dimensions: [sales.region], metrics: [total_amount]}}}}\nexpect: {expect}\n"
+        ))
+        .unwrap()
+    }
+
+    fn compile_only_status(case: &Case) -> CaseStatus {
+        let directory = conformance_directory();
+        run_case(
+            &directory,
+            &directory.join("cases/cs"),
+            case,
+            &Checks::CompileOnly,
+        )
+    }
+
+    #[test]
+    fn plt_1_2_a_compile_only_run_compares_the_sql_with_its_golden_file() {
+        let case =
+            plan_case("{outcome: plan, sql: cs-plan-rows-001.csv, rows: cs-plan-rows-001.csv}");
+        let CaseStatus::Failed(reason) = compile_only_status(&case) else {
+            panic!("the SQL differs from the golden file");
+        };
+        assert!(reason.contains("golden"), "{reason}");
+    }
+
+    #[test]
+    fn plt_1_2_a_compile_only_run_executes_no_plan() {
+        for expect in [
+            "{outcome: plan, rows: e1-output-name-001.csv}",
+            "{outcome: runtime_error, error: RADD-01}",
+        ] {
+            assert_eq!(compile_only_status(&plan_case(expect)), CaseStatus::Passed);
+        }
+    }
+
+    #[test]
+    fn plt_1_2_a_compile_only_run_still_fails_a_query_that_does_not_compile() {
+        let case = plan_case("{outcome: error, error: E_NAME_NOT_FOUND}");
+        assert!(matches!(compile_only_status(&case), CaseStatus::Failed(_)));
+    }
+
+    #[test]
+    fn plt_1_2_a_compile_only_run_checks_every_case_of_the_suite() {
+        let report = run_compile_only(&conformance_directory()).unwrap();
+        let failed: Vec<&CaseResult> = report
+            .cases
+            .iter()
+            .filter(|case| matches!(case.status, CaseStatus::Failed(_)))
+            .collect();
+        assert!(failed.is_empty(), "{failed:?}");
+        assert!(report.cases.len() > 100);
     }
 }

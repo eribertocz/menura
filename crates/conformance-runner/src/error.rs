@@ -34,6 +34,7 @@ pub enum RunnerErrorKind {
     /// An `error` or `runtime_error` case gives no expected code (CS-2).
     MissingErrorCode,
     /// The `DuckDB` database cannot be prepared (CS-4.2).
+    #[cfg(feature = "duckdb")]
     Database(duckdb::Error),
     /// An entry of `ossie/expected-failures.yaml` names no vendored case (OSS-2.4).
     UnknownExpectedFailure(String),
@@ -73,6 +74,7 @@ impl RunnerErrorKind {
             Self::NoRules => "CS-2.1",
             Self::PlanWithoutRows => "CS-2.2",
             Self::MissingSecurityContext | Self::MissingErrorCode => "CS-2",
+            #[cfg(feature = "duckdb")]
             Self::Database(_) => "CS-4.2",
             Self::UnknownExpectedFailure(_) => "OSS-2.4",
             Self::InvalidRunnerContext(_) => "CS-4.5",
@@ -111,6 +113,7 @@ impl fmt::Display for RunnerErrorKind {
                 formatter.write_str("this outcome requires `security_context`")
             }
             Self::MissingErrorCode => formatter.write_str("this outcome requires `error`"),
+            #[cfg(feature = "duckdb")]
             Self::Database(error) => write!(formatter, "database preparation failed: {error}"),
             Self::UnknownExpectedFailure(case) => {
                 write!(formatter, "entry `{case}` names no vendored case")
