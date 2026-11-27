@@ -14,6 +14,7 @@ duckdb = { version = "=1.20000.2", default-features = false, features = ["downlo
 serde = { version = "1", features = ["derive"] }
 serde_json = { version = "1", features = ["float_roundtrip"] }
 serde-saphyr = "2.1.1"
+sha2 = { version = "0.10", default-features = false }
 
 [features]
 default = ["duckdb"]
@@ -30,6 +31,48 @@ required-features = ["duckdb"]
 [[bin]]
 name = "conformance-clickhouse"
 path = "src/bin/conformance-clickhouse.rs"
+required-features = ["duckdb"]
+
+# The integration tests that run cases or execute SQL need DuckDB.
+
+[[test]]
+name = "e0_cases"
+path = "tests/e0_cases.rs"
+required-features = ["duckdb"]
+
+[[test]]
+name = "integrity_check_execution"
+path = "tests/integrity_check_execution.rs"
+required-features = ["duckdb"]
+
+[[test]]
+name = "ossie_suites"
+path = "tests/ossie_suites.rs"
+required-features = ["duckdb"]
+
+[[test]]
+name = "output_expectations"
+path = "tests/output_expectations.rs"
+required-features = ["duckdb"]
+
+[[test]]
+name = "population_check_execution"
+path = "tests/population_check_execution.rs"
+required-features = ["duckdb"]
+
+[[test]]
+name = "query_cases"
+path = "tests/query_cases.rs"
+required-features = ["duckdb"]
+
+[[test]]
+name = "sample_cases"
+path = "tests/sample_cases.rs"
+required-features = ["duckdb"]
+
+[[test]]
+name = "summary_check_execution"
+path = "tests/summary_check_execution.rs"
 required-features = ["duckdb"]
 
 [lints]

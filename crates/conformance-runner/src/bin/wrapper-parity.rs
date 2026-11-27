@@ -1,9 +1,11 @@
 //! `wrapper-parity <conformance-directory> --cli <menura> --mcp <menura-mcp> --manifest <file>
-//! --work <directory>`: runs every conformance case through the CLI and the MCP server and
-//! compares their documents with those of `core`, byte for byte, then writes the calls and
-//! their expected documents to `--manifest` for the Python package's check (ARC-6.9, A4).
-//! Every difference is printed with its case, its wrapper and its first differing line; any
-//! difference exits `1`.
+//! --work <directory> [--write-digests <file> | --check-digests <file>]`: runs every
+//! conformance case through the CLI and the MCP server and compares their documents with those
+//! of `core`, byte for byte, then writes the calls and their expected documents to `--manifest`
+//! for the Python package's check (ARC-6.9, A4). `--write-digests` also writes the SHA-256 of
+//! every CLI output, and `--check-digests` compares them with a file written so on another
+//! platform (PLT-1.2). Every difference is printed with its case, its wrapper and its first
+//! differing line; any difference exits `1`.
 
 #![forbid(unsafe_code)]
 #![allow(
@@ -17,12 +19,23 @@ use std::path::{Path, PathBuf};
 use std::process::ExitCode;
 
 use menura_conformance_runner::wrappers::{
-    CliForm, Expected, McpForm, Mismatch, ParityError, WrapperCall, calls_of_cases,
-    expected_result, usage_probes, write_manifest,
+    CliForm, Expected, McpForm, Mismatch, OutputDigest, ParityError, WrapperCall, calls_of_cases,
+    digest_differences, expected_result, usage_probes, write_digests, write_manifest,
 };
 
 const USAGE: &str = "usage: wrapper-parity <conformance-directory> --cli <menura> \
-                     --mcp <menura-mcp> --manifest <file> --work <directory>";
+                     --mcp <menura-mcp> --manifest <file> --work <directory> \
+                     [--write-digests <file> | --check-digests <file>]";
+
+/// What is done with the SHA-256 digests of the CLI outputs (PLT-1.2).
+enum Digests {
+    /// Nothing.
+    Ignored,
+    /// They are written to this file.
+    Write(PathBuf),
+    /// They are compared with those of this file.
+    Check(PathBuf),
+}
 
 /// The command line, once parsed.
 struct Arguments {
@@ -31,6 +44,7 @@ struct Arguments {
     mcp: PathBuf,
     manifest: PathBuf,
     work: PathBuf,
+    digests: Digests,
 }
 
 fn main() -> ExitCode {
@@ -55,26 +69,46 @@ fn main() -> ExitCode {
     }
 }
 
-/// The arguments: a directory, then each flag once with its value, in any order.
+/// The arguments: a directory, then each flag once with its value, in any order; at most one
+/// of the digest flags.
 fn parse(arguments: &[OsString]) -> Option<Arguments> {
     let (conformance, flags) = arguments.split_first()?;
-    let value = |name: &str| -> Option<PathBuf> {
-        let mut found = flags
-            .chunks(2)
+    let known = [
+        "--cli",
+        "--mcp",
+        "--manifest",
+        "--work",
+        "--write-digests",
+        "--check-digests",
+    ];
+    let pairs: Vec<&[OsString]> = flags.chunks(2).collect();
+    let all_known = pairs.iter().all(|pair| {
+        pair.len() == 2
+            && known
+                .iter()
+                .any(|name| pair.first().is_some_and(|flag| flag == name))
+    });
+    all_known.then_some(())?;
+    let value = |name: &str| -> Option<Option<PathBuf>> {
+        let mut found = pairs
+            .iter()
             .filter(|pair| pair.first().is_some_and(|flag| flag == name));
-        let pair = found.next()?;
-        found
-            .next()
-            .is_none()
-            .then(|| pair.get(1).map(PathBuf::from))?
+        let first = found.next().and_then(|pair| pair.get(1)).map(PathBuf::from);
+        found.next().is_none().then_some(first)
     };
-    (flags.len() == 8).then_some(())?;
+    let digests = match (value("--write-digests")?, value("--check-digests")?) {
+        (None, None) => Digests::Ignored,
+        (Some(path), None) => Digests::Write(path),
+        (None, Some(path)) => Digests::Check(path),
+        (Some(_), Some(_)) => return None,
+    };
     Some(Arguments {
         conformance: PathBuf::from(conformance),
-        cli: value("--cli")?,
-        mcp: value("--mcp")?,
-        manifest: value("--manifest")?,
-        work: value("--work")?,
+        cli: value("--cli")??,
+        mcp: value("--mcp")??,
+        manifest: value("--manifest")??,
+        work: value("--work")??,
+        digests,
     })
 }
 
@@ -102,7 +136,8 @@ fn check(arguments: &Arguments) -> Result<Vec<Mismatch>, String> {
     Ok(mismatches)
 }
 
-/// The differences of every call through the CLI and, when its inputs are UTF-8, MCP.
+/// The differences of every call through the CLI and, when its inputs are UTF-8, MCP, and of
+/// the digests of the CLI outputs when they are checked.
 fn run_wrappers(
     arguments: &Arguments,
     calls: &[(WrapperCall, Expected)],
@@ -114,11 +149,19 @@ fn run_wrappers(
     let cli = CliForm::new(arguments.cli.clone(), arguments.work.clone());
     let mut mcp = McpForm::start(Path::new(&arguments.mcp))?;
     let mut mismatches = Vec::new();
+    let mut digests = Vec::new();
     for (call, expected) in calls {
-        mismatches.extend(cli.check(call, expected)?);
+        let output = cli.run(call)?;
+        mismatches.extend(CliForm::compare(call, expected, &output));
+        digests.push(OutputDigest::of(call, &output));
         if McpForm::accepts(call) {
             mismatches.extend(mcp.check(call, expected)?);
         }
+    }
+    match &arguments.digests {
+        Digests::Ignored => {}
+        Digests::Write(path) => write_digests(path, &digests)?,
+        Digests::Check(path) => mismatches.extend(digest_differences(path, &digests)?),
     }
     Ok(mismatches)
 }

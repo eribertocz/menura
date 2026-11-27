@@ -2,8 +2,8 @@
 //! compared with `core` (ARC-5.4, ARC-6.9).
 
 use std::fs;
-use std::path::{Path, PathBuf};
-use std::process::{Command, Output};
+use std::path::PathBuf;
+use std::process::Command;
 
 use menura_core::Argument;
 
@@ -14,6 +14,20 @@ use super::expected::{Expected, ExpectedOutput};
 
 /// The exit status of a command that cannot run (ARC-5.4).
 const CANNOT_RUN: i32 = 2;
+
+/// What one `menura` process gave: its exit status, its standard output and error as bytes, and
+/// the audit record it wrote, if any.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct CliOutput {
+    /// The exit status, or `None` when the process was ended by a signal.
+    pub status: Option<i32>,
+    /// Standard output, as written.
+    pub stdout: Vec<u8>,
+    /// Standard error, as written.
+    pub stderr: Vec<u8>,
+    /// The file written to `--audit-record`, as written.
+    pub audit_record: Option<Vec<u8>>,
+}
 
 /// Runs calls through the `menura` binary, writing their generated files to a work directory.
 #[derive(Debug, Clone)]
@@ -33,7 +47,7 @@ impl CliForm {
         }
     }
 
-    /// Runs `call` and compares what the CLI gives with `expected`.
+    /// Runs `call` and compares what the CLI gives with `expected`, byte for byte.
     ///
     /// # Errors
     ///
@@ -43,6 +57,37 @@ impl CliForm {
         call: &WrapperCall,
         expected: &Expected,
     ) -> Result<Option<Mismatch>, ParityError> {
+        let output = self.run(call)?;
+        Ok(Self::compare(call, expected, &output))
+    }
+
+    /// The difference between what the CLI gave for `call` and `expected`, byte for byte, if
+    /// any.
+    #[must_use]
+    pub fn compare(
+        call: &WrapperCall,
+        expected: &Expected,
+        output: &CliOutput,
+    ) -> Option<Mismatch> {
+        let detail = match expected {
+            Expected::Output(expected) => output_difference(expected, output),
+            Expected::Usage(error) => usage_difference(&error.message(flag), output),
+        }?;
+        Some(Mismatch {
+            case: call.case.clone(),
+            wrapper: "cli",
+            command: call.command.name(),
+            detail,
+        })
+    }
+
+    /// Runs `call` as one `menura` process and returns what it gave.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`ParityError::Io`] when a file cannot be written or read, or the binary cannot
+    /// run.
+    pub fn run(&self, call: &WrapperCall) -> Result<CliOutput, ParityError> {
         let record = self.work_directory.join("audit-record.json");
         if record.exists() {
             fs::remove_file(&record).map_err(ParityError::io(&record))?;
@@ -58,16 +103,17 @@ impl CliForm {
             command.arg(flag(Argument::AuditRecord)).arg(&record);
         }
         let output = command.output().map_err(ParityError::io(&self.binary))?;
-        let detail = match expected {
-            Expected::Output(expected) => output_difference(expected, &output, &record)?,
-            Expected::Usage(error) => usage_difference(&error.message(flag), &output),
+        let audit_record = if record.exists() {
+            Some(fs::read(&record).map_err(ParityError::io(&record))?)
+        } else {
+            None
         };
-        Ok(detail.map(|detail| Mismatch {
-            case: call.case.clone(),
-            wrapper: "cli",
-            command: call.command.name(),
-            detail,
-        }))
+        Ok(CliOutput {
+            status: output.status.code(),
+            stdout: output.stdout,
+            stderr: output.stderr,
+            audit_record,
+        })
     }
 
     /// The file the CLI reads `value` from: the fixture file, or one written for it.
@@ -93,53 +139,61 @@ fn flag(argument: Argument) -> String {
 }
 
 /// What differs between the CLI's output and `expected`, if anything (ARC-5.4, ARC-5.7).
-fn output_difference(
-    expected: &ExpectedOutput,
-    output: &Output,
-    record: &Path,
-) -> Result<Option<String>, ParityError> {
+fn output_difference(expected: &ExpectedOutput, output: &CliOutput) -> Option<String> {
     let status = i32::from(expected.is_error);
-    if output.status.code() != Some(status) {
-        return Ok(Some(format!(
+    if output.status != Some(status) {
+        return Some(format!(
             "exit status {:?}, expected {status}; standard error: {}",
-            output.status.code(),
+            output.status,
             String::from_utf8_lossy(&output.stderr)
                 .lines()
                 .next()
                 .unwrap_or_default()
-        )));
+        ));
     }
-    let stdout = String::from_utf8_lossy(&output.stdout);
     let document = format!("{}\n", expected.document);
-    if let Some(detail) = compare_text("standard output", &document, &stdout) {
-        return Ok(Some(detail));
+    if let Some(detail) = byte_difference("standard output", &document, &output.stdout) {
+        return Some(detail);
     }
-    let written = if record.exists() {
-        Some(fs::read_to_string(record).map_err(ParityError::io(record))?)
-    } else {
-        None
-    };
     let expected_record = expected
         .audit_record
         .as_ref()
         .map(|text| format!("{text}\n"));
-    Ok(match (expected_record, written) {
+    match (expected_record, &output.audit_record) {
         (None, None) => None,
-        (Some(expected), Some(written)) => compare_text("audit record", &expected, &written),
+        (Some(expected), Some(written)) => byte_difference("audit record", &expected, written),
         (Some(_), None) => Some("no audit record was written".to_owned()),
         (None, Some(_)) => Some("an audit record was written, none expected".to_owned()),
+    }
+}
+
+/// What differs between the bytes `actual` and the text `expected`, if anything: the first
+/// differing line, or, when the difference is not visible as text, the byte counts.
+fn byte_difference(label: &str, expected: &str, actual: &[u8]) -> Option<String> {
+    if actual == expected.as_bytes() {
+        return None;
+    }
+    compare_text(label, expected, &String::from_utf8_lossy(actual)).or_else(|| {
+        Some(format!(
+            "{label}: the bytes differ ({} expected, {} found)",
+            expected.len(),
+            actual.len()
+        ))
     })
 }
 
 /// What differs between the CLI's refusal and the usage error `message` (ARC-5.4).
-fn usage_difference(message: &str, output: &Output) -> Option<String> {
-    if output.status.code() != Some(CANNOT_RUN) || !output.stdout.is_empty() {
+fn usage_difference(message: &str, output: &CliOutput) -> Option<String> {
+    if output.status != Some(CANNOT_RUN) || !output.stdout.is_empty() {
         return Some(format!(
             "exit status {:?} with {} bytes of standard output, expected {CANNOT_RUN} and none",
-            output.status.code(),
+            output.status,
             output.stdout.len()
         ));
     }
-    let stderr = String::from_utf8_lossy(&output.stderr);
-    compare_text("standard error", &format!("menura: {message}\n"), &stderr)
+    byte_difference(
+        "standard error",
+        &format!("menura: {message}\n"),
+        &output.stderr,
+    )
 }
