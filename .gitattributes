@@ -1,0 +1,19 @@
+# PLT-1.6: every text file is stored and checked out with line feed endings on every platform,
+# so golden files compare byte for byte everywhere (CS-2.3, CS-2.10).
+* text=auto eol=lf
+
+# Binary files are never converted.
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.pdf binary
+*.zip binary
+*.gz binary
+*.tar binary
+*.whl binary
+*.parquet binary
+*.duckdb binary
+*.db binary
+*.wasm binary
