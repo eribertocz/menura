@@ -4,7 +4,7 @@ A semantic compiler: it turns a question in business terms (metrics, dimensions,
 correct, secure, deterministic SQL. It reads semantic models in the **Apache Ossie** format,
 speaks standard SQL, and never stores or reads data itself.
 
-> Status: **1.1.0**, the ClickHouse dialect ([roadmap 7.2](spec/07-roadmap.md)). Contracts are
+> Status: **1.1.1**, the ClickHouse dialect ([roadmap 7.2](spec/07-roadmap.md)). Contracts are
 > frozen at major version 1 and follow [contract evolution, architecture 3.3](spec/architecture/README.md).
 
 ## What it does today
@@ -96,10 +96,16 @@ Everything 1.0.0 guarantees for DuckDB still holds.
 
 ## Supported platforms and channels
 
+The Rust crate `core`, the CLI `menura` and the MCP server `menura-mcp` support Linux x86_64,
+macOS x86_64, macOS arm64 and Windows x86_64, with the same output bytes on each
+([platforms PLT-1](spec/architecture/platforms.md)). The Python package supports the platforms of
+its wheels (ARC-6.3).
+
 Support is claimed only for the rows of the compatibility matrix attached to each release
 (`compatibility-matrix.md` and `compatibility-matrix.json`, CI-4). A combination the matrix does
 not list is unverified, not supported ([continuous integration CI-4.4](spec/09-continuous-integration.md)).
-This holds for ClickHouse too: only the ClickHouse release the matrix records is verified.
+This holds for each platform too, and for ClickHouse: only the platforms and the ClickHouse
+release the matrix records are verified.
 
 ## Links
 
