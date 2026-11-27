@@ -14,15 +14,36 @@ use std::fs;
 use std::path::{Path, PathBuf};
 use std::process::{Command, Output};
 
-use menura_core::{LoadOptions, document_json, validate};
-
 const QUERY: &str = r#"{"contract": "menura.query", "contract_version": "1.1.0",
     "time_zone": "UTC", "query": {"dimensions": ["orders.region"]}}"#;
 const CONTEXT: &str = r#"{"contract": "menura.security_context", "contract_version": "1.1.0",
     "subject": "user-1", "roles": ["admin"], "attributes": {}}"#;
 
-/// A model whose lines end with carriage return and line feed, with an error on its third line.
-const CRLF_MODEL: &[u8] = b"semantic_model:\r\n  - name: shop\r\n    datasets: [\r\n";
+/// A catalog schema whose lines end with carriage return and line feed, with a string that a
+/// line break interrupts: the carriage return is the control character the error points at.
+const CRLF_CATALOG_SCHEMA: &[u8] = b"{\r\n  \"relations\": \"x\r\n\"}\r\n";
+
+/// The report of [`CRLF_CATALOG_SCHEMA`] on every platform. Its error is at line 2, column
+/// 18, the carriage return; were the line endings translated to line feeds, it would be at
+/// line 3, column 0.
+const CRLF_REPORT: &str = r#"{
+  "contract": "menura.validation_report",
+  "contract_version": "1.2.0",
+  "errors": [
+    {
+      "code": "ECAT-01",
+      "message": "the document is not valid JSON: control character (\\u0000-\\u001F) found while parsing a string at line 2 column 18",
+      "location": {
+        "document": "catalog_schema",
+        "pointer": "",
+        "line": 2,
+        "column": 18
+      }
+    }
+  ],
+  "warnings": []
+}
+"#;
 
 /// A file name outside ASCII (PLT-1.5).
 const NON_ASCII_FOLDER: &str = "modèle-ñandú-模型";
@@ -153,32 +174,18 @@ fn plt_1_4_the_audit_record_file_has_line_feed_endings_only() {
 }
 
 #[test]
-fn plt_1_3_a_document_with_crlf_endings_gives_what_core_gives_for_its_exact_bytes() {
+fn plt_1_3_a_carriage_return_in_a_document_is_read_and_reported_as_given() {
     let folder = folder("crlf_input");
-    let model = file(&folder, "model.yaml", CRLF_MODEL);
-    let schema = shop("catalog-schema.json");
+    let schema = file(&folder, "catalog-schema.json", CRLF_CATALOG_SCHEMA);
     let output = run([
         OsString::from("validate"),
         "--model".into(),
-        model.into(),
+        shop("model.yaml").into(),
         "--catalog-schema".into(),
-        schema.clone().into(),
+        schema.into(),
     ]);
     assert_eq!(output.status.code(), Some(1), "{output:?}");
-    let report = validate(
-        CRLF_MODEL,
-        &fs::read(&schema).unwrap(),
-        &LoadOptions::default(),
-    );
-    let expected = format!("{}\n", document_json(&report).unwrap());
-    assert_eq!(String::from_utf8(output.stdout).unwrap(), expected);
-    let document: serde_json::Value = serde_json::from_str(&expected).unwrap();
-    let location = &document["errors"][0]["location"];
-    assert_eq!(document["errors"][0]["code"], "E0A-02");
-    assert_eq!(
-        (&location["line"], &location["column"]),
-        (&3.into(), &15.into())
-    );
+    assert_eq!(String::from_utf8(output.stdout).unwrap(), CRLF_REPORT);
 }
 
 /// The output of `dependencies` over the shop model copied to `model` and `schema`.
