@@ -1,7 +1,8 @@
 # Checks of spec/09-continuous-integration.md CI-1 that run on every pull request and every
 # push to main (WF-8.0): format, lint, unsafe, test, dependencies, dependency-graph, conformance,
-# ossie-suites, rule-coverage, index, examples, agent-smoke, benchmarks and conformance-wrappers.
-# Every job is named exactly as its check in CI-1.
+# ossie-suites, rule-coverage, index, examples, agent-smoke, benchmarks, conformance-wrappers and
+# platforms. Every job is named exactly as its check in CI-1; a job with a matrix adds its
+# platform in parentheses.
 #
 # Tool versions are pinned so that the same commit always gets the same verdict.
 name: ci
@@ -387,6 +388,57 @@ jobs:
         with:
           name: ci-summary-conformance-wrappers
           path: ${{ runner.temp }}/summary/conformance-wrappers.json
+          if-no-files-found: error
+
+  platforms:
+    name: platforms (${{ matrix.platform }})
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { platform: macos-arm64, runner: macos-15 }
+          - { platform: macos-x86_64, runner: macos-15-intel }
+          - { platform: windows-x86_64, runner: windows-2025 }
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - name: Check out the commit
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+      - name: Install the Rust toolchain
+        run: |
+          rustup toolchain install "$RUST_TOOLCHAIN" --profile minimal
+          rustup default "$RUST_TOOLCHAIN"
+      - name: Test the crates core, cli and mcp (PLT-1.1, PLT-1.3, PLT-1.4, PLT-1.5)
+        run: cargo test --locked -p menura-core -p menura-cli -p menura-mcp
+      # Without the `duckdb` feature the conformance tools link no libduckdb: no SQL is executed.
+      - name: Build menura, menura-mcp and the compile-only checks in release, without DuckDB
+        run: >-
+          cargo build --locked --release --no-default-features
+          -p menura-cli -p menura-mcp -p menura-conformance-runner
+          --bin menura --bin menura-mcp --bin conformance-compile-only --bin wrapper-parity
+      - name: Compile every case and compare each output with its golden file, without executing SQL (PLT-1.2, PLT-1.6)
+        run: target/release/conformance-compile-only conformance
+      - name: Run every case through the CLI and the MCP server, documents identical to core (PLT-1.2, PLT-1.4)
+        run: |
+          suffix=""
+          if [ "$RUNNER_OS" = "Windows" ]; then suffix=".exe"; fi
+          target/release/wrapper-parity conformance \
+            --cli "target/release/menura$suffix" --mcp "target/release/menura-mcp$suffix" \
+            --manifest "$RUNNER_TEMP/wrapper-parity.json" --work "$RUNNER_TEMP/wrapper-parity"
+      - name: Summarize the run for the compatibility matrix (CI-4.2, CI-4.3)
+        run: >-
+          "$(command -v python3 || command -v python)" -I scripts/ci/compatibility_matrix.py
+          summarize platforms "${{ matrix.platform }}"
+          --output "$RUNNER_TEMP/summary/platforms.json"
+      - name: Upload the summary for the compatibility matrix (CI-4)
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: ci-summary-platforms-${{ matrix.platform }}
+          path: ${{ runner.temp }}/summary/platforms.json
           if-no-files-found: error
 
   stubs:
