@@ -16,6 +16,7 @@ Usage:
   compatibility_matrix.py summarize conformance-wrappers --output FILE
   compatibility_matrix.py summarize conformance-clickhouse RUN-SUMMARY --output FILE
   compatibility_matrix.py summarize python-wheels PLATFORM --output FILE
+  compatibility_matrix.py summarize platforms PLATFORM --output FILE
   compatibility_matrix.py release COMMIT OUTPUT-DIRECTORY
 DESCRIPTION is the model description that the `menura` binary built in the same job wrote; its
 capability profile (DSC-4) gives the Menura version and the Apache Ossie normative version and
@@ -23,7 +24,8 @@ tracked commit. RUN-SUMMARY is the JSON file the ClickHouse conformance runner w
 server and time-zone data versions it read from the server (E6-7.16). The summaries read
 RUNNER_OS and RUNNER_ARCH; `release` reads GITHUB_REPOSITORY, GITHUB_TOKEN and RELEASE_TAG, and
 does nothing for a tag before 1.0.0 (CI-2 `release-assets`). From 1.1.0 the matrix also has the
-`core` row of the dialect `clickhouse` (CI-4.2).
+`core` row of the dialect `clickhouse` (CI-4.2). Each platform whose `platforms` job passed adds
+its `core`, `cli` and `mcp` rows (CI-4.2, PLT-1.1).
 Exit status: 0 on success, 1 otherwise.
 """
 import io
@@ -66,6 +68,9 @@ CI_JOBS = ("conformance", "ossie-suites", "conformance-wrappers")
 # The job of ci.yml that the `clickhouse` row depends on, from 1.1.0 (CI-4.2, E6-7.10).
 CLICKHOUSE_JOB = "conformance-clickhouse"
 WHEEL_JOB = re.compile(r"^python-wheels \(([a-z0-9_-]+)\)$")
+# The platforms of the `platforms` job of ci.yml (PLT-1.1), in the order their rows are written.
+PLATFORMS_JOB_PLATFORMS = ("macos-x86_64", "macos-arm64", "windows-x86_64")
+PLATFORMS_JOB = re.compile(r"^platforms \(([a-z0-9_-]+)\)$")
 
 CASE_LINE = re.compile(r"^  (\S+) (passed|pending|failed)(?:: (.*))?$")
 TOTAL_LINE = re.compile(r"^(\d+) cases: (\d+) passed, (\d+) pending, (\d+) failed$")
@@ -164,6 +169,16 @@ def wheel_summary(platform, environment):
     return {"job": "python-wheels", "platform": platform, "package_tests": "passed"}
 
 
+def platforms_summary(platform, environment):
+    """The summary of one `platforms` job: its platform, and that the crate tests, the golden
+    files and the wrapper parity passed there (PLT-1.1, PLT-1.2)."""
+    if platform not in PLATFORMS_JOB_PLATFORMS:
+        raise MatrixError(f"{platform} is not a platform of the platforms job")
+    if runner_platform(environment) != platform:
+        raise MatrixError(f"the platform {platform} is not the runner's platform")
+    return {"job": "platforms", "platform": platform, "tests": "passed"}
+
+
 def is_count(value):
     """Whether `value` is a non-negative integer; a JSON boolean is not one."""
     return isinstance(value, int) and not isinstance(value, bool) and value >= 0
@@ -208,6 +223,8 @@ def summarize(arguments, environment):
         return clickhouse_summary(pathlib.Path(values[0]).read_text(encoding="utf-8"), environment)
     if job == "python-wheels" and len(values) == 1:
         return wheel_summary(values[0], environment)
+    if job == "platforms" and len(values) == 1:
+        return platforms_summary(values[0], environment)
     raise MatrixError(f"bad summarize arguments: {' '.join(arguments)}")
 
 
@@ -296,6 +313,7 @@ def build_matrix(api, commit, with_clickhouse):
         rows.append(clickhouse_row(summaries, profile, ci_run["html_url"]))
     rows.append(row(common, "cli", platform, "conformance-wrappers", [ci_run["html_url"]]))
     rows.append(row(common, "mcp", platform, "conformance-wrappers", [ci_run["html_url"]]))
+    rows.extend(platforms_rows(ci_jobs, summaries, common, ci_run["html_url"]))
     rows.extend(python_rows(api, python_run, common, platform, ci_run["html_url"], commit))
     return {"rows": rows}
 
@@ -352,6 +370,30 @@ def clickhouse_row(summaries, profile, ci_url):
         "ossie_suites": None,
     })
     return row(columns, "core", require(summaries, CLICKHOUSE_JOB, "platform"), None, [ci_url])
+
+
+def platforms_rows(jobs, summaries, common, ci_url):
+    """The `core`, `cli` and `mcp` rows of each platform whose `platforms` job passed (CI-4.2,
+    PLT-1.1). They carry the columns of the rows of the `conformance` platform: on every
+    platform the outputs are byte-identical (PLT-1.2). A platform whose job did not pass has no
+    row; one whose job passed without its summary fails (CI-4.5)."""
+    passed = set()
+    for name, job in jobs.items():
+        match = PLATFORMS_JOB.match(name)
+        if match and job.get("conclusion") == "success":
+            passed.add(match.group(1))
+    rows = []
+    for platform in PLATFORMS_JOB_PLATFORMS:
+        if platform not in passed:
+            continue
+        name = f"platforms-{platform}"
+        if require(summaries, name, "platform") != platform:
+            raise MatrixError(f"summary {name} names another platform")
+        require(summaries, name, "tests")
+        rows.append(row(common, "core", platform, None, [ci_url]))
+        rows.append(row(common, "cli", platform, "platforms", [ci_url]))
+        rows.append(row(common, "mcp", platform, "platforms", [ci_url]))
+    return rows
 
 
 def python_rows(api, python_run, common, wrappers_platform, ci_url, commit):

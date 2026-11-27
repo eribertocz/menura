@@ -219,6 +219,87 @@ class SummaryTest(unittest.TestCase):
             matrix.wheel_summary("macos-arm64", LINUX)
 
 
+MACOS_ARM = {"RUNNER_OS": "macOS", "RUNNER_ARCH": "ARM64"}
+
+
+def platforms_actions(conclusions, summaries=None):
+    """The runs of a full matrix whose `platforms` jobs ended with `conclusions`, by platform;
+    each job that passed uploaded its summary unless `summaries` says otherwise."""
+    jobs = all_ci_jobs()
+    jobs.update({f"platforms ({platform})": conclusion for platform, conclusion in conclusions.items()})
+    if summaries is None:
+        summaries = {f"platforms-{platform}": {"job": "platforms", "platform": platform, "tests": "passed"}
+                     for platform, conclusion in conclusions.items() if conclusion == "success"}
+    return full_actions(ci_jobs=jobs, summaries=dict(ci_summaries(), **summaries))
+
+
+def row_keys(document):
+    return [(row["channel"], f"{row['platform']['os']}-{row['platform']['arch']}") for row in document["rows"]]
+
+
+class PlatformsTest(unittest.TestCase):
+    """CI-4.2 and CI-4.5 for the `platforms` job (PLT-1.1)."""
+
+    def test_ci_4_2_the_platforms_summary_names_the_runner_platform(self):
+        self.assertEqual(
+            matrix.platforms_summary("macos-arm64", MACOS_ARM),
+            {"job": "platforms", "platform": "macos-arm64", "tests": "passed"},
+        )
+
+    def test_ci_4_2_a_platforms_summary_on_another_runner_or_platform_fails(self):
+        with self.assertRaises(matrix.MatrixError):
+            matrix.platforms_summary("macos-arm64", LINUX)
+        with self.assertRaises(matrix.MatrixError):
+            matrix.platforms_summary("linux-x86_64", LINUX)
+
+    def test_ci_4_2_the_summarize_command_writes_the_platforms_summary(self):
+        with tempfile.TemporaryDirectory() as directory:
+            output = pathlib.Path(directory) / "summary" / "platforms.json"
+            arguments = ["summarize", "platforms", "macos-arm64", "--output", str(output)]
+            self.assertEqual(matrix.main(arguments, MACOS_ARM), 0)
+            summary = json.loads(output.read_text(encoding="utf-8"))
+        self.assertEqual(summary, matrix.platforms_summary("macos-arm64", MACOS_ARM))
+
+    def test_ci_4_2_each_passed_platforms_job_adds_core_cli_and_mcp_rows(self):
+        conclusions = {platform: "success" for platform in matrix.PLATFORMS_JOB_PLATFORMS}
+        rows = row_keys(matrix.build_matrix(platforms_actions(conclusions), COMMIT, False))
+        linux = [("core", "linux-x86_64"), ("cli", "linux-x86_64"), ("mcp", "linux-x86_64")]
+        platforms = [(channel, platform) for platform in matrix.PLATFORMS_JOB_PLATFORMS
+                     for channel in ("core", "cli", "mcp")]
+        python = [("python", platform) for platform in matrix.WHEEL_PLATFORMS]
+        self.assertEqual(rows, linux + platforms + python)
+
+    def test_ci_4_2_a_platforms_job_that_did_not_pass_has_no_row(self):
+        conclusions = {"macos-x86_64": "failure", "macos-arm64": "success", "windows-x86_64": "cancelled"}
+        rows = row_keys(matrix.build_matrix(platforms_actions(conclusions), COMMIT, False))
+        self.assertEqual([row for row in rows if row[1] == "macos-arm64" and row[0] != "python"],
+                         [("core", "macos-arm64"), ("cli", "macos-arm64"), ("mcp", "macos-arm64")])
+        self.assertFalse([row for row in rows if row[1] in ("macos-x86_64", "windows-x86_64")
+                          and row[0] != "python"])
+
+    def test_ci_4_2_the_platforms_rows_carry_the_columns_of_the_conformance_platform(self):
+        document = matrix.build_matrix(platforms_actions({"windows-x86_64": "success"}), COMMIT, False)
+        rows = {row_key: row for row_key, row in zip(row_keys(document), document["rows"])}
+        for channel in ("core", "cli", "mcp"):
+            linux, windows = rows[(channel, "linux-x86_64")], rows[(channel, "windows-x86_64")]
+            self.assertEqual(windows["platform"], {"os": "windows", "arch": "x86_64"})
+            for column in ("menura_version", "commit", "dialect", "engine", "ossie", "conformance", "ossie_suites"):
+                self.assertEqual(windows[column], linux[column], column)
+            self.assertEqual(windows["runs"], [CI_URL])
+        self.assertNotIn("wrappers", rows[("core", "windows-x86_64")])
+        self.assertEqual(rows[("cli", "windows-x86_64")]["wrappers"], {"check": "platforms", "passed": True})
+        self.assertEqual(rows[("mcp", "windows-x86_64")]["wrappers"], {"check": "platforms", "passed": True})
+
+    def test_ci_4_5_a_passed_platforms_job_without_its_summary_fails(self):
+        with self.assertRaises(matrix.MatrixError):
+            matrix.build_matrix(platforms_actions({"macos-arm64": "success"}, summaries={}), COMMIT, False)
+
+    def test_ci_4_5_a_platforms_summary_of_another_platform_fails(self):
+        summaries = {"platforms-macos-arm64": {"job": "platforms", "platform": "macos-x86_64", "tests": "passed"}}
+        with self.assertRaises(matrix.MatrixError):
+            matrix.build_matrix(platforms_actions({"macos-arm64": "success"}, summaries), COMMIT, False)
+
+
 class MatrixTest(unittest.TestCase):
     """CI-4.1, CI-4.2, CI-4.3, CI-4.5."""
 
