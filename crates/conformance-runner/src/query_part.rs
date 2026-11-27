@@ -4,7 +4,6 @@
 
 use std::path::Path;
 
-use duckdb::Connection;
 use menura_core::{
     AuditRecordDocument, Compilation, CompileErrorDocument, CompileOptions, CompileResult,
     CompiledPlanDocument, Diagnostic, Handle, build_producer, compile, explain,
@@ -14,17 +13,14 @@ use crate::alternatives_check::alternatives_mismatch;
 use crate::audit_check::audit_mismatch;
 use crate::case::{Case, Expectation, Outcome};
 use crate::compile_options::{compile_options, explain_options};
-use crate::csv_rows::parse_csv;
 use crate::diagnostic_check::{Part, describe, location_mismatch, missing_warnings};
-use crate::differential::check_differential;
-use crate::divergences::Divergences;
-use crate::execution::{ExecutionFailure, execute_plan};
 use crate::explain_part::{explained_error_mismatch, explained_mismatch, runs_explain};
 use crate::fixture::read_text;
 use crate::inlined_values::inlined_value_mismatch;
+#[cfg(feature = "duckdb")]
+use crate::plan_execution::{CaseDatabase, check_execution};
 use crate::plan_outputs::plan_outputs_mismatch;
 use crate::report::CaseStatus;
-use crate::row_comparison::{Comparison, rows_mismatch};
 
 /// What the query part of a case reads besides the case and the loaded model.
 pub(crate) struct QueryInputs<'inputs> {
@@ -32,10 +28,10 @@ pub(crate) struct QueryInputs<'inputs> {
     pub(crate) case_folder: &'inputs Path,
     /// The security context document, as bytes.
     pub(crate) security_context: &'inputs [u8],
-    /// The prepared database of the case (CS-4.2).
-    pub(crate) connection: &'inputs Connection,
-    /// The classified divergences of differential cases (CS-4.8).
-    pub(crate) divergences: &'inputs Divergences,
+    /// The prepared database of the case (CS-4.2) and the classified divergences (CS-4.8), or
+    /// `None` when the plan is only compiled and checked against its golden files (PLT-1.2).
+    #[cfg(feature = "duckdb")]
+    pub(crate) database: Option<CaseDatabase<'inputs>>,
 }
 
 /// Compiles the query of `case` over `handle` and compares the result with its expectation.
@@ -196,9 +192,10 @@ fn check_audit(case: &Case, audit: Option<&AuditRecordDocument>, case_folder: &P
 }
 
 /// Checks a compiled plan before execution, including that no value of the query or of the
-/// security context is written in its SQL (E6-4.2, roadmap 7.1a), then executes it: a
-/// `runtime_error` case must fail with its code, and any other case must return its rows and,
-/// when differential, those of its oracle.
+/// security context is written in its SQL (E6-4.2, roadmap 7.1a), then executes it on the
+/// case's database when it has one: a `runtime_error` case must fail with its code, and any
+/// other case must return its rows and, when differential, those of its oracle. Without a
+/// database, a plan that meets these checks passes the compile-only check (PLT-1.2).
 fn check_plan(
     case: &Case,
     plan: &CompiledPlanDocument,
@@ -210,13 +207,11 @@ fn check_plan(
     if let Some(reason) = mismatch {
         return CaseStatus::Failed(reason);
     }
-    if case.expect.outcome == Outcome::RuntimeError {
-        return check_runtime_error(&case.expect, plan, inputs.connection);
+    #[cfg(feature = "duckdb")]
+    if let Some(database) = &inputs.database {
+        return check_execution(case, plan, inputs.case_folder, database);
     }
-    match check_rows(&case.expect, plan, inputs) {
-        CaseStatus::Passed if case.oracle.is_some() => check_differential(case, plan, inputs),
-        status => status,
-    }
+    CaseStatus::Passed
 }
 
 fn warnings_of(result: &CompileResult) -> std::slice::Iter<'_, Diagnostic> {
@@ -287,67 +282,8 @@ fn plan_mismatch(
     }
 }
 
-/// Executes the plan and compares the rows it returns on `DuckDB` with the expected rows
-/// (CS-2.4, E6-5.4).
-fn check_rows(
-    expect: &Expectation,
-    plan: &CompiledPlanDocument,
-    inputs: &QueryInputs<'_>,
-) -> CaseStatus {
-    match compare_rows(expect, plan, inputs) {
-        Ok(None) => CaseStatus::Passed,
-        Ok(Some(reason)) | Err(reason) => CaseStatus::Failed(reason),
-    }
-}
-
-/// Executes the plan and compares its rows with the `rows` file of the case.
-fn compare_rows(
-    expect: &Expectation,
-    plan: &CompiledPlanDocument,
-    inputs: &QueryInputs<'_>,
-) -> Result<Option<String>, String> {
-    let file_name = expect
-        .rows
-        .as_deref()
-        .ok_or_else(|| "`outcome: plan` requires `rows`".to_owned())?;
-    let text = read_text(&inputs.case_folder.join(file_name)).map_err(|error| error.to_string())?;
-    let expected =
-        parse_csv(&text).map_err(|reason| format!("the rows file `{file_name}`: {reason}"))?;
-    let actual = execute_plan(inputs.connection, plan).map_err(|failure| match failure {
-        ExecutionFailure::Parameter(reason) => format!("the plan cannot be bound: {reason}"),
-        ExecutionFailure::Engine(message) => format!("the plan fails on DuckDB: {message}"),
-    })?;
-    Ok(rows_mismatch(
-        &plan.result_schema,
-        &actual,
-        &expected,
-        Comparison::of(expect),
-    ))
-}
-
-/// Executes the plan of a `runtime_error` case, which must fail with the expected runtime code
-/// in the engine's message (CS-2.5).
-fn check_runtime_error(
-    expect: &Expectation,
-    plan: &CompiledPlanDocument,
-    connection: &Connection,
-) -> CaseStatus {
-    let code = expect.error.as_deref().unwrap_or("none");
-    match execute_plan(connection, plan) {
-        Err(ExecutionFailure::Engine(message)) if message.contains(code) => CaseStatus::Passed,
-        Err(ExecutionFailure::Engine(message)) => CaseStatus::Failed(format!(
-            "the plan fails on DuckDB without the runtime code {code}: {message}"
-        )),
-        Err(ExecutionFailure::Parameter(reason)) => {
-            CaseStatus::Failed(format!("the plan cannot be bound: {reason}"))
-        }
-        Ok(_) => CaseStatus::Failed(format!(
-            "the plan executes, but the case expects the runtime code {code}"
-        )),
-    }
-}
-
 #[cfg(test)]
+#[cfg(feature = "duckdb")]
 mod tests {
     use std::path::PathBuf;
 
@@ -357,7 +293,7 @@ mod tests {
 
     use crate::case_file::parse_case;
     use crate::database::prepare_database;
-    use crate::divergences::parse_divergences;
+    use crate::divergences::{Divergences, parse_divergences};
     use crate::fixture::{ModelFixture, read_bytes, security_context_path};
     use crate::load_options::resolve_load_options;
     use crate::load_part::{LoadOutcome, ModelDocuments, check_load};
@@ -397,8 +333,10 @@ mod tests {
         let inputs = QueryInputs {
             case_folder: &case_folder,
             security_context: &security_context,
-            connection: &connection,
-            divergences,
+            database: Some(CaseDatabase {
+                connection: &connection,
+                divergences,
+            }),
         };
         check_query(&case, &handle, &inputs)
     }

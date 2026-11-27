@@ -6,13 +6,15 @@
 //! classified divergence leaves the case pending, never passed, and an entry for a case that no
 //! longer diverges fails it, so the file never keeps stale entries.
 
+use std::path::Path;
+
 use menura_core::CompiledPlanDocument;
 
 use crate::case::Case;
 use crate::divergences::{DIFFERENTIAL_FOLDER, DIVERGENCES_FILE, Divergence};
 use crate::execution::{ExecutionFailure, execute_plan, execute_sql};
 use crate::fixture::read_text;
-use crate::query_part::QueryInputs;
+use crate::plan_execution::CaseDatabase;
 use crate::report::CaseStatus;
 use crate::row_comparison::{Comparison, rows_divergence};
 
@@ -21,33 +23,35 @@ use crate::row_comparison::{Comparison, rows_divergence};
 pub(crate) fn check_differential(
     case: &Case,
     plan: &CompiledPlanDocument,
-    inputs: &QueryInputs<'_>,
+    case_folder: &Path,
+    database: &CaseDatabase<'_>,
 ) -> CaseStatus {
-    let divergence = match divergence_from_oracle(case, plan, inputs) {
+    let divergence = match divergence_from_oracle(case, plan, case_folder, database) {
         Ok(divergence) => divergence,
         Err(reason) => return CaseStatus::Failed(reason),
     };
-    classify(divergence, inputs.divergences.of(&case.id))
+    classify(divergence, database.divergences.of(&case.id))
 }
 
 /// Why the rows of `plan` differ from the oracle's, or `None` when they match.
 fn divergence_from_oracle(
     case: &Case,
     plan: &CompiledPlanDocument,
-    inputs: &QueryInputs<'_>,
+    case_folder: &Path,
+    database: &CaseDatabase<'_>,
 ) -> Result<Option<String>, String> {
     let file_name = case
         .oracle
         .as_deref()
         .ok_or_else(|| "a differential case requires `oracle`".to_owned())?;
-    let sql = read_text(&inputs.case_folder.join(file_name)).map_err(|error| error.to_string())?;
-    let oracle = execute_sql(inputs.connection, &sql, &[]).map_err(|failure| {
+    let sql = read_text(&case_folder.join(file_name)).map_err(|error| error.to_string())?;
+    let oracle = execute_sql(database.connection, &sql, &[]).map_err(|failure| {
         format!(
             "the oracle `{file_name}` fails on DuckDB: {}",
             describe(failure)
         )
     })?;
-    let actual = execute_plan(inputs.connection, plan)
+    let actual = execute_plan(database.connection, plan)
         .map_err(|failure| format!("the plan fails on DuckDB: {}", describe(failure)))?;
     Ok(rows_divergence(
         &plan.result_schema,

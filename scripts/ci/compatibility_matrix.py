@@ -16,14 +16,17 @@ Usage:
   compatibility_matrix.py summarize conformance-wrappers --output FILE
   compatibility_matrix.py summarize conformance-clickhouse RUN-SUMMARY --output FILE
   compatibility_matrix.py summarize python-wheels PLATFORM --output FILE
+  compatibility_matrix.py summarize platforms PLATFORM REPORT --output FILE
   compatibility_matrix.py release COMMIT OUTPUT-DIRECTORY
 DESCRIPTION is the model description that the `menura` binary built in the same job wrote; its
 capability profile (DSC-4) gives the Menura version and the Apache Ossie normative version and
 tracked commit. RUN-SUMMARY is the JSON file the ClickHouse conformance runner wrote, with the
-server and time-zone data versions it read from the server (E6-7.16). The summaries read
+server and time-zone data versions it read from the server (E6-7.16). For `platforms`, REPORT is
+the report of the job's own compile-only run. The summaries read
 RUNNER_OS and RUNNER_ARCH; `release` reads GITHUB_REPOSITORY, GITHUB_TOKEN and RELEASE_TAG, and
 does nothing for a tag before 1.0.0 (CI-2 `release-assets`). From 1.1.0 the matrix also has the
-`core` row of the dialect `clickhouse` (CI-4.2).
+`core` row of the dialect `clickhouse` (CI-4.2). Each platform whose `platforms` job passed adds
+its `core`, `cli` and `mcp` rows (CI-4.2, PLT-1.1).
 Exit status: 0 on success, 1 otherwise.
 """
 import io
@@ -66,6 +69,9 @@ CI_JOBS = ("conformance", "ossie-suites", "conformance-wrappers")
 # The job of ci.yml that the `clickhouse` row depends on, from 1.1.0 (CI-4.2, E6-7.10).
 CLICKHOUSE_JOB = "conformance-clickhouse"
 WHEEL_JOB = re.compile(r"^python-wheels \(([a-z0-9_-]+)\)$")
+# The platforms of the `platforms` job of ci.yml (PLT-1.1), in the order their rows are written.
+PLATFORMS_JOB_PLATFORMS = ("macos-x86_64", "macos-arm64", "windows-x86_64")
+PLATFORMS_JOB = re.compile(r"^platforms \(([a-z0-9_-]+)\)$")
 
 CASE_LINE = re.compile(r"^  (\S+) (passed|pending|failed)(?:: (.*))?$")
 TOTAL_LINE = re.compile(r"^(\d+) cases: (\d+) passed, (\d+) pending, (\d+) failed$")
@@ -91,26 +97,32 @@ def runner_platform(environment):
     return RUNNER_PLATFORMS[key]
 
 
-def parse_report(text):
-    """The case statuses (`id -> (status, reason)`) and DuckDB version of a runner report."""
+def parse_cases(text):
+    """The case statuses (`id -> (status, reason)`) of a runner report, checked against its
+    summary line."""
     cases = {}
     totals = None
-    duckdb = None
     for line in text.splitlines():
         case = CASE_LINE.match(line)
         if case:
             cases[case.group(1)] = (case.group(2), case.group(3) or "")
         elif TOTAL_LINE.match(line):
             totals = [int(number) for number in TOTAL_LINE.match(line).groups()]
-        elif DUCKDB_LINE.match(line):
-            duckdb = DUCKDB_LINE.match(line).group(1)
-    if totals is None or duckdb is None:
-        raise MatrixError("the runner report has no summary line or no DuckDB version")
+    if totals is None:
+        raise MatrixError("the runner report has no summary line")
     statuses = [status for status, _ in cases.values()]
     counted = [len(cases)] + [statuses.count(label) for label in ("passed", "pending", "failed")]
     if counted != totals:
         raise MatrixError(f"the runner report lists {counted} cases but its summary says {totals}")
-    return cases, duckdb
+    return cases
+
+
+def parse_report(text):
+    """The case statuses (`id -> (status, reason)`) and DuckDB version of a runner report."""
+    duckdb = next((match.group(1) for match in map(DUCKDB_LINE.match, text.splitlines()) if match), None)
+    if duckdb is None:
+        raise MatrixError("the runner report has no DuckDB version")
+    return parse_cases(text), duckdb
 
 
 def conformance_summary(report, description, environment):
@@ -164,6 +176,25 @@ def wheel_summary(platform, environment):
     return {"job": "python-wheels", "platform": platform, "package_tests": "passed"}
 
 
+def platforms_summary(platform, report, environment):
+    """The summary of one `platforms` job: its platform, the case counts of its own compile-only
+    run, which has no pending and no failed case, and that the job's checks passed (PLT-1.1,
+    PLT-1.2, CI-4.3)."""
+    if platform not in PLATFORMS_JOB_PLATFORMS:
+        raise MatrixError(f"{platform} is not a platform of the platforms job")
+    if runner_platform(environment) != platform:
+        raise MatrixError(f"the platform {platform} is not the runner's platform")
+    statuses = [status for status, _ in parse_cases(report).values()]
+    if statuses.count("passed") != len(statuses):
+        raise MatrixError("the compile-only run has a pending or failed case")
+    return {
+        "job": "platforms",
+        "platform": platform,
+        "cases": {"passed": len(statuses), "total": len(statuses)},
+        "tests": "passed",
+    }
+
+
 def is_count(value):
     """Whether `value` is a non-negative integer; a JSON boolean is not one."""
     return isinstance(value, int) and not isinstance(value, bool) and value >= 0
@@ -208,6 +239,9 @@ def summarize(arguments, environment):
         return clickhouse_summary(pathlib.Path(values[0]).read_text(encoding="utf-8"), environment)
     if job == "python-wheels" and len(values) == 1:
         return wheel_summary(values[0], environment)
+    if job == "platforms" and len(values) == 2:
+        report = pathlib.Path(values[1]).read_text(encoding="utf-8")
+        return platforms_summary(values[0], report, environment)
     raise MatrixError(f"bad summarize arguments: {' '.join(arguments)}")
 
 
@@ -296,6 +330,7 @@ def build_matrix(api, commit, with_clickhouse):
         rows.append(clickhouse_row(summaries, profile, ci_run["html_url"]))
     rows.append(row(common, "cli", platform, "conformance-wrappers", [ci_run["html_url"]]))
     rows.append(row(common, "mcp", platform, "conformance-wrappers", [ci_run["html_url"]]))
+    rows.extend(platforms_rows(ci_jobs, summaries, profile, ci_run["html_url"]))
     rows.extend(python_rows(api, python_run, common, platform, ci_run["html_url"], commit))
     return {"rows": rows}
 
@@ -354,6 +389,42 @@ def clickhouse_row(summaries, profile, ci_url):
     return row(columns, "core", require(summaries, CLICKHOUSE_JOB, "platform"), None, [ci_url])
 
 
+def platforms_rows(jobs, summaries, profile, ci_url):
+    """The `core`, `cli` and `mcp` rows of each platform whose `platforms` job passed (CI-4.2,
+    PLT-1.1). No SQL runs there, so the engine version and the Apache Ossie suite outcomes are
+    null; the conformance counts are those of the job's own compile-only run, and the wrapper
+    column states that the job passed (CI-4.3). A platform whose job did not pass has no row;
+    one whose job passed without its summary fails (CI-4.5)."""
+    passed = set()
+    for name, job in jobs.items():
+        match = PLATFORMS_JOB.match(name)
+        if match and job.get("conclusion") == "success":
+            passed.add(match.group(1))
+    rows = []
+    for platform in PLATFORMS_JOB_PLATFORMS:
+        if platform not in passed:
+            continue
+        name = f"platforms-{platform}"
+        if require(summaries, name, "platform") != platform:
+            raise MatrixError(f"summary {name} names another platform")
+        require(summaries, name, "tests")
+        columns = dict(profile)
+        columns.update({
+            "dialect": DIALECT,
+            "duckdb_version": None,
+            "engine": {"name": DIALECT, "version": None},
+            "conformance": {
+                "passed": require(summaries, name, "cases", "passed"),
+                "total": require(summaries, name, "cases", "total"),
+            },
+            "ossie_suites": None,
+        })
+        rows.append(row(columns, "core", platform, None, [ci_url]))
+        rows.append(row(columns, "cli", platform, "platforms", [ci_url]))
+        rows.append(row(columns, "mcp", platform, "platforms", [ci_url]))
+    return rows
+
+
 def python_rows(api, python_run, common, wrappers_platform, ci_url, commit):
     """One `python` row per wheel platform whose `python-wheels` job ran (CI-4.2)."""
     jobs = run_jobs(api, python_run)
@@ -401,7 +472,10 @@ ENGINE_NAMES = {DIALECT: "DuckDB", CLICKHOUSE_DIALECT: "ClickHouse"}
 
 
 def render_engine(engine):
-    """The engine cell: its name and exact version, then its time-zone data version if any."""
+    """The engine cell: its name and exact version, then its time-zone data version if any;
+    empty when the version is null, on a row where no SQL ran (CI-4.3)."""
+    if engine["version"] is None:
+        return ""
     text = f"{ENGINE_NAMES[engine['name']]} {engine['version']}"
     if "time_zone_data_version" in engine:
         text += f", time-zone data {engine['time_zone_data_version']}"

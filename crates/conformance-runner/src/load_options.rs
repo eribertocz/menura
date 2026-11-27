@@ -6,6 +6,7 @@ use menura_core::LoadOptions;
 use crate::case::CaseLoadOptions;
 
 /// The default extension namespace (architecture section 3.5, MDL-2.3).
+#[cfg(feature = "duckdb")]
 pub(crate) const DEFAULT_NAMESPACE: &str = "menura";
 
 /// The load options of a case: each option the case sets, and the default for each it omits.
