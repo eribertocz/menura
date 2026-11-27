@@ -1,7 +1,8 @@
 //! `conformance-compile-only <conformance-directory>`: checks every conformance case as the
 //! runner does, but executes no plan, so it needs no `DuckDB` (PLT-1.2). Every output a case
 //! gives (SQL, plan, error, description and check documents) is compared with its golden files;
-//! the report is the runner's (CS-4.3). Any failed case exits `1`.
+//! the report is the runner's (CS-4.3). Any failed or pending case exits `1` (CI-1
+//! `platforms`).
 //!
 //! The `platforms` job builds it without the `duckdb` feature, on every platform of PLT-1.1.
 
@@ -14,7 +15,7 @@
 use std::path::PathBuf;
 use std::process::ExitCode;
 
-use menura_conformance_runner::run_compile_only;
+use menura_conformance_runner::{CaseStatus, run_compile_only};
 
 const USAGE: &str = "usage: conformance-compile-only <conformance-directory>";
 
@@ -28,7 +29,11 @@ fn main() -> ExitCode {
         Ok(report) => {
             print!("{}", report.render());
             println!("compile-only: no plan was executed (PLT-1.2)");
-            if report.has_failures() {
+            let pending = report
+                .cases
+                .iter()
+                .any(|case| matches!(case.status, CaseStatus::Pending(_)));
+            if report.has_failures() || pending {
                 ExitCode::FAILURE
             } else {
                 ExitCode::SUCCESS

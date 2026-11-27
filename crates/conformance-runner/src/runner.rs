@@ -398,13 +398,18 @@ expect: {outcome: load_error, error: E0D-02}
 
     #[test]
     fn plt_1_2_a_compile_only_run_checks_every_case_of_the_suite() {
-        let report = run_compile_only(&conformance_directory()).unwrap();
-        let failed: Vec<&CaseResult> = report
+        let directory = conformance_directory();
+        let report = run_compile_only(&directory).unwrap();
+        let not_passed: Vec<&CaseResult> = report
             .cases
             .iter()
-            .filter(|case| matches!(case.status, CaseStatus::Failed(_)))
+            .filter(|case| case.status != CaseStatus::Passed)
             .collect();
-        assert!(failed.is_empty(), "{failed:?}");
-        assert!(report.cases.len() > 100);
+        assert!(not_passed.is_empty(), "{not_passed:?}");
+        let mut case_count = 0;
+        for area_folder in area_folders(&directory.join("cases"), None).unwrap() {
+            case_count += case_files(&area_folder).unwrap().len();
+        }
+        assert_eq!(report.cases.len(), case_count);
     }
 }

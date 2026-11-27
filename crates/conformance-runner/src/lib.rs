@@ -14,8 +14,13 @@
 //! ```no_run
 //! use std::path::Path;
 //!
+//! # #[cfg(feature = "duckdb")]
+//! # {
 //! let report = menura_conformance_runner::run(Path::new("conformance"), Some("sample"))?;
 //! print!("{}", report.render());
+//! # }
+//! let report = menura_conformance_runner::run_compile_only(Path::new("conformance"))?;
+//! assert!(!report.has_failures());
 //! # Ok::<(), menura_conformance_runner::RunnerError>(())
 //! ```
 

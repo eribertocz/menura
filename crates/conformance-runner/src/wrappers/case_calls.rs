@@ -266,3 +266,87 @@ fn fixture(path: PathBuf) -> Result<CallValue, RunnerError> {
 fn generated(bytes: Vec<u8>) -> CallValue {
     CallValue::Document(Document { path: None, bytes })
 }
+
+#[cfg(test)]
+mod tests {
+    use menura_core::{LoadOptions, parse_compile_options, parse_load_options};
+
+    use super::*;
+    use crate::compile_options::compile_options;
+    use crate::load_options::resolve_load_options;
+
+    fn conformance_directory() -> PathBuf {
+        Path::new(env!("CARGO_MANIFEST_DIR")).join("../../conformance")
+    }
+
+    /// The calls of `case` alone, without a `diff` from a case before it.
+    fn calls_of(case: &Case) -> Vec<WrapperCall> {
+        let inputs = ModelInputs::read(&conformance_directory(), case).unwrap();
+        let mut builder = CallBuilder::default();
+        builder.add_case(case, &inputs, None).unwrap();
+        builder.calls
+    }
+
+    /// The load options of `call`, read as the CLI reads its file (ARC-5.5).
+    fn load_options_of(call: &WrapperCall) -> LoadOptions {
+        call.options(Argument::LoadOptions)
+            .map_or_else(LoadOptions::default, |options| {
+                parse_load_options(options.to_string().as_bytes()).unwrap()
+            })
+    }
+
+    /// PLT-1.2, ARC-6.9: every call of a case passes the documents and options the runner
+    /// compiles that case with, so the wrappers and the runner check the same inputs.
+    #[test]
+    fn arc_6_9_the_wrapper_calls_give_the_inputs_the_runner_compiles_each_case_with() {
+        let directory = conformance_directory();
+        let mut compiled = 0;
+        for area_folder in area_folders(&directory.join("cases"), None).unwrap() {
+            for case_path in case_files(&area_folder).unwrap() {
+                let case = read_case(&case_path).unwrap();
+                let folder = directory.join("models").join(&case.model);
+                let model = read_bytes(&folder.join("model.yaml")).unwrap();
+                let schema = read_bytes(&folder.join("catalog-schema.json")).unwrap();
+                for call in calls_of(&case) {
+                    assert_eq!(call.case, case.id.to_string());
+                    assert_eq!(
+                        load_options_of(&call),
+                        resolve_load_options(case.load_options.as_ref()),
+                        "{}",
+                        call.case
+                    );
+                    if call.document(Argument::Model).is_some() {
+                        assert_eq!(call.document(Argument::Model), Some(model.as_slice()));
+                    }
+                    if call.document(Argument::CatalogSchema).is_some() {
+                        assert_eq!(
+                            call.document(Argument::CatalogSchema),
+                            Some(schema.as_slice())
+                        );
+                    }
+                    if call.command != CommandName::Compile {
+                        continue;
+                    }
+                    compiled += 1;
+                    let query = serde_json::to_vec(case.query.as_ref().unwrap()).unwrap();
+                    assert_eq!(call.document(Argument::Query), Some(query.as_slice()));
+                    let context_file = case.security_context.as_deref().unwrap();
+                    let context =
+                        read_bytes(&security_context_path(&folder, context_file)).unwrap();
+                    assert_eq!(
+                        call.document(Argument::SecurityContext),
+                        Some(context.as_slice())
+                    );
+                    let options = call.options(Argument::CompileOptions).unwrap();
+                    assert_eq!(
+                        parse_compile_options(options.to_string().as_bytes()).unwrap(),
+                        compile_options(&case),
+                        "{}",
+                        call.case
+                    );
+                }
+            }
+        }
+        assert!(compiled > 0);
+    }
+}
