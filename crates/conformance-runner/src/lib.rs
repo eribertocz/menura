@@ -53,6 +53,7 @@ pub mod load_options;
 mod load_part;
 pub mod ossie;
 mod parameter_values;
+mod plan_execution;
 mod plan_outputs;
 mod query_part;
 pub mod regenerate;

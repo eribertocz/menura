@@ -19,6 +19,7 @@ use crate::integrity_checks_part::integrity_checks_part;
 use crate::load_options::resolve_load_options;
 use crate::load_part::{LoadOutcome, ModelDocuments, check_load};
 use crate::ossie::{OSSIE_AREA, check_layout, run_suites};
+use crate::plan_execution::CaseDatabase;
 use crate::query_part::{QueryInputs, check_query};
 use crate::report::{CaseResult, CaseStatus, Report};
 
@@ -138,8 +139,10 @@ fn run_case(
             let inputs = QueryInputs {
                 case_folder,
                 security_context,
-                connection: &prepared.connection,
-                divergences,
+                database: CaseDatabase {
+                    connection: &prepared.connection,
+                    divergences,
+                },
             };
             check_query(case, &handle, &inputs)
         }
