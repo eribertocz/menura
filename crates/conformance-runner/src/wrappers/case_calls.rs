@@ -295,6 +295,42 @@ mod tests {
             })
     }
 
+    /// Asserts that `call`, made for `case` of the model in `folder`, passes the model,
+    /// catalog schema and load options the runner loads that case with.
+    fn assert_model_inputs(case: &Case, folder: &Path, call: &WrapperCall) {
+        assert_eq!(call.case, case.id.to_string());
+        let expected = resolve_load_options(case.load_options.as_ref());
+        assert_eq!(load_options_of(call), expected, "{}", call.case);
+        for (argument, file) in [
+            (Argument::Model, "model.yaml"),
+            (Argument::CatalogSchema, "catalog-schema.json"),
+        ] {
+            if let Some(document) = call.document(argument) {
+                assert_eq!(document, read_bytes(&folder.join(file)).unwrap().as_slice());
+            }
+        }
+    }
+
+    /// Asserts that `call`, a `compile` of `case` of the model in `folder`, passes the query,
+    /// security context and compile options the runner compiles that case with.
+    fn assert_compile_inputs(case: &Case, folder: &Path, call: &WrapperCall) {
+        let query = serde_json::to_vec(case.query.as_ref().unwrap()).unwrap();
+        assert_eq!(call.document(Argument::Query), Some(query.as_slice()));
+        let context_file = case.security_context.as_deref().unwrap();
+        let context = read_bytes(&security_context_path(folder, context_file)).unwrap();
+        assert_eq!(
+            call.document(Argument::SecurityContext),
+            Some(context.as_slice())
+        );
+        let options = call.options(Argument::CompileOptions).unwrap();
+        assert_eq!(
+            parse_compile_options(options.to_string().as_bytes()).unwrap(),
+            compile_options(case),
+            "{}",
+            call.case
+        );
+    }
+
     /// PLT-1.2, ARC-6.9: every call of a case passes the documents and options the runner
     /// compiles that case with, so the wrappers and the runner check the same inputs.
     #[test]
@@ -305,45 +341,12 @@ mod tests {
             for case_path in case_files(&area_folder).unwrap() {
                 let case = read_case(&case_path).unwrap();
                 let folder = directory.join("models").join(&case.model);
-                let model = read_bytes(&folder.join("model.yaml")).unwrap();
-                let schema = read_bytes(&folder.join("catalog-schema.json")).unwrap();
                 for call in calls_of(&case) {
-                    assert_eq!(call.case, case.id.to_string());
-                    assert_eq!(
-                        load_options_of(&call),
-                        resolve_load_options(case.load_options.as_ref()),
-                        "{}",
-                        call.case
-                    );
-                    if call.document(Argument::Model).is_some() {
-                        assert_eq!(call.document(Argument::Model), Some(model.as_slice()));
+                    assert_model_inputs(&case, &folder, &call);
+                    if call.command == CommandName::Compile {
+                        assert_compile_inputs(&case, &folder, &call);
+                        compiled += 1;
                     }
-                    if call.document(Argument::CatalogSchema).is_some() {
-                        assert_eq!(
-                            call.document(Argument::CatalogSchema),
-                            Some(schema.as_slice())
-                        );
-                    }
-                    if call.command != CommandName::Compile {
-                        continue;
-                    }
-                    compiled += 1;
-                    let query = serde_json::to_vec(case.query.as_ref().unwrap()).unwrap();
-                    assert_eq!(call.document(Argument::Query), Some(query.as_slice()));
-                    let context_file = case.security_context.as_deref().unwrap();
-                    let context =
-                        read_bytes(&security_context_path(&folder, context_file)).unwrap();
-                    assert_eq!(
-                        call.document(Argument::SecurityContext),
-                        Some(context.as_slice())
-                    );
-                    let options = call.options(Argument::CompileOptions).unwrap();
-                    assert_eq!(
-                        parse_compile_options(options.to_string().as_bytes()).unwrap(),
-                        compile_options(&case),
-                        "{}",
-                        call.case
-                    );
                 }
             }
         }

@@ -1,6 +1,11 @@
 //! The SHA-256 digests of what the CLI gives for every call (PLT-1.2). The `conformance-wrappers`
 //! job writes them on Linux `x86_64`; the `platforms` job compares the digests of its own CLI with
 //! them, so every platform is checked against the same bytes, not only against its own `core`.
+//!
+//! Standard error is not digested. A command that runs writes nothing there that is part of
+//! its output (ARC-5.4), and the message of one that cannot run may quote a path, whose form is
+//! native to each platform (PLT-1.5), so its bytes legitimately differ between platforms. The
+//! parity check compares it with `core`'s usage message on every platform instead.
 
 use std::fmt::Write as _;
 use std::fs;
@@ -68,6 +73,7 @@ impl OutputDigest {
 fn sha256(bytes: &[u8]) -> String {
     let mut text = String::with_capacity(64);
     for byte in Sha256::digest(bytes) {
+        // Writing to a `String` never fails, so the `fmt::Result` carries nothing.
         let _ = write!(text, "{byte:02x}");
     }
     text
@@ -149,7 +155,10 @@ mod tests {
     }
 
     fn written(test: &str, digests: &[OutputDigest]) -> std::path::PathBuf {
-        let folder = std::env::temp_dir().join("menura-digests").join(test);
+        // One folder per test run, so that concurrent runs never share a file.
+        let folder = std::env::temp_dir()
+            .join(format!("menura-digests-{}", std::process::id()))
+            .join(test);
         fs::create_dir_all(&folder).unwrap();
         let path = folder.join("digests.txt");
         write_digests(&path, digests).unwrap();
