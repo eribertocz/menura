@@ -1,6 +1,6 @@
 # Contract: model description
 
-**Contract version:** 1.2.0 · **Owner:** `menura` · **Producer:** compiler (`describe`) · **Consumers:** hosts, translators, editors
+**Contract version:** 1.3.0 · **Owner:** `menura` · **Producer:** compiler (`describe`) · **Consumers:** hosts, translators, editors
 
 ## DSC-1 Purpose
 
@@ -13,14 +13,14 @@ choice. Interfaces build their menus from it; translators propose only what it l
 | Field | Content |
 |---|---|
 | `model_hash`, `security_fingerprint` | Identify the model and the context the description is valid for |
-| `datasets[]` | Authorized datasets: name, label, description, `ai_context` (DSC-3.6), and their authorized fields: reference, label, description, logical type, `is_time`, the time grains it accepts (DSC-3.8), `ai_context` |
+| `datasets[]` | Authorized datasets: name, label, description, `ai_context` (DSC-3.6), and their authorized fields: reference, label, description, logical type, `is_time`, the time grains it accepts (DSC-3.8), `ai_context`; and `sql_metrics`, the metrics a SQL-form query may aggregate on the dataset's relation (DSC-3.1) |
 | `metrics[]` | Authorized metrics: reference, label, description, result type, `kind` (`base`, `derived`, `context`), the datasets reachable from it (E3-3.4), `ai_context` |
 | `ambiguous_paths[]` | Pairs of datasets with more than one path, with exactly two witness paths each (DSC-3.9), so a consumer can ask the user to choose (the full set is never enumerated) |
 | `capabilities` | The capability profile of the compiler release (DSC-4) |
 
 ## DSC-3 Rules
 
-- **DSC-3.1** Only objects the security context is authorized to use are listed (E2-4). An unauthorized object is absent, never marked as restricted.
+- **DSC-3.1** Only objects the security context is authorized to use are listed (E2-4). An unauthorized object is absent, never marked as restricted. From contract version 1.3.0, each listed dataset has `sql_metrics`: the `reference` of every entry of `metrics` that QRY-5.2 exposes on the dataset's relation, so usable there as `AGG(alias.metric)`, in the order of `metrics` (DSC-3.4). It is filtered exactly as `metrics` is: a metric absent from `metrics` is never in `sql_metrics`. The member is always present, possibly empty.
 - **DSC-3.2** Summaries (`access: internal`) are never listed.
 - **DSC-3.2a** `reachable_datasets` and `ambiguous_paths` are computed over the authorized subgraph (E2-4.8).
 - **DSC-3.3** No data values, attribute values or row-policy conditions appear.

@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://eribertocz.github.io/menura/spec/contracts/model-dependencies/1.0.0",
+  "$id": "https://eribertocz.github.io/menura/spec/contracts/model-dependencies/1.1.0",
   "title": "Model dependencies",
   "type": "object",
   "additionalProperties": false,
@@ -110,6 +110,13 @@
             }
           },
           "security_policies": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "sources": {
             "type": "array",
             "items": {
               "type": "string",
