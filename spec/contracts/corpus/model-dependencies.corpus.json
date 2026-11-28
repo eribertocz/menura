@@ -212,14 +212,6 @@
           "op": "replace",
           "path": "/contract_version",
           "value": "1.0.0"
-        },
-        {
-          "op": "remove",
-          "path": "/datasets/0/sources"
-        },
-        {
-          "op": "remove",
-          "path": "/datasets/1/sources"
         }
       ]
     },
@@ -228,9 +220,11 @@
       "valid": false,
       "patch": [
         {
-          "op": "replace",
-          "path": "/datasets/1/sources/0",
-          "value": ""
+          "op": "add",
+          "path": "/datasets/1/sources",
+          "value": [
+            ""
+          ]
         }
       ]
     }
