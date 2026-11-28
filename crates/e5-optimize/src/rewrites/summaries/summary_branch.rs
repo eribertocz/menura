@@ -191,11 +191,13 @@ impl<'input> Mapping<'input> {
             .collect()
     }
 
-    /// The propagation `SemiJoin` `base` over `input`, its keys mapped.
+    /// The propagation `SemiJoin` `base` over `input`, its keys mapped; `None` along a
+    /// temporal relationship, which never uses a summary (VAL-2.19).
     fn semi_join(&self, input: PlanNode, base: &PlanNode) -> Option<PlanNode> {
         let Operation::SemiJoin {
             relationship,
             on,
+            temporal,
             related_all,
             related_visible,
             ..
@@ -203,12 +205,16 @@ impl<'input> Mapping<'input> {
         else {
             return None;
         };
+        if temporal.is_some() {
+            return None;
+        }
         let schema = input.schema().clone();
         Some(PlanNode::new(
             Operation::SemiJoin {
                 input: Box::new(input),
                 relationship: relationship.clone(),
                 on: self.conditions(on)?,
+                temporal: None,
                 related_all: related_all.clone(),
                 related_visible: related_visible.clone(),
             },
@@ -217,19 +223,24 @@ impl<'input> Mapping<'input> {
         ))
     }
 
-    /// The `Join` `base` with `left` as its left input, its `from_columns` mapped.
+    /// The `Join` `base` with `left` as its left input, its `from_columns` mapped; `None` along
+    /// a temporal relationship, which never uses a summary (VAL-2.19).
     fn join(&self, left: PlanNode, base: &PlanNode) -> Option<PlanNode> {
         let Operation::Join {
             right,
             relationship,
             kind,
             on,
+            temporal,
             right_prefix,
             ..
         } = base.operation()
         else {
             return None;
         };
+        if temporal.is_some() {
+            return None;
+        }
         let mut columns = left.schema().columns().to_vec();
         columns.extend(right.schema().columns().iter().cloned());
         Some(PlanNode::new(
@@ -239,6 +250,7 @@ impl<'input> Mapping<'input> {
                 relationship: relationship.clone(),
                 kind: *kind,
                 on: self.conditions(on)?,
+                temporal: None,
                 right_prefix: right_prefix.clone(),
             },
             OutputSchema::new(columns),

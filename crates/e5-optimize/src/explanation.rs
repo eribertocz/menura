@@ -22,7 +22,7 @@ pub(crate) fn rewrite_entries(
                 step: Step::E5,
                 subject: subject(record, input)?,
                 decision: decision(&record.outcome).to_owned(),
-                reason: reason(record),
+                reason: reason(record, input),
             })
         })
         .collect()
@@ -91,12 +91,64 @@ fn decision(outcome: &RewriteOutcome) -> &'static str {
 }
 
 /// The condition that held or failed.
-fn reason(record: &RewriteRecord) -> String {
+fn reason(record: &RewriteRecord, input: &PlanNode) -> String {
     match &record.outcome {
+        RewriteOutcome::Applied if is_temporal(record, input) => {
+            temporal_condition(record.rule).to_owned()
+        }
         RewriteOutcome::Applied => condition(record.rule).to_owned(),
         RewriteOutcome::Rejected { failed_condition } => {
             format!("condition not met: {failed_condition}")
         }
+    }
+}
+
+/// Whether the subject of `record` is a `Join` along a temporal relationship, or a branch with
+/// one, whose evidence is that of VAL-2.14 and VAL-2.15.
+fn is_temporal(record: &RewriteRecord, input: &PlanNode) -> bool {
+    let RewriteSubject::Node(path) = &record.subject else {
+        return false;
+    };
+    let Some(node) = node_at(input, path.steps()) else {
+        return false;
+    };
+    match record.rule {
+        RewriteRule::InnerJoins => matches!(
+            node.operation(),
+            Operation::Join {
+                temporal: Some(_),
+                ..
+            }
+        ),
+        RewriteRule::SkipDeduplication => joins_temporally(node),
+        _ => false,
+    }
+}
+
+/// Whether `node` or a node under it is a `Join` along a temporal relationship.
+fn joins_temporally(node: &PlanNode) -> bool {
+    matches!(
+        node.operation(),
+        Operation::Join {
+            temporal: Some(_),
+            ..
+        }
+    ) || node.inputs().into_iter().any(joins_temporally)
+}
+
+/// The condition of `rule` that held when it was applied to a temporal relationship (VAL-2.14,
+/// VAL-2.15); the same as [`condition`] for the other rules.
+fn temporal_condition(rule: RewriteRule) -> &'static str {
+    match rule {
+        RewriteRule::SkipDeduplication => {
+            "passing key_uniqueness evidence for every plain relationship, and population evidence \
+             for the population of every temporal relationship, that caused the Deduplicate"
+        }
+        RewriteRule::InnerJoins => {
+            "passing temporal_orphans evidence, no NULL value possible in from_columns and \
+             from_time, and every row of both sides reaches the join"
+        }
+        other => condition(other),
     }
 }
 

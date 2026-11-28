@@ -116,21 +116,9 @@ impl<'input> StepWriter<'input> {
                 };
                 Ok((self.scan(node, dataset, role)?, "scan"))
             }
-            Operation::Join {
-                left,
-                right,
-                kind,
-                on,
-                right_prefix,
-                ..
-            } => {
-                let join = JoinInputs {
-                    left,
-                    right,
-                    kind: *kind,
-                    on,
-                    right_prefix,
-                };
+            Operation::Join { .. } => {
+                let join = JoinInputs::of(node)
+                    .ok_or_else(|| error(InvariantViolation::NodeOutsideSlice, node))?;
                 Ok((self.join(node, &join)?, "join"))
             }
             Operation::Deduplicate {

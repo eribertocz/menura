@@ -133,6 +133,7 @@ fn left_join(
             relationship: relationship.name.clone(),
             kind: JoinKind::Left,
             on,
+            temporal: None,
             right_prefix: prefix.clone(),
         },
         OutputSchema::new(schema),

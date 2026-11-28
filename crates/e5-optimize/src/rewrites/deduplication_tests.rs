@@ -106,6 +106,7 @@ fn join(
                 left: ColumnName::new(keys.0),
                 right: ColumnName::new(keys.1),
             }],
+            temporal: None,
             right_prefix: ColumnPrefix::new(&format!("{prefix}.")),
         },
         columns,

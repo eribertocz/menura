@@ -1,0 +1,69 @@
+{
+  "contract": "menura.catalog_state",
+  "contract_version": "1.2.0",
+  "document_id": {
+    "origin": "conformance:val-temporal-nullable-time",
+    "snapshot": "state-1"
+  },
+  "schema_document_id": {
+    "origin": "conformance:val-temporal-nullable-time",
+    "snapshot": "val-temporal-nullable-time"
+  },
+  "relations": [
+    {
+      "source": "shop.customer_versions",
+      "row_count_estimate": 3,
+      "version": {
+        "origin": "conformance:val-temporal-nullable-time",
+        "snapshot": "customer_versions-1"
+      }
+    },
+    {
+      "source": "shop.sales",
+      "row_count_estimate": 5,
+      "version": {
+        "origin": "conformance:val-temporal-nullable-time",
+        "snapshot": "sales-1"
+      }
+    }
+  ],
+  "checks": [
+    {
+      "target": "CUSTOMER_HISTORY",
+      "check": "population",
+      "definition_hash": "6e2b5fc96d447f53bee1dc9b30f88e5bd15b5a08a2f408921945007737cbc98b",
+      "status": "passed",
+      "verified": [
+        {
+          "source": "shop.customer_versions",
+          "version": {
+            "origin": "conformance:val-temporal-nullable-time",
+            "snapshot": "customer_versions-1"
+          }
+        }
+      ]
+    },
+    {
+      "target": "SALE_CUSTOMER",
+      "check": "temporal_orphans",
+      "definition_hash": "790cddce719adf982757aa9d16e789c54554a10eec8a8b49b5392ddfe26db9a6",
+      "status": "passed",
+      "verified": [
+        {
+          "source": "shop.sales",
+          "version": {
+            "origin": "conformance:val-temporal-nullable-time",
+            "snapshot": "sales-1"
+          }
+        },
+        {
+          "source": "shop.customer_versions",
+          "version": {
+            "origin": "conformance:val-temporal-nullable-time",
+            "snapshot": "customer_versions-1"
+          }
+        }
+      ]
+    }
+  ]
+}

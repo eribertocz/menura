@@ -3,22 +3,24 @@
 use std::collections::BTreeSet;
 
 use menura_model::expression::{AggregateCall, Expression};
-use menura_representations::logical_plan::{AggregateComponent, LookupKey, Operation};
+use menura_representations::logical_plan::{
+    AggregateComponent, JoinCondition, LookupKey, Operation, TemporalCoverage,
+};
 use menura_representations::names::ColumnName;
 
 /// The names of plan columns, as text.
 pub(crate) type ColumnNames = BTreeSet<String>;
 
 /// Adds the columns that `operation` itself reads, not its inputs, to `columns`: the
-/// expressions, conditions, keys, identities and sort columns it carries. A `Snapshot` and a
+/// expressions, conditions (the `from_time` of a temporal coverage condition included,
+/// E5-3.1a), keys, identities and sort columns it carries. A `Snapshot` and a
 /// `Population` read their own rules, which this does not cover.
 pub(crate) fn add_operation_reads(operation: &Operation, columns: &mut ColumnNames) {
     match operation {
-        Operation::Join { on, .. }
-        | Operation::SemiJoin { on, .. }
-        | Operation::FullJoin { on, .. } => {
-            columns.extend(on.iter().map(|pair| pair.left.as_str().to_owned()));
+        Operation::Join { on, temporal, .. } | Operation::SemiJoin { on, temporal, .. } => {
+            add_join_reads(on, temporal.as_ref(), columns);
         }
+        Operation::FullJoin { on, .. } => add_join_reads(on, None, columns),
         Operation::Filter { .. } | Operation::ShiftedFilter { .. } => {
             add_filter_reads(operation, columns);
         }
@@ -62,6 +64,19 @@ pub(crate) fn add_operation_reads(operation: &Operation, columns: &mut ColumnNam
         | Operation::Periods { .. }
         | Operation::Snapshot { .. }
         | Operation::Limit { .. } => {}
+    }
+}
+
+/// Adds the columns the condition of a join reads on its left side: the left column of each
+/// key pair, and the `from_time` of a temporal coverage condition (E5-3.1a, VAL-2.8).
+fn add_join_reads(
+    on: &[JoinCondition],
+    temporal: Option<&TemporalCoverage>,
+    columns: &mut ColumnNames,
+) {
+    columns.extend(on.iter().map(|pair| pair.left.as_str().to_owned()));
+    if let Some(coverage) = temporal {
+        columns.insert(coverage.from_time.as_str().to_owned());
     }
 }
 

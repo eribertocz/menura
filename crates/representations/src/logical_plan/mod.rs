@@ -1,6 +1,7 @@
 //! The logical plan: the output of E4 and E5 (E4-3), a tree of typed nodes, each with its
 //! output schema and origin.
 
+mod coverage;
 mod items;
 mod lookup;
 mod operation;
@@ -15,6 +16,7 @@ mod snapshot_tests;
 mod tests;
 mod to_date;
 
+pub use coverage::{TemporalCoverage, comparison_type};
 pub use items::{
     AggregateComponent, DerivedFormula, JoinCondition, JoinKind, NamedExpression, Recomposition,
     SortItem, StitchColumn,

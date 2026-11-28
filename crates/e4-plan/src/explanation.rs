@@ -1,6 +1,7 @@
 //! The decisions E4 records in the explanation (PLN-7.3), in the order of that table: each
 //! `Deduplicate` (E4-4.0e), each `left` join that can produce a NULL group (E4-4.1), each
-//! context query (E4-8.2), then each propagated row policy (E4-6.5, E4-6.10). The branches of
+//! `Join` along a temporal relationship (VAL-2.8, VAL-2.24), each context query (E4-8.2), then
+//! each propagated row policy (E4-6.5, E4-6.10). The branches of
 //! the context queries follow those of the query (E4-8.8).
 
 use std::collections::BTreeSet;
@@ -58,13 +59,20 @@ pub fn explanation_with_contexts(
     let mut entries = deduplications(plan);
     let dimensions = inputs.query.columns().dimensions().count();
     for branch in inputs.branches.as_slice() {
-        entries.extend(null_groups(branch, dimensions));
+        entries.extend(null_groups(branch, dimensions, model));
     }
     for context in inputs.contexts {
         let dimensions = context.context.query().columns().dimensions().count();
         for branch in context.branches.as_slice() {
-            entries.extend(null_groups(branch, dimensions));
+            entries.extend(null_groups(branch, dimensions, model));
         }
+    }
+    let context_branches = inputs
+        .contexts
+        .iter()
+        .flat_map(|context| context.branches.as_slice());
+    for branch in inputs.branches.as_slice().iter().chain(context_branches) {
+        entries.extend(temporal_joins(branch, model));
     }
     entries.extend(
         inputs
@@ -136,7 +144,7 @@ fn home_scan(node: &PlanNode) -> Option<&NormalizedName> {
 /// One `E4-4.1` entry per join instance of `branch` on the path of one of its `dimensions`
 /// dimensions, in path order: its `left` join keeps a home row without a visible match, whose
 /// dimension values are NULL (E4-4.1).
-fn null_groups(branch: &Branch, dimensions: usize) -> Vec<ExplanationEntry> {
+fn null_groups(branch: &Branch, dimensions: usize, model: &InternalModel) -> Vec<ExplanationEntry> {
     let tree = &branch.join_tree;
     let mut on_dimension_paths: BTreeSet<usize> = BTreeSet::new();
     for position in 0..dimensions {
@@ -151,6 +159,14 @@ fn null_groups(branch: &Branch, dimensions: usize) -> Vec<ExplanationEntry> {
         if !on_dimension_paths.contains(&index) {
             continue;
         }
+        let temporal = model
+            .relationship(&instance.step.relationship)
+            .is_some_and(|relationship| relationship.temporal.is_some());
+        let uncovered = if temporal {
+            ", and so does a row whose time no version covers (VAL-2.10)"
+        } else {
+            ""
+        };
         entries.push(ExplanationEntry {
             code: "E4-4.1",
             step: Step::E4,
@@ -158,13 +174,65 @@ fn null_groups(branch: &Branch, dimensions: usize) -> Vec<ExplanationEntry> {
             decision: "the plan can produce a NULL group".to_owned(),
             reason: format!(
                 "left join: a row of {} without a visible match in {} falls into the NULL group \
-                 of the dimensions read through it",
+                 of the dimensions read through it{uncovered}",
                 instance.step.from.as_str(),
                 instance.step.to.as_str()
             ),
         });
     }
     entries
+}
+
+/// One `VAL-2.8` entry per join instance of `branch` along a temporal relationship, in path
+/// order (VAL-2.24). Its reason names the `from_time` field and the population, never a value.
+fn temporal_joins(branch: &Branch, model: &InternalModel) -> Vec<ExplanationEntry> {
+    let mut entries = Vec::new();
+    for instance in branch.join_tree.instances() {
+        let Some(relationship) = model.relationship(&instance.step.relationship) else {
+            continue;
+        };
+        let Some(range) = model.temporal_range(relationship) else {
+            continue;
+        };
+        entries.push(ExplanationEntry {
+            code: "VAL-2.8",
+            step: Step::E4,
+            subject: Subject::Relationship(relationship.name.clone()),
+            decision: "temporal join".to_owned(),
+            reason: format!(
+                "a row of {} matches the versions of {} in population {} that cover its field \
+                 {}",
+                relationship.from.as_str(),
+                relationship.to.as_str(),
+                range.population.as_str(),
+                range.from_time.as_str()
+            ),
+        });
+    }
+    entries
+}
+
+/// The part of the reason of an `E4-6.10` entry that names the temporal relationships the
+/// visible rows of `roots` follow to `name` (VAL-2.17); empty when they follow none.
+fn temporal_followed(
+    roots: &[&NormalizedName],
+    name: &NormalizedName,
+    graph: &PolicyGraph<'_>,
+    model: &InternalModel,
+) -> String {
+    let temporal: BTreeSet<&NormalizedName> = roots
+        .iter()
+        .flat_map(|root| graph.temporal_towards(root, name, model))
+        .collect();
+    if temporal.is_empty() {
+        return String::new();
+    }
+    let names: Vec<&str> = temporal.iter().map(|name| name.as_str()).collect();
+    format!(
+        "; follows the temporal relationships {}, through the versions that cover each row's \
+         time",
+        names.join(", ")
+    )
 }
 
 /// One `E4-6.10` entry per row policy that the visible rows of a home dataset, or of the
@@ -195,6 +263,7 @@ fn propagated_policies<'input>(
             continue;
         };
         let reached_names: Vec<&str> = roots.iter().map(|root| root.as_str()).collect();
+        let followed = temporal_followed(&roots, name, &graph, model);
         for policy in policies_in_filter(dataset, security) {
             entries.push(ExplanationEntry {
                 code: "E4-6.10",
@@ -205,7 +274,8 @@ fn propagated_policies<'input>(
                 },
                 decision: "row policy propagated".to_owned(),
                 reason: format!(
-                    "a row is visible only if its related rows of {} are visible; reaches {}",
+                    "a row is visible only if its related rows of {} are visible; reaches {}\
+                     {followed}",
                     name.as_str(),
                     reached_names.join(", ")
                 ),

@@ -32,6 +32,7 @@
 mod additivity_error;
 mod body;
 mod check;
+mod coverage;
 mod day;
 mod deduplicate;
 mod error;
@@ -59,6 +60,8 @@ mod snapshot;
 mod source_columns;
 mod steps;
 mod stitch;
+mod temporal_join;
+mod temporal_semi_join;
 mod to_date;
 mod types;
 mod values;

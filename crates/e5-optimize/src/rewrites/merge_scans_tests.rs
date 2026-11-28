@@ -80,6 +80,7 @@ fn join(left: PlanNode) -> PlanNode {
             left: ColumnName::new("CUSTOMER_ID"),
             right: ColumnName::new("C.CUSTOMER_ID"),
         }],
+        temporal: None,
         right_prefix: ColumnPrefix::new("C."),
     };
     node(operation, &["CUSTOMER_ID", "REGION"])

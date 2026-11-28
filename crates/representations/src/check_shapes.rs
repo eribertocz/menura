@@ -98,7 +98,7 @@ pub struct TemporalOrphansCheck<'plan> {
 
 /// The time range of the versions of a temporal relationship: the `valid_from`, `valid_to`,
 /// `valid_to_bound` and `open_end` of its population (VAL-2.3).
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct VersionRange {
     /// The column of `valid_from`.
     pub valid_from: ColumnName,

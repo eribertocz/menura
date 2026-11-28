@@ -5,6 +5,7 @@ use menura_model::expression::{DateValue, Expression};
 use menura_model::internal_model::NormalizedName;
 
 use super::PlanNode;
+use super::coverage::TemporalCoverage;
 use super::items::{
     AggregateComponent, JoinCondition, JoinKind, NamedExpression, SortItem, StitchColumn,
 };
@@ -40,6 +41,9 @@ pub enum Operation {
         kind: JoinKind,
         /// The equalities of the relationship's column pairs, in the order written.
         on: Vec<JoinCondition>,
+        /// Along a temporal relationship, the coverage a matched version must also meet:
+        /// `from_time` over `left`, the range over `right` (VAL-2.8); `None` for a plain one.
+        temporal: Option<TemporalCoverage>,
         /// The prefix of every column of `right` (E6-4.12).
         right_prefix: ColumnPrefix,
     },
@@ -65,7 +69,8 @@ pub enum Operation {
     /// `SemiJoin`: keep the rows of `input` that are visible along one relationship to D'
     /// (E4-3.4, E4-6.5a): a row is kept only if it has at least one match in `related_all`,
     /// and its number of matches in `related_visible` equals its number of matches in
-    /// `related_all`. A NULL key never matches. Its output is the columns of `input`.
+    /// `related_all`. A NULL key never matches; along a temporal relationship, a match is a
+    /// version that also covers the row's `from_time` (VAL-2.17). Its output is the columns of `input`.
     SemiJoin {
         /// The rows of the dataset D.
         input: Box<PlanNode>,
@@ -74,6 +79,10 @@ pub enum Operation {
         /// The key equalities: `left` is a column of `input`, `right` the paired column of
         /// `related_all` and of `related_visible`, in the order written.
         on: Vec<JoinCondition>,
+        /// Along a temporal relationship, the coverage a related version must also meet:
+        /// `from_time` over `input`, the range over `related_all` and `related_visible`
+        /// (VAL-2.8, VAL-2.17); `None` for a plain one.
+        temporal: Option<TemporalCoverage>,
         /// The unfiltered `Scan` of D'.
         related_all: Box<PlanNode>,
         /// The plan of the visible rows of D': its own `Filter` and `SemiJoin` nodes over a

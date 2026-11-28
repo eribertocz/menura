@@ -1,0 +1,7 @@
+CREATE SCHEMA shop;
+CREATE TABLE shop.balances (customer_id INTEGER NOT NULL, period DATE NOT NULL, balance INTEGER);
+INSERT INTO shop.balances VALUES (1, DATE '2026-01-01', 100), (1, DATE '2026-03-01', 130), (2, DATE '2026-01-01', 50), (3, DATE '2026-03-01', 70);
+CREATE TABLE shop.members (customer_id INTEGER NOT NULL, valid_from DATE NOT NULL, valid_to DATE);
+INSERT INTO shop.members VALUES (1, DATE '2026-01-01', NULL), (2, DATE '2026-01-01', NULL), (3, DATE '2026-01-01', NULL);
+CREATE TABLE shop.segments (customer_id INTEGER NOT NULL, segment VARCHAR NOT NULL, segment_from DATE NOT NULL, segment_to DATE);
+INSERT INTO shop.segments VALUES (1, 'RETAIL', DATE '2026-01-01', DATE '2026-02-15'), (1, 'CORPORATE', DATE '2026-02-15', NULL), (2, 'RETAIL', DATE '2026-01-01', DATE '2026-03-01'), (2, 'CORPORATE', DATE '2026-03-01', NULL), (3, 'RETAIL', DATE '2026-01-01', NULL);

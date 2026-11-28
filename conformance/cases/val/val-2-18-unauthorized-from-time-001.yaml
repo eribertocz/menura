@@ -1,0 +1,15 @@
+id: val-2-18-unauthorized-from-time-001
+rules: [VAL-2.18, E2-4.8]
+model: val-temporal-restricted-from-time
+security_context: analyst.json
+query:
+  contract: menura.query
+  contract_version: "1.1.0"
+  time_zone: UTC
+  query:
+    dimensions: [customer_versions.segment]
+    metrics:
+      - {metric: sale_count, alias: sale_count}
+expect:
+  outcome: error
+  error: E_NO_PATH
