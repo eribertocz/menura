@@ -64,7 +64,7 @@ Run in this order. A substage runs only if the substages it depends on succeeded
 | Shape and keys of every extension (`E0C-01`–`E0C-05`, `E0C-10`, `E0C-11`, `E0C-13`–`E0C-15`, `E0C-20`, `E0C-21`, `E0C-36`, `E0C-41`–`E0C-45`, `E0C-47`, `E0C-55`, `E0C-56`, `E0C-62`) | E0.c | E0.b |
 | References inside extensions (`E0C-22`, `E0C-32`, `E0C-33`, `E0C-37`, `E0C-49`–`E0C-51`, `E0C-54`, `E0C-60`, `E0C-63`–`E0C-65`) | E0.d | E0.c |
 | Reachability inside extensions (`E0C-16`, `E0C-61`) | E0.e | E0.d |
-| Expressions and types inside extensions (`E0C-12`, `E0C-17`, `E0C-23`, `E0C-61` (time kind), `E0C-24`, `E0C-30`, `E0C-31`, `E0C-34`, `E0C-35`, `E0C-46`, `E0C-48`, `E0C-52`, `E0C-53`, `E0C-57`) | E0.f | E0.e |
+| Expressions and types inside extensions (`E0C-12`, `E0C-17`, `E0C-23`, `E0C-61` (time kind), `E0C-24`, `E0C-30`, `E0C-31`, `E0C-34`, `E0C-35`, `E0C-46`, `E0C-48`, `E0C-52`, `E0C-53`, `E0C-57`, `E0C-66`) | E0.f | E0.e |
 
 Extension-specific validation (additivity, population, derived, context, security, summaries)
 is specified in [`spec/extensions/`](../../extensions/README.md) and runs within E0.c, E0.d and E0.f.
