@@ -12,7 +12,11 @@ deprecated and migrated.
 | Context modifiers | `context` | Metric | [context.md](context.md) |
 | Security | `security_context`; `access`, `row_access` | Model; Dataset | [security.md](security.md) |
 | Summaries | `aggregate` | Dataset | [summaries.md](summaries.md) |
+<<<<<<< HEAD
 | Validity | `valid_to_bound`, `open_end` of `populations`; `temporal` | Dataset; Relationship | [validity.md](validity.md) |
+=======
+| Validity | `valid_to_bound`, `open_end` of `populations` | Dataset | [validity.md](validity.md) |
+>>>>>>> origin/main
 
 All entries use the shape of MDL-2 and the common rules of E0.c.
 
