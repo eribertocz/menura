@@ -300,75 +300,77 @@ Find a rule ID or a section here, then open only that file at that line.
 | [contracts/compiled-plan.md](contracts/compiled-plan.md#L38) | 38 | rule | PLN-3.2 |
 | [contracts/compiled-plan.md](contracts/compiled-plan.md#L39) | 39 | rule | PLN-3.3 |
 | [contracts/compiled-plan.md](contracts/compiled-plan.md#L40) | 40 | rule | PLN-3.3a |
-| [contracts/compiled-plan.md](contracts/compiled-plan.md#L42) | 42 | section | PLN-4 Lineage |
-| [contracts/compiled-plan.md](contracts/compiled-plan.md#L54) | 54 | rule | PLN-4.1 |
-| [contracts/compiled-plan.md](contracts/compiled-plan.md#L55) | 55 | rule | PLN-4.2 |
-| [contracts/compiled-plan.md](contracts/compiled-plan.md#L56) | 56 | rule | PLN-4.3 |
-| [contracts/compiled-plan.md](contracts/compiled-plan.md#L57) | 57 | rule | PLN-4.4 |
-| [contracts/compiled-plan.md](contracts/compiled-plan.md#L58) | 58 | rule | PLN-4.5 |
-| [contracts/compiled-plan.md](contracts/compiled-plan.md#L59) | 59 | rule | PLN-4.6 |
-| [contracts/compiled-plan.md](contracts/compiled-plan.md#L60) | 60 | rule | PLN-4.7 |
-| [contracts/compiled-plan.md](contracts/compiled-plan.md#L61) | 61 | rule | PLN-4.8 |
-| [contracts/compiled-plan.md](contracts/compiled-plan.md#L62) | 62 | rule | PLN-4.9 |
-| [contracts/compiled-plan.md](contracts/compiled-plan.md#L64) | 64 | section | PLN-5 Compile error |
-| [contracts/compiled-plan.md](contracts/compiled-plan.md#L76) | 76 | rule | PLN-5.1 |
-| [contracts/compiled-plan.md](contracts/compiled-plan.md#L77) | 77 | rule | PLN-5.1a |
-| [contracts/compiled-plan.md](contracts/compiled-plan.md#L78) | 78 | rule | PLN-5.2 |
-| [contracts/compiled-plan.md](contracts/compiled-plan.md#L79) | 79 | rule | PLN-5.3 |
-| [contracts/compiled-plan.md](contracts/compiled-plan.md#L80) | 80 | rule | PLN-5.4 |
-| [contracts/compiled-plan.md](contracts/compiled-plan.md#L85) | 85 | rule | PLN-5.4a |
-| [contracts/compiled-plan.md](contracts/compiled-plan.md#L89) | 89 | section | PLN-6 Audit record |
-| [contracts/compiled-plan.md](contracts/compiled-plan.md#L102) | 102 | rule | PLN-6.1 |
-| [contracts/compiled-plan.md](contracts/compiled-plan.md#L103) | 103 | rule | PLN-6.2 |
-| [contracts/compiled-plan.md](contracts/compiled-plan.md#L104) | 104 | rule | PLN-6.3 |
-| [contracts/compiled-plan.md](contracts/compiled-plan.md#L105) | 105 | rule | PLN-6.3a |
-| [contracts/compiled-plan.md](contracts/compiled-plan.md#L106) | 106 | rule | PLN-6.4 |
-| [contracts/compiled-plan.md](contracts/compiled-plan.md#L107) | 107 | rule | PLN-6.5 |
-| [contracts/compiled-plan.md](contracts/compiled-plan.md#L113) | 113 | rule | PLN-6.6 |
-| [contracts/compiled-plan.md](contracts/compiled-plan.md#L114) | 114 | rule | PLN-6.7 |
-| [contracts/compiled-plan.md](contracts/compiled-plan.md#L115) | 115 | rule | PLN-6.8 |
-| [contracts/compiled-plan.md](contracts/compiled-plan.md#L117) | 117 | section | PLN-7 Explanation |
-| [contracts/compiled-plan.md](contracts/compiled-plan.md#L129) | 129 | rule | PLN-7.1 |
-| [contracts/compiled-plan.md](contracts/compiled-plan.md#L130) | 130 | rule | PLN-7.2 |
-| [contracts/compiled-plan.md](contracts/compiled-plan.md#L131) | 131 | rule | PLN-7.3 |
-| [contracts/compiled-plan.md](contracts/compiled-plan.md#L148) | 148 | rule | PLN-7.4 |
-| [contracts/compiled-plan.md](contracts/compiled-plan.md#L150) | 150 | section | PLN-8 Explain |
-| [contracts/compiled-plan.md](contracts/compiled-plan.md#L152) | 152 | rule | PLN-8.1 |
-| [contracts/compiled-plan.md](contracts/compiled-plan.md#L153) | 153 | rule | PLN-8.2 |
-| [contracts/compiled-plan.md](contracts/compiled-plan.md#L154) | 154 | rule | PLN-8.3 |
+| [contracts/compiled-plan.md](contracts/compiled-plan.md#L44) | 44 | section | PLN-4 Lineage |
+| [contracts/compiled-plan.md](contracts/compiled-plan.md#L56) | 56 | rule | PLN-4.1 |
+| [contracts/compiled-plan.md](contracts/compiled-plan.md#L57) | 57 | rule | PLN-4.2 |
+| [contracts/compiled-plan.md](contracts/compiled-plan.md#L58) | 58 | rule | PLN-4.3 |
+| [contracts/compiled-plan.md](contracts/compiled-plan.md#L59) | 59 | rule | PLN-4.4 |
+| [contracts/compiled-plan.md](contracts/compiled-plan.md#L60) | 60 | rule | PLN-4.5 |
+| [contracts/compiled-plan.md](contracts/compiled-plan.md#L61) | 61 | rule | PLN-4.6 |
+| [contracts/compiled-plan.md](contracts/compiled-plan.md#L62) | 62 | rule | PLN-4.7 |
+| [contracts/compiled-plan.md](contracts/compiled-plan.md#L63) | 63 | rule | PLN-4.8 |
+| [contracts/compiled-plan.md](contracts/compiled-plan.md#L64) | 64 | rule | PLN-4.9 |
+| [contracts/compiled-plan.md](contracts/compiled-plan.md#L66) | 66 | section | PLN-5 Compile error |
+| [contracts/compiled-plan.md](contracts/compiled-plan.md#L78) | 78 | rule | PLN-5.1 |
+| [contracts/compiled-plan.md](contracts/compiled-plan.md#L79) | 79 | rule | PLN-5.1a |
+| [contracts/compiled-plan.md](contracts/compiled-plan.md#L80) | 80 | rule | PLN-5.2 |
+| [contracts/compiled-plan.md](contracts/compiled-plan.md#L81) | 81 | rule | PLN-5.3 |
+| [contracts/compiled-plan.md](contracts/compiled-plan.md#L82) | 82 | rule | PLN-5.4 |
+| [contracts/compiled-plan.md](contracts/compiled-plan.md#L87) | 87 | rule | PLN-5.4a |
+| [contracts/compiled-plan.md](contracts/compiled-plan.md#L91) | 91 | section | PLN-6 Audit record |
+| [contracts/compiled-plan.md](contracts/compiled-plan.md#L104) | 104 | rule | PLN-6.1 |
+| [contracts/compiled-plan.md](contracts/compiled-plan.md#L105) | 105 | rule | PLN-6.2 |
+| [contracts/compiled-plan.md](contracts/compiled-plan.md#L106) | 106 | rule | PLN-6.3 |
+| [contracts/compiled-plan.md](contracts/compiled-plan.md#L107) | 107 | rule | PLN-6.3a |
+| [contracts/compiled-plan.md](contracts/compiled-plan.md#L108) | 108 | rule | PLN-6.4 |
+| [contracts/compiled-plan.md](contracts/compiled-plan.md#L109) | 109 | rule | PLN-6.5 |
+| [contracts/compiled-plan.md](contracts/compiled-plan.md#L115) | 115 | rule | PLN-6.6 |
+| [contracts/compiled-plan.md](contracts/compiled-plan.md#L116) | 116 | rule | PLN-6.7 |
+| [contracts/compiled-plan.md](contracts/compiled-plan.md#L117) | 117 | rule | PLN-6.8 |
+| [contracts/compiled-plan.md](contracts/compiled-plan.md#L119) | 119 | section | PLN-7 Explanation |
+| [contracts/compiled-plan.md](contracts/compiled-plan.md#L131) | 131 | rule | PLN-7.1 |
+| [contracts/compiled-plan.md](contracts/compiled-plan.md#L132) | 132 | rule | PLN-7.2 |
+| [contracts/compiled-plan.md](contracts/compiled-plan.md#L133) | 133 | rule | PLN-7.3 |
+| [contracts/compiled-plan.md](contracts/compiled-plan.md#L150) | 150 | rule | PLN-7.4 |
+| [contracts/compiled-plan.md](contracts/compiled-plan.md#L152) | 152 | section | PLN-8 Explain |
+| [contracts/compiled-plan.md](contracts/compiled-plan.md#L154) | 154 | rule | PLN-8.1 |
+| [contracts/compiled-plan.md](contracts/compiled-plan.md#L155) | 155 | rule | PLN-8.2 |
+| [contracts/compiled-plan.md](contracts/compiled-plan.md#L156) | 156 | rule | PLN-8.3 |
 | [contracts/executor.md](contracts/executor.md#L1) | 1 | section | Executor: running a compiled plan |
 | [contracts/executor.md](contracts/executor.md#L10) | 10 | section | EXE-1 Engine and connection |
 | [contracts/executor.md](contracts/executor.md#L14) | 14 | rule | EXE-1.1 |
 | [contracts/executor.md](contracts/executor.md#L15) | 15 | rule | EXE-1.2 |
 | [contracts/executor.md](contracts/executor.md#L16) | 16 | rule | EXE-1.3 |
 | [contracts/executor.md](contracts/executor.md#L17) | 17 | rule | EXE-1.4 |
-| [contracts/executor.md](contracts/executor.md#L19) | 19 | section | EXE-2 Parameters |
-| [contracts/executor.md](contracts/executor.md#L23) | 23 | rule | EXE-2.1 |
-| [contracts/executor.md](contracts/executor.md#L24) | 24 | rule | EXE-2.2 |
-| [contracts/executor.md](contracts/executor.md#L25) | 25 | rule | EXE-2.3 |
-| [contracts/executor.md](contracts/executor.md#L26) | 26 | rule | EXE-2.4 |
-| [contracts/executor.md](contracts/executor.md#L27) | 27 | rule | EXE-2.5 |
-| [contracts/executor.md](contracts/executor.md#L45) | 45 | section | EXE-3 Result |
-| [contracts/executor.md](contracts/executor.md#L49) | 49 | rule | EXE-3.1 |
-| [contracts/executor.md](contracts/executor.md#L50) | 50 | rule | EXE-3.2 |
-| [contracts/executor.md](contracts/executor.md#L51) | 51 | rule | EXE-3.3 |
-| [contracts/executor.md](contracts/executor.md#L52) | 52 | rule | EXE-3.4 |
-| [contracts/executor.md](contracts/executor.md#L72) | 72 | section | EXE-4 Limits |
-| [contracts/executor.md](contracts/executor.md#L76) | 76 | rule | EXE-4.1 |
-| [contracts/executor.md](contracts/executor.md#L77) | 77 | rule | EXE-4.2 |
-| [contracts/executor.md](contracts/executor.md#L79) | 79 | section | EXE-5 Runtime errors |
-| [contracts/executor.md](contracts/executor.md#L83) | 83 | rule | EXE-5.1 |
-| [contracts/executor.md](contracts/executor.md#L84) | 84 | rule | EXE-5.2 |
-| [contracts/executor.md](contracts/executor.md#L85) | 85 | rule | EXE-5.3 |
-| [contracts/executor.md](contracts/executor.md#L86) | 86 | rule | EXE-5.4 |
-| [contracts/executor.md](contracts/executor.md#L88) | 88 | section | EXE-6 Time-zone database |
-| [contracts/executor.md](contracts/executor.md#L92) | 92 | rule | EXE-6.1 |
-| [contracts/executor.md](contracts/executor.md#L93) | 93 | rule | EXE-6.2 |
-| [contracts/executor.md](contracts/executor.md#L95) | 95 | section | EXE-7 Data versions |
-| [contracts/executor.md](contracts/executor.md#L99) | 99 | rule | EXE-7.1 |
-| [contracts/executor.md](contracts/executor.md#L100) | 100 | rule | EXE-7.2 |
-| [contracts/executor.md](contracts/executor.md#L101) | 101 | rule | EXE-7.3 |
-| [contracts/executor.md](contracts/executor.md#L103) | 103 | section | EXE-8 Diagnostics |
+| [contracts/executor.md](contracts/executor.md#L18) | 18 | rule | EXE-1.5 |
+| [contracts/executor.md](contracts/executor.md#L20) | 20 | section | EXE-2 Parameters |
+| [contracts/executor.md](contracts/executor.md#L24) | 24 | rule | EXE-2.1 |
+| [contracts/executor.md](contracts/executor.md#L25) | 25 | rule | EXE-2.2 |
+| [contracts/executor.md](contracts/executor.md#L26) | 26 | rule | EXE-2.3 |
+| [contracts/executor.md](contracts/executor.md#L27) | 27 | rule | EXE-2.4 |
+| [contracts/executor.md](contracts/executor.md#L28) | 28 | rule | EXE-2.5 |
+| [contracts/executor.md](contracts/executor.md#L46) | 46 | section | EXE-3 Result |
+| [contracts/executor.md](contracts/executor.md#L50) | 50 | rule | EXE-3.1 |
+| [contracts/executor.md](contracts/executor.md#L51) | 51 | rule | EXE-3.2 |
+| [contracts/executor.md](contracts/executor.md#L52) | 52 | rule | EXE-3.3 |
+| [contracts/executor.md](contracts/executor.md#L53) | 53 | rule | EXE-3.4 |
+| [contracts/executor.md](contracts/executor.md#L73) | 73 | section | EXE-4 Limits |
+| [contracts/executor.md](contracts/executor.md#L77) | 77 | rule | EXE-4.1 |
+| [contracts/executor.md](contracts/executor.md#L78) | 78 | rule | EXE-4.2 |
+| [contracts/executor.md](contracts/executor.md#L80) | 80 | section | EXE-5 Runtime errors |
+| [contracts/executor.md](contracts/executor.md#L84) | 84 | rule | EXE-5.1 |
+| [contracts/executor.md](contracts/executor.md#L85) | 85 | rule | EXE-5.2 |
+| [contracts/executor.md](contracts/executor.md#L86) | 86 | rule | EXE-5.3 |
+| [contracts/executor.md](contracts/executor.md#L87) | 87 | rule | EXE-5.4 |
+| [contracts/executor.md](contracts/executor.md#L89) | 89 | section | EXE-6 Time-zone database |
+| [contracts/executor.md](contracts/executor.md#L93) | 93 | rule | EXE-6.1 |
+| [contracts/executor.md](contracts/executor.md#L94) | 94 | rule | EXE-6.2 |
+| [contracts/executor.md](contracts/executor.md#L96) | 96 | section | EXE-7 Data versions |
+| [contracts/executor.md](contracts/executor.md#L100) | 100 | rule | EXE-7.1 |
+| [contracts/executor.md](contracts/executor.md#L101) | 101 | rule | EXE-7.2 |
+| [contracts/executor.md](contracts/executor.md#L102) | 102 | rule | EXE-7.3 |
+| [contracts/executor.md](contracts/executor.md#L103) | 103 | rule | EXE-7.4 |
+| [contracts/executor.md](contracts/executor.md#L105) | 105 | section | EXE-8 Diagnostics |
 | [contracts/integrity-checks.md](contracts/integrity-checks.md#L1) | 1 | section | Contract: integrity checks |
 | [contracts/integrity-checks.md](contracts/integrity-checks.md#L5) | 5 | section | CHK-1 Purpose |
 | [contracts/integrity-checks.md](contracts/integrity-checks.md#L10) | 10 | section | CHK-2 Document |
