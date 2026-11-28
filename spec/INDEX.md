@@ -417,22 +417,22 @@ Find a rule ID or a section here, then open only that file at that line.
 | [contracts/model-dependencies.md](contracts/model-dependencies.md#L1) | 1 | section | Contract: model dependencies and model diff |
 | [contracts/model-dependencies.md](contracts/model-dependencies.md#L5) | 5 | section | DEP-1 Purpose |
 | [contracts/model-dependencies.md](contracts/model-dependencies.md#L14) | 14 | section | DEP-2 Content |
-| [contracts/model-dependencies.md](contracts/model-dependencies.md#L45) | 45 | section | DEP-3 Rules |
-| [contracts/model-dependencies.md](contracts/model-dependencies.md#L47) | 47 | rule | DEP-3.1 |
-| [contracts/model-dependencies.md](contracts/model-dependencies.md#L48) | 48 | rule | DEP-3.2 |
-| [contracts/model-dependencies.md](contracts/model-dependencies.md#L49) | 49 | rule | DEP-3.3 |
-| [contracts/model-dependencies.md](contracts/model-dependencies.md#L50) | 50 | rule | DEP-3.4 |
-| [contracts/model-dependencies.md](contracts/model-dependencies.md#L51) | 51 | rule | DEP-3.5 |
-| [contracts/model-dependencies.md](contracts/model-dependencies.md#L52) | 52 | rule | DEP-3.6 |
-| [contracts/model-dependencies.md](contracts/model-dependencies.md#L53) | 53 | rule | DEP-3.7 |
-| [contracts/model-dependencies.md](contracts/model-dependencies.md#L54) | 54 | rule | DEP-3.8 |
-| [contracts/model-dependencies.md](contracts/model-dependencies.md#L55) | 55 | rule | DEP-3.9 |
-| [contracts/model-dependencies.md](contracts/model-dependencies.md#L56) | 56 | rule | DEP-3.10 |
-| [contracts/model-dependencies.md](contracts/model-dependencies.md#L58) | 58 | section | DEP-4 Diff |
-| [contracts/model-dependencies.md](contracts/model-dependencies.md#L60) | 60 | rule | DEP-4.1 |
-| [contracts/model-dependencies.md](contracts/model-dependencies.md#L61) | 61 | rule | DEP-4.2 |
-| [contracts/model-dependencies.md](contracts/model-dependencies.md#L62) | 62 | rule | DEP-4.3 |
-| [contracts/model-dependencies.md](contracts/model-dependencies.md#L63) | 63 | rule | DEP-4.4 |
+| [contracts/model-dependencies.md](contracts/model-dependencies.md#L46) | 46 | section | DEP-3 Rules |
+| [contracts/model-dependencies.md](contracts/model-dependencies.md#L48) | 48 | rule | DEP-3.1 |
+| [contracts/model-dependencies.md](contracts/model-dependencies.md#L49) | 49 | rule | DEP-3.2 |
+| [contracts/model-dependencies.md](contracts/model-dependencies.md#L50) | 50 | rule | DEP-3.3 |
+| [contracts/model-dependencies.md](contracts/model-dependencies.md#L51) | 51 | rule | DEP-3.4 |
+| [contracts/model-dependencies.md](contracts/model-dependencies.md#L52) | 52 | rule | DEP-3.5 |
+| [contracts/model-dependencies.md](contracts/model-dependencies.md#L53) | 53 | rule | DEP-3.6 |
+| [contracts/model-dependencies.md](contracts/model-dependencies.md#L54) | 54 | rule | DEP-3.7 |
+| [contracts/model-dependencies.md](contracts/model-dependencies.md#L55) | 55 | rule | DEP-3.8 |
+| [contracts/model-dependencies.md](contracts/model-dependencies.md#L56) | 56 | rule | DEP-3.9 |
+| [contracts/model-dependencies.md](contracts/model-dependencies.md#L57) | 57 | rule | DEP-3.10 |
+| [contracts/model-dependencies.md](contracts/model-dependencies.md#L59) | 59 | section | DEP-4 Diff |
+| [contracts/model-dependencies.md](contracts/model-dependencies.md#L61) | 61 | rule | DEP-4.1 |
+| [contracts/model-dependencies.md](contracts/model-dependencies.md#L62) | 62 | rule | DEP-4.2 |
+| [contracts/model-dependencies.md](contracts/model-dependencies.md#L63) | 63 | rule | DEP-4.3 |
+| [contracts/model-dependencies.md](contracts/model-dependencies.md#L64) | 64 | rule | DEP-4.4 |
 | [contracts/model-description.md](contracts/model-description.md#L1) | 1 | section | Contract: model description |
 | [contracts/model-description.md](contracts/model-description.md#L5) | 5 | section | DSC-1 Purpose |
 | [contracts/model-description.md](contracts/model-description.md#L11) | 11 | section | DSC-2 Content |

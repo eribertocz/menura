@@ -1,6 +1,6 @@
 {
   "contract": "menura.model_dependencies",
-  "contract_version": "1.0.0",
+  "contract_version": "1.1.0",
   "producer": {
     "compiler_version": "0.8.0",
     "ossie_normative": "0.1.1",
@@ -24,6 +24,9 @@
       ],
       "security_policies": [
         "CUSTOMERS.REGION_SCOPE"
+      ],
+      "sources": [
+        "sales.public.dim_customer"
       ]
     },
     {
@@ -53,6 +56,10 @@
       ],
       "security_policies": [
         "CUSTOMERS.REGION_SCOPE"
+      ],
+      "sources": [
+        "sales.public.dim_customer",
+        "sales.public.fact_invoice"
       ]
     }
   ],

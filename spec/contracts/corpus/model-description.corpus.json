@@ -588,6 +588,46 @@
           ]
         }
       ]
+    },
+    {
+      "name": "no sql_metrics in version 1.2.0",
+      "valid": true,
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/contract_version",
+          "value": "1.2.0"
+        },
+        {
+          "op": "remove",
+          "path": "/datasets/0/sql_metrics"
+        },
+        {
+          "op": "remove",
+          "path": "/datasets/1/sql_metrics"
+        }
+      ]
+    },
+    {
+      "name": "dataset without sql_metrics in version 1.3.0 (DSC-3.1)",
+      "valid": false,
+      "patch": [
+        {
+          "op": "remove",
+          "path": "/datasets/0/sql_metrics"
+        }
+      ]
+    },
+    {
+      "name": "empty sql_metrics reference",
+      "valid": false,
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/datasets/1/sql_metrics/0",
+          "value": ""
+        }
+      ]
     }
   ]
 }

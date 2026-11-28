@@ -203,6 +203,46 @@
           "value": "window"
         }
       ]
+    },
+    {
+      "name": "no sources in version 1.0.0",
+      "valid": true,
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/contract_version",
+          "value": "1.0.0"
+        },
+        {
+          "op": "remove",
+          "path": "/datasets/0/sources"
+        },
+        {
+          "op": "remove",
+          "path": "/datasets/1/sources"
+        }
+      ]
+    },
+    {
+      "name": "dataset without sources in version 1.1.0 (DEP-3.5)",
+      "valid": false,
+      "patch": [
+        {
+          "op": "remove",
+          "path": "/datasets/0/sources"
+        }
+      ]
+    },
+    {
+      "name": "empty source",
+      "valid": false,
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/datasets/1/sources/0",
+          "value": ""
+        }
+      ]
     }
   ]
 }
