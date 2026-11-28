@@ -1,0 +1,14 @@
+id: e1-sql-shared-name-003
+rules: [E1-4.9]
+model: e1-sql-shared-names
+security_context: analyst.json
+query:
+  contract: "menura.query"
+  contract_version: "1.1.0"
+  time_zone: "UTC"
+  sql: "SELECT region, AGG(o.volume) AS orders FROM e1_shared.orders AS o GROUP BY region ORDER BY region"
+expect:
+  outcome: "plan"
+  sql_clickhouse: e1-sql-shared-name-003.clickhouse.sql
+  row_order: "exact"
+  rows: "e1-sql-shared-name-003.csv"

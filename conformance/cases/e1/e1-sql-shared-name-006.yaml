@@ -1,0 +1,15 @@
+id: e1-sql-shared-name-006
+rules: [E1-4.9]
+model: e1-sql-shared-names
+security_context: analyst.json
+query:
+  contract: "menura.query"
+  contract_version: "1.1.0"
+  time_zone: "UTC"
+  sql: "SELECT region, AGG(o.order_id) AS total FROM e1_shared.orders AS o GROUP BY region"
+expect:
+  outcome: "error"
+  error: "E_FIELD_IN_METRICS"
+  location:
+    document: "query"
+    pointer: "/sql"
