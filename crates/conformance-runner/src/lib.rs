@@ -80,8 +80,10 @@ pub mod report;
 #[cfg(feature = "duckdb")]
 mod row_comparison;
 pub mod runner;
+pub mod runtime_codes;
 mod schema_versions;
 mod sql_literals;
+pub mod time_zone_check;
 pub mod wrappers;
 
 pub use error::{RunnerError, RunnerErrorKind};

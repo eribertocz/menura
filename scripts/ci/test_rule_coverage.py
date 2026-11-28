@@ -157,6 +157,10 @@ class RuleCoverageTest(unittest.TestCase):
     def test_t1_classifies_vs_rules_as_behavioral(self):
         self.assertEqual(check_rule_coverage.classify("VS-1"), "behavioral")
 
+    def test_t1_classifies_exe_rules_as_behavioral(self):
+        self.assertEqual(check_rule_coverage.classify("EXE-2.3"), "behavioral")
+        self.assertEqual(check_rule_coverage.classify("EXE-6.1"), "behavioral")
+
     def test_t1_classifies_arc_6_mig_and_dep_rules_as_behavioral(self):
         classify = check_rule_coverage.classify
         self.assertEqual(classify("ARC-6.5a"), "behavioral")

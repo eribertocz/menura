@@ -16,6 +16,7 @@ use crate::execution::{ExecutionFailure, execute_plan};
 use crate::fixture::read_text;
 use crate::report::CaseStatus;
 use crate::row_comparison::{Comparison, rows_mismatch};
+use crate::runtime_codes::{Engine, runtime_code};
 
 /// What a plan is executed with: the case's database and the reviewed divergences.
 pub(crate) struct CaseDatabase<'database> {
@@ -84,8 +85,8 @@ fn compare_rows(
     ))
 }
 
-/// Executes the plan of a `runtime_error` case, which must fail with the expected runtime code
-/// in the engine's message (CS-2.5).
+/// Executes the plan of a `runtime_error` case, which must fail with the expected runtime code,
+/// mapped from the engine's message as an executor maps it (CS-2.5, EXE-5.3).
 fn check_runtime_error(
     expect: &Expectation,
     plan: &CompiledPlanDocument,
@@ -93,7 +94,12 @@ fn check_runtime_error(
 ) -> CaseStatus {
     let code = expect.error.as_deref().unwrap_or("none");
     match execute_plan(connection, plan) {
-        Err(ExecutionFailure::Engine(message)) if message.contains(code) => CaseStatus::Passed,
+        Err(ExecutionFailure::Engine(message))
+            if runtime_code(Engine::Duckdb, &message)
+                .is_some_and(|mapped| mapped.as_str() == code) =>
+        {
+            CaseStatus::Passed
+        }
         Err(ExecutionFailure::Engine(message)) => CaseStatus::Failed(format!(
             "the plan fails on DuckDB without the runtime code {code}: {message}"
         )),

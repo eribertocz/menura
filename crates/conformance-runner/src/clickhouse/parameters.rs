@@ -2,7 +2,7 @@
 //! n is sent as the query parameter `pn`, its CON-4 value written in `ClickHouse`'s text form for
 //! its logical type, and NULL written `\N`.
 
-use menura_contracts::types::common::{LogicalType, Parameter};
+use menura_contracts::types::common::{FloatBits, LogicalType, Parameter};
 use serde_json::Value as Json;
 
 /// The `(name, text)` of every parameter of a plan, `p1`, `p2`, … in position order.
@@ -50,12 +50,12 @@ fn scalar_text(logical_type: &LogicalType, value: &Json) -> Result<String, Strin
             .ok_or_else(invalid),
         LogicalType::Integer { .. } => match value {
             Json::Number(number) if number.is_i64() || number.is_u64() => Ok(number.to_string()),
-            Json::String(text) if text.parse::<i128>().is_ok() => Ok(text.clone()),
+            Json::String(text) if is_integer_text(text) => Ok(text.clone()),
             _ => Err(invalid()),
         },
-        LogicalType::Float { .. } => value
+        LogicalType::Float { bits } => value
             .as_f64()
-            .map(|number| number.to_string())
+            .map(|number| float_text(number, *bits))
             .ok_or_else(invalid),
         LogicalType::Decimal { .. } | LogicalType::Text | LogicalType::Date | LogicalType::Uuid => {
             value.as_str().map(str::to_owned).ok_or_else(invalid)
@@ -67,6 +67,25 @@ fn scalar_text(logical_type: &LogicalType, value: &Json) -> Result<String, Strin
         _ => Err(format!(
             "the runner cannot bind a parameter of type {logical_type:?} on ClickHouse"
         )),
+    }
+}
+
+/// Whether `text` is the CON-4 text of an integer of at most 128 bits, signed or unsigned:
+/// decimal digits with an optional leading `-`.
+fn is_integer_text(text: &str) -> bool {
+    !text.starts_with('+') && (text.parse::<i128>().is_ok() || text.parse::<u128>().is_ok())
+}
+
+/// The shortest decimal text that reads back as exactly the float of the parameter's width
+/// (EXE-2.3): a 32-bit float is written from its own 32-bit value, never from the 64-bit one.
+fn float_text(number: f64, bits: FloatBits) -> String {
+    match bits {
+        #[allow(
+            clippy::cast_possible_truncation,
+            reason = "a 32-bit float parameter holds a value of 32-bit precision"
+        )]
+        FloatBits::ThirtyTwo => (number as f32).to_string(),
+        FloatBits::SixtyFour => number.to_string(),
     }
 }
 
@@ -118,6 +137,9 @@ pub(crate) fn escape(text: &str) -> String {
     }
     escaped
 }
+
+#[cfg(test)]
+mod executor_tests;
 
 #[cfg(test)]
 mod tests {
