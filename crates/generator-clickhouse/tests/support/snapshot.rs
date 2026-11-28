@@ -19,11 +19,23 @@ pub fn generate_snapshot(
     population: &PlanNode,
     model: &InternalModel,
 ) -> Result<GeneratedCheckSql, GenerateError> {
+    let membership = Membership::Periodic {
+        period: ColumnName::new("CREATED_AT"),
+    };
+    generate_snapshot_with(rows, population, model, membership)
+}
+
+/// The SQL of the monthly snapshot check of `rows`, whose population is `population` with
+/// `membership`, by its `REGION` and its `PERIOD`, over `model` and its catalog.
+pub fn generate_snapshot_with(
+    rows: &PlanNode,
+    population: &PlanNode,
+    model: &InternalModel,
+    membership: Membership,
+) -> Result<GeneratedCheckSql, GenerateError> {
     let rule = PopulationRule {
         entity: vec![ColumnName::new("REGION")],
-        membership: Membership::Periodic {
-            period: ColumnName::new("CREATED_AT"),
-        },
+        membership,
         required_when: None,
     };
     let check = SnapshotCheck {

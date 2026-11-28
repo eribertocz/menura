@@ -10,18 +10,22 @@ use menura_contracts::types::common::LogicalType;
 use menura_contracts::types::compiled_plan::InputDocument;
 use menura_contracts::types::descriptions::{Binding, CheckParameter};
 use menura_generator_clickhouse::{GenerateError, generate_check_sql};
-use menura_model::internal_model::{FieldPath, NormalizedName};
+use menura_model::expression::DateValue;
+use menura_model::internal_model::{
+    FieldPath, NormalizedName, OpenEnd, PartialPeriod, ValidToBound,
+};
 use menura_representations::bound_query::{
     BoundDimension, BoundDimensionKind, BoundFilter, BoundQuery, BoundQueryParts,
 };
 use menura_representations::columns::Columns;
-use menura_representations::logical_plan::PlanNode;
-use menura_representations::names::OutputName;
+use menura_representations::logical_plan::{Membership, PlanNode};
+use menura_representations::names::{ColumnName, OutputName};
 use menura_representations::origin::Origin;
 use menura_representations::time::{QueryTime, TimeZoneName};
 use support::{
     SETTINGS, at, catalog_for, column, from_model, from_query, generate, generate_snapshot,
-    instant, model, model_with_sources, named, parse, project, query, scan, scan_of,
+    generate_snapshot_with, instant, model, model_with_sources, named, parse, project, query, scan,
+    scan_of,
 };
 
 #[test]
@@ -215,6 +219,34 @@ fn e6_7_12_a_value_the_population_of_a_snapshot_check_reads_is_e6_01_at_its_data
     let rows = scan("ORDERS", &["REGION", "CREATED_AT"]);
     let population = scan("STAGED", &["REGION", "CREATED_AT", "SHIPPED_AT"]);
     let error = generate_snapshot(&rows, &population, &model).expect_err("E6-01");
+    assert_eq!(
+        error,
+        GenerateError::InexpressibleType {
+            origin: from_model("/semantic_model/0/datasets/0"),
+            subject: Some("dataset:STAGED".to_owned()),
+        }
+    );
+}
+
+/// A `validity` membership over `ORDERED_ON` whose `open_end` is the last day of `year`.
+fn validity_ending(year: u16) -> Membership {
+    Membership::Validity {
+        valid_from: ColumnName::new("ORDERED_ON"),
+        valid_to: ColumnName::new("ORDERED_ON"),
+        partial_period: PartialPeriod::AnyDay,
+        valid_to_bound: ValidToBound::Inclusive,
+        open_end: DateValue::new(year, 12, 31).map(OpenEnd::Date),
+    }
+}
+
+#[test]
+fn e6_7_12_the_open_end_of_the_population_of_a_snapshot_check_is_e6_01_at_its_dataset() {
+    let model = model_with_sources("main.orders", "main.staged");
+    let rows = scan("ORDERS", &["REGION", "CREATED_AT"]);
+    let population = scan("STAGED", &["REGION", "ORDERED_ON"]);
+    generate_snapshot_with(&rows, &population, &model, validity_ending(2099)).expect("SQL");
+    let error = generate_snapshot_with(&rows, &population, &model, validity_ending(9999))
+        .expect_err("E6-01");
     assert_eq!(
         error,
         GenerateError::InexpressibleType {

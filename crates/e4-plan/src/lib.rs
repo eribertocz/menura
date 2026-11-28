@@ -29,6 +29,7 @@
 mod columns;
 mod context;
 mod context_time;
+mod coverage;
 mod derived_inputs;
 mod dimensions;
 mod error;

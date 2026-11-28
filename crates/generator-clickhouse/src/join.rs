@@ -2,7 +2,7 @@
 //! one matched on the key pairs.
 
 use menura_representations::logical_plan::{
-    JoinCondition, JoinKind, OutputSchema, PlanNode, SchemaColumn,
+    JoinCondition, JoinKind, Operation, OutputSchema, PlanNode, SchemaColumn, TemporalCoverage,
 };
 use menura_representations::names::{ColumnName, ColumnPrefix};
 
@@ -10,7 +10,7 @@ use crate::body::SelectBody;
 use crate::error::{GenerateError, InvariantViolation};
 use crate::identifiers::quote;
 use crate::join_keys::{KeySide, key_equality};
-use crate::steps::{StepWriter, error};
+use crate::steps::{StepWriter, WrittenNode, error};
 
 /// The inputs of a `Join` node (E4-3.2).
 #[derive(Debug, Clone, Copy)]
@@ -23,14 +23,56 @@ pub(crate) struct JoinInputs<'input> {
     pub(crate) kind: JoinKind,
     /// The key pairs, in the order written.
     pub(crate) on: &'input [JoinCondition],
+    /// Along a temporal relationship, the coverage a version must also meet (VAL-2.8).
+    pub(crate) temporal: Option<&'input TemporalCoverage>,
     /// The prefix of every column of `right`.
     pub(crate) right_prefix: &'input ColumnPrefix,
 }
 
+impl<'input> JoinInputs<'input> {
+    /// The inputs of `node`, when it is a `Join`.
+    pub(crate) fn of(node: &'input PlanNode) -> Option<Self> {
+        match node.operation() {
+            Operation::Join {
+                left,
+                right,
+                kind,
+                on,
+                temporal,
+                right_prefix,
+                ..
+            } => Some(Self {
+                left,
+                right,
+                kind: *kind,
+                on,
+                temporal: temporal.as_ref(),
+                right_prefix,
+            }),
+            _ => None,
+        }
+    }
+}
+
 impl<'input> StepWriter<'input> {
+    /// The steps of `left`, then of `right` with its columns under `right_prefix` (E6-4.12).
+    fn join_sides(
+        &mut self,
+        left: &'input PlanNode,
+        right: &'input PlanNode,
+        right_prefix: &'input ColumnPrefix,
+    ) -> Result<(WrittenNode, WrittenNode), GenerateError> {
+        let left_step = self.write(left)?;
+        self.column_prefix = Some(right_prefix);
+        let right_step = self.write(right);
+        self.column_prefix = None;
+        Ok((left_step, right_step?))
+    }
+
     /// The steps of `left`, then of `right` (E6-4.12), then the step that selects every column
-    /// of `node` from them, joined on the key pairs. A column of the right side of a left join
-    /// is nullable (PLN-1).
+    /// of `node` from them, joined on the key pairs; along a temporal relationship, the steps
+    /// of [`Self::temporal_join`] (VAL-2.22). A column of the right side of a left join is
+    /// nullable (PLN-1).
     pub(crate) fn join(
         &mut self,
         node: &'input PlanNode,
@@ -41,17 +83,17 @@ impl<'input> StepWriter<'input> {
             right,
             kind,
             on: keys,
+            temporal,
             right_prefix,
         } = *join;
         if keys.is_empty() {
             return Err(error(InvariantViolation::JoinWithoutKeys, node));
         }
-        let left_step = self.write(left)?;
-        self.column_prefix = Some(right_prefix);
-        let right_step = self.write(right);
-        self.column_prefix = None;
-        let right_step = right_step?;
+        let (left_step, right_step) = self.join_sides(left, right, right_prefix)?;
         self.parameters.start_node(node.origin());
+        if temporal.is_some() {
+            return self.temporal_join(node, join, &left_step.name, &right_step.name);
+        }
         let items = node
             .schema()
             .columns()
@@ -118,7 +160,7 @@ fn key_column<'input>(
 
 /// The select item of the `Join` column `column`: the column of the same name of exactly one
 /// input. A column of the right side of a left join must be nullable (PLN-1).
-fn joined_item(
+pub(crate) fn joined_item(
     node: &PlanNode,
     left: &OutputSchema,
     right: &OutputSchema,

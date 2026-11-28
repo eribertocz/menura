@@ -196,6 +196,7 @@ fn with_input(node: &PlanNode, input: PlanNode) -> PlanNode {
             relationship,
             kind,
             on,
+            temporal,
             right_prefix,
             ..
         } => Operation::Join {
@@ -204,6 +205,7 @@ fn with_input(node: &PlanNode, input: PlanNode) -> PlanNode {
             relationship: relationship.clone(),
             kind: *kind,
             on: on.clone(),
+            temporal: temporal.clone(),
             right_prefix: right_prefix.clone(),
         },
         _ => return node.clone(),

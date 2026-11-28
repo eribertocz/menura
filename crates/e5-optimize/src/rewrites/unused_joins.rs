@@ -304,6 +304,7 @@ fn replace_left(operation: &Operation, input: Box<PlanNode>) -> Operation {
             relationship,
             kind,
             on,
+            temporal,
             right_prefix,
             ..
         } => Operation::Join {
@@ -312,11 +313,13 @@ fn replace_left(operation: &Operation, input: Box<PlanNode>) -> Operation {
             relationship: relationship.clone(),
             kind: *kind,
             on: on.clone(),
+            temporal: temporal.clone(),
             right_prefix: right_prefix.clone(),
         },
         Operation::SemiJoin {
             relationship,
             on,
+            temporal,
             related_all,
             related_visible,
             ..
@@ -324,6 +327,7 @@ fn replace_left(operation: &Operation, input: Box<PlanNode>) -> Operation {
             input,
             relationship: relationship.clone(),
             on: on.clone(),
+            temporal: temporal.clone(),
             related_all: related_all.clone(),
             related_visible: related_visible.clone(),
         },

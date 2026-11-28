@@ -1,0 +1,18 @@
+id: val-2-13-inclusive-overlap-001
+rules: [VAL-2.13, VAL-2.7, VAL-2.9, VAL-2.10, VAL-2.22, E4-4.0e]
+model: val-temporal-overlap
+security_context: analyst.json
+query:
+  contract: menura.query
+  contract_version: "1.1.0"
+  time_zone: UTC
+  query:
+    dimensions: [customer_tiers.tier]
+    metrics:
+      - {metric: visit_count, alias: visit_count}
+expect:
+  outcome: plan
+  sql: val-2-13-inclusive-overlap-001.sql
+  sql_clickhouse: val-2-13-inclusive-overlap-001.clickhouse.sql
+  rows: val-2-13-inclusive-overlap-001.csv
+  row_order: any

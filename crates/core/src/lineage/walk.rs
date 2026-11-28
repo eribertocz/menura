@@ -4,7 +4,7 @@ use menura_model::expression::Expression;
 use menura_model::internal_model::NormalizedName;
 use menura_representations::logical_plan::{
     AggregateComponent, JoinCondition, LookupColumn, NamedExpression, Operation, PlanNode,
-    StitchColumn,
+    StitchColumn, TemporalCoverage,
 };
 use menura_representations::names::{ColumnName, ColumnPrefix};
 
@@ -129,6 +129,7 @@ impl Sources<'_> {
             right,
             relationship,
             on,
+            temporal,
             right_prefix,
             ..
         } = node.operation()
@@ -140,7 +141,7 @@ impl Sources<'_> {
         };
         let left = self.node(left, prefix)?;
         let right = self.node(right, Some(right_prefix))?;
-        Ok(join(left, right, relationship, on))
+        Ok(join(left, right, relationship, on, temporal.as_ref()))
     }
 
     /// The lineage of the `SemiJoin` `node`, whose input `Scan` columns are under `prefix`.
@@ -152,6 +153,7 @@ impl Sources<'_> {
         let Operation::SemiJoin {
             input,
             on,
+            temporal,
             related_all,
             related_visible,
             ..
@@ -165,7 +167,7 @@ impl Sources<'_> {
         let input = self.node(input, prefix)?;
         let all = self.node(related_all, None)?;
         let visible = self.node(related_visible, None)?;
-        Ok(semi_join(input, all, visible, on))
+        Ok(semi_join(input, all, visible, on, temporal.as_ref()))
     }
 }
 
@@ -182,20 +184,33 @@ pub(super) fn reads_nothing(node: &PlanNode) -> NodeLineage {
 
 /// `Join(left, right, relationship)`: the columns of both inputs; each column of `right` also
 /// derives from `relationship` and from the relationships that bring the `left` columns of
-/// `on` (PLN-4.4). The conditions are read in every branch (PLN-4.5).
+/// `on` (PLN-4.4), and, along a temporal relationship, from the `from_time`, `valid_from` and
+/// `valid_to` fields of its coverage condition (VAL-2.24). The conditions are read in every
+/// branch (PLN-4.5).
 fn join(
     mut left: NodeLineage,
     mut right: NodeLineage,
     relationship: &NormalizedName,
     on: &[JoinCondition],
+    temporal: Option<&TemporalCoverage>,
 ) -> NodeLineage {
-    let left_keys = left.provenance_of(on.iter().map(|pair| pair.left.as_str()));
-    let right_keys = right.provenance_of(on.iter().map(|pair| pair.right.as_str()));
+    let mut left_keys = left.provenance_of(on.iter().map(|pair| pair.left.as_str()));
+    let mut right_keys = right.provenance_of(on.iter().map(|pair| pair.right.as_str()));
+    let mut coverage = Provenance::default();
+    if let Some(temporal) = temporal {
+        let time = left.provenance_of([temporal.from_time.as_str()]);
+        let range = right.provenance_of(range_columns(temporal));
+        left_keys.absorb(&time);
+        right_keys.absorb(&range);
+        coverage.absorb(&time);
+        coverage.absorb(&range);
+    }
     for provenance in right.columns.values_mut() {
         provenance.relationships.insert(relationship.clone());
         provenance
             .relationships
             .extend(left_keys.relationships.iter().cloned());
+        provenance.fields.extend(coverage.fields.iter().cloned());
     }
     left.read_in_every_branch(&left_keys);
     left.read_in_every_branch(&right_keys);
@@ -205,22 +220,38 @@ fn join(
     left
 }
 
-/// `SemiJoin`: the columns of `input`; the keys of `on` on both sides, and everything the
-/// plans of the related rows read, are read in every branch (PLN-4.5).
+/// `SemiJoin`: the columns of `input`; the keys of `on` on both sides, the columns of the
+/// coverage condition of a temporal relationship, and everything the plans of the related rows
+/// read, are read in every branch (PLN-4.5).
 fn semi_join(
     mut input: NodeLineage,
     all: NodeLineage,
     visible: NodeLineage,
     on: &[JoinCondition],
+    temporal: Option<&TemporalCoverage>,
 ) -> NodeLineage {
-    let input_keys = input.provenance_of(on.iter().map(|pair| pair.left.as_str()));
+    let mut input_keys = input.provenance_of(on.iter().map(|pair| pair.left.as_str()));
+    if let Some(temporal) = temporal {
+        input_keys.absorb(&input.provenance_of([temporal.from_time.as_str()]));
+    }
     input.read_in_every_branch(&input_keys);
     for related in [all, visible] {
-        let related_keys = related.provenance_of(on.iter().map(|pair| pair.right.as_str()));
+        let mut related_keys = related.provenance_of(on.iter().map(|pair| pair.right.as_str()));
+        if let Some(temporal) = temporal {
+            related_keys.absorb(&related.provenance_of(range_columns(temporal)));
+        }
         input.read_in_every_branch(&related_keys);
         input.absorb_reads(related);
     }
     input
+}
+
+/// The `valid_from` and `valid_to` columns of the coverage condition `temporal`.
+fn range_columns(temporal: &TemporalCoverage) -> [&str; 2] {
+    [
+        temporal.range.valid_from.as_str(),
+        temporal.range.valid_to.as_str(),
+    ]
 }
 
 /// `Aggregate`: each key derives from the columns its expression reads, each component from

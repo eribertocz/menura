@@ -1,6 +1,7 @@
 //! Relationships and the graph of the usable ones (E0H-2 "Graph", E0H-2.3).
 
 use super::common::{Descriptions, DiagnosticCode, NormalizedName, SourceLocation};
+use super::validity::{OpenEnd, ValidToBound};
 
 /// One relationship of the model, usable or not.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -35,6 +36,25 @@ pub struct TemporalJoin {
     pub from_time: NormalizedName,
     /// The `validity` population of `to` that supplies the versions (VAL-2.3).
     pub population: NormalizedName,
+}
+
+/// The fields a temporal relationship compares (VAL-2.3, VAL-2.7): its `from_time` and the
+/// range of its population, as [`crate::internal_model::InternalModel::temporal_range`]
+/// resolves them.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct TemporalRange<'model> {
+    /// The field of `from` that holds the time of each row.
+    pub from_time: &'model NormalizedName,
+    /// The population that supplies the versions.
+    pub population: &'model NormalizedName,
+    /// The field of `to` of the start of validity.
+    pub valid_from: &'model NormalizedName,
+    /// The field of `to` of the end of validity.
+    pub valid_to: &'model NormalizedName,
+    /// Whether `valid_to` is the last value covered or the first one not covered (VAL-1.1).
+    pub valid_to_bound: ValidToBound,
+    /// The `valid_to` value that reads like NULL, when declared (VAL-1.2).
+    pub open_end: Option<&'model OpenEnd>,
 }
 
 /// The directed graph of the usable relationships, with what each dataset reaches (E0H-2.3).

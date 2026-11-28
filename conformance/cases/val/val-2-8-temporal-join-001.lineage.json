@@ -1,0 +1,75 @@
+[
+  {
+    "model_inputs": [
+      "field:CUSTOMER_VERSIONS.SEGMENT",
+      "field:CUSTOMER_VERSIONS.VALID_FROM",
+      "field:CUSTOMER_VERSIONS.VALID_TO",
+      "field:SALES.SOLD_ON",
+      "relationship:SALE_CUSTOMER"
+    ],
+    "output": "segment",
+    "physical_inputs": [
+      {
+        "column": "customer_id",
+        "source": "shop.customer_versions"
+      },
+      {
+        "column": "segment",
+        "source": "shop.customer_versions"
+      },
+      {
+        "column": "valid_from",
+        "source": "shop.customer_versions"
+      },
+      {
+        "column": "valid_to",
+        "source": "shop.customer_versions"
+      },
+      {
+        "column": "customer_id",
+        "source": "shop.sales"
+      },
+      {
+        "column": "sold_on",
+        "source": "shop.sales"
+      }
+    ],
+    "security_policies": [],
+    "summary": null
+  },
+  {
+    "model_inputs": [
+      "field:SALES.SALE_ID",
+      "metric:SALE_COUNT"
+    ],
+    "output": "sale_count",
+    "physical_inputs": [
+      {
+        "column": "customer_id",
+        "source": "shop.customer_versions"
+      },
+      {
+        "column": "valid_from",
+        "source": "shop.customer_versions"
+      },
+      {
+        "column": "valid_to",
+        "source": "shop.customer_versions"
+      },
+      {
+        "column": "customer_id",
+        "source": "shop.sales"
+      },
+      {
+        "column": "sale_id",
+        "source": "shop.sales"
+      },
+      {
+        "column": "sold_on",
+        "source": "shop.sales"
+      }
+    ],
+    "security_policies": [],
+    "summary": null
+  }
+]

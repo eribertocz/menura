@@ -1,0 +1,18 @@
+id: val-2-17-propagation-001
+rules: [VAL-2.17, E4-6.5a, E4-3.4]
+model: val-temporal-policy
+security_context: analyst.json
+query:
+  contract: menura.query
+  contract_version: "1.1.0"
+  time_zone: UTC
+  query:
+    metrics:
+      - {metric: sale_count, alias: sale_count}
+      - {metric: total_amount, alias: total_amount}
+expect:
+  outcome: plan
+  sql: val-2-17-propagation-001.sql
+  sql_clickhouse: val-2-17-propagation-001.clickhouse.sql
+  rows: val-2-17-propagation-001.csv
+  row_order: any

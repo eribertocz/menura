@@ -81,6 +81,40 @@ impl<'model> PolicyGraph<'model> {
         found
     }
 
+    /// The temporal relationships that the visible rows of `home` follow on their way to
+    /// `target` (E4-6.5, VAL-2.17), as `followed` walks them from `home`, ordered by name.
+    pub(crate) fn temporal_towards(
+        &self,
+        home: &'model NormalizedName,
+        target: &NormalizedName,
+        model: &InternalModel,
+    ) -> BTreeSet<&'model NormalizedName> {
+        let mut found = BTreeSet::new();
+        let mut pending: Vec<(Vec<NormalizedName>, Vec<&'model NormalizedName>)> =
+            vec![(vec![home.clone()], Vec::new())];
+        while let Some((chain, temporal)) = pending.pop() {
+            let Some(current) = chain.last() else {
+                continue;
+            };
+            for edge in self.followed(current, &chain) {
+                let mut next_temporal = temporal.clone();
+                let is_temporal = model
+                    .relationship(&edge.relationship)
+                    .is_some_and(|relationship| relationship.temporal.is_some());
+                if is_temporal {
+                    next_temporal.push(&edge.relationship);
+                }
+                if &edge.to == target {
+                    found.extend(next_temporal.iter().copied());
+                }
+                let mut next_chain = chain.clone();
+                next_chain.push(edge.to.clone());
+                pending.push((next_chain, next_temporal));
+            }
+        }
+        found
+    }
+
     fn leaving(&self, dataset: &NormalizedName) -> impl Iterator<Item = &'model GraphEdge> {
         self.outgoing.get(dataset).into_iter().flatten().copied()
     }

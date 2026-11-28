@@ -103,6 +103,7 @@ pub fn join_of(
             relationship: NormalizedName::new(relationship),
             kind: JoinKind::Left,
             on,
+            temporal: None,
             right_prefix: ColumnPrefix::new(prefix),
         },
         OutputSchema::new(columns),

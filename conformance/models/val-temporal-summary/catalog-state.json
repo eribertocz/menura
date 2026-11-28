@@ -1,0 +1,153 @@
+{
+  "contract": "menura.catalog_state",
+  "contract_version": "1.2.0",
+  "document_id": {
+    "origin": "conformance:val-temporal-summary",
+    "snapshot": "state-1"
+  },
+  "schema_document_id": {
+    "origin": "conformance:val-temporal-summary",
+    "snapshot": "val-temporal-summary"
+  },
+  "relations": [
+    {
+      "source": "shop.customer_versions",
+      "row_count_estimate": 3,
+      "version": {
+        "origin": "conformance:val-temporal-summary",
+        "snapshot": "customer_versions-1"
+      }
+    },
+    {
+      "source": "shop.sales",
+      "row_count_estimate": 4,
+      "partitions": {
+        "column": "sold_on",
+        "grain": "day",
+        "versions": [
+          {
+            "period": "2026-01-15",
+            "version": {
+              "origin": "conformance:val-temporal-summary",
+              "snapshot": "sales-2026-01-15"
+            }
+          },
+          {
+            "period": "2026-02-01",
+            "version": {
+              "origin": "conformance:val-temporal-summary",
+              "snapshot": "sales-2026-02-01"
+            }
+          },
+          {
+            "period": "2026-03-10",
+            "version": {
+              "origin": "conformance:val-temporal-summary",
+              "snapshot": "sales-2026-03-10"
+            }
+          },
+          {
+            "period": "2100-06-01",
+            "version": {
+              "origin": "conformance:val-temporal-summary",
+              "snapshot": "sales-2100-06-01"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "source": "shop.sales_by_customer_day",
+      "row_count_estimate": 4,
+      "aggregate_build": {
+        "definition_hash": "a14d455ad8476520faea27fd572c9b910180d3720487095498f7a6197c0fb9dc",
+        "coverage": {
+          "from": "2026-01-15",
+          "to": "2100-06-01"
+        },
+        "built_from": [
+          {
+            "period": "2026-01-15",
+            "version": {
+              "origin": "conformance:val-temporal-summary",
+              "snapshot": "sales-2026-01-15"
+            }
+          },
+          {
+            "period": "2026-02-01",
+            "version": {
+              "origin": "conformance:val-temporal-summary",
+              "snapshot": "sales-2026-02-01"
+            }
+          },
+          {
+            "period": "2026-03-10",
+            "version": {
+              "origin": "conformance:val-temporal-summary",
+              "snapshot": "sales-2026-03-10"
+            }
+          },
+          {
+            "period": "2100-06-01",
+            "version": {
+              "origin": "conformance:val-temporal-summary",
+              "snapshot": "sales-2100-06-01"
+            }
+          }
+        ],
+        "integrity_check": {
+          "status": "passed",
+          "definition_hash": "a14d455ad8476520faea27fd572c9b910180d3720487095498f7a6197c0fb9dc",
+          "verified": [
+            {
+              "period": "2026-01-15",
+              "version": {
+                "origin": "conformance:val-temporal-summary",
+                "snapshot": "sales-2026-01-15"
+              }
+            },
+            {
+              "period": "2026-02-01",
+              "version": {
+                "origin": "conformance:val-temporal-summary",
+                "snapshot": "sales-2026-02-01"
+              }
+            },
+            {
+              "period": "2026-03-10",
+              "version": {
+                "origin": "conformance:val-temporal-summary",
+                "snapshot": "sales-2026-03-10"
+              }
+            },
+            {
+              "period": "2100-06-01",
+              "version": {
+                "origin": "conformance:val-temporal-summary",
+                "snapshot": "sales-2100-06-01"
+              }
+            }
+          ]
+        },
+        "time_zone": "UTC"
+      }
+    }
+  ],
+  "checks": [
+    {
+      "target": "CUSTOMER_HISTORY",
+      "check": "population",
+      "definition_hash": "6e2b5fc96d447f53bee1dc9b30f88e5bd15b5a08a2f408921945007737cbc98b",
+      "status": "passed",
+      "verified": [
+        {
+          "source": "shop.customer_versions",
+          "version": {
+            "origin": "conformance:val-temporal-summary",
+            "snapshot": "customer_versions-1"
+          }
+        }
+      ]
+    }
+  ]
+}

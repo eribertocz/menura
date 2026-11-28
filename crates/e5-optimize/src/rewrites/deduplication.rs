@@ -1,4 +1,5 @@
-//! E5-3.2, E5-3.2a: removes a `Deduplicate` node with `key_uniqueness` evidence for every join of its branch.
+//! E5-3.2, E5-3.2a: removes a `Deduplicate` node with `key_uniqueness` evidence, or `population`
+//! evidence for a temporal relationship (VAL-2.14), for every join of its branch.
 
 use menura_model::internal_model::{CheckKind, InternalModel, NormalizedName};
 use menura_representations::logical_plan::{Operation, OutputSchema, PlanNode};
@@ -101,21 +102,44 @@ fn failed_condition(input: &PlanNode, context: &RewriteContext<'_>) -> Option<St
     };
     joins.iter().find_map(|join| {
         let name = join.relationship.as_str();
-        if !follows_relationship(join, context.model) {
+        if follows_relationship(join, context.model) {
+            missing_uniqueness(join.relationship, context)
+        } else {
             Some(format!(
                 "the Join of relationship {name} does not follow it from `from` to `to` (E5-3.2a)"
             ))
-        } else if !context
-            .evidence
-            .holds(CheckKind::KeyUniqueness, join.relationship)
-        {
-            Some(format!(
-                "no passing key_uniqueness evidence for relationship {name} (E5-3.2a)"
-            ))
-        } else {
-            None
         }
     })
+}
+
+/// The failed condition of a `Join` along `relationship` that has no uniqueness evidence:
+/// `key_uniqueness` evidence for the relationship, or, for a temporal relationship, `population`
+/// evidence for its population (E5-3.2a, VAL-2.14); `None` when it has it.
+fn missing_uniqueness(
+    relationship: &NormalizedName,
+    context: &RewriteContext<'_>,
+) -> Option<String> {
+    let name = relationship.as_str();
+    let range = context
+        .model
+        .relationship(relationship)
+        .and_then(|found| context.model.temporal_range(found));
+    if let Some(range) = range {
+        let held = context
+            .evidence
+            .holds(CheckKind::Population, range.population);
+        return (!held).then(|| {
+            format!(
+                "no passing population evidence for population {} of temporal relationship \
+                 {name} (E5-3.2a, VAL-2.14)",
+                range.population.as_str()
+            )
+        });
+    }
+    let held = context
+        .evidence
+        .holds(CheckKind::KeyUniqueness, relationship);
+    (!held).then(|| format!("no passing key_uniqueness evidence for relationship {name} (E5-3.2a)"))
 }
 
 /// The joins of the branch `input`, in path order (E4-4.0c), or `None` when `input` is not a
@@ -182,38 +206,15 @@ fn without_identity(node: &PlanNode, identity: &[ColumnName]) -> PlanNode {
             dataset: dataset.clone(),
             row_identity: None,
         },
-        Operation::Filter { input, predicate } => Operation::Filter {
-            input: Box::new(without_identity(input, identity)),
-            predicate: predicate.clone(),
-        },
-        Operation::SemiJoin {
-            input,
-            relationship,
-            on,
-            related_all,
-            related_visible,
-        } => Operation::SemiJoin {
-            input: Box::new(without_identity(input, identity)),
-            relationship: relationship.clone(),
-            on: on.clone(),
-            related_all: related_all.clone(),
-            related_visible: related_visible.clone(),
-        },
-        Operation::Join {
-            left,
-            right,
-            relationship,
-            kind,
-            on,
-            right_prefix,
-        } => Operation::Join {
-            left: Box::new(without_identity(left, identity)),
-            right: right.clone(),
-            relationship: relationship.clone(),
-            kind: *kind,
-            on: on.clone(),
-            right_prefix: right_prefix.clone(),
-        },
+        Operation::Filter { input, .. }
+        | Operation::SemiJoin { input, .. }
+        | Operation::Join { left: input, .. } => {
+            let mut operation = node.operation().clone();
+            if let Some(slot) = input_mut(&mut operation, 0) {
+                *slot = without_identity(input, identity);
+            }
+            operation
+        }
         other => other.clone(),
     };
     PlanNode::new(operation, OutputSchema::new(columns), node.origin().clone())

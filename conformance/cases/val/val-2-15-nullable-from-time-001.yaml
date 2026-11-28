@@ -1,0 +1,19 @@
+id: val-2-15-nullable-from-time-001
+rules: [VAL-2.15, E5-3.3a]
+model: val-temporal-nullable-time
+security_context: analyst.json
+query:
+  contract: menura.query
+  contract_version: "1.1.0"
+  time_zone: UTC
+  query:
+    dimensions: [customer_versions.segment]
+    metrics:
+      - {metric: total_amount, alias: total_amount}
+expect:
+  outcome: plan
+  sql: val-2-15-nullable-from-time-001.sql
+  sql_clickhouse: val-2-15-nullable-from-time-001.clickhouse.sql
+  rows: val-2-15-nullable-from-time-001.csv
+  row_order: any
+  explanation: [DEV-4, E4-4.0e, E4-4.1, VAL-2.8, E5-3.2]

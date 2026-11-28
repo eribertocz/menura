@@ -3,12 +3,12 @@
 //! with no row policy (CHK-2.2), with the columns of each role.
 
 use menura_contracts::types::catalog::CatalogSchemaDocument;
-use menura_contracts::types::common::{Dialect, LogicalType, TimestampPrecision};
+use menura_contracts::types::common::Dialect;
 use menura_model::internal_model::{
     Dataset, InternalModel, NormalizedName, OpenEnd, PopulationMode, Relationship, ValidToBound,
 };
 use menura_representations::check_shapes::{TemporalOrphansCheck, VersionRange};
-use menura_representations::logical_plan::PlanNode;
+use menura_representations::logical_plan::{PlanNode, comparison_type};
 use menura_representations::names::ColumnName;
 use menura_representations::origin::Origin;
 
@@ -69,7 +69,7 @@ pub(super) fn temporal_orphans_sql(
             valid_to_bound: parts.valid_to_bound,
             open_end: parts.open_end.cloned(),
         },
-        compared_as: compared_type([&time, start, end].map(|column| &column.logical_type)),
+        compared_as: comparison_type([&time, start, end].map(|column| &column.logical_type)),
         result_columns: result_columns(
             &from_keys,
             &time,
@@ -155,38 +155,6 @@ fn defect(relationship: &Relationship, what: &str) -> InternalError {
         STAGE,
         format!("the relationship {} {what}", relationship.name.as_str()),
     )
-}
-
-/// The type the three time values are compared as (VAL-2.9): E0.f checked that they are all
-/// `date`, or all `timestamp` with the same `with_time_zone` (VAL-2.5); timestamps are compared
-/// at the finest of their precisions.
-fn compared_type(types: [&LogicalType; 3]) -> LogicalType {
-    let finest = types
-        .iter()
-        .filter_map(|logical_type| match logical_type {
-            LogicalType::Timestamp { precision, .. } => Some(*precision),
-            _ => None,
-        })
-        .max_by_key(|precision| fraction_digits(*precision));
-    match (types[0], finest) {
-        (LogicalType::Timestamp { with_time_zone, .. }, Some(precision)) => {
-            LogicalType::Timestamp {
-                precision,
-                with_time_zone: *with_time_zone,
-            }
-        }
-        (first, _) => first.clone(),
-    }
-}
-
-/// The number of fraction digits a timestamp of `precision` stores.
-fn fraction_digits(precision: TimestampPrecision) -> u8 {
-    match precision {
-        TimestampPrecision::S => 0,
-        TimestampPrecision::Ms => 3,
-        TimestampPrecision::Us => 6,
-        TimestampPrecision::Ns => 9,
-    }
 }
 
 /// The result columns (VAL-2.16a, CHK-2.6): the `from_columns` fields in pair order, then

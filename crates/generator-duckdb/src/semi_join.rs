@@ -9,7 +9,9 @@
 
 use menura_contracts::types::common::LogicalType;
 use menura_model::internal_model::NormalizedName;
-use menura_representations::logical_plan::{JoinCondition, Operation, OutputSchema, PlanNode};
+use menura_representations::logical_plan::{
+    JoinCondition, Operation, OutputSchema, PlanNode, TemporalCoverage,
+};
 use menura_representations::names::ColumnName;
 
 use crate::body::SelectBody;
@@ -17,6 +19,7 @@ use crate::error::{GenerateError, InvariantViolation};
 use crate::identifiers::quote;
 use crate::join_keys::{KeySide, key_equality};
 use crate::steps::{StepWriter, error};
+use crate::temporal_semi_join::TemporalSemiJoin;
 
 /// The alias of the input row.
 const ROW: &str = "\"menura_row\"";
@@ -35,6 +38,8 @@ struct SemiJoinInputs<'input> {
     relationship: &'input NormalizedName,
     /// The key equalities: an `input` column equals a related column.
     on: &'input [JoinCondition],
+    /// Along a temporal relationship, the coverage a related version must also meet.
+    temporal: Option<&'input TemporalCoverage>,
     /// The unfiltered `Scan` of the related dataset.
     related_all: &'input PlanNode,
     /// The plan of the visible rows of the related dataset.
@@ -48,12 +53,14 @@ fn operands(node: &PlanNode) -> Option<SemiJoinInputs<'_>> {
             input,
             relationship,
             on,
+            temporal,
             related_all,
             related_visible,
         } => Some(SemiJoinInputs {
             input,
             relationship,
             on,
+            temporal: temporal.as_ref(),
             related_all,
             related_visible,
         }),
@@ -62,7 +69,8 @@ fn operands(node: &PlanNode) -> Option<SemiJoinInputs<'_>> {
 }
 
 impl<'input> StepWriter<'input> {
-    /// The steps of the operands of the `SemiJoin` `node`, in operand order, then its body.
+    /// The steps of the operands of the `SemiJoin` `node`, in operand order, then its body;
+    /// along a temporal relationship, those of [`Self::temporal_semi_join`] (VAL-2.17).
     pub(crate) fn semi_join(
         &mut self,
         node: &'input PlanNode,
@@ -70,6 +78,16 @@ impl<'input> StepWriter<'input> {
         let inputs =
             &operands(node).ok_or_else(|| error(InvariantViolation::NodeOutsideSlice, node))?;
         self.check(node, inputs)?;
+        if let Some(coverage) = inputs.temporal {
+            let temporal = TemporalSemiJoin {
+                input: inputs.input,
+                on: inputs.on,
+                coverage,
+                related_all: inputs.related_all,
+                related_visible: inputs.related_visible,
+            };
+            return self.temporal_semi_join(node, &temporal);
+        }
         let input = self.write(inputs.input)?;
         let all = self.write(inputs.related_all)?;
         let visible = self.write(inputs.related_visible)?;

@@ -1,0 +1,19 @@
+id: val-2-11-missing-zero-001
+rules: [VAL-2.11, E4-7.6]
+model: val-temporal-snapshot
+security_context: analyst.json
+query:
+  contract: menura.query
+  contract_version: "1.1.0"
+  time_zone: UTC
+  query:
+    dimensions: [segments.segment]
+    metrics:
+      - {metric: lowest_balance, alias: lowest_balance}
+    nonportable_extensions:
+      - {"vendor_name": "COMMON", "data": {"namespace": "menura", "version": 1, "date_range": {"dimension": "balances.period", "from": "2026-03-01", "to": "2026-03-31"}}}
+expect:
+  outcome: plan
+  sql_clickhouse: val-2-11-missing-zero-001.clickhouse.sql
+  rows: val-2-11-missing-zero-001.csv
+  row_order: any

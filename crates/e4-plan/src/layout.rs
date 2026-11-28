@@ -3,13 +3,16 @@
 
 use std::collections::BTreeSet;
 
-use menura_model::internal_model::{Dataset, FieldPath, InternalModel, NormalizedName};
+use menura_model::internal_model::{
+    Dataset, FieldPath, InternalModel, NormalizedName, Relationship,
+};
 use menura_representations::logical_plan::JoinCondition;
 use menura_representations::names::{ColumnName, ColumnPrefix};
 use menura_representations::origin::Origin;
 use menura_representations::paths::{Branch, InstanceId, JoinInstance, QueryElement};
 
 use crate::columns::source_prefix;
+use crate::coverage::{PlacedCoverage, placed_coverage};
 use crate::error::{InvariantViolation, PlanError};
 
 /// The name of the synthesized row identity before it is made unique (E4-4.0f).
@@ -27,6 +30,10 @@ pub(crate) struct PlacedInstance<'model> {
     pub(crate) prefix: ColumnPrefix,
     /// The equalities of its `Join`, over the plan columns.
     pub(crate) on: Vec<JoinCondition>,
+    /// Along a temporal relationship, the coverage its `Join` also requires, over the plan
+    /// columns (VAL-2.8): `from_time` read from the instance the step starts from (E3-4.2a),
+    /// the range read from this instance. `None` for a plain relationship.
+    pub(crate) temporal: Option<PlacedCoverage>,
 }
 
 /// The datasets and column names of one branch.
@@ -110,11 +117,7 @@ impl<'model> Layout<'model> {
             .dataset(&step.to)
             .ok_or_else(|| fail(InvariantViolation::UnknownDataset))?;
         let parent_dataset = self.dataset(instance.parent).map_err(fail)?;
-        let matches = relationship.from == step.from
-            && relationship.to == step.to
-            && parent_dataset.name == step.from
-            && relationship.from_columns.len() == relationship.to_columns.len();
-        if !matches {
+        if !step_matches(relationship, instance, parent_dataset) {
             return Err(fail(InvariantViolation::UnknownRelationship));
         }
         let names = instance_names(dataset, model);
@@ -124,25 +127,47 @@ impl<'model> Layout<'model> {
                 .iter()
                 .map(|name| prefix.column(name.as_str()).as_str().to_owned()),
         );
-        let mut on = Vec::new();
-        for (from, to) in relationship
-            .from_columns
-            .iter()
-            .zip(&relationship.to_columns)
-        {
-            let left = self
-                .key_column(instance.parent, parent_dataset, from)
-                .map_err(fail)?;
-            let right = prefix.column(key_name(dataset, to).as_str());
-            on.push(JoinCondition { left, right });
-        }
+        let on = self
+            .key_pairs(instance, parent_dataset, dataset, &prefix, relationship)
+            .map_err(fail)?;
+        let temporal = placed_coverage(
+            relationship,
+            model,
+            |field| self.field_column(instance.parent, parent_dataset, field),
+            |field| field_in(dataset, &prefix, field),
+        )
+        .map_err(fail)?;
         Ok(PlacedInstance {
             dataset,
             origin,
             relationship: step.relationship.clone(),
             prefix,
             on,
+            temporal,
         })
+    }
+
+    /// The equalities of the `Join` of `instance` along `relationship`: each `from_columns`
+    /// column of `parent` with its paired `to_columns` column of `dataset` under `prefix`.
+    fn key_pairs(
+        &self,
+        instance: &JoinInstance,
+        parent: &Dataset,
+        dataset: &Dataset,
+        prefix: &ColumnPrefix,
+        relationship: &Relationship,
+    ) -> Result<Vec<JoinCondition>, InvariantViolation> {
+        relationship
+            .from_columns
+            .iter()
+            .zip(&relationship.to_columns)
+            .map(|(from, to)| {
+                Ok(JoinCondition {
+                    left: self.key_column(instance.parent, parent, from)?,
+                    right: prefix.column(key_name(dataset, to).as_str()),
+                })
+            })
+            .collect()
     }
 
     /// The relationship names along the path of `instance`, each followed by `.`, then as
@@ -270,6 +295,29 @@ impl<'model> Layout<'model> {
             Some(placed) => Ok(placed.prefix.column(field.as_str())),
         }
     }
+}
+
+/// Whether `relationship` is the relationship of the step of `instance`, from `parent`, with
+/// as many `to_columns` as `from_columns`.
+fn step_matches(relationship: &Relationship, instance: &JoinInstance, parent: &Dataset) -> bool {
+    let step = &instance.step;
+    relationship.from == step.from
+        && relationship.to == step.to
+        && parent.name == step.from
+        && relationship.from_columns.len() == relationship.to_columns.len()
+}
+
+/// The column of the field `field` of `dataset` under `prefix`, the prefix of an instance of
+/// `dataset`.
+fn field_in(
+    dataset: &Dataset,
+    prefix: &ColumnPrefix,
+    field: &NormalizedName,
+) -> Result<ColumnName, InvariantViolation> {
+    dataset
+        .field(field)
+        .map(|_| prefix.column(field.as_str()))
+        .ok_or(InvariantViolation::ForeignField)
 }
 
 /// The name, under the prefix of an instance of `dataset`, of the relationship key column

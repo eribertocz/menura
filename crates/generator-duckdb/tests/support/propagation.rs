@@ -253,6 +253,7 @@ pub fn semi_join_on(
             input: Box::new(input),
             relationship: NormalizedName::new(relationship),
             on,
+            temporal: None,
             related_all: Box::new(related_all),
             related_visible: Box::new(related_visible),
         },

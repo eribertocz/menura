@@ -1,0 +1,17 @@
+id: val-2-18-named-path-001
+rules: [VAL-2.18, E2-4.8]
+model: val-temporal-restricted
+security_context: analyst.json
+query:
+  contract: menura.query
+  contract_version: "1.1.0"
+  time_zone: UTC
+  query:
+    dimensions: [customer_versions.segment]
+    metrics:
+      - {metric: sale_count, alias: sale_count}
+    nonportable_extensions:
+      - {"vendor_name": "COMMON", "data": {"namespace": "menura", "version": 1, "paths": [{"from": "sales", "to": "customer_versions", "relationships": ["sale_customer"]}]}}
+expect:
+  outcome: error
+  error: E_NAME_NOT_FOUND

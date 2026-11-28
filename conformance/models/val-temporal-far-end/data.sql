@@ -1,0 +1,5 @@
+CREATE SCHEMA shop;
+CREATE TABLE shop.sales (sale_id INTEGER NOT NULL, customer_id INTEGER, sold_on DATE, amount INTEGER NOT NULL);
+INSERT INTO shop.sales VALUES (1, 1, DATE '2026-01-15', 10), (2, 1, DATE '2026-02-01', 20), (3, 1, DATE '2100-06-01', 40), (4, 2, DATE '2026-04-01', 80), (5, 2, NULL, 160), (6, 2, DATE '2026-02-15', 320), (7, 9, DATE '2026-01-01', 640), (8, NULL, DATE '2026-01-01', 1280), (9, 3, DATE '2026-01-14', 2560);
+CREATE TABLE shop.customer_versions (customer_id INTEGER NOT NULL, segment VARCHAR NOT NULL, valid_from DATE NOT NULL, valid_to DATE);
+INSERT INTO shop.customer_versions VALUES (1, 'RETAIL', DATE '2026-01-01', DATE '2026-02-01'), (1, 'CORPORATE', DATE '2026-02-01', DATE '9999-12-31'), (2, 'RETAIL', DATE '2026-03-01', DATE '2026-04-01'), (3, 'RETAIL', DATE '2026-01-01', DATE '2026-01-15');

@@ -29,7 +29,7 @@ pub use metric::{
 };
 pub use relationship::{
     DatasetPair, DatasetReach, GraphEdge, PathCount, ReachedDataset, Relationship,
-    RelationshipGraph, TemporalJoin,
+    RelationshipGraph, TemporalJoin, TemporalRange,
 };
 pub use security::{
     AccessMode, AttributeType, DatasetAccess, FieldRestriction, RoleName, RowPolicy, ScalarType,
@@ -111,6 +111,39 @@ impl InternalModel {
         find(&self.parts.relationships, name, |relationship| {
             &relationship.name
         })
+    }
+
+    /// The `from_time` of the temporal `relationship` and the range of its `validity`
+    /// population (VAL-2.3); `None` for a plain relationship, or when its population is not a
+    /// `validity` population of its `to` dataset, which E0 reports (`E0C-68`).
+    #[must_use]
+    pub fn temporal_range<'model>(
+        &'model self,
+        relationship: &'model Relationship,
+    ) -> Option<TemporalRange<'model>> {
+        let temporal = relationship.temporal.as_ref()?;
+        let population = self
+            .dataset(&relationship.to)?
+            .populations
+            .iter()
+            .find(|population| population.name == temporal.population)?;
+        match &population.mode {
+            PopulationMode::Validity {
+                valid_from,
+                valid_to,
+                valid_to_bound,
+                open_end,
+                ..
+            } => Some(TemporalRange {
+                from_time: &temporal.from_time,
+                population: &temporal.population,
+                valid_from,
+                valid_to,
+                valid_to_bound: *valid_to_bound,
+                open_end: open_end.as_ref(),
+            }),
+            PopulationMode::Periodic { .. } => None,
+        }
     }
 }
 

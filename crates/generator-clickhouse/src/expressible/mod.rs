@@ -8,6 +8,7 @@
 //! model expression, and the error is located at the dataset that holds it.
 
 mod needs;
+mod open_end;
 mod sources;
 mod walk;
 
@@ -23,6 +24,8 @@ use menura_representations::origin::{Origin, QueryLocation};
 use crate::error::GenerateError;
 use crate::types::is_inexpressible_value;
 use needs::{Needs, Scope, after_nanosecond_range, is_nanosecond_timestamp, outside_date32};
+use open_end::check_node_open_end;
+pub(crate) use open_end::{check_open_end, check_rule_open_end};
 use sources::check_sources;
 
 /// `E6-01` when `plan`, the plan of `query` over `model` and `catalog`, scans a relation
@@ -198,12 +201,14 @@ fn metric_subject(kind: &BoundMetricKind) -> Option<String> {
 }
 
 /// `E6-01` at the first dataset, among those `plan` scans in the order its steps are written
-/// (E6-4.12), with a row policy or a field the plan reads that needs such a value; then at
-/// the origin of the first node that returns a column of such a type.
+/// (E6-4.12), with a row policy or a field the plan reads that needs such a value, or that
+/// declares a population whose `open_end` a node reads outside the range of its type
+/// (VAL-2.23); then at the origin of the first node that returns a column of such a type.
 fn check_plan(plan: &PlanNode, needs: &Needs<'_>) -> Result<(), GenerateError> {
     let mut nodes = Vec::new();
     post_order(plan, &mut nodes);
     for node in &nodes {
+        check_node_open_end(node, needs.model)?;
         let Operation::Scan { dataset, .. } = node.operation() else {
             continue;
         };
