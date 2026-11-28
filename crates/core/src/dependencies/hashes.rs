@@ -10,7 +10,7 @@ use menura_model::internal_model::{
     DivisionByZero, Field, FieldPath, Metric, MissingHandling, NormalizedName, NullHandling,
     Population, PopulationMode, Relationship, RemovedDimensions, RoleName, RowPolicy, Selection,
     SemiAdditive, SnapshotAggregation, StaleHandling, Summary, TypedValue, UnexpectedHandling,
-    ValueType,
+    ValidToBound, ValueType,
 };
 use serde_json::{Value, json};
 
@@ -159,12 +159,25 @@ fn population(population: &Population) -> Value {
             valid_from,
             valid_to,
             partial_period,
-        } => json!({
-            "mode": "validity",
-            "valid_from": valid_from.as_str(),
-            "valid_to": valid_to.as_str(),
-            "partial_period": partial_period.as_str(),
-        }),
+            valid_to_bound,
+            open_end,
+        } => {
+            let mut validity = json!({
+                "mode": "validity",
+                "valid_from": valid_from.as_str(),
+                "valid_to": valid_to.as_str(),
+                "partial_period": partial_period.as_str(),
+            });
+            // The new keys join the tree only when they differ from their defaults, so the
+            // hash of a population without them is unchanged (VAL-1.1, VAL-1.2).
+            if *valid_to_bound != ValidToBound::Inclusive {
+                validity["valid_to_bound"] = json!(valid_to_bound.as_str());
+            }
+            if let Some(open_end) = open_end {
+                validity["open_end"] = json!(open_end.con4_text());
+            }
+            validity
+        }
         PopulationMode::Periodic { period, grain } => {
             json!({"mode": "periodic", "period": period.as_str(), "grain": grain_value(*grain)})
         }

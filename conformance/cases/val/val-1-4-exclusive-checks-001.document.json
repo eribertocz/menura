@@ -1,0 +1,41 @@
+{
+  "checks": [
+    {
+      "check_id": "population:DATE_EXCLUSIVE",
+      "definition_hash": "46b3cac8347a0221e8f9fb0f0425d7a4b9f20b180653b2492bd8b1bf93b937eb",
+      "kind": "population",
+      "parameters": [],
+      "sources": [
+        "shop.date_ranges"
+      ],
+      "sql": "WITH\n  \"menura_1_scan\" AS (\n    SELECT\n      \"customer_id\" AS \"CUSTOMER_ID\",\n      \"valid_from\" AS \"VALID_FROM\",\n      \"valid_to\" AS \"VALID_TO\"\n    FROM \"shop\".\"date_ranges\"\n  ),\n  \"menura_2_bounds\" AS (\n    SELECT\n      \"CUSTOMER_ID\",\n      \"VALID_FROM\",\n      \"VALID_TO\",\n      \"VALID_FROM\" AS \"menura.from\",\n      NULLIF(\"VALID_TO\", CAST('2000-01-01' AS DATE)) AS \"menura.to\",\n      row_number() OVER (ORDER BY \"CUSTOMER_ID\", \"VALID_FROM\", \"VALID_TO\") AS \"menura.row\"\n    FROM \"menura_1_scan\"\n  ),\n  \"menura_3_overlaps\" AS (\n    SELECT\n      \"menura_row\".\"menura.row\" AS \"menura.row\"\n    FROM \"menura_2_bounds\" AS \"menura_row\"\n    JOIN \"menura_2_bounds\" AS \"menura_other\" ON \"menura_row\".\"menura.row\" <> \"menura_other\".\"menura.row\" AND \"menura_row\".\"CUSTOMER_ID\" IS NOT NULL AND \"menura_row\".\"CUSTOMER_ID\" = \"menura_other\".\"CUSTOMER_ID\" AND \"menura_row\".\"menura.from\" IS NOT NULL AND (\"menura_row\".\"menura.to\" IS NULL OR \"menura_row\".\"menura.from\" < \"menura_row\".\"menura.to\") AND \"menura_other\".\"menura.from\" IS NOT NULL AND (\"menura_other\".\"menura.to\" IS NULL OR \"menura_other\".\"menura.from\" < \"menura_other\".\"menura.to\") AND (\"menura_other\".\"menura.to\" IS NULL OR \"menura_row\".\"menura.from\" < \"menura_other\".\"menura.to\") AND (\"menura_row\".\"menura.to\" IS NULL OR \"menura_other\".\"menura.from\" < \"menura_row\".\"menura.to\")\n    GROUP BY 1\n  )\nSELECT\n  \"CUSTOMER_ID\" AS \"CUSTOMER_ID\",\n  \"VALID_FROM\" AS \"VALID_FROM\",\n  \"VALID_TO\" AS \"VALID_TO\",\n  'invalid_interval' AS \"violation\"\nFROM \"menura_2_bounds\"\nWHERE \"menura.from\" IS NOT NULL AND \"menura.to\" IS NOT NULL AND \"menura.from\" >= \"menura.to\"\nUNION ALL\nSELECT\n  \"CUSTOMER_ID\" AS \"CUSTOMER_ID\",\n  \"VALID_FROM\" AS \"VALID_FROM\",\n  \"VALID_TO\" AS \"VALID_TO\",\n  'overlap' AS \"violation\"\nFROM \"menura_2_bounds\"\nWHERE \"menura.row\" IN (SELECT \"menura.row\" FROM \"menura_3_overlaps\")",
+      "target": "DATE_EXCLUSIVE"
+    },
+    {
+      "check_id": "population:DATE_OPEN_END",
+      "definition_hash": "863d1cc5d78f4ca0867b0804e52fb04f773363e3be4f56856f56670634daa6c1",
+      "kind": "population",
+      "parameters": [],
+      "sources": [
+        "shop.open_ranges"
+      ],
+      "sql": "WITH\n  \"menura_1_scan\" AS (\n    SELECT\n      \"customer_id\" AS \"CUSTOMER_ID\",\n      \"valid_from\" AS \"VALID_FROM\",\n      \"valid_to\" AS \"VALID_TO\"\n    FROM \"shop\".\"open_ranges\"\n  ),\n  \"menura_2_days\" AS (\n    SELECT\n      \"CUSTOMER_ID\",\n      \"VALID_FROM\",\n      \"VALID_TO\",\n      \"VALID_FROM\" AS \"menura.from_day\",\n      NULLIF(\"VALID_TO\", CAST('2000-01-01' AS DATE)) AS \"menura.to_day\",\n      row_number() OVER (ORDER BY \"CUSTOMER_ID\", \"VALID_FROM\", \"VALID_TO\") AS \"menura.row\"\n    FROM \"menura_1_scan\"\n  ),\n  \"menura_3_overlaps\" AS (\n    SELECT\n      \"menura_row\".\"menura.row\" AS \"menura.row\"\n    FROM \"menura_2_days\" AS \"menura_row\"\n    JOIN \"menura_2_days\" AS \"menura_other\" ON \"menura_row\".\"menura.row\" <> \"menura_other\".\"menura.row\" AND \"menura_row\".\"CUSTOMER_ID\" IS NOT NULL AND \"menura_row\".\"CUSTOMER_ID\" = \"menura_other\".\"CUSTOMER_ID\" AND \"menura_row\".\"menura.from_day\" IS NOT NULL AND (\"menura_row\".\"menura.to_day\" IS NULL OR \"menura_row\".\"menura.from_day\" <= \"menura_row\".\"menura.to_day\") AND \"menura_other\".\"menura.from_day\" IS NOT NULL AND (\"menura_other\".\"menura.to_day\" IS NULL OR \"menura_other\".\"menura.from_day\" <= \"menura_other\".\"menura.to_day\") AND (\"menura_other\".\"menura.to_day\" IS NULL OR \"menura_row\".\"menura.from_day\" <= \"menura_other\".\"menura.to_day\") AND (\"menura_row\".\"menura.to_day\" IS NULL OR \"menura_other\".\"menura.from_day\" <= \"menura_row\".\"menura.to_day\")\n    GROUP BY 1\n  )\nSELECT\n  \"CUSTOMER_ID\" AS \"CUSTOMER_ID\",\n  \"VALID_FROM\" AS \"VALID_FROM\",\n  \"VALID_TO\" AS \"VALID_TO\",\n  'invalid_interval' AS \"violation\"\nFROM \"menura_2_days\"\nWHERE \"menura.from_day\" IS NOT NULL AND \"menura.to_day\" IS NOT NULL AND \"menura.from_day\" > \"menura.to_day\"\nUNION ALL\nSELECT\n  \"CUSTOMER_ID\" AS \"CUSTOMER_ID\",\n  \"VALID_FROM\" AS \"VALID_FROM\",\n  \"VALID_TO\" AS \"VALID_TO\",\n  'overlap' AS \"violation\"\nFROM \"menura_2_days\"\nWHERE \"menura.row\" IN (SELECT \"menura.row\" FROM \"menura_3_overlaps\")",
+      "target": "DATE_OPEN_END"
+    },
+    {
+      "check_id": "population:STAMP_EXCLUSIVE",
+      "definition_hash": "6b9f430fd212875ccb481830b725d863c1d72935436d5d63e64103b87460cd0c",
+      "kind": "population",
+      "parameters": [],
+      "sources": [
+        "shop.stamp_ranges"
+      ],
+      "sql": "WITH\n  \"menura_1_scan\" AS (\n    SELECT\n      \"customer_id\" AS \"CUSTOMER_ID\",\n      \"valid_from\" AS \"VALID_FROM\",\n      \"valid_to\" AS \"VALID_TO\"\n    FROM \"shop\".\"stamp_ranges\"\n  ),\n  \"menura_2_bounds\" AS (\n    SELECT\n      \"CUSTOMER_ID\",\n      \"VALID_FROM\",\n      \"VALID_TO\",\n      \"VALID_FROM\" AS \"menura.from\",\n      \"VALID_TO\" AS \"menura.to\",\n      row_number() OVER (ORDER BY \"CUSTOMER_ID\", \"VALID_FROM\", \"VALID_TO\") AS \"menura.row\"\n    FROM \"menura_1_scan\"\n  ),\n  \"menura_3_overlaps\" AS (\n    SELECT\n      \"menura_row\".\"menura.row\" AS \"menura.row\"\n    FROM \"menura_2_bounds\" AS \"menura_row\"\n    JOIN \"menura_2_bounds\" AS \"menura_other\" ON \"menura_row\".\"menura.row\" <> \"menura_other\".\"menura.row\" AND \"menura_row\".\"CUSTOMER_ID\" IS NOT NULL AND \"menura_row\".\"CUSTOMER_ID\" = \"menura_other\".\"CUSTOMER_ID\" AND \"menura_row\".\"menura.from\" IS NOT NULL AND (\"menura_row\".\"menura.to\" IS NULL OR \"menura_row\".\"menura.from\" < \"menura_row\".\"menura.to\") AND \"menura_other\".\"menura.from\" IS NOT NULL AND (\"menura_other\".\"menura.to\" IS NULL OR \"menura_other\".\"menura.from\" < \"menura_other\".\"menura.to\") AND (\"menura_other\".\"menura.to\" IS NULL OR \"menura_row\".\"menura.from\" < \"menura_other\".\"menura.to\") AND (\"menura_row\".\"menura.to\" IS NULL OR \"menura_other\".\"menura.from\" < \"menura_row\".\"menura.to\")\n    GROUP BY 1\n  )\nSELECT\n  \"CUSTOMER_ID\" AS \"CUSTOMER_ID\",\n  \"VALID_FROM\" AS \"VALID_FROM\",\n  \"VALID_TO\" AS \"VALID_TO\",\n  'invalid_interval' AS \"violation\"\nFROM \"menura_2_bounds\"\nWHERE \"menura.from\" IS NOT NULL AND \"menura.to\" IS NOT NULL AND \"menura.from\" >= \"menura.to\"\nUNION ALL\nSELECT\n  \"CUSTOMER_ID\" AS \"CUSTOMER_ID\",\n  \"VALID_FROM\" AS \"VALID_FROM\",\n  \"VALID_TO\" AS \"VALID_TO\",\n  'overlap' AS \"violation\"\nFROM \"menura_2_bounds\"\nWHERE \"menura.row\" IN (SELECT \"menura.row\" FROM \"menura_3_overlaps\")",
+      "target": "STAMP_EXCLUSIVE"
+    }
+  ],
+  "contract": "menura.integrity_checks",
+  "contract_version": "@schema",
+  "dialect": "duckdb",
+  "model_hash": "cb3a04f271b412363f7d1debb05ee7cab9e0c9b589d0fcb810e07a6ab288cfac"
+}

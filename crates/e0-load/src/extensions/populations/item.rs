@@ -1,6 +1,7 @@
 //! Reading one item of a `populations` list: its keys (POP-4.1) and their values (POP-4.2).
 
 use menura_contracts::types::common::Grain;
+use menura_model::internal_model::ValidToBound;
 use serde_json::{Map, Value as Json};
 
 use super::model::{PartialPeriod, PopulationMode};
@@ -13,14 +14,23 @@ const REQUIRED_WHEN: &str = "required_when";
 const VALID_FROM: &str = "valid_from";
 const VALID_TO: &str = "valid_to";
 const PARTIAL_PERIOD: &str = "partial_period";
+const VALID_TO_BOUND: &str = "valid_to_bound";
+const OPEN_END: &str = "open_end";
 const PERIOD: &str = "period";
 const GRAIN: &str = "grain";
 
 /// The keys every mode has (POP-2).
 const COMMON_KEYS: [&str; 4] = [NAME, MODE, ENTITY, REQUIRED_WHEN];
 
-/// The keys of the mode `validity` (POP-2).
-const VALIDITY_KEYS: [&str; 3] = [VALID_FROM, VALID_TO, PARTIAL_PERIOD];
+/// The keys of the mode `validity`, the required ones then the optional ones (POP-2,
+/// VAL-1.5).
+const VALIDITY_KEYS: [&str; 5] = [
+    VALID_FROM,
+    VALID_TO,
+    PARTIAL_PERIOD,
+    VALID_TO_BOUND,
+    OPEN_END,
+];
 
 /// The keys of the mode `periodic` (POP-2).
 const PERIODIC_KEYS: [&str; 2] = [PERIOD, GRAIN];
@@ -31,6 +41,11 @@ const PARTIAL_PERIODS: [(&str, PartialPeriod); 3] = [
     ("any_day", PartialPeriod::AnyDay),
     ("full_period", PartialPeriod::FullPeriod),
     ("period_end", PartialPeriod::PeriodEnd),
+];
+
+const VALID_TO_BOUNDS: [(&str, ValidToBound); 2] = [
+    ("inclusive", ValidToBound::Inclusive),
+    ("exclusive", ValidToBound::Exclusive),
 ];
 
 const GRAINS: [(&str, Grain); 5] = [
@@ -228,7 +243,7 @@ impl Reader {
         Some(names)
     }
 
-    /// A string key: a field name or the text of `required_when`.
+    /// A string key: a field name, or the text of `required_when` or `open_end`.
     fn text<'json>(&mut self, key: &str, value: &'json Json) -> Option<&'json str> {
         match value {
             Json::String(text) => Some(text),
@@ -288,10 +303,14 @@ impl Reader {
                 let partial_period = self
                     .mode_key(members, PARTIAL_PERIOD, mode)
                     .and_then(|value| self.choice(PARTIAL_PERIOD, value, &PARTIAL_PERIODS));
+                let range_shape = self.range_shape(members);
+                let (valid_to_bound, open_end) = range_shape?;
                 Some(PopulationMode::Validity {
                     valid_from: valid_from?,
                     valid_to: valid_to?,
                     partial_period: partial_period?,
+                    valid_to_bound,
+                    open_end,
                 })
             }
             Mode::Periodic => {
@@ -305,6 +324,27 @@ impl Reader {
                 })
             }
         }
+    }
+
+    /// The optional keys of the mode `validity` (VAL-1.5): `valid_to_bound`, `inclusive` when
+    /// not given, and the text of `open_end`, when given; `None` when either value has a wrong
+    /// type or is outside its set, which is `E0C-03`.
+    fn range_shape(
+        &mut self,
+        members: &Map<String, Json>,
+    ) -> Option<(ValidToBound, Option<String>)> {
+        let valid_to_bound = match members.get(VALID_TO_BOUND) {
+            None => Some(ValidToBound::Inclusive),
+            Some(value) => self.choice(VALID_TO_BOUND, value, &VALID_TO_BOUNDS),
+        };
+        let open_end = members
+            .get(OPEN_END)
+            .map(|value| self.text(OPEN_END, value));
+        let open_end = match open_end {
+            None => None,
+            Some(text) => Some(text?.to_owned()),
+        };
+        Some((valid_to_bound?, open_end))
     }
 
     /// The value of the key `key` of `mode`; `E0C-21` when it is missing.

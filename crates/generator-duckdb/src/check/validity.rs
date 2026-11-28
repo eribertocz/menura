@@ -1,5 +1,6 @@
 //! The `population` check with `mode: validity` (CHK-6.3, POP-5): the rows whose interval is
-//! inverted, and each row whose interval overlaps another row of the same entity.
+//! inverted, and each row whose interval overlaps another row of the same entity. An inclusive
+//! `valid_to` compares days; an exclusive one compares values and computes no day (VAL-1.4).
 
 use menura_representations::logical_plan::PlanNode;
 use menura_representations::names::ColumnName;
@@ -10,8 +11,9 @@ use super::sql::{
 };
 use crate::body::{SelectBody, union_all};
 use crate::error::GenerateError;
-use crate::population::membership::column_type;
+use crate::population::membership::{column_type, open_ended};
 use crate::steps::{StepWriter, pass_through};
+use menura_model::internal_model::ValidToBound;
 use menura_representations::check_shapes::ValidityCheck;
 
 /// The alias of a row that overlaps another.
@@ -19,11 +21,45 @@ const ROW: &str = "\"menura_row\"";
 /// The alias of the other row.
 const OTHER: &str = "\"menura_other\"";
 
-/// The synthesized columns of the `days` step.
-struct DayColumns {
+/// The synthesized columns of the step that bounds every row, and how they compare.
+struct BoundColumns {
     from: String,
     to: String,
     row: String,
+    range: Range,
+}
+
+/// How the bounds of a row compare (CHK-6.3, VAL-1.4).
+#[derive(Debug, Clone, Copy)]
+struct Range {
+    /// The step's name: `days` for days, `bounds` for values.
+    step: &'static str,
+    /// The base names of the columns of the start and the end.
+    names: (&'static str, &'static str),
+    /// `from` is before `to`, so that the row covers something.
+    starts_before: &'static str,
+    /// `from` is not before `to`: the row is `invalid_interval`.
+    inverted: &'static str,
+}
+
+impl Range {
+    /// Inclusive days (CHK-6.3), or exclusive values (VAL-1.4).
+    fn of(bound: ValidToBound) -> Self {
+        match bound {
+            ValidToBound::Inclusive => Self {
+                step: "days",
+                names: ("menura.from_day", "menura.to_day"),
+                starts_before: "<=",
+                inverted: ">",
+            },
+            ValidToBound::Exclusive => Self {
+                step: "bounds",
+                names: ("menura.from", "menura.to"),
+                starts_before: "<",
+                inverted: ">=",
+            },
+        }
+    }
 }
 
 impl<'input> StepWriter<'input> {
@@ -39,10 +75,12 @@ impl<'input> StepWriter<'input> {
         let written = self.write(rows)?;
         self.parameters.start_node(rows.origin());
         let taken = column_names(rows);
-        let columns = DayColumns {
-            from: synthesized("menura.from_day", &taken),
-            to: synthesized("menura.to_day", &taken),
+        let range = Range::of(check.valid_to_bound);
+        let columns = BoundColumns {
+            from: synthesized(range.names.0, &taken),
+            to: synthesized(range.names.1, &taken),
             row: synthesized("menura.row", &taken),
+            range,
         };
         let days = self.days_step(rows, check, &columns, &written.name)?;
         let overlaps = self.push_step("overlaps", overlaps_body(check, &columns, &days));
@@ -64,7 +102,8 @@ impl<'input> StepWriter<'input> {
             items: items("invalid_interval"),
             from: days.clone(),
             clauses: vec![format!(
-                "WHERE {from} IS NOT NULL AND {to} IS NOT NULL AND {from} > {to}"
+                "WHERE {from} IS NOT NULL AND {to} IS NOT NULL AND {from} {} {to}",
+                range.inverted
             )],
         };
         let row = column(None, &columns.row);
@@ -76,25 +115,30 @@ impl<'input> StepWriter<'input> {
         Ok(union_all(invalid, &[overlap]))
     }
 
-    /// The step of every row with its `valid_from` day, its `valid_to` day and its row number.
-    /// The step is read three times and may be computed each time, so the rows are numbered
-    /// in the order of every scanned column: only equal rows, which are interchangeable, can
-    /// swap numbers between two readings.
+    /// The step of every row with its bounds and its row number: its `valid_from` and
+    /// `valid_to` days for an inclusive `valid_to`, their values for an exclusive one, an
+    /// `open_end` read as NULL (VAL-1.2). The step is read three times and may be computed
+    /// each time, so the rows are numbered in the order of every scanned column: only equal
+    /// rows, which are interchangeable, can swap numbers between two readings.
     fn days_step(
         &mut self,
         rows: &'input PlanNode,
         check: &ValidityCheck<'input>,
-        columns: &DayColumns,
+        columns: &BoundColumns,
         written: &str,
     ) -> Result<String, GenerateError> {
         let mut items = pass_through(rows, rows.schema())?;
-        for (field, name) in [
-            (&check.valid_from, &columns.from),
-            (&check.valid_to, &columns.to),
+        for (field, name, open_end) in [
+            (&check.valid_from, &columns.from, None),
+            (&check.valid_to, &columns.to, check.open_end.as_ref()),
         ] {
             let logical_type = column_type(rows, rows, field)?;
-            let day = self.day_sql(rows, rows, &column(None, field.as_str()), logical_type)?;
-            items.push(aliased(&day, name));
+            let value = open_ended(rows, &column(None, field.as_str()), open_end, logical_type)?;
+            let bound = match check.valid_to_bound {
+                ValidToBound::Inclusive => self.day_sql(rows, rows, &value, logical_type)?,
+                ValidToBound::Exclusive => value,
+            };
+            items.push(aliased(&bound, name));
         }
         let order = column_names(rows)
             .iter()
@@ -110,31 +154,21 @@ impl<'input> StepWriter<'input> {
             from: written.to_owned(),
             clauses: Vec::new(),
         };
-        Ok(self.push_step("days", body))
+        Ok(self.push_step(columns.range.step, body))
     }
 }
 
 /// The row numbers of the rows that overlap another row of the same entity: both have a
-/// whole entity and a `valid_from` day, neither is inverted, and each starts on or before the
-/// day the other ends (a NULL `valid_to` is open-ended).
-fn overlaps_body(check: &ValidityCheck<'_>, columns: &DayColumns, days: &str) -> SelectBody {
+/// whole entity and a `valid_from`, neither is inverted, and each starts before the other
+/// ends, on or before its last day for an inclusive `valid_to` (a NULL `valid_to` is
+/// open-ended).
+fn overlaps_body(check: &ValidityCheck<'_>, columns: &BoundColumns, days: &str) -> SelectBody {
     let entity = |alias: &str| -> Vec<String> {
         check
             .entity
             .iter()
             .map(|name| column(Some(alias), name.as_str()))
             .collect()
-    };
-    let from = |alias: &str| column(Some(alias), &columns.from);
-    let to = |alias: &str| column(Some(alias), &columns.to);
-    let valid = |alias: &str| {
-        format!(
-            "{} IS NOT NULL AND ({} IS NULL OR {} <= {})",
-            from(alias),
-            to(alias),
-            from(alias),
-            to(alias)
-        )
     };
     let mut conditions = vec![
         format!(
@@ -144,21 +178,8 @@ fn overlaps_body(check: &ValidityCheck<'_>, columns: &DayColumns, days: &str) ->
         ),
         all_not_null(&entity(ROW)),
         all_equal(&entity(ROW), &entity(OTHER)),
-        valid(ROW),
-        valid(OTHER),
     ];
-    conditions.push(format!(
-        "({} IS NULL OR {} <= {})",
-        to(OTHER),
-        from(ROW),
-        to(OTHER)
-    ));
-    conditions.push(format!(
-        "({} IS NULL OR {} <= {})",
-        to(ROW),
-        from(OTHER),
-        to(ROW)
-    ));
+    conditions.extend(range_conditions(columns));
     SelectBody {
         items: vec![aliased(&column(Some(ROW), &columns.row), &columns.row)],
         from: format!("{days} AS {ROW}"),
@@ -167,4 +188,33 @@ fn overlaps_body(check: &ValidityCheck<'_>, columns: &DayColumns, days: &str) ->
             "GROUP BY 1".to_owned(),
         ],
     }
+}
+
+/// The conditions on the bounds of two rows that overlap: each has a `valid_from` and is not
+/// inverted, and each starts before the other ends (a NULL `valid_to` is open-ended).
+fn range_conditions(columns: &BoundColumns) -> [String; 4] {
+    let from = |alias: &str| column(Some(alias), &columns.from);
+    let to = |alias: &str| column(Some(alias), &columns.to);
+    let before = columns.range.starts_before;
+    let starts_before_end = |start: &str, end: &str| {
+        format!(
+            "({} IS NULL OR {} {before} {})",
+            to(end),
+            from(start),
+            to(end)
+        )
+    };
+    let valid = |alias: &str| {
+        format!(
+            "{} IS NOT NULL AND {}",
+            from(alias),
+            starts_before_end(alias, alias)
+        )
+    };
+    [
+        valid(ROW),
+        valid(OTHER),
+        starts_before_end(ROW, OTHER),
+        starts_before_end(OTHER, ROW),
+    ]
 }

@@ -1,0 +1,8 @@
+id: val-1-5-open-end-untyped-001
+rules: [VAL-1.5, POP-4.5, E0C-24, W0F-01]
+model: val-1-5-open-end-untyped-001
+expect:
+  outcome: load_error
+  error: E0C-24
+  location: {document: model, pointer: /semantic_model/0/datasets/1/custom_extensions/0/data}
+  warnings: [W0F-01]

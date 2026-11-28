@@ -19,19 +19,21 @@ use crate::read::{Node, Value};
 pub(super) fn dataset(assembly: &Assembly<'_, '_>, outline: &DatasetOutline<'_>) -> Dataset {
     let pointer = &outline.pointer;
     let node = resolve(assembly.document, pointer);
+    let fields = by_name(
+        outline
+            .fields
+            .iter()
+            .map(|element| field(assembly, element)),
+        |field| &field.name,
+    );
+    let populations = populations(assembly, pointer, &fields);
     Dataset {
         name: declared(outline.name.as_ref()),
         source: outline
             .source
             .as_ref()
             .map_or_else(String::new, |source| source.text.to_owned()),
-        fields: by_name(
-            outline
-                .fields
-                .iter()
-                .map(|element| field(assembly, element)),
-            |field| &field.name,
-        ),
+        fields,
         metrics: by_name(
             outline
                 .metrics
@@ -45,7 +47,7 @@ pub(super) fn dataset(assembly: &Assembly<'_, '_>, outline: &DatasetOutline<'_>)
         unique_keys: node.map(unique_keys).unwrap_or_default(),
         access: access(assembly, pointer),
         row_policies: row_policies(assembly, pointer),
-        populations: populations(assembly, pointer),
+        populations,
         summary: assembly.input.extensions.is_summary(pointer),
         descriptions: descriptions(assembly.document, pointer),
         query_errors: assembly.usability.codes(pointer),
@@ -75,13 +77,18 @@ fn row_policies(assembly: &Assembly<'_, '_>, pointer: &JsonPointer) -> Vec<RowPo
     )
 }
 
-fn populations(assembly: &Assembly<'_, '_>, pointer: &JsonPointer) -> Vec<Population> {
+/// The populations the dataset at `pointer` declares, over its `fields`.
+fn populations(
+    assembly: &Assembly<'_, '_>,
+    pointer: &JsonPointer,
+    fields: &[Field],
+) -> Vec<Population> {
     let declared = &assembly.input.extensions.populations;
     by_name(
         declared
             .iter()
             .filter(|population| population.dataset == *pointer)
-            .map(population),
+            .map(|declared| population(declared, fields)),
         |population| &population.name,
     )
 }

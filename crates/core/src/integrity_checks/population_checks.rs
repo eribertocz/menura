@@ -39,6 +39,8 @@ pub(super) fn population_check_sql(
         PopulationMode::Validity {
             valid_from,
             valid_to,
+            valid_to_bound,
+            open_end,
             ..
         } => {
             fields.push(added_column_name("violation", &fields));
@@ -47,6 +49,8 @@ pub(super) fn population_check_sql(
                 entity,
                 valid_from: ColumnName::new(valid_from.as_str()),
                 valid_to: ColumnName::new(valid_to.as_str()),
+                valid_to_bound: *valid_to_bound,
+                open_end: open_end.clone(),
                 result_columns: fields,
             };
             CheckShape::Validity(check)
@@ -151,10 +155,14 @@ pub(super) fn population_rule(population: &Population) -> PopulationRule {
             valid_from,
             valid_to,
             partial_period,
+            valid_to_bound,
+            open_end,
         } => Membership::Validity {
             valid_from: ColumnName::new(valid_from.as_str()),
             valid_to: ColumnName::new(valid_to.as_str()),
             partial_period: *partial_period,
+            valid_to_bound: *valid_to_bound,
+            open_end: open_end.clone(),
         },
         PopulationMode::Periodic { period, .. } => Membership::Periodic {
             period: ColumnName::new(period.as_str()),

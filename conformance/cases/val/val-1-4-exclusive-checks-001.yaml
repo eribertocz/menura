@@ -1,0 +1,6 @@
+id: val-1-4-exclusive-checks-001
+rules: [VAL-1.4, VAL-1.2, CHK-6.3, CHK-7.3]
+model: val-validity-checks
+expect:
+  outcome: "integrity_checks"
+  document: "val-1-4-exclusive-checks-001.document.json"

@@ -5,6 +5,7 @@ use menura_contracts::types::common::Grain;
 use super::common::{Descriptions, DiagnosticCode, NormalizedName, SourceLocation, TypedValue};
 use super::metric::Metric;
 use super::security::{DatasetAccess, RowPolicy};
+use super::validity::{OpenEnd, ValidToBound};
 use crate::expression::Expression;
 
 /// One dataset of the model.
@@ -81,10 +82,15 @@ pub enum PopulationMode {
     Validity {
         /// The field of the start of validity, inclusive.
         valid_from: NormalizedName,
-        /// The field of the end of validity, inclusive.
+        /// The field of the end of validity, inclusive unless `valid_to_bound` says otherwise.
         valid_to: NormalizedName,
         /// When an entity is expected in a period its validity covers partly.
         partial_period: PartialPeriod,
+        /// Whether `valid_to` is the last value covered or the first one not covered
+        /// (VAL-1.1).
+        valid_to_bound: ValidToBound,
+        /// The `valid_to` value that means open-ended, like NULL, when declared (VAL-1.2).
+        open_end: Option<OpenEnd>,
     },
     /// `periodic`: one row per entity and period.
     Periodic {

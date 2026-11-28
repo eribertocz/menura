@@ -1,7 +1,7 @@
 //! The expected-entity rule a `Population` node applies (E4-3.12, POP-3).
 
 use menura_model::expression::Expression;
-use menura_model::internal_model::PartialPeriod;
+use menura_model::internal_model::{OpenEnd, PartialPeriod, ValidToBound};
 
 use crate::names::ColumnName;
 
@@ -26,10 +26,16 @@ pub enum Membership {
     Validity {
         /// The column of the start of validity, inclusive.
         valid_from: ColumnName,
-        /// The column of the end of validity, inclusive; NULL means open-ended.
+        /// The column of the end of validity, inclusive unless `valid_to_bound` says
+        /// otherwise; NULL means open-ended.
         valid_to: ColumnName,
         /// How much of the period the validity must cover.
         partial_period: PartialPeriod,
+        /// Whether `valid_to` is the last value covered or the first one not covered
+        /// (VAL-1.1, VAL-1.3).
+        valid_to_bound: ValidToBound,
+        /// The `valid_to` value that reads like NULL, when declared (VAL-1.2).
+        open_end: Option<OpenEnd>,
     },
     /// `periodic`: an entity is expected in a period if its row for that period exists
     /// (POP-3.2). Its grain is the node's `grain`, which E0 requires (ADD-5.1.7).

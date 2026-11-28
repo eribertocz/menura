@@ -11,7 +11,7 @@ use menura_contracts::types::common::{Grain, LogicalType, TimestampPrecision, To
 use menura_generator_duckdb::{GenerateError, GeneratedSql};
 use menura_model::internal_model::{
     Dataset, Descriptions, Field, InternalModel, ModelParts, NormalizedName, PartialPeriod,
-    RelationshipGraph, TypedValue, ValueType,
+    RelationshipGraph, TypedValue, ValidToBound, ValueType,
 };
 use menura_representations::bound_query::BoundQuery;
 use menura_representations::logical_plan::{
@@ -242,6 +242,8 @@ pub fn validity(partial_period: PartialPeriod) -> Membership {
         valid_from: ColumnName::new("VALID_FROM"),
         valid_to: ColumnName::new("VALID_TO"),
         partial_period,
+        valid_to_bound: ValidToBound::Inclusive,
+        open_end: None,
     }
 }
 

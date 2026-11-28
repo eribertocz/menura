@@ -1,0 +1,7 @@
+id: val-1-5-open-end-type-001
+rules: [VAL-1.5, VAL-1.2, POP-4.2, E0C-03]
+model: val-1-5-open-end-type-001
+expect:
+  outcome: load_error
+  error: E0C-03
+  location: {document: model, pointer: /semantic_model/0/datasets/0/custom_extensions/0/data}

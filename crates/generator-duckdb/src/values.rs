@@ -4,6 +4,7 @@ use menura_contracts::encode_integer;
 use menura_model::expression::{
     DateValue, DecimalLiteral, FloatLiteral, IntegerLiteral, Literal, TimeOfDay, TimestampValue,
 };
+use menura_model::internal_model::OpenEnd;
 use menura_security::{AdmittedScalar, AdmittedValue};
 use serde_json::Value;
 
@@ -35,6 +36,22 @@ pub(crate) fn literal_sql(literal: &Literal) -> String {
             date_text(timestamp.date),
             time_text(&timestamp.time)
         ),
+    }
+}
+
+/// The text of a model `open_end` (VAL-1.2) that `DuckDB` casts to its `physical` type: the
+/// date, or the date and time separated by a space, with the offset `+00` for an instant.
+pub(crate) fn open_end_text(open_end: &OpenEnd) -> String {
+    match open_end {
+        OpenEnd::Date(date) => text_sql(&date_text(*date)),
+        OpenEnd::Timestamp(timestamp) => {
+            let zone = if timestamp.with_time_zone { "+00" } else { "" };
+            text_sql(&format!(
+                "{} {}{zone}",
+                date_text(timestamp.date),
+                timestamp.time
+            ))
+        }
     }
 }
 

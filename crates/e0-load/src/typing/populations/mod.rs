@@ -1,13 +1,14 @@
-//! `E0C-23` and `E0C-24`: the condition and the time fields of every population (POP-4.4,
-//! POP-4.5), typed against the field types E0.f found.
+//! `E0C-23`, `E0C-24` and `E0C-66`: the condition, the time fields and the `open_end` of every
+//! population (POP-4.4, POP-4.5, VAL-1.5), typed against the field types E0.f found.
 //!
 //! `required_when` is a row-level expression of the declaring dataset: a bare name is a field
 //! of that dataset. A text that does not parse, a construct outside the subset, a qualified
 //! reference, an aggregate, `AGG(…)`, `USER_ATTRIBUTE(…)`, or a type other than boolean is
 //! `E0C-23`. The structural conditions are checked whatever the types of the fields read; the
 //! type is checked only when every field read has a type, and `E0C-24` only on typed fields: a
-//! field without a type already has its own diagnostic (POP-4.5). A missing field is `E0C-22`,
-//! reported by E0.d.
+//! field without a type already has its own diagnostic (POP-4.5). An `open_end` is read as a
+//! value of the type of `valid_to` only when `valid_to` has a `date` or `timestamp` type: any
+//! other type already has its `E0C-24`. A missing field is `E0C-22`, reported by E0.d.
 
 pub(super) mod structure;
 
@@ -18,6 +19,7 @@ use menura_model::expression::Reference;
 
 use super::output::{ElementKind, Typing};
 use crate::expressions::{ExpressionPlace, parse_element_expression};
+use crate::extensions::populations::{PopulationMode, parse_open_end};
 use crate::extensions::{ExtensionCode, ExtensionDiagnostic, Extensions, Population, per_entry};
 use crate::names::Name;
 use crate::outline::{DatasetOutline, outline};
@@ -48,8 +50,9 @@ impl Fields<'_, '_> {
 ///
 /// # Errors
 ///
-/// Returns at most one `E0C-23` and one `E0C-24` diagnostic per entry, at the entry's `data`
-/// member (E0C-2.6), in document order then by code. Both codes reject the model (E0-4).
+/// Returns at most one `E0C-23`, one `E0C-24` and one `E0C-66` diagnostic per entry, at the
+/// entry's `data` member (E0C-2.6), in document order then by code. Every one of these codes
+/// rejects the model (E0-4).
 pub fn type_populations(
     structure: &Structure<'_>,
     typing: &Typing,
@@ -84,6 +87,12 @@ pub fn type_populations(
         ExtensionCode::PopulationTimeKind,
         "a population time field is not of kind date or timestamp",
         |population| time_problems(&fields, population),
+    ));
+    errors.extend(per_entry(
+        populations,
+        ExtensionCode::InvalidOpenEnd,
+        "a population open_end is not a value of the type of its valid_to",
+        |population| open_end_problem(&fields, population).into_iter().collect(),
     ));
     let order: HashMap<&JsonPointer, usize> = populations
         .iter()
@@ -168,4 +177,28 @@ fn time_problems(fields: &Fields<'_, '_>, population: &Population) -> Vec<String
             })
         })
         .collect()
+}
+
+/// Why the `open_end` of `population` is not a value of the type of its `valid_to` in its
+/// CON-4 form (VAL-1.5): checked only when `valid_to` has a `date` or `timestamp` type.
+fn open_end_problem(fields: &Fields<'_, '_>, population: &Population) -> Option<String> {
+    let PopulationMode::Validity {
+        valid_to,
+        open_end: Some(open_end),
+        ..
+    } = &population.mode
+    else {
+        return None;
+    };
+    let typed = fields.type_of(&population.dataset, &Name::declared(valid_to))?;
+    let logical_type = typed
+        .logical()
+        .filter(|logical| matches!(logical, LogicalType::Date | LogicalType::Timestamp { .. }))?;
+    parse_open_end(open_end, logical_type).is_none().then(|| {
+        format!(
+            "the open_end `{open_end}` of the population `{}` is not a {} in its CON-4 form",
+            population.name,
+            describe(&typed.value_type)
+        )
+    })
 }

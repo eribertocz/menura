@@ -8,8 +8,10 @@
 pub(crate) mod fixture;
 mod item;
 mod model;
+mod open_end;
 
 pub(crate) use model::{PartialPeriod, Population, PopulationMode};
+pub(crate) use open_end::parse_open_end;
 
 use serde_json::Value as Json;
 

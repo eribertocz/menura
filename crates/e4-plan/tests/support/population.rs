@@ -4,7 +4,7 @@ use menura_contracts::types::common::{Grain, LogicalType};
 use menura_e4_plan::{PlanError, PopulationRequest, plan_population};
 use menura_expressions::typing::big_integer;
 use menura_model::internal_model::{
-    Dataset, InternalModel, PartialPeriod, Population, PopulationMode, RowPolicy,
+    Dataset, InternalModel, PartialPeriod, Population, PopulationMode, RowPolicy, ValidToBound,
 };
 use menura_representations::logical_plan::{Operation, OutputSchema, PlanNode, PopulationRule};
 use menura_representations::names::ColumnName;
@@ -61,6 +61,8 @@ pub fn validity(partial_period: PartialPeriod) -> PopulationMode {
         valid_from: name("VALID_FROM"),
         valid_to: name("VALID_TO"),
         partial_period,
+        valid_to_bound: ValidToBound::Inclusive,
+        open_end: None,
     }
 }
 
