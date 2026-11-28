@@ -72,10 +72,11 @@ rejected, never answered partially or without a rule it needs (above all a row p
 | Version | Content |
 |---|---|
 | 1.1.0 | ClickHouse dialect |
-| 1.2.0 | Window metrics (moving windows, running totals), ranking and top N |
+| 1.2.0 | Temporal validity (VAL, Mergus #639); the executor contract (EXE, Accipiter); `sql_metrics` in `describe` and `sources` in the model dependencies; SQL-form lookup by position |
+| 1.3.0 | Window metrics (moving windows, running totals), ranking and top N; a stable element `id` extension, so that `menura diff` reports renames, and the `business` metadata extension (unit, synonyms, owner, certification, translations) (Accipiter) |
 | 1.x | Layer 2 SQL growth (F28) |
-| 1.3.0 | Fiscal and custom calendars |
-| 1.4.0 | Metric templates and query parameters |
+| 1.4.0 | Fiscal and custom calendars |
+| 1.5.0 | Metric templates and query parameters |
 | 1.x | Native adoption of each new official Apache Ossie capability; matching extensions deprecated |
 
 Modules outside the compiler (executor, natural-language translator, gateway, pipelines) have
@@ -107,7 +108,7 @@ their own roadmaps in their own repositories.
 
 | ID | Item |
 |---|---|
-| F1 | Moving windows and ranking (planned for 1.2.0) |
+| F1 | Moving windows and ranking (planned for 1.3.0) |
 | F2 | Predicates on metric values (`HAVING`) |
 | F3 | Subtotals (`ROLLUP`, `CUBE`, `GROUPING SETS`) |
 | F4 | Row listings without aggregation |

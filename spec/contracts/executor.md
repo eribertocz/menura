@@ -4,8 +4,10 @@ Rules for every executor that runs a compiled plan ([contract](compiled-plan.md)
 its result in Apache Arrow (architecture section 3.1). This chapter adds no document and no
 JSON Schema: it states what an executor does with the plan it receives, so that the rows it
 returns are exactly the ones the plan means. The executor never modifies `sql` or `parameters`
-(PLN-2.5). Its rules join the coverage scope at the gate of the release that implements them
-(7.1a).
+(PLN-2.5). This chapter enters the coverage scope at the 1.2.0 gate (CS-2.6). The conformance
+runner covers the rules it applies when it executes a plan; a rule that binds only an external
+executor, which Menura cannot observe, is verified by that executor's own suite and listed in
+`spec/coverage-exempt.txt` (CS-2.6b).
 
 ## EXE-1 Engine and connection
 

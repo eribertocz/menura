@@ -3,8 +3,8 @@
 Rules for history tables, whose rows are versions of an entity with a validity range (slowly
 changing dimensions of type 2). VAL-1 lets a `validity` population (POP-2) declare a half-open
 range and a sentinel end. VAL-2 lets a relationship join each row of `from` to the version of
-`to` valid at a time the row holds. Their rules join the coverage scope at the gate of the
-release that implements them (7.1a).
+`to` valid at a time the row holds. This chapter enters the coverage scope at the 1.2.0 gate
+(CS-2.6).
 
 ## VAL-1 Range shape of a `validity` population
 

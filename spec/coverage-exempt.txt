@@ -36,3 +36,19 @@ OSS-2.6 rule for documentation and wording, checked in review
 E2-5.1 statement of architecture: which stage runs which check
 E5-3.1 the rewrite has no observable effect on results; the SQL shape is not normative
 E5-3.1a definition used by E5-3.1
+EXE-1.1 executor obligation: which engine version it runs; verified by the executor's own suite (EXE chapter intro)
+EXE-1.3 executor obligation: its own connection and credentials; verified by the executor's own suite (EXE chapter intro)
+EXE-1.5 executor obligation: the extensions it loads to read its sources; verified by the executor's own suite (EXE chapter intro)
+EXE-3.1 executor obligation: the Arrow schema of its result; verified by the executor's own suite (EXE chapter intro)
+EXE-3.2 executor obligation: Arrow values and row order of its result; verified by the executor's own suite (EXE chapter intro)
+EXE-3.3 executor obligation: Arrow time units of its result; verified by the executor's own suite (EXE chapter intro)
+EXE-3.4 executor obligation: NaN and infinity in its Arrow result; verified by the executor's own suite (EXE chapter intro)
+EXE-4.1 executor obligation: enforcing the plan's limits; verified by the executor's own suite (EXE chapter intro)
+EXE-4.2 executor obligation: cancelling and failing with REXE-01 or REXE-02; verified by the executor's own suite (EXE chapter intro)
+EXE-5.1 pointer to E6-4.6a, E6-4.6b and E6-7.5, whose cases cover the raised message
+EXE-5.2 statement of how the engines report a raised message; no behavior of Menura or of the executor
+EXE-5.4 the executor's own reporting format, not part of any Menura contract
+EXE-7.1 executor obligation: reading exactly the plan's data versions or failing with REXE-04; verified by the executor's own suite (EXE chapter intro)
+EXE-7.2 executor obligation: how it guarantees the data versions is its own choice; verified by the executor's own suite (EXE chapter intro)
+EXE-7.3 executor obligation: results tied to no data version; verified by the executor's own suite (EXE chapter intro)
+EXE-7.4 executor obligation: keeping results of different engine versions apart in its cache; verified by the executor's own suite (EXE chapter intro)
