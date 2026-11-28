@@ -24,6 +24,7 @@ returns are exactly the ones the plan means. The executor never modifies `sql` o
 | EXE-2.2 | **NULL.** A parameter whose `value` is `null` is bound as SQL NULL in DuckDB, whatever its type, and as `\N` in ClickHouse (E6-7.3). |
 | EXE-2.3 | **Values by type.** The native value of each logical type is the one of the table below. A type with no ClickHouse value is never a parameter of a `clickhouse` plan, because compilation fails with `E6-01` (E6-7.12). `binary` and `interval` have no CON-4 encoding, so no parameter has either type. |
 | EXE-2.4 | **No NaN.** No parameter is NaN or infinite: CON-4 writes a float as a JSON number, and JSON has neither. |
+| EXE-2.5 | **Fraction digits.** A `time` or `timestamp` parameter holds at most six fraction digits: a query literal has at most six (E0F-9.3), `reference_time` keeps microseconds (QRY-2), and no security attribute has either type (SCY-2.2). A binding at microsecond resolution is therefore exact for every precision, `ns` included. |
 
 | Logical type | CON-4 value | DuckDB (`$n`) | ClickHouse (`pn`) |
 |---|---|---|---|
@@ -35,7 +36,7 @@ returns are exactly the ones the plan means. The executor never modifies `sql` o
 | `text` | String | `VARCHAR` | The text in ClickHouse's escaped form: `\`, tab, line feed and carriage return written `\\`, `\t`, `\n` and `\r` |
 | `date` | `YYYY-MM-DD` | `DATE` of that day of the proleptic Gregorian calendar | The CON-4 text, which `Date32` reads |
 | `time` | `HH:MM:SS[.f]` | `TIME` of the microseconds since midnight. A query literal has at most six fraction digits (E0F-9.3) | None (E6-7.12) |
-| `timestamp`, `precision` p, without time zone | `YYYY-MM-DDTHH:MM:SS[.f]` | A timestamp of the wall-clock value: `TIMESTAMP` (microseconds) for p `s`, `ms` or `us`, `TIMESTAMP_NS` for p `ns` | None (E6-7.12) |
+| `timestamp`, `precision` p, without time zone | `YYYY-MM-DDTHH:MM:SS[.f]` | A timestamp of the wall-clock value: `TIMESTAMP` (microseconds), exact for every precision (EXE-2.5) | None (E6-7.12) |
 | `timestamp`, `precision` p, with time zone | `YYYY-MM-DDTHH:MM:SS[.f]Z` | `TIMESTAMP WITH TIME ZONE` of the microseconds since `1970-01-01T00:00:00Z`; or, where the binding interface has no such value, a `VARCHAR` holding the CON-4 text with `Z` replaced by `+00:00`. Never a `TIMESTAMP`, which the cast would read in the session `TimeZone` | The CON-4 text with `T` replaced by a space and `Z` removed, which `DateTime64(<d>, 'UTC')` reads as an instant in UTC |
 | `uuid` | Lowercase, hyphenated | `UUID`, or a `VARCHAR` holding the CON-4 text | The CON-4 text |
 | `list<T>` | JSON array | A list whose elements are bound as `T`'s row states, a NULL element as NULL (E6-5.3) | `[e1,e2,…]`: a NULL element is `NULL`; a `boolean`, `integer` or `float` element is its text; any other element is its text between single quotes, escaped as in the `text` row and with each `'` written `\'` |
