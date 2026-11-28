@@ -13,8 +13,9 @@ pub(crate) const SUPPORTED_VERSION: u64 = 1;
 
 /// Every extension key with the object types it is valid on, as the model contract lists them.
 /// `additivity` is valid on a dataset metric of the development format too (ADD-5.1.6);
-/// `derived` and `context` are valid on model metrics only (DER-5.1.1, CTX-5.1.1).
-const EXTENSION_KEYS: [(&str, &[ObjectKind]); 8] = [
+/// `derived` and `context` are valid on model metrics only (DER-5.1.1, CTX-5.1.1), and
+/// `temporal` on relationships only (VAL-2.1).
+const EXTENSION_KEYS: [(&str, &[ObjectKind]); 9] = [
     (
         "additivity",
         &[ObjectKind::Metric, ObjectKind::DatasetMetric],
@@ -26,6 +27,7 @@ const EXTENSION_KEYS: [(&str, &[ObjectKind]); 8] = [
     ("access", &[ObjectKind::Dataset]),
     ("row_access", &[ObjectKind::Dataset]),
     ("aggregate", &[ObjectKind::Dataset]),
+    ("temporal", &[ObjectKind::Relationship]),
 ];
 
 /// What a key of `data` of an entry of ours is.

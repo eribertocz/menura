@@ -15,6 +15,9 @@ pub struct Relationship {
     pub from_columns: Vec<NormalizedName>,
     /// `to_columns`, in the order written; paired by position with `from_columns`.
     pub to_columns: Vec<NormalizedName>,
+    /// Its `temporal` entry when it is a temporal relationship (VAL-2.1); `None` for a plain
+    /// one.
+    pub temporal: Option<TemporalJoin>,
     /// Its `description`, `label` and `ai_context`.
     pub descriptions: Descriptions,
     /// The query error codes of a query that names it, ordered by code; empty when it is
@@ -22,6 +25,16 @@ pub struct Relationship {
     pub query_errors: Vec<DiagnosticCode>,
     /// Where it is written.
     pub location: SourceLocation,
+}
+
+/// The `temporal` entry of a temporal relationship (VAL-2.1): each row of `from` joins the
+/// versions of `to` that the population covers at its `from_time` value (VAL-2.8).
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct TemporalJoin {
+    /// The field of `from` that holds the time of each row (VAL-2.2).
+    pub from_time: NormalizedName,
+    /// The `validity` population of `to` that supplies the versions (VAL-2.3).
+    pub population: NormalizedName,
 }
 
 /// The directed graph of the usable relationships, with what each dataset reaches (E0H-2.3).

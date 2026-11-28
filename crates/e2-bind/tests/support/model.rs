@@ -123,6 +123,7 @@ fn keyed_relationship(relationship_name: &str, from: &str, to: &str, key: &str) 
         to: name(to),
         from_columns: vec![name(key)],
         to_columns: vec![name("CUSTOMER_ID")],
+        temporal: None,
         descriptions: Descriptions::default(),
         query_errors: Vec::new(),
         location: location(),

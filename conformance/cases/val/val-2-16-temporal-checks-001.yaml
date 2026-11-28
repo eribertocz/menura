@@ -1,0 +1,6 @@
+id: val-2-16-temporal-checks-001
+rules: [VAL-2.16, VAL-2.16a, CHK-2.6, CHK-7.3]
+model: val-temporal
+expect:
+  outcome: "integrity_checks"
+  document: "val-2-16-temporal-checks-001.document.json"

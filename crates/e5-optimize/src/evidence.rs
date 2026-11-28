@@ -82,7 +82,10 @@ fn relationship_check_kind(kind: CheckKind) -> Option<StateCheckKind> {
     match kind {
         CheckKind::KeyUniqueness => Some(StateCheckKind::KeyUniqueness),
         CheckKind::OrphanKeys => Some(StateCheckKind::OrphanKeys),
-        CheckKind::Summary | CheckKind::Population | CheckKind::SemiAdditive => None,
+        CheckKind::TemporalOrphans
+        | CheckKind::Summary
+        | CheckKind::Population
+        | CheckKind::SemiAdditive => None,
     }
 }
 

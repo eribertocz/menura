@@ -1,0 +1,98 @@
+version: "0.1.1"
+semantic_model:
+  - name: val_temporal
+    description: 'Sales and visits joined to the customer version valid at their time (VAL-2): an exclusive date history with an open_end, an inclusive timestamp history, and a plain relationship that is a second path from sales to customer_versions (VAL-2.12)'
+    custom_extensions:
+      - vendor_name: COMMON
+        data: '{"namespace": "menura", "version": 1, "security_context": {"roles": ["analyst"], "attributes": []}}'
+    datasets:
+      - name: sales
+        source: shop.sales
+        primary_key: [sale_id]
+        fields:
+          - name: sale_id
+            expression: {dialects: [{dialect: ANSI_SQL, expression: sale_id}]}
+          - name: customer_id
+            expression: {dialects: [{dialect: ANSI_SQL, expression: customer_id}]}
+          - name: sold_on
+            expression: {dialects: [{dialect: ANSI_SQL, expression: sold_on}]}
+            dimension: {is_time: true}
+          - name: sold_at
+            expression: {dialects: [{dialect: ANSI_SQL, expression: sold_at}]}
+            dimension: {is_time: true}
+        custom_extensions:
+          - vendor_name: COMMON
+            data: '{"namespace": "menura", "version": 1, "access": {"mode": "roles", "roles": ["analyst"]}}'
+      - name: customer_versions
+        source: shop.customer_versions
+        primary_key: [customer_id, valid_from]
+        fields:
+          - name: customer_id
+            expression: {dialects: [{dialect: ANSI_SQL, expression: customer_id}]}
+          - name: segment
+            expression: {dialects: [{dialect: ANSI_SQL, expression: segment}]}
+          - name: valid_from
+            expression: {dialects: [{dialect: ANSI_SQL, expression: valid_from}]}
+            dimension: {is_time: true}
+          - name: valid_to
+            expression: {dialects: [{dialect: ANSI_SQL, expression: valid_to}]}
+            dimension: {is_time: true}
+        custom_extensions:
+          - vendor_name: COMMON
+            data: '{"namespace": "menura", "version": 1, "access": {"mode": "roles", "roles": ["analyst"]}, "populations": [{"name": "customer_history", "mode": "validity", "entity": ["customer_id"], "valid_from": "valid_from", "valid_to": "valid_to", "partial_period": "any_day", "valid_to_bound": "exclusive", "open_end": "2099-12-31"}]}'
+      - name: visits
+        source: shop.visits
+        primary_key: [visit_id]
+        fields:
+          - name: visit_id
+            expression: {dialects: [{dialect: ANSI_SQL, expression: visit_id}]}
+          - name: customer_id
+            expression: {dialects: [{dialect: ANSI_SQL, expression: customer_id}]}
+          - name: visited_at
+            expression: {dialects: [{dialect: ANSI_SQL, expression: visited_at}]}
+            dimension: {is_time: true}
+        custom_extensions:
+          - vendor_name: COMMON
+            data: '{"namespace": "menura", "version": 1, "access": {"mode": "roles", "roles": ["analyst"]}}'
+      - name: customer_tiers
+        source: shop.customer_tiers
+        primary_key: [customer_id, tier_from]
+        fields:
+          - name: customer_id
+            expression: {dialects: [{dialect: ANSI_SQL, expression: customer_id}]}
+          - name: tier
+            expression: {dialects: [{dialect: ANSI_SQL, expression: tier}]}
+          - name: tier_from
+            expression: {dialects: [{dialect: ANSI_SQL, expression: tier_from}]}
+            dimension: {is_time: true}
+          - name: tier_to
+            expression: {dialects: [{dialect: ANSI_SQL, expression: tier_to}]}
+            dimension: {is_time: true}
+        custom_extensions:
+          - vendor_name: COMMON
+            data: '{"namespace": "menura", "version": 1, "access": {"mode": "roles", "roles": ["analyst"]}, "populations": [{"name": "tier_history", "mode": "validity", "entity": ["customer_id"], "valid_from": "tier_from", "valid_to": "tier_to", "partial_period": "any_day"}]}'
+    relationships:
+      - name: sale_customer
+        from: sales
+        to: customer_versions
+        from_columns: [customer_id]
+        to_columns: [customer_id]
+        custom_extensions:
+          - vendor_name: COMMON
+            data: '{"namespace": "menura", "version": 1, "temporal": {"from_time": "sold_on", "population": "customer_history"}}'
+      - name: sale_customer_any
+        from: sales
+        to: customer_versions
+        from_columns: [customer_id]
+        to_columns: [customer_id]
+      - name: visit_tier
+        from: visits
+        to: customer_tiers
+        from_columns: [customer_id]
+        to_columns: [customer_id]
+        custom_extensions:
+          - vendor_name: COMMON
+            data: '{"namespace": "menura", "version": 1, "temporal": {"from_time": "visited_at", "population": "tier_history"}}'
+    metrics:
+      - name: sale_count
+        expression: {dialects: [{dialect: ANSI_SQL, expression: 'COUNT(sales.sale_id)'}]}

@@ -27,6 +27,14 @@ impl Comparison {
             tolerance: expect.tolerance,
         }
     }
+
+    /// Rows in any order, floats compared exactly.
+    pub(crate) fn any_order() -> Self {
+        Self {
+            row_order: RowOrder::Any,
+            tolerance: None,
+        }
+    }
 }
 
 /// Why the actual rows differ from the expected ones, or `None` when they match.
@@ -108,7 +116,7 @@ pub(crate) fn rows_divergence(
 }
 
 /// Why the actual cells differ from the expected ones, or `None` when they match.
-fn cells_mismatch(
+pub(crate) fn cells_mismatch(
     actual: &[Vec<Cell>],
     expected: &[Vec<Cell>],
     comparison: Comparison,

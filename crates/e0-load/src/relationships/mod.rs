@@ -62,7 +62,12 @@ pub(crate) fn analyze_relationships(
         .iter()
         .map(|element| &element.pointer)
         .collect();
-    let lookup = Lookup::new(&datasets, &summaries, &unusable);
+    let temporal: HashSet<&JsonPointer> = extensions
+        .temporal
+        .iter()
+        .map(|declaration| &declaration.relationship)
+        .collect();
+    let lookup = Lookup::new(&datasets, &summaries, &unusable, &temporal);
     let mut warnings = Vec::new();
     let judged: Vec<_> = relationships
         .iter()

@@ -1,0 +1,17 @@
+id: val-2-12-two-paths-001
+rules: [VAL-2.12, E0E-2.2, W0E-01]
+model: val-temporal
+security_context: analyst.json
+query:
+  contract: menura.query
+  contract_version: "1.1.0"
+  reference_time: "2026-11-15T12:00:00-04:00"
+  time_zone: UTC
+  query:
+    dimensions: [customer_versions.segment]
+    metrics:
+      - {metric: sale_count, alias: sale_count}
+expect:
+  outcome: error
+  error: E_AMBIGUOUS_PATH
+  warnings: [W0E-01, W0E-02]

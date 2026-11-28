@@ -79,6 +79,7 @@ fn model_with(change: impl Fn(&mut Field)) -> InternalModel {
         to: NormalizedName::new("REGIONS"),
         from_columns: vec![NormalizedName::new("REGION_ID")],
         to_columns: vec![NormalizedName::new("REGION_ID")],
+        temporal: None,
         ..parts.relationships[0].clone()
     };
     parts.relationships.insert(0, regions_relationship);

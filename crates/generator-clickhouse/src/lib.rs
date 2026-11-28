@@ -64,8 +64,9 @@ mod types;
 mod values;
 
 pub use check::{
-    CheckInputs, GeneratedCheckSql, PeriodicCheck, SnapshotCheck, SnapshotTime, ValidityCheck,
-    generate_check_sql, generate_periodic_check_sql, generate_snapshot_check_sql,
+    CheckInputs, GeneratedCheckSql, PeriodicCheck, SnapshotCheck, SnapshotTime,
+    TemporalOrphansCheck, ValidityCheck, VersionRange, generate_check_sql,
+    generate_periodic_check_sql, generate_snapshot_check_sql, generate_temporal_orphans_check_sql,
     generate_validity_check_sql,
 };
 pub use error::{GenerateError, InvariantViolation};

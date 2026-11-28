@@ -6,7 +6,7 @@ mod metrics;
 
 pub(super) use elements::{
     dataset, descriptions, field_definition, population, relationship, relationship_definition,
-    security_context,
+    security_context, validity_range,
 };
 pub(super) use metrics::{metric, metric_definition};
 

@@ -20,7 +20,9 @@
 //! context metrics by [`context::check_context_time_kinds`] (`E0C-61`, CTX-5.1.4). The
 //! conditions of row policies are parsed and typed by [`security::type_row_policies`]
 //! (`E0C-46`, `E0C-48`, SCY-5.1.6), and the measures and dimensions of summaries by
-//! [`summaries::type_summaries`] (`E0C-52`, `E0C-53`, `E0C-57`, SUM-6.1.3 to SUM-6.1.5). `AGG(…)` in a field or a dataset metric is `E0F-02`
+//! [`summaries::type_summaries`] (`E0C-52`, `E0C-53`, `E0C-57`, SUM-6.1.3 to SUM-6.1.5), and
+//! the time of temporal relationships by [`temporal::type_temporal`] (`E0C-70`, `E0C-71`,
+//! VAL-2.5, VAL-2.6). `AGG(…)` in a field or a dataset metric is `E0F-02`
 //! (DER-5.1.2).
 
 pub(crate) mod additivity;
@@ -35,6 +37,7 @@ pub(crate) mod populations;
 mod scope;
 pub(crate) mod security;
 pub(crate) mod summaries;
+pub(crate) mod temporal;
 
 pub(crate) use diagnostic::{TYPING_WARNING, TypingDiagnostic};
 pub(crate) use output::{ElementKind, TypedElement, Typing, UnusableElement};

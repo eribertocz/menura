@@ -188,6 +188,8 @@ pub enum StateCheckKind {
     KeyUniqueness,
     /// Foreign keys without a match.
     OrphanKeys,
+    /// `from` rows of a temporal relationship with no version covering their time (VAL-2.16a).
+    TemporalOrphans,
     /// Population extension.
     Population,
     /// Semi-additive metric extension.

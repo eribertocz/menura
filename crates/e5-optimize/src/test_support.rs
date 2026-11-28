@@ -84,6 +84,7 @@ pub(crate) fn shop_model() -> InternalModel {
             to: NormalizedName::new("CUSTOMERS"),
             from_columns: vec![NormalizedName::new("CUSTOMER_ID")],
             to_columns: vec![NormalizedName::new("CUSTOMER_ID")],
+            temporal: None,
             descriptions: Descriptions::default(),
             query_errors: Vec::new(),
             location: location("/semantic_model/0/relationships/0"),
