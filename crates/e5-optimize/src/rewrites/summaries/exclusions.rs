@@ -8,7 +8,7 @@ use menura_model::expression::{AggregateCall, Expression, Reference};
 use menura_model::internal_model::{
     Dataset, Field, InternalModel, NormalizedName, Summary, ValueType,
 };
-use menura_representations::logical_plan::{AggregateComponent, OutputSchema};
+use menura_representations::logical_plan::{AggregateComponent, Operation, OutputSchema, PlanNode};
 
 use menura_representations::bound_query::BoundQuery;
 
@@ -18,14 +18,28 @@ use super::restricted::reads_restricted_metric;
 
 /// Whether the branch is excluded by SUM-3.2: it still has a `Deduplicate`, one of its
 /// components is read by a metric of the query declared non-additive or semi-additive,
-/// or one of its components aggregates a float.
+/// it has a `Join` or a propagation `SemiJoin` along a temporal relationship anywhere in its
+/// plan (VAL-2.19), or one of its components aggregates a float.
 pub(super) fn excluded(shape: &BranchShape<'_>, model: &InternalModel, query: &BoundQuery) -> bool {
     shape.deduplicate
         || reads_restricted_metric(shape, model, query)
+        || joins_temporally(shape.aggregate)
         || shape
             .components
             .iter()
             .any(|component| aggregates_float(component, shape.scan.schema()))
+}
+
+/// Whether `node` or a node under it is a `Join` or a `SemiJoin` along a temporal
+/// relationship: a summary row has no single `from_time` value (VAL-2.19).
+fn joins_temporally(node: &PlanNode) -> bool {
+    let temporal = match node.operation() {
+        Operation::Join { temporal, .. } | Operation::SemiJoin { temporal, .. } => {
+            temporal.is_some()
+        }
+        _ => false,
+    };
+    temporal || node.inputs().into_iter().any(joins_temporally)
 }
 
 /// Whether the argument of `component` may be a float: a recomposed float sum can differ

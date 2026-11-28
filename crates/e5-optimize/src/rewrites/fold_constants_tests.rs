@@ -69,6 +69,7 @@ fn semi_join(input: PlanNode) -> PlanNode {
         input: Box::new(input),
         relationship: NormalizedName::new(RELATIONSHIP),
         on: key_condition(),
+        temporal: None,
         related_all: Box::new(policy("CUSTOMERS", true)),
         related_visible: Box::new(policy("CUSTOMERS", true)),
     })
@@ -81,6 +82,7 @@ fn join(left: PlanNode, right: PlanNode) -> PlanNode {
         relationship: NormalizedName::new(RELATIONSHIP),
         kind: JoinKind::Left,
         on: key_condition(),
+        temporal: None,
         right_prefix: ColumnPrefix::new("CUSTOMERS"),
     })
 }

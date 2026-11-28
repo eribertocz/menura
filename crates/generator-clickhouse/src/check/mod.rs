@@ -11,13 +11,15 @@ mod temporal;
 mod validity;
 
 use menura_contracts::types::catalog::CatalogSchemaDocument;
+use menura_contracts::types::common::LogicalType;
 use menura_contracts::types::descriptions::CheckParameter;
-use menura_model::internal_model::InternalModel;
+use menura_model::internal_model::{InternalModel, NormalizedName};
 use menura_representations::logical_plan::{Operation, PlanNode};
+use menura_representations::names::ColumnName;
 
 use crate::body::{SelectBody, statement};
 use crate::error::{GenerateError, InvariantViolation};
-use crate::expressible::check_model_plans;
+use crate::expressible::{check_model_plans, check_open_end, check_rule_open_end};
 use crate::expression::Environment;
 use crate::steps::{StepWriter, error, pass_through};
 
@@ -87,6 +89,14 @@ pub fn generate_validity_check_sql(
     inputs: CheckInputs<'_>,
 ) -> Result<GeneratedCheckSql, GenerateError> {
     check_model_plans(&[check.rows], inputs.model, inputs.catalog)?;
+    if let Some(dataset) = scanned_dataset(check.rows) {
+        check_open_end(
+            check.open_end.as_ref(),
+            column_type(check.rows, &check.valid_to),
+            dataset,
+            inputs.model,
+        )?;
+    }
     let environment = environment(inputs);
     let mut writer = StepWriter::new(&environment);
     let last = writer.validity_check(check)?;
@@ -124,6 +134,11 @@ pub fn generate_snapshot_check_sql(
     let mut plans = vec![check.rows];
     plans.extend(check.time.as_ref().map(|time| time.population));
     check_model_plans(&plans, inputs.model, inputs.catalog)?;
+    if let Some(time) = &check.time
+        && let Some(dataset) = scanned_dataset(time.population)
+    {
+        check_rule_open_end(time.rule, time.population.schema(), dataset, inputs.model)?;
+    }
     let environment = environment(inputs);
     let mut writer = StepWriter::new(&environment);
     let last = writer.snapshot_check(check)?;
@@ -142,6 +157,14 @@ pub fn generate_temporal_orphans_check_sql(
     inputs: CheckInputs<'_>,
 ) -> Result<GeneratedCheckSql, GenerateError> {
     check_model_plans(&[check.rows, check.versions], inputs.model, inputs.catalog)?;
+    if let Some(dataset) = scanned_dataset(check.versions) {
+        check_open_end(
+            check.range.open_end.as_ref(),
+            column_type(check.versions, &check.range.valid_to),
+            dataset,
+            inputs.model,
+        )?;
+    }
     let environment = environment(inputs);
     let mut writer = StepWriter::new(&environment);
     let last = writer.temporal_orphans_check(check)?;
@@ -189,4 +212,25 @@ impl<'input> StepWriter<'input> {
             _ => Err(error(InvariantViolation::NodeOutsideSlice, node)),
         }
     }
+}
+
+/// The dataset of the `Scan` under the `Filter` nodes of `rows`, the plan of a check's rows:
+/// the dataset that declares the population whose `open_end` the check reads (VAL-2.23).
+fn scanned_dataset(rows: &PlanNode) -> Option<&NormalizedName> {
+    let mut node = rows;
+    loop {
+        if let Operation::Scan { dataset, .. } = node.operation() {
+            return Some(dataset);
+        }
+        node = node.inputs().into_iter().next()?;
+    }
+}
+
+/// The type of the column `name` of `rows`, when it has one.
+fn column_type<'plan>(rows: &'plan PlanNode, name: &ColumnName) -> Option<&'plan LogicalType> {
+    rows.schema()
+        .columns()
+        .iter()
+        .find(|column| &column.name == name)
+        .map(|column| &column.logical_type)
 }

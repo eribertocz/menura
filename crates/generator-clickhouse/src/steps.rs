@@ -121,6 +121,7 @@ impl<'input> StepWriter<'input> {
                 right,
                 kind,
                 on,
+                temporal,
                 right_prefix,
                 ..
             } => {
@@ -129,6 +130,7 @@ impl<'input> StepWriter<'input> {
                     right,
                     kind: *kind,
                     on,
+                    temporal: temporal.as_ref(),
                     right_prefix,
                 };
                 Ok((self.join(node, &join)?, "join"))

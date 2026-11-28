@@ -28,17 +28,19 @@ impl<'a> Evidence<'a> {
         self.state
     }
 
-    /// Whether the state holds evidence of the check of `kind` for the relationship `target`
-    /// (CAT-7.3): a result whose `status` is `passed`, whose `definition_hash` is the current
-    /// one (E0H-4.3), and whose `verified` lists exactly the current versions of the relations
-    /// the check reads (its CHK-2 `sources`): the `to` relation for `key_uniqueness`, the `from`
-    /// and `to` relations for `orphan_keys`. Only those two kinds are evidence for E5; every
-    /// other kind has none.
+    /// Whether the state holds evidence of the check of `kind` for `target` (CAT-7.3): a
+    /// result whose `status` is `passed`, whose `definition_hash` is the current one (E0H-4.3),
+    /// and whose `verified` lists exactly the current versions of the relations the check reads
+    /// (its CHK-2 `sources`): the `to` relation for `key_uniqueness`, the `from` and `to`
+    /// relations for `orphan_keys` and `temporal_orphans`, whose `target` is a relationship, and
+    /// the relation of the dataset that declares the population for `population`, whose
+    /// `target` is a population (VAL-2.14, VAL-2.15). Only those four kinds are evidence for
+    /// E5; `summary` and `semi_additive` have none.
     pub(crate) fn holds(&self, kind: CheckKind, target: &NormalizedName) -> bool {
         let Some(state) = self.state else {
             return false;
         };
-        let Some(state_kind) = relationship_check_kind(kind) else {
+        let Some(state_kind) = evidence_check_kind(kind) else {
             return false;
         };
         let Some(current) = self.current_check(kind, target) else {
@@ -64,28 +66,38 @@ impl<'a> Evidence<'a> {
             .find(|check| check.kind == kind && check.target == target.as_str())
     }
 
-    /// The relations the relationship check of `kind` for `name` reads (CHK-2 `sources`):
-    /// those of the `to` dataset, and also of the `from` dataset for `orphan_keys`.
+    /// The relations the check of `kind` for `name` reads (CHK-2 `sources`): for a
+    /// relationship check, those of the `to` dataset, and also of the `from` dataset for
+    /// `orphan_keys` and `temporal_orphans`; for a `population` check, that of the dataset that
+    /// declares the population.
     fn check_sources(&self, kind: CheckKind, name: &NormalizedName) -> Option<BTreeSet<&'a str>> {
+        if kind == CheckKind::Population {
+            let declaring = self.model.parts().datasets.iter().find(|dataset| {
+                dataset
+                    .populations
+                    .iter()
+                    .any(|population| &population.name == name)
+            })?;
+            return Some(BTreeSet::from([declaring.source.as_str()]));
+        }
         let relationship = self.model.relationship(name)?;
         let to = self.model.dataset(&relationship.to)?;
         let mut sources = BTreeSet::from([to.source.as_str()]);
-        if kind == CheckKind::OrphanKeys {
+        if matches!(kind, CheckKind::OrphanKeys | CheckKind::TemporalOrphans) {
             sources.insert(self.model.dataset(&relationship.from)?.source.as_str());
         }
         Some(sources)
     }
 }
 
-/// The kind of `checks` a relationship check of `kind` is reported as, if it is one.
-fn relationship_check_kind(kind: CheckKind) -> Option<StateCheckKind> {
+/// The kind of `checks` a check of `kind` is reported as, if E5 may use it as evidence.
+fn evidence_check_kind(kind: CheckKind) -> Option<StateCheckKind> {
     match kind {
         CheckKind::KeyUniqueness => Some(StateCheckKind::KeyUniqueness),
         CheckKind::OrphanKeys => Some(StateCheckKind::OrphanKeys),
-        CheckKind::TemporalOrphans
-        | CheckKind::Summary
-        | CheckKind::Population
-        | CheckKind::SemiAdditive => None,
+        CheckKind::TemporalOrphans => Some(StateCheckKind::TemporalOrphans),
+        CheckKind::Population => Some(StateCheckKind::Population),
+        CheckKind::Summary | CheckKind::SemiAdditive => None,
     }
 }
 

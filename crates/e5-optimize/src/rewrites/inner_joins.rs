@@ -1,5 +1,6 @@
-//! E5-3.3, E5-3.3a: changes a `left` join to `inner` with `orphan_keys` evidence and the
-//! conditions of E5-3.3a.
+//! E5-3.3, E5-3.3a: changes a `left` join to `inner` with `orphan_keys` evidence, or
+//! `temporal_orphans` evidence for a temporal relationship (VAL-2.15), and the conditions of
+//! E5-3.3a.
 //!
 //! A chain of `Join` nodes is examined in path order, from the `Join` over the home side to
 //! the last one, because condition (2) of E5-3.3a depends on the joins before it.
@@ -8,8 +9,10 @@ use std::collections::BTreeSet;
 
 use menura_model::expression::{Expression, Reference};
 use menura_model::internal_model::{CheckKind, NormalizedName, Relationship};
-use menura_representations::logical_plan::{JoinCondition, JoinKind, Operation, PlanNode};
-use menura_representations::names::ColumnPrefix;
+use menura_representations::logical_plan::{
+    JoinCondition, JoinKind, Operation, PlanNode, TemporalCoverage,
+};
+use menura_representations::names::{ColumnName, ColumnPrefix};
 
 use crate::context::RewriteContext;
 use crate::plan_inputs::map_inputs;
@@ -69,6 +72,8 @@ struct ChainJoin<'plan> {
     kind: JoinKind,
     /// Its key equalities.
     on: &'plan [JoinCondition],
+    /// Its coverage condition, along a temporal relationship (VAL-2.8).
+    temporal: &'plan Option<TemporalCoverage>,
     /// The prefix of the columns of its joined side.
     right_prefix: &'plan ColumnPrefix,
 }
@@ -85,6 +90,7 @@ fn unwind(top: &PlanNode, path: Vec<usize>) -> (Vec<ChainJoin<'_>>, &PlanNode, V
         relationship,
         kind,
         on,
+        temporal,
         right_prefix,
     } = node.operation()
     {
@@ -96,6 +102,7 @@ fn unwind(top: &PlanNode, path: Vec<usize>) -> (Vec<ChainJoin<'_>>, &PlanNode, V
             relationship,
             kind: *kind,
             on,
+            temporal,
             right_prefix,
         });
         node = left;
@@ -179,6 +186,7 @@ fn rebuilt_join(
             relationship: join.relationship.clone(),
             kind,
             on: join.on.to_vec(),
+            temporal: join.temporal.clone(),
             right_prefix: join.right_prefix.clone(),
         },
         join.node.schema().clone(),
@@ -207,6 +215,8 @@ fn record(path: &[usize], outcome: Result<(), FailedCondition>) -> RewriteRecord
 enum FailedCondition {
     /// E5-3.3: no passing `orphan_keys` evidence.
     Evidence,
+    /// E5-3.3, VAL-2.15: no passing `temporal_orphans` evidence for a temporal relationship.
+    TemporalEvidence,
 }
 
 impl FailedCondition {
@@ -214,6 +224,10 @@ impl FailedCondition {
     fn text(self) -> &'static str {
         match self {
             Self::Evidence => "passing `orphan_keys` evidence for the relationship (CAT-7.3)",
+            Self::TemporalEvidence => {
+                "passing `temporal_orphans` evidence for the temporal relationship (CAT-7.3, \
+                 VAL-2.15)"
+            }
         }
     }
 }
@@ -227,45 +241,65 @@ fn decide(
     context: &RewriteContext<'_>,
 ) -> Option<Result<(), FailedCondition>> {
     let relationship = context.model.relationship(join.relationship)?;
+    let from_time = join.temporal.as_ref().map(|coverage| &coverage.from_time);
     let structural = from_columns_are_not_null(relationship, context)
-        && from_side_reads_every_row(join.on, sides)
+        && from_side_reads_every_row(join.on, from_time, sides)
         && is_bare_scan_of(join.right, &relationship.to);
     if !structural {
         return None;
     }
-    if context
-        .evidence
-        .holds(CheckKind::OrphanKeys, join.relationship)
-    {
+    let (kind, failed) = if relationship.temporal.is_some() {
+        (
+            CheckKind::TemporalOrphans,
+            FailedCondition::TemporalEvidence,
+        )
+    } else {
+        (CheckKind::OrphanKeys, FailedCondition::Evidence)
+    };
+    if context.evidence.holds(kind, join.relationship) {
         Some(Ok(()))
     } else {
-        Some(Err(FailedCondition::Evidence))
+        Some(Err(failed))
     }
 }
 
-/// Whether every `from_columns` field of `relationship` is a catalog column of its `from`
-/// dataset, read as is, that the catalog schema declares `nullable: false` (E5-3.3a (1)). E0
-/// takes the nullability of a column reference from the admitted catalog schema (E0H-2.2).
+/// Whether every `from_columns` field of `relationship`, and its `from_time` field when it is
+/// temporal (VAL-2.15), is a catalog column of its `from` dataset, read as is, that the catalog
+/// schema declares `nullable: false` (E5-3.3a (1)). E0 takes the nullability of a column
+/// reference from the admitted catalog schema (E0H-2.2).
 fn from_columns_are_not_null(relationship: &Relationship, context: &RewriteContext<'_>) -> bool {
     let Some(from) = context.model.dataset(&relationship.from) else {
         return false;
     };
-    relationship.from_columns.iter().all(|name| {
-        from.field(name).is_some_and(|field| {
-            matches!(
-                field.expression,
-                Some(Expression::Reference(Reference {
-                    qualifier: None,
-                    ..
-                }))
-            ) && field.typed.as_ref().is_some_and(|typed| !typed.nullable)
+    let from_time = relationship
+        .temporal
+        .as_ref()
+        .map(|temporal| &temporal.from_time);
+    relationship
+        .from_columns
+        .iter()
+        .chain(from_time)
+        .all(|name| {
+            from.field(name).is_some_and(|field| {
+                matches!(
+                    field.expression,
+                    Some(Expression::Reference(Reference {
+                        qualifier: None,
+                        ..
+                    }))
+                ) && field.typed.as_ref().is_some_and(|typed| !typed.nullable)
+            })
         })
-    })
 }
 
-/// Whether the columns of the left side of `on` all come from one side of the chain, and that
-/// side is the home side or a side joined by an `inner` join (E5-3.3a (2)).
-fn from_side_reads_every_row(on: &[JoinCondition], sides: &[Side<'_>]) -> bool {
+/// Whether the columns of the left side of `on`, and `from_time` along a temporal
+/// relationship, all come from one side of the chain, and that side is the home side or a side
+/// joined by an `inner` join (E5-3.3a (2)).
+fn from_side_reads_every_row(
+    on: &[JoinCondition],
+    from_time: Option<&ColumnName>,
+    sides: &[Side<'_>],
+) -> bool {
     let Some(first) = on.first() else {
         return false;
     };
@@ -276,7 +310,9 @@ fn from_side_reads_every_row(on: &[JoinCondition], sides: &[Side<'_>]) -> bool {
             side.reads_every_row
                 && on
                     .iter()
-                    .all(|condition| side.columns.contains(condition.left.as_str()))
+                    .map(|condition| &condition.left)
+                    .chain(from_time)
+                    .all(|column| side.columns.contains(column.as_str()))
         })
 }
 

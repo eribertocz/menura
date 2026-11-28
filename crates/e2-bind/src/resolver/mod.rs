@@ -9,7 +9,9 @@ use std::collections::HashMap;
 
 use menura_contracts::types::audit_record::Access;
 use menura_model::expression::Reference;
-use menura_model::internal_model::{DiagnosticCode, FieldPath, InternalModel, NormalizedName};
+use menura_model::internal_model::{
+    DiagnosticCode, FieldPath, InternalModel, NormalizedName, Relationship,
+};
 use menura_representations::bound_query::{
     AuthorizationDecision, AuthorizedObject, AuthorizedSubgraph, MetricPath,
 };
@@ -51,8 +53,9 @@ impl<'model> Resolver<'model> {
     }
 
     /// The authorized subgraph (E2-4.8): the datasets whose `access` admits the user, and the
-    /// relationships between them whose `from_columns` and `to_columns` read only fields the
-    /// user may see (E2-4.2). The query does not name these relationships, so checking their
+    /// relationships between them whose `from_columns` and `to_columns`, and for a temporal
+    /// relationship its `from_time`, `valid_from` and `valid_to` (VAL-2.18), read only fields
+    /// the user may see (E2-4.2). The query does not name these relationships, so checking their
     /// keys records no decision (E2-4.7).
     fn authorized_subgraph(&self) -> AuthorizedSubgraph {
         let admitted = self.authorization.subgraph();
@@ -63,6 +66,9 @@ impl<'model> Resolver<'model> {
                 self.model.relationship(name).is_some_and(|relationship| {
                     self.keys_readable(&relationship.from, &relationship.from_columns)
                         && self.keys_readable(&relationship.to, &relationship.to_columns)
+                        && self.time_fields(relationship).iter().all(
+                            |(dataset, fields)| self.keys_readable(dataset, fields),
+                        )
                 })
             })
             .cloned()
@@ -125,7 +131,8 @@ impl<'model> Resolver<'model> {
 
     /// The relationship a one-part reference names, when it is in the model and authorized
     /// (E2-4.8): E0 has not dropped it (`E0E-01`, `E0E-02`, E0-4 table), both ends are
-    /// authorized datasets, and every key field it reads is authorized (E2-4.2).
+    /// authorized datasets, and every key field it reads is authorized, with the time fields
+    /// of a temporal relationship (E2-4.2, VAL-2.18).
     pub(crate) fn relationship_reference(
         &mut self,
         reference: &QueryReference,
@@ -147,7 +154,31 @@ impl<'model> Resolver<'model> {
                 return None;
             }
         }
+        for (dataset, fields) in self.time_fields(relationship) {
+            if !self.key_fields(dataset, &fields) {
+                return None;
+            }
+        }
         Some(name.clone())
+    }
+
+    /// The fields a temporal relationship compares besides its keys, by dataset (VAL-2.18):
+    /// `from_time` of `from`, then `valid_from` and `valid_to` of its population on `to`;
+    /// none for a plain relationship.
+    fn time_fields(
+        &self,
+        relationship: &'model Relationship,
+    ) -> Vec<(&'model NormalizedName, Vec<NormalizedName>)> {
+        match self.model.temporal_range(relationship) {
+            Some(range) => vec![
+                (&relationship.from, vec![range.from_time.clone()]),
+                (
+                    &relationship.to,
+                    vec![range.valid_from.clone(), range.valid_to.clone()],
+                ),
+            ],
+            None => Vec::new(),
+        }
     }
 
     /// Whether every key column of `dataset` is authorized: a field by its decision, any other

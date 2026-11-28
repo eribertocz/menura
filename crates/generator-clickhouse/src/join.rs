@@ -2,7 +2,7 @@
 //! one matched on the key pairs.
 
 use menura_representations::logical_plan::{
-    JoinCondition, JoinKind, OutputSchema, PlanNode, SchemaColumn,
+    JoinCondition, JoinKind, OutputSchema, PlanNode, SchemaColumn, TemporalCoverage,
 };
 use menura_representations::names::{ColumnName, ColumnPrefix};
 
@@ -23,14 +23,17 @@ pub(crate) struct JoinInputs<'input> {
     pub(crate) kind: JoinKind,
     /// The key pairs, in the order written.
     pub(crate) on: &'input [JoinCondition],
+    /// Along a temporal relationship, the coverage a version must also meet (VAL-2.8).
+    pub(crate) temporal: Option<&'input TemporalCoverage>,
     /// The prefix of every column of `right`.
     pub(crate) right_prefix: &'input ColumnPrefix,
 }
 
 impl<'input> StepWriter<'input> {
     /// The steps of `left`, then of `right` (E6-4.12), then the step that selects every column
-    /// of `node` from them, joined on the key pairs. A column of the right side of a left join
-    /// is nullable (PLN-1).
+    /// of `node` from them, joined on the key pairs; along a temporal relationship, the steps
+    /// of [`Self::temporal_join`] (VAL-2.22). A column of the right side of a left join is
+    /// nullable (PLN-1).
     pub(crate) fn join(
         &mut self,
         node: &'input PlanNode,
@@ -41,6 +44,7 @@ impl<'input> StepWriter<'input> {
             right,
             kind,
             on: keys,
+            temporal,
             right_prefix,
         } = *join;
         if keys.is_empty() {
@@ -52,6 +56,9 @@ impl<'input> StepWriter<'input> {
         self.column_prefix = None;
         let right_step = right_step?;
         self.parameters.start_node(node.origin());
+        if temporal.is_some() {
+            return self.temporal_join(node, join, &left_step.name, &right_step.name);
+        }
         let items = node
             .schema()
             .columns()
@@ -118,7 +125,7 @@ fn key_column<'input>(
 
 /// The select item of the `Join` column `column`: the column of the same name of exactly one
 /// input. A column of the right side of a left join must be nullable (PLN-1).
-fn joined_item(
+pub(crate) fn joined_item(
     node: &PlanNode,
     left: &OutputSchema,
     right: &OutputSchema,

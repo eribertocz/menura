@@ -235,6 +235,7 @@ pub fn outline(node: &PlanNode) -> String {
             on,
             related_all,
             related_visible,
+            ..
         } => {
             let keys: Vec<String> = on
                 .iter()

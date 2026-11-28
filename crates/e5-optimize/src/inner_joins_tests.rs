@@ -215,6 +215,7 @@ fn join(
                 left: ColumnName::new(left_column),
                 right: ColumnName::new(&format!("{prefix}{right_column}")),
             }],
+            temporal: None,
             right_prefix: ColumnPrefix::new(prefix),
         },
         schema(&columns),

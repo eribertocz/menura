@@ -16,6 +16,8 @@ use menura_representations::origin::Origin;
 use crate::columns::{column_reference, over_scan, read_fields};
 use crate::error::{InvariantViolation, PlanError};
 use crate::followed::PolicyGraph;
+use crate::joins::coverage;
+use crate::layout::PlacedCoverage;
 use crate::policy_visits::{RowFilter, RowFilters};
 use crate::rewrite::rewrite;
 use crate::scan::scan;
@@ -96,6 +98,9 @@ impl Visibility<'_> {
                 .relationship(&edge.relationship)
                 .ok_or_else(|| unknown_relationship(dataset))?;
             fields.extend(relationship.from_columns.iter().cloned());
+            if let Some(range) = self.model.temporal_range(relationship) {
+                fields.push(range.from_time.clone());
+            }
         }
         Ok(fields)
     }
@@ -174,29 +179,68 @@ impl Visibility<'_> {
         let origin = Origin::Model(relationship.location.clone());
         let related = self.related_dataset(edge, &origin)?;
         let on = key_pairs(relationship, prefix);
+        let placed = self.placed_coverage(relationship, prefix, &origin)?;
         let mut related_chain = chain.to_vec();
         related_chain.push(related.name.clone());
-        let mut visible_fields = relationship.to_columns.clone();
+        let mut all_fields = relationship.to_columns.clone();
+        if let Some(placed) = &placed {
+            for column in [&placed.valid_from, &placed.valid_to] {
+                all_fields.push(NormalizedName::new(column.as_str()));
+            }
+        }
+        let mut visible_fields = all_fields.clone();
         visible_fields.extend(self.fields_on_chain(related, &related_chain)?);
-        let related_all = scan(related, &relationship.to_columns, self.catalog, None)?;
+        let related_all = scan(related, &all_fields, self.catalog, None)?;
         let related_visible = self.visible_on_chain(
             scan(related, &visible_fields, self.catalog, None)?,
             related,
             None,
             &related_chain,
         )?;
+        let temporal = placed
+            .map(|placed| coverage(&placed, input.schema(), related_all.schema()))
+            .transpose()
+            .map_err(|violation| PlanError::invariant(violation, &origin))?;
         let schema = input.schema().clone();
         Ok(PlanNode::new(
             Operation::SemiJoin {
                 input: Box::new(input),
                 relationship: relationship.name.clone(),
                 on,
+                temporal,
                 related_all: Box::new(related_all),
                 related_visible: Box::new(related_visible),
             },
             schema,
             origin,
         ))
+    }
+}
+
+impl Visibility<'_> {
+    /// The columns of the coverage condition of a `SemiJoin` along `relationship` when it is
+    /// temporal (VAL-2.17): `from_time` under `prefix`, the range over the unprefixed `Scan`
+    /// of the related dataset.
+    fn placed_coverage(
+        &self,
+        relationship: &Relationship,
+        prefix: Option<&ColumnPrefix>,
+        origin: &Origin,
+    ) -> Result<Option<PlacedCoverage>, PlanError> {
+        match self.model.temporal_range(relationship) {
+            None if relationship.temporal.is_some() => Err(PlanError::invariant(
+                InvariantViolation::UnknownRelationship,
+                origin,
+            )),
+            None => Ok(None),
+            Some(range) => Ok(Some(PlacedCoverage {
+                from_time: column_of(range.from_time, prefix),
+                valid_from: ColumnName::new(range.valid_from.as_str()),
+                valid_to: ColumnName::new(range.valid_to.as_str()),
+                valid_to_bound: range.valid_to_bound,
+                open_end: range.open_end.cloned(),
+            })),
+        }
     }
 }
 

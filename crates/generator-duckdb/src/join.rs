@@ -2,11 +2,12 @@
 //! one matched on the key pairs.
 
 use menura_representations::logical_plan::{
-    JoinCondition, JoinKind, OutputSchema, PlanNode, SchemaColumn,
+    JoinCondition, JoinKind, OutputSchema, PlanNode, SchemaColumn, TemporalCoverage,
 };
 use menura_representations::names::{ColumnName, ColumnPrefix};
 
 use crate::body::SelectBody;
+use crate::coverage::{CoverageSide, coverage_conditions};
 use crate::error::{GenerateError, InvariantViolation};
 use crate::identifiers::quote;
 use crate::join_keys::{KeySide, key_equality};
@@ -23,14 +24,18 @@ pub(crate) struct JoinInputs<'input> {
     pub(crate) kind: JoinKind,
     /// The key pairs, in the order written.
     pub(crate) on: &'input [JoinCondition],
+    /// Along a temporal relationship, the coverage a version must also meet (VAL-2.8).
+    pub(crate) temporal: Option<&'input TemporalCoverage>,
     /// The prefix of every column of `right`.
     pub(crate) right_prefix: &'input ColumnPrefix,
 }
 
 impl<'input> StepWriter<'input> {
     /// The steps of `left`, then of `right` (E6-4.12), then the step that selects every column
-    /// of `node` from them, joined on the key pairs. A column of the right side of a left join
-    /// is nullable (PLN-1).
+    /// of `node` from them, joined on the key pairs and, along a temporal relationship, on the
+    /// coverage of the row's `from_time` (VAL-2.8, VAL-2.22): a row with k covering versions
+    /// gives k rows, and under `left` a row with none gives one row whose right columns are
+    /// NULL. A column of the right side of a left join is nullable (PLN-1).
     pub(crate) fn join(
         &mut self,
         node: &'input PlanNode,
@@ -41,6 +46,7 @@ impl<'input> StepWriter<'input> {
             right,
             kind,
             on: keys,
+            temporal,
             right_prefix,
         } = *join;
         if keys.is_empty() {
@@ -67,6 +73,21 @@ impl<'input> StepWriter<'input> {
                     .ok_or_else(|| error(InvariantViolation::IncompatibleJoinKeys, node))
             })
             .collect::<Result<Vec<_>, _>>()?;
+        let mut conditions = conditions;
+        if let Some(coverage) = temporal {
+            conditions.extend(coverage_conditions(
+                node,
+                coverage,
+                CoverageSide {
+                    schema: left.schema(),
+                    qualifier: &left_step.name,
+                },
+                CoverageSide {
+                    schema: right.schema(),
+                    qualifier: &right_step.name,
+                },
+            )?);
+        }
         let keyword = match kind {
             JoinKind::Left => "LEFT JOIN",
             JoinKind::Inner => "INNER JOIN",

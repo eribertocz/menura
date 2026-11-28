@@ -3,7 +3,9 @@
 
 use std::collections::BTreeSet;
 
-use menura_model::internal_model::{Dataset, FieldPath, InternalModel, NormalizedName};
+use menura_model::internal_model::{
+    Dataset, FieldPath, InternalModel, NormalizedName, OpenEnd, ValidToBound,
+};
 use menura_representations::logical_plan::JoinCondition;
 use menura_representations::names::{ColumnName, ColumnPrefix};
 use menura_representations::origin::Origin;
@@ -27,6 +29,24 @@ pub(crate) struct PlacedInstance<'model> {
     pub(crate) prefix: ColumnPrefix,
     /// The equalities of its `Join`, over the plan columns.
     pub(crate) on: Vec<JoinCondition>,
+    /// Along a temporal relationship, the coverage its `Join` also requires, over the plan
+    /// columns (VAL-2.8): `from_time` read from the instance the step starts from (E3-4.2a),
+    /// the range read from this instance. `None` for a plain relationship.
+    pub(crate) temporal: Option<PlacedCoverage>,
+}
+
+/// The columns of the coverage condition of a temporal `Join` (VAL-2.7, VAL-2.8).
+pub(crate) struct PlacedCoverage {
+    /// The column of `from_time`, on the left side.
+    pub(crate) from_time: ColumnName,
+    /// The column of `valid_from`, on the right side.
+    pub(crate) valid_from: ColumnName,
+    /// The column of `valid_to`, on the right side.
+    pub(crate) valid_to: ColumnName,
+    /// Whether `valid_to` is inclusive or exclusive (VAL-1.1).
+    pub(crate) valid_to_bound: ValidToBound,
+    /// The `valid_to` value that reads like NULL, when declared (VAL-1.2).
+    pub(crate) open_end: Option<OpenEnd>,
 }
 
 /// The datasets and column names of one branch.
@@ -136,12 +156,28 @@ impl<'model> Layout<'model> {
             let right = prefix.column(key_name(dataset, to).as_str());
             on.push(JoinCondition { left, right });
         }
+        let temporal = match model.temporal_range(relationship) {
+            None if relationship.temporal.is_some() => {
+                return Err(fail(InvariantViolation::UnknownRelationship));
+            }
+            None => None,
+            Some(range) => Some(PlacedCoverage {
+                from_time: self
+                    .field_column(instance.parent, parent_dataset, range.from_time)
+                    .map_err(fail)?,
+                valid_from: field_in(dataset, &prefix, range.valid_from).map_err(fail)?,
+                valid_to: field_in(dataset, &prefix, range.valid_to).map_err(fail)?,
+                valid_to_bound: range.valid_to_bound,
+                open_end: range.open_end.cloned(),
+            }),
+        };
         Ok(PlacedInstance {
             dataset,
             origin,
             relationship: step.relationship.clone(),
             prefix,
             on,
+            temporal,
         })
     }
 
@@ -270,6 +306,19 @@ impl<'model> Layout<'model> {
             Some(placed) => Ok(placed.prefix.column(field.as_str())),
         }
     }
+}
+
+/// The column of the field `field` of `dataset` under `prefix`, the prefix of an instance of
+/// `dataset`.
+fn field_in(
+    dataset: &Dataset,
+    prefix: &ColumnPrefix,
+    field: &NormalizedName,
+) -> Result<ColumnName, InvariantViolation> {
+    dataset
+        .field(field)
+        .map(|_| prefix.column(field.as_str()))
+        .ok_or(InvariantViolation::ForeignField)
 }
 
 /// The name, under the prefix of an instance of `dataset`, of the relationship key column
