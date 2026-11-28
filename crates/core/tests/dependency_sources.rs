@@ -109,6 +109,28 @@ fn dep_3_5_a_propagated_policy_adds_the_source_its_semi_join_scans() {
 }
 
 #[test]
+fn dep_3_5_a_dataset_on_the_propagation_chain_without_policies_is_a_source() {
+    let document = document_of(PROPAGATION_MODEL, PROPAGATION_SCHEMA);
+    assert_eq!(
+        sources(&document, "dataset:ORDERS"),
+        ["shop.customers", "shop.orders", "shop.stores"]
+    );
+    assert_eq!(
+        sources(&document, "dataset:LINES"),
+        [
+            "shop.lines",
+            "shop.products",
+            "shop.suppliers",
+            "shop.warehouses"
+        ]
+    );
+    assert_eq!(
+        sources(&document, "dataset:PEOPLE"),
+        ["shop.people", "shop.teams"]
+    );
+}
+
+#[test]
 fn dep_3_5_sources_are_computed_for_every_user_whatever_their_access() {
     let document = document_of(PROPAGATION_MODEL, PROPAGATION_SCHEMA);
     assert_eq!(

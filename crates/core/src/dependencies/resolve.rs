@@ -64,9 +64,9 @@ impl<'model> Resolver<'model> {
     }
 
     /// The `sources` of the dataset `name` (DEP-3.5): its own `source`; for a summary, those of
-    /// the datasets of the visibility inputs of its base; for any other dataset, those of the
-    /// summaries of it and of the datasets of its visibility inputs. Without duplicates, in
-    /// code-point order.
+    /// the datasets reached by the relationships V(base) follows; for any other dataset, those
+    /// of the summaries of it and of the datasets reached by the relationships V(D) follows,
+    /// with or without row policies of their own. Without duplicates, in code-point order.
     pub(super) fn sources(&self, name: &NormalizedName) -> Vec<String> {
         let mut sources = BTreeSet::new();
         let Some(dataset) = self.model.dataset(name) else {
@@ -85,7 +85,10 @@ impl<'model> Resolver<'model> {
             .into_iter()
             .flat_map(|inputs| inputs.model.iter())
             .filter_map(|input| match input {
-                ModelInput::Dataset(reached) => self.model.dataset(reached),
+                ModelInput::Relationship(followed) => self
+                    .model
+                    .relationship(followed)
+                    .and_then(|relationship| self.model.dataset(&relationship.to)),
                 _ => None,
             });
         sources.extend(datasets.map(|reached| reached.source.clone()));
