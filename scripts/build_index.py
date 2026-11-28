@@ -2,6 +2,7 @@
 
 Usage: python3 scripts/build_index.py [--check]
 With --check, exit with status 1 if spec/INDEX.md is out of date.
+Always exit with status 1 if a file of spec/ holds a merge conflict marker.
 """
 import pathlib
 import re
@@ -10,6 +11,7 @@ import sys
 SPEC = pathlib.Path(__file__).resolve().parent.parent / "spec"
 INDEX = SPEC / "INDEX.md"
 HEADING = re.compile(r"^(#{1,3}) (.+)$")
+CONFLICT_MARKER = re.compile(r"^(<{7}|={7}|>{7})( |$)")
 RULE = re.compile(r"\*\*([A-Z][A-Z0-9]*-[0-9][0-9.]*[a-z]?)\*\*|^\| ([A-Z][A-Z0-9]*-[0-9][0-9.]*[a-z]?|[A-Z]{1,2}[0-9]+) \|")
 
 
@@ -60,7 +62,23 @@ def duplicate_rule_ids(rows):
     return duplicates
 
 
+def conflict_markers():
+    found = []
+    for path in sorted(SPEC.rglob("*")):
+        if not path.is_file() or path.suffix not in (".md", ".json", ".txt"):
+            continue
+        relative = path.relative_to(SPEC).as_posix()
+        for number, line in enumerate(path.read_text(encoding="utf-8").splitlines(), start=1):
+            if CONFLICT_MARKER.match(line):
+                found.append(f"{relative}:{number}")
+    return found
+
+
 def main():
+    markers = conflict_markers()
+    if markers:
+        print("merge conflict markers in spec/: " + ", ".join(markers))
+        sys.exit(1)
     rows = collect()
     duplicates = duplicate_rule_ids(rows)
     if duplicates:
