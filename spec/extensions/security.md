@@ -54,7 +54,7 @@ lacks a written policy. Security has two levels, and both always apply:
 
 - **SCY-4.1** A list attribute is used only as the single item of an `IN` / `NOT IN` list, as in `region IN (USER_ATTRIBUTE('regions'))`, and the test holds for any of its values. The parentheses are required by the grammar (E0F-9.1).
 - **SCY-4.2** No aggregates, subqueries or other datasets in a condition.
-- **SCY-4.3** Semantics (combination, exemption, propagation, no grant) are in E4-6.
+- **SCY-4.3** Semantics (combination, exemption, propagation, no grant) are in E4-6. Propagation along a temporal relationship is in VAL-2.17.
 
 ## SCY-4a Confidentiality of the compiled plan
 
