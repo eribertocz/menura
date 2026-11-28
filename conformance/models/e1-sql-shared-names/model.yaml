@@ -1,0 +1,26 @@
+version: "0.1.1"
+semantic_model:
+  - name: e1_shared
+    description: 'The field orders.volume and the model metric volume share a name; the field is restricted to manager, the metric is not'
+    custom_extensions:
+      - vendor_name: COMMON
+        data: '{"namespace": "menura", "version": 1, "security_context": {"roles": ["analyst", "manager"], "attributes": []}}'
+    datasets:
+      - name: orders
+        source: shop.orders
+        primary_key: [order_id]
+        fields:
+          - name: order_id
+            expression: {dialects: [{dialect: ANSI_SQL, expression: 'order_id'}]}
+          - name: region
+            expression: {dialects: [{dialect: ANSI_SQL, expression: 'region'}]}
+          - name: volume
+            expression: {dialects: [{dialect: ANSI_SQL, expression: 'volume'}]}
+        custom_extensions:
+          - vendor_name: COMMON
+            data: '{"namespace": "menura", "version": 1, "access": {"mode": "roles", "roles": ["analyst", "manager"], "fields": [{"names": ["volume"], "roles": ["manager"]}]}}'
+    metrics:
+      - name: volume
+        expression: {dialects: [{dialect: ANSI_SQL, expression: 'COUNT(orders.order_id)'}]}
+      - name: order_count
+        expression: {dialects: [{dialect: ANSI_SQL, expression: 'COUNT(orders.order_id)'}]}

@@ -1,4 +1,4 @@
-//! QRY-5.1, QRY-5.2, DEV-8 and E2-4.4 in the SQL form: how a name read through the `FROM`
+//! QRY-5.1, QRY-5.2, DEV-8, E1-4.9 and E2-4.4 in the SQL form: how a name read through the `FROM`
 //! relation resolves, and P5, the SQL form binds as the equivalent wide-table query.
 
 // `cfg(test)` marks the helpers as test code, where `expect` and `panic!` are allowed
@@ -61,14 +61,15 @@ fn dimension_kinds(query: &BoundQuery) -> Vec<BoundDimensionKind> {
 }
 
 #[test]
-fn qry_5_2_an_authorized_field_wins_over_a_same_named_metric() {
+fn e1_4_9_a_shared_name_is_the_field_outside_agg_and_the_metric_inside_it() {
     let model = shadowing_model();
-    let as_item = sql_columns(
+    let tree = sql_columns(
         relation("sales", "orders", None, 40),
-        vec![field_item("region", 8), agg_item("revenue", "r", 16)],
+        vec![field_item("region", 8), agg_item("region", "r", 16)],
     );
+    let query = bound(&tree, &model);
     assert_eq!(
-        dimension_kinds(&bound(&as_item, &model)),
+        dimension_kinds(&query),
         vec![BoundDimensionKind::Field {
             field: FieldPath {
                 dataset: name("ORDERS"),
@@ -78,15 +79,16 @@ fn qry_5_2_an_authorized_field_wins_over_a_same_named_metric() {
             time_grain_origin: None,
         }]
     );
-    let in_agg = sql_columns(
-        relation("sales", "orders", None, 40),
-        vec![agg_item("region", "r", 8)],
+    assert_eq!(
+        metric_kinds(&query),
+        vec![BoundMetricKind::Reference(MetricPath::SemanticModel(name(
+            "REGION"
+        )))]
     );
-    assert_eq!(first_code(&in_agg, &model), BindCode::FieldInMetrics);
 }
 
 #[test]
-fn e2_4_4_an_unauthorized_field_does_not_hide_a_same_named_metric() {
+fn e1_4_9_the_lookup_by_position_does_not_depend_on_authorization() {
     let model = shadowing_model();
     let in_agg = sql_columns(
         relation("sales", "orders", None, 40),
@@ -102,7 +104,7 @@ fn e2_4_4_an_unauthorized_field_does_not_hide_a_same_named_metric() {
         relation("sales", "orders", None, 40),
         vec![field_item("unit_cost", 8), agg_item("revenue", "r", 20)],
     );
-    assert_eq!(first_code(&as_item, &model), BindCode::MetricInDimensions);
+    assert_eq!(first_code(&as_item, &model), BindCode::NameNotFound);
 }
 
 #[test]
