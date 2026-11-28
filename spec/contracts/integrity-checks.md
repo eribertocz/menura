@@ -1,6 +1,6 @@
 # Contract: integrity checks
 
-**Contract version:** 1.3.0 · **Owner:** `menura` · **Producer:** compiler (`integrity_checks`) · **Consumer:** data pipelines
+**Contract version:** 1.4.0 · **Owner:** `menura` · **Producer:** compiler (`integrity_checks`) · **Consumer:** data pipelines
 
 ## CHK-1 Purpose
 
@@ -14,7 +14,7 @@ after each load and report the results in the catalog state (`checks`, `aggregat
 | Field | Meaning |
 |---|---|
 | `check_id` | Stable identifier: `<kind>:<target>` |
-| `kind` | `key_uniqueness`, `orphan_keys`, `summary`, `population`, `semi_additive` |
+| `kind` | `key_uniqueness`, `orphan_keys`, `temporal_orphans`, `summary`, `population`, `semi_additive` |
 | `target` | Normalized name of the relationship, summary, population or metric (E0H-4.3) |
 | `definition_hash` | See CHK-3 |
 | `sql` | Read-only query in the dialect; generated like any plan (E6) |
@@ -37,6 +37,7 @@ For every other kind, it is the SHA-256 (CON-2) of the canonical JSON of `{kind,
 definition}`, where `definition` is the normalized form of what the check reads, and nothing else:
 
 - `key_uniqueness`, `orphan_keys`: the relationship (`from`, `to` and the column pairs), the `source` of both datasets, and the normalized tree and logical type of every field named in the column pairs;
+- `temporal_orphans`: the relationship (`from`, `to` and the column pairs) and its normalized `temporal` entry (VAL-2.1), the `source` of both datasets, the normalized tree and logical type of every field named in the column pairs and of `from_time`, and the `valid_from`, `valid_to`, `valid_to_bound` and `open_end` of its population (VAL-2.3), with the normalized tree and logical type of `valid_from` and `valid_to`;
 - `population`: the normalized population extension, the `source` of its dataset, and the tree and logical type of every field it reads;
 - `semi_additive`: the normalized metric (tree and additivity extension), the `source` of its dataset, and the tree and logical type of every field it reads.
 
@@ -62,7 +63,7 @@ Moved from E0H-4 at the 0.2.0 gate, because they are checked by the stages that 
 
 ## CHK-6 Check queries
 
-Each query returns one row per violation (CHK-2.1). Unless a rule says otherwise, it reads every row of the relations in `sources` (CHK-2.2).
+Each query returns one row per violation (CHK-2.1). Unless a rule says otherwise, it reads every row of the relations in `sources` (CHK-2.2). The `temporal_orphans` query is defined in VAL-2.16a.
 
 - **CHK-6.1** **`key_uniqueness`.** The groups of the relationship's `to_columns` values in the `to` dataset where every value is non-NULL and `COUNT(*)` > 1. Columns: the `to_columns` fields in pair order, then `row_count`, the number of rows of the group as a 64-bit signed integer.
 - **CHK-6.2** **`orphan_keys`.** The rows of the `from` dataset whose `from_columns` values are all non-NULL and that have no row of `to` with equal `to_columns` values, pair by pair (an anti-join). Columns: the `from_columns` fields in pair order. A `from` row with a NULL in any `from_columns` field is never a violation.
@@ -82,7 +83,7 @@ Each query returns one row per violation (CHK-2.1). Unless a rule says otherwise
 
 - **CHK-7.1** A parameter has `position`, `logical_type` and exactly one of `value` or `binding`. A parameter with `value` is a value the compiler fixed, encoded as CON-4 requires; the pipeline binds it unchanged. A parameter with `binding` is a slot the pipeline fills at run time.
 - **CHK-7.2** `binding` is `time_zone`, `period_from` or `period_to`. Each has `logical_type` `text`. A slot appears at most once in a query's `parameters`; its value is shared by every use in the SQL (E6-4.2). The pipeline binds the same values to a summary check and to the build query of the same build.
-- **CHK-7.3** A query has a `time_zone` slot exactly when it computes a day or a period from a `timestamp` with time zone: a summary check or build query whose time dimension has such a `base` field (CHK-5.2); a `semi_additive` check whose `over`, or a time field of its `population`, is one; a `population` check whose `valid_from`, `valid_to` or `period` is one. The pipeline binds an IANA time-zone name; the day of such a value is its day in that time zone (E6-5.2).
+- **CHK-7.3** A query has a `time_zone` slot exactly when it computes a day or a period from a `timestamp` with time zone: a summary check or build query whose time dimension has such a `base` field (CHK-5.2); a `semi_additive` check whose `over`, or a time field of its `population`, is one; a `population` check whose `valid_from`, `valid_to` or `period` is one. A `temporal_orphans` check has no slot: it compares values and computes no day (VAL-2.16a). The pipeline binds an IANA time-zone name; the day of such a value is its day in that time zone (E6-5.2).
 - **CHK-7.4** A summary check and a build query have exactly one `period_from` slot and one `period_to` slot; no other kind has them. The pipeline binds periods in canonical form (CAT-5.1) at the grain of the base relation's `partitions`, `period_from` ≤ `period_to`. The query reads the base rows whose coverage day (the day of the `base` field of the coverage dimension, POP-3.5) is on or after the first day of `period_from` and on or before the last day of `period_to`: the range is inclusive at both ends, and a row whose coverage day is NULL is outside it. The query reads the grain of each bound from its shape (CAT-8, condition 6), so its SQL does not depend on the catalog state.
 
 Schema: [`schemas/integrity-checks.schema.json`](schemas/integrity-checks.schema.json) · Example: [`examples/integrity-checks.example.json`](examples/integrity-checks.example.json)

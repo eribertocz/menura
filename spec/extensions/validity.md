@@ -2,8 +2,14 @@
 
 Rules for history tables, whose rows are versions of an entity with a validity range (slowly
 changing dimensions of type 2). VAL-1 lets a `validity` population (POP-2) declare a half-open
+<<<<<<< HEAD
+range and a sentinel end. VAL-2 lets a relationship join each row of `from` to the version of
+`to` valid at a time the row holds. Their rules join the coverage scope at the gate of the
+release that implements them (7.1a).
+=======
 range and a sentinel end. Its rules join the coverage scope at the gate of the release that
 implements them (7.1a).
+>>>>>>> origin/main
 
 ## VAL-1 Range shape of a `validity` population
 
@@ -15,8 +21,59 @@ implements them (7.1a).
 | VAL-1.4 | **Integrity check of an exclusive range.** For a population with `valid_to_bound: exclusive`, CHK-6.3 compares values, not days: a row is `invalid_interval` when `valid_from` and `valid_to` are non-NULL, `valid_to` is not `open_end`, and `valid_from` ≥ `valid_to`; two rows overlap when each one's `valid_from` is before the other's `valid_to`, an open-ended `valid_to` being after every value. The check then computes no day, so it has no `time_zone` slot (CHK-7.3). Every other part of CHK-6.3 applies unchanged. |
 | VAL-1.5 | **Validation.** `valid_to_bound` and `open_end` are keys of the `validity` mode: on a `periodic` population they are `E0C-21` (POP-4.1). A `valid_to_bound` other than `inclusive` or `exclusive`, or an `open_end` that is not a string, is `E0C-03` (POP-4.2). An `open_end` that is not a value of the logical type of `valid_to` in its CON-4 form is `E0C-66`, located at `open_end` and checked in E0.f only when `valid_to` has a type (POP-4.5). |
 
+<<<<<<< HEAD
+## VAL-2 Temporal relationships
+
+A temporal relationship joins a row of `from` to the version of its entity that was valid at
+a time the `from` row holds: the "as of" join of a fact to a history table. It is an Apache
+Ossie relationship with a `temporal` entry of ours (MDL-2), and every rule about relationships
+applies to it, with the changes below.
+
+```json
+{"namespace": "menura", "version": 1,
+ "temporal": {"from_time": "sold_at", "population": "customer_versions"}}
+```
+
+| ID | Rule |
+|---|---|
+| VAL-2.1 | **Declaration.** `temporal` is a key of the entry of ours on a Relationship (E0C-2.3). It is an object with exactly `from_time` and `population`, each a non-empty string. A missing key, a wrong type or an empty string is `E0C-03`, and an unknown key is `E0C-02` (E0C-2.4). All of this is checked in E0.c. A relationship with a valid `temporal` entry is a **temporal relationship**. |
+| VAL-2.2 | **Time of the `from` row.** `from_time` is a declared name (E0D-1.4) that names a field of the relationship's `from` dataset under E0D-1.3. A name with no such field is `E0C-67`. It is checked in E0.d only when `from` resolves. |
+| VAL-2.3 | **Population.** `population` names a population (POP-4.3) declared on the relationship's `to` dataset whose `mode` is `validity`. Any other name, or a population of another mode or another dataset, is `E0C-68`. It is checked in E0.d only when `to` resolves. The population supplies `valid_from`, `valid_to`, `valid_to_bound` and `open_end` (POP-2, VAL-1.1, VAL-1.2). Its `partial_period` and `required_when` play no part in the join. |
+| VAL-2.4 | **Entity keys.** The population's `entity` and the relationship's `to_columns` hold the same set of columns, compared as E0E-3.8 compares a column list with a key. A difference is `E0C-69`, checked in E0.d only when every name in both resolves. Pair i of the relationship still compares `from_columns` i with `to_columns` i. |
+| VAL-2.5 | **Types.** `from_time`, `valid_from` and `valid_to` all have kind `date`, or all have kind `timestamp` with the same `with_time_zone`. Anything else is `E0C-70`, checked in E0.f only when all three are typed (POP-4.5). So a `timestamp` is never compared with a `date`, and a timestamp with time zone is never compared with one without. Timestamps of different precisions are allowed (VAL-2.9). |
+| VAL-2.6 | **No clock.** A `from_time` field that uses `CURRENT_DATE`, `CURRENT_TIME` or `CURRENT_TIMESTAMP`, directly or through other fields, is `E0C-71`, checked in E0.f. Which version a row joins never depends on when or where the query runs. |
+| VAL-2.7 | **Coverage.** A row r of `to` **covers** a value t when t is not NULL, r's `valid_from` is not NULL and is ≤ t, and r is open-ended or t is before its end. r is open-ended when its `valid_to` is NULL or equals `open_end` (VAL-1.2). "Before its end" means t < `valid_to` under `valid_to_bound: exclusive` and t ≤ `valid_to` under `inclusive` (VAL-1.1). So a row that is not open-ended and whose `valid_from` is after its `valid_to`, or equal to it under `exclusive`, covers no value. |
+| VAL-2.8 | **Matching.** Along a temporal relationship, a row f of `from` matches a row r of `to` exactly when every pair of key columns is equal, as for any relationship (a NULL key never matches), and r covers f's `from_time` value (VAL-2.7). This replaces key equality everywhere the specification says a row matches or is related along the relationship: the `Join` (E4-3.2), the `SemiJoin` (E4-3.4), propagation (E4-6.5a) and the `temporal_orphans` check (VAL-2.16a). `from_time` is read from the join instance the step starts from (E3-4.2a). |
+| VAL-2.9 | **Comparison.** t is compared with `valid_from`, `valid_to` and `open_end` as values of their common kind: days for a `date`; instants for a `timestamp` with time zone, compared directly, never truncated to a day or converted to the query time zone; wall-clock values for a `timestamp` without time zone. Timestamps of different precisions are compared exactly, as the values they denote, never rounded to the coarser precision. |
+| VAL-2.10 | **Unmatched rows.** A `from` row matches nothing when its `from_time` or any key is NULL, when its entity has no version, or when its time lies before, after or between every version of its entity. Under a `left` join it falls into the NULL group, which is kept (E4-4.1). At the instant a version ends under `exclusive`, the row matches the next version, if one starts there, and never the one that ends. |
+| VAL-2.11 | **Other rows that join.** A row that E4-7.6 adds for `missing: zero` joins with the `from_time` value E4-7.6 gives it: its `over` value, if `from_time` is `over`, otherwise NULL, so it matches nothing. `ToDate` (E4-8.5) and the shift of `prior_period` (E4-8.4) never change a row's `from_time`, so a repeated or shifted row keeps the version it joined. |
+| VAL-2.12 | **Graph and paths.** A temporal relationship is an edge of the graph like any other (E0E-2.2). Reachability, `W0E-01`, `E_AMBIGUOUS_PATH`, the query `paths` extension (QRY-4.3) and E3 apply unchanged. A plain and a temporal relationship between the same two datasets are two paths. `W0E-02` (E0E-3.2) is not reported for a temporal relationship, because its many-to-one cardinality rests on its population, not on a key (VAL-2.13). |
+| VAL-2.13 | **Cardinality.** A `from` row matches at most one version when no two versions of an entity cover the same value. That is what the population check proves (CHK-6.3, VAL-1.4). The compiler never assumes it: a branch with a `Join` along a temporal relationship gets its `Deduplicate` as E4-4.0e states for every branch with a `Join`, so a row that matches several versions counts once in each group they give (E0E-3.3, E4-4.0f). |
+| VAL-2.14 | **Deduplication evidence.** For a `Join` along a temporal relationship, E5-3.2a's `key_uniqueness` evidence is replaced by passing `population` evidence (CAT-7.3) for the relationship's population. That evidence holds whatever time zone the check ran in: two versions that share an instant always share a day, and a row that covers nothing (VAL-2.7) is never matched. Together with VAL-2.4 it proves that each `from` row matches at most one row of `to`. |
+| VAL-2.15 | **Inner-join evidence.** For a `Join` along a temporal relationship, E5-3.3 needs passing `temporal_orphans` evidence (VAL-2.16a, CAT-7.3) in place of `orphan_keys`. Condition (1) of E5-3.3a applies to the `from_time` field as it does to every `from_columns` field. Conditions (2) and (3) are unchanged. |
+| VAL-2.16 | **Recorded checks.** For a usable temporal relationship, E0 records one `temporal_orphans` check and no `key_uniqueness` or `orphan_keys` check (E0H-4.3). The population's own `population` check is recorded as for every population. |
+| VAL-2.16a | **Temporal orphans check.** The `temporal_orphans` query of a temporal relationship (CHK-6) returns the rows of its `from` dataset whose `from_columns` values and `from_time` value are all non-NULL and that no row of `to` matches under VAL-2.8: no row with equal `to_columns` values, pair by pair, covers their `from_time` value (VAL-2.7). Columns: the `from_columns` fields in pair order, then `from_time` unless it is one of them (CHK-2.6). A `from` row with a NULL in any `from_columns` field or in `from_time` is never a violation. The query compares values and computes no day, so it has no `time_zone` slot (CHK-7.3, VAL-2.9). |
+| VAL-2.17 | **Row policies.** Propagation along a temporal relationship follows E4-6.5 to E4-6.6 with the matching of VAL-2.8. A row of `from` is visible only if at least one version covering its `from_time` exists and every covering version is in V(`to`). A row whose `from_time` is NULL, or covered by no version, is never visible (deny by default). It does not help a row that other versions of its entity are visible. A model that also wants the policy applied through every version declares a plain relationship as well, and E4-6.6 requires the row to be visible along both. |
+| VAL-2.18 | **Authorization.** A temporal relationship is authorized (E2-4.8) only when its `from_time` field and its population's `valid_from` and `valid_to` fields are also fields the user is authorized to see (SCY-3.1, SCY-3.1a). Otherwise it is outside the authorized subgraph, with the diagnostics of E2-4.2. |
+| VAL-2.19 | **Summaries.** A summary is never used for a branch (E5-3.5) that has a `Join` or a propagation `SemiJoin` along any temporal relationship, wherever it is in the join tree, because a summary row has no single `from_time` value (SUM-3.2). |
+| VAL-2.20 | **Unusability.** A temporal relationship is unusable when its `from_time` field, or its population's `valid_from` or `valid_to` field, is unusable (E0-4.2a). It is then excluded from the graph like any unusable relationship, and E0-4.2a's `E0H-01` rule applies. |
+| VAL-2.21 | **No query value.** The coverage condition reads no query value, no security attribute, no `reference_time` and no query `time_zone`. It adds no parameter (E6-4.2), and two queries that differ only in `time_zone` join the same versions. `open_end` is a model constant, written as a literal of the type of `valid_to` (E6-4.11). |
+| VAL-2.22 | **Generation.** In every dialect, a `Join` or `SemiJoin` along a temporal relationship has the meaning of VAL-2.8, and its SQL shape is internal (E6-4.14): a `from` row with k ≥ 1 covering versions gives k rows, and under `left` one with none gives exactly one row whose `to` columns are NULL. `open_end` is written as a literal of the type of `valid_to` (E6-4.11), and no parameter is added (VAL-2.21). |
+| VAL-2.23 | **ClickHouse.** In the `clickhouse` dialect, any SQL shape is allowed whose meaning is fixed by the statement's `SETTINGS` clause (E6-7.8). `ASOF JOIN` is never used, because it picks one version where VAL-2.8 keeps every covering version. An `open_end` outside the range of the ClickHouse type of `valid_to` (E6-7.12) fails with `E6-01`, located at `dataset:` of the `to` dataset. The same holds for the `open_end` of any `validity` population (VAL-1.2) wherever ClickHouse SQL reads it, a population check included (E6-7.11), located at `dataset:` of the dataset that declares the population. |
+| VAL-2.24 | **Lineage and explanation.** For a column whose value a `Join` along a temporal relationship brings, `model_inputs` lists the relationship (PLN-4.4), and also its `from_time` field and its population's `valid_from` and `valid_to` fields. `physical_inputs` lists their columns as `Join`-condition columns (PLN-4.5). E4 records one `VAL-2.8` entry per such `Join` (PLN-7.3), with subject `relationship:<name>`, in branch order and then path order. Its `reason` names the `from_time` field and the population, never a value. The `E4-4.1` entry of a temporal `left` join says that a time covered by no version also gives the NULL group. |
+
+=======
+>>>>>>> origin/main
 ## VAL-3 Diagnostics
 
 | Code | Condition |
 |---|---|
 | `E0C-66` | `open_end` is not a value of the type of `valid_to` in its CON-4 form |
+<<<<<<< HEAD
+| `E0C-67` | `temporal.from_time` names no field of the relationship's `from` dataset |
+| `E0C-68` | `temporal.population` names no `validity` population of the relationship's `to` dataset |
+| `E0C-69` | The population's `entity` and the relationship's `to_columns` are not the same set of columns |
+| `E0C-70` | `from_time`, `valid_from` and `valid_to` are not all `date`, or not all `timestamp` with the same `with_time_zone` |
+| `E0C-71` | `from_time` uses `CURRENT_DATE`, `CURRENT_TIME` or `CURRENT_TIMESTAMP`, directly or through other fields |
+=======
+>>>>>>> origin/main

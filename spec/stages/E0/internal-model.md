@@ -46,11 +46,12 @@ report the results in the catalog state.
 |---|---|---|
 | Key uniqueness of `to_columns` in `to` | Violated many-to-one cardinality | Skipping row-identity deduplication for that relationship |
 | Orphan keys: `from_columns` values with no match in `to` | Missing referential integrity | Inner joins instead of left joins for that relationship |
+| Temporal orphans: `from` rows with no version of `to` covering their `from_time` | A missing version at the row's time | Inner joins instead of left joins for that temporal relationship (VAL-2.15) |
 | Summary integrity | A summary that differs from its base | Using the summary (CAT-7.2) |
-| Population | Missing or unexpected entities per period | Semi-additive policies (population extension) |
+| Population | Missing or unexpected entities per period | Semi-additive policies (population extension); skipping row-identity deduplication for a temporal relationship (VAL-2.14) |
 | Semi-additive | A semi-additive metric whose snapshots break its declaration | Semi-additive policies (additivity extension) |
 
-- **E0H-4.3** E0 records one check per usable relationship for each of `key_uniqueness` and `orphan_keys`, one `summary` check per summary, one `population` check per population of a usable dataset and one `semi_additive` check per usable semi-additive metric. Each has the `kind`, `target` (the normalized name: of the relationship, of the summary, of the population (unique in the model, POP-4.3), or of the metric; a development-line dataset metric is qualified as `<dataset>.<metric>`), `check_id` and `definition_hash` of CHK-2 and CHK-3, sorted by `check_id`. Their SQL is generated later, as CHK-4.2 states.
+- **E0H-4.3** E0 records one check per usable relationship for each of `key_uniqueness` and `orphan_keys`, except that a usable temporal relationship gets one `temporal_orphans` check instead (VAL-2.16), one `summary` check per summary, one `population` check per population of a usable dataset and one `semi_additive` check per usable semi-additive metric. Each has the `kind`, `target` (the normalized name: of the relationship, of the summary, of the population (unique in the model, POP-4.3), or of the metric; a development-line dataset metric is qualified as `<dataset>.<metric>`), `check_id` and `definition_hash` of CHK-2 and CHK-3, sorted by `check_id`. Their SQL is generated later, as CHK-4.2 states.
 
 ## E0H-5 Diagnostics
 

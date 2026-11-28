@@ -1,6 +1,6 @@
 # Contract: catalog
 
-**Contract version:** 1.1.0 · **Owner:** `menura` · **Producer:** data pipelines · **Consumer:** compiler
+**Contract version:** schema document 1.1.0, state document 1.2.0 (CAT-2.1) · **Owner:** `menura` · **Producer:** data pipelines · **Consumer:** compiler
 
 ## CAT-1 Purpose
 
@@ -154,8 +154,9 @@ The explanation states which condition failed.
 A check in `checks` is evidence only if its `status` is `passed`, its `definition_hash` equals
 the current check's hash, and `verified` lists, for every relation involved, the current version
 of every one of its periods (or its single version when it is not partitioned), with no
-difference. Only then may E5 use it: skip deduplication (`key_uniqueness`) or use an inner join
-(`orphan_keys`).
+difference. Only then may E5 use it: skip deduplication (`key_uniqueness`, or `population` for a temporal
+relationship, VAL-2.14) or use an inner join (`orphan_keys`, or `temporal_orphans` for a temporal
+relationship, VAL-2.15).
 
 ### CAT-7.4 Never
 

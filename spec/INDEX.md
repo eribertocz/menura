@@ -283,10 +283,10 @@ Find a rule ID or a section here, then open only that file at that line.
 | [contracts/catalog.md](contracts/catalog.md#L130) | 130 | section | CAT-7.2 Summary validity |
 | [contracts/catalog.md](contracts/catalog.md#L150) | 150 | rule | CAT-7.2.1 |
 | [contracts/catalog.md](contracts/catalog.md#L152) | 152 | section | CAT-7.3 Check evidence |
-| [contracts/catalog.md](contracts/catalog.md#L160) | 160 | section | CAT-7.4 Never |
-| [contracts/catalog.md](contracts/catalog.md#L166) | 166 | section | CAT-8 Semantic rules |
-| [contracts/catalog.md](contracts/catalog.md#L178) | 178 | section | CAT-9 Errors |
-| [contracts/catalog.md](contracts/catalog.md#L191) | 191 | rule | CAT-9.1 |
+| [contracts/catalog.md](contracts/catalog.md#L161) | 161 | section | CAT-7.4 Never |
+| [contracts/catalog.md](contracts/catalog.md#L167) | 167 | section | CAT-8 Semantic rules |
+| [contracts/catalog.md](contracts/catalog.md#L179) | 179 | section | CAT-9 Errors |
+| [contracts/catalog.md](contracts/catalog.md#L192) | 192 | rule | CAT-9.1 |
 | [contracts/compiled-plan.md](contracts/compiled-plan.md#L1) | 1 | section | Contract: compiled plan and compile error |
 | [contracts/compiled-plan.md](contracts/compiled-plan.md#L7) | 7 | section | PLN-1 Compiled plan |
 | [contracts/compiled-plan.md](contracts/compiled-plan.md#L25) | 25 | section | PLN-2 SQL rules |
@@ -331,11 +331,11 @@ Find a rule ID or a section here, then open only that file at that line.
 | [contracts/compiled-plan.md](contracts/compiled-plan.md#L129) | 129 | rule | PLN-7.1 |
 | [contracts/compiled-plan.md](contracts/compiled-plan.md#L130) | 130 | rule | PLN-7.2 |
 | [contracts/compiled-plan.md](contracts/compiled-plan.md#L131) | 131 | rule | PLN-7.3 |
-| [contracts/compiled-plan.md](contracts/compiled-plan.md#L147) | 147 | rule | PLN-7.4 |
-| [contracts/compiled-plan.md](contracts/compiled-plan.md#L149) | 149 | section | PLN-8 Explain |
-| [contracts/compiled-plan.md](contracts/compiled-plan.md#L151) | 151 | rule | PLN-8.1 |
-| [contracts/compiled-plan.md](contracts/compiled-plan.md#L152) | 152 | rule | PLN-8.2 |
-| [contracts/compiled-plan.md](contracts/compiled-plan.md#L153) | 153 | rule | PLN-8.3 |
+| [contracts/compiled-plan.md](contracts/compiled-plan.md#L148) | 148 | rule | PLN-7.4 |
+| [contracts/compiled-plan.md](contracts/compiled-plan.md#L150) | 150 | section | PLN-8 Explain |
+| [contracts/compiled-plan.md](contracts/compiled-plan.md#L152) | 152 | rule | PLN-8.1 |
+| [contracts/compiled-plan.md](contracts/compiled-plan.md#L153) | 153 | rule | PLN-8.2 |
+| [contracts/compiled-plan.md](contracts/compiled-plan.md#L154) | 154 | rule | PLN-8.3 |
 | [contracts/integrity-checks.md](contracts/integrity-checks.md#L1) | 1 | section | Contract: integrity checks |
 | [contracts/integrity-checks.md](contracts/integrity-checks.md#L5) | 5 | section | CHK-1 Purpose |
 | [contracts/integrity-checks.md](contracts/integrity-checks.md#L10) | 10 | section | CHK-2 Document |
@@ -346,30 +346,30 @@ Find a rule ID or a section here, then open only that file at that line.
 | [contracts/integrity-checks.md](contracts/integrity-checks.md#L29) | 29 | rule | CHK-2.5 |
 | [contracts/integrity-checks.md](contracts/integrity-checks.md#L30) | 30 | rule | CHK-2.6 |
 | [contracts/integrity-checks.md](contracts/integrity-checks.md#L32) | 32 | section | CHK-3 Definition hash |
-| [contracts/integrity-checks.md](contracts/integrity-checks.md#L45) | 45 | rule | CHK-3.1 |
-| [contracts/integrity-checks.md](contracts/integrity-checks.md#L47) | 47 | section | CHK-4 Use of evidence and generation |
-| [contracts/integrity-checks.md](contracts/integrity-checks.md#L51) | 51 | rule | CHK-4.1 |
-| [contracts/integrity-checks.md](contracts/integrity-checks.md#L52) | 52 | rule | CHK-4.2 |
-| [contracts/integrity-checks.md](contracts/integrity-checks.md#L54) | 54 | section | CHK-5 Summary build and time zone |
-| [contracts/integrity-checks.md](contracts/integrity-checks.md#L56) | 56 | rule | CHK-5.1 |
-| [contracts/integrity-checks.md](contracts/integrity-checks.md#L57) | 57 | rule | CHK-5.2 |
-| [contracts/integrity-checks.md](contracts/integrity-checks.md#L58) | 58 | rule | CHK-5.3 |
-| [contracts/integrity-checks.md](contracts/integrity-checks.md#L59) | 59 | rule | CHK-5.4 |
-| [contracts/integrity-checks.md](contracts/integrity-checks.md#L60) | 60 | rule | CHK-5.5 |
-| [contracts/integrity-checks.md](contracts/integrity-checks.md#L61) | 61 | rule | CHK-5.6 |
-| [contracts/integrity-checks.md](contracts/integrity-checks.md#L63) | 63 | section | CHK-6 Check queries |
-| [contracts/integrity-checks.md](contracts/integrity-checks.md#L67) | 67 | rule | CHK-6.1 |
-| [contracts/integrity-checks.md](contracts/integrity-checks.md#L68) | 68 | rule | CHK-6.2 |
-| [contracts/integrity-checks.md](contracts/integrity-checks.md#L69) | 69 | rule | CHK-6.3 |
-| [contracts/integrity-checks.md](contracts/integrity-checks.md#L70) | 70 | rule | CHK-6.4 |
-| [contracts/integrity-checks.md](contracts/integrity-checks.md#L71) | 71 | rule | CHK-6.5 |
-| [contracts/integrity-checks.md](contracts/integrity-checks.md#L78) | 78 | rule | CHK-6.5a |
-| [contracts/integrity-checks.md](contracts/integrity-checks.md#L79) | 79 | rule | CHK-6.6 |
-| [contracts/integrity-checks.md](contracts/integrity-checks.md#L81) | 81 | section | CHK-7 Parameters and bindings |
-| [contracts/integrity-checks.md](contracts/integrity-checks.md#L83) | 83 | rule | CHK-7.1 |
-| [contracts/integrity-checks.md](contracts/integrity-checks.md#L84) | 84 | rule | CHK-7.2 |
-| [contracts/integrity-checks.md](contracts/integrity-checks.md#L85) | 85 | rule | CHK-7.3 |
-| [contracts/integrity-checks.md](contracts/integrity-checks.md#L86) | 86 | rule | CHK-7.4 |
+| [contracts/integrity-checks.md](contracts/integrity-checks.md#L46) | 46 | rule | CHK-3.1 |
+| [contracts/integrity-checks.md](contracts/integrity-checks.md#L48) | 48 | section | CHK-4 Use of evidence and generation |
+| [contracts/integrity-checks.md](contracts/integrity-checks.md#L52) | 52 | rule | CHK-4.1 |
+| [contracts/integrity-checks.md](contracts/integrity-checks.md#L53) | 53 | rule | CHK-4.2 |
+| [contracts/integrity-checks.md](contracts/integrity-checks.md#L55) | 55 | section | CHK-5 Summary build and time zone |
+| [contracts/integrity-checks.md](contracts/integrity-checks.md#L57) | 57 | rule | CHK-5.1 |
+| [contracts/integrity-checks.md](contracts/integrity-checks.md#L58) | 58 | rule | CHK-5.2 |
+| [contracts/integrity-checks.md](contracts/integrity-checks.md#L59) | 59 | rule | CHK-5.3 |
+| [contracts/integrity-checks.md](contracts/integrity-checks.md#L60) | 60 | rule | CHK-5.4 |
+| [contracts/integrity-checks.md](contracts/integrity-checks.md#L61) | 61 | rule | CHK-5.5 |
+| [contracts/integrity-checks.md](contracts/integrity-checks.md#L62) | 62 | rule | CHK-5.6 |
+| [contracts/integrity-checks.md](contracts/integrity-checks.md#L64) | 64 | section | CHK-6 Check queries |
+| [contracts/integrity-checks.md](contracts/integrity-checks.md#L68) | 68 | rule | CHK-6.1 |
+| [contracts/integrity-checks.md](contracts/integrity-checks.md#L69) | 69 | rule | CHK-6.2 |
+| [contracts/integrity-checks.md](contracts/integrity-checks.md#L70) | 70 | rule | CHK-6.3 |
+| [contracts/integrity-checks.md](contracts/integrity-checks.md#L71) | 71 | rule | CHK-6.4 |
+| [contracts/integrity-checks.md](contracts/integrity-checks.md#L72) | 72 | rule | CHK-6.5 |
+| [contracts/integrity-checks.md](contracts/integrity-checks.md#L79) | 79 | rule | CHK-6.5a |
+| [contracts/integrity-checks.md](contracts/integrity-checks.md#L80) | 80 | rule | CHK-6.6 |
+| [contracts/integrity-checks.md](contracts/integrity-checks.md#L82) | 82 | section | CHK-7 Parameters and bindings |
+| [contracts/integrity-checks.md](contracts/integrity-checks.md#L84) | 84 | rule | CHK-7.1 |
+| [contracts/integrity-checks.md](contracts/integrity-checks.md#L85) | 85 | rule | CHK-7.2 |
+| [contracts/integrity-checks.md](contracts/integrity-checks.md#L86) | 86 | rule | CHK-7.3 |
+| [contracts/integrity-checks.md](contracts/integrity-checks.md#L87) | 87 | rule | CHK-7.4 |
 | [contracts/migration-report.md](contracts/migration-report.md#L1) | 1 | section | Contract: migration report |
 | [contracts/migration-report.md](contracts/migration-report.md#L5) | 5 | section | MIG-1 Purpose |
 | [contracts/migration-report.md](contracts/migration-report.md#L11) | 11 | section | MIG-2 Content |
@@ -433,8 +433,8 @@ Find a rule ID or a section here, then open only that file at that line.
 | [contracts/model.md](contracts/model.md#L24) | 24 | rule | MDL-2.3 |
 | [contracts/model.md](contracts/model.md#L25) | 25 | rule | MDL-2.4 |
 | [contracts/model.md](contracts/model.md#L26) | 26 | rule | MDL-2.5 |
-| [contracts/model.md](contracts/model.md#L38) | 38 | section | MDL-3 Hash |
-| [contracts/model.md](contracts/model.md#L40) | 40 | rule | MDL-3.1 |
+| [contracts/model.md](contracts/model.md#L39) | 39 | section | MDL-3 Hash |
+| [contracts/model.md](contracts/model.md#L41) | 41 | rule | MDL-3.1 |
 | [contracts/query.md](contracts/query.md#L1) | 1 | section | Contract: query |
 | [contracts/query.md](contracts/query.md#L5) | 5 | section | QRY-1 Purpose and Apache Ossie status |
 | [contracts/query.md](contracts/query.md#L14) | 14 | rule | QRY-1.1 |
@@ -511,7 +511,7 @@ Find a rule ID or a section here, then open only that file at that line.
 | [decisions/0007-agent-channels-and-dependencies.md](decisions/0007-agent-channels-and-dependencies.md#L21) | 21 | section | Rules changed |
 | [decisions/README.md](decisions/README.md#L1) | 1 | section | Decision records |
 | [extensions/README.md](extensions/README.md#L1) | 1 | section | Extensions |
-| [extensions/README.md](extensions/README.md#L19) | 19 | section | EXT-1 Runtime failure policies |
+| [extensions/README.md](extensions/README.md#L23) | 23 | section | EXT-1 Runtime failure policies |
 | [extensions/additivity.md](extensions/additivity.md#L1) | 1 | section | Extension: additivity |
 | [extensions/additivity.md](extensions/additivity.md#L5) | 5 | section | ADD-1 Purpose |
 | [extensions/additivity.md](extensions/additivity.md#L10) | 10 | section | ADD-2 Default and conflicts |
@@ -663,13 +663,39 @@ Find a rule ID or a section here, then open only that file at that line.
 | [extensions/summaries.md](extensions/summaries.md#L73) | 73 | rule | SUM-6.1.7 |
 | [extensions/summaries.md](extensions/summaries.md#L74) | 74 | rule | SUM-6.1.8 |
 | [extensions/validity.md](extensions/validity.md#L1) | 1 | section | Validity: range shape and temporal relationships |
-| [extensions/validity.md](extensions/validity.md#L8) | 8 | section | VAL-1 Range shape of a `validity` population |
-| [extensions/validity.md](extensions/validity.md#L12) | 12 | rule | VAL-1.1 |
-| [extensions/validity.md](extensions/validity.md#L13) | 13 | rule | VAL-1.2 |
-| [extensions/validity.md](extensions/validity.md#L14) | 14 | rule | VAL-1.3 |
-| [extensions/validity.md](extensions/validity.md#L15) | 15 | rule | VAL-1.4 |
-| [extensions/validity.md](extensions/validity.md#L16) | 16 | rule | VAL-1.5 |
-| [extensions/validity.md](extensions/validity.md#L18) | 18 | section | VAL-3 Diagnostics |
+| [extensions/validity.md](extensions/validity.md#L14) | 14 | section | VAL-1 Range shape of a `validity` population |
+| [extensions/validity.md](extensions/validity.md#L18) | 18 | rule | VAL-1.1 |
+| [extensions/validity.md](extensions/validity.md#L19) | 19 | rule | VAL-1.2 |
+| [extensions/validity.md](extensions/validity.md#L20) | 20 | rule | VAL-1.3 |
+| [extensions/validity.md](extensions/validity.md#L21) | 21 | rule | VAL-1.4 |
+| [extensions/validity.md](extensions/validity.md#L22) | 22 | rule | VAL-1.5 |
+| [extensions/validity.md](extensions/validity.md#L25) | 25 | section | VAL-2 Temporal relationships |
+| [extensions/validity.md](extensions/validity.md#L39) | 39 | rule | VAL-2.1 |
+| [extensions/validity.md](extensions/validity.md#L40) | 40 | rule | VAL-2.2 |
+| [extensions/validity.md](extensions/validity.md#L41) | 41 | rule | VAL-2.3 |
+| [extensions/validity.md](extensions/validity.md#L42) | 42 | rule | VAL-2.4 |
+| [extensions/validity.md](extensions/validity.md#L43) | 43 | rule | VAL-2.5 |
+| [extensions/validity.md](extensions/validity.md#L44) | 44 | rule | VAL-2.6 |
+| [extensions/validity.md](extensions/validity.md#L45) | 45 | rule | VAL-2.7 |
+| [extensions/validity.md](extensions/validity.md#L46) | 46 | rule | VAL-2.8 |
+| [extensions/validity.md](extensions/validity.md#L47) | 47 | rule | VAL-2.9 |
+| [extensions/validity.md](extensions/validity.md#L48) | 48 | rule | VAL-2.10 |
+| [extensions/validity.md](extensions/validity.md#L49) | 49 | rule | VAL-2.11 |
+| [extensions/validity.md](extensions/validity.md#L50) | 50 | rule | VAL-2.12 |
+| [extensions/validity.md](extensions/validity.md#L51) | 51 | rule | VAL-2.13 |
+| [extensions/validity.md](extensions/validity.md#L52) | 52 | rule | VAL-2.14 |
+| [extensions/validity.md](extensions/validity.md#L53) | 53 | rule | VAL-2.15 |
+| [extensions/validity.md](extensions/validity.md#L54) | 54 | rule | VAL-2.16 |
+| [extensions/validity.md](extensions/validity.md#L55) | 55 | rule | VAL-2.16a |
+| [extensions/validity.md](extensions/validity.md#L56) | 56 | rule | VAL-2.17 |
+| [extensions/validity.md](extensions/validity.md#L57) | 57 | rule | VAL-2.18 |
+| [extensions/validity.md](extensions/validity.md#L58) | 58 | rule | VAL-2.19 |
+| [extensions/validity.md](extensions/validity.md#L59) | 59 | rule | VAL-2.20 |
+| [extensions/validity.md](extensions/validity.md#L60) | 60 | rule | VAL-2.21 |
+| [extensions/validity.md](extensions/validity.md#L61) | 61 | rule | VAL-2.22 |
+| [extensions/validity.md](extensions/validity.md#L62) | 62 | rule | VAL-2.23 |
+| [extensions/validity.md](extensions/validity.md#L63) | 63 | rule | VAL-2.24 |
+| [extensions/validity.md](extensions/validity.md#L67) | 67 | section | VAL-3 Diagnostics |
 | [glossary.md](glossary.md#L1) | 1 | section | Glossary |
 | [ossie-mapping.md](ossie-mapping.md#L1) | 1 | section | Apache Ossie mapping |
 | [stages/E0/README.md](stages/E0/README.md#L1) | 1 | section | E0 Load and validate the model |
@@ -753,8 +779,8 @@ Find a rule ID or a section here, then open only that file at that line.
 | [stages/E0/internal-model.md](stages/E0/internal-model.md#L36) | 36 | rule | E0H-3.3 |
 | [stages/E0/internal-model.md](stages/E0/internal-model.md#L37) | 37 | rule | E0H-3.4 |
 | [stages/E0/internal-model.md](stages/E0/internal-model.md#L39) | 39 | section | E0H-4 Integrity checks |
-| [stages/E0/internal-model.md](stages/E0/internal-model.md#L53) | 53 | rule | E0H-4.3 |
-| [stages/E0/internal-model.md](stages/E0/internal-model.md#L55) | 55 | section | E0H-5 Diagnostics |
+| [stages/E0/internal-model.md](stages/E0/internal-model.md#L54) | 54 | rule | E0H-4.3 |
+| [stages/E0/internal-model.md](stages/E0/internal-model.md#L56) | 56 | section | E0H-5 Diagnostics |
 | [stages/E0/metrics.md](stages/E0/metrics.md#L1) | 1 | section | E0.g Classify metrics |
 | [stages/E0/metrics.md](stages/E0/metrics.md#L3) | 3 | section | E0G-1 Components |
 | [stages/E0/metrics.md](stages/E0/metrics.md#L8) | 8 | rule | E0G-1.1 |
