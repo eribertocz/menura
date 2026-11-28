@@ -24,6 +24,9 @@
       ],
       "security_policies": [
         "CUSTOMERS.REGION_SCOPE"
+      ],
+      "sources": [
+        "sales.public.dim_customer"
       ]
     },
     {
@@ -53,6 +56,10 @@
       ],
       "security_policies": [
         "CUSTOMERS.REGION_SCOPE"
+      ],
+      "sources": [
+        "sales.public.dim_customer",
+        "sales.public.fact_invoice"
       ]
     }
   ],

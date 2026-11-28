@@ -597,6 +597,14 @@
           "op": "replace",
           "path": "/contract_version",
           "value": "1.2.0"
+        },
+        {
+          "op": "remove",
+          "path": "/datasets/0/sql_metrics"
+        },
+        {
+          "op": "remove",
+          "path": "/datasets/1/sql_metrics"
         }
       ]
     },
@@ -605,11 +613,9 @@
       "valid": false,
       "patch": [
         {
-          "op": "add",
-          "path": "/datasets/1/sql_metrics",
-          "value": [
-            ""
-          ]
+          "op": "replace",
+          "path": "/datasets/1/sql_metrics/0",
+          "value": ""
         }
       ]
     }

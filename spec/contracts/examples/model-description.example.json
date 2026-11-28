@@ -41,7 +41,8 @@
           "is_time": false,
           "time_grains": []
         }
-      ]
+      ],
+      "sql_metrics": []
     },
     {
       "name": "INVOICES",
@@ -131,6 +132,12 @@
           "is_time": false,
           "time_grains": []
         }
+      ],
+      "sql_metrics": [
+        "AVERAGE_INVOICE",
+        "BILLED",
+        "BILLED_YTD",
+        "INVOICE_COUNT"
       ]
     }
   ],
