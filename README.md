@@ -4,8 +4,9 @@ A semantic compiler: it turns a question in business terms (metrics, dimensions,
 correct, secure, deterministic SQL. It reads semantic models in the **Apache Ossie** format,
 speaks standard SQL, and never stores or reads data itself.
 
-> Status: **1.1.1**, the ClickHouse dialect ([roadmap 7.2](spec/07-roadmap.md)). Contracts are
-> frozen at major version 1 and follow [contract evolution, architecture 3.3](spec/architecture/README.md).
+> Status: **1.2.0**, window metrics, ranking and top N ([roadmap 7.2](spec/07-roadmap.md)).
+> Contracts are frozen at major version 1 and follow
+> [contract evolution, architecture 3.3](spec/architecture/README.md).
 
 ## What it does today
 
