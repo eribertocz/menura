@@ -17,8 +17,10 @@ uses to decide that an entity is missing (ADD-4.2).
 | `mode` | Yes | `validity` (validity intervals) or `periodic` (one row per entity and period) |
 | `entity` | Yes | Fields of the dataset that identify the entity |
 | `valid_from` | If `validity` | Start of validity, inclusive |
-| `valid_to` | If `validity` | End of validity, inclusive; NULL means open-ended |
+| `valid_to` | If `validity` | End of validity, inclusive unless `valid_to_bound` says otherwise; NULL means open-ended |
 | `partial_period` | If `validity` | `any_day`, `full_period` or `period_end` |
+| `valid_to_bound` | No, `validity` only | `inclusive` (default) or `exclusive`: whether `valid_to` is the last value covered or the first one not covered (VAL-1.1) |
+| `open_end` | No, `validity` only | A `valid_to` value that means open-ended, like NULL (VAL-1.2) |
 | `period` | If `periodic` | Period field of the row |
 | `grain` | If `periodic` | Grain of `period` |
 | `required_when` | No | Boolean expression over the dataset's fields; the entity is expected only if it holds |

@@ -511,7 +511,7 @@ Find a rule ID or a section here, then open only that file at that line.
 | [decisions/0007-agent-channels-and-dependencies.md](decisions/0007-agent-channels-and-dependencies.md#L21) | 21 | section | Rules changed |
 | [decisions/README.md](decisions/README.md#L1) | 1 | section | Decision records |
 | [extensions/README.md](extensions/README.md#L1) | 1 | section | Extensions |
-| [extensions/README.md](extensions/README.md#L18) | 18 | section | EXT-1 Runtime failure policies |
+| [extensions/README.md](extensions/README.md#L19) | 19 | section | EXT-1 Runtime failure policies |
 | [extensions/additivity.md](extensions/additivity.md#L1) | 1 | section | Extension: additivity |
 | [extensions/additivity.md](extensions/additivity.md#L5) | 5 | section | ADD-1 Purpose |
 | [extensions/additivity.md](extensions/additivity.md#L10) | 10 | section | ADD-2 Default and conflicts |
@@ -592,22 +592,22 @@ Find a rule ID or a section here, then open only that file at that line.
 | [extensions/population.md](extensions/population.md#L1) | 1 | section | Extension: population |
 | [extensions/population.md](extensions/population.md#L5) | 5 | section | POP-1 Purpose |
 | [extensions/population.md](extensions/population.md#L10) | 10 | section | POP-2 Schema |
-| [extensions/population.md](extensions/population.md#L28) | 28 | section | POP-3 Meaning |
-| [extensions/population.md](extensions/population.md#L32) | 32 | rule | POP-3.1 |
-| [extensions/population.md](extensions/population.md#L33) | 33 | rule | POP-3.2 |
-| [extensions/population.md](extensions/population.md#L34) | 34 | rule | POP-3.3 |
-| [extensions/population.md](extensions/population.md#L35) | 35 | rule | POP-3.4 |
-| [extensions/population.md](extensions/population.md#L36) | 36 | rule | POP-3.5 |
-| [extensions/population.md](extensions/population.md#L37) | 37 | rule | POP-3.6 |
-| [extensions/population.md](extensions/population.md#L38) | 38 | rule | POP-3.7 |
-| [extensions/population.md](extensions/population.md#L40) | 40 | section | POP-4 Validation |
-| [extensions/population.md](extensions/population.md#L50) | 50 | rule | POP-4.1 |
-| [extensions/population.md](extensions/population.md#L51) | 51 | rule | POP-4.2 |
-| [extensions/population.md](extensions/population.md#L52) | 52 | rule | POP-4.3 |
-| [extensions/population.md](extensions/population.md#L53) | 53 | rule | POP-4.4 |
-| [extensions/population.md](extensions/population.md#L54) | 54 | rule | POP-4.5 |
-| [extensions/population.md](extensions/population.md#L55) | 55 | rule | POP-4.6 |
-| [extensions/population.md](extensions/population.md#L57) | 57 | section | POP-5 Integrity checks |
+| [extensions/population.md](extensions/population.md#L30) | 30 | section | POP-3 Meaning |
+| [extensions/population.md](extensions/population.md#L34) | 34 | rule | POP-3.1 |
+| [extensions/population.md](extensions/population.md#L35) | 35 | rule | POP-3.2 |
+| [extensions/population.md](extensions/population.md#L36) | 36 | rule | POP-3.3 |
+| [extensions/population.md](extensions/population.md#L37) | 37 | rule | POP-3.4 |
+| [extensions/population.md](extensions/population.md#L38) | 38 | rule | POP-3.5 |
+| [extensions/population.md](extensions/population.md#L39) | 39 | rule | POP-3.6 |
+| [extensions/population.md](extensions/population.md#L40) | 40 | rule | POP-3.7 |
+| [extensions/population.md](extensions/population.md#L42) | 42 | section | POP-4 Validation |
+| [extensions/population.md](extensions/population.md#L52) | 52 | rule | POP-4.1 |
+| [extensions/population.md](extensions/population.md#L53) | 53 | rule | POP-4.2 |
+| [extensions/population.md](extensions/population.md#L54) | 54 | rule | POP-4.3 |
+| [extensions/population.md](extensions/population.md#L55) | 55 | rule | POP-4.4 |
+| [extensions/population.md](extensions/population.md#L56) | 56 | rule | POP-4.5 |
+| [extensions/population.md](extensions/population.md#L57) | 57 | rule | POP-4.6 |
+| [extensions/population.md](extensions/population.md#L59) | 59 | section | POP-5 Integrity checks |
 | [extensions/security.md](extensions/security.md#L1) | 1 | section | Extension: security |
 | [extensions/security.md](extensions/security.md#L5) | 5 | section | SCY-1 Principle |
 | [extensions/security.md](extensions/security.md#L13) | 13 | section | SCY-2 `security_context` (model, required) |
@@ -662,6 +662,14 @@ Find a rule ID or a section here, then open only that file at that line.
 | [extensions/summaries.md](extensions/summaries.md#L72) | 72 | rule | SUM-6.1.6 |
 | [extensions/summaries.md](extensions/summaries.md#L73) | 73 | rule | SUM-6.1.7 |
 | [extensions/summaries.md](extensions/summaries.md#L74) | 74 | rule | SUM-6.1.8 |
+| [extensions/validity.md](extensions/validity.md#L1) | 1 | section | Validity: range shape and temporal relationships |
+| [extensions/validity.md](extensions/validity.md#L8) | 8 | section | VAL-1 Range shape of a `validity` population |
+| [extensions/validity.md](extensions/validity.md#L12) | 12 | rule | VAL-1.1 |
+| [extensions/validity.md](extensions/validity.md#L13) | 13 | rule | VAL-1.2 |
+| [extensions/validity.md](extensions/validity.md#L14) | 14 | rule | VAL-1.3 |
+| [extensions/validity.md](extensions/validity.md#L15) | 15 | rule | VAL-1.4 |
+| [extensions/validity.md](extensions/validity.md#L16) | 16 | rule | VAL-1.5 |
+| [extensions/validity.md](extensions/validity.md#L18) | 18 | section | VAL-3 Diagnostics |
 | [glossary.md](glossary.md#L1) | 1 | section | Glossary |
 | [ossie-mapping.md](ossie-mapping.md#L1) | 1 | section | Apache Ossie mapping |
 | [stages/E0/README.md](stages/E0/README.md#L1) | 1 | section | E0 Load and validate the model |
