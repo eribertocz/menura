@@ -66,9 +66,10 @@ impl<'model> Resolver<'model> {
                 self.model.relationship(name).is_some_and(|relationship| {
                     self.keys_readable(&relationship.from, &relationship.from_columns)
                         && self.keys_readable(&relationship.to, &relationship.to_columns)
-                        && self.time_fields(relationship).iter().all(
-                            |(dataset, fields)| self.keys_readable(dataset, fields),
-                        )
+                        && self
+                            .time_fields(relationship)
+                            .iter()
+                            .all(|(dataset, fields)| self.keys_readable(dataset, fields))
                 })
             })
             .cloned()

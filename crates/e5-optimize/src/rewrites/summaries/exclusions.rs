@@ -198,3 +198,81 @@ impl FieldReader<'_> {
             })
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use menura_contracts::types::common::LogicalType;
+    use menura_model::internal_model::{NormalizedName, SourceLocation, ValidToBound};
+    use menura_representations::check_shapes::VersionRange;
+    use menura_representations::logical_plan::{
+        JoinCondition, JoinKind, Operation, OutputSchema, PlanNode, TemporalCoverage,
+    };
+    use menura_representations::names::{ColumnName, ColumnPrefix};
+    use menura_representations::origin::Origin;
+
+    use super::joins_temporally;
+
+    fn node(operation: Operation) -> PlanNode {
+        PlanNode::new(
+            operation,
+            OutputSchema::new(Vec::new()),
+            Origin::Model(SourceLocation {
+                pointer: "/semantic_model/0".to_owned(),
+                line: 1,
+                column: 1,
+            }),
+        )
+    }
+
+    fn scan(dataset: &str) -> PlanNode {
+        node(Operation::Scan {
+            dataset: NormalizedName::new(dataset),
+            row_identity: None,
+        })
+    }
+
+    fn coverage() -> TemporalCoverage {
+        TemporalCoverage {
+            from_time: ColumnName::new("SOLD_ON"),
+            range: VersionRange {
+                valid_from: ColumnName::new("VALID_FROM"),
+                valid_to: ColumnName::new("VALID_TO"),
+                valid_to_bound: ValidToBound::Exclusive,
+                open_end: None,
+            },
+            compared_as: LogicalType::Date,
+        }
+    }
+
+    /// A `Join` of `SALES` with the visible rows of `CUSTOMERS`, which propagate a policy
+    /// along `REGIONS`, temporal when `temporal` is set.
+    fn branch(temporal: bool) -> PlanNode {
+        let keys = vec![JoinCondition {
+            left: ColumnName::new("REGION_ID"),
+            right: ColumnName::new("REGION_ID"),
+        }];
+        let visible = node(Operation::SemiJoin {
+            input: Box::new(scan("CUSTOMERS")),
+            relationship: NormalizedName::new("CUSTOMER_REGION"),
+            on: keys.clone(),
+            temporal: temporal.then(coverage),
+            related_all: Box::new(scan("REGIONS")),
+            related_visible: Box::new(scan("REGIONS")),
+        });
+        node(Operation::Join {
+            left: Box::new(scan("SALES")),
+            right: Box::new(visible),
+            relationship: NormalizedName::new("SALE_CUSTOMER"),
+            kind: JoinKind::Left,
+            on: keys,
+            temporal: None,
+            right_prefix: ColumnPrefix::new("SALE_CUSTOMER."),
+        })
+    }
+
+    #[test]
+    fn val_2_19_a_temporal_semi_join_anywhere_in_the_join_tree_excludes_the_branch() {
+        assert!(joins_temporally(&branch(true)));
+        assert!(!joins_temporally(&branch(false)));
+    }
+}

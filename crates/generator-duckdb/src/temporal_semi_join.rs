@@ -66,16 +66,7 @@ impl<'input> StepWriter<'input> {
             .iter()
             .map(|column| quote(column.name.as_str()))
             .collect();
-        let mut numbered = columns.clone();
-        numbered.push(format!("ROW_NUMBER() OVER () AS {}", added.row));
-        let rows = self.push_step(
-            "rows",
-            SelectBody {
-                items: numbered,
-                from: input.name,
-                clauses: Vec::new(),
-            },
-        );
+        let rows = self.numbered_input(&columns, &input.name, &added);
         let mut carried = columns.clone();
         carried.push(added.row.clone());
         let counted_all = self.counted_step(
@@ -114,11 +105,64 @@ impl<'input> StepWriter<'input> {
         })
     }
 
+    /// The step of every row of `input` with its row number.
+    fn numbered_input(&mut self, columns: &[String], input: &str, added: &Added) -> String {
+        let mut items = columns.to_vec();
+        items.push(format!("ROW_NUMBER() OVER () AS {}", added.row));
+        self.push_step(
+            "rows",
+            SelectBody {
+                items,
+                from: input.to_owned(),
+                clauses: Vec::new(),
+            },
+        )
+    }
+
     /// The step of one row per row number of `counted.rows`, with the columns of
     /// `counted.carried` and, as `counted.count`, the number of versions of
-    /// `counted.versions` that cover it: each row is joined with the versions of its key, a
-    /// row without any keeping one row whose coverage is not TRUE.
+    /// `counted.versions` that cover it.
     fn counted_step(
+        &mut self,
+        node: &'input PlanNode,
+        semi_join: &TemporalSemiJoin<'input>,
+        counted: Counted<'_>,
+        added: &Added,
+    ) -> Result<String, GenerateError> {
+        let joined = self.covering_step(node, semi_join, counted, added)?;
+        let mut items = counted.carried.to_vec();
+        items.push(format!(
+            "SUM({}) OVER (PARTITION BY {}) AS {}",
+            added.covers, added.row, counted.count
+        ));
+        items.push(format!(
+            "ROW_NUMBER() OVER (PARTITION BY {}) AS {}",
+            added.row, added.rank
+        ));
+        let ranked = self.push_step(
+            "covered",
+            SelectBody {
+                items,
+                from: joined,
+                clauses: Vec::new(),
+            },
+        );
+        let mut items = counted.carried.to_vec();
+        items.push(counted.count.to_owned());
+        Ok(self.push_step(
+            "counted",
+            SelectBody {
+                items,
+                from: ranked,
+                clauses: vec![format!("WHERE {} = 1", added.rank)],
+            },
+        ))
+    }
+
+    /// The step of each row of `counted.rows` joined on its keys with every version of
+    /// `counted.versions`, and whether the version covers its `from_time`: a row without any
+    /// version keeps one row whose coverage is 0.
+    fn covering_step(
         &mut self,
         node: &'input PlanNode,
         semi_join: &TemporalSemiJoin<'input>,
@@ -149,7 +193,7 @@ impl<'input> StepWriter<'input> {
             conditions.join(" AND "),
             added.covers
         ));
-        let joined = self.push_step(
+        Ok(self.push_step(
             "versions",
             SelectBody {
                 items,
@@ -159,33 +203,6 @@ impl<'input> StepWriter<'input> {
                     counted.versions,
                     keys.join(" AND ")
                 )],
-            },
-        );
-        let mut items = counted.carried.to_vec();
-        items.push(format!(
-            "SUM({}) OVER (PARTITION BY {}) AS {}",
-            added.covers, added.row, counted.count
-        ));
-        items.push(format!(
-            "ROW_NUMBER() OVER (PARTITION BY {}) AS {}",
-            added.row, added.rank
-        ));
-        let ranked = self.push_step(
-            "covered",
-            SelectBody {
-                items,
-                from: joined,
-                clauses: Vec::new(),
-            },
-        );
-        let mut items = counted.carried.to_vec();
-        items.push(counted.count.to_owned());
-        Ok(self.push_step(
-            "counted",
-            SelectBody {
-                items,
-                from: ranked,
-                clauses: vec![format!("WHERE {} = 1", added.rank)],
             },
         ))
     }

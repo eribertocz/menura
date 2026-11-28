@@ -40,85 +40,15 @@ impl<'input> StepWriter<'input> {
         left_step: &str,
         right_step: &str,
     ) -> Result<SelectBody, GenerateError> {
-        let coverage = join
-            .temporal
-            .ok_or_else(|| error(InvariantViolation::UnknownRelationship, node))?;
-        let (left, right) = (join.left.schema(), join.right.schema());
-        let added = added_names([left, right]);
-        let left_columns = quoted(left);
-        let right_columns = quoted(right);
-        let mut numbered = left_columns.clone();
-        numbered.push(format!("ROW_NUMBER() OVER () AS {}", added.row));
-        let rows = self.push_step(
-            "rows",
-            SelectBody {
-                items: numbered,
-                from: left_step.to_owned(),
-                clauses: Vec::new(),
-            },
-        );
-        let keys = key_conditions(node, join, left, right)?;
-        let covering = coverage_conditions(
-            node,
-            coverage,
-            CoverageSide {
-                schema: left,
-                qualifier: ROW,
-            },
-            CoverageSide {
-                schema: right,
-                qualifier: VERSION,
-            },
-        )?;
-        let mut items: Vec<String> = left_columns
-            .iter()
-            .chain([&added.row])
-            .map(|column| format!("{ROW}.{column}"))
-            .chain(
-                right_columns
-                    .iter()
-                    .map(|column| format!("{VERSION}.{column}")),
-            )
-            .collect();
-        items.push(format!(
-            "CASE WHEN {} THEN 1 ELSE 0 END AS {}",
-            covering.join(" AND "),
-            added.covers
-        ));
-        let joined = self.push_step(
-            "versions",
-            SelectBody {
-                items,
-                from: format!("{rows} AS {ROW}"),
-                clauses: vec![format!(
-                    "LEFT JOIN {right_step} AS {VERSION} ON {}",
-                    keys.join(" AND ")
-                )],
-            },
-        );
-        let mut items: Vec<String> = left_columns.iter().chain(&right_columns).cloned().collect();
-        items.push(added.covers.clone());
-        items.push(format!(
-            "MAX({}) OVER (PARTITION BY {}) AS {}",
-            added.covers, added.row, added.covered
-        ));
-        items.push(format!(
-            "ROW_NUMBER() OVER (PARTITION BY {}) AS {}",
-            added.row, added.rank
-        ));
-        let ranked = self.push_step(
-            "covered",
-            SelectBody {
-                items,
-                from: joined,
-                clauses: Vec::new(),
-            },
-        );
+        let added = added_names([join.left.schema(), join.right.schema()]);
+        let rows = self.numbered_rows(join, left_step, &added);
+        let joined = self.joined_versions(node, join, &rows, right_step, &added)?;
+        let ranked = self.ranked_versions(join, &joined, &added);
         let items = node
             .schema()
             .columns()
             .iter()
-            .map(|column| self.temporal_item(node, join, column, &added))
+            .map(|column| temporal_item(node, join, column, &added))
             .collect::<Result<Vec<_>, _>>()?;
         let kept = match join.kind {
             JoinKind::Left => format!(
@@ -136,36 +66,131 @@ impl<'input> StepWriter<'input> {
         })
     }
 
-    /// The select item of the `Join` column `column`: a left column as it is, a right column
-    /// NULL on a row whose version does not cover it.
-    fn temporal_item(
-        &self,
+    /// The step of the left rows, each with its row number.
+    fn numbered_rows(&mut self, join: &JoinInputs<'_>, left_step: &str, added: &Added) -> String {
+        let mut items = quoted(join.left.schema());
+        items.push(format!("ROW_NUMBER() OVER () AS {}", added.row));
+        self.push_step(
+            "rows",
+            SelectBody {
+                items,
+                from: left_step.to_owned(),
+                clauses: Vec::new(),
+            },
+        )
+    }
+
+    /// The step of each numbered left row joined on its keys with every version of its
+    /// entity, and whether the version covers its `from_time`; a row without any version keeps
+    /// one row whose coverage is 0.
+    fn joined_versions(
+        &mut self,
         node: &PlanNode,
         join: &JoinInputs<'_>,
-        column: &SchemaColumn,
+        rows: &str,
+        right_step: &str,
         added: &Added,
     ) -> Result<String, GenerateError> {
-        let item = joined_item(
+        let coverage = join
+            .temporal
+            .ok_or_else(|| error(InvariantViolation::UnknownRelationship, node))?;
+        let (left, right) = (join.left.schema(), join.right.schema());
+        let keys = key_conditions(node, join, left, right)?;
+        let covering = coverage_conditions(
             node,
-            join.left.schema(),
-            join.right.schema(),
-            join.kind,
-            column,
+            coverage,
+            CoverageSide {
+                schema: left,
+                qualifier: ROW,
+            },
+            CoverageSide {
+                schema: right,
+                qualifier: VERSION,
+            },
         )?;
-        let is_right = join
-            .right
-            .schema()
-            .columns()
+        let mut items: Vec<String> = quoted(left)
             .iter()
-            .any(|candidate| candidate.name == column.name);
-        if is_right {
-            Ok(format!(
-                "CASE WHEN {} = 1 THEN {item} ELSE NULL END AS {item}",
-                added.covers
-            ))
-        } else {
-            Ok(item)
-        }
+            .chain([&added.row])
+            .map(|column| format!("{ROW}.{column}"))
+            .chain(
+                quoted(right)
+                    .iter()
+                    .map(|column| format!("{VERSION}.{column}")),
+            )
+            .collect();
+        items.push(format!(
+            "CASE WHEN {} THEN 1 ELSE 0 END AS {}",
+            covering.join(" AND "),
+            added.covers
+        ));
+        Ok(self.push_step(
+            "versions",
+            SelectBody {
+                items,
+                from: format!("{rows} AS {ROW}"),
+                clauses: vec![format!(
+                    "LEFT JOIN {right_step} AS {VERSION} ON {}",
+                    keys.join(" AND ")
+                )],
+            },
+        ))
+    }
+
+    /// The step of the joined rows with, per left row, whether any version covers it and the
+    /// rank of each of its rows.
+    fn ranked_versions(&mut self, join: &JoinInputs<'_>, joined: &str, added: &Added) -> String {
+        let mut items: Vec<String> = quoted(join.left.schema())
+            .into_iter()
+            .chain(quoted(join.right.schema()))
+            .collect();
+        items.push(added.covers.clone());
+        items.push(format!(
+            "MAX({}) OVER (PARTITION BY {}) AS {}",
+            added.covers, added.row, added.covered
+        ));
+        items.push(format!(
+            "ROW_NUMBER() OVER (PARTITION BY {}) AS {}",
+            added.row, added.rank
+        ));
+        self.push_step(
+            "covered",
+            SelectBody {
+                items,
+                from: joined.to_owned(),
+                clauses: Vec::new(),
+            },
+        )
+    }
+}
+
+/// The select item of the `Join` column `column`: a left column as it is, a right column
+/// NULL on a row whose version does not cover it.
+fn temporal_item(
+    node: &PlanNode,
+    join: &JoinInputs<'_>,
+    column: &SchemaColumn,
+    added: &Added,
+) -> Result<String, GenerateError> {
+    let item = joined_item(
+        node,
+        join.left.schema(),
+        join.right.schema(),
+        join.kind,
+        column,
+    )?;
+    let is_right = join
+        .right
+        .schema()
+        .columns()
+        .iter()
+        .any(|candidate| candidate.name == column.name);
+    if is_right {
+        Ok(format!(
+            "CASE WHEN {} = 1 THEN {item} ELSE NULL END AS {item}",
+            added.covers
+        ))
+    } else {
+        Ok(item)
     }
 }
 

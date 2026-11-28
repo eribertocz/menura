@@ -212,6 +212,29 @@ fn temporal_joins(branch: &Branch, model: &InternalModel) -> Vec<ExplanationEntr
     entries
 }
 
+/// The part of the reason of an `E4-6.10` entry that names the temporal relationships the
+/// visible rows of `roots` follow to `name` (VAL-2.17); empty when they follow none.
+fn temporal_followed(
+    roots: &[&NormalizedName],
+    name: &NormalizedName,
+    graph: &PolicyGraph<'_>,
+    model: &InternalModel,
+) -> String {
+    let temporal: BTreeSet<&NormalizedName> = roots
+        .iter()
+        .flat_map(|root| graph.temporal_towards(root, name, model))
+        .collect();
+    if temporal.is_empty() {
+        return String::new();
+    }
+    let names: Vec<&str> = temporal.iter().map(|name| name.as_str()).collect();
+    format!(
+        "; follows the temporal relationships {}, through the versions that cover each row's \
+         time",
+        names.join(", ")
+    )
+}
+
 /// One `E4-6.10` entry per row policy that the visible rows of a home dataset, or of the
 /// population dataset of a semi-additive branch, take from another dataset (E4-6.5), in the
 /// visit order of E4-6.9. Its reason names every such dataset it reaches.
@@ -240,20 +263,7 @@ fn propagated_policies<'input>(
             continue;
         };
         let reached_names: Vec<&str> = roots.iter().map(|root| root.as_str()).collect();
-        let temporal: BTreeSet<&NormalizedName> = roots
-            .iter()
-            .flat_map(|root| graph.temporal_towards(root, name, model))
-            .collect();
-        let followed = if temporal.is_empty() {
-            String::new()
-        } else {
-            let names: Vec<&str> = temporal.iter().map(|name| name.as_str()).collect();
-            format!(
-                "; follows the temporal relationships {}, through the versions that cover each \
-                 row's time",
-                names.join(", ")
-            )
-        };
+        let followed = temporal_followed(&roots, name, &graph, model);
         for policy in policies_in_filter(dataset, security) {
             entries.push(ExplanationEntry {
                 code: "E4-6.10",

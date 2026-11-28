@@ -46,8 +46,8 @@ impl<'input> StepWriter<'input> {
             right,
             kind,
             on: keys,
-            temporal,
             right_prefix,
+            ..
         } = *join;
         if keys.is_empty() {
             return Err(error(InvariantViolation::JoinWithoutKeys, node));
@@ -64,30 +64,7 @@ impl<'input> StepWriter<'input> {
             .iter()
             .map(|column| joined_item(node, left.schema(), right.schema(), kind, column))
             .collect::<Result<Vec<_>, _>>()?;
-        let conditions = keys
-            .iter()
-            .map(|key| {
-                let left_column = key_column(node, left.schema(), &left_step.name, &key.left)?;
-                let right_column = key_column(node, right.schema(), &right_step.name, &key.right)?;
-                key_equality(left_column.side(), right_column.side())
-                    .ok_or_else(|| error(InvariantViolation::IncompatibleJoinKeys, node))
-            })
-            .collect::<Result<Vec<_>, _>>()?;
-        let mut conditions = conditions;
-        if let Some(coverage) = temporal {
-            conditions.extend(coverage_conditions(
-                node,
-                coverage,
-                CoverageSide {
-                    schema: left.schema(),
-                    qualifier: &left_step.name,
-                },
-                CoverageSide {
-                    schema: right.schema(),
-                    qualifier: &right_step.name,
-                },
-            )?);
-        }
+        let conditions = join_conditions(node, join, &left_step.name, &right_step.name)?;
         let keyword = match kind {
             JoinKind::Left => "LEFT JOIN",
             JoinKind::Inner => "INNER JOIN",
@@ -102,6 +79,40 @@ impl<'input> StepWriter<'input> {
             )],
         })
     }
+}
+
+/// The conditions of the `Join` `node` between the steps `left_step` and `right_step`: the
+/// equality of each key pair and, along a temporal relationship, the coverage of the row's
+/// `from_time` (VAL-2.8).
+fn join_conditions(
+    node: &PlanNode,
+    join: &JoinInputs<'_>,
+    left_step: &str,
+    right_step: &str,
+) -> Result<Vec<String>, GenerateError> {
+    let (left, right) = (join.left.schema(), join.right.schema());
+    let mut conditions = join
+        .on
+        .iter()
+        .map(|key| {
+            let left_column = key_column(node, left, left_step, &key.left)?;
+            let right_column = key_column(node, right, right_step, &key.right)?;
+            key_equality(left_column.side(), right_column.side())
+                .ok_or_else(|| error(InvariantViolation::IncompatibleJoinKeys, node))
+        })
+        .collect::<Result<Vec<_>, _>>()?;
+    if let Some(coverage) = join.temporal {
+        let rows = CoverageSide {
+            schema: left,
+            qualifier: left_step,
+        };
+        let versions = CoverageSide {
+            schema: right,
+            qualifier: right_step,
+        };
+        conditions.extend(coverage_conditions(node, coverage, rows, versions)?);
+    }
+    Ok(conditions)
 }
 
 /// A key column, qualified by the name of its step, with its type.

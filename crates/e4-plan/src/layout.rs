@@ -4,7 +4,7 @@
 use std::collections::BTreeSet;
 
 use menura_model::internal_model::{
-    Dataset, FieldPath, InternalModel, NormalizedName, OpenEnd, ValidToBound,
+    Dataset, FieldPath, InternalModel, NormalizedName, OpenEnd, Relationship, ValidToBound,
 };
 use menura_representations::logical_plan::JoinCondition;
 use menura_representations::names::{ColumnName, ColumnPrefix};
@@ -144,33 +144,19 @@ impl<'model> Layout<'model> {
                 .iter()
                 .map(|name| prefix.column(name.as_str()).as_str().to_owned()),
         );
-        let mut on = Vec::new();
-        for (from, to) in relationship
-            .from_columns
-            .iter()
-            .zip(&relationship.to_columns)
-        {
-            let left = self
-                .key_column(instance.parent, parent_dataset, from)
-                .map_err(fail)?;
-            let right = prefix.column(key_name(dataset, to).as_str());
-            on.push(JoinCondition { left, right });
-        }
-        let temporal = match model.temporal_range(relationship) {
-            None if relationship.temporal.is_some() => {
-                return Err(fail(InvariantViolation::UnknownRelationship));
-            }
-            None => None,
-            Some(range) => Some(PlacedCoverage {
-                from_time: self
-                    .field_column(instance.parent, parent_dataset, range.from_time)
-                    .map_err(fail)?,
-                valid_from: field_in(dataset, &prefix, range.valid_from).map_err(fail)?,
-                valid_to: field_in(dataset, &prefix, range.valid_to).map_err(fail)?,
-                valid_to_bound: range.valid_to_bound,
-                open_end: range.open_end.cloned(),
-            }),
-        };
+        let on = self
+            .key_pairs(instance, parent_dataset, dataset, &prefix, relationship)
+            .map_err(fail)?;
+        let temporal = self
+            .coverage(
+                instance,
+                parent_dataset,
+                dataset,
+                &prefix,
+                relationship,
+                model,
+            )
+            .map_err(fail)?;
         Ok(PlacedInstance {
             dataset,
             origin,
@@ -179,6 +165,56 @@ impl<'model> Layout<'model> {
             on,
             temporal,
         })
+    }
+
+    /// The equalities of the `Join` of `instance` along `relationship`: each `from_columns`
+    /// column of `parent` with its paired `to_columns` column of `dataset` under `prefix`.
+    fn key_pairs(
+        &self,
+        instance: &JoinInstance,
+        parent: &Dataset,
+        dataset: &Dataset,
+        prefix: &ColumnPrefix,
+        relationship: &Relationship,
+    ) -> Result<Vec<JoinCondition>, InvariantViolation> {
+        relationship
+            .from_columns
+            .iter()
+            .zip(&relationship.to_columns)
+            .map(|(from, to)| {
+                Ok(JoinCondition {
+                    left: self.key_column(instance.parent, parent, from)?,
+                    right: prefix.column(key_name(dataset, to).as_str()),
+                })
+            })
+            .collect()
+    }
+
+    /// The columns of the coverage condition of `instance` when its `relationship` is temporal
+    /// (VAL-2.8): `from_time` of `parent`, the dataset the step starts from, and the range of
+    /// `dataset` under `prefix`; `None` for a plain relationship.
+    fn coverage(
+        &self,
+        instance: &JoinInstance,
+        parent: &Dataset,
+        dataset: &Dataset,
+        prefix: &ColumnPrefix,
+        relationship: &Relationship,
+        model: &InternalModel,
+    ) -> Result<Option<PlacedCoverage>, InvariantViolation> {
+        let Some(range) = model.temporal_range(relationship) else {
+            return match relationship.temporal {
+                Some(_) => Err(InvariantViolation::UnknownRelationship),
+                None => Ok(None),
+            };
+        };
+        Ok(Some(PlacedCoverage {
+            from_time: self.field_column(instance.parent, parent, range.from_time)?,
+            valid_from: field_in(dataset, prefix, range.valid_from)?,
+            valid_to: field_in(dataset, prefix, range.valid_to)?,
+            valid_to_bound: range.valid_to_bound,
+            open_end: range.open_end.cloned(),
+        }))
     }
 
     /// The relationship names along the path of `instance`, each followed by `.`, then as

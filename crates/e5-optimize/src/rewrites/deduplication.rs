@@ -102,12 +102,12 @@ fn failed_condition(input: &PlanNode, context: &RewriteContext<'_>) -> Option<St
     };
     joins.iter().find_map(|join| {
         let name = join.relationship.as_str();
-        if !follows_relationship(join, context.model) {
+        if follows_relationship(join, context.model) {
+            missing_uniqueness(join.relationship, context)
+        } else {
             Some(format!(
                 "the Join of relationship {name} does not follow it from `from` to `to` (E5-3.2a)"
             ))
-        } else {
-            missing_uniqueness(join.relationship, context)
         }
     })
 }
@@ -124,29 +124,22 @@ fn missing_uniqueness(
         .model
         .relationship(relationship)
         .and_then(|found| context.model.temporal_range(found));
-    match range {
-        Some(range)
-            if !context
-                .evidence
-                .holds(CheckKind::Population, range.population) =>
-        {
-            Some(format!(
+    if let Some(range) = range {
+        let held = context
+            .evidence
+            .holds(CheckKind::Population, range.population);
+        return (!held).then(|| {
+            format!(
                 "no passing population evidence for population {} of temporal relationship \
                  {name} (E5-3.2a, VAL-2.14)",
                 range.population.as_str()
-            ))
-        }
-        Some(_) => None,
-        None if !context
-            .evidence
-            .holds(CheckKind::KeyUniqueness, relationship) =>
-        {
-            Some(format!(
-                "no passing key_uniqueness evidence for relationship {name} (E5-3.2a)"
-            ))
-        }
-        None => None,
+            )
+        });
     }
+    let held = context
+        .evidence
+        .holds(CheckKind::KeyUniqueness, relationship);
+    (!held).then(|| format!("no passing key_uniqueness evidence for relationship {name} (E5-3.2a)"))
 }
 
 /// The joins of the branch `input`, in path order (E4-4.0c), or `None` when `input` is not a
@@ -213,42 +206,15 @@ fn without_identity(node: &PlanNode, identity: &[ColumnName]) -> PlanNode {
             dataset: dataset.clone(),
             row_identity: None,
         },
-        Operation::Filter { input, predicate } => Operation::Filter {
-            input: Box::new(without_identity(input, identity)),
-            predicate: predicate.clone(),
-        },
-        Operation::SemiJoin {
-            input,
-            relationship,
-            on,
-            temporal,
-            related_all,
-            related_visible,
-        } => Operation::SemiJoin {
-            input: Box::new(without_identity(input, identity)),
-            relationship: relationship.clone(),
-            on: on.clone(),
-            temporal: temporal.clone(),
-            related_all: related_all.clone(),
-            related_visible: related_visible.clone(),
-        },
-        Operation::Join {
-            left,
-            right,
-            relationship,
-            kind,
-            on,
-            temporal,
-            right_prefix,
-        } => Operation::Join {
-            left: Box::new(without_identity(left, identity)),
-            right: right.clone(),
-            relationship: relationship.clone(),
-            kind: *kind,
-            on: on.clone(),
-            temporal: temporal.clone(),
-            right_prefix: right_prefix.clone(),
-        },
+        Operation::Filter { input, .. }
+        | Operation::SemiJoin { input, .. }
+        | Operation::Join { left: input, .. } => {
+            let mut operation = node.operation().clone();
+            if let Some(slot) = input_mut(&mut operation, 0) {
+                *slot = without_identity(input, identity);
+            }
+            operation
+        }
         other => other.clone(),
     };
     PlanNode::new(operation, OutputSchema::new(columns), node.origin().clone())
