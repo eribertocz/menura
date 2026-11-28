@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://eribertocz.github.io/menura/spec/contracts/integrity-checks/1.3.0",
+  "$id": "https://eribertocz.github.io/menura/spec/contracts/integrity-checks/1.4.0",
   "title": "Integrity checks document",
   "type": "object",
   "additionalProperties": false,
@@ -55,6 +55,7 @@
             "enum": [
               "key_uniqueness",
               "orphan_keys",
+              "temporal_orphans",
               "summary",
               "population",
               "semi_additive"

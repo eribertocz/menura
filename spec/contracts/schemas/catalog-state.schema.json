@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://eribertocz.github.io/menura/spec/contracts/catalog-state/1.1.0",
+  "$id": "https://eribertocz.github.io/menura/spec/contracts/catalog-state/1.2.0",
   "title": "Catalog state document",
   "type": "object",
   "required": [
@@ -47,6 +47,7 @@
             "enum": [
               "key_uniqueness",
               "orphan_keys",
+              "temporal_orphans",
               "population",
               "semi_additive"
             ]

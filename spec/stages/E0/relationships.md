@@ -8,7 +8,7 @@ ambiguous join or an inflated number (P6). E3 uses the graph to choose paths.
 ## E0E-2 Graph
 
 - **E0E-2.1** Nodes: every dataset of the model except summaries (E5 handles those).
-- **E0E-2.2** Edges: one per relationship, directed from `from` (many side) to `to` (one side), identified by its name.
+- **E0E-2.2** Edges: one per relationship, temporal relationships included (VAL-2.12), directed from `from` (many side) to `to` (one side), identified by its name.
 - **E0E-2.3** Queries traverse edges only from many to one, as in Apache Ossie Layer 3.
 - **E0E-2.4** A path is a sequence of edges with no repeated dataset, so cycles never produce infinite paths.
 
@@ -17,8 +17,8 @@ ambiguous join or an inflated number (P6). E3 uses the graph to choose paths.
 | ID | Rule |
 |---|---|
 | E0E-3.1 | `from_columns` and `to_columns` have the same length (`E0E-01`, located at the relationship). |
-| E0E-3.2 | The relationship direction declares many-to-one cardinality. If `to_columns` matches neither the `primary_key` nor a `unique_keys` entry of `to`, the model is valid but produces `W0E-02`, because the data could violate the declared cardinality. |
-| E0E-3.3 | Correctness under violated cardinality: a home row counts once in each group it matches (E4-4 step 5), using a synthesized row identity (Apache Ossie Layer 2 section 3.2). |
+| E0E-3.2 | The relationship direction declares many-to-one cardinality. If `to_columns` matches neither the `primary_key` nor a `unique_keys` entry of `to`, the model is valid but produces `W0E-02`, because the data could violate the declared cardinality. `W0E-02` is not reported for a temporal relationship (VAL-2.12). |
+| E0E-3.3 | Correctness under violated cardinality: a home row counts once in each group it matches (E4-4 step 5), using a synthesized row identity (Apache Ossie Layer 2 section 3.2). Along a temporal relationship, a row matches the versions that cover its `from_time` (VAL-2.8, VAL-2.13). |
 | E0E-3.4 | If `from_columns` also matches a key of `from`, the relationship is one-to-one. It is recorded, and in version 1 it is still traversed only from `from` to `to`. |
 | E0E-3.5 | Self-relationships are allowed, never take part in a path, and produce `W0E-03`. Cycles are allowed; paths stay finite because they never repeat a dataset (E0E-2.4). |
 | E0E-3.6 | A relationship whose `from` or `to` is a summary dataset is an error (`E0E-02`). |

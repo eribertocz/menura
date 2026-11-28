@@ -34,6 +34,7 @@ custom_extensions:
 | `security_context` | Model | [security](../extensions/security.md) |
 | `access` (with optional `fields`), `row_access` | Dataset | [security](../extensions/security.md) |
 | `aggregate` | Dataset | [summaries](../extensions/summaries.md) |
+| `temporal` | Relationship | [validity](../extensions/validity.md) |
 
 ## MDL-3 Hash
 
