@@ -140,6 +140,10 @@ pub enum ExtensionCode {
     /// `E0C-66`: a population `open_end` that is not a value of the type of its `valid_to` in
     /// its CON-4 form (VAL-1.5).
     InvalidOpenEnd,
+    /// `E0C-72`: under `valid_to_bound: exclusive`, a population `valid_from` and `valid_to`
+    /// that are not both `date`, or not both `timestamp` with the same `with_time_zone`
+    /// (VAL-1.5).
+    ExclusiveRangeKinds,
     /// `W0C-01`: a `COMMON` entry whose `data` is not valid JSON; kept, not interpreted.
     NotJson,
     /// `W0C-02`: an entry under the former namespace `semantic_compiler`, read as ours until
@@ -212,6 +216,7 @@ impl ExtensionCode {
             Self::NestedContext => "E0C-64",
             Self::SemiAdditiveRunningTotal => "E0C-65",
             Self::InvalidOpenEnd => "E0C-66",
+            Self::ExclusiveRangeKinds => "E0C-72",
             Self::NotJson => "W0C-01",
             Self::FormerNamespace => "W0C-02",
             Self::NoSecurityContext => "W0C-40",

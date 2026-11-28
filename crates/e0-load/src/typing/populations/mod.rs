@@ -1,5 +1,6 @@
-//! `E0C-23`, `E0C-24` and `E0C-66`: the condition, the time fields and the `open_end` of every
-//! population (POP-4.4, POP-4.5, VAL-1.5), typed against the field types E0.f found.
+//! `E0C-23`, `E0C-24`, `E0C-66` and `E0C-72`: the condition, the time fields, the `open_end`
+//! and the kinds of an exclusive range of every population (POP-4.4, POP-4.5, VAL-1.5), typed
+//! against the field types E0.f found.
 //!
 //! `required_when` is a row-level expression of the declaring dataset: a bare name is a field
 //! of that dataset. A text that does not parse, a construct outside the subset, a qualified
@@ -8,7 +9,9 @@
 //! type is checked only when every field read has a type, and `E0C-24` only on typed fields: a
 //! field without a type already has its own diagnostic (POP-4.5). An `open_end` is read as a
 //! value of the type of `valid_to` only when `valid_to` has a `date` or `timestamp` type: any
-//! other type already has its `E0C-24`. A missing field is `E0C-22`, reported by E0.d.
+//! other type already has its `E0C-24`. Under `valid_to_bound: exclusive`, `valid_from` and
+//! `valid_to` must both be `date`, or both `timestamp` with the same `with_time_zone`; that is
+//! checked only when both have a type. A missing field is `E0C-22`, reported by E0.d.
 
 pub(super) mod structure;
 
@@ -16,6 +19,7 @@ use std::collections::HashMap;
 
 use menura_contracts::types::common::LogicalType;
 use menura_model::expression::Reference;
+use menura_model::internal_model::ValidToBound;
 
 use super::output::{ElementKind, Typing};
 use crate::expressions::{ExpressionPlace, parse_element_expression};
@@ -50,9 +54,9 @@ impl Fields<'_, '_> {
 ///
 /// # Errors
 ///
-/// Returns at most one `E0C-23`, one `E0C-24` and one `E0C-66` diagnostic per entry, at the
-/// entry's `data` member (E0C-2.6), in document order then by code. Every one of these codes
-/// rejects the model (E0-4).
+/// Returns at most one `E0C-23`, one `E0C-24`, one `E0C-66` and one `E0C-72` diagnostic per
+/// entry, at the entry's `data` member (E0C-2.6), in document order then by code. Every one
+/// of these codes rejects the model (E0-4).
 pub fn type_populations(
     structure: &Structure<'_>,
     typing: &Typing,
@@ -88,12 +92,7 @@ pub fn type_populations(
         "a population time field is not of kind date or timestamp",
         |population| time_problems(&fields, population),
     ));
-    errors.extend(per_entry(
-        populations,
-        ExtensionCode::InvalidOpenEnd,
-        "a population open_end is not a value of the type of its valid_to",
-        |population| open_end_problem(&fields, population).into_iter().collect(),
-    ));
+    errors.extend(range_shape_problems(&fields, populations));
     let order: HashMap<&JsonPointer, usize> = populations
         .iter()
         .enumerate()
@@ -106,6 +105,30 @@ pub fn type_populations(
     } else {
         Err(errors)
     }
+}
+
+/// The `E0C-66` and `E0C-72` diagnostics of `populations`: their range shape (VAL-1.5).
+fn range_shape_problems(
+    fields: &Fields<'_, '_>,
+    populations: &[Population],
+) -> Vec<ExtensionDiagnostic> {
+    let mut errors = per_entry(
+        populations,
+        ExtensionCode::InvalidOpenEnd,
+        "a population open_end is not a value of the type of its valid_to",
+        |population| open_end_problem(fields, population).into_iter().collect(),
+    );
+    errors.extend(per_entry(
+        populations,
+        ExtensionCode::ExclusiveRangeKinds,
+        "an exclusive population range has valid_from and valid_to of different kinds",
+        |population| {
+            exclusive_kinds_problem(fields, population)
+                .into_iter()
+                .collect()
+        },
+    ));
+    errors
 }
 
 /// Why the `required_when` of `population` is not a valid boolean expression (POP-4.4).
@@ -199,6 +222,45 @@ fn open_end_problem(fields: &Fields<'_, '_>, population: &Population) -> Option<
             "the open_end `{open_end}` of the population `{}` is not a {} in its CON-4 form",
             population.name,
             describe(&typed.value_type)
+        )
+    })
+}
+
+/// Why `valid_from` and `valid_to` of an exclusive `population` cannot be compared without a
+/// time zone (VAL-1.5): they are not both `date`, or not both `timestamp` with the same
+/// `with_time_zone`. Checked only when both have a type.
+fn exclusive_kinds_problem(fields: &Fields<'_, '_>, population: &Population) -> Option<String> {
+    let PopulationMode::Validity {
+        valid_from,
+        valid_to,
+        valid_to_bound: ValidToBound::Exclusive,
+        ..
+    } = &population.mode
+    else {
+        return None;
+    };
+    let from = fields.type_of(&population.dataset, &Name::declared(valid_from))?;
+    let to = fields.type_of(&population.dataset, &Name::declared(valid_to))?;
+    let same_kind = match (from.logical(), to.logical()) {
+        (Some(LogicalType::Date), Some(LogicalType::Date)) => true,
+        (
+            Some(LogicalType::Timestamp {
+                with_time_zone: from_zone,
+                ..
+            }),
+            Some(LogicalType::Timestamp {
+                with_time_zone: to_zone,
+                ..
+            }),
+        ) => from_zone == to_zone,
+        _ => false,
+    };
+    (!same_kind).then(|| {
+        format!(
+            "the exclusive population `{}` has `{valid_from}` of type {} and `{valid_to}` of type {}",
+            population.name,
+            describe(&from.value_type),
+            describe(&to.value_type)
         )
     })
 }

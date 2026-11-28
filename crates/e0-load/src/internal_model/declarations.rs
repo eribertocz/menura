@@ -167,8 +167,9 @@ pub(super) fn population(
 }
 
 /// `text`, the `open_end` of a population, as a value of the type of its field `valid_to`
-/// among `fields`. E0.f rejected every other text (VAL-1.5); `None` only when `valid_to` has
-/// no type, which makes the field unusable (E0-4).
+/// among `fields`. `None` only when `valid_to` has no type, which makes the field unusable
+/// (E0-4): for a typed `valid_to`, E0.f has already rejected every text this cannot read
+/// (`E0C-66`, VAL-1.5), so the model is never built.
 fn typed_open_end(text: &str, valid_to: &str, fields: &[Field]) -> Option<OpenEnd> {
     let name = written(valid_to);
     let field = fields.iter().find(|field| field.name == name)?;

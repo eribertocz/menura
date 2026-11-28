@@ -2,7 +2,7 @@
 //! of populations in E0.c, E0.d and E0.f.
 
 /// The model document of every `e0-populations*` conformance model, by name.
-const MODELS: [(&str, &str); 11] = [
+const MODELS: [(&str, &str); 12] = [
     (
         "e0-populations",
         include_str!("../../../../../conformance/models/e0-populations/model.yaml"),
@@ -54,6 +54,10 @@ const MODELS: [(&str, &str); 11] = [
     (
         "val-1-5-open-end-untyped-001",
         include_str!("../../../../../conformance/models/val-1-5-open-end-untyped-001/model.yaml"),
+    ),
+    (
+        "val-1-5-exclusive-kinds-001",
+        include_str!("../../../../../conformance/models/val-1-5-exclusive-kinds-001/model.yaml"),
     ),
 ];
 

@@ -207,7 +207,7 @@ fn val_1_5_an_open_end_of_the_type_of_valid_to_is_accepted() {
     assert!(with_range(r#""open_end": "9999-12-31""#, "valid_to").is_empty());
     let stamp = "CAST(valid_to AS TIMESTAMP)";
     assert!(with_range(r#""open_end": "9999-12-31T00:00:00""#, stamp).is_empty());
-    assert!(with_range(r#""valid_to_bound": "exclusive""#, stamp).is_empty());
+    assert!(with_range(r#""valid_to_bound": "exclusive""#, "valid_to").is_empty());
 }
 
 #[test]
@@ -241,5 +241,27 @@ fn val_1_5_e0c_66_is_checked_only_when_valid_to_has_a_type() {
     assert_eq!(
         problems(conformance_model("val-1-5-open-end-value-001")),
         customers("E0C-66")
+    );
+}
+
+#[test]
+fn val_1_5_e0c_72_an_exclusive_range_of_two_kinds() {
+    let exclusive = r#""valid_to_bound": "exclusive""#;
+    assert_eq!(
+        with_range(exclusive, "CAST(valid_to AS TIMESTAMP)"),
+        customers("E0C-72")
+    );
+    assert!(with_range(exclusive, "valid_to").is_empty());
+    assert!(
+        with_range(
+            r#""valid_to_bound": "inclusive""#,
+            "CAST(valid_to AS TIMESTAMP)"
+        )
+        .is_empty()
+    );
+    assert!(with_range(exclusive, "valid_to + segment").is_empty());
+    assert_eq!(
+        problems(conformance_model("val-1-5-exclusive-kinds-001")),
+        customers("E0C-72")
     );
 }
