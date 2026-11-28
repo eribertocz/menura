@@ -19,7 +19,7 @@ use crate::names::{
     reference_names, written_expression_reference, written_identifier, written_reference,
 };
 use crate::not_found::{expression_not_found, not_found};
-use crate::resolver::{NameScope, RelationScope, Resolver};
+use crate::resolver::{NameScope, Position, RelationScope, Resolver};
 use crate::walk::nodes;
 
 /// Whether an output column is a dimension or a metric.
@@ -214,10 +214,12 @@ fn resolve_read(
     resolver: &mut Resolver<'_>,
 ) -> Result<ResolvedRead, BindError> {
     let written = written_reference(reference);
-    let target = resolver.scoped_reference(scope, reference).ok_or_else(|| {
-        let alternatives = resolver.alternatives(expected, scope, reference_names(reference));
-        not_found(&written, "field or metric", origin, alternatives)
-    })?;
+    let target = resolver
+        .scoped_reference(scope, reference, position(expected))
+        .ok_or_else(|| {
+            let alternatives = resolver.alternatives(expected, scope, reference_names(reference));
+            not_found(&written, "field or metric", origin, alternatives)
+        })?;
     Ok(ResolvedRead { written, target })
 }
 
@@ -239,7 +241,7 @@ fn expression_reads(
     for (reference, expected) in nodes(expression).into_iter().filter_map(expected_reference) {
         let written = written_expression_reference(reference);
         let target = resolver
-            .scoped_expression_reference(scope, reference)
+            .scoped_expression_reference(scope, reference, position(expected))
             .ok_or_else(|| expression_not_found(reference, expected, scope, origin, resolver))?;
         reads.push(ResolvedRead { written, target });
     }
@@ -258,7 +260,7 @@ fn resolve_filter<'tree>(
         .filter_map(expected_reference)
     {
         let target = resolver
-            .scoped_expression_reference(scope, reference)
+            .scoped_expression_reference(scope, reference, position(expected))
             .ok_or_else(|| {
                 expression_not_found(reference, expected, scope, &filter.origin, resolver)
             })?;
@@ -284,6 +286,15 @@ fn expected_reference(node: &Expression) -> Option<(&Reference, ExpectedKind)> {
         Expression::Reference(reference) => Some((reference, ExpectedKind::Field)),
         Expression::MetricAggregate(reference) => Some((reference, ExpectedKind::Metric)),
         _ => None,
+    }
+}
+
+/// The SQL-form position of a name that is expected to be `expected` (E1-4.9): the argument of
+/// `AGG(…)` is a metric position, every other name a field position.
+fn position(expected: ExpectedKind) -> Position {
+    match expected {
+        ExpectedKind::Metric => Position::Metric,
+        ExpectedKind::Field | ExpectedKind::Dataset => Position::Field,
     }
 }
 

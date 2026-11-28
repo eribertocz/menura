@@ -1,0 +1,15 @@
+id: e1-sql-shared-name-002
+rules: [E1-4.9]
+model: e1-sql-shared-names
+security_context: analyst.json
+query:
+  contract: "menura.query"
+  contract_version: "1.1.0"
+  time_zone: "UTC"
+  sql: "SELECT volume, AGG(o.volume) AS orders FROM e1_shared.orders AS o GROUP BY volume ORDER BY volume"
+expect:
+  outcome: "error"
+  error: "E_METRIC_IN_DIMENSIONS"
+  location:
+    document: "query"
+    pointer: "/sql"

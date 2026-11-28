@@ -21,7 +21,7 @@ use menura_security::{AdmittedSecurityContext, Authorization};
 use crate::authorized_query::ResolvedName;
 use crate::names::{identifier_name, reference_names};
 
-pub(crate) use relation::{NameScope, RelationScope};
+pub(crate) use relation::{NameScope, Position, RelationScope};
 
 /// The query error code E0 records for a relationship it drops (`E0E-01`, `E0E-02`).
 const DROPPED_RELATIONSHIP: &str = "E_NAME_NOT_FOUND";
