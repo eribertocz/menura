@@ -131,7 +131,7 @@ fn dep_3_5_a_dataset_on_the_propagation_chain_without_policies_is_a_source() {
 }
 
 #[test]
-fn dep_3_5_sources_are_computed_for_every_user_whatever_their_access() {
+fn dep_3_5_sources_ignore_the_access_and_roles_of_the_datasets_reached() {
     let document = document_of(PROPAGATION_MODEL, PROPAGATION_SCHEMA);
     assert_eq!(
         sources(&document, "dataset:PRODUCTS"),
