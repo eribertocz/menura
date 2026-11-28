@@ -1,4 +1,6 @@
-//! Runs every `plan` and `runtime_error` case on a `ClickHouse` server (E6-7.10, CS-2.3a).
+//! Runs every `plan` and `runtime_error` case on a `ClickHouse` server (E6-7.10, CS-2.3a), and
+//! the `temporal_orphans` checks of every `integrity_checks` case (VAL-2.16a), whose rows must
+//! be those `DuckDB` returns.
 //!
 //! For each case the runner prepares the case's `DuckDB` database as CS-4.2 says, loads its
 //! model through `core` (CS-2.8), opens a fresh `ClickHouse` session whose settings of E6-7.8
@@ -8,6 +10,7 @@
 //! server's own time zone must not be UTC (E6-7.10).
 
 mod case_check;
+mod check_parity;
 mod copy_check;
 mod http;
 mod parameters;
@@ -34,6 +37,7 @@ use crate::load_part::{LoadOutcome, ModelDocuments, check_load};
 use crate::report::{CaseResult, CaseStatus, Report};
 use crate::runner::{area_folders, case_files};
 use case_check::{ClickhouseInputs, check_on_clickhouse};
+use check_parity::{check_parity, compared_checks};
 use copy_check::copy_mismatch;
 use tables::{drop_fixture, load_fixture};
 
@@ -93,7 +97,8 @@ fn is_utc(name: &str) -> bool {
     )
 }
 
-/// Runs every `plan` and `runtime_error` case of `conformance_directory/cases/` on `server`.
+/// Runs every `plan` and `runtime_error` case of `conformance_directory/cases/` on `server`,
+/// and every `integrity_checks` case whose model has a `temporal_orphans` check.
 ///
 /// # Errors
 ///
@@ -106,17 +111,23 @@ pub fn run_on_clickhouse(
     for area_folder in area_folders(&conformance_directory.join("cases"), None)? {
         for case_path in case_files(&area_folder)? {
             let case = read_case(&case_path)?;
-            if !matches!(case.expect.outcome, Outcome::Plan | Outcome::RuntimeError) {
-                continue;
-            }
             let session_id = format!("menura-conformance-{}", report.cases.len());
-            let status = run_case(
-                conformance_directory,
-                &area_folder,
-                &case,
-                server,
-                session_id,
-            );
+            let status = match case.expect.outcome {
+                Outcome::Plan | Outcome::RuntimeError => run_case(
+                    conformance_directory,
+                    &area_folder,
+                    &case,
+                    server,
+                    session_id,
+                ),
+                Outcome::IntegrityChecks => {
+                    match run_check_case(conformance_directory, &case, server, session_id) {
+                        Some(status) => status,
+                        None => continue,
+                    }
+                }
+                Outcome::LoadError | Outcome::Error | Outcome::Describe => continue,
+            };
             report.cases.push(CaseResult {
                 id: case.id,
                 rules: case.rules,
@@ -169,6 +180,49 @@ fn run_case(
     }
 }
 
+/// Runs the `temporal_orphans` checks of the `integrity_checks` case `case` on both engines in
+/// the fresh session `session_id`; `None` when its model has none, so the case is not run here.
+fn run_check_case(
+    conformance_directory: &Path,
+    case: &Case,
+    server: &ClickhouseServer,
+    session_id: String,
+) -> Option<CaseStatus> {
+    let model_folder = conformance_directory.join("models").join(&case.model);
+    let (duckdb, handle) = match prepare_database_and_model(&model_folder, case) {
+        Ok(prepared) => prepared,
+        Err(status) => return Some(status),
+    };
+    let checks = compared_checks(&handle);
+    if checks.is_empty() {
+        return None;
+    }
+    let session = match server.open_session(session_id) {
+        Ok(session) => session,
+        Err(failure) => return Some(CaseStatus::Failed(failure.describe())),
+    };
+    let loaded = match load_fixture(&session, &model_folder, &duckdb) {
+        Ok(loaded) => loaded,
+        Err(reason) => {
+            return Some(CaseStatus::Failed(format!(
+                "the fixture cannot be loaded: {reason}"
+            )));
+        }
+    };
+    let status = match copy_mismatch(&session, &loaded.tables) {
+        Ok(None) => with_unloaded_sources(
+            check_parity(&handle, &checks, &duckdb, &session),
+            &loaded.not_created,
+        ),
+        Ok(Some(mismatch)) => CaseStatus::Failed(mismatch),
+        Err(reason) => CaseStatus::Failed(format!("the copied tables cannot be checked: {reason}")),
+    };
+    Some(match drop_fixture(&session, &loaded) {
+        Ok(()) => status,
+        Err(reason) => CaseStatus::Failed(format!("the fixture cannot be dropped: {reason}")),
+    })
+}
+
 /// What a case runs with once its `DuckDB` database is prepared and its model is loaded.
 struct PreparedCase {
     /// The case's `DuckDB` database (CS-4.2), the source of the rows copied to `ClickHouse`.
@@ -184,19 +238,7 @@ struct PreparedCase {
 /// read.
 fn prepare_case(model_folder: &Path, case: &Case) -> Result<PreparedCase, CaseStatus> {
     let failed = |error: RunnerError| CaseStatus::Failed(error.to_string());
-    let fixture = ModelFixture::read(model_folder).map_err(failed)?;
-    let duckdb = prepare_database(&fixture).map_err(|error| {
-        failed(RunnerError::new(
-            RunnerErrorKind::Database(error),
-            model_folder,
-        ))
-    })?;
-    let documents = ModelDocuments::read(model_folder).map_err(failed)?;
-    let options = resolve_load_options(case.load_options.as_ref());
-    let handle = match check_load(case, &documents, &options) {
-        LoadOutcome::Checked(status) => return Err(status),
-        LoadOutcome::Loaded(handle) => handle,
-    };
+    let (duckdb, handle) = prepare_database_and_model(model_folder, case)?;
     let context_name = case
         .security_context
         .as_deref()
@@ -208,6 +250,28 @@ fn prepare_case(model_folder: &Path, case: &Case) -> Result<PreparedCase, CaseSt
         handle,
         security_context,
     })
+}
+
+/// Prepares the `DuckDB` database of `case` and loads its model, or returns the status that
+/// decides the case: a load that fails or a fixture that cannot be read.
+fn prepare_database_and_model(
+    model_folder: &Path,
+    case: &Case,
+) -> Result<(Connection, Box<Handle>), CaseStatus> {
+    let failed = |error: RunnerError| CaseStatus::Failed(error.to_string());
+    let fixture = ModelFixture::read(model_folder).map_err(failed)?;
+    let duckdb = prepare_database(&fixture).map_err(|error| {
+        failed(RunnerError::new(
+            RunnerErrorKind::Database(error),
+            model_folder,
+        ))
+    })?;
+    let documents = ModelDocuments::read(model_folder).map_err(failed)?;
+    let options = resolve_load_options(case.load_options.as_ref());
+    match check_load(case, &documents, &options) {
+        LoadOutcome::Checked(status) => Err(status),
+        LoadOutcome::Loaded(handle) => Ok((duckdb, handle)),
+    }
 }
 
 /// A failed status names the sources of the fixture that could not be created on `ClickHouse`.
