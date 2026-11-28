@@ -58,7 +58,7 @@ lacks a written policy. Security has two levels, and both always apply:
 
 ## SCY-4a Confidentiality of the compiled plan
 
-- **SCY-4a.1** The compiled plan (its SQL, parameters and explanation) contains policy conditions and the names of datasets joined only to apply them. It is confidential to the host and the executor and MUST NOT be shown to the end user. What a user may see is the model description (DSC) and the result rows.
+- **SCY-4a.1** The compiled plan (its SQL, parameters, explanation and warnings) contains policy conditions and the names of datasets joined only to apply them, and its `warnings` include load warnings, which can name datasets the user is not authorized to see; the `warnings` of a compile error (PLN-5) are confidential for the same reason. It is confidential to the host and the executor and MUST NOT be shown to the end user. What a user may see is the model description (DSC) and the result rows.
 
 ## SCY-5 Validation
 
