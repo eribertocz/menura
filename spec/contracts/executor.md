@@ -89,7 +89,8 @@ returns are exactly the ones the plan means. The executor never modifies `sql` o
 
 | ID | Rule |
 |---|---|
-| EXE-6.1 | **Same version.** Before it executes a plan, the executor compares `producer.tzdata_version` (E6-5.5) with the version of the time-zone database the engine uses: for DuckDB, the time-zone data of its `icu` extension; for ClickHouse, its embedded time-zone data (E6-7.16). The engine's version is the one the engine reports or, when it reports none, the one the compatibility matrix records for the engine version in use (CI-4.3). When the two versions differ, or the executor cannot determine the engine's, it fails with `REXE-03` and does not execute the plan. This check comes before every other check of this chapter. |
+| EXE-6.1 | **Engine data.** The engine's time-zone data is the data of the pinned engine version (EXE-1.1). For ClickHouse, which embeds its own data (E6-7.16), the executor reads `TZDATA_VERSION` from `system.build_options` before it executes a plan, and when that version differs from the one the compatibility matrix records for the ClickHouse version in use (CI-4.3), or cannot be read, it fails with `REXE-03` and does not execute the plan. For DuckDB, the time-zone data is fixed by the DuckDB build through its `icu` extension and no statement reports its version, so EXE-1.1 alone governs it and no check applies. This check comes before every other check of this chapter. |
+| EXE-6.2 | **Compiler data.** `producer.tzdata_version` names the time-zone data the compiler used (E6-5.5). It may differ from the engine's: the compiler's data decides only which zone names a query may use (E1-2.3) and the bounds of relative ranges, which reach the SQL as bound parameters (QRY-4.2); every other time computation is the engine's. A difference between the two is never `REXE-03`. |
 
 ## EXE-7 Data versions
 
@@ -105,5 +106,5 @@ returns are exactly the ones the plan means. The executor never modifies `sql` o
 |---|---|
 | `REXE-01` | The result has more rows than `limits.max_rows` (EXE-4.2) |
 | `REXE-02` | Execution did not deliver the last row within `limits.timeout_ms` (EXE-4.2) |
-| `REXE-03` | The engine's time-zone database version differs from `producer.tzdata_version`, or cannot be determined (EXE-6.1) |
+| `REXE-03` | A ClickHouse engine's time-zone data version differs from the one the compatibility matrix records for its version, or cannot be read (EXE-6.1) |
 | `REXE-04` | The executor cannot guarantee that it read exactly the plan's `data_versions` (EXE-7.1) |
