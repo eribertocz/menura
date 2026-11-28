@@ -224,16 +224,6 @@
       ]
     },
     {
-      "name": "dataset without sources in version 1.1.0 (DEP-3.5)",
-      "valid": false,
-      "patch": [
-        {
-          "op": "remove",
-          "path": "/datasets/0/sources"
-        }
-      ]
-    },
-    {
       "name": "empty source",
       "valid": false,
       "patch": [

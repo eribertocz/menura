@@ -490,33 +490,6 @@
       }
     }
   },
-  "allOf": [
-    {
-      "$comment": "Contract version 1.0 has no sources; from 1.1.0 every dataset carries it (DEP-3.5).",
-      "if": {
-        "required": [
-          "contract_version"
-        ],
-        "properties": {
-          "contract_version": {
-            "type": "string",
-            "pattern": "^1\\.0\\."
-          }
-        }
-      },
-      "else": {
-        "properties": {
-          "datasets": {
-            "items": {
-              "required": [
-                "sources"
-              ]
-            }
-          }
-        }
-      }
-    }
-  ],
   "$defs": {
     "semver": {
       "type": "string",

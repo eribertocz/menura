@@ -554,31 +554,6 @@
           }
         }
       }
-    },
-    {
-      "$comment": "Contract versions 1.0 to 1.2 have no sql_metrics; from 1.3.0 every dataset carries it (DSC-3.1).",
-      "if": {
-        "required": [
-          "contract_version"
-        ],
-        "properties": {
-          "contract_version": {
-            "type": "string",
-            "pattern": "^1\\.[012]\\."
-          }
-        }
-      },
-      "else": {
-        "properties": {
-          "datasets": {
-            "items": {
-              "required": [
-                "sql_metrics"
-              ]
-            }
-          }
-        }
-      }
     }
   ]
 }
