@@ -12,10 +12,10 @@
 | `dialect` | Target dialect: `duckdb`, or from 1.1.0 `clickhouse` (E6-7). |
 | `data_source` | Logical source name. The executor maps it to a connection with its own credentials. |
 | `sql` | One SQL statement in the target dialect. |
-| `parameters` | Bound parameter values, by position, each with its logical type, encoded as CON-4 requires. The SQL names position n as its dialect states (`$n` in DuckDB, E6-5.8; `{pn:T}` in ClickHouse, E6-7.3). |
+| `parameters` | Bound parameter values, by position, each with its logical type, encoded as CON-4 requires. The SQL names position n as its dialect states (`$n` in DuckDB, E6-4.2; `{pn:T}` in ClickHouse, E6-7.3). An executor binds them as EXE-2 states. |
 | `result_schema` | Output columns in the query tree's column order (E1-5): dimensions then metrics for the wide-table form, `SELECT` order for the SQL form. Name, role, logical and physical type, nullability. `nullable` is true for every column that comes from the right side of a left `Join`, and for a stitched component unless both its values and its empty-input value are non-NULL. Every other column keeps the nullability of its expression. |
 | `cache_key` | See PLN-3. |
-| `limits` | Suggested `timeout_ms` and `max_rows` (`null` means no limit beyond the query's own). |
+| `limits` | `timeout_ms` and `max_rows` (`null` means no limit beyond the query's own), which the executor enforces (EXE-4). |
 | `lineage` | See PLN-4. |
 | `explanation` | Every decision with its stage and reason (P7). See PLN-7. |
 | `warnings` | Non-blocking diagnostics. |

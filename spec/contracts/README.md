@@ -19,6 +19,8 @@ examples in `examples/`, all checked in CI.
 | Model diff | `menura.model_diff` | Out | [model-dependencies.md](model-dependencies.md) |
 | Migration report | `menura.migration_report` | Out | [migration-report.md](migration-report.md) |
 
+The obligations of an executor that runs a compiled plan are rules, not a document: [executor.md](executor.md).
+
 ## Public contracts
 
 - **CON-0.1** Every contract listed above is **public**: it is the only interface other modules may rely on. Anything not in a contract (internal types, plan nodes, crate APIs other than the public functions) is private and may change at any time.
