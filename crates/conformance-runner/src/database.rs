@@ -161,6 +161,54 @@ mod tests {
     }
 
     #[test]
+    fn exe_1_2_icu_is_built_in_and_no_extension_is_installed_at_run_time() {
+        let connection = prepare_database(&empty_fixture()).unwrap();
+        let icu_loaded: bool = connection
+            .query_row(
+                "SELECT loaded FROM duckdb_extensions() WHERE extension_name = 'icu'",
+                [],
+                |row| row.get(0),
+            )
+            .unwrap();
+        assert!(icu_loaded);
+        assert_eq!(
+            setting(&connection, "autoinstall_known_extensions"),
+            "false"
+        );
+        assert_eq!(setting(&connection, "autoload_known_extensions"), "false");
+    }
+
+    #[test]
+    fn exe_1_4_a_three_part_source_names_a_database_attached_under_that_exact_name() {
+        let fixture = ModelFixture {
+            sources: vec!["Shop.main.orders".to_owned(), "main.notes".to_owned()],
+            data_script: "CREATE TABLE \"Shop\".main.orders (id INTEGER); \
+                          CREATE TABLE main.notes (id INTEGER); \
+                          INSERT INTO \"Shop\".main.orders VALUES (1); \
+                          INSERT INTO main.notes VALUES (1), (2);"
+                .to_owned(),
+        };
+        let connection = prepare_database(&fixture).unwrap();
+        let attached: i64 = connection
+            .query_row(
+                "SELECT count(*) FROM duckdb_databases() WHERE database_name = 'Shop'",
+                [],
+                |row| row.get(0),
+            )
+            .unwrap();
+        assert_eq!(attached, 1);
+        let orders: i64 = connection
+            .query_row("SELECT count(*) FROM \"Shop\".main.orders", [], |row| {
+                row.get(0)
+            })
+            .unwrap();
+        let notes: i64 = connection
+            .query_row("SELECT count(*) FROM main.notes", [], |row| row.get(0))
+            .unwrap();
+        assert_eq!((orders, notes), (1, 2));
+    }
+
+    #[test]
     fn quote_identifier_doubles_embedded_quotes() {
         assert_eq!(quote_identifier("a\"b"), "\"a\"\"b\"");
     }

@@ -38,8 +38,7 @@ fn bound_value(logical_type: &LogicalType, value: &Json) -> Result<Value, String
     match logical_type {
         LogicalType::Boolean => value.as_bool().map(Value::Boolean).ok_or_else(invalid),
         LogicalType::Integer { bits, signed } => {
-            integer_value(integer_of(value).ok_or_else(invalid)?, *bits, *signed)
-                .ok_or_else(invalid)
+            bound_integer(value, *bits, *signed).ok_or_else(invalid)
         }
         LogicalType::Decimal { precision, scale } => {
             decimal_value(value.as_str().ok_or_else(invalid)?, *precision, *scale)
@@ -57,17 +56,41 @@ fn bound_value(logical_type: &LogicalType, value: &Json) -> Result<Value, String
             .map(|item| bound_value(element, item))
             .collect::<Result<_, _>>()
             .map(Value::List),
-        LogicalType::Interval
-        | LogicalType::Binary
-        | LogicalType::Uuid
-        | LogicalType::Unsupported => Err(format!(
+        LogicalType::Uuid => uuid_value(value.as_str().ok_or_else(invalid)?).ok_or_else(invalid),
+        LogicalType::Interval | LogicalType::Binary | LogicalType::Unsupported => Err(format!(
             "the runner cannot bind a parameter of type {logical_type:?}"
         )),
     }
 }
 
+/// A `uuid` (CON-4: lowercase and hyphenated), bound as a `VARCHAR` holding its text, which
+/// the plan's `CAST($n AS UUID)` reads exactly (EXE-2.3).
+fn uuid_value(text: &str) -> Option<Value> {
+    let groups: Vec<&str> = text.split('-').collect();
+    let lengths: Vec<usize> = groups.iter().map(|group| group.len()).collect();
+    let lowercase_hex = text
+        .bytes()
+        .all(|byte| byte == b'-' || byte.is_ascii_digit() || (b'a'..=b'f').contains(&byte));
+    (lengths == [8, 4, 4, 4, 12] && lowercase_hex).then(|| Value::Text(text.to_owned()))
+}
+
+/// The number of fraction digits a binding at microsecond resolution keeps exactly (EXE-2.5).
+const MAXIMUM_FRACTION_DIGITS: usize = 6;
+
+/// Whether the seconds of the time or timestamp `text` have at most six fraction digits, so
+/// that a binding at microsecond resolution neither rounds nor truncates it (EXE-2.1, EXE-2.5).
+fn has_exact_fraction(text: &str) -> bool {
+    let without_zone = text.strip_suffix('Z').unwrap_or(text);
+    without_zone
+        .split_once('.')
+        .is_none_or(|(_, fraction)| fraction.len() <= MAXIMUM_FRACTION_DIGITS)
+}
+
 /// The `DuckDB` value of a date, a time or a timestamp in its CON-4 text form.
 fn temporal_value(logical_type: &LogicalType, text: &str) -> Option<Value> {
+    if !has_exact_fraction(text) {
+        return None;
+    }
     match logical_type {
         LogicalType::Date => i32::try_from(parse_date(text)?).ok().map(Value::Date32),
         LogicalType::Time => {
@@ -96,11 +119,30 @@ fn instant_value(text: &str) -> Option<Value> {
     Some(Value::Text(format!("{utc}+00:00")))
 }
 
+/// The `DuckDB` integer of a CON-4 integer of the parameter's type, made from the exact
+/// integer (EXE-2.3). An unsigned 128-bit integer may exceed the signed range, so it is read
+/// on its own.
+fn bound_integer(value: &Json, bits: IntegerBits, signed: bool) -> Option<Value> {
+    if bits == IntegerBits::OneHundredTwentyEight && !signed {
+        return unsigned_integer_of(value).map(Value::UHugeInt);
+    }
+    integer_value(integer_of(value)?, bits, signed)
+}
+
 /// An integer written as a JSON number or, outside ±(2^53 − 1), as a string (CON-4).
 fn integer_of(value: &Json) -> Option<i128> {
     match value {
         Json::Number(number) => number.as_i64().map(i128::from),
-        Json::String(text) => text.parse().ok(),
+        Json::String(text) if !text.starts_with('+') => text.parse().ok(),
+        _ => None,
+    }
+}
+
+/// A non-negative integer written as a JSON number or as a string (CON-4), up to 2^128 − 1.
+fn unsigned_integer_of(value: &Json) -> Option<u128> {
+    match value {
+        Json::Number(number) => number.as_u64().map(u128::from),
+        Json::String(text) if !text.starts_with('+') => text.parse().ok(),
         _ => None,
     }
 }
@@ -152,6 +194,9 @@ fn float_value(number: f64, bits: FloatBits) -> Value {
         FloatBits::SixtyFour => Value::Double(number),
     }
 }
+
+#[cfg(test)]
+mod executor_tests;
 
 #[cfg(test)]
 mod tests {

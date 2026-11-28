@@ -30,7 +30,7 @@ import yaml
 
 # Prefixes of spec/README.md Conventions. Backlog items (`F`) are not rules.
 BEHAVIORAL = re.compile(
-    r"^(?:E[0-6][A-Z]?-|(?:STG|CAT|QRY|SEC|PLN|DSC|CHK|MDL|CON|ADD|POP|DER|CTX|SCY|SUM|EXT|DEV|VS|PLT|VAL)-"
+    r"^(?:E[0-6][A-Z]?-|(?:STG|CAT|QRY|SEC|PLN|DSC|CHK|MDL|CON|ADD|POP|DER|CTX|SCY|SUM|EXT|EXE|DEV|VS|PLT|VAL)-"
     r"|OSS-[25](?:\.|$)|ARC-[56](?:\.|$)|(?:MIG|DEP)-)"
 )
 PROCESS = re.compile(r"^(?:[PASQTR]\d|(?:WF|CS|CI)-|OSS-[134](?:\.|$))")

@@ -18,6 +18,7 @@ use crate::fixture::read_text;
 use crate::inlined_values::inlined_value_mismatch;
 use crate::report::CaseStatus;
 use crate::row_comparison::{Comparison, cell_rows_mismatch};
+use crate::runtime_codes::{Engine, runtime_code};
 
 /// The code compilation returns when the plan needs a value `ClickHouse` cannot express
 /// (E6-7.12).
@@ -166,8 +167,8 @@ fn rows_mismatch(
     compared().unwrap_or_else(Some)
 }
 
-/// Executes the plan of a `runtime_error` case, which must fail with an error whose message
-/// contains the expected code (CS-2.4c, E6-7.5).
+/// Executes the plan of a `runtime_error` case, which must fail with the expected runtime code,
+/// mapped from the engine's error 395 as an executor maps it (CS-2.4c, E6-7.5, EXE-5.3).
 fn runtime_error_mismatch(
     case: &Case,
     plan: &CompiledPlanDocument,
@@ -179,7 +180,12 @@ fn runtime_error_mismatch(
         Err(reason) => return Some(format!("the plan cannot be bound: {reason}")),
     };
     match session.execute(&plan.sql, &parameters) {
-        Err(ServerFailure::Engine(message)) if message.contains(code) => None,
+        Err(ServerFailure::Engine(message))
+            if runtime_code(Engine::Clickhouse, &message)
+                .is_some_and(|mapped| mapped.as_str() == code) =>
+        {
+            None
+        }
         Err(failure) => Some(format!(
             "the plan fails on ClickHouse without the runtime code {code}: {}",
             failure.describe()
