@@ -127,8 +127,8 @@ Find a rule ID or a section here, then open only that file at that line.
 | [07-roadmap.md](07-roadmap.md#L56) | 56 | rule | VS-5 |
 | [07-roadmap.md](07-roadmap.md#L58) | 58 | section | 7.1b What 1.0.0 guarantees |
 | [07-roadmap.md](07-roadmap.md#L70) | 70 | section | 7.2 After the MVP |
-| [07-roadmap.md](07-roadmap.md#L84) | 84 | section | 7.3 Capability scope |
-| [07-roadmap.md](07-roadmap.md#L106) | 106 | section | 7.4 Backlog after the MVP |
+| [07-roadmap.md](07-roadmap.md#L85) | 85 | section | 7.3 Capability scope |
+| [07-roadmap.md](07-roadmap.md#L107) | 107 | section | 7.4 Backlog after the MVP |
 | [08-conformance-suite.md](08-conformance-suite.md#L1) | 1 | section | 8. Conformance suite |
 | [08-conformance-suite.md](08-conformance-suite.md#L5) | 5 | section | CS-1 Layout |
 | [08-conformance-suite.md](08-conformance-suite.md#L22) | 22 | section | CS-2 Case format |
@@ -337,40 +337,40 @@ Find a rule ID or a section here, then open only that file at that line.
 | [contracts/compiled-plan.md](contracts/compiled-plan.md#L155) | 155 | rule | PLN-8.2 |
 | [contracts/compiled-plan.md](contracts/compiled-plan.md#L156) | 156 | rule | PLN-8.3 |
 | [contracts/executor.md](contracts/executor.md#L1) | 1 | section | Executor: running a compiled plan |
-| [contracts/executor.md](contracts/executor.md#L10) | 10 | section | EXE-1 Engine and connection |
-| [contracts/executor.md](contracts/executor.md#L14) | 14 | rule | EXE-1.1 |
-| [contracts/executor.md](contracts/executor.md#L15) | 15 | rule | EXE-1.2 |
-| [contracts/executor.md](contracts/executor.md#L16) | 16 | rule | EXE-1.3 |
-| [contracts/executor.md](contracts/executor.md#L17) | 17 | rule | EXE-1.4 |
-| [contracts/executor.md](contracts/executor.md#L18) | 18 | rule | EXE-1.5 |
-| [contracts/executor.md](contracts/executor.md#L20) | 20 | section | EXE-2 Parameters |
-| [contracts/executor.md](contracts/executor.md#L24) | 24 | rule | EXE-2.1 |
-| [contracts/executor.md](contracts/executor.md#L25) | 25 | rule | EXE-2.2 |
-| [contracts/executor.md](contracts/executor.md#L26) | 26 | rule | EXE-2.3 |
-| [contracts/executor.md](contracts/executor.md#L27) | 27 | rule | EXE-2.4 |
-| [contracts/executor.md](contracts/executor.md#L28) | 28 | rule | EXE-2.5 |
-| [contracts/executor.md](contracts/executor.md#L46) | 46 | section | EXE-3 Result |
-| [contracts/executor.md](contracts/executor.md#L50) | 50 | rule | EXE-3.1 |
-| [contracts/executor.md](contracts/executor.md#L51) | 51 | rule | EXE-3.2 |
-| [contracts/executor.md](contracts/executor.md#L52) | 52 | rule | EXE-3.3 |
-| [contracts/executor.md](contracts/executor.md#L53) | 53 | rule | EXE-3.4 |
-| [contracts/executor.md](contracts/executor.md#L73) | 73 | section | EXE-4 Limits |
-| [contracts/executor.md](contracts/executor.md#L77) | 77 | rule | EXE-4.1 |
-| [contracts/executor.md](contracts/executor.md#L78) | 78 | rule | EXE-4.2 |
-| [contracts/executor.md](contracts/executor.md#L80) | 80 | section | EXE-5 Runtime errors |
-| [contracts/executor.md](contracts/executor.md#L84) | 84 | rule | EXE-5.1 |
-| [contracts/executor.md](contracts/executor.md#L85) | 85 | rule | EXE-5.2 |
-| [contracts/executor.md](contracts/executor.md#L86) | 86 | rule | EXE-5.3 |
-| [contracts/executor.md](contracts/executor.md#L87) | 87 | rule | EXE-5.4 |
-| [contracts/executor.md](contracts/executor.md#L89) | 89 | section | EXE-6 Time-zone database |
-| [contracts/executor.md](contracts/executor.md#L93) | 93 | rule | EXE-6.1 |
-| [contracts/executor.md](contracts/executor.md#L94) | 94 | rule | EXE-6.2 |
-| [contracts/executor.md](contracts/executor.md#L96) | 96 | section | EXE-7 Data versions |
-| [contracts/executor.md](contracts/executor.md#L100) | 100 | rule | EXE-7.1 |
-| [contracts/executor.md](contracts/executor.md#L101) | 101 | rule | EXE-7.2 |
-| [contracts/executor.md](contracts/executor.md#L102) | 102 | rule | EXE-7.3 |
-| [contracts/executor.md](contracts/executor.md#L103) | 103 | rule | EXE-7.4 |
-| [contracts/executor.md](contracts/executor.md#L105) | 105 | section | EXE-8 Diagnostics |
+| [contracts/executor.md](contracts/executor.md#L12) | 12 | section | EXE-1 Engine and connection |
+| [contracts/executor.md](contracts/executor.md#L16) | 16 | rule | EXE-1.1 |
+| [contracts/executor.md](contracts/executor.md#L17) | 17 | rule | EXE-1.2 |
+| [contracts/executor.md](contracts/executor.md#L18) | 18 | rule | EXE-1.3 |
+| [contracts/executor.md](contracts/executor.md#L19) | 19 | rule | EXE-1.4 |
+| [contracts/executor.md](contracts/executor.md#L20) | 20 | rule | EXE-1.5 |
+| [contracts/executor.md](contracts/executor.md#L22) | 22 | section | EXE-2 Parameters |
+| [contracts/executor.md](contracts/executor.md#L26) | 26 | rule | EXE-2.1 |
+| [contracts/executor.md](contracts/executor.md#L27) | 27 | rule | EXE-2.2 |
+| [contracts/executor.md](contracts/executor.md#L28) | 28 | rule | EXE-2.3 |
+| [contracts/executor.md](contracts/executor.md#L29) | 29 | rule | EXE-2.4 |
+| [contracts/executor.md](contracts/executor.md#L30) | 30 | rule | EXE-2.5 |
+| [contracts/executor.md](contracts/executor.md#L48) | 48 | section | EXE-3 Result |
+| [contracts/executor.md](contracts/executor.md#L52) | 52 | rule | EXE-3.1 |
+| [contracts/executor.md](contracts/executor.md#L53) | 53 | rule | EXE-3.2 |
+| [contracts/executor.md](contracts/executor.md#L54) | 54 | rule | EXE-3.3 |
+| [contracts/executor.md](contracts/executor.md#L55) | 55 | rule | EXE-3.4 |
+| [contracts/executor.md](contracts/executor.md#L75) | 75 | section | EXE-4 Limits |
+| [contracts/executor.md](contracts/executor.md#L79) | 79 | rule | EXE-4.1 |
+| [contracts/executor.md](contracts/executor.md#L80) | 80 | rule | EXE-4.2 |
+| [contracts/executor.md](contracts/executor.md#L82) | 82 | section | EXE-5 Runtime errors |
+| [contracts/executor.md](contracts/executor.md#L86) | 86 | rule | EXE-5.1 |
+| [contracts/executor.md](contracts/executor.md#L87) | 87 | rule | EXE-5.2 |
+| [contracts/executor.md](contracts/executor.md#L88) | 88 | rule | EXE-5.3 |
+| [contracts/executor.md](contracts/executor.md#L89) | 89 | rule | EXE-5.4 |
+| [contracts/executor.md](contracts/executor.md#L91) | 91 | section | EXE-6 Time-zone database |
+| [contracts/executor.md](contracts/executor.md#L95) | 95 | rule | EXE-6.1 |
+| [contracts/executor.md](contracts/executor.md#L96) | 96 | rule | EXE-6.2 |
+| [contracts/executor.md](contracts/executor.md#L98) | 98 | section | EXE-7 Data versions |
+| [contracts/executor.md](contracts/executor.md#L102) | 102 | rule | EXE-7.1 |
+| [contracts/executor.md](contracts/executor.md#L103) | 103 | rule | EXE-7.2 |
+| [contracts/executor.md](contracts/executor.md#L104) | 104 | rule | EXE-7.3 |
+| [contracts/executor.md](contracts/executor.md#L105) | 105 | rule | EXE-7.4 |
+| [contracts/executor.md](contracts/executor.md#L107) | 107 | section | EXE-8 Diagnostics |
 | [contracts/integrity-checks.md](contracts/integrity-checks.md#L1) | 1 | section | Contract: integrity checks |
 | [contracts/integrity-checks.md](contracts/integrity-checks.md#L5) | 5 | section | CHK-1 Purpose |
 | [contracts/integrity-checks.md](contracts/integrity-checks.md#L10) | 10 | section | CHK-2 Document |
