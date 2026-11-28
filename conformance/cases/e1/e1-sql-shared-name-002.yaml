@@ -9,7 +9,7 @@ query:
   sql: "SELECT volume, AGG(o.volume) AS orders FROM e1_shared.orders AS o GROUP BY volume ORDER BY volume"
 expect:
   outcome: "error"
-  error: "E_NAME_NOT_FOUND"
+  error: "E_METRIC_IN_DIMENSIONS"
   location:
     document: "query"
     pointer: "/sql"

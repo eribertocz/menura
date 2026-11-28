@@ -23,14 +23,17 @@ const ANALYST: &[&str] = &["analyst"];
 
 /// The model with the metrics of the semantic model `REGION` and `UNIT_COST`, which share
 /// their names with a field of `ORDERS` (`UNIT_COST` is restricted to admin), and
-/// `ORDER_TOTAL`, which shares its name with a dataset metric of `ORDERS`. Each reads
-/// `orders.amount` only.
+/// `ORDER_TOTAL` and `TOTAL_COST`, which share their names with a dataset metric of `ORDERS`
+/// (`TOTAL_COST` reads `unit_cost`, so only admin may use it). Each reads `orders.amount`
+/// only. `CUSTOMER_ID` shares its name with a field of `ORDERS` and reads `orders.unit_cost`,
+/// so only admin may use it.
 #[cfg(test)]
 fn shadowing_model() -> InternalModel {
     model_with(|parts| {
-        for metric_name in ["REGION", "UNIT_COST", "ORDER_TOTAL"] {
+        for metric_name in ["REGION", "UNIT_COST", "ORDER_TOTAL", "TOTAL_COST"] {
             add_semantic_metric(parts, metric_name, "ORDERS", "AMOUNT");
         }
+        add_semantic_metric(parts, "CUSTOMER_ID", "ORDERS", "UNIT_COST");
     })
 }
 
@@ -88,7 +91,7 @@ fn e1_4_9_a_shared_name_is_the_field_outside_agg_and_the_metric_inside_it() {
 }
 
 #[test]
-fn e1_4_9_the_lookup_by_position_does_not_depend_on_authorization() {
+fn e1_4_9_an_unauthorized_field_is_looked_up_as_if_it_did_not_exist() {
     let model = shadowing_model();
     let in_agg = sql_columns(
         relation("sales", "orders", None, 40),
@@ -104,7 +107,33 @@ fn e1_4_9_the_lookup_by_position_does_not_depend_on_authorization() {
         relation("sales", "orders", None, 40),
         vec![field_item("unit_cost", 8), agg_item("revenue", "r", 20)],
     );
-    assert_eq!(first_code(&as_item, &model), BindCode::NameNotFound);
+    assert_eq!(first_code(&as_item, &model), BindCode::MetricInDimensions);
+}
+
+#[test]
+fn e1_4_9_an_unauthorized_metric_is_looked_up_as_if_it_did_not_exist() {
+    let tree = sql_columns(
+        relation("sales", "orders", None, 40),
+        vec![agg_item("customer_id", "c", 8)],
+    );
+    assert_eq!(
+        first_code(&tree, &shadowing_model()),
+        BindCode::FieldInMetrics
+    );
+}
+
+#[test]
+fn e1_4_9_an_unauthorized_dataset_metric_falls_through_to_a_model_metric() {
+    let tree = sql_columns(
+        relation("sales", "orders", None, 40),
+        vec![agg_item("total_cost", "t", 8)],
+    );
+    assert_eq!(
+        metric_kinds(&bound(&tree, &shadowing_model())),
+        vec![BoundMetricKind::Reference(MetricPath::SemanticModel(name(
+            "TOTAL_COST"
+        )))]
+    );
 }
 
 #[test]

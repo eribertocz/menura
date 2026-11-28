@@ -128,8 +128,8 @@ impl Resolver<'_> {
     /// The member `member` of `relation`, unqualified or qualified by `qualifier`, looked up by
     /// its position (E1-4.9): at `Position::Metric` a metric exposed on the relation, else a
     /// field of it; at `Position::Field` a field of the relation, else a metric exposed on it.
-    /// The lookup does not depend on what the user may see; the member found is then taken only
-    /// when the user may use it, and is otherwise reported as an unknown name (E2-4.4).
+    /// A candidate the user may not use is skipped exactly as if it did not exist, so the
+    /// answer never reveals an unauthorized name (E2-4.4).
     fn relation_member(
         &mut self,
         relation: &RelationScope,
@@ -141,12 +141,14 @@ impl Resolver<'_> {
             return None;
         }
         let field = self.relation_field(relation, member);
-        let metric = self.relation_metric(relation, member);
-        let found = match position {
-            Position::Metric => metric.or(field),
-            Position::Field => field.or(metric),
-        }?;
-        self.authorized(found)
+        let metrics = self.relation_metrics(relation, member);
+        let candidates: Vec<ResolvedName> = match position {
+            Position::Metric => metrics.into_iter().chain(field).collect(),
+            Position::Field => field.into_iter().chain(metrics).collect(),
+        };
+        candidates
+            .into_iter()
+            .find_map(|candidate| self.authorized(candidate))
     }
 
     /// The field `member` of the relation's dataset, when it exists.
@@ -162,22 +164,27 @@ impl Resolver<'_> {
         }))
     }
 
-    /// The metric `member` exposed on the relation, when it exists: a dataset metric of its
-    /// dataset, or a metric of the semantic model exposed on it (QRY-5.2, DEV-8).
-    fn relation_metric(
+    /// The metrics named `member` exposed on the relation, in lookup order: a dataset metric of
+    /// its dataset, then a metric of the semantic model exposed on it (QRY-5.2, DEV-8).
+    fn relation_metrics(
         &self,
         relation: &RelationScope,
         member: &NormalizedName,
-    ) -> Option<ResolvedName> {
-        let dataset = self.model.dataset(&relation.dataset)?;
-        if dataset.metrics.iter().any(|metric| &metric.name == member) {
-            return Some(ResolvedName::Metric(MetricPath::Dataset {
-                dataset: relation.dataset.clone(),
-                metric: member.clone(),
-            }));
-        }
-        self.is_exposed(relation, member)
-            .then(|| ResolvedName::Metric(MetricPath::SemanticModel(member.clone())))
+    ) -> Vec<ResolvedName> {
+        let dataset_metric = self
+            .model
+            .dataset(&relation.dataset)
+            .is_some_and(|dataset| dataset.metrics.iter().any(|metric| &metric.name == member))
+            .then(|| {
+                ResolvedName::Metric(MetricPath::Dataset {
+                    dataset: relation.dataset.clone(),
+                    metric: member.clone(),
+                })
+            });
+        let model_metric = self
+            .is_exposed(relation, member)
+            .then(|| ResolvedName::Metric(MetricPath::SemanticModel(member.clone())));
+        dataset_metric.into_iter().chain(model_metric).collect()
     }
 
     /// `found`, when the user may use it (E2-4.2, E2-4.3).
