@@ -39,6 +39,8 @@ Schema: [`schemas/compiled-plan.schema.json`](schemas/compiled-plan.schema.json)
 - **PLN-3.3** `data_versions` lists, from the catalog state, the version of every period read or, for relations that are not partitioned, the version of the whole relation (`period` is then `"*"`). For a summary, its versions are those of `aggregate_build.built_from`. It is `null` when the state document gives no versions for some relation read; a key with `null` versions MUST NOT be reused across data loads, so executors SHOULD NOT cache such results beyond their own time limit. Entries are ordered by relation `source`, then by `period`, comparing code points.
 - **PLN-3.3a** A period is read when its relation is scanned: every `Scan` of the plan reads every period of its relation, whether the scan serves a value, a join, a row policy or a propagation `SemiJoin`. Before 1.0.0 a `date_range` prunes no period, so `data_versions` lists every period the catalog state gives for each relation scanned.
 
+The key deliberately contains neither the compiler version nor the engine version; EXE-7.4 states why, and how an executor keeps results of different engine versions apart.
+
 ## PLN-4 Lineage
 
 One entry per output column:
