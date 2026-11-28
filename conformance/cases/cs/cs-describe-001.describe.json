@@ -178,7 +178,10 @@
           "time_grains": []
         }
       ],
-      "name": "RETURNS"
+      "name": "RETURNS",
+      "sql_metrics": [
+        "TOTAL_REFUND"
+      ]
     },
     {
       "fields": [
@@ -303,7 +306,14 @@
           "time_grains": []
         }
       ],
-      "name": "SALES"
+      "name": "SALES",
+      "sql_metrics": [
+        "SALE_COUNT",
+        "TEAM_PER_QUANTITY",
+        "TOTAL_AMOUNT",
+        "TOTAL_QUANTITY",
+        "TOTAL_WHOLE_AMOUNT"
+      ]
     }
   ],
   "metrics": [

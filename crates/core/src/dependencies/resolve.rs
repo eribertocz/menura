@@ -1,6 +1,6 @@
 //! The inputs of fields, join keys and datasets (DEP-3.4 to DEP-3.6), computed once per model.
 
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 
 use menura_contracts::normalize_unquoted_identifier;
 use menura_contracts::types::catalog::{CatalogSchemaDocument, RelationSchema};
@@ -18,6 +18,7 @@ pub(super) struct Resolver<'model> {
     model: &'model InternalModel,
     catalog: &'model CatalogSchemaDocument,
     datasets: BTreeMap<NormalizedName, Inputs>,
+    visibility: BTreeMap<NormalizedName, Inputs>,
 }
 
 impl<'model> Resolver<'model> {
@@ -30,6 +31,7 @@ impl<'model> Resolver<'model> {
             model,
             catalog,
             datasets: BTreeMap::new(),
+            visibility: BTreeMap::new(),
         };
         let graph = PolicyGraph::new(model);
         let visibility: BTreeMap<NormalizedName, Inputs> = model
@@ -47,6 +49,7 @@ impl<'model> Resolver<'model> {
                 (dataset.name.clone(), inputs)
             })
             .collect();
+        resolver.visibility = visibility;
         resolver
     }
 
@@ -58,6 +61,47 @@ impl<'model> Resolver<'model> {
     /// The inputs of the dataset `name` (DEP-3.5); empty for a dataset the model does not have.
     pub(super) fn dataset(&self, name: &NormalizedName) -> Inputs {
         self.datasets.get(name).cloned().unwrap_or_default()
+    }
+
+    /// The `sources` of the dataset `name` (DEP-3.5): its own `source`; for a summary, those of
+    /// the datasets of the visibility inputs of its base; for any other dataset, those of the
+    /// summaries of it and of the datasets of its visibility inputs. Without duplicates, in
+    /// code-point order.
+    pub(super) fn sources(&self, name: &NormalizedName) -> Vec<String> {
+        let mut sources = BTreeSet::new();
+        let Some(dataset) = self.model.dataset(name) else {
+            return Vec::new();
+        };
+        sources.insert(dataset.source.clone());
+        let visible_from = if let Some(summary) = self.summary(name) {
+            &summary.of
+        } else {
+            sources.extend(self.summary_sources(name));
+            name
+        };
+        let datasets = self
+            .visibility
+            .get(visible_from)
+            .into_iter()
+            .flat_map(|inputs| inputs.model.iter())
+            .filter_map(|input| match input {
+                ModelInput::Dataset(reached) => self.model.dataset(reached),
+                _ => None,
+            });
+        sources.extend(datasets.map(|reached| reached.source.clone()));
+        sources.into_iter().collect()
+    }
+
+    /// The `source` of every summary dataset whose `aggregate.of` names the dataset `base`.
+    fn summary_sources(&self, base: &NormalizedName) -> Vec<String> {
+        self.model
+            .parts()
+            .summaries
+            .iter()
+            .filter(|summary| &summary.of == base)
+            .filter_map(|summary| self.model.dataset(&summary.dataset))
+            .map(|summary| summary.source.clone())
+            .collect()
     }
 
     /// The inputs of the field `path` (DEP-3.6), the field itself included: its dataset, its

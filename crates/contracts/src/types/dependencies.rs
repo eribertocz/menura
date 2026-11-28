@@ -59,6 +59,11 @@ pub struct ElementDependencies {
     pub physical_inputs: Vec<PhysicalInput>,
     /// Row policies that restrict the rows it reads, ordered as in PLN-4.7.
     pub security_policies: Vec<String>,
+    /// Datasets only: the catalog relations a query on the dataset may read, ordered comparing
+    /// code points, without duplicates (DEP-3.5); absent before contract version 1.1.0 and on
+    /// every other kind of element.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub sources: Option<Vec<String>>,
 }
 
 /// The dependencies of a metric: those of every element, with its kind (DEP-2).
