@@ -1,0 +1,20 @@
+id: val-2-12-plain-path-001
+rules: [VAL-2.12, QRY-4.3]
+model: val-temporal
+security_context: analyst.json
+query:
+  contract: menura.query
+  contract_version: "1.1.0"
+  time_zone: UTC
+  query:
+    dimensions: [customer_versions.segment]
+    metrics:
+      - {metric: sale_count, alias: sale_count}
+    nonportable_extensions:
+      - {"vendor_name": "COMMON", "data": {"namespace": "menura", "version": 1, "paths": [{"from": "sales", "to": "customer_versions", "relationships": ["sale_customer_any"]}]}}
+expect:
+  outcome: plan
+  warnings: [W0E-01, W0E-02]
+  sql_clickhouse: val-2-12-plain-path-001.clickhouse.sql
+  rows: val-2-12-plain-path-001.csv
+  row_order: any

@@ -1,0 +1,18 @@
+id: val-2-23-open-end-range-001
+rules: [VAL-2.23, E6-7.12]
+model: val-temporal-far-end
+security_context: analyst.json
+query:
+  contract: menura.query
+  contract_version: "1.1.0"
+  time_zone: UTC
+  query:
+    dimensions: [customer_versions.segment]
+    metrics:
+      - {metric: sale_count, alias: sale_count}
+expect:
+  outcome: plan
+  clickhouse: e6_01
+  sql: val-2-23-open-end-range-001.sql
+  rows: val-2-23-open-end-range-001.csv
+  row_order: any

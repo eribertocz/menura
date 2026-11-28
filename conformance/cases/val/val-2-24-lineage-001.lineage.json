@@ -1,0 +1,75 @@
+[
+  {
+    "model_inputs": [
+      "field:CUSTOMER_TIERS.TIER",
+      "field:CUSTOMER_TIERS.TIER_FROM",
+      "field:CUSTOMER_TIERS.TIER_TO",
+      "field:VISITS.VISITED_AT",
+      "relationship:VISIT_TIER"
+    ],
+    "output": "tier",
+    "physical_inputs": [
+      {
+        "column": "customer_id",
+        "source": "shop.customer_tiers"
+      },
+      {
+        "column": "tier",
+        "source": "shop.customer_tiers"
+      },
+      {
+        "column": "tier_from",
+        "source": "shop.customer_tiers"
+      },
+      {
+        "column": "tier_to",
+        "source": "shop.customer_tiers"
+      },
+      {
+        "column": "customer_id",
+        "source": "shop.visits"
+      },
+      {
+        "column": "visited_at",
+        "source": "shop.visits"
+      }
+    ],
+    "security_policies": [],
+    "summary": null
+  },
+  {
+    "model_inputs": [
+      "field:VISITS.VISIT_ID",
+      "metric:VISIT_COUNT"
+    ],
+    "output": "visit_count",
+    "physical_inputs": [
+      {
+        "column": "customer_id",
+        "source": "shop.customer_tiers"
+      },
+      {
+        "column": "tier_from",
+        "source": "shop.customer_tiers"
+      },
+      {
+        "column": "tier_to",
+        "source": "shop.customer_tiers"
+      },
+      {
+        "column": "customer_id",
+        "source": "shop.visits"
+      },
+      {
+        "column": "visit_id",
+        "source": "shop.visits"
+      },
+      {
+        "column": "visited_at",
+        "source": "shop.visits"
+      }
+    ],
+    "security_policies": [],
+    "summary": null
+  }
+]

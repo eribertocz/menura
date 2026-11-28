@@ -1,0 +1,67 @@
+version: "0.1.1"
+semantic_model:
+  - name: val_temporal_summary
+    description: 'Sales with a summary by customer and day, joined to the customer version valid at their day: the summary is never used for the branch (VAL-2.19)'
+    custom_extensions:
+      - vendor_name: COMMON
+        data: '{"namespace": "menura", "version": 1, "security_context": {"roles": ["analyst"], "attributes": []}}'
+    datasets:
+      - name: sales
+        source: shop.sales
+        primary_key: [sale_id]
+        fields:
+          - name: sale_id
+            expression: {dialects: [{dialect: ANSI_SQL, expression: sale_id}]}
+          - name: customer_id
+            expression: {dialects: [{dialect: ANSI_SQL, expression: customer_id}]}
+          - name: sold_on
+            expression: {dialects: [{dialect: ANSI_SQL, expression: sold_on}]}
+            dimension: {is_time: true}
+          - name: amount
+            expression: {dialects: [{dialect: ANSI_SQL, expression: amount}]}
+        custom_extensions:
+          - vendor_name: COMMON
+            data: '{"namespace": "menura", "version": 1, "access": {"mode": "roles", "roles": ["analyst"]}}'
+      - name: customer_versions
+        source: shop.customer_versions
+        primary_key: [customer_id, valid_from]
+        fields:
+          - name: customer_id
+            expression: {dialects: [{dialect: ANSI_SQL, expression: customer_id}]}
+          - name: segment
+            expression: {dialects: [{dialect: ANSI_SQL, expression: segment}]}
+          - name: valid_from
+            expression: {dialects: [{dialect: ANSI_SQL, expression: valid_from}]}
+            dimension: {is_time: true}
+          - name: valid_to
+            expression: {dialects: [{dialect: ANSI_SQL, expression: valid_to}]}
+            dimension: {is_time: true}
+        custom_extensions:
+          - vendor_name: COMMON
+            data: '{"namespace": "menura", "version": 1, "access": {"mode": "roles", "roles": ["analyst"]}, "populations": [{"name": "customer_history", "mode": "validity", "entity": ["customer_id"], "valid_from": "valid_from", "valid_to": "valid_to", "partial_period": "any_day", "valid_to_bound": "exclusive", "open_end": "2099-12-31"}]}'
+      - name: sales_by_customer_day
+        source: shop.sales_by_customer_day
+        primary_key: [customer_id, sold_day]
+        fields:
+          - name: customer_id
+            expression: {dialects: [{dialect: ANSI_SQL, expression: customer_id}]}
+          - name: sold_day
+            expression: {dialects: [{dialect: ANSI_SQL, expression: sold_day}]}
+            dimension: {is_time: true}
+          - name: amount_sum
+            expression: {dialects: [{dialect: ANSI_SQL, expression: amount_sum}]}
+        custom_extensions:
+          - vendor_name: COMMON
+            data: '{"namespace": "menura", "version": 1, "access": {"mode": "internal"}, "aggregate": {"of": "sales", "dimensions": [{"field": "customer_id", "base": "customer_id"}, {"field": "sold_day", "base": "sold_on", "grain": "day"}], "measures": [{"field": "amount_sum", "base_aggregate": "SUM(sales.amount)"}], "coverage_field": "sold_day"}}'
+    relationships:
+      - name: sale_customer
+        from: sales
+        to: customer_versions
+        from_columns: [customer_id]
+        to_columns: [customer_id]
+        custom_extensions:
+          - vendor_name: COMMON
+            data: '{"namespace": "menura", "version": 1, "temporal": {"from_time": "sold_on", "population": "customer_history"}}'
+    metrics:
+      - name: total_amount
+        expression: {dialects: [{dialect: ANSI_SQL, expression: 'SUM(sales.amount)'}]}

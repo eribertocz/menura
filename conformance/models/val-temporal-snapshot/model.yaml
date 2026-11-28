@@ -1,0 +1,68 @@
+version: "0.1.1"
+semantic_model:
+  - name: val_temporal_snapshot
+    description: 'Monthly balances joined to the customer segment valid at their period (VAL-2.11): a row added for missing: zero joins with its over value as from_time'
+    custom_extensions:
+      - vendor_name: COMMON
+        data: '{"namespace": "menura", "version": 1, "security_context": {"roles": ["analyst"], "attributes": []}}'
+    datasets:
+      - name: balances
+        source: shop.balances
+        primary_key: [customer_id, period]
+        fields:
+          - name: customer_id
+            expression: {dialects: [{dialect: ANSI_SQL, expression: customer_id}]}
+          - name: period
+            expression: {dialects: [{dialect: ANSI_SQL, expression: period}]}
+            dimension: {is_time: true}
+          - name: balance
+            expression: {dialects: [{dialect: ANSI_SQL, expression: balance}]}
+        custom_extensions:
+          - vendor_name: COMMON
+            data: '{"namespace": "menura", "version": 1, "access": {"mode": "roles", "roles": ["analyst"]}}'
+      - name: members
+        source: shop.members
+        fields:
+          - name: customer_id
+            expression: {dialects: [{dialect: ANSI_SQL, expression: customer_id}]}
+          - name: valid_from
+            expression: {dialects: [{dialect: ANSI_SQL, expression: valid_from}]}
+            dimension: {is_time: true}
+          - name: valid_to
+            expression: {dialects: [{dialect: ANSI_SQL, expression: valid_to}]}
+            dimension: {is_time: true}
+        custom_extensions:
+          - vendor_name: COMMON
+            data: '{"namespace": "menura", "version": 1, "access": {"mode": "roles", "roles": ["analyst"]}, "populations": [{"name": "active_members", "mode": "validity", "entity": ["customer_id"], "valid_from": "valid_from", "valid_to": "valid_to", "partial_period": "any_day"}]}'
+      - name: segments
+        source: shop.segments
+        primary_key: [customer_id, segment_from]
+        fields:
+          - name: customer_id
+            expression: {dialects: [{dialect: ANSI_SQL, expression: customer_id}]}
+          - name: segment
+            expression: {dialects: [{dialect: ANSI_SQL, expression: segment}]}
+          - name: segment_from
+            expression: {dialects: [{dialect: ANSI_SQL, expression: segment_from}]}
+            dimension: {is_time: true}
+          - name: segment_to
+            expression: {dialects: [{dialect: ANSI_SQL, expression: segment_to}]}
+            dimension: {is_time: true}
+        custom_extensions:
+          - vendor_name: COMMON
+            data: '{"namespace": "menura", "version": 1, "access": {"mode": "roles", "roles": ["analyst"]}, "populations": [{"name": "segment_history", "mode": "validity", "entity": ["customer_id"], "valid_from": "segment_from", "valid_to": "segment_to", "partial_period": "any_day", "valid_to_bound": "exclusive"}]}'
+    relationships:
+      - name: balance_segment
+        from: balances
+        to: segments
+        from_columns: [customer_id]
+        to_columns: [customer_id]
+        custom_extensions:
+          - vendor_name: COMMON
+            data: '{"namespace": "menura", "version": 1, "temporal": {"from_time": "period", "population": "segment_history"}}'
+    metrics:
+      - name: lowest_balance
+        expression: {dialects: [{dialect: ANSI_SQL, expression: 'MIN(balances.balance)'}]}
+        custom_extensions:
+          - vendor_name: COMMON
+            data: '{"namespace": "menura", "version": 1, "additivity": {"type": "semi_additive", "over": "balances.period", "entity": ["balances.customer_id"], "aggregation": "last", "selection": "global_period", "snapshot_grain": "month", "population": "active_members", "missing": "zero", "unexpected": "exclude", "nulls": "keep"}}'

@@ -1,0 +1,69 @@
+{
+  "contract": "menura.catalog_state",
+  "contract_version": "1.2.0",
+  "document_id": {
+    "origin": "conformance:val-temporal-key-evidence",
+    "snapshot": "state-1"
+  },
+  "schema_document_id": {
+    "origin": "conformance:val-temporal-key-evidence",
+    "snapshot": "val-temporal-key-evidence"
+  },
+  "relations": [
+    {
+      "source": "shop.customer_versions",
+      "row_count_estimate": 3,
+      "version": {
+        "origin": "conformance:val-temporal-key-evidence",
+        "snapshot": "customer_versions-1"
+      }
+    },
+    {
+      "source": "shop.sales",
+      "row_count_estimate": 4,
+      "version": {
+        "origin": "conformance:val-temporal-key-evidence",
+        "snapshot": "sales-1"
+      }
+    }
+  ],
+  "checks": [
+    {
+      "target": "SALE_CUSTOMER",
+      "check": "key_uniqueness",
+      "definition_hash": "6e2b5fc96d447f53bee1dc9b30f88e5bd15b5a08a2f408921945007737cbc98b",
+      "status": "passed",
+      "verified": [
+        {
+          "source": "shop.customer_versions",
+          "version": {
+            "origin": "conformance:val-temporal-key-evidence",
+            "snapshot": "customer_versions-1"
+          }
+        }
+      ]
+    },
+    {
+      "target": "SALE_CUSTOMER",
+      "check": "orphan_keys",
+      "definition_hash": "f24b3f9a28027571955873803ce92f48fc41e6949afc1ff9935e83e31bc40956",
+      "status": "passed",
+      "verified": [
+        {
+          "source": "shop.sales",
+          "version": {
+            "origin": "conformance:val-temporal-key-evidence",
+            "snapshot": "sales-1"
+          }
+        },
+        {
+          "source": "shop.customer_versions",
+          "version": {
+            "origin": "conformance:val-temporal-key-evidence",
+            "snapshot": "customer_versions-1"
+          }
+        }
+      ]
+    }
+  ]
+}

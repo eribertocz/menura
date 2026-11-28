@@ -1,0 +1,5 @@
+sale_id,segment,total_amount
+1,RETAIL,10
+2,CORPORATE,20
+3,CORPORATE,40
+4,RETAIL,80
