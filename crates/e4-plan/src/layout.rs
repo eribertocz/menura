@@ -4,7 +4,7 @@
 use std::collections::BTreeSet;
 
 use menura_model::internal_model::{
-    Dataset, FieldPath, InternalModel, NormalizedName, OpenEnd, Relationship, ValidToBound,
+    Dataset, FieldPath, InternalModel, NormalizedName, Relationship,
 };
 use menura_representations::logical_plan::JoinCondition;
 use menura_representations::names::{ColumnName, ColumnPrefix};
@@ -12,6 +12,7 @@ use menura_representations::origin::Origin;
 use menura_representations::paths::{Branch, InstanceId, JoinInstance, QueryElement};
 
 use crate::columns::source_prefix;
+use crate::coverage::{PlacedCoverage, placed_coverage};
 use crate::error::{InvariantViolation, PlanError};
 
 /// The name of the synthesized row identity before it is made unique (E4-4.0f).
@@ -33,20 +34,6 @@ pub(crate) struct PlacedInstance<'model> {
     /// columns (VAL-2.8): `from_time` read from the instance the step starts from (E3-4.2a),
     /// the range read from this instance. `None` for a plain relationship.
     pub(crate) temporal: Option<PlacedCoverage>,
-}
-
-/// The columns of the coverage condition of a temporal `Join` (VAL-2.7, VAL-2.8).
-pub(crate) struct PlacedCoverage {
-    /// The column of `from_time`, on the left side.
-    pub(crate) from_time: ColumnName,
-    /// The column of `valid_from`, on the right side.
-    pub(crate) valid_from: ColumnName,
-    /// The column of `valid_to`, on the right side.
-    pub(crate) valid_to: ColumnName,
-    /// Whether `valid_to` is inclusive or exclusive (VAL-1.1).
-    pub(crate) valid_to_bound: ValidToBound,
-    /// The `valid_to` value that reads like NULL, when declared (VAL-1.2).
-    pub(crate) open_end: Option<OpenEnd>,
 }
 
 /// The datasets and column names of one branch.
@@ -130,11 +117,7 @@ impl<'model> Layout<'model> {
             .dataset(&step.to)
             .ok_or_else(|| fail(InvariantViolation::UnknownDataset))?;
         let parent_dataset = self.dataset(instance.parent).map_err(fail)?;
-        let matches = relationship.from == step.from
-            && relationship.to == step.to
-            && parent_dataset.name == step.from
-            && relationship.from_columns.len() == relationship.to_columns.len();
-        if !matches {
+        if !step_matches(relationship, instance, parent_dataset) {
             return Err(fail(InvariantViolation::UnknownRelationship));
         }
         let names = instance_names(dataset, model);
@@ -147,16 +130,13 @@ impl<'model> Layout<'model> {
         let on = self
             .key_pairs(instance, parent_dataset, dataset, &prefix, relationship)
             .map_err(fail)?;
-        let temporal = self
-            .coverage(
-                instance,
-                parent_dataset,
-                dataset,
-                &prefix,
-                relationship,
-                model,
-            )
-            .map_err(fail)?;
+        let temporal = placed_coverage(
+            relationship,
+            model,
+            |field| self.field_column(instance.parent, parent_dataset, field),
+            |field| field_in(dataset, &prefix, field),
+        )
+        .map_err(fail)?;
         Ok(PlacedInstance {
             dataset,
             origin,
@@ -188,33 +168,6 @@ impl<'model> Layout<'model> {
                 })
             })
             .collect()
-    }
-
-    /// The columns of the coverage condition of `instance` when its `relationship` is temporal
-    /// (VAL-2.8): `from_time` of `parent`, the dataset the step starts from, and the range of
-    /// `dataset` under `prefix`; `None` for a plain relationship.
-    fn coverage(
-        &self,
-        instance: &JoinInstance,
-        parent: &Dataset,
-        dataset: &Dataset,
-        prefix: &ColumnPrefix,
-        relationship: &Relationship,
-        model: &InternalModel,
-    ) -> Result<Option<PlacedCoverage>, InvariantViolation> {
-        let Some(range) = model.temporal_range(relationship) else {
-            return match relationship.temporal {
-                Some(_) => Err(InvariantViolation::UnknownRelationship),
-                None => Ok(None),
-            };
-        };
-        Ok(Some(PlacedCoverage {
-            from_time: self.field_column(instance.parent, parent, range.from_time)?,
-            valid_from: field_in(dataset, prefix, range.valid_from)?,
-            valid_to: field_in(dataset, prefix, range.valid_to)?,
-            valid_to_bound: range.valid_to_bound,
-            open_end: range.open_end.cloned(),
-        }))
     }
 
     /// The relationship names along the path of `instance`, each followed by `.`, then as
@@ -342,6 +295,16 @@ impl<'model> Layout<'model> {
             Some(placed) => Ok(placed.prefix.column(field.as_str())),
         }
     }
+}
+
+/// Whether `relationship` is the relationship of the step of `instance`, from `parent`, with
+/// as many `to_columns` as `from_columns`.
+fn step_matches(relationship: &Relationship, instance: &JoinInstance, parent: &Dataset) -> bool {
+    let step = &instance.step;
+    relationship.from == step.from
+        && relationship.to == step.to
+        && parent.name == step.from
+        && relationship.from_columns.len() == relationship.to_columns.len()
 }
 
 /// The column of the field `field` of `dataset` under `prefix`, the prefix of an instance of

@@ -124,3 +124,95 @@ fn column_type<'schema>(
         .find(|column| &column.name == name)
         .map(|column| &column.logical_type)
 }
+
+#[cfg(test)]
+mod tests {
+    use menura_contracts::Sha256Hash;
+    use menura_contracts::types::common::LogicalType;
+    use menura_model::expression::DateValue;
+    use menura_model::internal_model::{
+        Dataset, Descriptions, InternalModel, ModelParts, NormalizedName, OpenEnd, PartialPeriod,
+        RelationshipGraph, SourceLocation, ValidToBound,
+    };
+    use menura_representations::logical_plan::{
+        Membership, OutputSchema, PopulationRule, SchemaColumn,
+    };
+    use menura_representations::names::ColumnName;
+
+    use super::check_rule_open_end;
+
+    /// A model with the one dataset `MEMBERS`.
+    fn test_model() -> InternalModel {
+        let members = Dataset {
+            name: NormalizedName::new("MEMBERS"),
+            source: "shop.members".to_owned(),
+            fields: Vec::new(),
+            metrics: Vec::new(),
+            primary_key: Vec::new(),
+            unique_keys: Vec::new(),
+            access: None,
+            row_policies: Vec::new(),
+            populations: Vec::new(),
+            summary: false,
+            descriptions: Descriptions::default(),
+            query_errors: Vec::new(),
+            location: SourceLocation {
+                pointer: "/semantic_model/0/datasets/0".to_owned(),
+                line: 1,
+                column: 1,
+            },
+        };
+        let parts = ModelParts {
+            name: NormalizedName::new("SHOP"),
+            descriptions: Descriptions::default(),
+            datasets: vec![members],
+            relationships: Vec::new(),
+            graph: RelationshipGraph::default(),
+            metrics: Vec::new(),
+            security_context: None,
+            summaries: Vec::new(),
+            checks: Vec::new(),
+            unusable: Vec::new(),
+            warnings: Vec::new(),
+        };
+        InternalModel::new(parts, Sha256Hash::try_from("0".repeat(64)).expect("a hash"))
+    }
+
+    fn rule(year: u16) -> PopulationRule {
+        PopulationRule {
+            entity: vec![ColumnName::new("CUSTOMER_ID")],
+            membership: Membership::Validity {
+                valid_from: ColumnName::new("VALID_FROM"),
+                valid_to: ColumnName::new("VALID_TO"),
+                partial_period: PartialPeriod::AnyDay,
+                valid_to_bound: ValidToBound::Inclusive,
+                open_end: DateValue::new(year, 12, 31).map(OpenEnd::Date),
+            },
+            required_when: None,
+        }
+    }
+
+    fn rows() -> OutputSchema {
+        OutputSchema::new(vec![SchemaColumn {
+            name: ColumnName::new("VALID_TO"),
+            logical_type: LogicalType::Date,
+            nullable: true,
+        }])
+    }
+
+    #[test]
+    fn e6_7_12_a_population_open_end_after_2299_is_e6_01_at_its_dataset() {
+        let model = test_model();
+        let dataset = &model.parts().datasets[0].name;
+        assert!(check_rule_open_end(&rule(2099), &rows(), dataset, &model).is_ok());
+        let error = check_rule_open_end(&rule(9999), &rows(), dataset, &model).unwrap_err();
+        let diagnostic = error.to_diagnostic().expect("E6-01");
+        assert_eq!(diagnostic.code, "E6-01");
+        assert!(
+            diagnostic.message.contains("`dataset:MEMBERS`"),
+            "{diagnostic:?}"
+        );
+        let unknown = NormalizedName::new("NOT_A_DATASET");
+        assert!(check_rule_open_end(&rule(9999), &rows(), &unknown, &model).is_ok());
+    }
+}

@@ -322,3 +322,7 @@ fn from_side_reads_every_row(
 fn is_bare_scan_of(node: &PlanNode, dataset: &NormalizedName) -> bool {
     matches!(node.operation(), Operation::Scan { dataset: scanned, .. } if scanned == dataset)
 }
+
+#[cfg(test)]
+#[path = "inner_joins_side_tests.rs"]
+mod side_tests;

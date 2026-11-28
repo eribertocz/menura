@@ -124,3 +124,21 @@ fn val_2_23_an_open_end_outside_the_clickhouse_range_is_e6_01_in_the_checks() {
     );
     assert!(integrity_checks(&handle, Dialect::Duckdb).is_ok());
 }
+
+const VALIDITY_FAR_END_MODEL: &str =
+    include_str!("../../../conformance/models/val-validity-far-end/model.yaml");
+const VALIDITY_FAR_END_SCHEMA: &str =
+    include_str!("../../../conformance/models/val-validity-far-end/catalog-schema.json");
+
+#[test]
+fn e6_7_12_the_open_end_of_a_population_outside_the_clickhouse_range_is_e6_01_in_the_checks() {
+    let handle = handle(VALIDITY_FAR_END_MODEL, VALIDITY_FAR_END_SCHEMA);
+    let error = integrity_checks(&handle, Dialect::Clickhouse).unwrap_err();
+    let diagnostic = &error.errors[0];
+    assert_eq!(diagnostic.code, "E6-01", "{diagnostic:?}");
+    assert!(
+        diagnostic.message.contains("dataset:MEMBERS"),
+        "{diagnostic:?}"
+    );
+    assert!(integrity_checks(&handle, Dialect::Duckdb).is_ok());
+}

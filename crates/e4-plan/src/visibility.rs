@@ -14,10 +14,10 @@ use menura_representations::names::{ColumnName, ColumnPrefix};
 use menura_representations::origin::Origin;
 
 use crate::columns::{column_reference, over_scan, read_fields};
+use crate::coverage::{PlacedCoverage, placed_coverage};
 use crate::error::{InvariantViolation, PlanError};
 use crate::followed::PolicyGraph;
 use crate::joins::coverage;
-use crate::layout::PlacedCoverage;
 use crate::policy_visits::{RowFilter, RowFilters};
 use crate::rewrite::rewrite;
 use crate::scan::scan;
@@ -163,6 +163,24 @@ impl Visibility<'_> {
         }
     }
 
+    /// The coverage condition of a `SemiJoin` along `relationship` when it is temporal
+    /// (VAL-2.17): `from_time` under `prefix`, the range over the unprefixed `Scan` of the
+    /// related dataset.
+    fn placed(
+        &self,
+        relationship: &Relationship,
+        prefix: Option<&ColumnPrefix>,
+        origin: &Origin,
+    ) -> Result<Option<PlacedCoverage>, PlanError> {
+        placed_coverage(
+            relationship,
+            self.model,
+            |field| Ok(column_of(field, prefix)),
+            |field| Ok(ColumnName::new(field.as_str())),
+        )
+        .map_err(|violation| PlanError::invariant(violation, origin))
+    }
+
     /// The `SemiJoin` of `input`, rows of `dataset`, along `edge`.
     fn semi_join(
         &self,
@@ -179,15 +197,10 @@ impl Visibility<'_> {
         let origin = Origin::Model(relationship.location.clone());
         let related = self.related_dataset(edge, &origin)?;
         let on = key_pairs(relationship, prefix);
-        let placed = self.placed_coverage(relationship, prefix, &origin)?;
+        let placed = self.placed(relationship, prefix, &origin)?;
         let mut related_chain = chain.to_vec();
         related_chain.push(related.name.clone());
-        let mut all_fields = relationship.to_columns.clone();
-        if let Some(placed) = &placed {
-            for column in [&placed.valid_from, &placed.valid_to] {
-                all_fields.push(NormalizedName::new(column.as_str()));
-            }
-        }
+        let all_fields = related_fields(relationship, placed.as_ref());
         let mut visible_fields = all_fields.clone();
         visible_fields.extend(self.fields_on_chain(related, &related_chain)?);
         let related_all = scan(related, &all_fields, self.catalog, None)?;
@@ -217,31 +230,19 @@ impl Visibility<'_> {
     }
 }
 
-impl Visibility<'_> {
-    /// The columns of the coverage condition of a `SemiJoin` along `relationship` when it is
-    /// temporal (VAL-2.17): `from_time` under `prefix`, the range over the unprefixed `Scan`
-    /// of the related dataset.
-    fn placed_coverage(
-        &self,
-        relationship: &Relationship,
-        prefix: Option<&ColumnPrefix>,
-        origin: &Origin,
-    ) -> Result<Option<PlacedCoverage>, PlanError> {
-        match self.model.temporal_range(relationship) {
-            None if relationship.temporal.is_some() => Err(PlanError::invariant(
-                InvariantViolation::UnknownRelationship,
-                origin,
-            )),
-            None => Ok(None),
-            Some(range) => Ok(Some(PlacedCoverage {
-                from_time: column_of(range.from_time, prefix),
-                valid_from: ColumnName::new(range.valid_from.as_str()),
-                valid_to: ColumnName::new(range.valid_to.as_str()),
-                valid_to_bound: range.valid_to_bound,
-                open_end: range.open_end.cloned(),
-            })),
+/// The fields the `Scan`s of the related dataset of a `SemiJoin` along `relationship` read:
+/// its `to_columns`, then the range of `placed` when it is temporal.
+fn related_fields(
+    relationship: &Relationship,
+    placed: Option<&PlacedCoverage>,
+) -> Vec<NormalizedName> {
+    let mut fields = relationship.to_columns.clone();
+    if let Some(placed) = placed {
+        for column in [&placed.valid_from, &placed.valid_to] {
+            fields.push(NormalizedName::new(column.as_str()));
         }
     }
+    fields
 }
 
 /// The equalities of `relationship`: each `from_columns` field as a column of the input

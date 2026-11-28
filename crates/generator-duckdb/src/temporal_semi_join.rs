@@ -61,11 +61,7 @@ impl<'input> StepWriter<'input> {
         let visible = self.write(semi_join.related_visible)?;
         let schema = semi_join.input.schema();
         let added = added_names(schema);
-        let columns: Vec<String> = schema
-            .columns()
-            .iter()
-            .map(|column| quote(column.name.as_str()))
-            .collect();
+        let columns = quoted(schema);
         let rows = self.numbered_input(&columns, &input.name, &added);
         let mut carried = columns.clone();
         carried.push(added.row.clone());
@@ -94,15 +90,7 @@ impl<'input> StepWriter<'input> {
             },
             &added,
         )?;
-        Ok(SelectBody {
-            items: columns,
-            from: counted_visible,
-            clauses: vec![format!(
-                "WHERE {related} >= 1 AND {related} = {visible}",
-                related = added.related,
-                visible = added.visible
-            )],
-        })
+        Ok(kept_rows(columns, counted_visible, &added))
     }
 
     /// The step of every row of `input` with its row number.
@@ -221,6 +209,29 @@ struct Counted<'step> {
     versions_schema: &'step OutputSchema,
     /// The quoted name of the count.
     count: &'step str,
+}
+
+/// The quoted names of the columns of `schema`.
+fn quoted(schema: &OutputSchema) -> Vec<String> {
+    schema
+        .columns()
+        .iter()
+        .map(|column| quote(column.name.as_str()))
+        .collect()
+}
+
+/// The body that keeps, with its `columns`, each row of `counted` with at least one covering
+/// version and as many visible covering versions.
+fn kept_rows(columns: Vec<String>, counted: String, added: &Added) -> SelectBody {
+    SelectBody {
+        items: columns,
+        from: counted,
+        clauses: vec![format!(
+            "WHERE {related} >= 1 AND {related} = {visible}",
+            related = added.related,
+            visible = added.visible
+        )],
+    }
 }
 
 /// The quoted names of the columns the steps add: each `menura.` name followed by as many `.`

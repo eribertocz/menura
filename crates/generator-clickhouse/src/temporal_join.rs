@@ -108,16 +108,7 @@ impl<'input> StepWriter<'input> {
                 qualifier: VERSION,
             },
         )?;
-        let mut items: Vec<String> = quoted(left)
-            .iter()
-            .chain([&added.row])
-            .map(|column| format!("{ROW}.{column}"))
-            .chain(
-                quoted(right)
-                    .iter()
-                    .map(|column| format!("{VERSION}.{column}")),
-            )
-            .collect();
+        let mut items = joined_columns(left, right, added);
         items.push(format!(
             "CASE WHEN {} THEN 1 ELSE 0 END AS {}",
             covering.join(" AND "),
@@ -163,8 +154,9 @@ impl<'input> StepWriter<'input> {
     }
 }
 
-/// The select item of the `Join` column `column`: a left column as it is, a right column
-/// NULL on a row whose version does not cover it.
+/// The select item of the `Join` column `column`: a left column as it is, and, under a `left`
+/// join, a right column NULL on a row whose version does not cover it. Under an `inner` join
+/// every kept row is covered, so a right column keeps its type.
 fn temporal_item(
     node: &PlanNode,
     join: &JoinInputs<'_>,
@@ -184,7 +176,7 @@ fn temporal_item(
         .columns()
         .iter()
         .any(|candidate| candidate.name == column.name);
-    if is_right {
+    if is_right && join.kind == JoinKind::Left {
         Ok(format!(
             "CASE WHEN {} = 1 THEN {item} ELSE NULL END AS {item}",
             added.covers
@@ -192,6 +184,21 @@ fn temporal_item(
     } else {
         Ok(item)
     }
+}
+
+/// The columns of the joined step: those of the numbered left row with its number, then those
+/// of the version.
+fn joined_columns(left: &OutputSchema, right: &OutputSchema, added: &Added) -> Vec<String> {
+    quoted(left)
+        .iter()
+        .chain([&added.row])
+        .map(|column| format!("{ROW}.{column}"))
+        .chain(
+            quoted(right)
+                .iter()
+                .map(|column| format!("{VERSION}.{column}")),
+        )
+        .collect()
 }
 
 /// The quoted names of the columns of `schema`.

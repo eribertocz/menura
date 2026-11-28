@@ -10,8 +10,9 @@ use menura_representations::logical_plan::{
 use menura_representations::names::ColumnName;
 
 use crate::columns::source_prefix;
+use crate::coverage::PlacedCoverage;
 use crate::error::{InvariantViolation, PlanError};
-use crate::layout::{Layout, PlacedCoverage};
+use crate::layout::Layout;
 use crate::scan::instance_scan;
 use crate::visibility::Visibility;
 
