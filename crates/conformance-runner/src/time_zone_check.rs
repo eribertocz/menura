@@ -1,20 +1,23 @@
-//! The time-zone database check an executor makes before it executes a compiled plan (EXE-6.1):
-//! the version the compiler used, `producer.tzdata_version` (E6-5.5), must be the version of the
-//! time-zone database the engine uses.
+//! The time-zone data check an executor makes before it executes a compiled plan on `ClickHouse`
+//! (EXE-6.1): the `TZDATA_VERSION` the server reports must be the version the compatibility
+//! matrix records for the `ClickHouse` version in use (CI-4.3, E6-7.16).
+//!
+//! `DuckDB` gets no check: its time-zone data is fixed by its build (EXE-1.1). The compiler's own
+//! version, `producer.tzdata_version`, is never compared with the engine's (EXE-6.2).
 
 use std::fmt;
 
-/// The code of a time-zone database version that differs or cannot be determined (EXE-8).
+/// The code of a `ClickHouse` time-zone data version that differs or cannot be read (EXE-8).
 pub const TIME_ZONE_MISMATCH_CODE: &str = "REXE-03";
 
-/// Why a plan must not be executed on an engine: its time-zone database version differs from
-/// the plan's, or cannot be determined (`REXE-03`, EXE-6.1).
+/// Why a plan must not be executed on a `ClickHouse` server: its time-zone data version differs
+/// from the one the compatibility matrix records, or cannot be read (`REXE-03`, EXE-6.1).
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct TimeZoneMismatch {
-    /// The version the plan declares, `producer.tzdata_version`.
-    pub plan_version: String,
-    /// The engine's version, or `None` when it cannot be determined.
-    pub engine_version: Option<String>,
+    /// The version the compatibility matrix records for the `ClickHouse` version in use.
+    pub recorded_version: String,
+    /// The version the server reports as `TZDATA_VERSION`, or `None` when it cannot be read.
+    pub server_version: Option<String>,
 }
 
 impl TimeZoneMismatch {
@@ -27,19 +30,20 @@ impl TimeZoneMismatch {
 
 impl fmt::Display for TimeZoneMismatch {
     fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match &self.engine_version {
-            Some(engine) => write!(
+        match &self.server_version {
+            Some(server) => write!(
                 formatter,
-                "{}: the plan's time-zone database is {} but the engine's is {engine} (EXE-6.1)",
+                "{}: the server's time-zone data is {server}, but the compatibility matrix \
+                 records {} (EXE-6.1)",
                 self.code(),
-                self.plan_version
+                self.recorded_version
             ),
             None => write!(
                 formatter,
-                "{}: the plan's time-zone database is {} and the engine's cannot be determined \
-                 (EXE-6.1)",
+                "{}: the server's time-zone data version cannot be read; the compatibility \
+                 matrix records {} (EXE-6.1)",
                 self.code(),
-                self.plan_version
+                self.recorded_version
             ),
         }
     }
@@ -47,34 +51,35 @@ impl fmt::Display for TimeZoneMismatch {
 
 impl std::error::Error for TimeZoneMismatch {}
 
-/// Checks that the plan's time-zone database version `plan_version` is the engine's
-/// `engine_version`, which is `None` when it cannot be determined (EXE-6.1).
+/// Checks that the `ClickHouse` server's `TZDATA_VERSION`, `server_version` (`None` when it
+/// cannot be read), is `recorded_version`, the one the compatibility matrix records for the
+/// `ClickHouse` version in use (EXE-6.1).
 ///
 /// # Errors
 ///
-/// A [`TimeZoneMismatch`], code `REXE-03`, when the versions differ, or when the engine's
+/// A [`TimeZoneMismatch`], code `REXE-03`, when the versions differ, or when the server's
 /// version is `None` or empty.
 ///
 /// # Example
 ///
 /// ```
-/// use menura_conformance_runner::time_zone_check::check_time_zone_database;
+/// use menura_conformance_runner::time_zone_check::check_clickhouse_time_zone_data;
 ///
-/// assert!(check_time_zone_database("2025b", Some("2025b")).is_ok());
-/// let mismatch = check_time_zone_database("2025b", Some("2024a")).unwrap_err();
+/// assert!(check_clickhouse_time_zone_data("2025b", Some("2025b")).is_ok());
+/// let mismatch = check_clickhouse_time_zone_data("2025b", Some("2024a")).unwrap_err();
 /// assert_eq!(mismatch.code(), "REXE-03");
 /// ```
-pub fn check_time_zone_database(
-    plan_version: &str,
-    engine_version: Option<&str>,
+pub fn check_clickhouse_time_zone_data(
+    recorded_version: &str,
+    server_version: Option<&str>,
 ) -> Result<(), TimeZoneMismatch> {
-    let engine_version = engine_version.filter(|version| !version.is_empty());
-    if engine_version == Some(plan_version) {
+    let server_version = server_version.filter(|version| !version.is_empty());
+    if server_version == Some(recorded_version) {
         return Ok(());
     }
     Err(TimeZoneMismatch {
-        plan_version: plan_version.to_owned(),
-        engine_version: engine_version.map(str::to_owned),
+        recorded_version: recorded_version.to_owned(),
+        server_version: server_version.map(str::to_owned),
     })
 }
 
@@ -83,30 +88,44 @@ mod tests {
     use super::*;
 
     #[test]
-    fn exe_6_1_the_same_version_passes() {
-        assert_eq!(check_time_zone_database("2025b", Some("2025b")), Ok(()));
+    fn exe_6_1_the_recorded_version_passes() {
+        assert_eq!(
+            check_clickhouse_time_zone_data("2025b", Some("2025b")),
+            Ok(())
+        );
     }
 
     #[test]
     fn exe_6_1_a_different_version_fails_with_rexe_03() {
-        let mismatch = check_time_zone_database("2025b", Some("2025a")).unwrap_err();
+        let mismatch = check_clickhouse_time_zone_data("2025b", Some("2025a")).unwrap_err();
         assert_eq!(mismatch.code(), "REXE-03");
-        assert_eq!(mismatch.engine_version.as_deref(), Some("2025a"));
+        assert_eq!(mismatch.server_version.as_deref(), Some("2025a"));
         assert!(mismatch.to_string().starts_with("REXE-03: "));
     }
 
     #[test]
-    fn exe_6_1_an_undetermined_version_fails_with_rexe_03() {
-        for engine in [None, Some("")] {
-            let mismatch = check_time_zone_database("2025b", engine).unwrap_err();
+    fn exe_6_1_an_unreadable_version_fails_with_rexe_03() {
+        for server in [None, Some("")] {
+            let mismatch = check_clickhouse_time_zone_data("2025b", server).unwrap_err();
             assert_eq!(mismatch.code(), "REXE-03");
-            assert_eq!(mismatch.engine_version, None);
+            assert_eq!(mismatch.server_version, None);
         }
     }
 
     #[test]
     fn exe_6_1_versions_are_compared_exactly() {
-        assert!(check_time_zone_database("2025b", Some("2025B")).is_err());
-        assert!(check_time_zone_database("2025b", Some(" 2025b")).is_err());
+        assert!(check_clickhouse_time_zone_data("2025b", Some("2025B")).is_err());
+        assert!(check_clickhouse_time_zone_data("2025b", Some(" 2025b")).is_err());
+    }
+
+    #[test]
+    fn exe_6_2_the_compiler_version_is_never_compared_with_the_engine() {
+        let producer = menura_core::build_producer().unwrap();
+        let engine = format!("{}-other", producer.tzdata_version);
+        assert_ne!(producer.tzdata_version, engine);
+        assert_eq!(
+            check_clickhouse_time_zone_data(&engine, Some(&engine)),
+            Ok(())
+        );
     }
 }
