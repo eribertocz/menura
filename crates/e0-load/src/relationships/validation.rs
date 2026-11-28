@@ -16,15 +16,19 @@ pub(crate) struct Lookup<'model, 'document> {
     summaries: &'model HashSet<&'model JsonPointer>,
     /// The JSON Pointers of the datasets and relationships an earlier substage made unusable.
     unusable: &'model HashSet<&'model JsonPointer>,
+    /// The JSON Pointers of the temporal relationships (VAL-2.1).
+    temporal: &'model HashSet<&'model JsonPointer>,
 }
 
 impl<'model, 'document> Lookup<'model, 'document> {
-    /// The lookup of `datasets`, where `summaries` are summary datasets and `unusable` are the
-    /// datasets and relationships an earlier substage made unusable.
+    /// The lookup of `datasets`, where `summaries` are summary datasets, `unusable` are the
+    /// datasets and relationships an earlier substage made unusable and `temporal` are the
+    /// temporal relationships.
     pub(crate) fn new(
         datasets: &'model [DatasetDeclaration<'document>],
         summaries: &'model HashSet<&'model JsonPointer>,
         unusable: &'model HashSet<&'model JsonPointer>,
+        temporal: &'model HashSet<&'model JsonPointer>,
     ) -> Self {
         let mut by_name = HashMap::new();
         for dataset in datasets {
@@ -34,6 +38,7 @@ impl<'model, 'document> Lookup<'model, 'document> {
             by_name,
             summaries,
             unusable,
+            temporal,
         }
     }
 
@@ -76,7 +81,8 @@ pub(crate) enum Verdict<'model, 'document> {
 }
 
 /// Checks `relationship`, adds its diagnostics to `diagnostics` and tells what it is for the
-/// graph.
+/// graph. A temporal relationship is an edge like any other, but never gets `W0E-02`: its
+/// many-to-one cardinality rests on its population, not on a key (VAL-2.12).
 pub(crate) fn check<'model, 'document>(
     lookup: &Lookup<'model, 'document>,
     relationship: &RelationshipDeclaration<'_>,
@@ -104,7 +110,8 @@ pub(crate) fn check<'model, 'document>(
     {
         return Verdict::Excluded;
     }
-    if !is_key(to, &relationship.to_columns) {
+    let temporal = lookup.temporal.contains(&relationship.place.pointer);
+    if !temporal && !is_key(to, &relationship.to_columns) {
         diagnostics.push(undeclared_key(relationship));
     }
     if from.place.pointer == to.place.pointer {

@@ -1,11 +1,13 @@
 //! The SQL of an integrity check (CHK-4.2): a logical plan generated like the plan of a query,
 //! with no security context and no query time settings, because no user runs it (CHK-2.2).
 //! The checks that compare rows with other rows of the same relation, or with a series of
-//! periods (CHK-6.3–CHK-6.5), write their last steps over the step of their rows' plan.
+//! periods (CHK-6.3–CHK-6.5), or with the versions of another relation (VAL-2.16a), write
+//! their last steps over the steps of their rows' plans.
 
 mod periodic;
 mod snapshot;
 mod sql;
+mod temporal;
 mod validity;
 
 use menura_contracts::types::catalog::CatalogSchemaDocument;
@@ -20,7 +22,7 @@ use crate::expression::Environment;
 use crate::steps::{StepWriter, error, pass_through};
 
 pub use menura_representations::check_shapes::{
-    PeriodicCheck, SnapshotCheck, SnapshotTime, ValidityCheck,
+    PeriodicCheck, SnapshotCheck, SnapshotTime, TemporalOrphansCheck, ValidityCheck, VersionRange,
 };
 
 /// The SQL of an integrity-check plan and the parameters it binds (CHK-2, CHK-7.1).
@@ -125,6 +127,24 @@ pub fn generate_snapshot_check_sql(
     let environment = environment(inputs);
     let mut writer = StepWriter::new(&environment);
     let last = writer.snapshot_check(check)?;
+    Ok(finish(writer, &last))
+}
+
+/// Generates the `ClickHouse` SQL of the `temporal_orphans` check of a temporal relationship
+/// (VAL-2.16a). It compares values and computes no day, so it has no `time_zone` slot
+/// (CHK-7.3).
+///
+/// # Errors
+///
+/// As [`generate_validity_check_sql`].
+pub fn generate_temporal_orphans_check_sql(
+    check: &TemporalOrphansCheck<'_>,
+    inputs: CheckInputs<'_>,
+) -> Result<GeneratedCheckSql, GenerateError> {
+    check_model_plans(&[check.rows, check.versions], inputs.model, inputs.catalog)?;
+    let environment = environment(inputs);
+    let mut writer = StepWriter::new(&environment);
+    let last = writer.temporal_orphans_check(check)?;
     Ok(finish(writer, &last))
 }
 

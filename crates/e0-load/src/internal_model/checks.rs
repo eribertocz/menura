@@ -4,12 +4,13 @@
 use menura_contracts::{Sha256Hash, hash_value};
 use menura_model::internal_model::{
     CheckKind, Dataset, DeclaredAdditivity, Field, Metric, NormalizedName, Population,
-    RecordedCheck, Relationship, Summary,
+    PopulationMode, RecordedCheck, Relationship, Summary,
 };
 use serde_json::Value as Json;
 
 use super::documents::{
     field_definition, metric_definition, object, population, relationship_definition, text,
+    validity_range,
 };
 use super::index::ReadNames;
 
@@ -33,6 +34,14 @@ pub(super) fn recorded_checks(model: &CheckedModel<'_>) -> Vec<RecordedCheck> {
         .iter()
         .filter(|relationship| relationship.query_errors.is_empty())
     {
+        if let Some(definition) = temporal_check(model, relationship) {
+            checks.push(check(
+                CheckKind::TemporalOrphans,
+                relationship.name.as_str(),
+                &definition,
+            ));
+            continue;
+        }
         let definition = relationship_check(model, relationship);
         for kind in [CheckKind::KeyUniqueness, CheckKind::OrphanKeys] {
             checks.push(check(kind, relationship.name.as_str(), &definition));
@@ -147,6 +156,43 @@ fn relationship_check(model: &CheckedModel<'_>, relationship: &Relationship) -> 
         ("from_fields", fields(from, &relationship.from_columns)),
         ("to_fields", fields(to, &relationship.to_columns)),
     ])
+}
+
+/// What `temporal_orphans` reads for a temporal `relationship` (CHK-3, VAL-2.16): the
+/// relationship with its `temporal` entry, the `source` of both datasets, the fields of the
+/// column pairs and `from_time`, and the range of the population with its `valid_from` and
+/// `valid_to` fields; `None` for a plain relationship, which has `key_uniqueness` and
+/// `orphan_keys` instead.
+fn temporal_check(model: &CheckedModel<'_>, relationship: &Relationship) -> Option<Json> {
+    let temporal = relationship.temporal.as_ref()?;
+    let from = dataset(model, &relationship.from);
+    let to = dataset(model, &relationship.to);
+    let declared = to.and_then(|to| {
+        to.populations
+            .iter()
+            .find(|declared| declared.name == temporal.population)
+    });
+    let range_fields: Vec<&NormalizedName> = match declared.map(|declared| &declared.mode) {
+        Some(PopulationMode::Validity {
+            valid_from,
+            valid_to,
+            ..
+        }) => vec![valid_from, valid_to],
+        _ => Vec::new(),
+    };
+    let from_fields = relationship
+        .from_columns
+        .iter()
+        .chain(std::iter::once(&temporal.from_time));
+    Some(object([
+        ("relationship", relationship_definition(relationship)),
+        ("from_source", source(from)),
+        ("to_source", source(to)),
+        ("from_fields", fields(from, from_fields)),
+        ("to_fields", fields(to, &relationship.to_columns)),
+        ("range", declared.map_or(Json::Null, validity_range)),
+        ("range_fields", fields(to, range_fields)),
+    ]))
 }
 
 /// What `population` reads: the population, the `source` of its dataset and every field it

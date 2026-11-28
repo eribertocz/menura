@@ -1,0 +1,7 @@
+id: val-2-2-from-time-001
+rules: [VAL-2.2, E0C-67]
+model: val-2-2-from-time-001
+expect:
+  outcome: load_error
+  error: E0C-67
+  location: {document: model, pointer: /semantic_model/0/relationships/0/custom_extensions/0/data}

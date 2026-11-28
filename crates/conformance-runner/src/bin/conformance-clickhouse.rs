@@ -1,7 +1,8 @@
 //! `conformance-clickhouse <conformance-directory> <server-url> <summary-file>`: runs every
-//! `plan` and `runtime_error` case on the `ClickHouse` server at `server-url`
-//! (`http://host:port`), prints the report per rule ID and the server facts, and writes the
-//! summary the compatibility matrix reads (E6-7.10, E6-7.16, CI-4.3). Exits `1` when a case
+//! `plan` and `runtime_error` case, and the `temporal_orphans` checks of every
+//! `integrity_checks` case, on the `ClickHouse` server at `server-url` (`http://host:port`),
+//! prints the report per rule ID and the server facts, and writes the summary the
+//! compatibility matrix reads (E6-7.10, E6-7.16, CI-4.3, VAL-2.16a). Exits `1` when a case
 //! fails and `2` when the run cannot start.
 
 #![forbid(unsafe_code)]

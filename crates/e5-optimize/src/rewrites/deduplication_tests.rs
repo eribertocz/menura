@@ -182,6 +182,7 @@ fn two_join_model() -> InternalModel {
             to: NormalizedName::new("REGIONS"),
             from_columns: vec![NormalizedName::new("REGION_ID")],
             to_columns: vec![NormalizedName::new("REGION_ID")],
+            temporal: None,
             descriptions: Descriptions::default(),
             query_errors: Vec::new(),
             location: location("/semantic_model/0/relationships/1"),

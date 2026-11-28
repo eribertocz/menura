@@ -49,6 +49,7 @@ fn to_regions(from: &str, index: usize) -> Relationship {
         to: name("REGIONS"),
         from_columns: vec![name("REGION_ID")],
         to_columns: vec![name("REGION_ID")],
+        temporal: None,
         descriptions: Descriptions::default(),
         query_errors: Vec::new(),
         location: located(&format!("/semantic_model/0/relationships/{index}")),

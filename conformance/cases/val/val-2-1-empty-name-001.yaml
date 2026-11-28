@@ -1,0 +1,7 @@
+id: val-2-1-empty-name-001
+rules: [VAL-2.1, E0C-03]
+model: val-2-1-empty-name-001
+expect:
+  outcome: load_error
+  error: E0C-03
+  location: {document: model, pointer: /semantic_model/0/relationships/0/custom_extensions/0/data}
