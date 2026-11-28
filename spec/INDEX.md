@@ -237,18 +237,18 @@ Find a rule ID or a section here, then open only that file at that line.
 | [architecture/platforms.md](architecture/platforms.md#L15) | 15 | rule | PLT-1.5 |
 | [architecture/platforms.md](architecture/platforms.md#L16) | 16 | rule | PLT-1.6 |
 | [contracts/README.md](contracts/README.md#L1) | 1 | section | Contracts |
-| [contracts/README.md](contracts/README.md#L22) | 22 | section | Public contracts |
-| [contracts/README.md](contracts/README.md#L24) | 24 | rule | CON-0.1 |
-| [contracts/README.md](contracts/README.md#L25) | 25 | rule | CON-0.2 |
-| [contracts/README.md](contracts/README.md#L26) | 26 | rule | CON-0.3 |
-| [contracts/README.md](contracts/README.md#L27) | 27 | rule | CON-0.4 |
-| [contracts/README.md](contracts/README.md#L28) | 28 | rule | CON-0.5 |
-| [contracts/README.md](contracts/README.md#L33) | 33 | section | Shared rules |
-| [contracts/README.md](contracts/README.md#L35) | 35 | rule | CON-1 |
-| [contracts/README.md](contracts/README.md#L36) | 36 | rule | CON-2 |
-| [contracts/README.md](contracts/README.md#L37) | 37 | rule | CON-3 |
-| [contracts/README.md](contracts/README.md#L38) | 38 | rule | CON-4 |
-| [contracts/README.md](contracts/README.md#L39) | 39 | rule | CON-5 |
+| [contracts/README.md](contracts/README.md#L24) | 24 | section | Public contracts |
+| [contracts/README.md](contracts/README.md#L26) | 26 | rule | CON-0.1 |
+| [contracts/README.md](contracts/README.md#L27) | 27 | rule | CON-0.2 |
+| [contracts/README.md](contracts/README.md#L28) | 28 | rule | CON-0.3 |
+| [contracts/README.md](contracts/README.md#L29) | 29 | rule | CON-0.4 |
+| [contracts/README.md](contracts/README.md#L30) | 30 | rule | CON-0.5 |
+| [contracts/README.md](contracts/README.md#L35) | 35 | section | Shared rules |
+| [contracts/README.md](contracts/README.md#L37) | 37 | rule | CON-1 |
+| [contracts/README.md](contracts/README.md#L38) | 38 | rule | CON-2 |
+| [contracts/README.md](contracts/README.md#L39) | 39 | rule | CON-3 |
+| [contracts/README.md](contracts/README.md#L40) | 40 | rule | CON-4 |
+| [contracts/README.md](contracts/README.md#L41) | 41 | rule | CON-5 |
 | [contracts/catalog.md](contracts/catalog.md#L1) | 1 | section | Contract: catalog |
 | [contracts/catalog.md](contracts/catalog.md#L5) | 5 | section | CAT-1 Purpose |
 | [contracts/catalog.md](contracts/catalog.md#L10) | 10 | section | CAT-2 Two documents |
@@ -336,6 +336,37 @@ Find a rule ID or a section here, then open only that file at that line.
 | [contracts/compiled-plan.md](contracts/compiled-plan.md#L152) | 152 | rule | PLN-8.1 |
 | [contracts/compiled-plan.md](contracts/compiled-plan.md#L153) | 153 | rule | PLN-8.2 |
 | [contracts/compiled-plan.md](contracts/compiled-plan.md#L154) | 154 | rule | PLN-8.3 |
+| [contracts/executor.md](contracts/executor.md#L1) | 1 | section | Executor: running a compiled plan |
+| [contracts/executor.md](contracts/executor.md#L10) | 10 | section | EXE-1 Engine and connection |
+| [contracts/executor.md](contracts/executor.md#L14) | 14 | rule | EXE-1.1 |
+| [contracts/executor.md](contracts/executor.md#L15) | 15 | rule | EXE-1.2 |
+| [contracts/executor.md](contracts/executor.md#L16) | 16 | rule | EXE-1.3 |
+| [contracts/executor.md](contracts/executor.md#L17) | 17 | rule | EXE-1.4 |
+| [contracts/executor.md](contracts/executor.md#L19) | 19 | section | EXE-2 Parameters |
+| [contracts/executor.md](contracts/executor.md#L23) | 23 | rule | EXE-2.1 |
+| [contracts/executor.md](contracts/executor.md#L24) | 24 | rule | EXE-2.2 |
+| [contracts/executor.md](contracts/executor.md#L25) | 25 | rule | EXE-2.3 |
+| [contracts/executor.md](contracts/executor.md#L26) | 26 | rule | EXE-2.4 |
+| [contracts/executor.md](contracts/executor.md#L44) | 44 | section | EXE-3 Result |
+| [contracts/executor.md](contracts/executor.md#L48) | 48 | rule | EXE-3.1 |
+| [contracts/executor.md](contracts/executor.md#L49) | 49 | rule | EXE-3.2 |
+| [contracts/executor.md](contracts/executor.md#L50) | 50 | rule | EXE-3.3 |
+| [contracts/executor.md](contracts/executor.md#L51) | 51 | rule | EXE-3.4 |
+| [contracts/executor.md](contracts/executor.md#L71) | 71 | section | EXE-4 Limits |
+| [contracts/executor.md](contracts/executor.md#L75) | 75 | rule | EXE-4.1 |
+| [contracts/executor.md](contracts/executor.md#L76) | 76 | rule | EXE-4.2 |
+| [contracts/executor.md](contracts/executor.md#L78) | 78 | section | EXE-5 Runtime errors |
+| [contracts/executor.md](contracts/executor.md#L82) | 82 | rule | EXE-5.1 |
+| [contracts/executor.md](contracts/executor.md#L83) | 83 | rule | EXE-5.2 |
+| [contracts/executor.md](contracts/executor.md#L84) | 84 | rule | EXE-5.3 |
+| [contracts/executor.md](contracts/executor.md#L85) | 85 | rule | EXE-5.4 |
+| [contracts/executor.md](contracts/executor.md#L87) | 87 | section | EXE-6 Time-zone database |
+| [contracts/executor.md](contracts/executor.md#L91) | 91 | rule | EXE-6.1 |
+| [contracts/executor.md](contracts/executor.md#L93) | 93 | section | EXE-7 Data versions |
+| [contracts/executor.md](contracts/executor.md#L97) | 97 | rule | EXE-7.1 |
+| [contracts/executor.md](contracts/executor.md#L98) | 98 | rule | EXE-7.2 |
+| [contracts/executor.md](contracts/executor.md#L99) | 99 | rule | EXE-7.3 |
+| [contracts/executor.md](contracts/executor.md#L101) | 101 | section | EXE-8 Diagnostics |
 | [contracts/integrity-checks.md](contracts/integrity-checks.md#L1) | 1 | section | Contract: integrity checks |
 | [contracts/integrity-checks.md](contracts/integrity-checks.md#L5) | 5 | section | CHK-1 Purpose |
 | [contracts/integrity-checks.md](contracts/integrity-checks.md#L10) | 10 | section | CHK-2 Document |

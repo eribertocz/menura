@@ -52,10 +52,10 @@ The compiled plan carries everything the executor needs without knowing any sema
 - dialect and logical data source,
 - result schema (names, logical and physical types),
 - cache key (plan hash, data versions used, security context fingerprint),
-- suggested timeout and row limit,
+- timeout and row limit, which the executor enforces,
 - explanation.
 
-The executor MUST NOT modify the SQL.
+The executor MUST NOT modify the SQL. Its other obligations are in the [executor chapter](../contracts/executor.md).
 
 ## 3.5 Public functions
 
