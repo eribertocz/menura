@@ -588,6 +588,30 @@
           ]
         }
       ]
+    },
+    {
+      "name": "no sql_metrics in version 1.2.0",
+      "valid": true,
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/contract_version",
+          "value": "1.2.0"
+        }
+      ]
+    },
+    {
+      "name": "empty sql_metrics reference",
+      "valid": false,
+      "patch": [
+        {
+          "op": "add",
+          "path": "/datasets/1/sql_metrics",
+          "value": [
+            ""
+          ]
+        }
+      ]
     }
   ]
 }

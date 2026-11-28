@@ -203,6 +203,30 @@
           "value": "window"
         }
       ]
+    },
+    {
+      "name": "no sources in version 1.0.0",
+      "valid": true,
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/contract_version",
+          "value": "1.0.0"
+        }
+      ]
+    },
+    {
+      "name": "empty source",
+      "valid": false,
+      "patch": [
+        {
+          "op": "add",
+          "path": "/datasets/1/sources",
+          "value": [
+            ""
+          ]
+        }
+      ]
     }
   ]
 }
