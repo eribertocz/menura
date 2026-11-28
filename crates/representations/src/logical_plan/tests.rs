@@ -3,7 +3,7 @@
 use menura_contracts::types::common::{Grain, IntegerBits, LogicalType};
 use menura_contracts::types::query::{Direction, NullsOrder};
 use menura_model::expression::{AggregateCall, Expression, Identifier, Reference, SimpleAggregate};
-use menura_model::internal_model::PartialPeriod;
+use menura_model::internal_model::{PartialPeriod, ValidToBound};
 
 use super::{
     AggregateComponent, JoinCondition, JoinKind, LookupColumn, LookupKey, Membership,
@@ -363,6 +363,8 @@ fn e4_3_12_population_reads_visible_rows_then_periods() {
                     valid_from: ColumnName::new("VALID_FROM"),
                     valid_to: ColumnName::new("VALID_TO"),
                     partial_period: PartialPeriod::PeriodEnd,
+                    valid_to_bound: ValidToBound::Inclusive,
+                    open_end: None,
                 },
                 required_when: Some(column_reference("IS_BILLABLE")),
             },

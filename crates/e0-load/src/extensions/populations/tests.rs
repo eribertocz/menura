@@ -13,6 +13,7 @@ use crate::extensions::output::{Extensions, ExtensionsFailure};
 use crate::extensions::{DEFAULT_NAMESPACE, validate_extensions};
 use crate::read::read_document;
 use crate::structure::validate_structure;
+use menura_model::internal_model::ValidToBound;
 
 use super::fixture::{
     ACCOUNTS_DATA, CUSTOMERS, CUSTOMERS_DATA, MODEL, PERIODIC, VALIDITY, conformance_model,
@@ -65,6 +66,8 @@ fn pop_2_pop_4_1_pop_4_2_valid_populations_are_read() {
                 valid_from: "valid_from".to_owned(),
                 valid_to: "valid_to".to_owned(),
                 partial_period: PartialPeriod::AnyDay,
+                valid_to_bound: ValidToBound::Inclusive,
+                open_end: None,
             },
             required_when: Some("active".to_owned()),
         }
@@ -210,4 +213,54 @@ fn pop_4_6_one_diagnostic_per_code_and_entry_sorted_by_code() {
         "{}",
         found[1]
     );
+}
+
+#[test]
+fn val_1_5_the_range_keys_are_read_with_their_values() {
+    let item = VALIDITY.replace(
+        '}',
+        r#", "valid_to_bound": "exclusive", "open_end": "9999-12-31"}"#,
+    );
+    let extensions = validate(&with_validity(&item)).expect("the extensions are accepted");
+    assert_eq!(
+        extensions.populations[0].mode,
+        PopulationMode::Validity {
+            valid_from: "valid_from".to_owned(),
+            valid_to: "valid_to".to_owned(),
+            partial_period: PartialPeriod::AnyDay,
+            valid_to_bound: ValidToBound::Exclusive,
+            open_end: Some("9999-12-31".to_owned()),
+        }
+    );
+    let inclusive = VALIDITY.replace('}', r#", "valid_to_bound": "inclusive"}"#);
+    assert!(validate(&with_validity(&inclusive)).is_ok());
+}
+
+#[test]
+fn val_1_5_e0c_21_range_keys_on_a_periodic_population() {
+    for key in [
+        r#""valid_to_bound": "exclusive""#,
+        r#""open_end": "2026-01-01""#,
+    ] {
+        let periodic = PERIODIC.replace('}', &format!(", {key}}}"));
+        let model = with_populations(&format!("[{VALIDITY}]"), &format!("[{periodic}]"));
+        assert_eq!(errors(&model), [pair("E0C-21", ACCOUNTS_DATA)], "{key}");
+    }
+}
+
+#[test]
+fn val_1_5_e0c_03_a_wrong_bound_or_an_open_end_that_is_not_a_string() {
+    for key in [
+        r#""valid_to_bound": "half_open""#,
+        r#""valid_to_bound": true"#,
+        r#""open_end": 99991231"#,
+        r#""open_end": null"#,
+    ] {
+        let item = VALIDITY.replace('}', &format!(", {key}}}"));
+        assert_eq!(
+            errors(&with_validity(&item)),
+            [pair("E0C-03", CUSTOMERS_DATA)],
+            "{key}"
+        );
+    }
 }

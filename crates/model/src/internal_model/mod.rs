@@ -13,6 +13,7 @@ mod metric;
 mod relationship;
 mod security;
 mod summary;
+mod validity;
 
 pub use check::{CheckKind, RecordedCheck};
 pub use common::{
@@ -35,6 +36,7 @@ pub use security::{
     SecurityAttribute, SecurityContext,
 };
 pub use summary::{Summary, SummaryDimension, SummaryMeasure};
+pub use validity::{OpenEnd, OpenEndTimestamp, ValidToBound};
 
 use menura_contracts::Sha256Hash;
 

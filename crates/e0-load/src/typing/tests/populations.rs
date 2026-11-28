@@ -1,5 +1,5 @@
 //! The conditions and time fields of populations in E0.f: POP-4.4, POP-4.5, POP-4.6, `E0C-23`
-//! and `E0C-24`.
+//! and `E0C-24`. Also VAL-1.5 and `E0C-66`.
 
 use menura_contracts::admit_catalog_schema;
 use menura_contracts::types::audit_record::OssieFormat;
@@ -188,5 +188,80 @@ fn pop_4_6_diagnostics_are_in_document_order_then_by_code() {
             ("E0C-24", CUSTOMERS_DATA.to_owned()),
             ("E0C-24", ACCOUNTS_DATA.to_owned()),
         ]
+    );
+}
+
+/// What the population of `customers` with the extra keys `keys` finds, `valid_to` written as
+/// `valid_to`.
+fn with_range(keys: &str, valid_to: &str) -> Vec<(&'static str, String)> {
+    let item = VALIDITY.replace('}', &format!(", {keys}}}"));
+    let model = with_validity(&item).replace(
+        "expression: {dialects: [{dialect: ANSI_SQL, expression: valid_to}]}",
+        &format!("expression: {{dialects: [{{dialect: ANSI_SQL, expression: '{valid_to}'}}]}}"),
+    );
+    problems(&model)
+}
+
+#[test]
+fn val_1_5_an_open_end_of_the_type_of_valid_to_is_accepted() {
+    assert!(with_range(r#""open_end": "9999-12-31""#, "valid_to").is_empty());
+    let stamp = "CAST(valid_to AS TIMESTAMP)";
+    assert!(with_range(r#""open_end": "9999-12-31T00:00:00""#, stamp).is_empty());
+    assert!(with_range(r#""valid_to_bound": "exclusive""#, "valid_to").is_empty());
+}
+
+#[test]
+fn val_1_5_e0c_66_an_open_end_that_is_not_a_value_of_the_type_of_valid_to() {
+    for open_end in ["9999-12-31T00:00:00Z", "9999-02-30", "31/12/9999", ""] {
+        let keys = format!(r#""open_end": "{open_end}""#);
+        assert_eq!(
+            with_range(&keys, "valid_to"),
+            customers("E0C-66"),
+            "{open_end}"
+        );
+    }
+    let stamp = "CAST(valid_to AS TIMESTAMP)";
+    assert_eq!(
+        with_range(r#""open_end": "9999-12-31T00:00:00Z""#, stamp),
+        customers("E0C-66")
+    );
+}
+
+#[test]
+fn val_1_5_e0c_66_is_checked_only_when_valid_to_has_a_type() {
+    assert!(with_range(r#""open_end": "not a date""#, "valid_to + segment").is_empty());
+    assert_eq!(
+        with_range(r#""open_end": "not a date""#, "segment"),
+        customers("E0C-24")
+    );
+    assert_eq!(
+        problems(conformance_model("val-1-5-open-end-untyped-001")),
+        [("E0C-24", ACCOUNTS_DATA.to_owned())]
+    );
+    assert_eq!(
+        problems(conformance_model("val-1-5-open-end-value-001")),
+        customers("E0C-66")
+    );
+}
+
+#[test]
+fn val_1_5_e0c_72_an_exclusive_range_of_two_kinds() {
+    let exclusive = r#""valid_to_bound": "exclusive""#;
+    assert_eq!(
+        with_range(exclusive, "CAST(valid_to AS TIMESTAMP)"),
+        customers("E0C-72")
+    );
+    assert!(with_range(exclusive, "valid_to").is_empty());
+    assert!(
+        with_range(
+            r#""valid_to_bound": "inclusive""#,
+            "CAST(valid_to AS TIMESTAMP)"
+        )
+        .is_empty()
+    );
+    assert!(with_range(exclusive, "valid_to + segment").is_empty());
+    assert_eq!(
+        problems(conformance_model("val-1-5-exclusive-kinds-001")),
+        customers("E0C-72")
     );
 }

@@ -5,6 +5,7 @@
 use crate::logical_plan::{PlanNode, PopulationRule};
 use crate::names::ColumnName;
 use menura_contracts::types::common::Grain;
+use menura_model::internal_model::{OpenEnd, ValidToBound};
 
 /// The `population` check with `mode: validity` (CHK-6.3).
 #[derive(Debug, Clone)]
@@ -17,6 +18,11 @@ pub struct ValidityCheck<'plan> {
     pub valid_from: ColumnName,
     /// The column of `rows` of `valid_to`.
     pub valid_to: ColumnName,
+    /// Whether `valid_to` is inclusive, compared by days, or exclusive, compared by values
+    /// (CHK-6.3, VAL-1.4).
+    pub valid_to_bound: ValidToBound,
+    /// The `valid_to` value that reads like NULL, when declared (VAL-1.2).
+    pub open_end: Option<OpenEnd>,
     /// The result column names: the entity fields, `valid_from`, `valid_to`, then
     /// `violation` (CHK-2.6).
     pub result_columns: Vec<String>,

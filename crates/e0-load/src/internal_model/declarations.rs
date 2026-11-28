@@ -2,9 +2,9 @@
 //! (E0H-1.2): additivity, derived and context metrics, and populations.
 
 use menura_model::internal_model::{
-    ContextModifier, DeclaredAdditivity, DivisionByZero, FieldPath, MissingHandling, NullHandling,
-    PartialPeriod, Population, PopulationMode, RemovedDimensions, Selection, SemiAdditive,
-    SnapshotAggregation, StaleHandling, UnexpectedHandling,
+    ContextModifier, DeclaredAdditivity, DivisionByZero, Field, FieldPath, MissingHandling,
+    NullHandling, OpenEnd, PartialPeriod, Population, PopulationMode, RemovedDimensions, Selection,
+    SemiAdditive, SnapshotAggregation, StaleHandling, UnexpectedHandling, ValueType,
 };
 
 use super::located::{located, normalized, written};
@@ -17,7 +17,9 @@ use crate::extensions::additivity::{
 };
 use crate::extensions::context::{Modifier, Removed};
 use crate::extensions::derived::DivisionByZero as Division;
-use crate::extensions::populations::{PartialPeriod as Partial, PopulationMode as Mode};
+use crate::extensions::populations::{
+    PartialPeriod as Partial, PopulationMode as Mode, parse_open_end,
+};
 
 /// The model's form of `dataset.field`.
 pub(super) fn field_path(reference: &FieldReference) -> FieldPath {
@@ -118,8 +120,12 @@ pub(super) fn context_modifier(modifier: &Modifier) -> ContextModifier {
     }
 }
 
-/// The model's form of a population, with its `required_when` parsed.
-pub(super) fn population(population: &crate::extensions::Population) -> Population {
+/// The model's form of a population, with its `required_when` parsed and its `open_end` read
+/// as a value of the type of its `valid_to` among `fields`, the fields of its dataset.
+pub(super) fn population(
+    population: &crate::extensions::Population,
+    fields: &[Field],
+) -> Population {
     Population {
         name: written(&population.name),
         entity: population
@@ -132,6 +138,8 @@ pub(super) fn population(population: &crate::extensions::Population) -> Populati
                 valid_from,
                 valid_to,
                 partial_period,
+                valid_to_bound,
+                open_end,
             } => PopulationMode::Validity {
                 valid_from: written(valid_from),
                 valid_to: written(valid_to),
@@ -140,6 +148,10 @@ pub(super) fn population(population: &crate::extensions::Population) -> Populati
                     Partial::FullPeriod => PartialPeriod::FullPeriod,
                     Partial::PeriodEnd => PartialPeriod::PeriodEnd,
                 },
+                valid_to_bound: *valid_to_bound,
+                open_end: open_end
+                    .as_deref()
+                    .and_then(|text| typed_open_end(text, valid_to, fields)),
             },
             Mode::Periodic { period, grain } => PopulationMode::Periodic {
                 period: written(period),
@@ -151,5 +163,18 @@ pub(super) fn population(population: &crate::extensions::Population) -> Populati
             .as_deref()
             .and_then(|text| parse(text, ExpressionPlace::Extension).ok()),
         location: located(&population.data, population.location),
+    }
+}
+
+/// `text`, the `open_end` of a population, as a value of the type of its field `valid_to`
+/// among `fields`. `None` only when `valid_to` has no type, which makes the field unusable
+/// (E0-4): for a typed `valid_to`, E0.f has already rejected every text this cannot read
+/// (`E0C-66`, VAL-1.5), so the model is never built.
+fn typed_open_end(text: &str, valid_to: &str, fields: &[Field]) -> Option<OpenEnd> {
+    let name = written(valid_to);
+    let field = fields.iter().find(|field| field.name == name)?;
+    match &field.typed.as_ref()?.value_type {
+        ValueType::Logical(logical_type) => parse_open_end(text, logical_type),
+        ValueType::Null => None,
     }
 }

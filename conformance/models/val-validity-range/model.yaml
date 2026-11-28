@@ -1,0 +1,81 @@
+version: "0.1.1"
+semantic_model:
+  - name: val_validity_range
+    description: 'Which entities each validity population with an exclusive valid_to or an open_end expects in March 2026, each balance a power of two (VAL-1.1, VAL-1.2, VAL-1.3)'
+    custom_extensions:
+      - vendor_name: COMMON
+        data: '{"namespace": "menura", "version": 1, "security_context": {"roles": ["analyst"], "attributes": []}}'
+    datasets:
+      - name: balances
+        source: shop.balances
+        primary_key: [customer_id, period]
+        fields:
+          - name: customer_id
+            expression: {dialects: [{dialect: ANSI_SQL, expression: 'customer_id'}]}
+          - name: period
+            expression: {dialects: [{dialect: ANSI_SQL, expression: 'period'}]}
+            dimension: {is_time: true}
+          - name: balance
+            expression: {dialects: [{dialect: ANSI_SQL, expression: 'balance'}]}
+        custom_extensions:
+          - vendor_name: COMMON
+            data: '{"namespace": "menura", "version": 1, "access": {"mode": "roles", "roles": ["analyst"]}}'
+      - name: date_ranges
+        source: shop.date_ranges
+        fields:
+          - name: customer_id
+            expression: {dialects: [{dialect: ANSI_SQL, expression: 'customer_id'}]}
+          - name: valid_from
+            expression: {dialects: [{dialect: ANSI_SQL, expression: 'valid_from'}]}
+            dimension: {is_time: true}
+          - name: valid_to
+            expression: {dialects: [{dialect: ANSI_SQL, expression: 'valid_to'}]}
+            dimension: {is_time: true}
+        custom_extensions:
+          - vendor_name: COMMON
+            data: '{"namespace": "menura", "version": 1, "access": {"mode": "roles", "roles": ["analyst"]}, "populations": [{"name": "date_exclusive", "mode": "validity", "entity": ["customer_id"], "valid_from": "valid_from", "valid_to": "valid_to", "partial_period": "any_day", "valid_to_bound": "exclusive"}, {"name": "date_exclusive_end", "mode": "validity", "entity": ["customer_id"], "valid_from": "valid_from", "valid_to": "valid_to", "partial_period": "period_end", "valid_to_bound": "exclusive"}, {"name": "date_open_end", "mode": "validity", "entity": ["customer_id"], "valid_from": "valid_from", "valid_to": "valid_to", "partial_period": "period_end", "open_end": "2000-01-01"}, {"name": "date_exclusive_open_end", "mode": "validity", "entity": ["customer_id"], "valid_from": "valid_from", "valid_to": "valid_to", "partial_period": "any_day", "valid_to_bound": "exclusive", "open_end": "2000-01-01"}]}'
+      - name: stamp_ranges
+        source: shop.stamp_ranges
+        fields:
+          - name: customer_id
+            expression: {dialects: [{dialect: ANSI_SQL, expression: 'customer_id'}]}
+          - name: valid_from
+            expression: {dialects: [{dialect: ANSI_SQL, expression: 'valid_from'}]}
+            dimension: {is_time: true}
+          - name: valid_to
+            expression: {dialects: [{dialect: ANSI_SQL, expression: 'valid_to'}]}
+            dimension: {is_time: true}
+        custom_extensions:
+          - vendor_name: COMMON
+            data: '{"namespace": "menura", "version": 1, "access": {"mode": "roles", "roles": ["analyst"]}, "populations": [{"name": "stamp_exclusive", "mode": "validity", "entity": ["customer_id"], "valid_from": "valid_from", "valid_to": "valid_to", "partial_period": "any_day", "valid_to_bound": "exclusive"}, {"name": "stamp_exclusive_open_end", "mode": "validity", "entity": ["customer_id"], "valid_from": "valid_from", "valid_to": "valid_to", "partial_period": "any_day", "valid_to_bound": "exclusive", "open_end": "2000-01-01T00:00:00Z"}]}'
+    metrics:
+      - name: date_exclusive_balance
+        expression: {dialects: [{dialect: ANSI_SQL, expression: 'SUM(balances.balance)'}]}
+        custom_extensions:
+          - vendor_name: COMMON
+            data: '{"namespace": "menura", "version": 1, "additivity": {"type": "semi_additive", "over": "balances.period", "entity": ["balances.customer_id"], "aggregation": "last", "selection": "global_period", "snapshot_grain": "month", "population": "date_exclusive", "missing": "error", "unexpected": "exclude", "nulls": "keep"}}'
+      - name: date_exclusive_end_balance
+        expression: {dialects: [{dialect: ANSI_SQL, expression: 'SUM(balances.balance)'}]}
+        custom_extensions:
+          - vendor_name: COMMON
+            data: '{"namespace": "menura", "version": 1, "additivity": {"type": "semi_additive", "over": "balances.period", "entity": ["balances.customer_id"], "aggregation": "last", "selection": "global_period", "snapshot_grain": "month", "population": "date_exclusive_end", "missing": "error", "unexpected": "exclude", "nulls": "keep"}}'
+      - name: date_open_end_balance
+        expression: {dialects: [{dialect: ANSI_SQL, expression: 'SUM(balances.balance)'}]}
+        custom_extensions:
+          - vendor_name: COMMON
+            data: '{"namespace": "menura", "version": 1, "additivity": {"type": "semi_additive", "over": "balances.period", "entity": ["balances.customer_id"], "aggregation": "last", "selection": "global_period", "snapshot_grain": "month", "population": "date_open_end", "missing": "error", "unexpected": "exclude", "nulls": "keep"}}'
+      - name: date_exclusive_open_end_balance
+        expression: {dialects: [{dialect: ANSI_SQL, expression: 'SUM(balances.balance)'}]}
+        custom_extensions:
+          - vendor_name: COMMON
+            data: '{"namespace": "menura", "version": 1, "additivity": {"type": "semi_additive", "over": "balances.period", "entity": ["balances.customer_id"], "aggregation": "last", "selection": "global_period", "snapshot_grain": "month", "population": "date_exclusive_open_end", "missing": "error", "unexpected": "exclude", "nulls": "keep"}}'
+      - name: stamp_exclusive_balance
+        expression: {dialects: [{dialect: ANSI_SQL, expression: 'SUM(balances.balance)'}]}
+        custom_extensions:
+          - vendor_name: COMMON
+            data: '{"namespace": "menura", "version": 1, "additivity": {"type": "semi_additive", "over": "balances.period", "entity": ["balances.customer_id"], "aggregation": "last", "selection": "global_period", "snapshot_grain": "month", "population": "stamp_exclusive", "missing": "error", "unexpected": "exclude", "nulls": "keep"}}'
+      - name: stamp_exclusive_open_end_balance
+        expression: {dialects: [{dialect: ANSI_SQL, expression: 'SUM(balances.balance)'}]}
+        custom_extensions:
+          - vendor_name: COMMON
+            data: '{"namespace": "menura", "version": 1, "additivity": {"type": "semi_additive", "over": "balances.period", "entity": ["balances.customer_id"], "aggregation": "last", "selection": "global_period", "snapshot_grain": "month", "population": "stamp_exclusive_open_end", "missing": "error", "unexpected": "exclude", "nulls": "keep"}}'

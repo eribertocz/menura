@@ -1,6 +1,7 @@
 //! A population of the `populations` extension (POP-2), as data types only.
 
 use menura_contracts::types::common::Grain;
+use menura_model::internal_model::ValidToBound;
 
 use crate::pointer::JsonPointer;
 use crate::read::Location;
@@ -35,10 +36,15 @@ pub enum PopulationMode {
     Validity {
         /// The field of the start of validity, inclusive.
         valid_from: String,
-        /// The field of the end of validity, inclusive.
+        /// The field of the end of validity, inclusive unless `valid_to_bound` says otherwise.
         valid_to: String,
         /// When an entity is expected in a period its validity covers partly.
         partial_period: PartialPeriod,
+        /// The value of `valid_to_bound`, `inclusive` when not given (VAL-1.1).
+        valid_to_bound: ValidToBound,
+        /// The text of `open_end`, when given; checked against the type of `valid_to` by E0.f
+        /// (VAL-1.5).
+        open_end: Option<String>,
     },
     /// `periodic`: one row per entity and period.
     Periodic {

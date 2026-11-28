@@ -9,7 +9,7 @@ mod support;
 
 use menura_contracts::types::common::Grain;
 use menura_generator_duckdb::InvariantViolation;
-use menura_model::internal_model::PartialPeriod;
+use menura_model::internal_model::{PartialPeriod, ValidToBound};
 use menura_representations::logical_plan::{Membership, PlanNode};
 use menura_representations::names::ColumnName;
 use support::{
@@ -119,6 +119,8 @@ fn pop_3_5_timestamps_belong_to_their_day_in_the_query_time_zone() {
             valid_from: ColumnName::new("ACTIVE_FROM"),
             valid_to: ColumnName::new("ACTIVE_TO"),
             partial_period: PartialPeriod::AnyDay,
+            valid_to_bound: ValidToBound::Inclusive,
+            open_end: None,
         },
         None,
         Grain::Week,

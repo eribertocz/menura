@@ -75,5 +75,10 @@ name = "summary_check_execution"
 path = "tests/summary_check_execution.rs"
 required-features = ["duckdb"]
 
+[[test]]
+name = "validity_check_execution"
+path = "tests/validity_check_execution.rs"
+required-features = ["duckdb"]
+
 [lints]
 workspace = true

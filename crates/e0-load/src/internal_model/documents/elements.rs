@@ -1,8 +1,8 @@
 //! The documents of datasets, fields, populations, relationships and security.
 
 use menura_model::internal_model::{
-    AccessMode, AttributeType, Dataset, DatasetAccess, Descriptions, Field, Population,
-    PopulationMode, Relationship, RoleName, RowPolicy, ScalarType, SecurityContext,
+    AccessMode, AttributeType, Dataset, DatasetAccess, Descriptions, Field, OpenEnd, Population,
+    PopulationMode, Relationship, RoleName, RowPolicy, ScalarType, SecurityContext, ValidToBound,
 };
 use serde_json::Value as Json;
 
@@ -85,12 +85,18 @@ pub(in super::super) fn population(population: &Population) -> Json {
             valid_from,
             valid_to,
             partial_period,
-        } => object([
-            ("mode", text("validity")),
-            ("valid_from", name(valid_from)),
-            ("valid_to", name(valid_to)),
-            ("partial_period", text(partial_period.as_str())),
-        ]),
+            valid_to_bound,
+            open_end,
+        } => {
+            let mut validity = object([
+                ("mode", text("validity")),
+                ("valid_from", name(valid_from)),
+                ("valid_to", name(valid_to)),
+                ("partial_period", text(partial_period.as_str())),
+            ]);
+            range_shape(&mut validity, *valid_to_bound, open_end.as_ref());
+            validity
+        }
         PopulationMode::Periodic { period, grain } => object([
             ("mode", text("periodic")),
             ("period", name(period)),
@@ -103,6 +109,20 @@ pub(in super::super) fn population(population: &Population) -> Json {
         ("mode", mode),
         ("required_when", tree(population.required_when.as_ref())),
     ])
+}
+
+/// Adds `valid_to_bound` and `open_end` to `validity` only when they differ from their
+/// defaults, so that a population without them keeps its form (VAL-1.1, VAL-1.2).
+fn range_shape(validity: &mut Json, valid_to_bound: ValidToBound, open_end: Option<&OpenEnd>) {
+    let Json::Object(members) = validity else {
+        return;
+    };
+    if valid_to_bound != ValidToBound::Inclusive {
+        members.insert("valid_to_bound".to_owned(), text(valid_to_bound.as_str()));
+    }
+    if let Some(open_end) = open_end {
+        members.insert("open_end".to_owned(), text(&open_end.con4_text()));
+    }
 }
 
 fn roles(roles: &[RoleName]) -> Json {

@@ -165,10 +165,14 @@ fn population_rule(population: &Population) -> Result<PopulationRule, InvariantV
             valid_from,
             valid_to,
             partial_period,
+            valid_to_bound,
+            open_end,
         } => Membership::Validity {
             valid_from: column(valid_from),
             valid_to: column(valid_to),
             partial_period: *partial_period,
+            valid_to_bound: *valid_to_bound,
+            open_end: open_end.clone(),
         },
         PopulationMode::Periodic { period, .. } => Membership::Periodic {
             period: column(period),

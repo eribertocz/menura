@@ -10,7 +10,7 @@ mod support;
 use menura_contracts::types::common::{Grain, LogicalType};
 use menura_e4_plan::PlanError;
 use menura_expressions::typing::big_integer;
-use menura_model::internal_model::{PartialPeriod, RoleName, RowPolicy};
+use menura_model::internal_model::{PartialPeriod, RoleName, RowPolicy, ValidToBound};
 use menura_representations::logical_plan::{Membership, Operation};
 use menura_representations::names::ColumnName;
 use menura_representations::origin::Origin;
@@ -68,6 +68,8 @@ fn pop_3_1_validity_reads_its_interval_and_partial_period() {
                 valid_from: ColumnName::new("VALID_FROM"),
                 valid_to: ColumnName::new("VALID_TO"),
                 partial_period,
+                valid_to_bound: ValidToBound::Inclusive,
+                open_end: None,
             }
         );
         assert_eq!(

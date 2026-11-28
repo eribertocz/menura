@@ -1,0 +1,7 @@
+id: val-1-5-periodic-key-001
+rules: [VAL-1.5, POP-4.1, E0C-21]
+model: val-1-5-periodic-key-001
+expect:
+  outcome: load_error
+  error: E0C-21
+  location: {document: model, pointer: /semantic_model/0/datasets/1/custom_extensions/0/data}

@@ -2,7 +2,7 @@
 //! of the population's input and a period.
 
 use menura_contracts::types::common::{Grain, LogicalType};
-use menura_model::internal_model::PartialPeriod;
+use menura_model::internal_model::{OpenEnd, PartialPeriod, ValidToBound};
 use menura_representations::logical_plan::{Membership, PlanNode};
 use menura_representations::names::ColumnName;
 
@@ -11,13 +11,17 @@ use crate::day::{grain_interval, grain_name};
 use crate::error::{GenerateError, InvariantViolation};
 use crate::identifiers::quote;
 use crate::steps::{StepWriter, error};
+use crate::types::physical_type;
+use crate::values::open_end_text;
 
 impl<'input> StepWriter<'input> {
     /// The condition under which the row covers `period`, the start of a period at `grain`.
     ///
-    /// `validity` reads inclusive days, a NULL `valid_to` being open-ended and a NULL
-    /// `valid_from` never matching: `any_day` needs one day of the period, `full_period` every
-    /// day, `period_end` the last day (POP-3.1). `periodic` needs the row's period, truncated
+    /// `validity` reads days, a NULL `valid_to` or one equal to `open_end` being open-ended
+    /// (VAL-1.2) and a NULL `valid_from` never matching: `any_day` needs one day of the period,
+    /// `full_period` every day, `period_end` the last day (POP-3.1). An exclusive `valid_to`
+    /// v ends on the day of the last value before v (VAL-1.3), which is on or after a day d
+    /// exactly when v is after the first instant of d. `periodic` needs the row's period, truncated
     /// to `grain`, to be `period`; a NULL period never matches (POP-3.2). A `timestamp` value
     /// belongs to its day in the query time zone (E6-5.2).
     pub(crate) fn covers(
@@ -33,18 +37,30 @@ impl<'input> StepWriter<'input> {
                 valid_from,
                 valid_to,
                 partial_period,
+                valid_to_bound,
+                open_end,
             } => {
                 let from = self.day_of(node, input, valid_from)?;
-                let to = self.day_of(node, input, valid_to)?;
                 let last = last_day(period, grain);
                 let (from_bound, to_bound) = match partial_period {
                     PartialPeriod::AnyDay => (last.as_str(), period),
                     PartialPeriod::FullPeriod => (period, last.as_str()),
                     PartialPeriod::PeriodEnd => (last.as_str(), last.as_str()),
                 };
-                Ok(format!(
-                    "{from} <= {from_bound} AND ({to} IS NULL OR {to} >= {to_bound})"
-                ))
+                let to_type = column_type(node, input, valid_to)?;
+                let row_to = format!("{ROW}.{}", quote(valid_to.as_str()));
+                let to = open_ended(node, &row_to, open_end.as_ref(), to_type)?;
+                let end = match valid_to_bound {
+                    ValidToBound::Inclusive => {
+                        let day = self.day_sql(node, input, &to, to_type)?;
+                        format!("{day} IS NULL OR {day} >= {to_bound}")
+                    }
+                    ValidToBound::Exclusive => {
+                        let start = self.start_sql(node, to_bound, to_type)?;
+                        format!("{to} IS NULL OR {to} > {start}")
+                    }
+                };
+                Ok(format!("{from} <= {from_bound} AND ({end})"))
             }
             Membership::Periodic {
                 period: row_period, ..
@@ -69,6 +85,25 @@ impl<'input> StepWriter<'input> {
         let logical_type = column_type(node, input, name)?;
         self.day_sql(node, input, &value, logical_type)
     }
+}
+
+/// `value`, a `valid_to` of `logical_type`, as NULL when it equals `open_end` (VAL-1.2): a
+/// model constant, written as a literal (E6-4.11).
+pub(crate) fn open_ended(
+    node: &PlanNode,
+    value: &str,
+    open_end: Option<&OpenEnd>,
+    logical_type: &LogicalType,
+) -> Result<String, GenerateError> {
+    let Some(open_end) = open_end else {
+        return Ok(value.to_owned());
+    };
+    let physical = physical_type(logical_type)
+        .ok_or_else(|| error(InvariantViolation::UnsupportedType, node))?;
+    Ok(format!(
+        "NULLIF({value}, CAST({} AS {physical}))",
+        open_end_text(open_end)
+    ))
 }
 
 /// The type of the column `name` of `input`.
