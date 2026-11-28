@@ -82,7 +82,7 @@ impl<'input> StepWriter<'input> {
             row: synthesized("menura.row", &taken),
             range,
         };
-        let days = self.days_step(rows, check, &columns, &written.name)?;
+        let days = self.bounds_step(rows, check, &columns, &written.name)?;
         let overlaps = self.push_step("overlaps", overlaps_body(check, &columns, &days));
         let mut fields: Vec<&ColumnName> = check.entity.iter().collect();
         fields.extend([&check.valid_from, &check.valid_to]);
@@ -120,7 +120,7 @@ impl<'input> StepWriter<'input> {
     /// `open_end` read as NULL (VAL-1.2). The step is read three times and may be computed
     /// each time, so the rows are numbered in the order of every scanned column: only equal
     /// rows, which are interchangeable, can swap numbers between two readings.
-    fn days_step(
+    fn bounds_step(
         &mut self,
         rows: &'input PlanNode,
         check: &ValidityCheck<'input>,
