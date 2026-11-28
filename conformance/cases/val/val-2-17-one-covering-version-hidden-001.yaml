@@ -1,0 +1,17 @@
+id: val-2-17-one-covering-version-hidden-001
+rules: [VAL-2.17, E4-6.5a]
+model: val-temporal-overlap-policy
+security_context: analyst.json
+query:
+  contract: menura.query
+  contract_version: "1.1.0"
+  time_zone: UTC
+  query:
+    metrics:
+      - {metric: visit_count, alias: visit_count}
+expect:
+  outcome: plan
+  sql: val-2-17-one-covering-version-hidden-001.sql
+  sql_clickhouse: val-2-17-one-covering-version-hidden-001.clickhouse.sql
+  rows: val-2-17-one-covering-version-hidden-001.csv
+  row_order: any
