@@ -1,6 +1,6 @@
 //! CAT-8: semantic rules of the state document.
 
-use menura_contracts::types::catalog::RelationData;
+use menura_contracts::types::catalog::{RelationData, StateCheckKind};
 use menura_contracts::{AdmissionCode, admit_catalog_state};
 use serde_json::json;
 
@@ -304,4 +304,23 @@ fn cat_8_9_periods_without_rows_are_not_listed() {
         panic!("the relation is partitioned");
     };
     assert!(partitions.versions.is_empty());
+}
+
+#[test]
+fn cat_7_3_val_2_15_a_temporal_orphans_result_is_admitted_at_state_1_2_0() {
+    let document = with(
+        state_example(),
+        "/checks/0/check",
+        json!("temporal_orphans"),
+    );
+    assert_eq!(document["contract_version"], json!("1.2.0"));
+    let state = admit_catalog_state(&document.to_string(), &admitted_schema())
+        .expect("the state document is admitted");
+    let kinds: Vec<StateCheckKind> = state
+        .checks
+        .iter()
+        .flatten()
+        .map(|result| result.check)
+        .collect();
+    assert_eq!(kinds, [StateCheckKind::TemporalOrphans]);
 }
