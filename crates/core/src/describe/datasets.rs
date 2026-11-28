@@ -1,6 +1,7 @@
 //! The `datasets` member of a description (DSC-2, DSC-3.8, DSC-3.11).
 
 use menura_contracts::Sha256Hash;
+use menura_contracts::compare_names;
 use menura_contracts::types::common::{Grain, LogicalType};
 use menura_contracts::types::descriptions::{DescribedDataset, DescribedField};
 use menura_model::internal_model::{Dataset, Field};
@@ -25,11 +26,15 @@ pub(super) fn described_datasets(
     listing
         .datasets
         .iter()
-        .map(|listed| described_dataset(listed, model_hash))
+        .map(|listed| described_dataset(listed, listing, model_hash))
         .collect()
 }
 
-fn described_dataset(listed: &ListedDataset<'_>, model_hash: &Sha256Hash) -> DescribedDataset {
+fn described_dataset(
+    listed: &ListedDataset<'_>,
+    listing: &Listing<'_>,
+    model_hash: &Sha256Hash,
+) -> DescribedDataset {
     let dataset = listed.dataset;
     DescribedDataset {
         name: dataset.name.as_str().to_owned(),
@@ -41,7 +46,21 @@ fn described_dataset(listed: &ListedDataset<'_>, model_hash: &Sha256Hash) -> Des
             .map(|(field, logical_type)| described_field(dataset, field, logical_type, model_hash))
             .collect(),
         ai_context: ai_context(&dataset.descriptions, &dataset.location, model_hash),
+        sql_metrics: Some(sql_metrics(dataset, listing)),
     }
+}
+
+/// The references of the listed metrics exposed on the relation of `dataset`, in the order of
+/// the description's `metrics` (DSC-3.1, DSC-3.4, QRY-5.2).
+fn sql_metrics(dataset: &Dataset, listing: &Listing<'_>) -> Vec<String> {
+    let mut references: Vec<String> = listing
+        .metrics
+        .iter()
+        .filter(|listed| listed.exposed_on.as_ref() == Some(&dataset.name))
+        .map(|listed| listed.reference.clone())
+        .collect();
+    references.sort_by(|left, right| compare_names(left, right));
+    references
 }
 
 fn described_field(

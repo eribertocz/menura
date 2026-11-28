@@ -32,6 +32,8 @@ pub(super) struct ListedMetric<'model> {
     pub(super) metric: &'model Metric,
     /// Its result type.
     pub(super) logical_type: &'model LogicalType,
+    /// The dataset whose relation exposes it to a SQL-form query, if any (QRY-5.2).
+    pub(super) exposed_on: Option<NormalizedName>,
 }
 
 impl<'model> Listing<'model> {
@@ -51,7 +53,8 @@ impl<'model> Listing<'model> {
             .collect();
         let semantic = model.parts().metrics.iter().map(|metric| {
             let path = MetricPath::SemanticModel(metric.name.clone());
-            (metric.name.as_str().to_owned(), path, metric)
+            let exposed_on = sole_home_dataset(metric);
+            (metric.name.as_str().to_owned(), path, metric, exposed_on)
         });
         let scoped = datasets.iter().flat_map(|listed| {
             let dataset = &listed.dataset.name;
@@ -61,13 +64,15 @@ impl<'model> Listing<'model> {
                     metric: metric.name.clone(),
                 };
                 let reference = format!("{}.{}", dataset.as_str(), metric.name.as_str());
-                (reference, path, metric)
+                (reference, path, metric, Some(dataset.clone()))
             })
         });
         let metrics = semantic
             .chain(scoped)
-            .filter(|(_, path, _)| authorization.metric(path).access == Access::Granted)
-            .filter_map(|(reference, _, metric)| listed_metric(reference, metric))
+            .filter(|(_, path, _, _)| authorization.metric(path).access == Access::Granted)
+            .filter_map(|(reference, _, metric, exposed_on)| {
+                listed_metric(reference, metric, exposed_on)
+            })
             .collect();
         Self { datasets, metrics }
     }
@@ -112,8 +117,22 @@ fn listed_fields<'model>(
         .collect()
 }
 
-/// The listed metric `metric` under `reference`, when it is usable (DSC-3.7) and typed.
-fn listed_metric(reference: String, metric: &Metric) -> Option<ListedMetric<'_>> {
+/// The dataset a metric of the semantic model is exposed on in the SQL form: its home dataset,
+/// when every component has that one (QRY-5.2, DEV-8).
+fn sole_home_dataset(metric: &Metric) -> Option<NormalizedName> {
+    match metric.classification.as_ref()?.home_datasets.as_slice() {
+        [home] => Some(home.clone()),
+        _ => None,
+    }
+}
+
+/// The listed metric `metric` under `reference`, exposed on `exposed_on`, when it is usable
+/// (DSC-3.7) and typed.
+fn listed_metric(
+    reference: String,
+    metric: &Metric,
+    exposed_on: Option<NormalizedName>,
+) -> Option<ListedMetric<'_>> {
     if !metric.query_errors.is_empty() || metric.classification.is_none() {
         return None;
     }
@@ -122,6 +141,7 @@ fn listed_metric(reference: String, metric: &Metric) -> Option<ListedMetric<'_>>
         reference,
         metric,
         logical_type,
+        exposed_on,
     })
 }
 

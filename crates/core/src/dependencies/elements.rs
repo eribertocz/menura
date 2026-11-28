@@ -29,7 +29,8 @@ pub(super) fn datasets(resolver: &Resolver<'_>) -> Vec<ElementDependencies> {
             let own = own_codes(&dataset.query_errors, &propagated);
             let hash = dataset_hash(dataset, resolver.summary(&dataset.name), &own);
             let inputs = resolver.dataset(&dataset.name);
-            let entry = entry(&itself, hash, &dataset.query_errors, &inputs);
+            let mut entry = entry(&itself, hash, &dataset.query_errors, &inputs);
+            entry.sources = Some(resolver.sources(&dataset.name));
             (itself, entry)
         })
         .collect();
@@ -182,6 +183,7 @@ pub(super) fn policies(resolver: &Resolver<'_>) -> Vec<ElementDependencies> {
                 model_inputs: inputs.model.iter().map(ModelInput::written).collect(),
                 physical_inputs: inputs.written_physical_inputs(),
                 security_policies: Vec::new(),
+                sources: None,
             };
             entries.push((name, entry));
         }
@@ -205,5 +207,6 @@ fn entry(
         model_inputs: inputs.written_model_inputs(itself),
         physical_inputs: inputs.written_physical_inputs(),
         security_policies: inputs.written_policies(),
+        sources: None,
     }
 }

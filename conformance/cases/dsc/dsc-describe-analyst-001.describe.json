@@ -190,7 +190,8 @@
           "time_grains": []
         }
       ],
-      "name": "CUSTOMERS"
+      "name": "CUSTOMERS",
+      "sql_metrics": []
     },
     {
       "ai_context": {
@@ -290,7 +291,10 @@
           "time_grains": []
         }
       ],
-      "name": "ORDERS"
+      "name": "ORDERS",
+      "sql_metrics": [
+        "TOTAL_AMOUNT"
+      ]
     },
     {
       "fields": [
@@ -313,7 +317,10 @@
           "time_grains": []
         }
       ],
-      "name": "STORES"
+      "name": "STORES",
+      "sql_metrics": [
+        "STORE_COUNT"
+      ]
     }
   ],
   "metrics": [
