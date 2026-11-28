@@ -105,6 +105,10 @@ pub struct DescribedDataset {
         skip_serializing_if = "Option::is_none"
     )]
     pub ai_context: Option<AiContext>,
+    /// The `reference` of every listed metric a SQL-form query may aggregate on the dataset's
+    /// relation, in the order of `metrics` (DSC-3.1); absent before contract version 1.3.0.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub sql_metrics: Option<Vec<String>>,
 }
 
 /// An authorized field.

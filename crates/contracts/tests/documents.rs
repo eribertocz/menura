@@ -1,5 +1,5 @@
-//! Contract document tests: CON-0.1, CON-0.2, CON-1, PLN-5 and DSC-2. The schema verdicts of
-//! each contract are the cases of `spec/contracts/corpus/` (`tests/corpus.rs`).
+//! Contract document tests: CON-0.1, CON-0.2, CON-1, PLN-5, DSC-2, DSC-3.1 and DEP-3.5. The
+//! schema verdicts of each contract are the cases of `spec/contracts/corpus/` (`tests/corpus.rs`).
 
 // `cfg(test)` marks the helpers as test code, where `expect` is allowed (clippy.toml).
 #[cfg(test)]
@@ -291,4 +291,73 @@ fn dsc_2_a_null_ai_context_round_trips() {
 fn pln_1_a_typed_plan_requires_every_member() {
     let incomplete = without(example("compiled-plan.example.json"), "/lineage");
     assert!(serde_json::from_value::<CompiledPlanDocument>(incomplete).is_err());
+}
+
+#[test]
+fn dsc_3_1_sql_metrics_round_trips_and_is_absent_before_1_3_0() {
+    let document = adding(
+        example("model-description.example.json"),
+        "/datasets/0",
+        "sql_metrics",
+        json!(["TOTAL_AMOUNT"]),
+    );
+    assert_valid(ContractKind::ModelDescription, &document);
+    assert_eq!(
+        round_trip::<ModelDescriptionDocument>(&document),
+        Some(document.clone())
+    );
+    let decoded: ModelDescriptionDocument = serde_json::from_value(document).unwrap();
+    assert_eq!(
+        decoded.datasets[0].sql_metrics,
+        Some(vec!["TOTAL_AMOUNT".to_owned()])
+    );
+    let former = with(
+        example("model-description.example.json"),
+        "/contract_version",
+        json!("1.2.0"),
+    );
+    assert_valid(ContractKind::ModelDescription, &former);
+    let decoded: ModelDescriptionDocument = serde_json::from_value(former.clone()).unwrap();
+    assert!(
+        decoded
+            .datasets
+            .iter()
+            .all(|dataset| dataset.sql_metrics.is_none())
+    );
+    assert_eq!(
+        round_trip::<ModelDescriptionDocument>(&former),
+        Some(former)
+    );
+}
+
+#[test]
+fn dep_3_5_sources_round_trips_and_is_absent_in_1_0_0() {
+    let document = adding(
+        example("model-dependencies.example.json"),
+        "/datasets/0",
+        "sources",
+        json!(["shop.customers"]),
+    );
+    assert_valid(ContractKind::ModelDependencies, &document);
+    assert_eq!(
+        round_trip::<ModelDependenciesDocument>(&document),
+        Some(document.clone())
+    );
+    let decoded: ModelDependenciesDocument = serde_json::from_value(document).unwrap();
+    assert_eq!(
+        decoded.datasets[0].sources,
+        Some(vec!["shop.customers".to_owned()])
+    );
+    let former = with(
+        example("model-dependencies.example.json"),
+        "/contract_version",
+        json!("1.0.0"),
+    );
+    assert_valid(ContractKind::ModelDependencies, &former);
+    let decoded: ModelDependenciesDocument = serde_json::from_value(former.clone()).unwrap();
+    assert!(decoded.datasets.iter().all(|entry| entry.sources.is_none()));
+    assert_eq!(
+        round_trip::<ModelDependenciesDocument>(&former),
+        Some(former)
+    );
 }
