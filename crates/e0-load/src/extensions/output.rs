@@ -9,6 +9,7 @@ use super::diagnostic::ExtensionDiagnostic;
 use super::populations::Population;
 use super::security::Security;
 use super::summaries::{AGGREGATE, SummaryDeclaration};
+use super::temporal::TemporalDeclaration;
 use crate::pointer::JsonPointer;
 use crate::read::Location;
 
@@ -61,6 +62,8 @@ pub struct Extensions {
     pub security: Security,
     /// Every summary declaration of the model, in document order (SUM-2).
     pub summaries: Vec<SummaryDeclaration>,
+    /// Every temporal declaration of a relationship, in document order (VAL-2.1).
+    pub temporal: Vec<TemporalDeclaration>,
     /// `W0C-01` warnings, in document order. `W0C-40` and `W0C-41` come from
     /// [`super::security::resolution::resolve_access`], which needs a load option.
     pub warnings: Vec<ExtensionDiagnostic>,
@@ -95,6 +98,15 @@ impl Extensions {
         self.derived
             .iter()
             .find(|declaration| declaration.metric == *metric)
+    }
+
+    /// The temporal declaration of the relationship at `relationship`, when it is a temporal
+    /// relationship (VAL-2.1).
+    #[must_use]
+    pub fn temporal_declaration(&self, relationship: &JsonPointer) -> Option<&TemporalDeclaration> {
+        self.temporal
+            .iter()
+            .find(|declaration| declaration.relationship == *relationship)
     }
 
     /// The context declaration of the metric at `metric`, when it has one.

@@ -102,6 +102,7 @@ fn relationship(name: &str, from: &str, to: &str, column: &str) -> Relationship 
         to: NormalizedName::new(to),
         from_columns: vec![NormalizedName::new(column)],
         to_columns: vec![NormalizedName::new(column)],
+        temporal: None,
         descriptions: Descriptions::default(),
         query_errors: Vec::new(),
         location: location("/semantic_model/0/relationships/0"),

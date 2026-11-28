@@ -29,7 +29,7 @@ pub use metric::{
 };
 pub use relationship::{
     DatasetPair, DatasetReach, GraphEdge, PathCount, ReachedDataset, Relationship,
-    RelationshipGraph,
+    RelationshipGraph, TemporalJoin,
 };
 pub use security::{
     AccessMode, AttributeType, DatasetAccess, FieldRestriction, RoleName, RowPolicy, ScalarType,

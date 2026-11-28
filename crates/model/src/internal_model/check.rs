@@ -9,6 +9,9 @@ pub enum CheckKind {
     KeyUniqueness,
     /// `orphan_keys`: every `from_columns` value matches `to`.
     OrphanKeys,
+    /// `temporal_orphans`: every `from` row of a temporal relationship has a version of `to`
+    /// covering its `from_time` (VAL-2.16a).
+    TemporalOrphans,
     /// `summary`: a summary matches its base.
     Summary,
     /// `population`: the expected entities per period.
@@ -24,6 +27,7 @@ impl CheckKind {
         match self {
             Self::KeyUniqueness => "key_uniqueness",
             Self::OrphanKeys => "orphan_keys",
+            Self::TemporalOrphans => "temporal_orphans",
             Self::Summary => "summary",
             Self::Population => "population",
             Self::SemiAdditive => "semi_additive",

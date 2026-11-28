@@ -96,6 +96,7 @@ pub(super) fn summaries_only(document: &Node, summaries: &SummaryDatasets) -> Ex
         context: Vec::new(),
         security: Security::default(),
         summaries: Vec::new(),
+        temporal: Vec::new(),
         warnings: Vec::new(),
     }
 }

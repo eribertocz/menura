@@ -160,14 +160,52 @@ fn row_policy(policy: &RowPolicy) -> Json {
     ])
 }
 
-/// What a relationship check reads of the relationship: `from`, `to` and the column pairs
-/// (CHK-3).
+/// What a relationship check reads of the relationship: `from`, `to` and the column pairs,
+/// and the normalized `temporal` entry of a temporal relationship (CHK-3). A plain
+/// relationship has no `temporal` member, so that it keeps its form (VAL-2.1).
 pub(in super::super) fn relationship_definition(relationship: &Relationship) -> Json {
-    object([
+    let mut definition = object([
         ("from", name(&relationship.from)),
         ("to", name(&relationship.to)),
         ("from_columns", names(&relationship.from_columns)),
         ("to_columns", names(&relationship.to_columns)),
+    ]);
+    if let (Json::Object(members), Some(temporal)) = (&mut definition, &relationship.temporal) {
+        members.insert(
+            "temporal".to_owned(),
+            object([
+                ("from_time", name(&temporal.from_time)),
+                ("population", name(&temporal.population)),
+            ]),
+        );
+    }
+    definition
+}
+
+/// What a `temporal_orphans` check reads of the population of a temporal relationship:
+/// `valid_from`, `valid_to`, `valid_to_bound` and `open_end` (CHK-3, VAL-2.3); `Null` for a
+/// population that is not a `validity` one.
+pub(in super::super) fn validity_range(population: &Population) -> Json {
+    let PopulationMode::Validity {
+        valid_from,
+        valid_to,
+        valid_to_bound,
+        open_end,
+        ..
+    } = &population.mode
+    else {
+        return Json::Null;
+    };
+    object([
+        ("valid_from", name(valid_from)),
+        ("valid_to", name(valid_to)),
+        ("valid_to_bound", text(valid_to_bound.as_str())),
+        (
+            "open_end",
+            open_end
+                .as_ref()
+                .map_or(Json::Null, |open_end| text(&open_end.con4_text())),
+        ),
     ])
 }
 

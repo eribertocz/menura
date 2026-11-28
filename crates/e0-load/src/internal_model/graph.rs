@@ -6,12 +6,12 @@
 
 use menura_model::internal_model::{
     DatasetPair, DatasetReach, GraphEdge, NormalizedName, PathCount, ReachedDataset, Relationship,
-    RelationshipGraph,
+    RelationshipGraph, TemporalJoin,
 };
 
 use super::assembly::Assembly;
 use super::datasets::by_name;
-use super::located::{declared, descriptions, location_of, normalized};
+use super::located::{declared, descriptions, location_of, normalized, written};
 use crate::outline::RelationshipOutline;
 use crate::relationships::paths::reachability;
 use crate::relationships::{self, PathCount as Paths};
@@ -33,6 +33,14 @@ pub(super) fn relationship(
         to: declared(outline.to.as_ref()),
         from_columns: names(&outline.from_columns),
         to_columns: names(&outline.to_columns),
+        temporal: assembly
+            .input
+            .extensions
+            .temporal_declaration(&outline.pointer)
+            .map(|declaration| TemporalJoin {
+                from_time: written(&declaration.from_time),
+                population: written(&declaration.population),
+            }),
         descriptions: descriptions(assembly.document, &outline.pointer),
         query_errors: assembly.usability.codes(&outline.pointer),
         location: location_of(assembly.document, &outline.pointer),

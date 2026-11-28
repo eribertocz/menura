@@ -1,0 +1,79 @@
+version: "0.1.1"
+semantic_model:
+  - name: val_temporal_unusable
+    description: 'Temporal relationships made unusable by an unusable from_time, valid_from or valid_to (VAL-2.20): each such field reads a column its relation does not have'
+    custom_extensions:
+      - vendor_name: COMMON
+        data: '{"namespace": "menura", "version": 1, "security_context": {"roles": ["analyst"], "attributes": []}}'
+    datasets:
+      - name: sales
+        source: shop.sales
+        primary_key: [sale_id]
+        fields:
+          - name: sale_id
+            expression: {dialects: [{dialect: ANSI_SQL, expression: sale_id}]}
+          - name: customer_id
+            expression: {dialects: [{dialect: ANSI_SQL, expression: customer_id}]}
+          - name: sold_on
+            expression: {dialects: [{dialect: ANSI_SQL, expression: sold_on}]}
+            dimension: {is_time: true}
+          - name: sold_at
+            expression: {dialects: [{dialect: ANSI_SQL, expression: sold_at}]}
+            dimension: {is_time: true}
+          - name: sold_day
+            expression: {dialects: [{dialect: ANSI_SQL, expression: sold_day}]}
+            dimension: {is_time: true}
+        custom_extensions:
+          - vendor_name: COMMON
+            data: '{"namespace": "menura", "version": 1, "access": {"mode": "roles", "roles": ["analyst"]}}'
+      - name: customer_versions
+        source: shop.customer_versions
+        primary_key: [customer_id, valid_from]
+        fields:
+          - name: customer_id
+            expression: {dialects: [{dialect: ANSI_SQL, expression: customer_id}]}
+          - name: segment
+            expression: {dialects: [{dialect: ANSI_SQL, expression: segment}]}
+          - name: valid_from
+            expression: {dialects: [{dialect: ANSI_SQL, expression: valid_from}]}
+            dimension: {is_time: true}
+          - name: valid_to
+            expression: {dialects: [{dialect: ANSI_SQL, expression: valid_to}]}
+            dimension: {is_time: true}
+          - name: broken_from
+            expression: {dialects: [{dialect: ANSI_SQL, expression: broken_from}]}
+            dimension: {is_time: true}
+          - name: broken_to
+            expression: {dialects: [{dialect: ANSI_SQL, expression: broken_to}]}
+            dimension: {is_time: true}
+        custom_extensions:
+          - vendor_name: COMMON
+            data: '{"namespace": "menura", "version": 1, "access": {"mode": "roles", "roles": ["analyst"]}, "populations": [{"name": "customer_history", "mode": "validity", "entity": ["customer_id"], "valid_from": "valid_from", "valid_to": "valid_to", "partial_period": "any_day", "valid_to_bound": "exclusive"}, {"name": "broken_start", "mode": "validity", "entity": ["customer_id"], "valid_from": "broken_from", "valid_to": "valid_to", "partial_period": "any_day", "valid_to_bound": "exclusive"}, {"name": "broken_end", "mode": "validity", "entity": ["customer_id"], "valid_from": "valid_from", "valid_to": "broken_to", "partial_period": "any_day", "valid_to_bound": "exclusive"}]}'
+    relationships:
+      - name: sale_customer_by_day
+        from: sales
+        to: customer_versions
+        from_columns: [customer_id]
+        to_columns: [customer_id]
+        custom_extensions:
+          - vendor_name: COMMON
+            data: '{"namespace": "menura", "version": 1, "temporal": {"from_time": "sold_day", "population": "customer_history"}}'
+      - name: sale_customer_from
+        from: sales
+        to: customer_versions
+        from_columns: [customer_id]
+        to_columns: [customer_id]
+        custom_extensions:
+          - vendor_name: COMMON
+            data: '{"namespace": "menura", "version": 1, "temporal": {"from_time": "sold_on", "population": "broken_start"}}'
+      - name: sale_customer_to
+        from: sales
+        to: customer_versions
+        from_columns: [customer_id]
+        to_columns: [customer_id]
+        custom_extensions:
+          - vendor_name: COMMON
+            data: '{"namespace": "menura", "version": 1, "temporal": {"from_time": "sold_on", "population": "broken_end"}}'
+    metrics:
+      - name: sale_count
+        expression: {dialects: [{dialect: ANSI_SQL, expression: 'COUNT(sales.sale_id)'}]}

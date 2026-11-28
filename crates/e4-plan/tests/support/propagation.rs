@@ -175,6 +175,7 @@ pub fn linked_model(datasets: Vec<Dataset>, links: &[Link]) -> InternalModel {
                 to: name(to),
                 from_columns: vec![name(from_column)],
                 to_columns: vec![name(to_column)],
+                temporal: None,
                 descriptions: Descriptions::default(),
                 query_errors: Vec::new(),
                 location: located(&format!("/semantic_model/0/relationships/{index}")),

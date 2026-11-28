@@ -107,6 +107,7 @@ fn relationship(relationship_name: &str, from: &str, to: &str) -> Relationship {
         to: name(to),
         from_columns: vec![name("CUSTOMER_ID")],
         to_columns: vec![name("CUSTOMER_ID")],
+        temporal: None,
         descriptions: Descriptions::default(),
         query_errors: Vec::new(),
         location: location(),

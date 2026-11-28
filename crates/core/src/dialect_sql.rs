@@ -9,7 +9,9 @@ use menura_generator_clickhouse as clickhouse;
 use menura_generator_duckdb as duckdb;
 use menura_model::internal_model::InternalModel;
 use menura_representations::bound_query::BoundQuery;
-use menura_representations::check_shapes::{PeriodicCheck, SnapshotCheck, ValidityCheck};
+use menura_representations::check_shapes::{
+    PeriodicCheck, SnapshotCheck, TemporalOrphansCheck, ValidityCheck,
+};
 use menura_representations::logical_plan::PlanNode;
 use menura_security::AdmittedSecurityContext;
 
@@ -43,7 +45,8 @@ pub(crate) struct Sources<'input> {
     pub(crate) model: &'input InternalModel,
 }
 
-/// The shape of an integrity check, as both generators take it (CHK-4.2, CHK-6.3–CHK-6.5).
+/// The shape of an integrity check, as both generators take it (CHK-4.2, CHK-6.3–CHK-6.5,
+/// VAL-2.16a).
 pub(crate) enum CheckShape<'plan> {
     /// A check that is one logical plan.
     Plan(&'plan PlanNode),
@@ -53,6 +56,8 @@ pub(crate) enum CheckShape<'plan> {
     Periodic(PeriodicCheck<'plan>),
     /// The `semi_additive` check.
     Snapshot(SnapshotCheck<'plan>),
+    /// The `temporal_orphans` check.
+    TemporalOrphans(TemporalOrphansCheck<'plan>),
 }
 
 /// The SQL of `plan`, the optimized plan of `query`, in `dialect`, for the user of `security`.
@@ -126,6 +131,9 @@ fn duckdb_check_sql(
         CheckShape::Validity(check) => duckdb::generate_validity_check_sql(check, inputs),
         CheckShape::Periodic(check) => duckdb::generate_periodic_check_sql(check, inputs),
         CheckShape::Snapshot(check) => duckdb::generate_snapshot_check_sql(check, inputs),
+        CheckShape::TemporalOrphans(check) => {
+            duckdb::generate_temporal_orphans_check_sql(check, inputs)
+        }
     }
 }
 
@@ -144,6 +152,9 @@ fn clickhouse_check_sql(
         CheckShape::Validity(check) => clickhouse::generate_validity_check_sql(check, inputs),
         CheckShape::Periodic(check) => clickhouse::generate_periodic_check_sql(check, inputs),
         CheckShape::Snapshot(check) => clickhouse::generate_snapshot_check_sql(check, inputs),
+        CheckShape::TemporalOrphans(check) => {
+            clickhouse::generate_temporal_orphans_check_sql(check, inputs)
+        }
     }
 }
 

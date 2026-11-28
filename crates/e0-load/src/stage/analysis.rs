@@ -22,6 +22,7 @@ use crate::typing::derived::type_derived_metrics;
 use crate::typing::populations::type_populations;
 use crate::typing::security::type_row_policies;
 use crate::typing::summaries::type_summaries;
+use crate::typing::temporal::type_temporal;
 use crate::typing::{Typing, type_expressions};
 
 /// What the substages after E0.d read.
@@ -158,6 +159,7 @@ fn extension_types(
     );
     add_errors(substage, type_row_policies(structure, typing, extensions));
     add_errors(substage, type_summaries(structure, typing, extensions));
+    add_errors(substage, type_temporal(structure, typing, extensions));
     derived_typing
 }
 

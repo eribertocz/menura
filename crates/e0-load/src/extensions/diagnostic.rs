@@ -140,6 +140,21 @@ pub enum ExtensionCode {
     /// `E0C-66`: a population `open_end` that is not a value of the type of its `valid_to` in
     /// its CON-4 form (VAL-1.5).
     InvalidOpenEnd,
+    /// `E0C-67`: a `temporal.from_time` that names no field of the relationship's `from`
+    /// dataset (VAL-2.2).
+    MissingFromTime,
+    /// `E0C-68`: a `temporal.population` that names no `validity` population of the
+    /// relationship's `to` dataset (VAL-2.3).
+    TemporalPopulation,
+    /// `E0C-69`: the population's `entity` and the relationship's `to_columns` are not the
+    /// same set of columns (VAL-2.4).
+    TemporalEntityKeys,
+    /// `E0C-70`: `from_time`, `valid_from` and `valid_to` are not all `date`, or not all
+    /// `timestamp` with the same `with_time_zone` (VAL-2.5).
+    TemporalKinds,
+    /// `E0C-71`: a `from_time` field that reads `CURRENT_DATE`, `CURRENT_TIME` or
+    /// `CURRENT_TIMESTAMP` (VAL-2.6).
+    TemporalClock,
     /// `E0C-72`: under `valid_to_bound: exclusive`, a population `valid_from` and `valid_to`
     /// that are not both `date`, or not both `timestamp` with the same `with_time_zone`
     /// (VAL-1.5).
@@ -216,6 +231,11 @@ impl ExtensionCode {
             Self::NestedContext => "E0C-64",
             Self::SemiAdditiveRunningTotal => "E0C-65",
             Self::InvalidOpenEnd => "E0C-66",
+            Self::MissingFromTime => "E0C-67",
+            Self::TemporalPopulation => "E0C-68",
+            Self::TemporalEntityKeys => "E0C-69",
+            Self::TemporalKinds => "E0C-70",
+            Self::TemporalClock => "E0C-71",
             Self::ExclusiveRangeKinds => "E0C-72",
             Self::NotJson => "W0C-01",
             Self::FormerNamespace => "W0C-02",

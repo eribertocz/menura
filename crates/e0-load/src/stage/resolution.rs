@@ -13,6 +13,7 @@ use crate::references::derived::{DerivedMetrics, resolve_derived_references};
 use crate::references::populations::resolve_population_references;
 use crate::references::security::resolve_security_references;
 use crate::references::summaries::resolve_summary_references;
+use crate::references::temporal::resolve_temporal_references;
 use crate::references::{References, resolve_references};
 use crate::structure::Structure;
 
@@ -49,8 +50,9 @@ pub(super) fn resolve(
             None
         }
     };
-    let resolved_extensions = extensions
-        .map(|extensions| extension_references(document, structure, extensions, &mut substage));
+    let resolved_extensions = extensions.map(|extensions| {
+        extension_references(document, structure, catalog, extensions, &mut substage)
+    });
     if report.add_substage(document, substage) {
         return None;
     }
@@ -70,6 +72,7 @@ pub(super) fn resolve(
 fn extension_references(
     document: &Node,
     structure: &Structure<'_>,
+    catalog: &CatalogSchemaDocument,
     extensions: &Extensions,
     substage: &mut Substage,
 ) -> (Option<DerivedMetrics>, Option<ContextMetrics>) {
@@ -97,6 +100,10 @@ fn extension_references(
     };
     add_errors(substage, resolve_security_references(structure, extensions));
     add_errors(substage, resolve_summary_references(structure, extensions));
+    add_errors(
+        substage,
+        resolve_temporal_references(structure, catalog, extensions),
+    );
     (derived, context)
 }
 

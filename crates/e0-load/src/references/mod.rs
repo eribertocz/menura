@@ -16,7 +16,9 @@
 //! [`context::resolve_context_references`] (`E0C-60`, `E0C-63`, `E0C-64`, CTX-5.1.3), and the
 //! fields and roles of `access.fields` by [`security::resolve_security_references`]
 //! (`E0C-49`, SCY-5.1.4), and the names of summaries by
-//! [`summaries::resolve_summary_references`] (`E0C-50`, `E0C-51`, `E0C-54`, SUM-6.1.2).
+//! [`summaries::resolve_summary_references`] (`E0C-50`, `E0C-51`, `E0C-54`, SUM-6.1.2), and
+//! the names of temporal relationships by [`temporal::resolve_temporal_references`]
+//! (`E0C-67` to `E0C-69`, VAL-2.2 to VAL-2.4).
 //!
 //! A summary is not a dataset other model elements may name (SUM-6.1.7): a metric that refers
 //! to it gets `E0D-04`, as if the dataset were missing.
@@ -35,6 +37,7 @@ mod scope;
 pub(crate) mod security;
 mod sources;
 pub(crate) mod summaries;
+pub(crate) mod temporal;
 mod uniqueness;
 mod walk;
 

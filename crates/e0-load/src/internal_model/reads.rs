@@ -8,7 +8,10 @@ use super::trees::compiled;
 use super::usability::read_names;
 use crate::expressions::ExpressionPlace;
 use crate::extensions::additivity::FieldReference;
-use crate::outline::{ModelOutline, RelationshipOutline};
+use crate::extensions::populations::PopulationMode;
+use crate::extensions::temporal::TemporalDeclaration;
+use crate::names::Name;
+use crate::outline::{DatasetOutline, ModelOutline, RelationshipOutline};
 use crate::pointer::JsonPointer;
 use crate::structure::CompiledVariant;
 
@@ -56,7 +59,7 @@ pub(super) fn reads(
         }
     }
     for relationship in &model.relationships {
-        for read in relationship_reads(index, relationship) {
+        for read in relationship_reads(input, index, relationship) {
             pairs.push((relationship.pointer.clone(), read));
         }
     }
@@ -115,23 +118,74 @@ fn metric_reads(
     read
 }
 
-/// The datasets a relationship joins and the fields its column lists name.
+/// The datasets a relationship joins and the fields its column lists name; for a temporal
+/// relationship, also its `from_time` field and its population's `valid_from` and `valid_to`
+/// fields (VAL-2.20).
 fn relationship_reads(
+    input: &ModelInput<'_, '_>,
     index: &ModelIndex<'_, '_>,
     relationship: &RelationshipOutline<'_>,
 ) -> Vec<JsonPointer> {
     let mut read = Vec::new();
+    let mut ends = Vec::new();
     for (end, columns) in [
         (&relationship.from, &relationship.from_columns),
         (&relationship.to, &relationship.to_columns),
     ] {
-        let Some(dataset) = end.as_ref().and_then(|end| index.dataset(&end.name)) else {
+        let dataset = end.as_ref().and_then(|end| index.dataset(&end.name));
+        ends.push(dataset);
+        let Some(dataset) = dataset else {
             continue;
         };
         read.push(dataset.pointer.clone());
         for column in columns {
             if let Some(field) = dataset.field(&column.name) {
                 read.push(field.pointer.clone());
+            }
+        }
+    }
+    if let (Some(declaration), [from, to]) = (
+        input.extensions.temporal_declaration(&relationship.pointer),
+        ends.as_slice(),
+    ) {
+        read.extend(temporal_reads(input, *from, *to, declaration));
+    }
+    read
+}
+
+/// The `from_time` field of `from` and the `valid_from` and `valid_to` fields of the
+/// population of `to` that `declaration` names, each when it resolves.
+fn temporal_reads(
+    input: &ModelInput<'_, '_>,
+    from: Option<&DatasetOutline<'_>>,
+    to: Option<&DatasetOutline<'_>>,
+    declaration: &TemporalDeclaration,
+) -> Vec<JsonPointer> {
+    let mut read = Vec::new();
+    if let Some(field) = from.and_then(|from| from.field(&Name::declared(&declaration.from_time))) {
+        read.push(field.pointer.clone());
+    }
+    let Some(to) = to else {
+        return read;
+    };
+    let wanted = Name::declared(&declaration.population);
+    for population in input
+        .extensions
+        .populations
+        .iter()
+        .filter(|population| population.dataset == to.pointer)
+        .filter(|population| Name::declared(&population.name) == wanted)
+    {
+        if let PopulationMode::Validity {
+            valid_from,
+            valid_to,
+            ..
+        } = &population.mode
+        {
+            for name in [valid_from, valid_to] {
+                if let Some(field) = to.field(&Name::declared(name)) {
+                    read.push(field.pointer.clone());
+                }
             }
         }
     }
