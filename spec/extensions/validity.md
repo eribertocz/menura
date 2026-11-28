@@ -2,14 +2,9 @@
 
 Rules for history tables, whose rows are versions of an entity with a validity range (slowly
 changing dimensions of type 2). VAL-1 lets a `validity` population (POP-2) declare a half-open
-<<<<<<< HEAD
 range and a sentinel end. VAL-2 lets a relationship join each row of `from` to the version of
 `to` valid at a time the row holds. Their rules join the coverage scope at the gate of the
 release that implements them (7.1a).
-=======
-range and a sentinel end. Its rules join the coverage scope at the gate of the release that
-implements them (7.1a).
->>>>>>> origin/main
 
 ## VAL-1 Range shape of a `validity` population
 
@@ -21,7 +16,6 @@ implements them (7.1a).
 | VAL-1.4 | **Integrity check of an exclusive range.** For a population with `valid_to_bound: exclusive`, CHK-6.3 compares values, not days: a row is `invalid_interval` when `valid_from` and `valid_to` are non-NULL, `valid_to` is not `open_end`, and `valid_from` ≥ `valid_to`; two rows overlap when each one's `valid_from` is before the other's `valid_to`, an open-ended `valid_to` being after every value. The check then computes no day, so it has no `time_zone` slot (CHK-7.3). Every other part of CHK-6.3 applies unchanged. |
 | VAL-1.5 | **Validation.** `valid_to_bound` and `open_end` are keys of the `validity` mode: on a `periodic` population they are `E0C-21` (POP-4.1). A `valid_to_bound` other than `inclusive` or `exclusive`, or an `open_end` that is not a string, is `E0C-03` (POP-4.2). An `open_end` that is not a value of the logical type of `valid_to` in its CON-4 form is `E0C-66`, located at `open_end` and checked in E0.f only when `valid_to` has a type (POP-4.5). |
 
-<<<<<<< HEAD
 ## VAL-2 Temporal relationships
 
 A temporal relationship joins a row of `from` to the version of its entity that was valid at
@@ -62,18 +56,13 @@ applies to it, with the changes below.
 | VAL-2.23 | **ClickHouse.** In the `clickhouse` dialect, any SQL shape is allowed whose meaning is fixed by the statement's `SETTINGS` clause (E6-7.8). `ASOF JOIN` is never used, because it picks one version where VAL-2.8 keeps every covering version. An `open_end` outside the range of the ClickHouse type of `valid_to` (E6-7.12) fails with `E6-01`, located at `dataset:` of the `to` dataset. The same holds for the `open_end` of any `validity` population (VAL-1.2) wherever ClickHouse SQL reads it, a population check included (E6-7.11), located at `dataset:` of the dataset that declares the population. |
 | VAL-2.24 | **Lineage and explanation.** For a column whose value a `Join` along a temporal relationship brings, `model_inputs` lists the relationship (PLN-4.4), and also its `from_time` field and its population's `valid_from` and `valid_to` fields. `physical_inputs` lists their columns as `Join`-condition columns (PLN-4.5). E4 records one `VAL-2.8` entry per such `Join` (PLN-7.3), with subject `relationship:<name>`, in branch order and then path order. Its `reason` names the `from_time` field and the population, never a value. The `E4-4.1` entry of a temporal `left` join says that a time covered by no version also gives the NULL group. |
 
-=======
->>>>>>> origin/main
 ## VAL-3 Diagnostics
 
 | Code | Condition |
 |---|---|
 | `E0C-66` | `open_end` is not a value of the type of `valid_to` in its CON-4 form |
-<<<<<<< HEAD
 | `E0C-67` | `temporal.from_time` names no field of the relationship's `from` dataset |
 | `E0C-68` | `temporal.population` names no `validity` population of the relationship's `to` dataset |
 | `E0C-69` | The population's `entity` and the relationship's `to_columns` are not the same set of columns |
 | `E0C-70` | `from_time`, `valid_from` and `valid_to` are not all `date`, or not all `timestamp` with the same `with_time_zone` |
 | `E0C-71` | `from_time` uses `CURRENT_DATE`, `CURRENT_TIME` or `CURRENT_TIMESTAMP`, directly or through other fields |
-=======
->>>>>>> origin/main

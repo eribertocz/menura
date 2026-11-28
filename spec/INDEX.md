@@ -511,7 +511,7 @@ Find a rule ID or a section here, then open only that file at that line.
 | [decisions/0007-agent-channels-and-dependencies.md](decisions/0007-agent-channels-and-dependencies.md#L21) | 21 | section | Rules changed |
 | [decisions/README.md](decisions/README.md#L1) | 1 | section | Decision records |
 | [extensions/README.md](extensions/README.md#L1) | 1 | section | Extensions |
-| [extensions/README.md](extensions/README.md#L23) | 23 | section | EXT-1 Runtime failure policies |
+| [extensions/README.md](extensions/README.md#L19) | 19 | section | EXT-1 Runtime failure policies |
 | [extensions/additivity.md](extensions/additivity.md#L1) | 1 | section | Extension: additivity |
 | [extensions/additivity.md](extensions/additivity.md#L5) | 5 | section | ADD-1 Purpose |
 | [extensions/additivity.md](extensions/additivity.md#L10) | 10 | section | ADD-2 Default and conflicts |
@@ -663,39 +663,39 @@ Find a rule ID or a section here, then open only that file at that line.
 | [extensions/summaries.md](extensions/summaries.md#L73) | 73 | rule | SUM-6.1.7 |
 | [extensions/summaries.md](extensions/summaries.md#L74) | 74 | rule | SUM-6.1.8 |
 | [extensions/validity.md](extensions/validity.md#L1) | 1 | section | Validity: range shape and temporal relationships |
-| [extensions/validity.md](extensions/validity.md#L14) | 14 | section | VAL-1 Range shape of a `validity` population |
-| [extensions/validity.md](extensions/validity.md#L18) | 18 | rule | VAL-1.1 |
-| [extensions/validity.md](extensions/validity.md#L19) | 19 | rule | VAL-1.2 |
-| [extensions/validity.md](extensions/validity.md#L20) | 20 | rule | VAL-1.3 |
-| [extensions/validity.md](extensions/validity.md#L21) | 21 | rule | VAL-1.4 |
-| [extensions/validity.md](extensions/validity.md#L22) | 22 | rule | VAL-1.5 |
-| [extensions/validity.md](extensions/validity.md#L25) | 25 | section | VAL-2 Temporal relationships |
-| [extensions/validity.md](extensions/validity.md#L39) | 39 | rule | VAL-2.1 |
-| [extensions/validity.md](extensions/validity.md#L40) | 40 | rule | VAL-2.2 |
-| [extensions/validity.md](extensions/validity.md#L41) | 41 | rule | VAL-2.3 |
-| [extensions/validity.md](extensions/validity.md#L42) | 42 | rule | VAL-2.4 |
-| [extensions/validity.md](extensions/validity.md#L43) | 43 | rule | VAL-2.5 |
-| [extensions/validity.md](extensions/validity.md#L44) | 44 | rule | VAL-2.6 |
-| [extensions/validity.md](extensions/validity.md#L45) | 45 | rule | VAL-2.7 |
-| [extensions/validity.md](extensions/validity.md#L46) | 46 | rule | VAL-2.8 |
-| [extensions/validity.md](extensions/validity.md#L47) | 47 | rule | VAL-2.9 |
-| [extensions/validity.md](extensions/validity.md#L48) | 48 | rule | VAL-2.10 |
-| [extensions/validity.md](extensions/validity.md#L49) | 49 | rule | VAL-2.11 |
-| [extensions/validity.md](extensions/validity.md#L50) | 50 | rule | VAL-2.12 |
-| [extensions/validity.md](extensions/validity.md#L51) | 51 | rule | VAL-2.13 |
-| [extensions/validity.md](extensions/validity.md#L52) | 52 | rule | VAL-2.14 |
-| [extensions/validity.md](extensions/validity.md#L53) | 53 | rule | VAL-2.15 |
-| [extensions/validity.md](extensions/validity.md#L54) | 54 | rule | VAL-2.16 |
-| [extensions/validity.md](extensions/validity.md#L55) | 55 | rule | VAL-2.16a |
-| [extensions/validity.md](extensions/validity.md#L56) | 56 | rule | VAL-2.17 |
-| [extensions/validity.md](extensions/validity.md#L57) | 57 | rule | VAL-2.18 |
-| [extensions/validity.md](extensions/validity.md#L58) | 58 | rule | VAL-2.19 |
-| [extensions/validity.md](extensions/validity.md#L59) | 59 | rule | VAL-2.20 |
-| [extensions/validity.md](extensions/validity.md#L60) | 60 | rule | VAL-2.21 |
-| [extensions/validity.md](extensions/validity.md#L61) | 61 | rule | VAL-2.22 |
-| [extensions/validity.md](extensions/validity.md#L62) | 62 | rule | VAL-2.23 |
-| [extensions/validity.md](extensions/validity.md#L63) | 63 | rule | VAL-2.24 |
-| [extensions/validity.md](extensions/validity.md#L67) | 67 | section | VAL-3 Diagnostics |
+| [extensions/validity.md](extensions/validity.md#L9) | 9 | section | VAL-1 Range shape of a `validity` population |
+| [extensions/validity.md](extensions/validity.md#L13) | 13 | rule | VAL-1.1 |
+| [extensions/validity.md](extensions/validity.md#L14) | 14 | rule | VAL-1.2 |
+| [extensions/validity.md](extensions/validity.md#L15) | 15 | rule | VAL-1.3 |
+| [extensions/validity.md](extensions/validity.md#L16) | 16 | rule | VAL-1.4 |
+| [extensions/validity.md](extensions/validity.md#L17) | 17 | rule | VAL-1.5 |
+| [extensions/validity.md](extensions/validity.md#L19) | 19 | section | VAL-2 Temporal relationships |
+| [extensions/validity.md](extensions/validity.md#L33) | 33 | rule | VAL-2.1 |
+| [extensions/validity.md](extensions/validity.md#L34) | 34 | rule | VAL-2.2 |
+| [extensions/validity.md](extensions/validity.md#L35) | 35 | rule | VAL-2.3 |
+| [extensions/validity.md](extensions/validity.md#L36) | 36 | rule | VAL-2.4 |
+| [extensions/validity.md](extensions/validity.md#L37) | 37 | rule | VAL-2.5 |
+| [extensions/validity.md](extensions/validity.md#L38) | 38 | rule | VAL-2.6 |
+| [extensions/validity.md](extensions/validity.md#L39) | 39 | rule | VAL-2.7 |
+| [extensions/validity.md](extensions/validity.md#L40) | 40 | rule | VAL-2.8 |
+| [extensions/validity.md](extensions/validity.md#L41) | 41 | rule | VAL-2.9 |
+| [extensions/validity.md](extensions/validity.md#L42) | 42 | rule | VAL-2.10 |
+| [extensions/validity.md](extensions/validity.md#L43) | 43 | rule | VAL-2.11 |
+| [extensions/validity.md](extensions/validity.md#L44) | 44 | rule | VAL-2.12 |
+| [extensions/validity.md](extensions/validity.md#L45) | 45 | rule | VAL-2.13 |
+| [extensions/validity.md](extensions/validity.md#L46) | 46 | rule | VAL-2.14 |
+| [extensions/validity.md](extensions/validity.md#L47) | 47 | rule | VAL-2.15 |
+| [extensions/validity.md](extensions/validity.md#L48) | 48 | rule | VAL-2.16 |
+| [extensions/validity.md](extensions/validity.md#L49) | 49 | rule | VAL-2.16a |
+| [extensions/validity.md](extensions/validity.md#L50) | 50 | rule | VAL-2.17 |
+| [extensions/validity.md](extensions/validity.md#L51) | 51 | rule | VAL-2.18 |
+| [extensions/validity.md](extensions/validity.md#L52) | 52 | rule | VAL-2.19 |
+| [extensions/validity.md](extensions/validity.md#L53) | 53 | rule | VAL-2.20 |
+| [extensions/validity.md](extensions/validity.md#L54) | 54 | rule | VAL-2.21 |
+| [extensions/validity.md](extensions/validity.md#L55) | 55 | rule | VAL-2.22 |
+| [extensions/validity.md](extensions/validity.md#L56) | 56 | rule | VAL-2.23 |
+| [extensions/validity.md](extensions/validity.md#L57) | 57 | rule | VAL-2.24 |
+| [extensions/validity.md](extensions/validity.md#L59) | 59 | section | VAL-3 Diagnostics |
 | [glossary.md](glossary.md#L1) | 1 | section | Glossary |
 | [ossie-mapping.md](ossie-mapping.md#L1) | 1 | section | Apache Ossie mapping |
 | [stages/E0/README.md](stages/E0/README.md#L1) | 1 | section | E0 Load and validate the model |
